@@ -14,4 +14,3 @@ Erdos/Problem006.lean:15:10: error: type mismatch
   but is expected to have type
     Prop
 """
-
