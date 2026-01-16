@@ -49,47 +49,95 @@ erdos-harness/
 
 ---
 
-## 2) YAML Schema (Upstream Format)
+## 2) YAML Schema
 
-Based on the erdosproblems `CONTRIBUTING.md`, each problem entry has these fields:
+### Upstream Format (teorth/erdosproblems)
+
+**Important:** The upstream repository contains **metadata only**, not full problem statements. The actual format is:
+
+```yaml
+- number: "6"
+  prize: "$100"
+  status:
+    state: "proved"
+    last_update: "2025-08-31"
+  oeis: ["A000040"]
+  formalized:
+    state: "yes"
+    last_update: "2025-08-31"
+  tags:
+    - number theory
+    - primes
+  comments: "Solved by Green and Tao in 2008."
+```
+
+### Upstream Field Definitions
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `number` | str | Yes | Problem identifier (string, not int) |
+| `prize` | str | No | Prize amount as string ("$500", "£25", "no") |
+| `status.state` | str | No | One of: open, proved, disproved, solved |
+| `status.last_update` | str | No | ISO date of last status update |
+| `oeis` | list[str] | No | OEIS sequence IDs or ["N/A"] |
+| `formalized.state` | str | No | "yes" or "no" |
+| `formalized.last_update` | str | No | ISO date |
+| `tags` | list[str] | No | Topic tags |
+| `comments` | str | No | Brief notes |
+
+### Enriched Format (erdos-harness)
+
+Since the upstream YAML lacks titles and statements, erdos-harness uses an **enriched format** for local development and testing. Problem statements must be sourced separately (see Section 3).
 
 ```yaml
 - id: 6
   title: "Small primes in arithmetic progressions"
   statement: |
     Let $p_1 < p_2 < \ldots$ be the sequence of primes.
-    Prove that for every $k$, there exist...
+    Prove that for every $k$, there exist infinitely many
+    arithmetic progressions of length $k$ consisting of primes.
   status: proved
   prize: 100
   tags:
     - number theory
     - primes
   references:
-    - key: Erdos1975
-      citation: "P. Erdős, Some problems on number theory..."
-      doi: "10.1007/BF01940595"
     - key: GreenTao2008
-      arxiv_id: "0801.1283"
+      citation: "B. Green, T. Tao, The primes contain arbitrarily long arithmetic progressions"
+      doi: "10.4007/annals.2008.167.481"
+      arxiv_id: "math/0404188"
   notes: "Solved by Green and Tao in 2008."
   oeis_ids:
     - A000040
   formalized: true
 ```
 
-### Field Definitions
+### Enriched Field Definitions
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `id` | int | Yes | Unique problem ID (1-indexed) |
-| `title` | str | Yes | Short descriptive title |
-| `statement` | str | Yes | Full problem statement (may contain LaTeX) |
+| `id` | int | Yes | Unique problem ID (converted from upstream `number`) |
+| `title` | str | Yes | Short descriptive title (sourced separately) |
+| `statement` | str | Yes | Full problem statement with LaTeX (sourced separately) |
 | `status` | str | Yes | One of: open, proved, disproved, partially_solved |
-| `prize` | int | No | Prize amount in USD (default: 0) |
+| `prize` | int | No | Prize amount in USD (parsed from upstream string) |
 | `tags` | list[str] | No | Topic tags (default: []) |
 | `references` | list[dict] | No | Bibliography entries (default: []) |
-| `notes` | str | No | Additional notes |
+| `notes` | str | No | Additional notes (from upstream `comments`) |
 | `oeis_ids` | list[str] | No | Related OEIS sequence IDs |
-| `formalized` | bool | No | Has Lean formalization (default: false) |
+| `formalized` | bool | No | Has Lean formalization (parsed from upstream) |
+
+### Data Sourcing Strategy
+
+The upstream teorth/erdosproblems repo provides metadata only. For full problem data, erdos-harness supports multiple strategies:
+
+1. **Enriched Local YAML** (default for v1): Maintain a local `data/problems_enriched.yaml` with manually curated titles and statements. This is the simplest approach for initial development.
+
+2. **Upstream Metadata + Scraping** (future): Parse metadata from upstream, then fetch statements from erdosproblems.com.
+
+3. **Hybrid Merging** (future): Merge upstream metadata with local enrichments, keeping them in sync.
+
+For v1, the ProblemLoader expects the **enriched format** with `id`, `title`, and `statement` fields. Test fixtures (Spec 008) use this enriched format.
 
 ---
 
@@ -174,13 +222,15 @@ class ProblemLoader:
 
         # Check package data (for installed package)
         try:
-            import importlib.resources as pkg_resources
+            from importlib.resources import as_file, files
 
-            with pkg_resources.files("erdos") as pkg_path:
-                pkg_data = pkg_path / "data" / "problems.yaml"
-                if pkg_data.exists():
-                    return cls(Path(str(pkg_data)))
-        except (ImportError, TypeError):
+            pkg_files = files("erdos")
+            pkg_data = pkg_files.joinpath("data", "problems.yaml")
+            # as_file() extracts resource to a real filesystem path
+            with as_file(pkg_data) as real_path:
+                if real_path.exists():
+                    return cls(real_path)
+        except (ImportError, TypeError, AttributeError, FileNotFoundError):
             pass
 
         raise ProblemLoaderError(
@@ -210,9 +260,13 @@ class ProblemLoader:
 
         Handles field name normalization and validation.
         """
-        # Normalize status string
-        status_str = raw.get("status", "unknown")
-        status = ProblemStatus.from_string(status_str)
+        # Normalize status string - StrEnum accepts value directly
+        status_str = raw.get("status", "open")
+        try:
+            status = ProblemStatus(status_str)
+        except ValueError:
+            # Unknown status defaults to OPEN
+            status = ProblemStatus.OPEN
 
         # Parse references
         raw_refs = raw.get("references", [])

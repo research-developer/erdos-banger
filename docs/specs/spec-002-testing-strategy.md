@@ -74,7 +74,7 @@ tests/
 **pyproject.toml:**
 ```toml
 [tool.pytest.ini_options]
-minversion = "8.0"
+minversion = "9.0"
 addopts = [
     "-ra",                      # Show extra summary for all except passed
     "-q",                       # Quieter output
@@ -83,7 +83,6 @@ addopts = [
     "--import-mode=importlib",  # Modern import mode for src layout
 ]
 testpaths = ["tests"]
-pythonpath = ["src"]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "e2e: end-to-end tests requiring full environment",
@@ -400,12 +399,15 @@ def test_loader_parses_real_yaml(sample_problems_yaml: Path) -> None:
 
 
 # tests/integration/test_show_command.py
-def test_show_returns_problem(temp_project_dir: Path) -> None:
+def test_show_returns_problem(sample_problems_yaml: Path) -> None:
     """show command returns correct problem data."""
-    from erdos.commands.show import show_problem
+    from erdos.commands.show import get_problem
+    from erdos.core.problem_loader import ProblemLoader
 
-    result = show_problem(problem_id=6, json_output=True)
-    assert result["id"] == 6
+    loader = ProblemLoader(sample_problems_yaml)
+    result = get_problem(6, loader)
+    assert result.success
+    assert result.data["id"] == 6
 
 
 # tests/e2e/test_cli_show.py
@@ -417,10 +419,12 @@ def test_erdos_show_json_output(cli_runner) -> None:
     import json
     data = json.loads(result.stdout)
 
-    assert data["id"] == 6
-    assert "title" in data
-    assert "statement" in data
-    assert "status" in data
+    assert data["success"] is True
+    assert data["command"] == "erdos show"
+    assert data["data"]["id"] == 6
+    assert "title" in data["data"]
+    assert "statement" in data["data"]
+    assert "status" in data["data"]
 ```
 
 ---
@@ -443,9 +447,9 @@ For new features, start with an integration or E2E test that defines the desired
 ```python
 # Start here: what should happen when a user runs this?
 def test_erdos_formalize_creates_lean_file(cli_runner, temp_project_dir):
-    """erdos formalize should create a compilable Lean skeleton."""
+    """erdos lean formalize should create a compilable Lean skeleton."""
     # This test will FAIL until we implement the feature
-    result = cli_runner("formalize", "6")
+    result = cli_runner("lean", "formalize", "6")
 
     lean_file = temp_project_dir / "formal" / "lean" / "Erdos" / "Problem006.lean"
     assert lean_file.exists()
@@ -639,10 +643,10 @@ uv run pytest --cov=erdos --cov-fail-under=80
 
 # Tests are fast
 uv run pytest tests/unit/ --durations=10
-# Slowest test < 100ms
+# Slowest unit test < 100ms
 
 # Markers work correctly
-uv run pytest -m "not requires_lean" -m "not requires_network"
+uv run pytest -m "not requires_lean and not requires_network"
 # Exit code: 0 (skips appropriate tests)
 ```
 
@@ -651,6 +655,8 @@ uv run pytest -m "not requires_lean" -m "not requires_network"
 ```python
 # tests/test_test_infrastructure.py
 """Verify our testing infrastructure is correctly configured."""
+
+from pathlib import Path
 
 import pytest
 

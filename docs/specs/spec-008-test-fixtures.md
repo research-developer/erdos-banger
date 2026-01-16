@@ -58,9 +58,12 @@ tests/
 
 ## 2) Sample Problems YAML
 
+**Note:** Test fixtures use the **enriched format** (with `id`, `title`, `statement`) as defined in Spec 005, not the upstream teorth/erdosproblems metadata-only format. This allows testing the full ProblemLoader and CLI functionality without scraping external sources.
+
 ```yaml
 # tests/fixtures/sample_problems.yaml
 # Minimal dataset with representative problems for testing
+# Uses enriched format (see Spec 005 for format details)
 
 - id: 1
   title: "Sum of reciprocals of primes"

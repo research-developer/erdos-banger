@@ -55,15 +55,15 @@ classifiers = [
 ]
 
 dependencies = [
-    "typer>=0.12.0",
-    "rich>=13.7.0",
-    "pydantic>=2.6.0",
-    "pyyaml>=6.0.1",
-    "jinja2>=3.1.3",
+    "typer>=0.21.1",
+    "rich>=14.2.0",
+    "pydantic>=2.12.5",
+    "pyyaml>=6.0.3",
+    "jinja2>=3.1.6",
 ]
 
 [project.optional-dependencies]
-pdf = ["docling>=1.0.0"]
+pdf = ["docling>=2.68.0"]
 
 [project.scripts]
 erdos = "erdos.cli:app"
@@ -80,16 +80,18 @@ packages = ["src/erdos"]
 
 **pyproject.toml (continued):**
 ```toml
-[tool.uv]
-dev-dependencies = [
-    "pytest>=8.0.0",
-    "pytest-cov>=4.1.0",
-    "pytest-xdist>=3.5.0",
-    "hypothesis>=6.98.0",
-    "ruff>=0.3.0",
-    "mypy>=1.8.0",
-    "pre-commit>=3.6.0",
-    "types-PyYAML>=6.0.12",
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
+    "pytest-xdist>=3.8.0",
+    "pytest-mock>=3.15.1",
+    "hypothesis>=6.150.2",
+    "ruff>=0.14.13",
+    "mypy>=1.19.1",
+    "pre-commit>=4.5.1",
+    "responses>=0.25.8",
+    "types-PyYAML>=6.0.12.20250915",
 ]
 ```
 
@@ -203,9 +205,10 @@ select = [
     "UP",     # pyupgrade
     "ARG",    # flake8-unused-arguments
     "SIM",    # flake8-simplify
-    "TCH",    # flake8-type-checking
+    "TC",     # flake8-type-checking
     "PTH",    # flake8-use-pathlib
     "ERA",    # eradicate (commented-out code)
+    "S",      # flake8-bandit (security)
     "PL",     # Pylint
     "RUF",    # Ruff-specific rules
 ]
@@ -265,6 +268,7 @@ We use [mypy](https://mypy.readthedocs.io/) in strict mode for type checking.
 ```toml
 [tool.mypy]
 python_version = "3.11"
+plugins = ["pydantic.mypy"]
 strict = true
 warn_return_any = true
 warn_unused_ignores = true
@@ -272,7 +276,7 @@ disallow_untyped_defs = true
 disallow_incomplete_defs = true
 check_untyped_defs = true
 disallow_untyped_decorators = true
-no_implicit_optional = true
+implicit_optional = false
 warn_redundant_casts = true
 warn_unused_configs = true
 show_error_codes = true
@@ -286,6 +290,11 @@ disallow_untyped_defs = false  # Test functions don't need full typing
 [[tool.mypy.overrides]]
 module = "yaml.*"
 ignore_missing_imports = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
 ```
 
 ### py.typed Marker
@@ -311,23 +320,23 @@ We use [pre-commit](https://pre-commit.com/) to run checks before each commit.
 ```yaml
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.0
+    rev: v0.14.13
     hooks:
       - id: ruff
         args: [--fix]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+    rev: v1.19.1
     hooks:
       - id: mypy
         additional_dependencies:
-          - pydantic>=2.6.0
-          - types-PyYAML>=6.0.12
-        args: [--strict]
+          - pydantic>=2.12.5
+          - types-PyYAML>=6.0.12.20250915
+        args: [--config-file=pyproject.toml]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -404,7 +413,7 @@ formal/lean/lake-packages/
 3.11
 ```
 
-Pin to 3.11 for now. 3.12 is an option but some dependencies may have compatibility issues.
+Pin to 3.11 for now. CI should cover at least 3.11 and 3.12; bump the pin once the project is stable on 3.12+.
 
 ---
 
@@ -418,6 +427,10 @@ After implementing this spec, the following must work:
 # 1. Environment setup works
 uv sync
 # Exit code: 0, .venv created, all deps installed
+
+# CI mode: refuse to change uv.lock
+uv sync --frozen
+# Exit code: 0, lockfile unchanged
 
 # 2. CLI is runnable
 uv run erdos --version
@@ -445,19 +458,18 @@ uv run pre-commit run --all-files
 ```python
 """Verify development tooling is correctly configured."""
 
-import subprocess
-import sys
 from pathlib import Path
+import tomllib
 
 
-def test_uv_sync_succeeds() -> None:
-    """uv sync should complete without errors."""
-    result = subprocess.run(
-        ["uv", "sync"],
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0, f"uv sync failed: {result.stderr}"
+def test_pyproject_has_required_sections() -> None:
+    """pyproject.toml should include required tool sections."""
+    data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+    assert "project" in data
+    assert "dependency-groups" in data
+    assert "tool" in data
+    assert "ruff" in data["tool"]
+    assert "mypy" in data["tool"]
 
 
 def test_cli_is_importable() -> None:

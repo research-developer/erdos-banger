@@ -47,10 +47,17 @@ formal/
 ### lean-toolchain
 
 ```
-leanprover/lean4:v4.3.0
+leanprover/lean4:v4.12.0
 ```
 
-This file tells elan which Lean version to use. Pin to a specific release for reproducibility.
+This file tells elan which Lean version to use. **Important:** The toolchain version must match the mathlib4 version you're using.
+
+**To sync with latest mathlib4:**
+```bash
+curl -L https://raw.githubusercontent.com/leanprover-community/mathlib4/master/lean-toolchain -o lean-toolchain
+lake update
+lake exe cache get  # Download precompiled mathlib (highly recommended)
+```
 
 ### lakefile.lean
 
@@ -65,14 +72,18 @@ package erdos where
     ⟨`pp.unicode.fun, true⟩  -- Pretty print with Unicode
   ]
 
+-- Pin mathlib to a specific version for reproducibility
+-- Update this version along with lean-toolchain when upgrading
 require mathlib from git
-  "https://github.com/leanprover-community/mathlib4.git" @ "v4.3.0"
+  "https://github.com/leanprover-community/mathlib4.git" @ "v4.12.0"
 
 @[default_target]
 lean_lib Erdos where
   -- Library configuration
   globs := #[.submodules `Erdos]
 ```
+
+**Note:** When updating mathlib, ensure `lean-toolchain` and the mathlib version are compatible. Check [mathlib4 releases](https://github.com/leanprover-community/mathlib4/releases) for version tags.
 
 ### Erdos.lean (Root Module)
 
@@ -230,7 +241,7 @@ class LeanRunner:
 
         # Create lean-toolchain if missing
         if not self._toolchain.exists():
-            self._toolchain.write_text("leanprover/lean4:v4.3.0\n")
+            self._toolchain.write_text("leanprover/lean4:v4.12.0\n")
 
         # Create lakefile.lean if missing
         if not self._lakefile.exists():
@@ -390,8 +401,9 @@ package erdos where
     ⟨`pp.unicode.fun, true⟩
   ]
 
+-- Pin mathlib version - update along with lean-toolchain
 require mathlib from git
-  "https://github.com/leanprover-community/mathlib4.git" @ "v4.3.0"
+  "https://github.com/leanprover-community/mathlib4.git" @ "v4.12.0"
 
 @[default_target]
 lean_lib Erdos where

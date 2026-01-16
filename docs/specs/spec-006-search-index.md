@@ -47,8 +47,11 @@ CREATE TABLE IF NOT EXISTS problems (
 );
 
 -- Text chunks for search
+-- Note: We use an explicit _rowid column because FTS5 external content tables
+-- require an integer rowid, and TEXT PRIMARY KEY tables don't have implicit rowids.
 CREATE TABLE IF NOT EXISTS chunks (
-    id TEXT PRIMARY KEY,  -- e.g., "problem_6_statement" or "ref_doi_10.1007_chunk_3"
+    _rowid INTEGER PRIMARY KEY AUTOINCREMENT,  -- Explicit rowid for FTS5 sync
+    id TEXT UNIQUE NOT NULL,  -- e.g., "problem_6_statement" or "ref_doi_10.1007_chunk_3"
     text TEXT NOT NULL,
     source_type TEXT NOT NULL,  -- "problem_statement", "problem_notes", "reference_abstract", "reference_fulltext"
     problem_id INTEGER,  -- NULL if reference-only
@@ -62,22 +65,22 @@ CREATE TABLE IF NOT EXISTS chunks (
 CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(
     text,
     content='chunks',
-    content_rowid='rowid',
+    content_rowid='_rowid',  -- Reference our explicit _rowid column
     tokenize='porter unicode61'  -- Porter stemming + Unicode support
 );
 
--- Triggers to keep FTS in sync
+-- Triggers to keep FTS in sync (use _rowid, not rowid)
 CREATE TRIGGER IF NOT EXISTS chunks_ai AFTER INSERT ON chunks BEGIN
-    INSERT INTO chunks_fts(rowid, text) VALUES (new.rowid, new.text);
+    INSERT INTO chunks_fts(rowid, text) VALUES (new._rowid, new.text);
 END;
 
 CREATE TRIGGER IF NOT EXISTS chunks_ad AFTER DELETE ON chunks BEGIN
-    INSERT INTO chunks_fts(chunks_fts, rowid, text) VALUES('delete', old.rowid, old.text);
+    INSERT INTO chunks_fts(chunks_fts, rowid, text) VALUES('delete', old._rowid, old.text);
 END;
 
 CREATE TRIGGER IF NOT EXISTS chunks_au AFTER UPDATE ON chunks BEGIN
-    INSERT INTO chunks_fts(chunks_fts, rowid, text) VALUES('delete', old.rowid, old.text);
-    INSERT INTO chunks_fts(rowid, text) VALUES (new.rowid, new.text);
+    INSERT INTO chunks_fts(chunks_fts, rowid, text) VALUES('delete', old._rowid, old.text);
+    INSERT INTO chunks_fts(rowid, text) VALUES (new._rowid, new.text);
 END;
 
 -- Index for efficient filtering
@@ -200,9 +203,10 @@ class SearchIndex:
             indexed_at TEXT NOT NULL
         );
 
-        -- Text chunks
+        -- Text chunks (explicit _rowid for FTS5 external content sync)
         CREATE TABLE IF NOT EXISTS chunks (
-            id TEXT PRIMARY KEY,
+            _rowid INTEGER PRIMARY KEY AUTOINCREMENT,
+            id TEXT UNIQUE NOT NULL,
             text TEXT NOT NULL,
             source_type TEXT NOT NULL,
             problem_id INTEGER,
@@ -216,22 +220,22 @@ class SearchIndex:
         CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(
             text,
             content='chunks',
-            content_rowid='rowid',
+            content_rowid='_rowid',
             tokenize='porter unicode61'
         );
 
-        -- Sync triggers
+        -- Sync triggers (use _rowid)
         CREATE TRIGGER IF NOT EXISTS chunks_ai AFTER INSERT ON chunks BEGIN
-            INSERT INTO chunks_fts(rowid, text) VALUES (new.rowid, new.text);
+            INSERT INTO chunks_fts(rowid, text) VALUES (new._rowid, new.text);
         END;
 
         CREATE TRIGGER IF NOT EXISTS chunks_ad AFTER DELETE ON chunks BEGIN
-            INSERT INTO chunks_fts(chunks_fts, rowid, text) VALUES('delete', old.rowid, old.text);
+            INSERT INTO chunks_fts(chunks_fts, rowid, text) VALUES('delete', old._rowid, old.text);
         END;
 
         CREATE TRIGGER IF NOT EXISTS chunks_au AFTER UPDATE ON chunks BEGIN
-            INSERT INTO chunks_fts(chunks_fts, rowid, text) VALUES('delete', old.rowid, old.text);
-            INSERT INTO chunks_fts(rowid, text) VALUES (new.rowid, new.text);
+            INSERT INTO chunks_fts(chunks_fts, rowid, text) VALUES('delete', old._rowid, old.text);
+            INSERT INTO chunks_fts(rowid, text) VALUES (new._rowid, new.text);
         END;
 
         -- Indexes
@@ -361,7 +365,7 @@ class SearchIndex:
                 c.problem_id,
                 c.reference_key
             FROM chunks_fts
-            JOIN chunks c ON chunks_fts.rowid = c.rowid
+            JOIN chunks c ON chunks_fts.rowid = c._rowid
             WHERE chunks_fts MATCH ?
         """
         params: list = [query]
