@@ -44,12 +44,17 @@ All models share common Pydantic configuration:
 # src/erdos/core/models.py
 """Core domain models for erdos-harness."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+
+def utc_now() -> datetime:
+    """Timezone-aware UTC timestamp."""
+    return datetime.now(timezone.utc)
 
 
 class ErdosBaseModel(BaseModel):
@@ -119,7 +124,13 @@ class ProblemRecord(ErdosBaseModel):
     """
     An Erdős problem from the dataset.
 
-    Maps to entries in teorth/erdosproblems problems.yaml.
+    This is the **enriched** internal representation used by the CLI.
+
+    The upstream `teorth/erdosproblems` `data/problems.yaml` is metadata-only
+    (no titles/statements). `ProblemRecord` is produced by combining upstream
+    metadata with locally maintained enrichments and/or other sources.
+
+    See Spec 005 for the upstream schema and enrichment strategy.
     """
 
     model_config = ConfigDict(
@@ -174,7 +185,14 @@ class ReferenceEntry(ErdosBaseModel):
     key: Annotated[str, Field(min_length=1, description="Reference key (e.g., 'Erdos1975')")]
     citation: Annotated[str | None, Field(default=None, description="Full citation text")]
     doi: Annotated[str | None, Field(default=None, pattern=r"^10\.\d{4,}/.*$")]
-    arxiv_id: Annotated[str | None, Field(default=None, pattern=r"^\d{4}\.\d{4,5}(v\d+)?$")]
+    arxiv_id: Annotated[
+        str | None,
+        Field(
+            default=None,
+            # Accept both post-2007 (YYMM.NNNN/NNNNN) and pre-2007 (archive/YYMMNNN) identifiers.
+            pattern=r"^(?:\d{4}\.\d{4,5}|[A-Za-z\\-]+(?:\\.[A-Za-z\\-]+)?/\\d{7})(?:v\\d+)?$",
+        ),
+    ]
     url: Annotated[str | None, Field(default=None)]
 ```
 
@@ -228,6 +246,15 @@ class ReferenceRecord(ErdosBaseModel):
     def has_identifier(self) -> bool:
         """Check if reference has at least one identifier."""
         return bool(self.doi or self.arxiv_id or self.semantic_scholar_id)
+
+    @model_validator(mode="after")
+    def _require_identifier(self) -> "ReferenceRecord":
+        """Enforce that at least one identifier is present."""
+        if not (self.doi or self.arxiv_id or self.semantic_scholar_id):
+            raise ValueError(
+                "ReferenceRecord requires at least one identifier: doi, arxiv_id, or semantic_scholar_id"
+            )
+        return self
 
     @property
     def best_url(self) -> str | None:
@@ -285,8 +312,8 @@ class ProblemManifest(ErdosBaseModel):
     schema_version: Annotated[int, Field(default=1)]
     problem_id: Annotated[int, Field(ge=1)]
     entries: Annotated[list[ManifestEntry], Field(default_factory=list)]
-    created_at: Annotated[datetime, Field(default_factory=datetime.utcnow)]
-    updated_at: Annotated[datetime, Field(default_factory=datetime.utcnow)]
+    created_at: Annotated[datetime, Field(default_factory=utc_now)]
+    updated_at: Annotated[datetime, Field(default_factory=utc_now)]
 ```
 
 ---
@@ -361,7 +388,7 @@ class LeanError(ErdosBaseModel):
 
 
 class LeanCheckResult(ErdosBaseModel):
-    """Result of running lean --make or lake build on a file."""
+    """Result of running `lake build <module>` inside a Lean 4 project."""
 
     file: Annotated[str, Field(description="File that was checked")]
     success: Annotated[bool, Field(description="True if compilation succeeded")]
@@ -371,7 +398,7 @@ class LeanCheckResult(ErdosBaseModel):
     # Metadata
     lean_version: Annotated[str | None, Field(default=None)]
     duration_ms: Annotated[int | None, Field(default=None, ge=0)]
-    checked_at: Annotated[datetime, Field(default_factory=datetime.utcnow)]
+    checked_at: Annotated[datetime, Field(default_factory=utc_now)]
 
     @property
     def error_count(self) -> int:
@@ -404,7 +431,7 @@ class CLIOutput(ErdosBaseModel):
     error: Annotated[dict[str, Any] | None, Field(default=None)]
 
     # Metadata
-    timestamp: Annotated[datetime, Field(default_factory=datetime.utcnow)]
+    timestamp: Annotated[datetime, Field(default_factory=utc_now)]
     duration_ms: Annotated[int | None, Field(default=None)]
 
     @classmethod
@@ -431,7 +458,7 @@ class CLIOutput(ErdosBaseModel):
 
 # Example usage:
 # CLIOutput.ok("erdos show", problem.model_dump())
-# CLIOutput.err("erdos show", "NotFound", "Problem 9999 not found", code=404)
+# CLIOutput.err("erdos show", "NotFound", "Problem 9999 not found", code=3)
 ```
 
 ---
@@ -690,10 +717,10 @@ class TestCLIOutput:
         assert output.error is None
 
     def test_error_output(self) -> None:
-        output = CLIOutput.err("erdos show", "NotFound", "Problem not found", code=404)
+        output = CLIOutput.err("erdos show", "NotFound", "Problem not found", code=3)
         assert not output.success
         assert output.error["type"] == "NotFound"
-        assert output.error["code"] == 404
+        assert output.error["code"] == 3
 ```
 
 ### Property-Based Tests

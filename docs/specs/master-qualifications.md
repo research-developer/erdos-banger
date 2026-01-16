@@ -1,6 +1,6 @@
 # Master Qualifications & Build Decisions
 
-> Companion document to `master-draft.md`. This captures scope decisions, risk mitigations, and concrete choices that guide the actual v1 implementation. The master draft remains the vision; this document is the pragmatic filter.
+> Companion document to `docs/specs/master-vision.md`. This captures scope decisions, risk mitigations, and concrete choices that guide the actual v1 implementation. The master vision remains the vision; this document is the pragmatic filter.
 
 ---
 
@@ -12,13 +12,13 @@ The master draft describes many capabilities. Here's what we're **actually build
 
 | Component | Scope | Notes |
 |-----------|-------|-------|
-| Dataset loading | Full | Parse `problems.yaml`, Pydantic models |
+| Dataset loading | Full | Parse enriched problems YAML, validate via Pydantic models |
 | `erdos list` | Full | With filters (status, prize, tags) |
 | `erdos show` | Full | Display single problem |
 | `erdos refs` | Basic | Show refs from YAML only (no enrichment) |
 | `erdos lean init` | Full | Set up Lean project, fetch mathlib |
 | `erdos lean check` | Full | Compile file, parse errors to JSON |
-| `erdos formalize` | Basic | Template-based skeleton generation |
+| `erdos lean formalize` | Basic | Template-based skeleton generation |
 | SQLite FTS | Basic | Problem statements only, no chunking |
 | `erdos search` | Basic | BM25 only, no vectors |
 
@@ -43,7 +43,7 @@ The master draft describes many capabilities. Here's what we're **actually build
 | Qdrant | Same as above |
 | Multiple API fallbacks | One source working > many sources half-working |
 
-**Decision:** We ship when `erdos show 6 && erdos lean init && erdos formalize 6 && erdos lean check` works end-to-end. That's the real v1.0 milestone.
+**Decision:** We ship when `erdos show 6 && erdos lean init && erdos lean formalize 6 && erdos lean check` works end-to-end. That's the real v1.0 milestone.
 
 ---
 
@@ -55,7 +55,7 @@ The master draft's "vertical slice" was actually horizontal. Here's the real ver
 # This should work after 2-3 days of coding:
 erdos show 6                           # Display problem 6 from YAML
 erdos lean init                        # Set up Lean project with mathlib
-erdos formalize 6                      # Generate Problem006.lean skeleton
+erdos lean formalize 6                 # Generate Problem006.lean skeleton
 erdos lean check Erdos/Problem006.lean # Verify it compiles with sorry
 ```
 
@@ -69,12 +69,13 @@ Before writing any code, manually execute this workflow for Problem 6:
 
 1. [ ] Open `problems.yaml` from teorth/erdosproblems, find Problem 6
 2. [ ] Note exact field names and structure (do they match our Pydantic models?)
-3. [ ] Google its references, find the relevant arXiv paper
-4. [ ] Read the paper, understand what the theorem actually states
-5. [ ] Check if Problem 6 is in the Formal Conjectures Repository (324 formalized statements exist)
-6. [ ] Write a Lean file by hand that states the theorem
-7. [ ] Compile it against mathlib4, note what imports are needed
-8. [ ] Document friction points encountered
+3. [ ] Create a minimal `data/problems_enriched.yaml` entry for Problem 6 (title + statement + status)
+4. [ ] Google its references, find the relevant arXiv paper
+5. [ ] Read the paper, understand what the theorem actually states
+6. [ ] Check if Problem 6 is in the Formal Conjectures Repository (324 formalized statements exist)
+7. [ ] Write a Lean file by hand that states the theorem
+8. [ ] Compile it against mathlib4, note what imports are needed
+9. [ ] Document friction points encountered
 
 **This manual pass will reveal problems the spec doesn't anticipate.**
 
@@ -87,13 +88,13 @@ The master draft has too many "possibly X or Y" statements. Here are hard decisi
 | Choice | Decision | Rationale |
 |--------|----------|-----------|
 | CLI framework | **Typer + Rich** | Not Click. Typer is faster to write, Rich output is nice |
-| Package manager | **Poetry** | Not PDM, not pip-tools |
+| Package manager | **uv** | PEP 621 + `uv.lock`, fast, single toolchain |
 | Database | **SQLite with FTS5** | Not Postgres. Not until we have 10k+ documents |
 | Vector store | **None for v1** | BM25 only. Add vectors in v1.2 if retrieval quality demands it |
 | Embedding model | **Skip for v1** | If we add later: SPECTER2 (scientific text) over MiniLM |
 | PDF conversion | **Skip for v1** | arXiv HTML + LaTeX source only. Docling is optional extra |
-| Lean version | **leanprover/lean4:v4.3.0** | Pin exact version in `lean-toolchain` |
-| mathlib4 | **Pin to specific commit** | Document which commit in lakefile |
+| Lean version | **leanprover/lean4:v4.12.0** | Pin exact version in `lean-toolchain` |
+| mathlib4 | **Pin to tag matching Lean** | Use `mathlib4` tag matching `lean-toolchain` (e.g. `v4.12.0`) |
 | LLM integration | **Claude Code environment** | Not OpenAI API for v1. Claude skills + shell commands |
 | MCP | **Skip for v1** | CLI is sufficient |
 
@@ -169,7 +170,7 @@ The master draft's 15 issues are too coarse. Here's a finer breakdown:
 
 ### Epic 1: Project Scaffolding (Issues 1-4)
 
-1. **Repo structure and Poetry setup** - pyproject.toml, directory tree, .gitignore
+1. **Repo structure and uv setup** - `pyproject.toml`, `uv.lock`, directory tree, `.gitignore`
 2. **Typer CLI skeleton** - `erdos --version`, `--help`, global flags
 3. **Config file parser** - YAML config loading, env var precedence
 4. **Logging infrastructure** - Structured JSON logs to `logs/`
@@ -177,7 +178,7 @@ The master draft's 15 issues are too coarse. Here's a finer breakdown:
 ### Epic 2: Dataset Integration (Issues 5-8)
 
 5. **Git submodule setup** - teorth/erdosproblems integration
-6. **YAML parser for problems.yaml** - Handle actual field names from upstream
+6. **YAML parser for enriched problems** - Load v1 enriched YAML; detect upstream metadata-only format with a clear error
 7. **Pydantic models** - ProblemRecord, ReferenceRecord
 8. **`erdos list` command** - With filters, table output, JSON output
 
@@ -192,7 +193,7 @@ The master draft's 15 issues are too coarse. Here's a finer breakdown:
 12. **`erdos lean init` command** - Detect elan, run lake update
 13. **`erdos lean check` command** - Run lake build, capture stderr
 14. **Lean error parser** - Regex for line:col:message format
-15. **`erdos formalize` command** - Template-based skeleton generation
+15. **`erdos lean formalize` command** - Template-based skeleton generation
 
 ### Epic 5: Basic Search (Issues 16-18)
 
@@ -216,7 +217,7 @@ Before handing to a coding agent, ensure:
 
 ### Hard Decisions Made
 - [x] Typer, not Click
-- [x] Poetry, not pip
+- [x] uv, not Poetry/PDM/pip-tools
 - [x] SQLite, not Postgres
 - [x] No vectors in v1
 - [x] No PDF conversion in v1
@@ -228,30 +229,34 @@ Before handing to a coding agent, ensure:
 erdos-harness/
 ├── README.md
 ├── LICENSE                          # Apache-2.0
-├── pyproject.toml                   # Poetry config
-├── erdos/
-│   ├── __init__.py
-│   ├── cli.py                       # Typer app definition
-│   ├── commands/
-│   │   ├── __init__.py
-│   │   ├── list_cmd.py              # erdos list
-│   │   ├── show.py                  # erdos show
-│   │   ├── refs.py                  # erdos refs
-│   │   ├── search.py                # erdos search
-│   │   └── lean.py                  # erdos lean init/check/formalize
-│   ├── core/
-│   │   ├── __init__.py
-│   │   ├── models.py                # Pydantic models
-│   │   ├── problem_loader.py        # YAML parsing
-│   │   ├── search_index.py          # SQLite FTS
-│   │   └── lean_runner.py           # Subprocess lean/lake calls
-│   └── templates/
-│       └── lean_skeleton.j2         # Jinja2 template for Lean files
+├── pyproject.toml                   # PEP 621 project config
+├── uv.lock                          # Locked deps (committed)
+├── .python-version                  # Python pin for dev
+├── src/
+│   └── erdos/
+│       ├── __init__.py
+│       ├── cli.py                   # Typer app definition
+│       ├── commands/
+│       │   ├── __init__.py
+│       │   ├── list_cmd.py          # erdos list
+│       │   ├── show.py              # erdos show
+│       │   ├── refs.py              # erdos refs
+│       │   ├── search.py            # erdos search
+│       │   └── lean.py              # erdos lean init/check/formalize
+│       ├── core/
+│       │   ├── __init__.py
+│       │   ├── models.py            # Pydantic models
+│       │   ├── problem_loader.py    # YAML parsing
+│       │   ├── search_index.py      # SQLite FTS
+│       │   └── lean_runner.py       # Subprocess lean/lake calls
+│       ├── templates/
+│       │   └── lean_skeleton.j2     # Jinja2 template for Lean files
+│       └── py.typed                 # PEP 561 marker
 ├── data/
 │   └── erdosproblems/               # Git submodule
 ├── formal/
 │   └── lean/
-│       ├── lean-toolchain           # leanprover/lean4:v4.3.0
+│       ├── lean-toolchain           # leanprover/lean4:v4.12.0
 │       ├── lakefile.lean
 │       └── Erdos/                   # Generated Lean files
 ├── index/
@@ -268,24 +273,11 @@ erdos-harness/
 
 ### Exact Dependencies (pyproject.toml)
 
-```toml
-[tool.poetry.dependencies]
-python = "^3.10"
-typer = {extras = ["all"], version = "^0.9.0"}
-rich = "^13.0.0"
-pydantic = "^2.5.0"
-pyyaml = "^6.0.0"
-jinja2 = "^3.1.0"
+**Single source of truth:** `docs/specs/spec-001-dev-environment-tooling.md` defines the exact `pyproject.toml` (uv + dependency groups + ruff/mypy/pytest config) and keeps dependency versions current.
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.4.0"
-pytest-cov = "^4.1.0"
-black = "^23.0.0"
-ruff = "^0.1.0"
-
-[tool.poetry.extras]
-pdf = ["docling"]  # Optional, for PDF conversion
-```
+At minimum, v1 depends on:
+- Runtime: `typer`, `rich`, `pydantic`, `pyyaml`, `jinja2`
+- Dev: `pytest`, `pytest-cov`, `ruff`, `mypy`, `pre-commit`
 
 ---
 
@@ -311,7 +303,7 @@ Given scope reduction:
 
 Before coding starts:
 
-1. **What's the actual schema of problems.yaml?** - Need to inspect teorth/erdosproblems
+1. **What's the actual schema of problems.yaml?** - See Spec 005; upstream is metadata-only
 2. **Which problems have Formal Conjectures entries?** - Should we import those?
 3. **What mathlib4 commit works with our chosen Lean version?** - Pin this
 4. **Do we need Windows support in v1?** - Affects path handling, Lean setup

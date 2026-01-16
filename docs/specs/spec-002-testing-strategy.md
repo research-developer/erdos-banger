@@ -221,7 +221,7 @@ from typing import Iterator
 
 import pytest
 
-from erdos.core.models import ProblemRecord
+from erdos.core.models import ProblemRecord, ProblemStatus
 
 
 @pytest.fixture
@@ -231,7 +231,7 @@ def sample_problem() -> ProblemRecord:
         id=6,
         title="Test Problem",
         statement="Prove that P implies Q.",
-        status="open",
+        status=ProblemStatus.OPEN,
         prize=100,
         tags=["number theory"],
         references=[],
@@ -564,10 +564,14 @@ def test_that_needs_lean():
 **GitHub Actions workflow:**
 
 ```yaml
-# .github/workflows/test.yml
-name: Tests
+# .github/workflows/ci.yml
+name: CI
 
 on: [push, pull_request]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -575,41 +579,61 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
-          submodules: true
+          submodules: recursive
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            uv.lock
+            pyproject.toml
+            .python-version
+          cache-suffix: ${{ matrix.python-version }}
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
 
+      - name: Verify lockfile is up-to-date
+        run: uv lock --check
+
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --frozen
 
       - name: Run linting
         run: uv run ruff check .
+
+      - name: Run formatting check
+        run: uv run ruff format . --check
 
       - name: Run type checking
         run: uv run mypy src/
 
       - name: Run tests
-        run: uv run pytest --cov=erdos --cov-report=xml -m "not requires_lean"
+        run: uv run pytest --cov=erdos --cov-report=xml -m "not requires_lean and not requires_network"
+
+      - name: Build distributions (sdist + wheel)
+        run: uv build
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: coverage.xml
 
   test-with-lean:
     runs-on: ubuntu-latest
+    env:
+      UV_PYTHON: "3.11"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
-          submodules: true
+          submodules: recursive
 
       - name: Install elan and Lean
         run: |
@@ -617,10 +641,23 @@ jobs:
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            uv.lock
+            pyproject.toml
+            .python-version
+          cache-suffix: lean
+
+      - name: Install Python 3.11
+        run: uv python install 3.11
+
+      - name: Verify lockfile is up-to-date
+        run: uv lock --check
 
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --frozen
 
       - name: Run Lean-dependent tests
         run: uv run pytest -m "requires_lean"
@@ -661,11 +698,12 @@ from pathlib import Path
 import pytest
 
 
-def test_pytest_markers_are_registered() -> None:
+def test_pytest_markers_are_registered(pytestconfig: pytest.Config) -> None:
     """All custom markers should be registered to avoid warnings."""
-    # If markers aren't registered, pytest would warn
-    # --strict-markers in config makes this a hard failure
-    pass  # The fact this test runs without marker warnings is the test
+    markers = pytestconfig.getini("markers")
+    expected = {"slow", "e2e", "requires_lean", "requires_network"}
+    registered = {m.split(":", 1)[0].strip() for m in markers}
+    assert expected.issubset(registered)
 
 
 def test_fixtures_directory_exists(fixtures_dir: Path) -> None:

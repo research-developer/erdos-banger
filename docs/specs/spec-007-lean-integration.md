@@ -617,6 +617,7 @@ def init(
 ```python
 @app.command()
 def check(
+    ctx: typer.Context,
     file: Annotated[
         Path,
         typer.Argument(help="Lean file to check"),
@@ -637,8 +638,8 @@ def check(
     runner = LeanRunner(path)
     result = runner.check(file)
 
-    ctx = _get_context()
-    if ctx.get("json"):
+    json_mode = bool(ctx.obj and ctx.obj.get("json"))
+    if json_mode:
         output = CLIOutput.ok(command="erdos lean check", data=result.model_dump())
         console.print_json(output.model_dump_json())
     else:
@@ -655,11 +656,12 @@ def check(
         raise typer.Exit(code=5)
 ```
 
-### `erdos formalize`
+### `erdos lean formalize`
 
 ```python
 @app.command()
 def formalize(
+    ctx: typer.Context,
     problem_id: Annotated[
         int,
         typer.Argument(help="Problem ID to formalize", min=1),
@@ -678,7 +680,7 @@ def formalize(
 
     Creates Erdos/Problem<ID>.lean with theorem stub.
 
-    Example: erdos formalize 6
+    Example: erdos lean formalize 6
     """
     from erdos.core.formalizer import generate_skeleton
     from erdos.core.problem_loader import ProblemLoader
@@ -697,11 +699,11 @@ def formalize(
         err_console.print(f"[red]Error:[/red] {e}")
         raise typer.Exit(code=1)
 
-    ctx = _get_context()
-    if ctx.get("json"):
+    json_mode = bool(ctx.obj and ctx.obj.get("json"))
+    if json_mode:
         console.print_json(
             CLIOutput.ok(
-                command="erdos formalize",
+                command="erdos lean formalize",
                 data={"problem_id": problem_id, "file": str(output_file)},
             ).model_dump_json()
         )
@@ -933,7 +935,7 @@ ls formal/lean/
 # Should show: lakefile.lean, lean-toolchain, Erdos/
 
 # 2. Skeleton generation works
-uv run erdos formalize 6
+uv run erdos lean formalize 6
 cat formal/lean/Erdos/Problem006.lean
 # Should show generated Lean file with problem info
 

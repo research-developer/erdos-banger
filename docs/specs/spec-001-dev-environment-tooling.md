@@ -23,7 +23,7 @@ We use [uv](https://docs.astral.sh/uv/) (Astral's Rust-based package manager) in
 
 ### Why uv
 
-- 10-100x faster than pip for dependency resolution
+- Faster dependency resolution than pip in many workflows
 - Native lockfile support (`uv.lock`)
 - Built-in virtual environment management
 - Same team as ruff (Astral) - coherent toolchain
@@ -76,7 +76,9 @@ build-backend = "hatchling.build"
 packages = ["src/erdos"]
 ```
 
-### uv-Specific Configuration
+### Dependency Groups (PEP 735)
+
+uv supports standardized dependency groups via `[dependency-groups]` (preferred over legacy `tool.uv.dev-dependencies`).
 
 **pyproject.toml (continued):**
 ```toml
@@ -180,10 +182,10 @@ We use [ruff](https://docs.astral.sh/ruff/) for both linting and formatting, rep
 
 ### Why ruff
 
-- 10-100x faster than individual tools
+- Fast single-tool lint + format
 - Single configuration point
 - Drop-in replacement for black formatting
-- 800+ lint rules available
+- Many lint rules available
 
 ### Configuration
 
@@ -255,9 +257,8 @@ We use [mypy](https://mypy.readthedocs.io/) in strict mode for type checking.
 
 ### Why mypy over ty
 
-[ty](https://docs.astral.sh/ty/) (Astral's new type checker) is 10-60x faster, but:
+[ty](https://docs.astral.sh/ty/) (Astral's new type checker) is promising, but:
 - Still in beta (released Dec 2025)
-- ~15% conformance vs ~69% for mature checkers
 - No plugin support (we may need Pydantic plugin)
 
 **Decision:** Use mypy for v1. Evaluate ty for v1.2 when it reaches stable.
@@ -428,9 +429,10 @@ After implementing this spec, the following must work:
 uv sync
 # Exit code: 0, .venv created, all deps installed
 
-# CI mode: refuse to change uv.lock
+# CI mode: lockfile must be present, up-to-date, and unchanged
+uv lock --check
 uv sync --frozen
-# Exit code: 0, lockfile unchanged
+# Exit code: 0, lockfile unchanged and environment synced from uv.lock
 
 # 2. CLI is runnable
 uv run erdos --version
@@ -477,27 +479,6 @@ def test_cli_is_importable() -> None:
     from erdos import cli
     assert hasattr(cli, "app")
 
-
-def test_ruff_check_passes() -> None:
-    """Ruff linting should pass on the codebase."""
-    result = subprocess.run(
-        ["uv", "run", "ruff", "check", "src/", "tests/"],
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0, f"Ruff check failed: {result.stdout}"
-
-
-def test_mypy_passes() -> None:
-    """Mypy type checking should pass."""
-    result = subprocess.run(
-        ["uv", "run", "mypy", "src/"],
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0, f"Mypy failed: {result.stdout}"
-
-
 def test_py_typed_exists() -> None:
     """PEP 561 py.typed marker should exist."""
     py_typed = Path("src/erdos/py.typed")
@@ -506,10 +487,127 @@ def test_py_typed_exists() -> None:
 
 ---
 
-## 9) References
+## 9) GitHub Actions CI/CD (Required)
+
+The tooling in this spec is enforced in CI. Keep CI responsibilities out of `pytest` (lint/format/typecheck are separate jobs/steps, not tests).
+
+### a) PR/Push CI (Quality Gates)
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            uv.lock
+            pyproject.toml
+            .python-version
+          cache-suffix: ${{ matrix.python-version }}
+
+      - name: Install Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Verify lockfile is up-to-date
+        run: uv lock --check
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Format (check)
+        run: uv run ruff format . --check
+
+      - name: Type check
+        run: uv run mypy src/
+
+      - name: Tests
+        run: uv run pytest -m "not requires_lean and not requires_network"
+
+      - name: Build (sdist + wheel)
+        run: uv build
+```
+
+### b) Release (Tag → Build → Publish)
+
+Use PyPI trusted publishing (OIDC) instead of long-lived tokens.
+
+```yaml
+# .github/workflows/release.yml
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      UV_PYTHON: "3.11"
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            uv.lock
+            pyproject.toml
+
+      - name: Install Python 3.11
+        run: uv python install 3.11
+
+      - name: Verify lockfile is up-to-date
+        run: uv lock --check
+
+      - name: Build distributions
+        run: uv build
+
+      - name: Publish to PyPI (trusted publishing)
+        run: uv publish --trusted-publishing always
+```
+
+### c) Scheduled Dependency Hygiene (Optional, Recommended)
+
+- Run weekly `uv lock --upgrade` and open a PR with updated `uv.lock`.
+- Treat dependency bumps as normal PRs: CI must pass.
+
+---
+
+## 10) References
 
 - [uv Documentation](https://docs.astral.sh/uv/)
 - [uv Project Configuration](https://docs.astral.sh/uv/concepts/projects/config/)
+- [uv Dependency Groups](https://docs.astral.sh/uv/concepts/projects/dependencies/#dependency-groups)
+- [PEP 735 (Dependency Groups)](https://peps.python.org/pep-0735/)
 - [Ruff Documentation](https://docs.astral.sh/ruff/)
 - [Ruff Configuration](https://docs.astral.sh/ruff/configuration/)
 - [mypy Configuration](https://mypy.readthedocs.io/en/stable/config_file.html)

@@ -10,7 +10,7 @@ The Problem Loader is the foundation of the data pipeline. It reads `problems.ya
 
 ### Guiding Principles
 
-1. **Single source of truth** - All problem data comes from the upstream YAML
+1. **Upstream SSOT (metadata)** - Upstream YAML is SSOT for metadata; titles/statements come from enrichment
 2. **Validation at the boundary** - Parse once, validate once, use everywhere
 3. **Lazy loading** - Don't load all 1135 problems unless needed
 4. **Cacheable** - Parsed data can be cached to avoid re-parsing
@@ -195,10 +195,11 @@ class ProblemLoader:
         """
         Create loader using default data path.
 
-        Looks for problems.yaml in these locations (in order):
+        Looks for a problems YAML in these locations (in order):
         1. ERDOS_DATA_PATH environment variable
-        2. ./data/erdosproblems/data/problems.yaml (relative to cwd)
-        3. Package data directory
+        2. ./data/problems_enriched.yaml (relative to cwd; v1 default)
+        3. ./data/erdosproblems/data/problems.yaml (upstream metadata-only)
+        4. Package data directory
 
         Returns:
             ProblemLoader instance
@@ -211,9 +212,16 @@ class ProblemLoader:
         # Check environment variable first
         env_path = os.environ.get("ERDOS_DATA_PATH")
         if env_path:
-            yaml_path = Path(env_path) / "problems.yaml"
-            if yaml_path.exists():
-                return cls(yaml_path)
+            env_dir = Path(env_path)
+            for filename in ("problems_enriched.yaml", "problems.yaml"):
+                yaml_path = env_dir / filename
+                if yaml_path.exists():
+                    return cls(yaml_path)
+
+        # v1 default: local enriched dataset
+        enriched_path = Path("data/problems_enriched.yaml")
+        if enriched_path.exists():
+            return cls(enriched_path)
 
         # Check relative path (for development)
         relative_path = Path("data/erdosproblems/data/problems.yaml")
@@ -225,7 +233,7 @@ class ProblemLoader:
             from importlib.resources import as_file, files
 
             pkg_files = files("erdos")
-            pkg_data = pkg_files.joinpath("data", "problems.yaml")
+            pkg_data = pkg_files.joinpath("data", "problems_enriched.yaml")
             # as_file() extracts resource to a real filesystem path
             with as_file(pkg_data) as real_path:
                 if real_path.exists():
@@ -234,7 +242,7 @@ class ProblemLoader:
             pass
 
         raise ProblemLoaderError(
-            "Could not find problems.yaml. Set ERDOS_DATA_PATH or run from repo root."
+            "Could not find problems YAML. Set ERDOS_DATA_PATH or create data/problems_enriched.yaml."
         )
 
     @property
@@ -260,13 +268,22 @@ class ProblemLoader:
 
         Handles field name normalization and validation.
         """
-        # Normalize status string - StrEnum accepts value directly
-        status_str = raw.get("status", "open")
-        try:
-            status = ProblemStatus(status_str)
-        except ValueError:
-            # Unknown status defaults to OPEN
-            status = ProblemStatus.OPEN
+        if "id" not in raw:
+            if "number" in raw:
+                raise ProblemLoaderError(
+                    "Unsupported upstream teorth/erdosproblems format (metadata-only). "
+                    "v1 requires enriched problems with id/title/statement. "
+                    "Create data/problems_enriched.yaml (Spec 005) or point ERDOS_DATA_PATH at an enriched problems_enriched.yaml (or problems.yaml)."
+                )
+            raise ProblemLoaderError("Missing required field 'id' in problem entry")
+        if "title" not in raw or "statement" not in raw:
+            raise ProblemLoaderError(
+                "Missing required enriched fields 'title'/'statement'. "
+                "Create data/problems_enriched.yaml (Spec 005) or point ERDOS_DATA_PATH at an enriched problems_enriched.yaml (or problems.yaml)."
+            )
+
+        # Normalize status string (handles legacy/variant values)
+        status = ProblemStatus.from_string(raw.get("status", "open"))
 
         # Parse references
         raw_refs = raw.get("references", [])

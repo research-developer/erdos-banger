@@ -48,14 +48,14 @@ CREATE TABLE IF NOT EXISTS problems (
 
 -- Text chunks for search
 -- Note: We use an explicit _rowid column because FTS5 external content tables
--- require an integer rowid, and TEXT PRIMARY KEY tables don't have implicit rowids.
+-- require an integer rowid, and TEXT PRIMARY KEY is not an alias for rowid.
 CREATE TABLE IF NOT EXISTS chunks (
     _rowid INTEGER PRIMARY KEY AUTOINCREMENT,  -- Explicit rowid for FTS5 sync
     id TEXT UNIQUE NOT NULL,  -- e.g., "problem_6_statement" or "ref_doi_10.1007_chunk_3"
     text TEXT NOT NULL,
     source_type TEXT NOT NULL,  -- "problem_statement", "problem_notes", "reference_abstract", "reference_fulltext"
     problem_id INTEGER,  -- NULL if reference-only
-    reference_key TEXT,  -- NULL if problem-only
+    reference_doi TEXT,  -- NULL if problem-only (DOI string)
     start_char INTEGER,
     end_char INTEGER,
     indexed_at TEXT NOT NULL
@@ -124,7 +124,7 @@ class SearchResult:
     score: float  # BM25 score (higher = more relevant)
     source_type: ChunkSource
     problem_id: int | None
-    reference_key: str | None
+    reference_doi: str | None
 
 
 class SearchIndexError(Exception):
@@ -210,7 +210,7 @@ class SearchIndex:
             text TEXT NOT NULL,
             source_type TEXT NOT NULL,
             problem_id INTEGER,
-            reference_key TEXT,
+            reference_doi TEXT,
             start_char INTEGER,
             end_char INTEGER,
             indexed_at TEXT NOT NULL
@@ -251,7 +251,17 @@ class SearchIndex:
         """
 
         with self._connect() as conn:
-            conn.executescript(schema_sql)
+            try:
+                conn.executescript(schema_sql)
+            except sqlite3.OperationalError as e:
+                # Some Python builds link against SQLite without FTS5 enabled.
+                # Fail fast with a clear message instead of a cryptic SQL error.
+                if "fts5" in str(e).lower():
+                    raise SearchIndexError(
+                        "SQLite FTS5 is not available in this environment (sqlite3 compiled without FTS5). "
+                        "Use a Python/SQLite build with FTS5 enabled."
+                    ) from e
+                raise
 
     def index_problem(self, problem: ProblemRecord) -> None:
         """
@@ -316,7 +326,7 @@ class SearchIndex:
         conn.execute(
             """
             INSERT OR REPLACE INTO chunks
-            (id, text, source_type, problem_id, reference_key, start_char, end_char, indexed_at)
+            (id, text, source_type, problem_id, reference_doi, start_char, end_char, indexed_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
@@ -363,7 +373,7 @@ class SearchIndex:
                 bm25(chunks_fts) as score,
                 c.source_type,
                 c.problem_id,
-                c.reference_key
+                c.reference_doi
             FROM chunks_fts
             JOIN chunks c ON chunks_fts.rowid = c._rowid
             WHERE chunks_fts MATCH ?
@@ -394,7 +404,7 @@ class SearchIndex:
                         score=abs(row["score"]),  # BM25 returns negative scores
                         source_type=ChunkSource(row["source_type"]),
                         problem_id=row["problem_id"],
-                        reference_key=row["reference_key"],
+                        reference_doi=row["reference_doi"],
                     )
                 )
 
@@ -506,6 +516,7 @@ def build_index(
 
 @app.callback(invoke_without_command=True)
 def search(
+    ctx: typer.Context,
     query: Annotated[
         str,
         typer.Argument(help="Search query"),
@@ -529,8 +540,7 @@ def search(
     index = SearchIndex.from_default()
     results = index.search(query, limit=limit, problem_id=problem_id)
 
-    ctx = _get_context()
-    if ctx.get("json"):
+    if (ctx.obj or {}).get("json"):
         # JSON output
         output = CLIOutput.ok(
             command="erdos search",
@@ -735,7 +745,7 @@ class TestSearchResultDataclass:
             score=1.5,
             source_type=ChunkSource.PROBLEM_STATEMENT,
             problem_id=6,
-            reference_key=None,
+            reference_doi=None,
         )
 
         assert result.chunk_id == "test_1"

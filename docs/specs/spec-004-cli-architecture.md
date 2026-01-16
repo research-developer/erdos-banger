@@ -79,6 +79,7 @@ def version_callback(value: bool) -> None:
 
 @app.callback()
 def main(
+    ctx: typer.Context,
     version: Annotated[
         Optional[bool],
         typer.Option(
@@ -125,12 +126,15 @@ def main(
     Run 'erdos COMMAND --help' for command-specific help.
     """
     # Store global options in context for commands to access
-    ctx = typer.Context.get_current()
     ctx.ensure_object(dict)
-    ctx.obj["json"] = json_output
-    ctx.obj["no_network"] = no_network
-    ctx.obj["config"] = config
-    ctx.obj["log_level"] = log_level
+    ctx.obj.update(
+        {
+            "json": json_output,
+            "no_network": no_network,
+            "config": config,
+            "log_level": log_level,
+        }
+    )
 
 
 # Register subcommands
@@ -171,23 +175,15 @@ console = Console()
 err_console = Console(stderr=True)
 
 
-def _get_context() -> dict:
-    """Get global context from parent."""
-    ctx = typer.Context.get_current()
-    return ctx.obj or {}
-
-
-def _output(data: CLIOutput) -> None:
+def _output(ctx: typer.Context, data: CLIOutput) -> None:
     """Output result based on format preference."""
-    ctx = _get_context()
-    if ctx.get("json"):
+    if (ctx.obj or {}).get("json"):
         console.print_json(data.model_dump_json())
     else:
         if data.success:
             _print_human(data.data)
         else:
             err_console.print(f"[red]Error:[/red] {data.error['message']}")
-            raise typer.Exit(code=data.error.get("code", 1))
 
 
 def _print_human(problem_data: dict) -> None:
@@ -254,6 +250,7 @@ def get_problem(problem_id: int, loader: ProblemLoader) -> CLIOutput:
 
 @app.callback(invoke_without_command=True)
 def show(
+    ctx: typer.Context,
     problem_id: Annotated[
         int,
         typer.Argument(
@@ -274,7 +271,7 @@ def show(
     result = get_problem(problem_id, loader)
 
     # Output based on format
-    _output(result)
+    _output(ctx, result)
 
     # Exit with appropriate code
     if not result.success:
@@ -305,14 +302,8 @@ console = Console()
 err_console = Console(stderr=True)
 
 
-def _get_context() -> dict:
-    ctx = typer.Context.get_current()
-    return ctx.obj or {}
-
-
-def _output(data: CLIOutput) -> None:
-    ctx = _get_context()
-    if ctx.get("json"):
+def _output(ctx: typer.Context, data: CLIOutput) -> None:
+    if (ctx.obj or {}).get("json"):
         console.print_json(data.model_dump_json())
     else:
         if data.success:
@@ -386,6 +377,7 @@ def check_lean_file(file_path: Path, project_path: Path) -> CLIOutput:
 
 @app.command()
 def init(
+    ctx: typer.Context,
     project_path: Annotated[
         Optional[Path],
         typer.Option(
@@ -402,13 +394,14 @@ def init(
     """
     path = project_path or Path("formal/lean")
     result = init_lean_project(path)
-    _output(result)
+    _output(ctx, result)
     if not result.success:
         raise typer.Exit(code=result.error.get("code", 1))
 
 
 @app.command()
 def check(
+    ctx: typer.Context,
     file: Annotated[
         Path,
         typer.Argument(
@@ -433,7 +426,7 @@ def check(
     """
     path = project_path or Path("formal/lean")
     result = check_lean_file(file, path)
-    _output(result)
+    _output(ctx, result)
 
     # Exit with code 5 if Lean has errors
     if result.success and not result.data.get("success", True):
@@ -444,6 +437,7 @@ def check(
 
 @app.command()
 def formalize(
+    ctx: typer.Context,
     problem_id: Annotated[
         int,
         typer.Argument(
@@ -478,8 +472,7 @@ def formalize(
 
     output_file = generate_skeleton(problem, path)
 
-    ctx = _get_context()
-    if ctx.get("json"):
+    if (ctx.obj or {}).get("json"):
         console.print_json(
             CLIOutput.ok(
                 command="erdos lean formalize",
@@ -537,7 +530,7 @@ All `--json` output follows the `CLIOutput` schema:
   "success": true,
   "data": { ... },
   "error": null,
-  "timestamp": "2026-01-16T10:30:00Z",
+  "timestamp": "2026-01-16T10:30:00+00:00",
   "duration_ms": 42
 }
 ```
@@ -555,7 +548,7 @@ Error response:
     "message": "Problem 9999 not found",
     "code": 3
   },
-  "timestamp": "2026-01-16T10:30:00Z",
+  "timestamp": "2026-01-16T10:30:00+00:00",
   "duration_ms": 12
 }
 ```
@@ -694,6 +687,7 @@ class TestErdosShow:
 # tests/e2e/conftest.py
 """E2E test fixtures."""
 
+import os
 import subprocess
 from pathlib import Path
 from typing import Iterator

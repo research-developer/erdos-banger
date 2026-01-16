@@ -106,7 +106,7 @@ Every run produces structured logs (e.g. JSON lines or YAML) capturing the opera
                                            - Lake + mathlib dependency
                                            - elan toolchain (Lean version)
                                                    v
-                                            lean --make (via CLI)
+                                            lake build (via CLI)
                                                    v
                                            Lean output (errors, proofs)
                                                    ^
@@ -115,7 +115,7 @@ Every run produces structured logs (e.g. JSON lines or YAML) capturing the opera
                                           (all steps recorded)
 ```
 
-**Diagram Summary:** The dataset feeds the problem DB. Ingestion fetches references (via external APIs) into manifests and possibly cached text. An index builder uses the DB content (problem statements, reference texts) to create a hybrid search index (text + vectors). The CLI commands orchestrate these: e.g., `erdos search` queries the index and returns relevant text chunks with citations; `erdos ask` uses LLM (via CLI integration) to answer questions with those citations. The Lean project is initialized by `erdos lean init` and contains Lean files. Commands like `erdos formalize` create a Lean stub for a problem, and `erdos loop` runs an iterative loop where the LLM proposes proofs, Lean checks them, and feedback is logged. Logging happens throughout to enable reproducibility and evaluation.
+**Diagram Summary:** The dataset feeds the problem DB. Ingestion fetches references (via external APIs) into manifests and possibly cached text. An index builder uses the DB content (problem statements, reference texts) to create a hybrid search index (text + vectors). The CLI commands orchestrate these: e.g., `erdos search` queries the index and returns relevant text chunks with citations; `erdos ask` uses LLM (via CLI integration) to answer questions with those citations. The Lean project is initialized by `erdos lean init` and contains Lean files. Commands like `erdos lean formalize` create a Lean stub for a problem, and `erdos loop` runs an iterative loop where the LLM proposes proofs, Lean checks them, and feedback is logged. Logging happens throughout to enable reproducibility and evaluation.
 
 ---
 
@@ -127,21 +127,24 @@ Below is a proposed repository file tree. Directories are marked with a trailing
 erdos-harness/
 ├── README.md                   # Project overview, setup, basic usage (committed)
 ├── LICENSE                     # Project license (committed, likely Apache-2.0 or MIT)
-├── pyproject.toml / setup.cfg  # Python project config if using Poetry/PDM or setuptools (committed)
-├── requirements.txt            # (if not using Poetry) dependencies (committed)
-├── erdos/                      # Python package for CLI
-│   ├── __init__.py
-│   ├── cli.py                  # Entry point definitions for typer/click (committed)
-│   ├── commands/               # Implementation of each subcommand (committed)
-│   │   ├── list.py, show.py, refs.py, ingest.py, ... (committed)
-│   ├── core/                   # Core library (committed)
-│   │   ├── problem_loader.py   # Loads YAML from dataset (committed)
-│   │   ├── search_index.py     # Builds/queries FTS and vectors (committed)
-│   │   ├── lean_api.py         # Runs Lean compiler, parses errors (committed)
-│   │   ├── ingest_refs.py      # Metadata fetch & conversion (committed)
-│   │   └── models.py           # Pydantic models or dataclasses for internal data (committed)
-│   └── agents/                 # (Optional) LLM agent wrappers (committed, minimal v1)
-│       └── loop_agent.py       # Logic for LLM-augmented loop (calls CLI commands internally)
+├── pyproject.toml              # PEP 621 project config (committed)
+├── uv.lock                     # Locked dependencies (committed)
+├── .python-version             # Dev Python pin (committed)
+├── src/                        # Python package source (committed)
+│   └── erdos/
+│       ├── __init__.py
+│       ├── cli.py              # Typer entry point (committed)
+│       ├── commands/           # Implementation of each subcommand (committed)
+│       │   ├── list_cmd.py, show.py, refs.py, ingest.py, ... (committed)
+│       ├── core/               # Core library (committed)
+│       │   ├── problem_loader.py   # Loads YAML from dataset (committed)
+│       │   ├── search_index.py     # Builds/queries SQLite FTS (committed)
+│       │   ├── lean_runner.py      # Runs Lake/Lean, parses errors (committed)
+│       │   ├── ingest_refs.py      # Metadata fetch & conversion (committed)
+│       │   └── models.py           # Pydantic models (committed)
+│       ├── agents/             # (Optional) LLM agent wrappers (deferred)
+│       │   └── loop_agent.py
+│       └── py.typed            # PEP 561 marker (committed)
 ├── data/                       # Problem dataset (external submodule or snapshot)
 │   └── erdosproblems/          # teorth/erdosproblems submodule (not our code)
 │       ├── data/problems.yaml  # (from submodule, Apache-2.0 licensed) (not modified)
@@ -157,14 +160,14 @@ erdos-harness/
 │   └── extracts/               # Processed text extracts (e.g., markdown/HTML of papers) (git-ignored, can be regenerated)
 │       └── 0001_ref1.txt       # e.g. text of first reference for problem 1
 ├── index/
-│   ├── vectordb.sqlite         # SQLite database with FTS index and metadata (built) (git-ignored)
+│   ├── erdos.sqlite            # SQLite database with FTS index and metadata (built) (git-ignored)
 │   ├── index.cfg               # Index configuration (committed, e.g. embedding model used)
 │   └── pgvector.sql            # (Optional) schema for Postgres if used (committed)
 ├── formal/
 │   └── lean/                   # Lean4 project root (committed)
-│       ├── lean-toolchain      # Lean version (text file, e.g. leanprover/lean4:nightly-2023-12-31) (committed)
+│       ├── lean-toolchain      # Lean version (e.g. leanprover/lean4:v4.12.0) (committed)
 │       ├── lakefile.lean       # Lake configuration (committed)
-│       ├── Mathlib/            # mathlib4 dependency (fetched via lake, not committed)
+│       ├── .lake/              # Lake deps/build artifacts (git-ignored)
 │       ├── Erdos/              # Our Lean files for each problem (committed)
 │       │   ├── Problem001.lean # auto-generated skeleton for problem 1 (committed)
 │       │   ├── Problem001ProofAttempts.lean # iterative attempts (committed)
@@ -222,9 +225,9 @@ erdos-harness/
 
 ### Schema & Model Files
 
-We'll have Pydantic models or JSON schema definitions in `erdos/core/models.py` for key entities:
+We'll have Pydantic models in `src/erdos/core/models.py` (see Spec 003) for key entities:
 
-- **ProblemRecord:** Fields like `id` (EPC number, as in `problems.yaml`), `status` ("open", "proved", etc.), `prize` (if any), `tags` (topics), `statement` (problem text), `references` (list of reference entries with maybe IDs or DOIs), etc. These correspond to fields in the YAML per erdosproblems contributing guidelines. (We will inspect `CONTRIBUTING.md` or schema definitions from upstream for exact field names.)
+- **ProblemRecord:** Enriched internal representation used by the CLI. The upstream `teorth/erdosproblems` `data/problems.yaml` is metadata-only (no titles/statements); we supplement it via local enrichments and/or other sources (see Spec 005). Fields include `id`, `status`, `prize`, `tags`, plus enriched fields like `title`, `statement`, `references`, `notes`, and `formalized`.
 
 - **ReferenceRecord:** A literature source, with fields like `key` (a short id, e.g. "Erdos1965" or a DOI), `title`, `authors`, `venue`, `year`, `doi`, `arxiv_id`, `url` (if available), `oa_status`, `license`, etc. This is populated via metadata services (Crossref for DOI-based references, arXiv API for preprints, etc.). It also includes a field `local_pdf_path` or similar if we have a cached copy, and flags like `legal_status` (e.g. "open-access", "author-postprint", or "unknown").
 
@@ -403,13 +406,13 @@ Set up the Lean 4 project (if not already).
 
 Compile a Lean file (or the whole project) and report errors.
 
-**Behavior:** Runs `lake build <file>` or `lean --make <file>`. Captures and parses error messages.
+**Behavior:** Runs `lake build <module>` (derived from the file path, e.g. `Erdos/Problem006.lean` → `Erdos.Problem006`). Captures and parses error messages.
 
 **Output:** If errors, print them nicely. JSON output provides structured error objects. If successful, output "OK".
 
 **Exit codes:** 0 if no errors, nonzero (e.g. 5) if Lean compile error.
 
-#### 10. `erdos formalize <problem_id>`
+#### 10. `erdos lean formalize <problem_id>`
 
 Generate a Lean skeleton for the given problem.
 
@@ -451,7 +454,7 @@ Run an interactive (or automated) loop of Lean proof attempts using an LLM agent
 
 Structured error JSON for `--json` mode:
 ```json
-{ "error": { "type": "NotFound", "message": "Problem 9999 not found", "code": 404 } }
+{ "schema_version": 1, "command": "erdos show", "success": false, "data": null, "error": { "type": "NotFound", "message": "Problem 9999 not found", "code": 3 } }
 ```
 
 ### Command Contract for Automation
@@ -523,7 +526,7 @@ erdos ask X "What is known about this problem?"
 #### 6. Formalize Definition Skeleton
 
 ```bash
-erdos formalize X
+erdos lean formalize X
 erdos lean check Erdos/ProblemX.lean
 ```
 
@@ -548,7 +551,7 @@ Verify log file created with:
 ### Vertical Slice One-Liner
 
 ```bash
-erdos ingest 295 && erdos index build && erdos ask 295 "What's the status?" && erdos formalize 295 && erdos lean check Erdos/Problem295.lean
+erdos ingest 295 && erdos index build && erdos ask 295 "What's the status?" && erdos lean formalize 295 && erdos lean check Erdos/Problem295.lean
 ```
 
 ---
@@ -605,7 +608,7 @@ Extend beyond arXiv:
 
 ### Python Tooling
 
-Python 3.10+. Use Poetry for dependency management and publishing.
+Python 3.11+. Use uv for dependency management (PEP 621 + dependency groups + `uv.lock`) and builds/publishing (`uv build`, `uv publish`).
 
 ### CLI Library
 
@@ -783,16 +786,11 @@ git submodule update --init --recursive
 ### b. Python Environment Setup
 
 ```bash
-# 3. Install Python env
-python3 -m venv .venv
-source .venv/bin/activate
+# 3. Install uv (https://docs.astral.sh/uv/)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 4. Install dependencies
-pip install poetry
-poetry install
-
-# Alternatively, if not using Poetry:
-# pip install -r requirements.txt
+# 4. Install dependencies into .venv (uses uv.lock)
+uv sync
 ```
 
 Or via pipx:
@@ -803,10 +801,10 @@ pipx install 'erdos-harness==0.1.0'
 ### c. Verify CLI and Version
 
 ```bash
-erdos --version
+uv run erdos --version
 # Should output: erdos-harness 0.1.0
 
-erdos list --help
+uv run erdos list --help
 # Should show usage help
 ```
 
@@ -829,7 +827,7 @@ erdos lean init
 ### f. Quick "Hello World" Lean Check
 
 ```bash
-erdos formalize 1
+erdos lean formalize 1
 erdos lean check Erdos/Problem001.lean
 ```
 
@@ -923,7 +921,7 @@ erdos search "keyword"
 
 **Acceptance:** Known faulty Lean file produces structured error output.
 
-### 14. Formalize Skeleton (`erdos formalize`) (#14)
+### 14. Formalize Skeleton (`erdos lean formalize`) (#14)
 
 **Description:** Implement basic skeleton generation.
 
