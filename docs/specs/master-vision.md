@@ -43,7 +43,7 @@ The harness is composed of modular components that work together in a pipeline. 
 
 ### Problem Dataset Import
 
-Leverages Terence Tao's `teorth/erdosproblems` repository as a git submodule or managed snapshot to load problem data (YAML format). This is the canonical source for problem statements, status (open/solved), prizes, references, tags, etc. (Apache-2.0 licensed). Our repo will treat this data as read-only ground truth – updates can be pulled or synced, but we won't modify it directly (contributions can be upstreamed separately).
+Leverages Terence Tao's `teorth/erdosproblems` repository as a git submodule or managed snapshot to load problem **metadata** (YAML format). This is the canonical source for status, prizes, tags, and formalization metadata (Apache-2.0 licensed). The upstream `data/problems.yaml` is **metadata-only** (no titles/statements; no reference lists). The harness uses a local enriched dataset (`data/problems_enriched.yaml`, Spec 005) to add titles/statements/references while treating upstream metadata as SSOT.
 
 ### Literature Ingestion & Manifests
 
@@ -55,7 +55,7 @@ Uses a local database (default SQLite for simplicity) to store structured metada
 
 ### Hybrid Index (Search)
 
-Combines lexical search (e.g. BM25 via SQLite FTS5) and vector similarity for semantic search. Initially, we use SQLite FTS5 for keyword search and a small vector engine (e.g. in-memory via FAISS or an embedded library). For scaling or advanced use, we plan for an upgrade path to Postgres with the pgvector extension (to store embedding vectors with ACID compliance), or an external vector DB like Qdrant (Rust-based, open source, optimized for high-dimensional search). V1 keeps it simple: likely storing embeddings in SQLite or a lightweight local vector store due to small initial data.
+Combines lexical search (e.g. BM25 via SQLite FTS5) and (future) vector similarity for semantic search. **V1 uses SQLite FTS5 only**. Vector embeddings and vector stores (FAISS/pgvector/Qdrant) are deferred until the core BM25 pipeline is stable.
 
 ### Lean4 Workspace
 
@@ -63,7 +63,7 @@ A structured Lean 4 project (`formal/lean/`) managed by Lean's package manager L
 
 ### CLI Commands
 
-A unified `erdos` CLI with subcommands (`list`, `show`, `refs`, `ingest`, `search`, `ask`, `lean`, `formalize`, `loop`, etc. – defined in detail below). Each command is implemented with robust argument parsing, error handling, and optional JSON output for automation. We use a Python CLI framework (likely Typer with Rich for formatting) to get quick development and pretty output, or possibly Click if more mature stability is needed. The CLI is designed for both interactive use and as an API for LLM agents (deterministic outputs, machine-readable JSON with `--json`, no interactive prompts unless `--yes`/`--no-input` flags are used).
+A unified `erdos` CLI with subcommands (`list`, `show`, `refs`, `ingest`, `search`, `ask`, `lean`, `loop`, etc. – defined in detail below). Each command is implemented with robust argument parsing, error handling, and optional JSON output for automation. We use **Typer + Rich** (Spec 004). The CLI is designed for both interactive use and as an API for agents (deterministic outputs, machine-readable JSON with `--json`, no interactive prompts unless `--yes`/`--no-input` flags are used).
 
 ### Logging & Eval Harness
 
@@ -126,7 +126,7 @@ Below is a proposed repository file tree. Directories are marked with a trailing
 ```
 erdos-harness/
 ├── README.md                   # Project overview, setup, basic usage (committed)
-├── LICENSE                     # Project license (committed, likely Apache-2.0 or MIT)
+├── LICENSE                     # Project license (committed, Apache-2.0)
 ├── pyproject.toml              # PEP 621 project config (committed)
 ├── uv.lock                     # Locked dependencies (committed)
 ├── .python-version             # Dev Python pin (committed)
@@ -145,9 +145,10 @@ erdos-harness/
 │       ├── agents/             # (Optional) LLM agent wrappers (deferred)
 │       │   └── loop_agent.py
 │       └── py.typed            # PEP 561 marker (committed)
-├── data/                       # Problem dataset (external submodule or snapshot)
+├── data/                       # Problem dataset (upstream + local enrichments)
+│   ├── problems_enriched.yaml  # Enriched v1 dataset (titles/statements) (committed)
 │   └── erdosproblems/          # teorth/erdosproblems submodule (not our code)
-│       ├── data/problems.yaml  # (from submodule, Apache-2.0 licensed) (not modified)
+│       ├── data/problems.yaml  # Upstream metadata-only dataset (not modified)
 │       └── ...                 # other files from the dataset
 ├── literature/
 │   ├── manifests/              # Metadata manifests for references (committed or generated)
@@ -207,7 +208,7 @@ erdos-harness/
 
 **Committed:**
 - All code (CLI, core logic, model schemas, docs), config, and small metadata like manifests and Lean source files
-- The erdosproblems dataset (likely as a submodule to keep it separate but versioned)
+- The erdosproblems dataset (as a submodule to keep it separate but versioned)
 - Structured manifests (YAML/JSON listing reference metadata) – these contain DOIs, arXiv IDs, etc., but not full paper text
 - Lean files and their updates (this is part of our work product)
 - The `.claude/skills` (project-specific LLM skills) are committed so that they can be shared and versioned
@@ -221,7 +222,7 @@ erdos-harness/
   - Run logs
 - These are either generated or user-specific. We provide ways to regenerate from source metadata when possible. For example, a collaborator can run `erdos ingest 1` to fetch and parse references for problem 1 if they have network access, rather than storing those bulky files in git.
 
-**Data submodule strategy:** The `teorth/erdosproblems` data might be included via git submodule pointing to a specific commit (ensuring reproducibility of which version of `problems.yaml` we use). If users prefer not to use git submodules, we could provide a script to fetch a pinned snapshot (and possibly keep it in `data/erdosproblems/` anyway). Either way, we treat that directory as external upstream data.
+**Data submodule strategy:** Include `teorth/erdosproblems` via a git submodule pinned to a specific commit (reproducible metadata). Treat `data/erdosproblems/` as external upstream data.
 
 ### Schema & Model Files
 
@@ -296,7 +297,24 @@ Show detailed info for a single problem.
 
 **Example:** `erdos show 100 --json` → outputs JSON like:
 ```json
-{"id":100,"title":"...","status":"open","prize":0,"tags":["number theory"],"refs":[{"key":"Erdos1975"},...],"..."}
+{
+  "schema_version": 1,
+  "command": "erdos show",
+  "success": true,
+  "data": {
+    "id": 100,
+    "title": "...",
+    "statement": "...",
+    "status": "open",
+    "prize": 0,
+    "tags": ["number theory"],
+    "references": [{"key": "Erdos1975", "citation": "..."}],
+    "oeis_ids": [],
+    "notes": null,
+    "formalized": false
+  },
+  "error": null
+}
 ```
 
 In human output, could show a markdown-like output (title, statement, references enumerated).
@@ -307,7 +325,7 @@ In human output, could show a markdown-like output (title, statement, references
 
 List references for a problem, with available metadata.
 
-**Behavior:** Uses the embedded references in the problem data (which might just be textual references or links). The erdosproblems YAML likely has a references section with IDs or bibliography keys. For v1, we rely on that. If the YAML has a list of references with info (some entries might have DOI or partial citation), we display them.
+**Behavior:** Lists `ProblemRecord.references` from the enriched problems YAML. The upstream `teorth/erdosproblems` `data/problems.yaml` is metadata-only and does not contain reference lists. For v1, `erdos refs` is YAML-only (no API enrichment).
 
 If ingestion was run (see next command), we can enhance output with fetched metadata (like actual titles, DOIs, etc.). Possibly `refs` triggers an ingest if none exists, or we separate concerns: `refs` just shows what's in the dataset, and `ingest` must be called to fetch details. A compromise: `refs` could check if a manifest exists (e.g. `literature/manifests/0001.yaml` for problem 1) and if not, print "(metadata not ingested)".
 
@@ -333,7 +351,7 @@ Ingest (fetch) reference data for a problem. This is a key step involving extern
 For each reference:
 - Create a ReferenceRecord with metadata
 - If an open-access PDF or arXiv source is available, download it to `literature/cache/` (only if legally allowed: e.g. if Unpaywall says there is an open repository PDF, or arXiv PDF which is CC BY). For arXiv: since Dec 2023, arXiv provides HTML for TeX submissions, which we prefer to download (or the TeX source via arXiv API's e-print if needed). We avoid downloading publisher PDFs unless clearly open (e.g. Creative Commons).
-- If PDF is downloaded, run a conversion pipeline: first preference is arXiv HTML or LaTeX. If not arXiv, use Docling or similar to convert PDF to Markdown/HTML, preserving math via MathML or LaTeX. Docling is MIT licensed and designed for exactly this, including math extraction. GROBID (AGPL) is an alternative for extracting structured text; Docling's advantage is handling math in LaTeX and being MIT licensed. Another ML option is Nougat by Meta, which can convert PDFs to markup with formulas. The conversion output is stored in `literature/extracts/` for indexing.
+- If PDF is downloaded, run a conversion pipeline: first preference is arXiv HTML or LaTeX. If not arXiv, use Docling or similar to convert PDF to Markdown/HTML, preserving math via MathML or LaTeX. (Docling is a candidate optional dependency; as of 2026-01 it is not included in v1 due to a Typer version conflict.)
 - Save a manifest file `literature/manifests/<id>.yaml` with all reference entries and a summary of their status. Include checksums (e.g. MD5 of PDF/TeX) for reproducibility.
 
 **Output:** In human mode, print a summary: e.g. "Fetched 3 references. 2 PDFs downloaded (1 via arXiv, 1 via Unpaywall), 1 metadata only." JSON output would detail each reference and what happened.
@@ -364,10 +382,7 @@ Build or update the search index.
 
 Search the index for a query string.
 
-**Behavior:** Performs a hybrid search:
-- Use FTS to get e.g. top 50 text matches by BM25
-- Compute embedding of the query and find nearest vectors
-- Merge results (e.g. via reciprocal rank fusion or a simple approach)
+**Behavior:** Performs a keyword search against the local BM25 index (SQLite FTS5). Vector search is deferred until after the v1 BM25 pipeline is stable.
 
 **Output:** In human mode, a list of snippet results. JSON output: an array of RetrievedChunk objects.
 
@@ -381,12 +396,12 @@ Search the index for a query string.
 
 Ask a question about a specific problem, get a citation-grounded answer.
 
-**Behavior:** Invokes an LLM (likely through Claude or GPT via our environment). Runs retrieval-augmented generation:
+**Behavior:** (v1.1+) Invokes an LLM via the local environment (Claude Code workflow). Runs retrieval-augmented generation:
 - Searches the index with a query composed of [problem context + question]
 - Constructs a prompt for the LLM including retrieved snippets with citations
 - Post-processes the answer to ensure citations are properly numbered
 
-**Output:** A nicely formatted answer with citations like `【source†Lx-Ly】`. JSON mode provides answer text and sources array.
+**Output:** A nicely formatted answer with citations. JSON mode provides answer text and a `sources` array.
 
 **Network:** Possibly required for LLM API call.
 
@@ -498,7 +513,7 @@ erdos ingest X
 Triggers:
 - Crossref/OpenAlex query for each reference
 - ArXiv PDF/HTML download if available
-- Conversion via Docling
+- Conversion via optional PDF tooling (Docling or similar)
 - Save manifest file
 
 **Verification:** `literature/manifests/X.yaml` exists with proper structure.
@@ -634,7 +649,7 @@ Use Typer (built on Click) with Rich for formatting.
 
 ### Document Conversion
 
-**Docling:** MIT license, handles math and code. Optional dependency.
+**Docling:** MIT license, handles math and code. Candidate optional dependency (not included in v1 due to a Typer version conflict).
 
 **Alternatives considered:**
 - GROBID (AGPL - problematic license)
@@ -657,7 +672,7 @@ Use Typer (built on Click) with Rich for formatting.
 ### Licensing Summary
 
 - Python libs: permissive (MIT/BSD/Apache)
-- Docling: MIT
+- Docling (future optional): MIT
 - Lean and mathlib: Apache2
 - No GPL components included
 
@@ -851,7 +866,7 @@ erdos search "keyword"
 
 ### 2. Import Erdős Problems Data (#2)
 
-**Description:** Write parser for `data/problems.yaml`. Create Pydantic models.
+**Description:** Write loader for `data/problems_enriched.yaml` (v1 enriched dataset). Detect upstream metadata-only `data/erdosproblems/data/problems.yaml` and fail with a clear error if titles/statements are missing. Create Pydantic models.
 
 **Acceptance:** `erdos list` prints total count. `erdos show <id>` displays correct info.
 
@@ -875,7 +890,7 @@ erdos search "keyword"
 
 ### 6. Download & Conversion Pipeline (#6)
 
-**Description:** Implement PDF/HTML download and Docling conversion.
+**Description:** Implement PDF/HTML download and conversion (Docling or similar; deferred until PDF tooling is added to the dependency set).
 
 **Acceptance:** On sample arXiv paper, produces extracted text file.
 
@@ -942,69 +957,29 @@ erdos search "keyword"
 - Small & self-contained
 - Well-documented with accessible literature
 - Formalization-friendly
-- Coverage of categories (number theory, graph theory, combinatorics, geometry)
+- Coverage across major tag families
 
-### Suggested 10 Problems
+### Suggested 10 Problems (Metadata-Verified)
 
-#### Problem 4: Prime k-tuples conjecture
-- **Status:** proved (Green–Tao)
-- **Prize:** $10,000
-- **Why:** High-profile solved problem, rich reference material
-- **Tags:** number theory, primes
+These are suggested IDs to seed v1 development. Titles/statements are not present in upstream metadata and must come from `data/problems_enriched.yaml` (Spec 005).
 
-#### Problem 6: Small primes conjecture
-- **Status:** proved (Lean-formalized)
-- **Prize:** $100
-- **Why:** Accessible, has Lean proof for comparison
-- **Tags:** number theory, primes
+Source for metadata below: `teorth/erdosproblems` `data/problems.yaml` (pin via submodule for reproducibility).
 
-#### Problem 67: Erdős Discrepancy Problem
-- **Status:** proved (T. Tao, 2015)
-- **Prize:** $500
-- **Why:** Classic problem, well-documented proof
-- **Tags:** combinatorics (sequences)
-
-#### Problem 123: Distinct powers sum problem
-- **Status:** open
-- **Why:** Formalized statement in Lean, partial results in literature
-- **Tags:** number theory (exponential Diophantine)
-
-#### Problem 148: Arithmetical progressions
-- **Status:** open
-- **Why:** Multiple OEIS links, rich computational data
-- **Tags:** additive combinatorics
-
-#### Problem 316: Covering problem with counterexample
-- **Status:** disproved
-- **Why:** Specific counterexample found, tests disproof handling
-- **Tags:** combinatorics
-
-#### Problem 476: Restricted sumset conjecture
-- **Status:** proved (by AI)
-- **Why:** Landmark AI-assisted proof, formalized in Lean
-- **Tags:** additive combinatorics
-
-#### Problem 728: First AI-solved Erdős problem
-- **Status:** proved (by AI)
-- **Why:** Historic milestone, documented Lean proof
-- **Tags:** likely graph theory or combinatorics
-
-#### Problem 295: (Placeholder for mid-range open problem)
-- **Status:** open
-- **Why:** Actively studied, moderate literature
-- **Tags:** TBD based on dataset
-
-#### Problem 707: Graph Ramsey problem
-- **Status:** partially solved
-- **Why:** Modern computer assistance breakthrough
-- **Tags:** graph theory (Ramsey-type)
+| Problem | Upstream `status.state` | Upstream `prize` | Upstream `formalized.state` | Upstream `tags` |
+|--------:|--------------------------|------------------|------------------------------|-----------------|
+| 4 | proved | $10000 | yes | number theory, primes |
+| 6 | proved | $100 | yes | number theory, primes |
+| 67 | proved | $500 | yes | discrepancy |
+| 123 | open | $250 | yes | number theory |
+| 148 | open | no | no | number theory, unit fractions |
+| 295 | open | no | yes | number theory, unit fractions |
+| 316 | disproved (Lean) | no | yes | number theory, unit fractions |
+| 476 | proved (Lean) | no | no | number theory, additive combinatorics |
+| 707 | disproved (Lean) | $1000 | yes | additive combinatorics, sidon sets |
+| 728 | proved (Lean) | no | yes | number theory, factorials |
 
 ### Summary of Criteria
 
-- **Solved classics** (#4, #67) for retrieval and citation verification
-- **Smaller solved problems** (#6) for Lean formalization validation
-- **Open problems with data** (#123, #148, #295) for metadata gathering
-- **Disproved conjectures** (#316) for counterexample handling
-- **AI-assisted solutions** (#476, #728, #707) for frontier developments
-
-This selection ensures variety: long journal papers, short notes, formal Lean files, OEIS entries, and forum discussions – all within legal and available resources.
+- **Solved/disproved** problems validate reporting, status handling, and Lean-related tooling.
+- **Open** problems validate search and enrichment workflows.
+- **Mixed tags** validate filtering and display logic across domains.

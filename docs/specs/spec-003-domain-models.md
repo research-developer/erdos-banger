@@ -100,7 +100,11 @@ class ProblemStatus(str, Enum):
     @classmethod
     def from_string(cls, value: str) -> "ProblemStatus":
         """Parse status from various string formats."""
-        normalized = value.lower().strip().replace("-", "_").replace(" ", "_")
+        import re
+
+        normalized = value.lower().strip()
+        normalized = re.sub(r"\\s*\\([^)]*\\)\\s*$", "", normalized)  # e.g., "proved (Lean)" -> "proved"
+        normalized = normalized.replace("-", "_").replace(" ", "_")
         try:
             return cls(normalized)
         except ValueError:
@@ -615,6 +619,7 @@ class TestProblemStatus:
 
     def test_from_string_variants(self) -> None:
         assert ProblemStatus.from_string("solved") == ProblemStatus.PROVED
+        assert ProblemStatus.from_string("proved (Lean)") == ProblemStatus.PROVED
         assert ProblemStatus.from_string("OPEN") == ProblemStatus.OPEN
 
     def test_from_string_unknown(self) -> None:

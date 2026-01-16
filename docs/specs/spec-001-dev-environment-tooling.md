@@ -63,7 +63,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-pdf = ["docling>=2.68.0"]
+pdf = []
 
 [project.scripts]
 erdos = "erdos.cli:app"
@@ -75,6 +75,8 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/erdos"]
 ```
+
+**Note on the `pdf` extra:** Keep this extra empty for v1. As of 2026-01, `docling==2.68.0` requires `typer<0.20.0`, which conflicts with our `typer>=0.21.1` baseline. Revisit once Docling supports newer Typer versions.
 
 ### Dependency Groups (PEP 735)
 
@@ -257,11 +259,9 @@ We use [mypy](https://mypy.readthedocs.io/) in strict mode for type checking.
 
 ### Why mypy over ty
 
-[ty](https://docs.astral.sh/ty/) (Astral's new type checker) is promising, but:
-- Still in beta (released Dec 2025)
-- No plugin support (we may need Pydantic plugin)
+[ty](https://docs.astral.sh/ty/) (Astral's new type checker) is promising, but it is still evolving rapidly.
 
-**Decision:** Use mypy for v1. Evaluate ty for v1.2 when it reaches stable.
+**Decision:** Use mypy for v1. Re-evaluate ty in a later minor release once it is stable enough for our strict typing needs.
 
 ### Configuration
 
@@ -327,14 +327,15 @@ repos:
         args: [--fix]
       - id: ruff-format
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.19.1
+  - repo: local
     hooks:
       - id: mypy
-        additional_dependencies:
-          - pydantic>=2.12.5
-          - types-PyYAML>=6.0.12.20250915
-        args: [--config-file=pyproject.toml]
+        name: mypy (uv)
+        entry: uv run mypy
+        language: system
+        types: [python]
+        pass_filenames: false
+        args: [src/, tests/]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -388,12 +389,16 @@ ENV/
 
 # Testing
 .pytest_cache/
-.coverage
+.coverage*
+coverage.xml
 htmlcov/
 .hypothesis/
 
 # mypy
 .mypy_cache/
+
+# ruff
+.ruff_cache/
 
 # Project-specific (gitignored data)
 literature/cache/
@@ -460,8 +465,13 @@ uv run pre-commit run --all-files
 ```python
 """Verify development tooling is correctly configured."""
 
-from pathlib import Path
 import tomllib
+from pathlib import Path
+
+import pytest
+import typer
+
+from erdos import cli
 
 
 def test_pyproject_has_required_sections() -> None:
@@ -476,8 +486,15 @@ def test_pyproject_has_required_sections() -> None:
 
 def test_cli_is_importable() -> None:
     """The CLI module should be importable."""
-    from erdos import cli
     assert hasattr(cli, "app")
+
+
+def test_version_callback_covers_branches() -> None:
+    """Ensure version callback behavior stays stable and covered."""
+    cli.version_callback(False)
+    with pytest.raises(typer.Exit):
+        cli.version_callback(True)
+
 
 def test_py_typed_exists() -> None:
     """PEP 561 py.typed marker should exist."""
@@ -547,7 +564,7 @@ jobs:
         run: uv run mypy src/
 
       - name: Tests (no Lean, no network)
-        run: uv run pytest --cov=erdos --cov-report=xml -m "not requires_lean and not requires_network"
+        run: uv run pytest --cov=erdos --cov-report=xml --cov-fail-under=80 -m "not requires_lean and not requires_network"
 
       - name: Build (sdist + wheel)
         run: uv build
@@ -695,7 +712,7 @@ jobs:
 
       - name: Create Pull Request
         if: steps.changes.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: "chore(deps): update dependencies"
           title: "chore(deps): weekly dependency update"

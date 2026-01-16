@@ -72,7 +72,7 @@ Before writing any code, manually execute this workflow for Problem 6:
 3. [ ] Create a minimal `data/problems_enriched.yaml` entry for Problem 6 (title + statement + status)
 4. [ ] Google its references, find the relevant arXiv paper
 5. [ ] Read the paper, understand what the theorem actually states
-6. [ ] Check if Problem 6 is in the Formal Conjectures Repository (324 formalized statements exist)
+6. [ ] Check if Problem 6 is in the Formal Conjectures Repository (verify current coverage at implementation time)
 7. [ ] Write a Lean file by hand that states the theorem
 8. [ ] Compile it against mathlib4, note what imports are needed
 9. [ ] Document friction points encountered
@@ -92,7 +92,7 @@ The master draft has too many "possibly X or Y" statements. Here are hard decisi
 | Database | **SQLite with FTS5** | Not Postgres. Not until we have 10k+ documents |
 | Vector store | **None for v1** | BM25 only. Add vectors in v1.2 if retrieval quality demands it |
 | Embedding model | **Skip for v1** | If we add later: SPECTER2 (scientific text) over MiniLM |
-| PDF conversion | **Skip for v1** | arXiv HTML + LaTeX source only. Docling is optional extra |
+| PDF conversion | **Skip for v1** | arXiv HTML + LaTeX source only. `pdf` extra reserved; Docling currently conflicts with our Typer baseline |
 | Lean version | **leanprover/lean4:v4.12.0** | Pin exact version in `lean-toolchain` |
 | mathlib4 | **Pin to tag matching Lean** | Use `mathlib4` tag matching `lean-toolchain` (e.g. `v4.12.0`) |
 | LLM integration | **Claude Code environment** | Not OpenAI API for v1. Claude skills + shell commands |
@@ -107,7 +107,7 @@ The feedback correctly identifies Docling as risky:
 - PDF conversion is an edge case rabbit hole
 - Blocks progress on core functionality
 
-**Decision:** Docling is an **optional extra**, not a core dependency.
+**Decision:** PDF conversion is out of scope for v1. The `pdf` extra is reserved for future work.
 
 ### Content Acquisition Strategy (Ordered by Priority)
 
@@ -118,7 +118,7 @@ The feedback correctly identifies Docling as risky:
 
 If a paper isn't on arXiv and isn't open access, we record metadata and move on. We don't try to solve PDF extraction in v1.
 
-**Install path:** `pip install erdos-harness[pdf]` adds Docling as optional. Core install has no PyTorch.
+**Install path:** `pip install erdos-harness[pdf]` is reserved for future PDF tooling. As of 2026-01, Docling pins `typer<0.20.0`, which conflicts with our `typer>=0.21.1` baseline, so v1 ships without a PDF extra.
 
 ---
 
@@ -130,7 +130,7 @@ The master draft is light on formalization details. This is the hardest part.
 
 Before automating anything:
 
-1. **Pull Formal Conjectures Repository** - 324 statements already formalized
+1. **Pull Formal Conjectures Repository** - Many statements already formalized (verify current coverage at implementation time)
 2. **Manually write 5 Problem*.lean files** for target problems (4, 6, 67, 123, 316)
 3. **Document patterns:**
    - What mathlib imports are commonly needed?
@@ -315,7 +315,7 @@ Before coding starts:
 
 | Master Draft Says | Qualification Says |
 |-------------------|-------------------|
-| "Possibly Docling or Nougat or GROBID" | Docling as optional extra only, skip PDF in v1 |
+| "Possibly Docling or Nougat or GROBID" | Skip PDF in v1; Docling is a future optional extra (currently incompatible with our Typer baseline) |
 | "Maybe SQLite or Postgres or Qdrant" | SQLite only, period |
 | "Perhaps sentence-transformers" | No vectors in v1, BM25 only |
 | Vertical slice includes ingestion + LLM | True vertical: show → lean init → formalize → check |

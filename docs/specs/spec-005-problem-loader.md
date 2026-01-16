@@ -6,7 +6,7 @@
 
 ## Overview
 
-The Problem Loader is the foundation of the data pipeline. It reads `problems.yaml` from the erdosproblems submodule and transforms it into validated `ProblemRecord` objects.
+The Problem Loader is the foundation of the data pipeline. For v1, it reads an **enriched** problems YAML (default `data/problems_enriched.yaml`) and transforms it into validated `ProblemRecord` objects. The upstream `teorth/erdosproblems` `data/problems.yaml` is metadata-only and is used as SSOT for metadata and as an input to enrichment.
 
 ### Guiding Principles
 
@@ -61,14 +61,13 @@ erdos-harness/
   status:
     state: "proved"
     last_update: "2025-08-31"
-  oeis: ["A000040"]
+  oeis: ["A335277"]
   formalized:
     state: "yes"
-    last_update: "2025-08-31"
+    last_update: "2025-09-18"
   tags:
     - number theory
     - primes
-  comments: "Solved by Green and Tao in 2008."
 ```
 
 ### Upstream Field Definitions
@@ -77,7 +76,7 @@ erdos-harness/
 |-------|------|----------|-------------|
 | `number` | str | Yes | Problem identifier (string, not int) |
 | `prize` | str | No | Prize amount as string ("$500", "£25", "no") |
-| `status.state` | str | No | One of: open, proved, disproved, solved |
+| `status.state` | str | No | Free-form status label; common values include open, proved, disproved, solved, verifiable, falsifiable, decidable, independent, not provable, and variants like "proved (Lean)" |
 | `status.last_update` | str | No | ISO date of last status update |
 | `oeis` | list[str] | No | OEIS sequence IDs or ["N/A"] |
 | `formalized.state` | str | No | "yes" or "no" |

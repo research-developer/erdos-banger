@@ -1,0 +1,53 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"  # Every Monday at 6am UTC
+  workflow_dispatch:      # Allow manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-deps:
+    runs-on: ubuntu-latest
+    env:
+      UV_PYTHON: "3.11"
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v7
+
+      - name: Install Python 3.11
+        run: uv python install 3.11
+
+      - name: Update dependencies
+        run: uv lock --upgrade
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet uv.lock; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          commit-message: "chore(deps): update dependencies"
+          title: "chore(deps): weekly dependency update"
+          body: |
+            Automated dependency update via `uv lock --upgrade`.
+
+            This PR updates all dependencies to their latest compatible versions.
+            Review the lockfile diff and ensure CI passes before merging.
+          branch: deps/weekly-update
+          delete-branch: true
+          labels: dependencies

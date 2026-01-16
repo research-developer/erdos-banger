@@ -248,6 +248,18 @@ def fixtures_dir() -> Path:
 def sample_problems_yaml(fixtures_dir: Path) -> Path:
     """Path to sample problems.yaml for testing."""
     return fixtures_dir / "sample_problems.yaml"
+
+
+@pytest.fixture
+def in_memory_db() -> Iterator[sqlite3.Connection]:
+    """SQLite in-memory database for search index tests.
+
+    Note: Defined in shared conftest to support root-level meta-tests.
+    """
+    import sqlite3
+    conn = sqlite3.connect(":memory:")
+    yield conn
+    conn.close()
 ```
 
 ### Unit Test Fixtures (`tests/unit/conftest.py`)
@@ -296,13 +308,8 @@ def temp_project_dir(tmp_path: Path) -> Iterator[Path]:
     # Cleanup is automatic with tmp_path
 
 
-@pytest.fixture
-def in_memory_db():
-    """SQLite in-memory database for search index tests."""
-    import sqlite3
-    conn = sqlite3.connect(":memory:")
-    yield conn
-    conn.close()
+# Note: in_memory_db fixture is defined in tests/conftest.py (shared)
+# to support root-level meta-tests per Section 11.
 ```
 
 ### E2E Test Fixtures (`tests/e2e/conftest.py`)
