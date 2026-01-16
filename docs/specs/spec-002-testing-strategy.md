@@ -561,107 +561,23 @@ def test_that_needs_lean():
 
 ## 10) CI Test Matrix
 
-**GitHub Actions workflow:**
+> **Single Source of Truth:** The complete CI/CD workflow YAML lives in **Spec 001** (`docs/specs/spec-001-dev-environment-tooling.md`, Section 9).
 
-```yaml
-# .github/workflows/ci.yml
-name: CI
+The CI workflow runs tests across the following matrix:
 
-on: [push, pull_request]
+| Job | Python | Tests Run | Markers |
+|-----|--------|-----------|---------|
+| `ci` | 3.11, 3.12 | All except Lean/network | `-m "not requires_lean and not requires_network"` |
+| `test-with-lean` | 3.11 | Lean-dependent only | `-m "requires_lean"` |
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+### Key Testing Features in CI
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.11", "3.12"]
-    env:
-      UV_PYTHON: ${{ matrix.python-version }}
+- **Coverage:** Collected via pytest-cov, uploaded to Codecov
+- **Lean caching:** elan and `.lake` are cached to speed up Lean jobs
+- **Submodules:** Checked out recursively for erdosproblems dataset
+- **Parallel matrix:** Python 3.11 and 3.12 tested in parallel
 
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: recursive
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-          cache-dependency-glob: |
-            uv.lock
-            pyproject.toml
-            .python-version
-          cache-suffix: ${{ matrix.python-version }}
-
-      - name: Set up Python ${{ matrix.python-version }}
-        run: uv python install ${{ matrix.python-version }}
-
-      - name: Verify lockfile is up-to-date
-        run: uv lock --check
-
-      - name: Install dependencies
-        run: uv sync --frozen
-
-      - name: Run linting
-        run: uv run ruff check .
-
-      - name: Run formatting check
-        run: uv run ruff format . --check
-
-      - name: Run type checking
-        run: uv run mypy src/
-
-      - name: Run tests
-        run: uv run pytest --cov=erdos --cov-report=xml -m "not requires_lean and not requires_network"
-
-      - name: Build distributions (sdist + wheel)
-        run: uv build
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v5
-        with:
-          files: coverage.xml
-
-  test-with-lean:
-    runs-on: ubuntu-latest
-    env:
-      UV_PYTHON: "3.11"
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: recursive
-
-      - name: Install elan and Lean
-        run: |
-          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y
-          echo "$HOME/.elan/bin" >> $GITHUB_PATH
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-          cache-dependency-glob: |
-            uv.lock
-            pyproject.toml
-            .python-version
-          cache-suffix: lean
-
-      - name: Install Python 3.11
-        run: uv python install 3.11
-
-      - name: Verify lockfile is up-to-date
-        run: uv lock --check
-
-      - name: Install dependencies
-        run: uv sync --frozen
-
-      - name: Run Lean-dependent tests
-        run: uv run pytest -m "requires_lean"
-```
+See Spec 001 Section 9 for the complete workflow definitions.
 
 ---
 
