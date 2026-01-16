@@ -513,8 +513,11 @@ jobs:
         python-version: ["3.11", "3.12"]
     env:
       UV_PYTHON: ${{ matrix.python-version }}
+
     steps:
       - uses: actions/checkout@v6
+        with:
+          submodules: recursive
 
       - uses: astral-sh/setup-uv@v7
         with:
@@ -543,11 +546,61 @@ jobs:
       - name: Type check
         run: uv run mypy src/
 
-      - name: Tests
-        run: uv run pytest -m "not requires_lean and not requires_network"
+      - name: Tests (no Lean, no network)
+        run: uv run pytest --cov=erdos --cov-report=xml -m "not requires_lean and not requires_network"
 
       - name: Build (sdist + wheel)
         run: uv build
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.xml
+
+  test-with-lean:
+    runs-on: ubuntu-latest
+    env:
+      UV_PYTHON: "3.11"
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Cache elan and mathlib
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.elan
+            formal/lean/.lake
+          key: lean-${{ hashFiles('formal/lean/lean-toolchain', 'formal/lean/lakefile.lean') }}
+          restore-keys: |
+            lean-
+
+      - name: Install elan and Lean
+        run: |
+          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            uv.lock
+            pyproject.toml
+          cache-suffix: lean
+
+      - name: Install Python 3.11
+        run: uv python install 3.11
+
+      - name: Verify lockfile is up-to-date
+        run: uv lock --check
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Run Lean-dependent tests
+        run: uv run pytest -m "requires_lean"
 ```
 
 ### b) Release (Tag → Build → Publish)
