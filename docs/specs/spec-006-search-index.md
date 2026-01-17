@@ -511,6 +511,13 @@ def build_index(
 
 ## 5) CLI Integration
 
+`erdos search` is implemented in `src/erdos/commands/search.py` as a Typer callback.
+
+Key behavior:
+- Uses the FTS5 index when available; falls back to a basic substring search when the index is empty.
+- Supports `--build-index` to build/rebuild the index before searching.
+- When JSON mode is enabled (`erdos --json search ...` or `erdos search --json ...`), **progress output must go to stderr** so stdout remains valid JSON.
+
 ```python
 # In src/erdos/commands/search.py
 
@@ -519,60 +526,73 @@ def search(
     ctx: typer.Context,
     query: Annotated[
         str,
-        typer.Argument(help="Search query"),
+        typer.Argument(help="Search query (supports FTS5 syntax when index exists)"),
     ],
     limit: Annotated[
         int,
-        typer.Option("--limit", "-n", help="Maximum results"),
+        typer.Option("--limit", "-n", help="Maximum results to return"),
     ] = 10,
-    problem_id: Annotated[
+    problem_filter: Annotated[
         int | None,
-        typer.Option("--problem", "-p", help="Filter to specific problem"),
+        typer.Option("--problem", "-p", help="Filter to specific problem ID"),
     ] = None,
+    build_index: Annotated[
+        bool,
+        typer.Option("--build-index", help="Build/rebuild the search index before searching"),
+    ] = False,
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help="Output as JSON for machine consumption."),
+    ] = False,
 ) -> None:
-    """
-    Search problem statements and indexed content.
+    ctx.ensure_object(dict)
+    if json_output:
+        ctx.obj["json"] = True
 
-    Example: erdos search "prime arithmetic progression"
-    """
-    from erdos.core.search_index import SearchIndex
+    json_mode = bool((ctx.obj or {}).get("json"))
+    progress_console = err_console if json_mode else console
 
-    index = SearchIndex.from_default()
-    results = index.search(query, limit=limit, problem_id=problem_id)
+    if build_index:
+        progress_console.print("Building search index...")
+        stats = do_build_index(rebuild=True)
+        progress_console.print(f"Indexed {stats['problems_indexed']} problems")
 
-    if (ctx.obj or {}).get("json"):
-        # JSON output
-        output = CLIOutput.ok(
-            command="erdos search",
-            data={
-                "query": query,
-                "count": len(results),
-                "results": [
-                    {
-                        "chunk_id": r.chunk_id,
-                        "snippet": r.snippet,
-                        "score": r.score,
-                        "source_type": r.source_type.value,
-                        "problem_id": r.problem_id,
-                    }
-                    for r in results
-                ],
-            },
-        )
-        console.print_json(output.model_dump_json())
-    else:
-        # Human output
-        if not results:
-            console.print(f"No results for: {query}")
-            return
+    result = search_problems_fts(query, limit=limit, problem_id=problem_filter)
+    if not result.success and result.error and result.error.get("type") == "IndexEmpty":
+        loader = ProblemLoader.from_default()
+        result = search_problems_basic(query, loader, limit)
 
-        console.print(f"[bold]Search results for:[/bold] {query}\n")
-        for i, r in enumerate(results, 1):
-            problem_str = f"Problem {r.problem_id}" if r.problem_id else "Reference"
-            console.print(f"[cyan]{i}.[/cyan] [{r.source_type.value}] {problem_str}")
-            console.print(f"   {r.snippet}")
-            console.print(f"   [dim]Score: {r.score:.2f}[/dim]\n")
+    _output(ctx, result)
+    if not result.success:
+        raise typer.Exit(code=int(result.error.get("code", 1)))
 ```
+
+### JSON output schema
+
+On success, `CLIOutput.data` contains:
+
+```json
+{
+  "query": "prime",
+  "count": 1,
+  "use_fts": true,
+  "results": [
+    {
+      "chunk_id": 123,
+      "snippet": "...",
+      "score": 1.234,
+      "source_type": "problem_statement",
+      "problem_id": 6,
+      "title": "Small primes in arithmetic progressions",
+      "reference_doi": null
+    }
+  ]
+}
+```
+
+Notes:
+- When `use_fts` is `false`, results are produced by the basic substring search; `score` is `null` and FTS-specific fields may be absent.
+- When `--build-index` is used in JSON mode, index-build progress is printed to stderr (stdout remains JSON only).
 
 ---
 
