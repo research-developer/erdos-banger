@@ -238,6 +238,7 @@ def test_cli_lean_check_success_and_failure(monkeypatch, tmp_path: Path) -> None
     monkeypatch.setattr(LeanRunner, "check", fake_check_fail)
     bad = runner.invoke(app, ["lean", "check", str(file_path)], env={})
     assert bad.exit_code == 5
+    # Rich may wrap output; normalize whitespace for assertion
     normalized = " ".join(bad.stdout.split())
     assert "has 1 error" in normalized
 

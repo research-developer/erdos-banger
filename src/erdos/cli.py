@@ -24,7 +24,7 @@ app = typer.Typer(
 def version_callback(value: bool) -> None:
     """Print version and exit."""
     if value:
-        console.print(f"erdos-harness {__version__}")
+        console.print(f"erdos-banger {__version__}")
         raise typer.Exit()
 
 

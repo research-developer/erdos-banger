@@ -6,7 +6,7 @@
 
 ## Overview
 
-The CLI is the primary interface for erdos-harness. It must be:
+The CLI is the primary interface for erdos-banger. It must be:
 - **Consistent** - Same patterns across all commands
 - **Testable** - Every command testable without mocking
 - **Agent-friendly** - Clean JSON output for LLM agents
@@ -73,7 +73,7 @@ err_console = Console(stderr=True)
 def version_callback(value: bool) -> None:
     """Print version and exit."""
     if value:
-        console.print(f"erdos-harness {__version__}")
+        console.print(f"erdos-banger {__version__}")
         raise typer.Exit()
 
 
@@ -979,7 +979,7 @@ Options:
 ```bash
 # CLI is runnable
 uv run erdos --version
-# Output: erdos-harness 0.1.0
+# Output: erdos-banger 0.1.0
 
 # Help works at all levels
 uv run erdos --help
@@ -1024,7 +1024,7 @@ def test_cli_has_version_flag() -> None:
     """CLI should have --version flag."""
     result = runner.invoke(app, ["--version"])
     assert result.exit_code == 0
-    assert "erdos-harness" in result.stdout
+    assert "erdos-banger" in result.stdout
 
 
 def test_cli_has_json_flag() -> None:

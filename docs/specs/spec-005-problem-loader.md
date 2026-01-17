@@ -1,6 +1,6 @@
 # Spec 005: Problem Loader & YAML Parsing
 
-> Defines how erdos-harness loads problem data from the teorth/erdosproblems dataset.
+> Defines how erdos-banger loads problem data from the teorth/erdosproblems dataset.
 
 ---
 
@@ -38,7 +38,7 @@ git submodule update --remote data/erdosproblems
 
 **Directory structure:**
 ```
-erdos-harness/
+erdos-banger/
 ├── data/
 │   └── erdosproblems/          # Git submodule
 │       ├── data/
@@ -84,9 +84,9 @@ erdos-harness/
 | `tags` | list[str] | No | Topic tags |
 | `comments` | str | No | Brief notes |
 
-### Enriched Format (erdos-harness)
+### Enriched Format (erdos-banger)
 
-Since the upstream YAML lacks titles and statements, erdos-harness uses an **enriched format** for local development and testing. Problem statements must be sourced separately (see Section 3).
+Since the upstream YAML lacks titles and statements, erdos-banger uses an **enriched format** for local development and testing. Problem statements must be sourced separately (see Section 3).
 
 ```yaml
 - id: 6
@@ -128,7 +128,7 @@ Since the upstream YAML lacks titles and statements, erdos-harness uses an **enr
 
 ### Data Sourcing Strategy
 
-The upstream teorth/erdosproblems repo provides metadata only. For full problem data, erdos-harness supports multiple strategies:
+The upstream teorth/erdosproblems repo provides metadata only. For full problem data, erdos-banger supports multiple strategies:
 
 1. **Enriched Local YAML** (default for v1): Maintain a local `data/problems_enriched.yaml` with manually curated titles and statements. This is the simplest approach for initial development.
 
@@ -660,7 +660,7 @@ def test_specific_known_problem(real_data_loader: ProblemLoader) -> None:
 python -c "from erdos.core.problem_loader import ProblemLoader; print('OK')"
 
 # 2. from_default() works in repo root
-cd erdos-harness
+cd erdos-banger
 uv run python -c "
 from erdos.core.problem_loader import ProblemLoader
 loader = ProblemLoader.from_default()

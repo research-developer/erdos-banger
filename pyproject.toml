@@ -1,5 +1,5 @@
 [project]
-name = "erdos-harness"
+name = "erdos-banger"
 version = "0.1.0"
 description = "CLI toolkit for Erdős problem research"
 readme = "README.md"

@@ -225,7 +225,7 @@ wheels = [
 ]
 
 [[package]]
-name = "erdos-harness"
+name = "erdos-banger"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

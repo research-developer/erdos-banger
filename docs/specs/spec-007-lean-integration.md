@@ -6,7 +6,7 @@
 
 ## Overview
 
-Lean integration is core to erdos-harness: the goal is to formalize Erdős problems and attempt proofs. This spec covers:
+Lean integration is core to erdos-banger: the goal is to formalize Erdős problems and attempt proofs. This spec covers:
 
 1. Lean project structure and configuration
 2. Running Lean and capturing errors

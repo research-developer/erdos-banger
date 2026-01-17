@@ -12,7 +12,7 @@ def test_cli_has_version_flag() -> None:
     """CLI should have --version flag."""
     result = runner.invoke(app, ["--version"])
     assert result.exit_code == 0
-    assert "erdos-harness" in result.stdout
+    assert "erdos-banger" in result.stdout
 
 
 def test_cli_has_json_flag() -> None:

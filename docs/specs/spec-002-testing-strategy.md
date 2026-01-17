@@ -1,6 +1,6 @@
 # Spec 002: Testing Strategy & Architecture
 
-> Defines how we test erdos-harness: what to test, when to mock, and how to ensure vertical slices are testable end-to-end.
+> Defines how we test erdos-banger: what to test, when to mock, and how to ensure vertical slices are testable end-to-end.
 
 ---
 
