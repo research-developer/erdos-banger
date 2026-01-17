@@ -35,4 +35,3 @@ Instantiate `CliRunner()` without the unsupported argument.
 ## Related
 
 - `tests/integration/test_cli_commands.py`
-

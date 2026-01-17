@@ -38,4 +38,3 @@ Track seen IDs during iteration and raise `ProblemLoaderError` on duplicates.
 - `src/erdos/core/problem_loader.py`
 - `src/erdos/core/index_builder.py`
 - `tests/unit/test_problem_loader.py` (regression coverage)
-

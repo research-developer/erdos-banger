@@ -16,7 +16,7 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 | BUG-002 | `erdos search --build-index --json` contaminates stdout | P2 | Fixed |
 | BUG-003 | `erdos search` crashes when index exists but dataset missing | P2 | Fixed |
 | BUG-004 | `iter_problems()` allows duplicate IDs (index overwrite risk) | P2 | Fixed |
-| BUG-005 | Dead global flags: `--config`, `--no-network` | P2 | Open |
+| BUG-005 | Dead global flags: `--config`, `--no-network` | P2 | Fixed |
 
 ### Bug Decks
 

@@ -39,4 +39,3 @@ When JSON mode is enabled, print build progress to stderr (or suppress it) so st
 
 - `src/erdos/commands/search.py`
 - `tests/integration/test_cli_commands.py` (regression coverage)
-

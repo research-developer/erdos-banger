@@ -40,4 +40,3 @@ Treat title enrichment as best-effort:
 
 - `src/erdos/commands/search.py`
 - `tests/integration/test_cli_commands.py` (regression coverage)
-
