@@ -17,8 +17,8 @@ def test_cli_has_version_flag() -> None:
 
 def test_cli_has_json_flag() -> None:
     """CLI should have global --json flag."""
-    result = runner.invoke(app, ["--help"])
-    assert "--json" in result.stdout
+    result = runner.invoke(app, ["--json", "--help"])
+    assert result.exit_code == 0
 
 
 def test_cli_has_required_commands() -> None:

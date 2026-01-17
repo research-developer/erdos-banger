@@ -618,7 +618,15 @@ jobs:
         run: uv sync --frozen
 
       - name: Run Lean-dependent tests
-        run: uv run pytest -m "requires_lean"
+        run: |
+          set +e
+          uv run pytest -m "requires_lean"
+          status=$?
+          if [ $status -eq 5 ]; then
+            echo "No tests collected for marker 'requires_lean'; skipping."
+            exit 0
+          fi
+          exit $status
 ```
 
 ### b) Release (Tag → Build → Publish)
