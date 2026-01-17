@@ -55,3 +55,49 @@
   notes: null
   oeis_ids: []
   formalized: false
+
+- id: 100
+  title: "Graph coloring conjecture"
+  statement: |
+    Every planar graph with girth at least 5 is 3-colorable.
+  status: open
+  prize: 0
+  tags:
+    - graph theory
+    - coloring
+  references:
+    - key: Erdos1959
+      citation: "P. Erdős, Graph theory and probability, 1959"
+  notes: null
+  oeis_ids: []
+  formalized: false
+
+- id: 316
+  title: "Covering systems counterexample"
+  statement: |
+    Does there exist a covering system with all moduli distinct and greater than 10?
+  status: disproved
+  prize: 0
+  tags:
+    - combinatorics
+    - covering systems
+  references:
+    - key: Hough2015
+      citation: "B. Hough, Solution of the minimum modulus problem for covering systems, Ann. of Math. 181 (2015), 361–382"
+      doi: "10.4007/annals.2015.181.1.6"
+  notes: "Disproved by Hough in 2015."
+  oeis_ids: []
+  formalized: false
+
+- id: 999
+  title: "Partially solved problem"
+  statement: |
+    A problem that has been partially resolved.
+  status: partially_solved
+  prize: 250
+  tags:
+    - number theory
+  references: []
+  notes: "Partial progress made in several papers."
+  oeis_ids: []
+  formalized: false

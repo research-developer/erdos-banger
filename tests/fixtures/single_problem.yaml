@@ -1,0 +1,11 @@
+# tests/fixtures/single_problem.yaml
+# Minimal single problem for simple unit tests
+
+- id: 6
+  title: "Small primes in arithmetic progressions"
+  statement: "Prove that for every k, there exist infinitely many arithmetic progressions of length k consisting of primes."
+  status: proved
+  prize: 100
+  tags:
+    - number theory
+  references: []

@@ -1,0 +1,21 @@
+# tests/fixtures/invalid_problems.yaml
+# Intentionally malformed for error testing
+
+- id: "not a number"  # Should be int
+  title: "Bad problem"
+  statement: "Test"
+  status: open
+
+- title: "Missing ID"  # No id field
+  statement: "Test"
+  status: open
+
+- id: 1
+  # Missing title
+  statement: "Test"
+  status: open
+
+- id: 2
+  title: "Bad status"
+  statement: "Test"
+  status: "invalid_status"  # Not a valid status

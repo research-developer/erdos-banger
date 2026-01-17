@@ -1,0 +1,7 @@
+Erdos/Problem006.lean:12:5: error: type mismatch
+  rfl
+has type
+  ?m = ?m
+but is expected to have type
+  1 = 2
+Erdos/Problem006.lean:15:10: error: unknown identifier 'Nat.prime'
