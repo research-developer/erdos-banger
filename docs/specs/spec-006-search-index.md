@@ -578,7 +578,7 @@ On success, `CLIOutput.data` contains:
   "use_fts": true,
   "results": [
     {
-      "chunk_id": 123,
+      "chunk_id": "problem_6_statement",
       "snippet": "...",
       "score": 1.234,
       "source_type": "problem_statement",

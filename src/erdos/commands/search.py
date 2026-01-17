@@ -252,7 +252,9 @@ def search(
             )
         except (ProblemLoaderError, SearchIndexError) as e:
             duration_ms = int((time.perf_counter() - start_time) * 1000)
-            error_type = "LoaderError" if isinstance(e, ProblemLoaderError) else "IndexError"
+            error_type = (
+                "LoaderError" if isinstance(e, ProblemLoaderError) else "IndexError"
+            )
             result = CLIOutput.err(
                 command="erdos search",
                 error_type=error_type,
