@@ -5,17 +5,12 @@ from pathlib import Path
 import pytest
 
 from erdos.core.models import ChunkSource, ProblemRecord, ProblemStatus, TextChunk
-
-
-# Import will fail until implementation exists - that's expected in TDD
-# We'll run these tests to verify they fail first
+from erdos.core.search_index import SearchIndex, SearchIndexError, SearchResult
 
 
 @pytest.fixture
 def temp_index(tmp_path: Path):
     """Create a temporary search index."""
-    from erdos.core.search_index import SearchIndex
-
     return SearchIndex(tmp_path / "test.sqlite")
 
 
@@ -61,8 +56,6 @@ class TestSearchIndexBasics:
 
     def test_db_path_property(self, tmp_path: Path) -> None:
         """db_path property returns correct path."""
-        from erdos.core.search_index import SearchIndex
-
         db_file = tmp_path / "custom.sqlite"
         index = SearchIndex(db_file)
         assert index.db_path == db_file
@@ -73,8 +66,6 @@ class TestSearchIndexFromDefault:
 
     def test_from_default_creates_index(self, tmp_path: Path, monkeypatch) -> None:
         """from_default() creates index at default location."""
-        from erdos.core.search_index import SearchIndex
-
         # Change to tmp_path so we don't create files in repo
         monkeypatch.chdir(tmp_path)
 
@@ -84,8 +75,6 @@ class TestSearchIndexFromDefault:
 
     def test_from_default_respects_env_var(self, tmp_path: Path, monkeypatch) -> None:
         """from_default() uses ERDOS_INDEX_PATH if set."""
-        from erdos.core.search_index import SearchIndex
-
         custom_path = tmp_path / "custom" / "index.sqlite"
         monkeypatch.setenv("ERDOS_INDEX_PATH", str(custom_path))
 
@@ -287,8 +276,6 @@ class TestSearchResultDataclass:
 
     def test_search_result_fields(self) -> None:
         """SearchResult has expected fields."""
-        from erdos.core.search_index import SearchResult
-
         result = SearchResult(
             chunk_id="test_1",
             text="Some text about primes",
@@ -313,8 +300,6 @@ class TestSearchIndexError:
 
     def test_search_index_error_exists(self) -> None:
         """SearchIndexError can be raised."""
-        from erdos.core.search_index import SearchIndexError
-
         with pytest.raises(SearchIndexError):
             raise SearchIndexError("Test error")
 
@@ -345,8 +330,7 @@ class TestFTS5Queries:
         temp_index.index_problem(sample_problem)
         temp_index.index_problem(sample_problem_2)
 
-        # OR query - use words from both statements
-        # sample_problem: "...sequence of primes..."
-        # sample_problem_2: "For every integer..."
+        # OR query - use words from both statements (primes from sample_problem,
+        # integer from sample_problem_2)
         results = temp_index.search("primes OR integer")
         assert len(results) >= 2  # Should find both problems

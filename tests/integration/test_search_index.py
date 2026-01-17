@@ -4,14 +4,14 @@ from pathlib import Path
 
 import pytest
 
+from erdos.core.index_builder import build_index
+from erdos.core.problem_loader import ProblemLoader
+from erdos.core.search_index import SearchIndex, SearchResult
+
 
 @pytest.fixture
 def populated_index(tmp_path: Path, sample_problems_yaml: Path):
     """Index populated with sample data."""
-    from erdos.core.index_builder import build_index
-    from erdos.core.problem_loader import ProblemLoader
-    from erdos.core.search_index import SearchIndex
-
     loader = ProblemLoader(sample_problems_yaml)
     index = SearchIndex(tmp_path / "test.sqlite")
 
@@ -23,10 +23,6 @@ def test_build_index_indexes_all_problems(
     tmp_path: Path, sample_problems_yaml: Path
 ) -> None:
     """build_index indexes all problems from loader."""
-    from erdos.core.index_builder import build_index
-    from erdos.core.problem_loader import ProblemLoader
-    from erdos.core.search_index import SearchIndex
-
     loader = ProblemLoader(sample_problems_yaml)
     index = SearchIndex(tmp_path / "test.sqlite")
 
@@ -40,10 +36,6 @@ def test_build_index_rebuild_clears_existing(
     tmp_path: Path, sample_problems_yaml: Path
 ) -> None:
     """build_index with rebuild=True clears existing data."""
-    from erdos.core.index_builder import build_index
-    from erdos.core.problem_loader import ProblemLoader
-    from erdos.core.search_index import SearchIndex
-
     loader = ProblemLoader(sample_problems_yaml)
     index = SearchIndex(tmp_path / "test.sqlite")
 
@@ -79,8 +71,6 @@ def test_fts5_prefix_search_integration(populated_index) -> None:
 
 def test_search_returns_search_result_objects(populated_index) -> None:
     """Search returns SearchResult objects with correct fields."""
-    from erdos.core.search_index import SearchResult
-
     results = populated_index.search("test")
 
     if results:  # Only test if we got results
