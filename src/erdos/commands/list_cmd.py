@@ -9,7 +9,7 @@ from rich.console import Console
 from rich.table import Table
 
 from erdos.core.models import CLIOutput, ProblemRecord, ProblemStatus
-from erdos.core.problem_loader import ProblemLoader
+from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 
 
 app = typer.Typer(
@@ -142,7 +142,18 @@ def list_(
     if json_output:
         ctx.obj["json"] = True
 
-    loader = ProblemLoader.from_default()
+    try:
+        loader = ProblemLoader.from_default()
+    except ProblemLoaderError as e:
+        result = CLIOutput.err(
+            command="erdos list",
+            error_type="LoaderError",
+            message=str(e),
+            code=1,
+        )
+        _output(ctx, result)
+        raise typer.Exit(code=1) from None
+
     result = list_problems(
         status=status,
         prize_min=prize_min,

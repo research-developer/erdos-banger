@@ -150,14 +150,14 @@ def test_cli_search_empty_query_error(
     assert "Error:" in result.stderr
 
 
-def test_cli_lean_init_not_implemented(tmp_path: Path) -> None:
+def test_cli_lean_init_not_implemented() -> None:
     result = runner.invoke(app, ["lean", "init"], env={})
 
     assert result.exit_code == 1
     assert "Feature not yet implemented" in result.stderr
 
 
-def test_cli_lean_init_json_not_implemented(tmp_path: Path) -> None:
+def test_cli_lean_init_json_not_implemented() -> None:
     result = runner.invoke(app, ["lean", "init", "--json"], env={})
 
     assert result.exit_code == 1

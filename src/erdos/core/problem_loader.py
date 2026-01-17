@@ -163,15 +163,37 @@ class ProblemLoader:
                 )
             )
 
+        # Validate tags field type (avoid string-to-chars bug)
+        raw_tags = raw.get("tags", []) or []
+        if isinstance(raw_tags, str):
+            raise ProblemLoaderError(
+                f"Problem {raw.get('id')}: 'tags' must be a list, got string: {raw_tags!r}"
+            )
+        if not isinstance(raw_tags, list):
+            raise ProblemLoaderError(
+                f"Problem {raw.get('id')}: 'tags' must be a list, got {type(raw_tags).__name__}"
+            )
+
+        # Validate oeis_ids field type
+        raw_oeis = raw.get("oeis_ids", []) or []
+        if isinstance(raw_oeis, str):
+            raise ProblemLoaderError(
+                f"Problem {raw.get('id')}: 'oeis_ids' must be a list, got string: {raw_oeis!r}"
+            )
+        if not isinstance(raw_oeis, list):
+            raise ProblemLoaderError(
+                f"Problem {raw.get('id')}: 'oeis_ids' must be a list, got {type(raw_oeis).__name__}"
+            )
+
         return ProblemRecord(
             id=int(raw["id"]),
             title=str(raw["title"]),
             statement=str(raw["statement"]),
             status=status,
             prize=int(raw.get("prize", 0) or 0),
-            tags=list(raw.get("tags", []) or []),
+            tags=[str(t) for t in raw_tags],
             references=references,
-            oeis_ids=list(raw.get("oeis_ids", []) or []),
+            oeis_ids=[str(o) for o in raw_oeis],
             notes=raw.get("notes"),
             formalized=bool(raw.get("formalized", False)),
         )
@@ -199,6 +221,12 @@ class ProblemLoader:
         for i, raw in enumerate(raw_problems):
             try:
                 problem = self._parse_problem(raw)
+                if problem.id in problems:
+                    errors.append(
+                        f"Problem at index {i}: Duplicate ID {problem.id} "
+                        f"(first seen: '{problems[problem.id].title}')"
+                    )
+                    continue
                 problems[problem.id] = problem
             except (ProblemLoaderError, KeyError, TypeError, ValidationError) as e:
                 errors.append(f"Problem at index {i}: {e}")
@@ -273,7 +301,7 @@ class ProblemLoader:
             if prize_max is not None and problem.prize > prize_max:
                 continue
 
-            if tags is not None:
+            if tags is not None and tags:  # Treat empty list as "no filter"
                 tag_set = {t.lower() for t in tags}
                 problem_tags = {t.lower() for t in problem.tags}
                 if not tag_set.intersection(problem_tags):

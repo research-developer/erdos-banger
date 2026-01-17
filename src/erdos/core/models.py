@@ -4,7 +4,7 @@ import re
 from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -317,6 +317,23 @@ class TextChunk(ErdosBaseModel):
     # For display
     preview: Annotated[str | None, Field(default=None, max_length=200)] = None
 
+    @model_validator(mode="after")
+    def _validate_char_span(self) -> "TextChunk":
+        """Ensure start_char and end_char are paired and ordered."""
+        if (self.start_char is None) != (self.end_char is None):
+            raise ValueError(
+                "TextChunk: start_char and end_char must both be set or both be None"
+            )
+        if (
+            self.start_char is not None
+            and self.end_char is not None
+            and self.start_char > self.end_char
+        ):
+            raise ValueError(
+                f"TextChunk: start_char ({self.start_char}) must be <= end_char ({self.end_char})"
+            )
+        return self
+
     @classmethod
     def from_problem(cls, problem: ProblemRecord) -> "TextChunk":
         """Create a chunk from a problem statement."""
@@ -340,7 +357,9 @@ class LeanError(ErdosBaseModel):
     line: Annotated[int, Field(ge=1)]
     column: Annotated[int, Field(ge=1)]
     message: Annotated[str, Field(min_length=1)]
-    severity: Annotated[str, Field(default="error")] = "error"  # error, warning, info
+    severity: Annotated[Literal["error", "warning", "info"], Field(default="error")] = (
+        "error"
+    )
 
     def __str__(self) -> str:
         return f"{self.file}:{self.line}:{self.column}: {self.severity}: {self.message}"
@@ -393,6 +412,15 @@ class CLIOutput(ErdosBaseModel):
         default_factory=utc_now
     )
     duration_ms: Annotated[int | None, Field(default=None)] = None
+
+    @model_validator(mode="after")
+    def _check_invariants(self) -> "CLIOutput":
+        """Ensure success/data/error consistency."""
+        if self.success and self.error is not None:
+            raise ValueError("CLIOutput: success=True but error is set")
+        elif not self.success and self.error is None:
+            raise ValueError("CLIOutput: success=False but error is None")
+        return self
 
     @classmethod
     def ok(cls, command: str, data: Any, duration_ms: int | None = None) -> "CLIOutput":

@@ -11,7 +11,7 @@ from rich.console import Console
 from erdos.core.formalizer import generate_skeleton
 from erdos.core.lean_runner import LeanRunner
 from erdos.core.models import CLIOutput, LeanCheckResult
-from erdos.core.problem_loader import ProblemLoader
+from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 
 
 app = typer.Typer(help="Lean 4 theorem prover commands.")
@@ -23,12 +23,23 @@ def _output(ctx: typer.Context, data: CLIOutput) -> None:
     if (ctx.obj or {}).get("json"):
         console.print_json(data.model_dump_json())
     elif data.success:
-        if isinstance(data.data, dict) and {"file", "success"}.issubset(
-            data.data.keys()
-        ):
-            _print_human_check_result(cast("dict[str, Any]", data.data))
+        result_data = cast("dict[str, Any]", data.data)
+        if isinstance(result_data, dict):
+            # LeanCheckResult has "file" and "success" keys
+            if {"file", "success"}.issubset(result_data.keys()):
+                _print_human_check_result(result_data)
+            # Formalize result has "problem_id" and "file" keys
+            elif {"problem_id", "file"}.issubset(result_data.keys()):
+                _print_human_formalize_result(result_data)
+            # Init result has "project_path" and "initialized" keys
+            elif {"project_path", "initialized"}.issubset(result_data.keys()):
+                console.print(
+                    f"[green]✓[/green] Initialized Lean project at {result_data['project_path']}"
+                )
+            else:
+                console.print(result_data)
         else:
-            console.print(data.data)
+            console.print(result_data)
     else:
         error = cast("dict[str, Any]", data.error)
         err_console.print(f"[red]Error:[/red] {error['message']}")
@@ -44,6 +55,13 @@ def _print_human_check_result(result_data: dict[str, Any]) -> None:
         console.print(f"[red]✗[/red] {result.file} has {result.error_count} error(s)")
         for error in result.errors:
             console.print(f"  {error}")
+
+
+def _print_human_formalize_result(result_data: dict[str, Any]) -> None:
+    """Pretty-print formalize result."""
+    output_file = result_data["file"]
+    console.print(f"[green]✓[/green] Created {output_file}")
+    console.print(f"  Run: erdos lean check {output_file}")
 
 
 # ============================================================================
@@ -236,11 +254,28 @@ def formalize(
         ctx.obj["json"] = True
 
     path = project_path or Path("formal/lean")
-    loader = ProblemLoader.from_default()
+
+    try:
+        loader = ProblemLoader.from_default()
+    except ProblemLoaderError as e:
+        result = CLIOutput.err(
+            command="erdos lean formalize",
+            error_type="LoaderError",
+            message=str(e),
+            code=1,
+        )
+        _output(ctx, result)
+        raise typer.Exit(code=1) from None
 
     problem = loader.get_by_id(problem_id)
     if problem is None:
-        err_console.print(f"[red]Error:[/red] Problem {problem_id} not found")
+        result = CLIOutput.err(
+            command="erdos lean formalize",
+            error_type="NotFound",
+            message=f"Problem {problem_id} not found",
+            code=3,
+        )
+        _output(ctx, result)
         raise typer.Exit(code=3)
 
     try:
@@ -255,13 +290,8 @@ def formalize(
         _output(ctx, result)
         raise typer.Exit(code=1) from None
 
-    if (ctx.obj or {}).get("json"):
-        console.print_json(
-            CLIOutput.ok(
-                command="erdos lean formalize",
-                data={"problem_id": problem_id, "file": str(output_file)},
-            ).model_dump_json()
-        )
-    else:
-        console.print(f"[green]✓[/green] Created {output_file}")
-        console.print(f"  Run: erdos lean check {output_file}")
+    result = CLIOutput.ok(
+        command="erdos lean formalize",
+        data={"problem_id": problem_id, "file": str(output_file)},
+    )
+    _output(ctx, result)

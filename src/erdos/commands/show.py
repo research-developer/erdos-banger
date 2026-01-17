@@ -9,7 +9,7 @@ from rich.console import Console
 from rich.panel import Panel
 
 from erdos.core.models import CLIOutput, ProblemRecord
-from erdos.core.problem_loader import ProblemLoader
+from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 
 
 app = typer.Typer(
@@ -121,7 +121,18 @@ def show(
     ctx.ensure_object(dict)
     if json_output:
         ctx.obj["json"] = True
-    loader = ProblemLoader.from_default()  # Uses configured data path
+
+    try:
+        loader = ProblemLoader.from_default()
+    except ProblemLoaderError as e:
+        result = CLIOutput.err(
+            command="erdos show",
+            error_type="LoaderError",
+            message=str(e),
+            code=1,
+        )
+        _output(ctx, result)
+        raise typer.Exit(code=1) from None
 
     result = get_problem(problem_id, loader)
     _output(ctx, result)
