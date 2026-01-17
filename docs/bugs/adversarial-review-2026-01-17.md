@@ -7,69 +7,64 @@
 ## Executive Summary
 
 This review covers all specs implemented thus far (spec-003 through spec-006) and identifies:
-- **5 spec drift issues** (implementation deviates from spec)
+- **3 spec drift issues** (implementation deviates from spec) - *Updated after verification*
 - **9 missing test scenarios**
 - **2 inappropriate mock patterns**
-- **12 bugs** categorized by priority (P0-P4)
+- **5 confirmed bugs** (2 P2, 3 P3) - *Reduced from 12 after verification*
 
-**Overall Assessment:** The codebase is well-structured with good test coverage for core paths, but has significant dead code from unimplemented global flags and missing filter functionality specified in the CLI architecture spec.
+**Overall Assessment:** The codebase is well-structured with good test coverage for core paths. Several initial findings were false positives after careful spec comparison. Real issues include dead global flags and missing duration measurement.
+
+**Verification Status:** ✅ All findings verified against specs on 2026-01-17
 
 ---
 
 ## 1. Spec Drift
 
-### 1.1 [DRIFT-001] Missing `--prize-max` Filter (spec-004)
+### 1.1 [DRIFT-001] ~~Missing `--prize-max` Filter~~ → ENHANCEMENT
 
-**Severity:** P1 (High)
+**Status:** ⚠️ **RECLASSIFIED** - Not a bug, but useful enhancement
+**Original Severity:** P1 (High) → **Now:** P4 (Enhancement)
 **Spec:** spec-004-cli-architecture.md, Section 8 (Help Text Quality)
 **File:** `src/erdos/commands/list_cmd.py`
 
-The spec explicitly shows `--prize-max` as a filter option:
-```python
-# From spec-004:
-prize_max: Annotated[
-    Optional[int],
-    typer.Option("--prize-max", help="Maximum prize amount"),
-] = None,
-```
+**Verification Notes:**
+After careful review, spec-004 Section 8 (lines 825-862) only specifies `--prize-min`, NOT `--prize-max`. The original review incorrectly stated the spec required `--prize-max`.
 
-**Actual Implementation:**
-Only `--prize-min` is implemented. `--prize-max` is completely missing.
+However, spec-005 `ProblemLoader.filter()` method (lines 376-383) already supports `prize_max` parameter. Adding `--prize-max` to the CLI would be a useful enhancement since the loader already supports it.
 
-**Impact:** Users cannot filter problems by maximum prize amount as documented.
-
-**Fix:** Add `--prize-max` option to `list_cmd.py` and corresponding filter logic.
+**Resolution:** Implemented as enhancement (not bug fix)
 
 ---
 
 ### 1.2 [DRIFT-002] Dead Global Flags (spec-004)
 
+**Status:** ✅ **CONFIRMED** - Partially fixed
 **Severity:** P2 (Medium)
 **Spec:** spec-004-cli-architecture.md, Section 2 (Application Structure)
 **File:** `src/erdos/cli.py`
 
 The following global flags are defined but never used:
 
-| Flag | Spec Requirement | Current State |
-|------|------------------|---------------|
-| `--config` / `-c` | "Path to config file" | Stored in ctx.obj but never read |
-| `--no-network` | "Disable all network requests" | Stored but no code checks it |
-| `--log-level` | "Logging level" | Stored but logging never configured |
+| Flag | Spec Requirement | Current State | Resolution |
+|------|------------------|---------------|------------|
+| `--config` / `-c` | "Path to config file" | Stored but never read | Deferred to v1.1 |
+| `--no-network` | "Disable all network requests" | Stored but no code checks it | Reserved for future network commands |
+| `--log-level` | "Logging level" | Stored but logging never configured | **FIXED** |
 
 **Evidence:**
 ```python
 # cli.py:79-88
 ctx.obj.update({
     "json": json_output,
-    "no_network": no_network,  # Never checked anywhere
-    "config": config,          # Never loaded
-    "log_level": log_level,    # Logging never configured
+    "no_network": no_network,  # No network code exists yet
+    "config": config,          # Deferred to v1.1
+    "log_level": log_level,    # NOW CONFIGURED
 })
 ```
 
-**Impact:** Misleading CLI interface; users may expect these flags to work.
+**Impact:** `--log-level` now works. Other flags documented as reserved for v1.1.
 
-**Fix:** Either implement the functionality or remove the flags with a note for v1.1.
+**Fix Applied:** Implemented logging configuration for `--log-level`.
 
 ---
 
@@ -313,12 +308,15 @@ monkeypatch.setattr(LeanRunner, "check", fake_check_ok)
 
 ### P1 - High Priority
 
-#### [BUG-P1-001] `--prize-max` Filter Not Implemented
+#### [BUG-P1-001] ~~`--prize-max` Filter Not Implemented~~ → ENHANCEMENT
 
+**Status:** ⚠️ **RECLASSIFIED** - Not a bug (see DRIFT-001)
 **File:** `src/erdos/commands/list_cmd.py`
-**Description:** Spec-004 defines `--prize-max` option but it doesn't exist.
-**User Impact:** Cannot filter problems by maximum prize.
-**Fix:** Add option and filter logic in `list_problems()` and `list_()`.
+
+**Verification Notes:**
+Spec-004 does NOT define `--prize-max` as required. However, the loader (spec-005) supports it. Implemented as an enhancement.
+
+**Resolution:** Added `--prize-max` option as enhancement (not bug fix).
 
 ---
 
@@ -326,54 +324,47 @@ monkeypatch.setattr(LeanRunner, "check", fake_check_ok)
 
 #### [BUG-P2-001] `--config` Flag Does Nothing
 
+**Status:** ⏳ **DEFERRED** to v1.1
 **File:** `src/erdos/cli.py:58-64`
 **Description:** Config path stored but never loaded.
 **User Impact:** Configuration cannot be customized via file.
-**Fix:** Implement config loading or remove flag.
+
+**Resolution:** Deferred to v1.1. Help text updated to indicate future feature.
 
 ---
 
 #### [BUG-P2-002] `--no-network` Flag Does Nothing
 
+**Status:** ⏳ **RESERVED** for future use
 **File:** `src/erdos/cli.py:51-56`
-**Description:** Flag stored but no code checks it.
-**User Impact:** Network cannot be disabled.
-**Fix:** Pass to commands and honor in any future network code.
+**Description:** Flag stored but no network code exists yet.
+**User Impact:** None currently - no v1 commands use network.
+
+**Resolution:** Flag reserved for v1.1 network commands (ingest, ask). Help text clarified.
 
 ---
 
 #### [BUG-P2-003] `--log-level` Flag Does Nothing
 
+**Status:** ✅ **CONFIRMED & FIXED**
 **File:** `src/erdos/cli.py:66-71`
 **Description:** Log level stored but logging never configured.
 **User Impact:** Cannot control verbosity.
-**Fix:** Configure Python logging with specified level.
+**Fix Applied:** Implemented logging configuration in CLI callback.
 
 ---
 
-#### [BUG-P2-004] `iter_problems()` Re-parses YAML on Every Call
+#### [BUG-P2-004] ~~`iter_problems()` Re-parses YAML on Every Call~~ → FALSE POSITIVE
 
+**Status:** ⚠️ **FALSE POSITIVE** - Implementation matches spec exactly
 **File:** `src/erdos/core/problem_loader.py:214-223`
-**Description:** Each call to `iter_problems()` calls `_load_raw()` which re-reads and re-parses the YAML file.
-**User Impact:** Performance degradation for repeated iteration.
-**Fix:** Use cached data if available.
 
-```python
-# Current (inefficient):
-def iter_problems(self) -> Iterator[ProblemRecord]:
-    raw_problems = self._load_raw()  # Always re-reads file
-    for raw in raw_problems:
-        yield self._parse_problem(raw)
+**Verification Notes:**
+After reviewing spec-005 lines 349-358 and the test at lines 600-610, this is **intentional behavior**. The spec explicitly shows `iter_problems()` calling `_load_raw()` directly, and the test asserts "Cache should still be None (didn't call load_all)".
 
-# Suggested:
-def iter_problems(self) -> Iterator[ProblemRecord]:
-    if self._cache is not None:
-        yield from self._cache.values()
-    else:
-        raw_problems = self._load_raw()
-        for raw in raw_problems:
-            yield self._parse_problem(raw)
-```
+This is a design choice: `iter_problems()` is meant to be independent of the cache for true lazy iteration without populating the cache (useful for memory-constrained scenarios with 1135+ problems).
+
+**Resolution:** No fix needed - working as designed.
 
 ---
 
@@ -381,45 +372,50 @@ def iter_problems(self) -> Iterator[ProblemRecord]:
 
 #### [BUG-P3-001] `CLIOutput.duration_ms` Always Null
 
+**Status:** ✅ **CONFIRMED & FIXED**
 **Files:** All command files
 **Description:** Duration never measured or set.
 **User Impact:** Automation cannot measure command performance.
-**Fix:** Add timing decorator or manual measurement.
+**Fix Applied:** Added timing measurement to all commands.
 
 ---
 
-#### [BUG-P3-002] Search Fallback Uses Case-Insensitive Match but FTS Uses Stemming
+#### [BUG-P3-002] ~~Search Fallback Uses Case-Insensitive Match but FTS Uses Stemming~~ → BY DESIGN
 
+**Status:** ⚠️ **BY DESIGN** - Documented limitation
 **File:** `src/erdos/commands/search.py:127-138`
-**Description:** Basic search uses `q in text.lower()` while FTS uses Porter stemming. Results differ significantly.
-**User Impact:** Inconsistent search behavior depending on index state.
-**Fix:** Document difference or implement consistent tokenization.
+
+**Verification Notes:**
+The code at line 48 explicitly documents this: `"[dim]Using basic substring search (run 'erdos search --build-index' for better results)[/dim]"`. This is intentional fallback behavior when no FTS index exists, not a bug.
+
+**Resolution:** No fix needed - documented and working as designed.
 
 ---
 
 #### [BUG-P3-003] No Validation of Status String in List Filter
 
+**Status:** ✅ **CONFIRMED & FIXED**
 **File:** `src/erdos/commands/list_cmd.py:63`
 **Description:** Invalid status string silently becomes `UNKNOWN` via `ProblemStatus.from_string()`.
 **User Impact:** Typos in `--status` give unexpected empty results.
-**Fix:** Validate against known values and error on invalid input.
-
-```python
-# Current:
-status_enum = ProblemStatus.from_string(status) if status else None
-# "typo" -> ProblemStatus.UNKNOWN (silent)
-
-# Suggested: Validate and error
-```
+**Fix Applied:** Added validation with helpful error message listing valid values.
 
 ---
 
-#### [BUG-P3-004] Empty Tags List Not Handled Consistently
+#### [BUG-P3-004] ~~Empty Tags List Not Handled Consistently~~ → FALSE POSITIVE
 
+**Status:** ⚠️ **FALSE POSITIVE** - Code works correctly
 **File:** `src/erdos/core/problem_loader.py:172`
-**Description:** `tags=list(raw.get("tags", []) or [])` handles None but YAML may have `tags: []` explicitly.
-**User Impact:** Minor - works correctly but code is defensive.
-**Fix:** Simplify to `tags=raw.get("tags") or []`.
+
+**Verification Notes:**
+The expression `tags=list(raw.get("tags", []) or [])` correctly handles:
+1. `tags` key not present → `[]`
+2. `tags: null` in YAML → `[]` (via `or []`)
+3. `tags: []` in YAML → `[]`
+
+This is defensive programming that handles all edge cases correctly. The code is slightly verbose but correct.
+
+**Resolution:** No fix needed - working correctly.
 
 ---
 

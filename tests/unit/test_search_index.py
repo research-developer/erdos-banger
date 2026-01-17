@@ -235,9 +235,7 @@ class TestSearchIndexSearch:
 class TestSearchIndexClear:
     """Test clear operations."""
 
-    def test_clear_removes_all(
-        self, temp_index, sample_problem: ProblemRecord
-    ) -> None:
+    def test_clear_removes_all(self, temp_index, sample_problem: ProblemRecord) -> None:
         """clear() removes all indexed content."""
         temp_index.index_problem(sample_problem)
         temp_index.clear()
@@ -324,9 +322,7 @@ class TestSearchIndexError:
 class TestFTS5Queries:
     """Test FTS5 query syntax support."""
 
-    def test_phrase_search(
-        self, temp_index, sample_problem: ProblemRecord
-    ) -> None:
+    def test_phrase_search(self, temp_index, sample_problem: ProblemRecord) -> None:
         """FTS5 phrase search with quotes works."""
         temp_index.index_problem(sample_problem)
 
@@ -334,9 +330,7 @@ class TestFTS5Queries:
         results = temp_index.search('"arithmetic progressions"')
         assert len(results) > 0
 
-    def test_prefix_search(
-        self, temp_index, sample_problem: ProblemRecord
-    ) -> None:
+    def test_prefix_search(self, temp_index, sample_problem: ProblemRecord) -> None:
         """FTS5 prefix search with * works."""
         temp_index.index_problem(sample_problem)
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from typing import Annotated, Any, cast
 
 import typer
@@ -45,7 +46,9 @@ def _print_human(result_data: dict[str, Any]) -> None:
     if use_fts:
         console.print("[dim]Using FTS5 index with BM25 ranking[/dim]\n")
     else:
-        console.print("[dim]Using basic substring search (run 'erdos search --build-index' for better results)[/dim]\n")
+        console.print(
+            "[dim]Using basic substring search (run 'erdos search --build-index' for better results)[/dim]\n"
+        )
 
     for i, r in enumerate(results, 1):
         problem_id = r.get("problem_id")
@@ -92,15 +95,17 @@ def search_problems_fts(
         enriched_results = []
         for r in results:
             problem = loader.get_by_id(r.problem_id) if r.problem_id else None
-            enriched_results.append({
-                "chunk_id": r.chunk_id,
-                "snippet": r.snippet,
-                "score": r.score,
-                "source_type": r.source_type.value,
-                "problem_id": r.problem_id,
-                "title": problem.title if problem else None,
-                "reference_doi": r.reference_doi,
-            })
+            enriched_results.append(
+                {
+                    "chunk_id": r.chunk_id,
+                    "snippet": r.snippet,
+                    "score": r.score,
+                    "source_type": r.source_type.value,
+                    "problem_id": r.problem_id,
+                    "title": problem.title if problem else None,
+                    "reference_doi": r.reference_doi,
+                }
+            )
 
         return CLIOutput.ok(
             command="erdos search",
@@ -121,7 +126,9 @@ def search_problems_fts(
         )
 
 
-def search_problems_basic(query: str, loader: ProblemLoader, limit: int = 10) -> CLIOutput:
+def search_problems_basic(
+    query: str, loader: ProblemLoader, limit: int = 10
+) -> CLIOutput:
     """Fallback: basic substring search (no ranking)."""
     try:
         q = query.lower().strip()
@@ -144,7 +151,9 @@ def search_problems_basic(query: str, loader: ProblemLoader, limit: int = 10) ->
             {
                 "problem_id": p.id,
                 "title": p.title,
-                "snippet": p.statement[:200] + "..." if len(p.statement) > 200 else p.statement,
+                "snippet": p.statement[:200] + "..."
+                if len(p.statement) > 200
+                else p.statement,
                 "score": None,
                 "source_type": "problem_statement",
             }
@@ -192,7 +201,9 @@ def search(
     ] = None,
     build_index: Annotated[
         bool,
-        typer.Option("--build-index", help="Build/rebuild the search index before searching"),
+        typer.Option(
+            "--build-index", help="Build/rebuild the search index before searching"
+        ),
     ] = False,
     json_output: Annotated[
         bool,
@@ -231,6 +242,8 @@ def search(
             _output(ctx, result)
             raise typer.Exit(code=1) from None
 
+    start_time = time.perf_counter()
+
     # Try FTS search first, fall back to basic
     result = search_problems_fts(query, limit=limit, problem_id=problem_filter)
 
@@ -247,6 +260,10 @@ def search(
                 code=1,
             )
 
+    duration_ms = int((time.perf_counter() - start_time) * 1000)
+
+    # Add duration to result
+    result.duration_ms = duration_ms
     _output(ctx, result)
 
     if not result.success:

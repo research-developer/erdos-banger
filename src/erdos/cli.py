@@ -1,5 +1,6 @@
 """Erdos CLI - main entry point."""
 
+import logging
 from typing import Annotated
 
 import typer
@@ -7,6 +8,23 @@ from rich.console import Console
 
 from erdos import __version__
 from erdos.commands import lean, list_cmd, refs, search, show
+
+
+def _configure_logging(level: str) -> None:
+    """Configure Python logging with the specified level."""
+    level_map = {
+        "DEBUG": logging.DEBUG,
+        "INFO": logging.INFO,
+        "WARN": logging.WARNING,
+        "WARNING": logging.WARNING,
+        "ERROR": logging.ERROR,
+    }
+    log_level = level_map.get(level.upper(), logging.INFO)
+    logging.basicConfig(
+        level=log_level,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
 
 
 console = Console()
@@ -52,7 +70,7 @@ def main(
         bool,
         typer.Option(
             "--no-network",
-            help="Disable all network requests.",
+            help="Disable all network requests (reserved for v1.1 commands).",
         ),
     ] = False,
     config: Annotated[
@@ -60,7 +78,7 @@ def main(
         typer.Option(
             "--config",
             "-c",
-            help="Path to config file.",
+            help="Path to config file (v1.1 feature, currently ignored).",
         ),
     ] = None,
     log_level: Annotated[
@@ -76,6 +94,9 @@ def main(
 
     Run 'erdos COMMAND --help' for command-specific help.
     """
+    # Configure logging based on --log-level
+    _configure_logging(log_level)
+
     ctx.ensure_object(dict)
     if isinstance(ctx.obj, dict):
         ctx.obj.update(

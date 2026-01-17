@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from typing import Annotated, Any, cast
 
 import typer
@@ -10,6 +11,10 @@ from rich.table import Table
 
 from erdos.core.models import CLIOutput, ProblemRecord, ProblemStatus
 from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
+
+
+# Valid status values for user-facing validation
+_VALID_STATUSES = {"open", "proved", "disproved", "partially_solved"}
 
 
 app = typer.Typer(
@@ -54,14 +59,34 @@ def list_problems(
     *,
     status: str | None,
     prize_min: int | None,
+    prize_max: int | None,
     tag: list[str] | None,
     limit: int,
     loader: ProblemLoader,
 ) -> CLIOutput:
     """Core list logic (testable)."""
     try:
-        status_enum = ProblemStatus.from_string(status) if status is not None else None
-        problems = loader.filter(status=status_enum, prize_min=prize_min, tags=tag)
+        # Validate status if provided
+        if status is not None:
+            status_lower = status.lower()
+            if status_lower not in _VALID_STATUSES:
+                valid_list = ", ".join(sorted(_VALID_STATUSES))
+                return CLIOutput.err(
+                    command="erdos list",
+                    error_type="UsageError",
+                    message=f"Invalid status '{status}'. Valid values: {valid_list}",
+                    code=2,
+                )
+            status_enum = ProblemStatus.from_string(status)
+        else:
+            status_enum = None
+
+        problems = loader.filter(
+            status=status_enum,
+            prize_min=prize_min,
+            prize_max=prize_max,
+            tags=tag,
+        )
         problems = sorted(problems, key=lambda p: p.id)[:limit]
         return CLIOutput.ok(
             command="erdos list",
@@ -84,7 +109,7 @@ def list_(
         typer.Option(
             "--status",
             "-s",
-            help="Filter by status: open, proved, disproved",
+            help="Filter by status: open, proved, disproved, partially_solved",
         ),
     ] = None,
     prize_min: Annotated[
@@ -92,6 +117,14 @@ def list_(
         typer.Option(
             "--prize-min",
             help="Minimum prize amount in USD",
+            min=0,
+        ),
+    ] = None,
+    prize_max: Annotated[
+        int | None,
+        typer.Option(
+            "--prize-max",
+            help="Maximum prize amount in USD",
             min=0,
         ),
     ] = None,
@@ -132,6 +165,9 @@ def list_(
         # List problems with prize >= $1000
         erdos list --prize-min 1000
 
+        # List problems with prize <= $500
+        erdos list --prize-max 500
+
         # List number theory problems
         erdos list --tag "number theory"
 
@@ -142,6 +178,7 @@ def list_(
     if json_output:
         ctx.obj["json"] = True
 
+    start_time = time.perf_counter()
     try:
         loader = ProblemLoader.from_default()
     except ProblemLoaderError as e:
@@ -157,10 +194,15 @@ def list_(
     result = list_problems(
         status=status,
         prize_min=prize_min,
+        prize_max=prize_max,
         tag=tag,
         limit=limit,
         loader=loader,
     )
+    duration_ms = int((time.perf_counter() - start_time) * 1000)
+
+    # Add duration to result
+    result.duration_ms = duration_ms
     _output(ctx, result)
 
     if not result.success:
