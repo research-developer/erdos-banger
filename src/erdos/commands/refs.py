@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from typing import Annotated, Any, cast
 
 import typer
@@ -103,6 +104,7 @@ def refs(
     if json_output:
         ctx.obj["json"] = True
 
+    start_time = time.perf_counter()
     try:
         loader = ProblemLoader.from_default()
     except ProblemLoaderError as e:
@@ -116,6 +118,10 @@ def refs(
         raise typer.Exit(code=1) from None
 
     result = get_refs(problem_id, loader)
+    duration_ms = int((time.perf_counter() - start_time) * 1000)
+
+    # Add duration to result
+    result.duration_ms = duration_ms
     _output(ctx, result)
 
     if not result.success:

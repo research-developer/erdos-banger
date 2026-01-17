@@ -1,4 +1,4 @@
-"""Core domain models for erdos-harness."""
+"""Core domain models for erdos-banger."""
 
 import re
 from datetime import UTC, datetime

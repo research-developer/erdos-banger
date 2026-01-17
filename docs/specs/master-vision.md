@@ -4,7 +4,7 @@
 
 ### Name Candidates (no hype)
 
-- `erdos-harness` (concise and descriptive)
+- `erdos-banger` (concise and descriptive)
 - `problem-lab`
 - `erdos-lab`
 - `erdos-workbench`
@@ -15,7 +15,7 @@
 - `lean-erdos-kit`
 - `open-erdos`
 
-**Chosen Name:** `erdos-harness`
+**Chosen Name:** `erdos-banger`
 
 **Tagline:** CLI-first toolkit for collaborative research on Erdős problems, from literature to Lean formalization.
 
@@ -124,7 +124,7 @@ Every run produces structured logs (e.g. JSON lines or YAML) capturing the opera
 Below is a proposed repository file tree. Directories are marked with a trailing `/`. We indicate which parts are committed to git and which are user-local (ignored or generated).
 
 ```
-erdos-harness/
+erdos-banger/
 ├── README.md                   # Project overview, setup, basic usage (committed)
 ├── LICENSE                     # Project license (committed, Apache-2.0)
 ├── pyproject.toml              # PEP 621 project config (committed)
@@ -490,7 +490,7 @@ Structured error JSON for `--json` mode:
 #### 1. Setup and Data Load
 
 ```bash
-git clone ... && cd erdos-harness && git submodule update --init
+git clone ... && cd erdos-banger && git submodule update --init
 erdos list --status open --limit 1
 ```
 
@@ -791,8 +791,8 @@ Apache-2.0 (to match erdosproblems dataset).
 
 ```bash
 # 1. Clone the harness repo
-git clone https://github.com/youruser/erdos-harness.git
-cd erdos-harness
+git clone https://github.com/youruser/erdos-banger.git
+cd erdos-banger
 
 # 2. Initialize submodule for Erdős problems data
 git submodule update --init --recursive
@@ -810,14 +810,14 @@ uv sync
 
 Or via pipx:
 ```bash
-pipx install 'erdos-harness==0.1.0'
+pipx install 'erdos-banger==0.1.0'
 ```
 
 ### c. Verify CLI and Version
 
 ```bash
 uv run erdos --version
-# Should output: erdos-harness 0.1.0
+# Should output: erdos-banger 0.1.0
 
 uv run erdos list --help
 # Should show usage help

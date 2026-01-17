@@ -1,6 +1,6 @@
 # Spec 002: Testing Strategy & Architecture
 
-> Defines how we test erdos-harness: what to test, when to mock, and how to ensure vertical slices are testable end-to-end.
+> Defines how we test erdos-banger: what to test, when to mock, and how to ensure vertical slices are testable end-to-end.
 
 ---
 
@@ -74,7 +74,7 @@ tests/
 **pyproject.toml:**
 ```toml
 [tool.pytest.ini_options]
-minversion = "9.0"
+minversion = "8.0"
 addopts = [
     "-ra",                      # Show extra summary for all except passed
     "-q",                       # Quieter output

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from typing import Annotated, Any, cast
 
 import typer
@@ -122,8 +123,9 @@ def show(
     if json_output:
         ctx.obj["json"] = True
 
+    start_time = time.perf_counter()
     try:
-        loader = ProblemLoader.from_default()
+        loader = ProblemLoader.from_default()  # Uses configured data path
     except ProblemLoaderError as e:
         result = CLIOutput.err(
             command="erdos show",
@@ -135,6 +137,10 @@ def show(
         raise typer.Exit(code=1) from None
 
     result = get_problem(problem_id, loader)
+    duration_ms = int((time.perf_counter() - start_time) * 1000)
+
+    # Add duration to result
+    result.duration_ms = duration_ms
     _output(ctx, result)
 
     if not result.success:

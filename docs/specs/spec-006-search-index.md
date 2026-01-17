@@ -101,7 +101,7 @@ INSERT OR REPLACE INTO schema_meta (key, value) VALUES ('version', '1');
 
 ```python
 # src/erdos/core/search_index.py
-"""SQLite FTS5 search index for erdos-harness."""
+"""SQLite FTS5 search index for erdos-banger."""
 
 import json
 import sqlite3

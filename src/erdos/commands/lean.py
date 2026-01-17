@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 from typing import Annotated, Any, cast
 
@@ -159,8 +160,13 @@ def init(
     if json_output:
         ctx.obj["json"] = True
 
+    start_time = time.perf_counter()
     path = project_path or Path("formal/lean")
     result = init_lean_project(path)
+    duration_ms = int((time.perf_counter() - start_time) * 1000)
+
+    # Add duration to result
+    result.duration_ms = duration_ms
     _output(ctx, result)
     if not result.success:
         error = cast("dict[str, Any]", result.error)
@@ -203,8 +209,13 @@ def check(
     if json_output:
         ctx.obj["json"] = True
 
+    start_time = time.perf_counter()
     path = project_path or Path("formal/lean")
     result = check_lean_file(file, path)
+    duration_ms = int((time.perf_counter() - start_time) * 1000)
+
+    # Add duration to result
+    result.duration_ms = duration_ms
     _output(ctx, result)
 
     if (
@@ -253,6 +264,7 @@ def formalize(
     if json_output:
         ctx.obj["json"] = True
 
+    start_time = time.perf_counter()
     path = project_path or Path("formal/lean")
 
     try:
@@ -269,29 +281,35 @@ def formalize(
 
     problem = loader.get_by_id(problem_id)
     if problem is None:
+        duration_ms = int((time.perf_counter() - start_time) * 1000)
         result = CLIOutput.err(
             command="erdos lean formalize",
             error_type="NotFound",
             message=f"Problem {problem_id} not found",
             code=3,
         )
+        result.duration_ms = duration_ms
         _output(ctx, result)
         raise typer.Exit(code=3)
 
     try:
         output_file = generate_skeleton(problem, path)
     except NotImplementedError as e:
+        duration_ms = int((time.perf_counter() - start_time) * 1000)
         result = CLIOutput.err(
             command="erdos lean formalize",
             error_type="NotImplemented",
             message=str(e),
             code=1,
         )
+        result.duration_ms = duration_ms
         _output(ctx, result)
         raise typer.Exit(code=1) from None
 
+    duration_ms = int((time.perf_counter() - start_time) * 1000)
     result = CLIOutput.ok(
         command="erdos lean formalize",
         data={"problem_id": problem_id, "file": str(output_file)},
     )
+    result.duration_ms = duration_ms
     _output(ctx, result)

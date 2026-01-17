@@ -6,7 +6,7 @@
 
 ## Overview
 
-This spec defines the exact development environment, package management, linting, formatting, and type checking configuration for the erdos-harness project.
+This spec defines the exact development environment, package management, linting, formatting, and type checking configuration for the erdos-banger project.
 
 ### Guiding Principles
 
@@ -34,7 +34,7 @@ We use [uv](https://docs.astral.sh/uv/) (Astral's Rust-based package manager) in
 **pyproject.toml:**
 ```toml
 [project]
-name = "erdos-harness"
+name = "erdos-banger"
 version = "0.1.0"
 description = "CLI toolkit for Erdős problem research"
 readme = "README.md"
@@ -128,7 +128,7 @@ uv sync                    # Apply updates to venv
 We use the [src layout](https://docs.pytest.org/en/stable/explanation/goodpractices.html) recommended by pytest.
 
 ```
-erdos-harness/
+erdos-banger/
 ├── pyproject.toml
 ├── uv.lock
 ├── .python-version
@@ -442,7 +442,7 @@ uv sync --frozen
 
 # 2. CLI is runnable
 uv run erdos --version
-# Output: erdos-harness 0.1.0
+# Output: erdos-banger 0.1.0
 
 # 3. Linting passes
 uv run ruff check src/ tests/

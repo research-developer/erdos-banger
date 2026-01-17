@@ -118,7 +118,7 @@ The feedback correctly identifies Docling as risky:
 
 If a paper isn't on arXiv and isn't open access, we record metadata and move on. We don't try to solve PDF extraction in v1.
 
-**Install path:** `pip install erdos-harness[pdf]` is reserved for future PDF tooling. As of 2026-01, Docling pins `typer<0.20.0`, which conflicts with our `typer>=0.21.1` baseline, so v1 ships without a PDF extra.
+**Install path:** `pip install erdos-banger[pdf]` is reserved for future PDF tooling. As of 2026-01, Docling pins `typer<0.20.0`, which conflicts with our `typer>=0.21.1` baseline, so v1 ships without a PDF extra.
 
 ---
 
@@ -226,7 +226,7 @@ Before handing to a coding agent, ensure:
 ### Exact File Tree (V1.0)
 
 ```
-erdos-harness/
+erdos-banger/
 ├── README.md
 ├── LICENSE                          # Apache-2.0
 ├── pyproject.toml                   # PEP 621 project config
