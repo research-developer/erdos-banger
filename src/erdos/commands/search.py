@@ -52,8 +52,8 @@ def _print_human(result_data: dict[str, Any]) -> None:
 
     for i, r in enumerate(results, 1):
         problem_id = r.get("problem_id")
-        title = r.get("title", "")
-        snippet = r.get("snippet", "")
+        title = r.get("title") or ""
+        snippet = r.get("snippet") or ""
         score = r.get("score")
         source_type = r.get("source_type", "")
 
@@ -90,11 +90,22 @@ def search_problems_fts(
 
         results = index.search(query, limit=limit, problem_id=problem_id)
 
-        # Enrich results with problem titles
-        loader = ProblemLoader.from_default()
+        # Enrich results with problem titles (best-effort; index can still be used
+        # even if the source YAML isn't available in this environment).
+        loader: ProblemLoader | None = None
+        try:
+            loader = ProblemLoader.from_default()
+        except ProblemLoaderError:
+            loader = None
+
         enriched_results = []
         for r in results:
-            problem = loader.get_by_id(r.problem_id) if r.problem_id else None
+            problem = None
+            if loader is not None and r.problem_id is not None:
+                try:
+                    problem = loader.get_by_id(r.problem_id)
+                except ProblemLoaderError:
+                    problem = None
             enriched_results.append(
                 {
                     "chunk_id": r.chunk_id,
@@ -226,25 +237,31 @@ def search(
     if json_output:
         ctx.obj["json"] = True
 
+    json_mode = bool((ctx.obj or {}).get("json"))
+    progress_console = err_console if json_mode else console
+
+    start_time = time.perf_counter()
+
     # Build index if requested
     if build_index:
-        console.print("Building search index...")
+        progress_console.print("Building search index...")
         try:
             stats = do_build_index(rebuild=True)
-            console.print(
+            progress_console.print(
                 f"[green]✓[/green] Indexed {stats['problems_indexed']} problems"
             )
-        except ProblemLoaderError as e:
+        except (ProblemLoaderError, SearchIndexError) as e:
+            duration_ms = int((time.perf_counter() - start_time) * 1000)
+            error_type = "LoaderError" if isinstance(e, ProblemLoaderError) else "IndexError"
             result = CLIOutput.err(
                 command="erdos search",
-                error_type="LoaderError",
+                error_type=error_type,
                 message=str(e),
                 code=1,
             )
+            result.duration_ms = duration_ms
             _output(ctx, result)
             raise typer.Exit(code=1) from None
-
-    start_time = time.perf_counter()
 
     # Try FTS search first, fall back to basic
     result = search_problems_fts(query, limit=limit, problem_id=problem_filter)

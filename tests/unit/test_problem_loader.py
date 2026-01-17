@@ -236,3 +236,30 @@ class TestProblemLoaderIterProblems:
 
         assert isinstance(first, ProblemRecord)
         assert loader._cache is None
+
+    def test_raises_on_duplicate_ids(self, tmp_path: Path) -> None:
+        """iter_problems raises on duplicate IDs to prevent silent overwrites."""
+        yaml_file = tmp_path / "problems.yaml"
+        yaml_file.write_text(
+            "\n".join(
+                [
+                    "- id: 1",
+                    "  title: First",
+                    "  statement: A",
+                    "  status: open",
+                    "- id: 1",
+                    "  title: Second",
+                    "  statement: B",
+                    "  status: open",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        loader = ProblemLoader(yaml_file)
+        iterator = loader.iter_problems()
+        first = next(iterator)
+        assert first.id == 1
+        with pytest.raises(ProblemLoaderError, match=r"Duplicate ID 1"):
+            next(iterator)

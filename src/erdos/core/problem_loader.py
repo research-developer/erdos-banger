@@ -247,8 +247,16 @@ class ProblemLoader:
             ProblemRecord objects one at a time
         """
         raw_problems = self._load_raw()
-        for raw in raw_problems:
-            yield self._parse_problem(raw)
+        seen: dict[int, str] = {}
+        for i, raw in enumerate(raw_problems):
+            problem = self._parse_problem(raw)
+            if problem.id in seen:
+                raise ProblemLoaderError(
+                    f"Problem at index {i}: Duplicate ID {problem.id} "
+                    f"(first seen: '{seen[problem.id]}')"
+                )
+            seen[problem.id] = problem.title
+            yield problem
 
     def get_by_id(self, problem_id: int) -> ProblemRecord | None:
         """

@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-runner = CliRunner(mix_stderr=False)
+runner = CliRunner()
 
 
 def _data_dir(tmp_path: Path, sample_problems_yaml: Path) -> Path:
@@ -164,6 +164,61 @@ def test_cli_search_empty_query_error(
     # Empty query in basic search returns error code 2
     # But if index exists and is empty, it falls back to basic search
     assert result.exit_code == 2 or "Query must not be empty" in str(result.stderr)
+
+
+def test_cli_search_build_index_json_output_is_clean(
+    tmp_path: Path, sample_problems_yaml: Path
+) -> None:
+    data_dir = _data_dir(tmp_path, sample_problems_yaml)
+    index_path = tmp_path / "index" / "test.sqlite"
+    result = runner.invoke(
+        app,
+        ["search", "prime", "--build-index", "--json"],
+        env={"ERDOS_DATA_PATH": str(data_dir), "ERDOS_INDEX_PATH": str(index_path)},
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["command"] == "erdos search"
+    assert payload["success"] is True
+
+    # Progress/logging must not contaminate JSON on stdout.
+    assert "Building search index" not in result.stdout
+    assert "Building search index" in result.stderr
+
+
+def test_cli_search_fts_works_without_dataset_when_index_exists(
+    tmp_path: Path, sample_problems_yaml: Path, monkeypatch
+) -> None:
+    data_dir = _data_dir(tmp_path, sample_problems_yaml)
+    index_path = tmp_path / "index" / "test.sqlite"
+
+    # Build index while dataset is present.
+    build = runner.invoke(
+        app,
+        ["search", "prime", "--build-index"],
+        env={"ERDOS_DATA_PATH": str(data_dir), "ERDOS_INDEX_PATH": str(index_path)},
+    )
+    assert build.exit_code == 0
+
+    # Remove dataset and run from an isolated cwd so the loader can't fall back
+    # to repository-local data paths.
+    shutil.rmtree(data_dir)
+    monkeypatch.chdir(tmp_path)
+
+    result = runner.invoke(
+        app,
+        ["search", "prime", "--json"],
+        env={"ERDOS_INDEX_PATH": str(index_path)},
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["command"] == "erdos search"
+    assert payload["success"] is True
+    assert payload["data"]["use_fts"] is True
+    assert payload["data"]["count"] > 0
+    assert any(r.get("title") is None for r in payload["data"]["results"])
 
 
 def test_cli_lean_init_not_implemented() -> None:
