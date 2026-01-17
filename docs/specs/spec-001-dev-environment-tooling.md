@@ -287,6 +287,7 @@ show_column_numbers = true
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false  # Test functions don't need full typing
+disallow_incomplete_defs = false  # Fixtures often omit arg annotations
 
 [[tool.mypy.overrides]]
 module = "yaml.*"
@@ -617,7 +618,15 @@ jobs:
         run: uv sync --frozen
 
       - name: Run Lean-dependent tests
-        run: uv run pytest -m "requires_lean"
+        run: |
+          set +e
+          uv run pytest -m "requires_lean"
+          status=$?
+          if [ $status -eq 5 ]; then
+            echo "No tests collected for marker 'requires_lean'; skipping."
+            exit 0
+          fi
+          exit $status
 ```
 
 ### b) Release (Tag → Build → Publish)

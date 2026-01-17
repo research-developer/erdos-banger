@@ -23,4 +23,3 @@ def test_in_memory_db_fixture_provides_connection(in_memory_db) -> None:
     """in_memory_db fixture should provide a working SQLite connection."""
     cursor = in_memory_db.execute("SELECT 1")
     assert cursor.fetchone() == (1,)
-

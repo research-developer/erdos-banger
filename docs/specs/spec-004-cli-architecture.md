@@ -161,16 +161,19 @@ Each command lives in its own module under `src/erdos/commands/`.
 # src/erdos/commands/show.py
 """erdos show - display problem details."""
 
-from typing import Annotated
+from typing import Annotated, Any, cast
 
 import typer
 from rich.console import Console
 from rich.panel import Panel
 
 from erdos.core.models import CLIOutput, ProblemRecord
-from erdos.core.problem_loader import ProblemLoader
+from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 
-app = typer.Typer(help="Show detailed problem information.")
+app = typer.Typer(
+    help="Show detailed problem information.",
+    context_settings={"allow_interspersed_args": True},
+)
 console = Console()
 err_console = Console(stderr=True)
 
@@ -179,16 +182,18 @@ def _output(ctx: typer.Context, data: CLIOutput) -> None:
     """Output result based on format preference."""
     if (ctx.obj or {}).get("json"):
         console.print_json(data.model_dump_json())
+    elif data.success:
+        _print_human(cast("dict[str, Any]", data.data))
     else:
-        if data.success:
-            _print_human(data.data)
-        else:
-            err_console.print(f"[red]Error:[/red] {data.error['message']}")
+        error = cast("dict[str, Any]", data.error)
+        err_console.print(f"[red]Error:[/red] {error['message']}")
 
 
-def _print_human(problem_data: dict) -> None:
+def _print_human(problem_data: dict[str, Any]) -> None:
     """Pretty-print problem for humans."""
-    problem = ProblemRecord.model_validate(problem_data)
+    # `model_dump(mode="json")` turns enums into strings. With strict models
+    # (Spec 003), re-validation needs `strict=False`.
+    problem = ProblemRecord.model_validate(problem_data, strict=False)
 
     title = f"[bold]Problem {problem.id}:[/bold] {problem.title}"
     status_color = {
@@ -258,14 +263,35 @@ def show(
             min=1,
         ),
     ],
+    json_output: Annotated[
+        bool,
+        typer.Option(
+            "--json",
+            help="Output as JSON for machine consumption.",
+        ),
+    ] = False,
 ) -> None:
     """
     Show detailed information about an Erdős problem.
 
     Example: erdos show 6
     """
+    ctx.ensure_object(dict)
+    if json_output:
+        ctx.obj["json"] = True
+
     # Load configuration and create loader
-    loader = ProblemLoader.from_default()  # Uses configured data path
+    try:
+        loader = ProblemLoader.from_default()  # Uses configured data path
+    except ProblemLoaderError as e:
+        result = CLIOutput.err(
+            command="erdos show",
+            error_type="LoaderError",
+            message=str(e),
+            code=1,
+        )
+        _output(ctx, result)
+        raise typer.Exit(code=1) from None
 
     # Execute core logic
     result = get_problem(problem_id, loader)
@@ -275,7 +301,8 @@ def show(
 
     # Exit with appropriate code
     if not result.success:
-        raise typer.Exit(code=result.error.get("code", 1))
+        error = cast("dict[str, Any]", result.error)
+        raise typer.Exit(code=int(error.get("code", 1)))
 ```
 
 ---
@@ -289,13 +316,15 @@ Commands with subcommands use a Typer group.
 """erdos lean - Lean 4 integration commands."""
 
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated, Any, Optional, cast
 
 import typer
 from rich.console import Console
 
+from erdos.core.formalizer import generate_skeleton
 from erdos.core.lean_runner import LeanRunner
 from erdos.core.models import CLIOutput, LeanCheckResult
+from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 
 app = typer.Typer(help="Lean 4 theorem prover commands.")
 console = Console()
@@ -305,16 +334,32 @@ err_console = Console(stderr=True)
 def _output(ctx: typer.Context, data: CLIOutput) -> None:
     if (ctx.obj or {}).get("json"):
         console.print_json(data.model_dump_json())
-    else:
-        if data.success:
-            _print_human_check_result(data.data)
+    elif data.success:
+        result_data = cast("dict[str, Any]", data.data)
+        if isinstance(result_data, dict):
+            # LeanCheckResult has "file" and "success" keys
+            if {"file", "success"}.issubset(result_data.keys()):
+                _print_human_check_result(result_data)
+            # Formalize result has "problem_id" and "file" keys
+            elif {"problem_id", "file"}.issubset(result_data.keys()):
+                _print_human_formalize_result(result_data)
+            # Init result has "project_path" and "initialized" keys
+            elif {"project_path", "initialized"}.issubset(result_data.keys()):
+                console.print(
+                    f"[green]✓[/green] Initialized Lean project at {result_data['project_path']}"
+                )
+            else:
+                console.print(result_data)
         else:
-            err_console.print(f"[red]Error:[/red] {data.error['message']}")
+            console.print(result_data)
+    else:
+        error = cast("dict[str, Any]", data.error)
+        err_console.print(f"[red]Error:[/red] {error['message']}")
 
 
-def _print_human_check_result(result_data: dict) -> None:
+def _print_human_check_result(result_data: dict[str, Any]) -> None:
     """Pretty-print Lean check result."""
-    result = LeanCheckResult.model_validate(result_data)
+    result = LeanCheckResult.model_validate(result_data, strict=False)
 
     if result.success:
         console.print(f"[green]✓[/green] {result.file} compiled successfully")
@@ -322,6 +367,13 @@ def _print_human_check_result(result_data: dict) -> None:
         console.print(f"[red]✗[/red] {result.file} has {result.error_count} error(s)")
         for error in result.errors:
             console.print(f"  {error}")
+
+
+def _print_human_formalize_result(result_data: dict[str, Any]) -> None:
+    """Pretty-print formalize result."""
+    output_file = result_data["file"]
+    console.print(f"[green]✓[/green] Created {output_file}")
+    console.print(f"  Run: erdos lean check {output_file}")
 
 
 # ============================================================================
@@ -336,6 +388,13 @@ def init_lean_project(project_path: Path) -> CLIOutput:
         return CLIOutput.ok(
             command="erdos lean init",
             data={"project_path": str(project_path), "initialized": True},
+        )
+    except NotImplementedError as e:
+        return CLIOutput.err(
+            command="erdos lean init",
+            error_type="NotImplemented",
+            message=str(e),
+            code=1,
         )
     except Exception as e:
         return CLIOutput.err(
@@ -354,6 +413,13 @@ def check_lean_file(file_path: Path, project_path: Path) -> CLIOutput:
         return CLIOutput.ok(
             command="erdos lean check",
             data=result.model_dump(mode="json"),
+        )
+    except NotImplementedError as e:
+        return CLIOutput.err(
+            command="erdos lean check",
+            error_type="NotImplemented",
+            message=str(e),
+            code=1,
         )
     except FileNotFoundError:
         return CLIOutput.err(
@@ -386,17 +452,29 @@ def init(
             help="Path to Lean project (default: formal/lean/)",
         ),
     ] = None,
+    json_output: Annotated[
+        bool,
+        typer.Option(
+            "--json",
+            help="Output as JSON for machine consumption.",
+        ),
+    ] = False,
 ) -> None:
     """
     Initialize Lean 4 project with mathlib.
 
     Creates lakefile.lean, lean-toolchain, and directory structure.
     """
+    ctx.ensure_object(dict)
+    if json_output:
+        ctx.obj["json"] = True
+
     path = project_path or Path("formal/lean")
     result = init_lean_project(path)
     _output(ctx, result)
     if not result.success:
-        raise typer.Exit(code=result.error.get("code", 1))
+        error = cast("dict[str, Any]", result.error)
+        raise typer.Exit(code=int(error.get("code", 1)))
 
 
 @app.command()
@@ -418,21 +496,37 @@ def check(
             help="Path to Lean project (default: formal/lean/)",
         ),
     ] = None,
+    json_output: Annotated[
+        bool,
+        typer.Option(
+            "--json",
+            help="Output as JSON for machine consumption.",
+        ),
+    ] = False,
 ) -> None:
     """
     Check a Lean file for compilation errors.
 
     Example: erdos lean check Erdos/Problem006.lean
     """
+    ctx.ensure_object(dict)
+    if json_output:
+        ctx.obj["json"] = True
+
     path = project_path or Path("formal/lean")
     result = check_lean_file(file, path)
     _output(ctx, result)
 
     # Exit with code 5 if Lean has errors
-    if result.success and not result.data.get("success", True):
+    if (
+        result.success
+        and isinstance(result.data, dict)
+        and not result.data.get("success", True)
+    ):
         raise typer.Exit(code=5)
     if not result.success:
-        raise typer.Exit(code=result.error.get("code", 1))
+        error = cast("dict[str, Any]", result.error)
+        raise typer.Exit(code=int(error.get("code", 1)))
 
 
 @app.command()
@@ -453,35 +547,64 @@ def formalize(
             help="Path to Lean project (default: formal/lean/)",
         ),
     ] = None,
+    json_output: Annotated[
+        bool,
+        typer.Option(
+            "--json",
+            help="Output as JSON for machine consumption.",
+        ),
+    ] = False,
 ) -> None:
     """
     Generate a Lean skeleton for a problem.
 
     Creates Erdos/Problem<ID>.lean with theorem stub.
     """
-    from erdos.core.formalizer import generate_skeleton
-    from erdos.core.problem_loader import ProblemLoader
+    ctx.ensure_object(dict)
+    if json_output:
+        ctx.obj["json"] = True
 
     path = project_path or Path("formal/lean")
-    loader = ProblemLoader.from_default()
+    try:
+        loader = ProblemLoader.from_default()
+    except ProblemLoaderError as e:
+        result = CLIOutput.err(
+            command="erdos lean formalize",
+            error_type="LoaderError",
+            message=str(e),
+            code=1,
+        )
+        _output(ctx, result)
+        raise typer.Exit(code=1) from None
 
     problem = loader.get_by_id(problem_id)
     if problem is None:
-        err_console.print(f"[red]Error:[/red] Problem {problem_id} not found")
+        result = CLIOutput.err(
+            command="erdos lean formalize",
+            error_type="NotFound",
+            message=f"Problem {problem_id} not found",
+            code=3,
+        )
+        _output(ctx, result)
         raise typer.Exit(code=3)
 
-    output_file = generate_skeleton(problem, path)
-
-    if (ctx.obj or {}).get("json"):
-        console.print_json(
-            CLIOutput.ok(
-                command="erdos lean formalize",
-                data={"problem_id": problem_id, "file": str(output_file)},
-            ).model_dump_json()
+    try:
+        output_file = generate_skeleton(problem, path)
+    except NotImplementedError as e:
+        result = CLIOutput.err(
+            command="erdos lean formalize",
+            error_type="NotImplemented",
+            message=str(e),
+            code=1,
         )
-    else:
-        console.print(f"[green]✓[/green] Created {output_file}")
-        console.print(f"  Run: erdos lean check {output_file}")
+        _output(ctx, result)
+        raise typer.Exit(code=1) from None
+
+    result = CLIOutput.ok(
+        command="erdos lean formalize",
+        data={"problem_id": problem_id, "file": str(output_file)},
+    )
+    _output(ctx, result)
 ```
 
 ---
@@ -609,6 +732,7 @@ def test_show_real_problem(sample_problems_yaml: Path) -> None:
     result = get_problem(6, loader)
 
     assert result.success
+    assert isinstance(result.data, dict)
     assert result.data["id"] == 6
     assert "title" in result.data
 
@@ -619,6 +743,7 @@ def test_show_missing_problem(sample_problems_yaml: Path) -> None:
     result = get_problem(99999, loader)
 
     assert not result.success
+    assert isinstance(result.error, dict)
     assert result.error["type"] == "NotFound"
 ```
 
@@ -904,8 +1029,8 @@ def test_cli_has_version_flag() -> None:
 
 def test_cli_has_json_flag() -> None:
     """CLI should have global --json flag."""
-    result = runner.invoke(app, ["--help"])
-    assert "--json" in result.stdout
+    result = runner.invoke(app, ["--json", "--help"])
+    assert result.exit_code == 0
 
 
 def test_cli_has_required_commands() -> None:

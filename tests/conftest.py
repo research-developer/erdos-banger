@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import sqlite3
-from dataclasses import dataclass, field
-from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -14,30 +12,7 @@ import pytest
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-try:
-    from erdos.core.models import (  # type: ignore[import-not-found]
-        ProblemRecord,
-        ProblemStatus,
-    )
-except ImportError:
-    # TODO: Replace stubs with `erdos.core.models` once Spec 003 is implemented.
-    class ProblemStatus(str, Enum):
-        OPEN = "open"
-        PROVED = "proved"
-        DISPROVED = "disproved"
-        PARTIALLY_SOLVED = "partially_solved"
-        UNKNOWN = "unknown"
-
-    @dataclass(frozen=True)
-    class ProblemRecord:
-        id: int
-        title: str
-        statement: str
-        status: ProblemStatus
-        prize: int = 0
-        tags: list[str] = field(default_factory=list)
-        references: list[dict[str, object]] = field(default_factory=list)
-
+from erdos.core.models import ProblemRecord, ProblemStatus
 
 
 @pytest.fixture
