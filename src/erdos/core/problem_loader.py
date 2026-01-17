@@ -263,7 +263,16 @@ class ProblemLoader:
         raw_problems = self._load_raw()
         seen: dict[int, str] = {}
         for i, raw in enumerate(raw_problems):
-            problem = self._parse_problem(raw)
+            try:
+                problem = self._parse_problem(raw)
+            except (
+                ProblemLoaderError,
+                KeyError,
+                TypeError,
+                ValueError,
+                ValidationError,
+            ) as e:
+                raise ProblemLoaderError(f"Problem at index {i}: {e}") from e
             if problem.id in seen:
                 raise ProblemLoaderError(
                     f"Problem at index {i}: Duplicate ID {problem.id} "
