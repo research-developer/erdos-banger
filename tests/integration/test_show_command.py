@@ -12,6 +12,7 @@ def test_show_real_problem(sample_problems_yaml: Path) -> None:
     result = get_problem(6, loader)
 
     assert result.success
+    assert isinstance(result.data, dict)
     assert result.data["id"] == 6
     assert "title" in result.data
 
@@ -22,4 +23,5 @@ def test_show_missing_problem(sample_problems_yaml: Path) -> None:
     result = get_problem(99999, loader)
 
     assert not result.success
+    assert isinstance(result.error, dict)
     assert result.error["type"] == "NotFound"

@@ -10,6 +10,7 @@ class TestGetProblem:
         result: CLIOutput = get_problem(6, mock_loader_with_problem)
 
         assert result.success
+        assert isinstance(result.data, dict)
         assert result.data["id"] == 6
         assert result.data["status"] == ProblemStatus.OPEN.value
         assert result.command == "erdos show"
@@ -19,5 +20,6 @@ class TestGetProblem:
         result: CLIOutput = get_problem(9999, mock_loader_empty)
 
         assert not result.success
+        assert isinstance(result.error, dict)
         assert result.error["type"] == "NotFound"
         assert result.error["code"] == 3

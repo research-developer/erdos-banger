@@ -10,6 +10,7 @@ from typer.testing import CliRunner
 
 from erdos.cli import app
 from erdos.commands import lean as lean_cmd
+from erdos.core.lean_runner import LeanRunner
 from erdos.core.models import LeanCheckResult, LeanError
 
 
@@ -229,12 +230,12 @@ def test_cli_lean_check_success_and_failure(monkeypatch, tmp_path: Path) -> None
             ],
         )
 
-    monkeypatch.setattr(lean_cmd.LeanRunner, "check", fake_check_ok)
+    monkeypatch.setattr(LeanRunner, "check", fake_check_ok)
     ok = runner.invoke(app, ["lean", "check", str(file_path)], env={})
     assert ok.exit_code == 0
     assert "compiled successfully" in ok.stdout
 
-    monkeypatch.setattr(lean_cmd.LeanRunner, "check", fake_check_fail)
+    monkeypatch.setattr(LeanRunner, "check", fake_check_fail)
     bad = runner.invoke(app, ["lean", "check", str(file_path)], env={})
     assert bad.exit_code == 5
     assert "has 1 error" in bad.stdout
@@ -252,7 +253,7 @@ def test_cli_lean_init_and_formalize_success(
         out.write_text("-- skeleton\n", encoding="utf-8")
         return out
 
-    monkeypatch.setattr(lean_cmd.LeanRunner, "init", fake_init)
+    monkeypatch.setattr(LeanRunner, "init", fake_init)
     init = runner.invoke(app, ["lean", "init"], env={})
     assert init.exit_code == 0
     assert "initialized" in init.stdout.lower()
