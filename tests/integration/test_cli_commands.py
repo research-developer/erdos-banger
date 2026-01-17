@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-runner = CliRunner()
+runner = CliRunner(mix_stderr=False)
 
 
 def _data_dir(tmp_path: Path, sample_problems_yaml: Path) -> Path:

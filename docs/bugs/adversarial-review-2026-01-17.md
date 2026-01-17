@@ -10,7 +10,7 @@ This review covers all specs implemented thus far (spec-003 through spec-006) an
 - **3 spec drift issues** (implementation deviates from spec) - *Updated after verification*
 - **9 missing test scenarios**
 - **2 inappropriate mock patterns**
-- **5 confirmed bugs** (2 P2, 3 P3) - *Reduced from 12 after verification*
+- **5 confirmed bugs** (3 P2, 2 P3) - *Reduced from 12 after verification*
 
 **Overall Assessment:** The codebase is well-structured with good test coverage for core paths. Several initial findings were false positives after careful spec comparison. Real issues include dead global flags and missing duration measurement.
 
@@ -502,16 +502,16 @@ data = yaml.safe_load(f)  # Safe, not yaml.load()
 
 ### Immediate Actions (Before Next Release)
 
-1. **[P1]** Implement `--prize-max` filter in list command
-2. **[P2]** Either implement or remove dead global flags
-3. **[TEST]** Add E2E tests for list, refs, search commands
+1. **[P2]** Either implement or remove dead global flags (`--config`, `--no-network`) - See DRIFT-002
+2. **[TEST]** Add E2E tests for list, refs, search commands
 
 ### Short-Term Actions
 
-1. **[P2]** Fix `iter_problems()` to use cache
-2. **[P3]** Add duration_ms measurement to commands
-3. **[TEST]** Expand test fixtures with more diverse problems
-4. **[MOCK]** Extend `_MockLoader` to full interface
+1. **[P4]** Consider adding `--prize-max` filter as enhancement (see DRIFT-001 - reclassified)
+2. **[TEST]** Expand test fixtures with more diverse problems
+3. **[MOCK]** Extend `_MockLoader` to full interface
+
+> **Note:** The original `iter_problems()` caching concern (BUG-P2-004) was verified as FALSE POSITIVE - the implementation correctly matches spec design.
 
 ### Documentation Updates
 

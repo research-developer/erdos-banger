@@ -74,7 +74,7 @@ tests/
 **pyproject.toml:**
 ```toml
 [tool.pytest.ini_options]
-minversion = "9.0"
+minversion = "8.0"
 addopts = [
     "-ra",                      # Show extra summary for all except passed
     "-q",                       # Quieter output

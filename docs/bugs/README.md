@@ -21,10 +21,10 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 ## Quick Links
 
 - [Adversarial Review 2026-01-17](./adversarial-review-2026-01-17.md)
-  - 5 spec drift issues
+  - 3 spec drift issues
   - 9 missing test scenarios
   - 2 inappropriate mock patterns
-  - 12 bugs (1 P1, 4 P2, 4 P3, 3 P4)
+  - 5 bugs (3 P2, 2 P3)
 
 ## How to Add Bug Reports
 
