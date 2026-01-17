@@ -44,17 +44,18 @@ All models share common Pydantic configuration:
 # src/erdos/core/models.py
 """Core domain models for erdos-harness."""
 
-from datetime import datetime, timezone
+import re
+from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 def utc_now() -> datetime:
     """Timezone-aware UTC timestamp."""
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class ErdosBaseModel(BaseModel):
@@ -349,15 +350,32 @@ class TextChunk(ErdosBaseModel):
     source: ChunkSource
 
     # Source linkage
-    problem_id: Annotated[int | None, Field(default=None)]
-    reference_doi: Annotated[str | None, Field(default=None)]
+    problem_id: Annotated[int | None, Field(default=None)] = None
+    reference_doi: Annotated[str | None, Field(default=None)] = None
 
     # Position in source document
-    start_char: Annotated[int | None, Field(default=None, ge=0)]
-    end_char: Annotated[int | None, Field(default=None, ge=0)]
+    start_char: Annotated[int | None, Field(default=None, ge=0)] = None
+    end_char: Annotated[int | None, Field(default=None, ge=0)] = None
 
     # For display
-    preview: Annotated[str | None, Field(default=None, max_length=200)]
+    preview: Annotated[str | None, Field(default=None, max_length=200)] = None
+
+    @model_validator(mode="after")
+    def _validate_char_span(self) -> "TextChunk":
+        """Ensure start_char and end_char are paired and ordered."""
+        if (self.start_char is None) != (self.end_char is None):
+            raise ValueError(
+                "TextChunk: start_char and end_char must both be set or both be None"
+            )
+        if (
+            self.start_char is not None
+            and self.end_char is not None
+            and self.start_char > self.end_char
+        ):
+            raise ValueError(
+                f"TextChunk: start_char ({self.start_char}) must be <= end_char ({self.end_char})"
+            )
+        return self
 
     @classmethod
     def from_problem(cls, problem: ProblemRecord) -> "TextChunk":
@@ -385,7 +403,7 @@ class LeanError(ErdosBaseModel):
     line: Annotated[int, Field(ge=1)]
     column: Annotated[int, Field(ge=1)]
     message: Annotated[str, Field(min_length=1)]
-    severity: Annotated[str, Field(default="error")]  # error, warning, info
+    severity: Annotated[Literal["error", "warning", "info"], Field(default="error")] = "error"
 
     def __str__(self) -> str:
         return f"{self.file}:{self.line}:{self.column}: {self.severity}: {self.message}"
@@ -428,15 +446,42 @@ class CLIOutput(ErdosBaseModel):
     All --json output uses this structure for consistency.
     """
 
-    schema_version: Annotated[int, Field(default=1)]
+    schema_version: Annotated[int, Field(default=1)] = 1
     command: Annotated[str, Field(description="Command that produced this output")]
-    success: Annotated[bool, Field(default=True)]
+    success: Annotated[bool, Field(default=True)] = True
     data: Annotated[Any, Field(description="Command-specific output data")]
-    error: Annotated[dict[str, Any] | None, Field(default=None)]
+    error: Annotated[dict[str, Any] | None, Field(default=None)] = None
 
     # Metadata
     timestamp: Annotated[datetime, Field(default_factory=utc_now)]
-    duration_ms: Annotated[int | None, Field(default=None)]
+    duration_ms: Annotated[int | None, Field(default=None)] = None
+
+    @model_validator(mode="after")
+    def _check_invariants(self) -> "CLIOutput":
+        """Ensure success/data/error consistency."""
+        if self.success:
+            if self.error is not None:
+                raise ValueError("CLIOutput: success=True but error is set")
+            return self
+
+        # Failure case
+        if self.error is None:
+            raise ValueError("CLIOutput: success=False but error is None")
+        if self.data is not None:
+            raise ValueError("CLIOutput: success=False but data is not None")
+
+        required_keys = {"type", "message", "code"}
+        missing = required_keys.difference(self.error.keys())
+        if missing:
+            raise ValueError(f"CLIOutput: error missing keys: {sorted(missing)}")
+
+        if not isinstance(self.error.get("type"), str) or not self.error["type"]:
+            raise ValueError("CLIOutput: error.type must be a non-empty string")
+        if not isinstance(self.error.get("message"), str) or not self.error["message"]:
+            raise ValueError("CLIOutput: error.message must be a non-empty string")
+        if not isinstance(self.error.get("code"), int):
+            raise ValueError("CLIOutput: error.code must be an int")
+        return self
 
     @classmethod
     def ok(cls, command: str, data: Any, duration_ms: int | None = None) -> "CLIOutput":
@@ -564,7 +609,7 @@ except ValidationError as e:
 ## 12) Serialization Examples
 
 ```python
-# To JSON dict
+# To JSON dict (enums become strings)
 problem_dict = problem.model_dump(mode="json")
 # {
 #     "id": 6,
@@ -580,7 +625,8 @@ problem_dict = problem.model_dump(mode="json")
 problem_json = problem.model_dump_json(indent=2)
 
 # From dict
-restored = ProblemRecord.model_validate(problem_dict)
+# Note: with strict models (Spec 003), json-mode dumps must be re-validated with strict=False.
+restored = ProblemRecord.model_validate(problem_dict, strict=False)
 
 # From JSON string
 restored = ProblemRecord.model_validate_json(problem_json)
@@ -724,6 +770,7 @@ class TestCLIOutput:
     def test_error_output(self) -> None:
         output = CLIOutput.err("erdos show", "NotFound", "Problem not found", code=3)
         assert not output.success
+        assert output.error is not None
         assert output.error["type"] == "NotFound"
         assert output.error["code"] == 3
 ```

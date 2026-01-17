@@ -416,10 +416,28 @@ class CLIOutput(ErdosBaseModel):
     @model_validator(mode="after")
     def _check_invariants(self) -> "CLIOutput":
         """Ensure success/data/error consistency."""
-        if self.success and self.error is not None:
-            raise ValueError("CLIOutput: success=True but error is set")
-        elif not self.success and self.error is None:
+        if self.success:
+            if self.error is not None:
+                raise ValueError("CLIOutput: success=True but error is set")
+            return self
+
+        # Failure case
+        if self.error is None:
             raise ValueError("CLIOutput: success=False but error is None")
+        if self.data is not None:
+            raise ValueError("CLIOutput: success=False but data is not None")
+
+        required_keys = {"type", "message", "code"}
+        missing = required_keys.difference(self.error.keys())
+        if missing:
+            raise ValueError(f"CLIOutput: error missing keys: {sorted(missing)}")
+
+        if not isinstance(self.error.get("type"), str) or not self.error["type"]:
+            raise ValueError("CLIOutput: error.type must be a non-empty string")
+        if not isinstance(self.error.get("message"), str) or not self.error["message"]:
+            raise ValueError("CLIOutput: error.message must be a non-empty string")
+        if not isinstance(self.error.get("code"), int):
+            raise ValueError("CLIOutput: error.code must be an int")
         return self
 
     @classmethod
