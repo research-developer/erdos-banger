@@ -146,8 +146,12 @@ For v1, the ProblemLoader expects the **enriched format** with `id`, `title`, an
 # src/erdos/core/problem_loader.py
 """Load and parse problems from the erdosproblems dataset."""
 
+from __future__ import annotations
+
+import os
+from importlib.resources import as_file, files
 from pathlib import Path
-from typing import Iterator
+from typing import TYPE_CHECKING, Any
 
 import yaml
 from pydantic import ValidationError
@@ -155,10 +159,12 @@ from pydantic import ValidationError
 from erdos.core.models import ProblemRecord, ProblemStatus, ReferenceEntry
 
 
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+
 class ProblemLoaderError(Exception):
     """Raised when problem loading fails."""
-
-    pass
 
 
 class ProblemLoader:
@@ -190,7 +196,7 @@ class ProblemLoader:
         self._cache: dict[int, ProblemRecord] | None = None
 
     @classmethod
-    def from_default(cls) -> "ProblemLoader":
+    def from_default(cls) -> ProblemLoader:
         """
         Create loader using default data path.
 
@@ -206,8 +212,6 @@ class ProblemLoader:
         Raises:
             ProblemLoaderError: If no valid path found
         """
-        import os
-
         # Check environment variable first
         env_path = os.environ.get("ERDOS_DATA_PATH")
         if env_path:
@@ -229,8 +233,6 @@ class ProblemLoader:
 
         # Check package data (for installed package)
         try:
-            from importlib.resources import as_file, files
-
             pkg_files = files("erdos")
             pkg_data = pkg_files.joinpath("data", "problems_enriched.yaml")
             # as_file() extracts resource to a real filesystem path
@@ -249,17 +251,27 @@ class ProblemLoader:
         """Path to the problems.yaml file."""
         return self._yaml_path
 
-    def _load_raw(self) -> list[dict]:
+    def _load_raw(self) -> list[dict[str, Any]]:
         """Load raw YAML data."""
-        with open(self._yaml_path, encoding="utf-8") as f:
-            data = yaml.safe_load(f)
+        try:
+            with self._yaml_path.open(encoding="utf-8") as f:
+                data = yaml.safe_load(f)
+        except yaml.YAMLError as e:
+            raise ProblemLoaderError(f"Failed to parse YAML: {e}") from e
 
         if not isinstance(data, list):
             raise ProblemLoaderError(
                 f"Expected list of problems, got {type(data).__name__}"
             )
 
-        return data
+        raw: list[dict[str, Any]] = []
+        for item in data:
+            if not isinstance(item, dict):
+                raise ProblemLoaderError(
+                    f"Expected each problem to be a mapping, got {type(item).__name__}"
+                )
+            raw.append(item)
+        return raw
 
     def _parse_problem(self, raw: dict) -> ProblemRecord:
         """
@@ -281,16 +293,20 @@ class ProblemLoader:
                 "Create data/problems_enriched.yaml (Spec 005) or point ERDOS_DATA_PATH at an enriched problems_enriched.yaml (or problems.yaml)."
             )
 
-        # Normalize status string (handles legacy/variant values)
-        status = ProblemStatus.from_string(raw.get("status", "open"))
+        status = ProblemStatus.from_string(str(raw.get("status", "open")))
 
-        # Parse references
         raw_refs = raw.get("references", [])
-        references = []
+        references: list[ReferenceEntry] = []
+        if raw_refs is None:
+            raw_refs = []
+        if not isinstance(raw_refs, list):
+            raise ProblemLoaderError("Field 'references' must be a list")
         for ref in raw_refs:
+            if not isinstance(ref, dict):
+                raise ProblemLoaderError("Each reference must be a mapping")
             references.append(
                 ReferenceEntry(
-                    key=ref.get("key", "unknown"),
+                    key=str(ref.get("key", "unknown")),
                     citation=ref.get("citation"),
                     doi=ref.get("doi"),
                     arxiv_id=ref.get("arxiv_id"),
@@ -298,17 +314,39 @@ class ProblemLoader:
                 )
             )
 
+        # Validate tags field type (avoid string-to-chars bug)
+        raw_tags = raw.get("tags", []) or []
+        if isinstance(raw_tags, str):
+            raise ProblemLoaderError(
+                f"Problem {raw.get('id')}: 'tags' must be a list, got string: {raw_tags!r}"
+            )
+        if not isinstance(raw_tags, list):
+            raise ProblemLoaderError(
+                f"Problem {raw.get('id')}: 'tags' must be a list, got {type(raw_tags).__name__}"
+            )
+
+        # Validate oeis_ids field type
+        raw_oeis = raw.get("oeis_ids", []) or []
+        if isinstance(raw_oeis, str):
+            raise ProblemLoaderError(
+                f"Problem {raw.get('id')}: 'oeis_ids' must be a list, got string: {raw_oeis!r}"
+            )
+        if not isinstance(raw_oeis, list):
+            raise ProblemLoaderError(
+                f"Problem {raw.get('id')}: 'oeis_ids' must be a list, got {type(raw_oeis).__name__}"
+            )
+
         return ProblemRecord(
-            id=raw["id"],
-            title=raw["title"],
-            statement=raw["statement"],
+            id=int(raw["id"]),
+            title=str(raw["title"]),
+            statement=str(raw["statement"]),
             status=status,
-            prize=raw.get("prize", 0),
-            tags=raw.get("tags", []),
+            prize=int(raw.get("prize", 0) or 0),
+            tags=[str(t) for t in raw_tags],
             references=references,
-            oeis_ids=raw.get("oeis_ids", []),
+            oeis_ids=[str(o) for o in raw_oeis],
             notes=raw.get("notes"),
-            formalized=raw.get("formalized", False),
+            formalized=bool(raw.get("formalized", False)),
         )
 
     def load_all(self, *, use_cache: bool = True) -> list[ProblemRecord]:
@@ -334,8 +372,14 @@ class ProblemLoader:
         for i, raw in enumerate(raw_problems):
             try:
                 problem = self._parse_problem(raw)
+                if problem.id in problems:
+                    errors.append(
+                        f"Problem at index {i}: Duplicate ID {problem.id} "
+                        f"(first seen: '{problems[problem.id].title}')"
+                    )
+                    continue
                 problems[problem.id] = problem
-            except (KeyError, ValidationError) as e:
+            except (ProblemLoaderError, KeyError, TypeError, ValidationError) as e:
                 errors.append(f"Problem at index {i}: {e}")
 
         if errors:
@@ -354,8 +398,16 @@ class ProblemLoader:
             ProblemRecord objects one at a time
         """
         raw_problems = self._load_raw()
-        for raw in raw_problems:
-            yield self._parse_problem(raw)
+        seen: dict[int, str] = {}
+        for i, raw in enumerate(raw_problems):
+            problem = self._parse_problem(raw)
+            if problem.id in seen:
+                raise ProblemLoaderError(
+                    f"Problem at index {i}: Duplicate ID {problem.id} "
+                    f"(first seen: '{seen[problem.id]}')"
+                )
+            seen[problem.id] = problem.title
+            yield problem
 
     def get_by_id(self, problem_id: int) -> ProblemRecord | None:
         """
@@ -370,6 +422,8 @@ class ProblemLoader:
         if self._cache is None:
             self.load_all()
 
+        if self._cache is None:
+            return None
         return self._cache.get(problem_id)
 
     def filter(
@@ -395,7 +449,7 @@ class ProblemLoader:
             List of matching ProblemRecord objects
         """
         problems = self.load_all()
-        results = []
+        results: list[ProblemRecord] = []
 
         for problem in problems:
             # Status filter
@@ -409,7 +463,7 @@ class ProblemLoader:
                 continue
 
             # Tags filter (match any)
-            if tags is not None:
+            if tags is not None and tags:  # Treat empty list as "no filter"
                 tag_set = set(t.lower() for t in tags)
                 problem_tags = set(t.lower() for t in problem.tags)
                 if not tag_set.intersection(problem_tags):
@@ -436,16 +490,14 @@ class ProblemLoader:
 
 ## 4) Configuration
 
-The loader respects these configuration options:
+In v1, `ProblemLoader` does **not** read an `erdos.yaml` config file. Data location is determined by:
 
-```yaml
-# erdos.yaml (config file)
-data:
-  problems_path: "data/erdosproblems/data/problems.yaml"
-  cache_parsed: true
-```
+1. **Environment variable:** `ERDOS_DATA_PATH` (a directory containing `problems_enriched.yaml` or `problems.yaml`)
+2. **Repo default:** `./data/problems_enriched.yaml`
+3. **Dev fallback:** `./data/erdosproblems/data/problems.yaml` (upstream metadata-only; rejected by v1 parsing)
+4. **Installed package fallback:** `erdos/data/problems_enriched.yaml` (package resource)
 
-**Environment variable:** `ERDOS_DATA_PATH` overrides the config.
+Caching is controlled by `load_all(use_cache=True)` and `clear_cache()`.
 
 ---
 
@@ -610,48 +662,9 @@ class TestProblemLoaderIterProblems:
         assert loader._cache is None
 ```
 
-### Integration Tests
+### Integration Tests (Optional)
 
-```python
-# tests/integration/test_problem_loader.py
-"""Integration tests for ProblemLoader with real data."""
-
-from pathlib import Path
-
-import pytest
-
-from erdos.core.problem_loader import ProblemLoader
-
-
-@pytest.fixture
-def real_data_loader() -> ProblemLoader | None:
-    """Load from actual submodule if available."""
-    real_path = Path("data/erdosproblems/data/problems.yaml")
-    if real_path.exists():
-        return ProblemLoader(real_path)
-    pytest.skip("erdosproblems submodule not initialized")
-
-
-def test_loads_all_real_problems(real_data_loader: ProblemLoader) -> None:
-    """Verify we can load the full upstream dataset."""
-    problems = real_data_loader.load_all()
-
-    # Should have hundreds of problems
-    assert len(problems) > 100
-
-    # All should have valid IDs
-    ids = [p.id for p in problems]
-    assert len(ids) == len(set(ids))  # No duplicates
-
-
-def test_specific_known_problem(real_data_loader: ProblemLoader) -> None:
-    """Verify a known problem loads correctly."""
-    # Problem 6 is well-documented
-    problem = real_data_loader.get_by_id(6)
-
-    assert problem is not None
-    assert "prime" in problem.title.lower() or "prime" in problem.statement.lower()
-```
+No CI integration tests against `data/erdosproblems/data/problems.yaml` are included in v1 because that file is **metadata-only** and rejected by the v1 loader.
 
 ### Acceptance Criteria
 
@@ -679,7 +692,6 @@ print(f'Open problems: {len(open_problems)}')
 
 # 4. Tests pass
 uv run pytest tests/unit/test_problem_loader.py -v
-uv run pytest tests/integration/test_problem_loader.py -v
 ```
 
 ---
