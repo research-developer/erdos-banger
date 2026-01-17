@@ -231,7 +231,9 @@ def search(
         console.print("Building search index...")
         try:
             stats = do_build_index(rebuild=True)
-            console.print(f"[green]✓[/green] Indexed {stats['problems_indexed']} problems")
+            console.print(
+                f"[green]✓[/green] Indexed {stats['problems_indexed']} problems"
+            )
         except ProblemLoaderError as e:
             result = CLIOutput.err(
                 command="erdos search",

@@ -29,7 +29,8 @@ def test_build_index_indexes_all_problems(
     result = build_index(loader=loader, index=index)
 
     assert result["problems_indexed"] == loader.count()
-    assert result["total_chunks"] > 0
+    total_chunks = result["total_chunks"]
+    assert isinstance(total_chunks, int) and total_chunks > 0
 
 
 def test_build_index_rebuild_clears_existing(
