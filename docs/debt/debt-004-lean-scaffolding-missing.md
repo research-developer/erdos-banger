@@ -1,8 +1,10 @@
 # Debt: Lean Scaffolding Absent vs Spec 007
 
 **Priority:** P1
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-17
+**Fixed:** 2026-01-17
+**Commit:** 7e17d21
 
 ## Summary
 
@@ -33,4 +35,3 @@ Implement Spec 007 (or a clearly scoped subset) as the next major milestone:
 - `src/erdos/core/lean_runner.py`
 - `src/erdos/core/formalizer.py`
 - `.github/workflows/ci.yml`
-

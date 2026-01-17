@@ -16,11 +16,11 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| DEBT-001 | Spec 005 drift/inconsistency | P1 | Open |
-| DEBT-002 | Spec 006 search CLI drift | P2 | Open |
-| DEBT-003 | Spec 008 fixtures incomplete | P1 | Open |
-| DEBT-004 | Lean scaffolding absent vs Spec 007 | P1 | Open |
-| DEBT-005 | Placeholder tests vs “real” coverage | P2 | Open |
+| DEBT-001 | Spec 005 drift/inconsistency | P1 | Fixed |
+| DEBT-002 | Spec 006 search CLI drift | P2 | Fixed |
+| DEBT-003 | Spec 008 fixtures incomplete | P1 | Fixed |
+| DEBT-004 | Lean scaffolding absent vs Spec 007 | P1 | Fixed |
+| DEBT-005 | Placeholder tests vs “real” coverage | P2 | Fixed |
 
 ### Debt Decks
 
@@ -29,4 +29,3 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 - `docs/debt/debt-003-spec-008-fixtures-incomplete.md`
 - `docs/debt/debt-004-lean-scaffolding-missing.md`
 - `docs/debt/debt-005-placeholder-tests.md`
-

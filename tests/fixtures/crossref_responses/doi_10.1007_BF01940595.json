@@ -1,0 +1,15 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message": {
+    "DOI": "10.1007/BF01940595",
+    "title": ["Some problems on number theory"],
+    "author": [
+      {"given": "Paul", "family": "Erdős"}
+    ],
+    "published-print": {"date-parts": [[1975]]},
+    "container-title": ["Journal of Number Theory"],
+    "type": "journal-article",
+    "URL": "https://doi.org/10.1007/BF01940595"
+  }
+}

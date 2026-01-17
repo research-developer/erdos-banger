@@ -1,8 +1,10 @@
 # Debt: Placeholder Tests vs Real Coverage
 
 **Priority:** P2
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-17
+**Fixed:** 2026-01-17
+**Commit:** 59bdeac
 
 ## Summary
 
@@ -29,4 +31,3 @@ As each command/module gains real tests:
 
 - `docs/specs/spec-002-testing-strategy.md`
 - `tests/`
-

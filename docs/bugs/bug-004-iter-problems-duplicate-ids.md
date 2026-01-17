@@ -4,7 +4,7 @@
 **Status:** Fixed
 **Found:** 2026-01-17
 **Fixed:** 2026-01-17
-**Commit:** (pending)
+**Commit:** e862a35
 
 ## Description
 
@@ -38,4 +38,3 @@ Track seen IDs during iteration and raise `ProblemLoaderError` on duplicates.
 - `src/erdos/core/problem_loader.py`
 - `src/erdos/core/index_builder.py`
 - `tests/unit/test_problem_loader.py` (regression coverage)
-

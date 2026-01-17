@@ -1,8 +1,10 @@
 # Debt: Spec 008 Fixtures Are Incomplete
 
 **Priority:** P1
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-17
+**Fixed:** 2026-01-17
+**Commit:** bfb5b70
 
 ## Summary
 
@@ -36,4 +38,3 @@ Either:
 
 - `docs/specs/spec-008-test-fixtures.md`
 - `tests/fixtures/`
-

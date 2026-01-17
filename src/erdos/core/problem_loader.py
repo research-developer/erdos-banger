@@ -185,6 +185,14 @@ class ProblemLoader:
                 f"Problem {raw.get('id')}: 'oeis_ids' must be a list, got {type(raw_oeis).__name__}"
             )
 
+        # Validate formalized field type (bool("false") == True is a bug)
+        raw_formalized = raw.get("formalized")
+        if raw_formalized is not None and not isinstance(raw_formalized, bool):
+            raise ProblemLoaderError(
+                f"Problem {raw.get('id')}: 'formalized' must be a bool, got {type(raw_formalized).__name__}"
+            )
+        formalized = raw_formalized if isinstance(raw_formalized, bool) else False
+
         return ProblemRecord(
             id=int(raw["id"]),
             title=str(raw["title"]),
@@ -195,7 +203,7 @@ class ProblemLoader:
             references=references,
             oeis_ids=[str(o) for o in raw_oeis],
             notes=raw.get("notes"),
-            formalized=bool(raw.get("formalized", False)),
+            formalized=formalized,
         )
 
     def load_all(self, *, use_cache: bool = True) -> list[ProblemRecord]:
@@ -228,7 +236,13 @@ class ProblemLoader:
                     )
                     continue
                 problems[problem.id] = problem
-            except (ProblemLoaderError, KeyError, TypeError, ValidationError) as e:
+            except (
+                ProblemLoaderError,
+                KeyError,
+                TypeError,
+                ValueError,
+                ValidationError,
+            ) as e:
                 errors.append(f"Problem at index {i}: {e}")
 
         if errors:
@@ -249,7 +263,16 @@ class ProblemLoader:
         raw_problems = self._load_raw()
         seen: dict[int, str] = {}
         for i, raw in enumerate(raw_problems):
-            problem = self._parse_problem(raw)
+            try:
+                problem = self._parse_problem(raw)
+            except (
+                ProblemLoaderError,
+                KeyError,
+                TypeError,
+                ValueError,
+                ValidationError,
+            ) as e:
+                raise ProblemLoaderError(f"Problem at index {i}: {e}") from e
             if problem.id in seen:
                 raise ProblemLoaderError(
                     f"Problem at index {i}: Duplicate ID {problem.id} "

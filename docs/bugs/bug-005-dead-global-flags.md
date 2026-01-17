@@ -1,8 +1,10 @@
 # Bug: Dead Global Flags (`--config`, `--no-network`)
 
 **Priority:** P2
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-17
+**Fixed:** 2026-01-17
+**Commit:** a26d149
 
 ## Description
 
@@ -47,4 +49,3 @@ Pick one:
 - `src/erdos/cli.py`
 - `docs/specs/spec-004-cli-architecture.md`
 - `docs/specs/spec-005-problem-loader.md`
-

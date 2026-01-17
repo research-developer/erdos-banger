@@ -66,21 +66,6 @@ def main(
             help="Output as JSON for machine consumption.",
         ),
     ] = False,
-    no_network: Annotated[
-        bool,
-        typer.Option(
-            "--no-network",
-            help="Disable all network requests (reserved for v1.1 commands).",
-        ),
-    ] = False,
-    config: Annotated[
-        str | None,
-        typer.Option(
-            "--config",
-            "-c",
-            help="Path to config file (v1.1 feature, currently ignored).",
-        ),
-    ] = None,
     log_level: Annotated[
         str,
         typer.Option(
@@ -102,8 +87,6 @@ def main(
         ctx.obj.update(
             {
                 "json": json_output,
-                "no_network": no_network,
-                "config": config,
                 "log_level": log_level,
             }
         )

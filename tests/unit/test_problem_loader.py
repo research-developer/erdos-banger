@@ -263,3 +263,23 @@ class TestProblemLoaderIterProblems:
         assert first.id == 1
         with pytest.raises(ProblemLoaderError, match=r"Duplicate ID 1"):
             next(iterator)
+
+    def test_wraps_parse_errors_with_index(self, tmp_path: Path) -> None:
+        """iter_problems raises ProblemLoaderError (not ValueError) on invalid data."""
+        yaml_file = tmp_path / "problems.yaml"
+        yaml_file.write_text(
+            "\n".join(
+                [
+                    '- id: "not a number"',
+                    "  title: Bad",
+                    "  statement: X",
+                    "  status: open",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        loader = ProblemLoader(yaml_file)
+        with pytest.raises(ProblemLoaderError, match=r"Problem at index 0:"):
+            next(loader.iter_problems())
