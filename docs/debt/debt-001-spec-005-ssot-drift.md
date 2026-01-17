@@ -1,8 +1,10 @@
 # Debt: Spec 005 Drift/Inconsistency
 
 **Priority:** P1
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-17
+**Fixed:** 2026-01-17
+**Commit:** 19f2225
 
 ## Summary
 
@@ -37,4 +39,3 @@ Pick a single v1 stance and make Spec 005 match it:
 
 - `docs/specs/spec-005-problem-loader.md`
 - `src/erdos/core/problem_loader.py`
-

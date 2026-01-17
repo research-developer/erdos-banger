@@ -1,8 +1,10 @@
 # Debt: Spec 006 Search CLI Drift
 
 **Priority:** P2
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-17
+**Fixed:** 2026-01-17
+**Commit:** bd21e6c
 
 ## Summary
 
@@ -28,4 +30,3 @@ Either:
 
 - `docs/specs/spec-006-search-index.md`
 - `src/erdos/commands/search.py`
-
