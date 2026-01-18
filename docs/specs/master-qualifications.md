@@ -273,7 +273,7 @@ erdos-banger/
 
 ### Exact Dependencies (pyproject.toml)
 
-**Single source of truth:** `docs/specs/spec-001-dev-environment-tooling.md` defines the exact `pyproject.toml` (uv + dependency groups + ruff/mypy/pytest config) and keeps dependency versions current.
+**Single source of truth:** `docs/_archive/specs/spec-001-dev-environment-tooling.md` defines the exact `pyproject.toml` (uv + dependency groups + ruff/mypy/pytest config) and keeps dependency versions current.
 
 At minimum, v1 depends on:
 - Runtime: `typer`, `rich`, `pydantic`, `pyyaml`, `jinja2`

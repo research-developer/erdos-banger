@@ -30,7 +30,7 @@ Implement Spec 007 (or a clearly scoped subset) as the next major milestone:
 
 ## Related
 
-- `docs/specs/spec-007-lean-integration.md`
+- `docs/_archive/specs/spec-007-lean-integration.md`
 - `formal/lean/`
 - `src/erdos/core/lean_runner.py`
 - `src/erdos/core/formalizer.py`
