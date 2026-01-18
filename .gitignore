@@ -38,6 +38,8 @@ htmlcov/
 .ruff_cache/
 
 # Project-specific (gitignored data)
+data/problems_enriched.yaml
+data/problems.yaml
 literature/cache/
 literature/extracts/
 index/*.sqlite
