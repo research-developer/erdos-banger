@@ -8,23 +8,31 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 |------|------|---------|--------|
 | 2026-01-17 | Adversarial Review | Full codebase audit covering specs 003-006 | Active |
 
-## Bugs
+## Active Bugs
 
-| ID | Title | Priority | Status |
-|----|-------|----------|--------|
-| BUG-001 | Typer `CliRunner` unsupported `mix_stderr` arg | P1 | Fixed |
-| BUG-002 | `erdos search --build-index --json` contaminates stdout | P2 | Fixed |
-| BUG-003 | `erdos search` crashes when index exists but dataset missing | P2 | Fixed |
-| BUG-004 | `iter_problems()` allows duplicate IDs (index overwrite risk) | P2 | Fixed |
-| BUG-005 | Dead global flags: `--config`, `--no-network` | P2 | Fixed |
+*None currently active.*
 
-### Bug Decks
+## Archived Bugs
 
-- `docs/bugs/bug-001-typer-clirunner-mix-stderr.md`
-- `docs/bugs/bug-002-search-build-index-json-stdout.md`
-- `docs/bugs/bug-003-search-fts-loader-missing.md`
-- `docs/bugs/bug-004-iter-problems-duplicate-ids.md`
-- `docs/bugs/bug-005-dead-global-flags.md`
+All bugs below have been fixed and archived to `docs/_archive/bugs/`.
+
+| ID | Title | Priority | Status | Commit |
+|----|-------|----------|--------|--------|
+| BUG-001 | Typer `CliRunner` unsupported `mix_stderr` arg | P1 | Fixed | e862a35 |
+| BUG-002 | `erdos search --build-index --json` contaminates stdout | P2 | Fixed | e862a35 |
+| BUG-003 | `erdos search` crashes when index exists but dataset missing | P2 | Fixed | e862a35 |
+| BUG-004 | `iter_problems()` allows duplicate IDs (index overwrite risk) | P2 | Fixed | e862a35 |
+| BUG-005 | Dead global flags: `--config`, `--no-network` | P2 | Fixed | a26d149 |
+
+**Next Bug ID:** BUG-006
+
+### Archived Bug Decks
+
+- `docs/_archive/bugs/bug-001-typer-clirunner-mix-stderr.md`
+- `docs/_archive/bugs/bug-002-search-build-index-json-stdout.md`
+- `docs/_archive/bugs/bug-003-search-fts-loader-missing.md`
+- `docs/_archive/bugs/bug-004-iter-problems-duplicate-ids.md`
+- `docs/_archive/bugs/bug-005-dead-global-flags.md`
 
 ## Bug Priority Definitions
 
