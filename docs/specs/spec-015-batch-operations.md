@@ -42,7 +42,7 @@ When `PROBLEM_ID` is omitted, batch mode is activated.
 **Batch Options**
 
 - `--all`: Process all problems
-- `--status TEXT`: Filter by status (`open`, `proved`, `disproved`)
+- `--status TEXT`: Filter by status (`open`, `proved`, `disproved`, `partially_solved`, `unknown`)
 - `--prize-min INT`: Minimum prize amount
 - `--prize-max INT`: Maximum prize amount
 - `--tag TEXT`: Filter by tag (can be repeated)
@@ -96,6 +96,11 @@ uv run erdos lean formalize --status open --skip-existing
 # Formalize with parallel Lean compilation
 uv run erdos lean formalize --all --max-concurrent 8
 ```
+
+**Global flags**
+
+- `--json` is a **global** flag (see `src/erdos/cli.py`) and must be supported.
+- `--log-level` is a **global** flag (see `src/erdos/cli.py`).
 
 ---
 
@@ -185,9 +190,9 @@ Failed: [67]
     "total": 6,
     "completed": 5,
     "failed": 1,
-    "failed_ids": [67],
-    "duration_seconds": 45.2
-  }
+    "failed_ids": [67]
+  },
+  "duration_ms": 45200
 }
 ```
 
@@ -252,6 +257,11 @@ Simple async rate limiter with configurable delay.
 ### Vertical Slice Test
 
 ```bash
+# Prepare a local data dir (v1 expects enriched YAML with title/statement)
+tmp_data="$(mktemp -d)"
+cp tests/fixtures/sample_problems.yaml "$tmp_data/problems.yaml"
+export ERDOS_DATA_PATH="$tmp_data"
+
 # Dry run batch ingest
 uv run erdos ingest --status open --limit 3 --dry-run
 # Should list 3 problem IDs without making API calls
@@ -275,7 +285,7 @@ cat logs/batch_state.json | jq '.completed'
 ### Integration Tests
 
 - `tests/integration/test_batch_operations.py`
-  - Batch ingest with `--no-network` and fixtures
+  - Batch ingest with `--no-network` (ingest option; not a global flag) and fixtures
   - Batch formalize creates multiple Lean files
   - `--resume` continues from state file
   - `--dry-run` doesn't modify anything

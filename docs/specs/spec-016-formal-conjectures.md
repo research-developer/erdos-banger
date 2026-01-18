@@ -31,12 +31,13 @@
 The `teorth/erdosproblems` dataset tracks formalization status in its metadata:
 ```yaml
 formalized:
-  state: yes  # or "no", "partial"
-  lean4: true
-  source: "formal-conjectures"  # or URL
+  state: "yes"  # or "no" (SSOT: archived Spec 005 upstream schema)
+  last_update: "2025-09-18"
 ```
 
-Many problems (~50+) already have Lean 4 formalizations in community repositories. We should import these rather than generating fresh skeletons.
+In erdos-banger v1, the enriched dataset uses `ProblemRecord.formalized: bool` (SSOT: archived Spec 003) derived from upstream `formalized.state` (SSOT: archived Spec 005). The upstream metadata does **not** provide a canonical Lean file URL; imports use known repository path patterns (see Section 2).
+
+Many problems (hundreds) already have Lean formalizations in community repositories. We should import these rather than generating fresh skeletons.
 
 ---
 
@@ -57,6 +58,7 @@ erdos lean status [PROBLEM_ID] [OPTIONS]
 - `--upstream`: Check upstream metadata for formalization status
 - `--local`: Check local `formal/lean/Erdos/` directory
 - `--diff`: Show differences between local and upstream (if both exist)
+- `--no-network`: Do not fetch remote Lean sources (diff/import checks use cache only)
 
 ### 1.2 `erdos lean import`
 
@@ -70,9 +72,10 @@ erdos lean import PROBLEM_ID [OPTIONS]
 
 **Options**
 
-- `--source URL`: Override source URL (default: from upstream metadata)
+- `--source URL`: Override source URL (default: derived from Formal Conjectures path pattern)
 - `--force`: Overwrite existing local file
 - `--dry-run`: Show what would be imported without writing
+- `--no-network`: Use cached upstream file only (error if not cached)
 
 ### 1.3 `erdos lean formalize` (Extended)
 
@@ -110,23 +113,22 @@ uv run erdos lean status 6 --diff
 The upstream dataset includes `formalized` field:
 
 ```yaml
-- id: 6
+- number: "6"
   status:
-    state: proved
+    state: "proved"
   formalized:
-    state: yes
-    lean4: true
-    source: "https://github.com/teorth/formal-conjectures/blob/main/FormalConjectures/Erdos/Problem006.lean"
+    state: "yes"
+    last_update: "2025-09-18"
 ```
 
 ### Secondary: Known Repositories
 
-Fallback sources if metadata doesn't specify:
+Deterministic sources for import (derived; not present in upstream metadata):
 
 | Repository | Path Pattern |
 |------------|--------------|
-| teorth/formal-conjectures | `FormalConjectures/Erdos/Problem{id:03d}.lean` |
-| leanprover-community/mathlib4 | Various locations |
+| google-deepmind/formal-conjectures | `FormalConjectures/ErdosProblems/{id}.lean` |
+| leanprover-community/mathlib4 | (future) best-effort heuristics; not in v1.4 scope |
 
 ---
 
@@ -139,8 +141,8 @@ Problem 6: Primes in Arithmetic Progressions
 
 Upstream formalization:
   Status: formalized (Lean 4)
-  Source: teorth/formal-conjectures
-  URL: https://github.com/teorth/formal-conjectures/...
+  Source: google-deepmind/formal-conjectures
+  URL: https://github.com/google-deepmind/formal-conjectures/blob/main/FormalConjectures/ErdosProblems/6.lean
 
 Local formalization:
   File: formal/lean/Erdos/Problem006.lean
@@ -173,16 +175,18 @@ Problems with both:    10
   "command": "erdos lean status",
   "success": true,
   "data": {
-    "problem_id": 6,
-    "upstream": {
-      "formalized": true,
-      "lean4": true,
-      "source": "teorth/formal-conjectures",
-      "url": "https://..."
-    },
-    "local": {
-      "exists": true,
-      "path": "formal/lean/Erdos/Problem006.lean",
+      "problem_id": 6,
+      "upstream": {
+        "available": true,
+        "formalized": true,
+        "state": "yes",
+        "last_update": "2025-09-18",
+        "source": "google-deepmind/formal-conjectures",
+        "url": "https://raw.githubusercontent.com/google-deepmind/formal-conjectures/main/FormalConjectures/ErdosProblems/6.lean"
+      },
+      "local": {
+        "exists": true,
+        "path": "formal/lean/Erdos/Problem006.lean",
       "has_sorry": true,
       "hash": "abc123"
     },
@@ -197,11 +201,12 @@ Problems with both:    10
 
 ### Import Flow
 
-1. Check upstream metadata for `formalized.source` or `formalized.url`
-2. Fetch Lean file from source
-3. Validate it's syntactically valid Lean 4
-4. Write to `formal/lean/Erdos/Problem{id:03d}.lean`
-5. Record provenance in local metadata
+1. Check upstream metadata for `formalized.state == "yes"` (if upstream metadata is available)
+2. Derive candidate source URL from known repository path patterns (or use `--source URL`)
+3. Fetch Lean file from source (unless `--no-network` and not cached)
+4. Validate it's syntactically valid Lean 4
+5. Write to `formal/lean/Erdos/Problem{id:03d}.lean`
+6. Record provenance in local metadata
 
 ### Provenance Tracking
 
@@ -211,8 +216,8 @@ Create `formal/lean/Erdos/.provenance.yaml`:
 schema_version: 1
 imports:
   - problem_id: 6
-    source: "teorth/formal-conjectures"
-    url: "https://..."
+    source: "google-deepmind/formal-conjectures"
+    url: "https://raw.githubusercontent.com/google-deepmind/formal-conjectures/main/FormalConjectures/ErdosProblems/6.lean"
     imported_at: "2026-01-18T10:30:45Z"
     commit: "abc123"
     local_hash: "def456"
@@ -251,15 +256,10 @@ Modify `formalize`:
 
 ### 5.3 Extend: `src/erdos/core/models.py`
 
-Add to `ProblemRecord`:
+**Do not change** `ProblemRecord` for v1.4.
 
-```python
-class FormalizationMeta(BaseModel):
-    state: Literal["yes", "no", "partial"]
-    lean4: bool = False
-    source: str | None = None
-    url: str | None = None
-```
+- `ProblemRecord.formalized: bool` remains the SSOT field for “formalized yes/no” in the enriched dataset (archived Spec 003).
+- Richer upstream/provenance details are returned by `erdos lean status` and stored in `formal/lean/Erdos/.provenance.yaml`.
 
 ---
 
@@ -307,10 +307,10 @@ uv run pytest -m "not requires_lean and not requires_network"
 
 ### Fetching Upstream Files
 
-- Use GitHub raw URLs for known repositories
+- Use GitHub raw URLs for known repositories (Formal Conjectures)
 - Cache fetched files locally
 - Respect rate limits (GitHub: 60 req/hour unauthenticated)
-- `--no-network` flag should use cached/local data only
+- `--no-network` (command option) must use cached/local data only
 
 ### Offline Mode
 
@@ -323,7 +323,7 @@ If upstream URL is unreachable:
 ## References
 
 - teorth/erdosproblems: `https://github.com/teorth/erdosproblems`
-- Formal Conjectures Repository: `https://github.com/teorth/formal-conjectures`
+- Formal Conjectures Repository: `https://github.com/google-deepmind/formal-conjectures`
 - Master vision formalization strategy: `docs/specs/master-vision.md` (Section 5)
 
 ---

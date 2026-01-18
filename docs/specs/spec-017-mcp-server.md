@@ -5,9 +5,16 @@
 **Status:** Pending
 **Target:** v1.4
 **Prerequisites (SSOT):**
-- All CLI commands implemented (Specs 004-016)
+- CLI patterns: `docs/_archive/specs/spec-004-cli-architecture.md`
+- Domain models + `CLIOutput`: `docs/_archive/specs/spec-003-domain-models.md`
+- Presenter utilities (JSON routing): `docs/specs/spec-009-architecture-cleanup.md`
 - Search index: `docs/_archive/specs/spec-006-search-index.md`
 - Lean integration: `docs/_archive/specs/spec-007-lean-integration.md`
+- Optional tools require their owning specs:
+  - `ask_question`: `docs/specs/spec-011-ask-command.md`
+  - `get_logs`: `docs/specs/spec-013-logging-evaluation.md`
+  - semantic/hybrid modes: `docs/specs/spec-014-vector-embeddings.md`
+  - formalization import/status: `docs/specs/spec-016-formal-conjectures.md`
 
 ---
 
@@ -46,7 +53,7 @@ Benefits:
 ```bash
 erdos-mcp
 # or
-python -m erdos.mcp
+python -m erdos.mcp.server
 ```
 
 ### Transport
@@ -73,7 +80,7 @@ Get details for a specific Erdős problem.
 }
 ```
 
-**Output:** `ProblemRecord` as JSON
+**Output:** `CLIOutput` where `data` is a `ProblemRecord` (or `error` on failure).
 
 ### 2.2 `list_problems`
 
@@ -84,7 +91,7 @@ List problems with optional filters.
 {
   "type": "object",
   "properties": {
-    "status": {"type": "string", "enum": ["open", "proved", "disproved"]},
+    "status": {"type": "string", "enum": ["open", "proved", "disproved", "partially_solved", "unknown"]},
     "prize_min": {"type": "integer"},
     "prize_max": {"type": "integer"},
     "tags": {"type": "array", "items": {"type": "string"}},
@@ -93,7 +100,7 @@ List problems with optional filters.
 }
 ```
 
-**Output:** Array of `ProblemRecord` summaries
+**Output:** `CLIOutput` where `data` is an array of `ProblemRecord` summaries.
 
 ### 2.3 `get_references`
 
@@ -110,7 +117,11 @@ Get references for a problem.
 }
 ```
 
-**Output:** Array of `ReferenceRecord`
+**Output:** `CLIOutput` where `data` is an array of references.
+
+Notes:
+- If only `ProblemRecord.references` are available, return `ReferenceEntry` objects.
+- If ingestion is implemented (Spec 010), this tool may return enriched `ReferenceRecord` entries instead.
 
 ### 2.4 `search_index`
 
@@ -131,6 +142,7 @@ Search the problem/literature index.
 ```
 
 **Output:** Array of search results with scores
+**Output:** `CLIOutput` where `data` matches the `erdos search --json` schema (archived Spec 006).
 
 ### 2.5 `lean_check`
 
@@ -147,7 +159,7 @@ Compile a Lean file and return errors.
 }
 ```
 
-**Output:** `LeanCheckResult` with errors array
+**Output:** `CLIOutput` where `data` is a `LeanCheckResult`.
 
 ### 2.6 `lean_formalize`
 
@@ -165,7 +177,7 @@ Generate a Lean skeleton for a problem.
 }
 ```
 
-**Output:** Path to generated file
+**Output:** `CLIOutput` where `data` matches the `erdos lean formalize --json` schema.
 
 ### 2.7 `ask_question`
 
@@ -184,7 +196,7 @@ Ask a question about a problem (RAG).
 }
 ```
 
-**Output:** Prompt (if no_llm) or answer with sources
+**Output:** `CLIOutput` where `data` matches the `erdos ask --json` schema (Spec 011).
 
 ### 2.8 `get_logs`
 
@@ -202,64 +214,45 @@ Query run logs.
 }
 ```
 
-**Output:** Array of log entries
+**Output:** `CLIOutput` where `data` is an array of run log entries (Spec 013).
 
 ---
 
 ## 3) Claude Desktop Configuration
 
-Add to Claude Desktop config (`~/.config/claude/claude_desktop_config.json`):
+Preferred: use the MCP CLI installer (provided by `mcp[cli]`) to register the server with Claude Desktop:
 
-```json
-{
-  "mcpServers": {
-    "erdos": {
-      "command": "erdos-mcp",
-      "args": [],
-      "env": {
-        "ERDOS_DATA_PATH": "/path/to/erdos-banger/data"
-      }
-    }
-  }
-}
+```bash
+# Install server into Claude Desktop
+uv run mcp install src/erdos/mcp/server.py --name erdos
+
+# Pass env vars
+uv run mcp install src/erdos/mcp/server.py --name erdos -v ERDOS_DATA_PATH=/path/to/data
 ```
 
-Or with explicit Python path:
-
-```json
-{
-  "mcpServers": {
-    "erdos": {
-      "command": "python",
-      "args": ["-m", "erdos.mcp"],
-      "cwd": "/path/to/erdos-banger"
-    }
-  }
-}
-```
+Alternative: manual Claude Desktop JSON config may be used, but is not SSOT (follow official MCP docs for current format).
 
 ---
 
 ## 4) Implementation
 
-### 4.1 New Module: `src/erdos/mcp/__init__.py`
+### 4.1 New Module: `src/erdos/mcp/server.py`
 
-MCP server entry point using the `mcp` Python package.
+MCP server entry point using the MCP Python SDK (`mcp` on PyPI).
 
 ```python
-from mcp.server import Server
-from mcp.types import Tool
+from mcp.server.fastmcp import FastMCP
 
-server = Server("erdos")
+mcp = FastMCP("erdos-banger", json_response=True)
 
-@server.tool()
-async def get_problem(problem_id: int) -> dict:
+@mcp.tool()
+def get_problem(problem_id: int) -> dict:
     """Get details for a specific Erdős problem."""
-    loader = ProblemLoader.from_default()
-    problem = loader.get_by_id(problem_id)
-    return problem.model_dump()
+    # Call existing core logic and return CLIOutput-compatible dicts.
+    ...
 
-# ... register all tools
+# ... register all tools, then:
+# def main(): mcp.run()
 ```
 
 ### 4.2 Entry Point
@@ -268,7 +261,7 @@ Add to `pyproject.toml`:
 
 ```toml
 [project.scripts]
-erdos-mcp = "erdos.mcp:main"
+erdos-mcp = "erdos.mcp.server:main"
 ```
 
 ### 4.3 Dependencies
@@ -278,11 +271,11 @@ Add to `pyproject.toml`:
 ```toml
 [project.optional-dependencies]
 mcp = [
-    "mcp>=0.1.0",
+    "mcp[cli]>=1.25.0",
 ]
 ```
 
-**Install:** `pip install erdos-banger[mcp]`
+**Install (uv):** `uv sync --extra mcp`
 
 ---
 
@@ -290,17 +283,7 @@ mcp = [
 
 ### Tool Errors
 
-Return structured errors that AI can understand:
-
-```json
-{
-  "error": {
-    "type": "not_found",
-    "message": "Problem 9999 not found",
-    "code": 404
-  }
-}
-```
+Return errors using `CLIOutput.err(...)` (SSOT: archived Spec 003) so the MCP surface matches the CLI `--json` surface.
 
 ### Server Errors
 
@@ -313,19 +296,15 @@ MCP protocol handles transport errors. Tool-level errors should be returned as s
 ### Vertical Slice Test
 
 ```bash
-# Start MCP server (in background)
-erdos-mcp &
+# Install MCP optional deps
+uv sync --extra mcp
 
-# Test via MCP client (example using mcp-client-cli)
-echo '{"method": "tools/call", "params": {"name": "get_problem", "arguments": {"problem_id": 6}}}' | mcp-client-cli
+# Run the server in one terminal (stdio)
+uv run erdos-mcp
 
-# Or test directly via Python
-python -c "
-from erdos.mcp import server
-import asyncio
-result = asyncio.run(server.call_tool('get_problem', {'problem_id': 6}))
-print(result)
-"
+# In another terminal, test with the MCP Inspector (manual):
+#   npx -y @modelcontextprotocol/inspector
+# Or write a small Python stdio client using mcp.client.stdio (SSOT: MCP Python SDK docs).
 ```
 
 ### Unit Tests
@@ -376,7 +355,8 @@ uv run pytest -m "not requires_lean and not requires_network"
 ## References
 
 - Model Context Protocol: `https://modelcontextprotocol.io/`
-- MCP Python SDK: `https://github.com/anthropics/mcp`
+- MCP Python SDK (PyPI): `https://pypi.org/project/mcp/`
+- MCP Python SDK (repo): `https://github.com/modelcontextprotocol/python-sdk`
 - Master vision MCP section: `docs/specs/master-vision.md` (Section 8)
 
 ---

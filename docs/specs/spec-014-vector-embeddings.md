@@ -47,24 +47,19 @@ erdos search QUERY [OPTIONS]
 - `--hybrid`: Combine BM25 and semantic scores (default when both indexes exist)
 - `--bm25-only`: Force BM25-only search (no vectors)
 - `--alpha FLOAT`: Hybrid weight (0.0 = BM25 only, 1.0 = semantic only, default: `0.5`)
+- `--build-embeddings`: Build/rebuild embeddings (requires embeddings optional deps)
+- `--embedding-model TEXT`: Embedding model name (default: `sentence-transformers/all-MiniLM-L6-v2`)
 
 **Existing Options (unchanged)**
 
 - `--limit, -n INT`: Max results (default: `10`)
-- `--problem-id, -p INT`: Filter to specific problem
+- `--problem, -p INT`: Filter to specific problem
 - `--build-index`: Rebuild index before search
 
-### 1.2 `erdos index build` (Extended)
+**Global flags**
 
-```text
-erdos index build [OPTIONS]
-```
-
-**New Options**
-
-- `--embeddings`: Generate vector embeddings (requires embedding model)
-- `--embedding-model TEXT`: Model name (default: `all-MiniLM-L6-v2`)
-- `--no-embeddings`: Skip embedding generation (BM25 only)
+- `--json` is a **global** flag (see `src/erdos/cli.py`) and must be supported.
+- `--log-level` is a **global** flag (see `src/erdos/cli.py`).
 
 ### Examples
 
@@ -78,11 +73,9 @@ uv run erdos search "prime gaps" --semantic
 # Hybrid search (combines both)
 uv run erdos search "consecutive primes" --hybrid --alpha 0.6
 
-# Build index with embeddings
-uv run erdos index build --embeddings
-
-# Build index without embeddings (faster)
-uv run erdos index build --no-embeddings
+# Build index + embeddings, then search (both flags are additive)
+uv run erdos search "prime gaps" --build-index --build-embeddings
+uv run erdos search "prime gaps" --semantic
 ```
 
 ---
@@ -96,7 +89,7 @@ uv run erdos index build --no-embeddings
 - 384 dimensions
 - Fast inference (CPU-friendly)
 - Good general-purpose performance
-- MIT license
+- `sentence-transformers` is Apache-2.0 (model licenses vary; verify at implementation time)
 
 ### Alternative (Scientific Text)
 
@@ -114,18 +107,11 @@ uv run erdos index build --no-embeddings
 
 ### SQLite Table Extension
 
-Add to existing `search_chunks` table:
-
-```sql
-ALTER TABLE search_chunks ADD COLUMN embedding BLOB;
-ALTER TABLE search_chunks ADD COLUMN embedding_model TEXT;
-```
-
-Or create a separate embeddings table:
+Create a separate embeddings table (preferred; avoids changing the v1 FTS schema).
 
 ```sql
 CREATE TABLE chunk_embeddings (
-    chunk_id TEXT PRIMARY KEY REFERENCES search_chunks(id),
+    chunk_id TEXT PRIMARY KEY REFERENCES chunks(id),
     embedding BLOB NOT NULL,
     model TEXT NOT NULL,
     created_at TEXT NOT NULL
@@ -147,12 +133,13 @@ CREATE TABLE chunk_embeddings (
 ### Score Combination
 
 ```
-hybrid_score = (1 - alpha) * bm25_score_normalized + alpha * cosine_similarity
+hybrid_score = (1 - alpha) * bm25_score_normalized + alpha * semantic_score
 ```
 
 Where:
 - `bm25_score_normalized` = BM25 score / max(BM25 scores in result set)
-- `cosine_similarity` = dot product of normalized embeddings (range 0-1)
+- `raw_cosine` = dot product of normalized embeddings (range -1..1)
+- `semantic_score` = `(raw_cosine + 1) / 2` (range 0..1, stable for mixing with normalized BM25)
 - `alpha` = weight parameter (default 0.5)
 
 ### Retrieval Strategy
@@ -166,7 +153,7 @@ Where:
 
 ## 5) Output Schema (JSON)
 
-Extend existing search output:
+Extend existing search output (SSOT: archived Spec 006 JSON schema). Existing fields remain unchanged; additional semantic fields are additive.
 
 ```json
 {
@@ -183,13 +170,13 @@ Extend existing search output:
       {
         "chunk_id": "problem_6_statement",
         "problem_id": 6,
-        "text": "...",
-        "bm25_score": 12.5,
+        "snippet": "...",
+        "score": 12.5,
         "semantic_score": 0.87,
         "hybrid_score": 0.91
       }
     ],
-    "embedding_model": "all-MiniLM-L6-v2"
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
   }
 }
 ```
@@ -224,19 +211,26 @@ Add methods:
 - `search_semantic(query: str, limit: int) -> list[SearchResult]`
 - `search_hybrid(query: str, limit: int, alpha: float) -> list[SearchResult]`
 
-### 6.3 Dependencies
+### 6.3 Extend: `src/erdos/core/index_builder.py`
+
+The CLI entry point for index building is `erdos search --build-index` (SSOT: `src/erdos/commands/search.py`), which calls `src/erdos/core/index_builder.py`. Extend the builder to optionally:
+
+- build embeddings when `--build-embeddings` is set, after chunks are indexed
+- record the active embedding model name in index metadata
+
+### 6.4 Dependencies
 
 Add to `pyproject.toml`:
 
 ```toml
 [project.optional-dependencies]
 embeddings = [
-    "sentence-transformers>=2.2.0",
-    "numpy>=1.24.0",
+    "sentence-transformers>=5.2.0",
+    "numpy>=2.4.1",
 ]
 ```
 
-**Install:** `pip install erdos-banger[embeddings]`
+**Install (uv):** `uv sync --extra embeddings`
 
 ---
 
@@ -245,8 +239,14 @@ embeddings = [
 ### Vertical Slice Test
 
 ```bash
-# Build index with embeddings
-uv run erdos index build --embeddings
+# Prepare a local data dir (v1 expects enriched YAML with title/statement)
+tmp_data="$(mktemp -d)"
+cp tests/fixtures/sample_problems.yaml "$tmp_data/problems.yaml"
+export ERDOS_DATA_PATH="$tmp_data"
+export ERDOS_INDEX_PATH="$(mktemp -d)/erdos.sqlite"
+
+# Build index (FTS) + embeddings
+uv run erdos search "prime gaps" --build-index --build-embeddings
 
 # Semantic search
 uv run erdos search "prime gaps" --semantic --json | jq '.data.results[0].semantic_score'

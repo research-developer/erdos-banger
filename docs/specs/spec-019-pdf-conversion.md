@@ -48,7 +48,7 @@ erdos ingest PROBLEM_ID [OPTIONS]
 **New Options**
 
 - `--pdf`: Enable PDF conversion for non-arXiv references
-- `--pdf-converter TEXT`: Converter to use (`docling`, `pymupdf`, `pdfplumber`)
+- `--pdf-converter TEXT`: Converter to use (`docling`, `pdfplumber`)
 - `--no-pdf`: Skip PDFs entirely (metadata only)
 
 ### 1.2 `erdos convert` (New Command)
@@ -85,11 +85,11 @@ uv run erdos convert paper.pdf --converter docling
 | Converter | License | Math Support | Quality | Speed |
 |-----------|---------|--------------|---------|-------|
 | **Docling** | MIT | Excellent (LaTeX) | High | Medium |
-| PyMuPDF | AGPL | Poor | Medium | Fast |
 | pdfplumber | MIT | Poor | Medium | Fast |
-| pdf2image + Tesseract | Apache | None (OCR) | Low | Slow |
 
-**Decision:** Docling is the preferred converter due to superior math handling. Others are fallbacks for edge cases.
+**Decision:** Docling is the preferred converter due to superior math handling. `pdfplumber` is a low-quality fallback for cases where math fidelity is not required.
+
+**License policy (SSOT):** No GPL/AGPL components included (see `docs/specs/master-vision.md`). Therefore PyMuPDF (AGPL/commercial) is **prohibited**, even as an optional fallback.
 
 ---
 
@@ -98,7 +98,7 @@ uv run erdos convert paper.pdf --converter docling
 ### Installation
 
 ```bash
-pip install erdos-banger[pdf]
+uv sync --extra pdf
 ```
 
 In `pyproject.toml`:
@@ -106,7 +106,7 @@ In `pyproject.toml`:
 ```toml
 [project.optional-dependencies]
 pdf = [
-    "docling>=0.1.0",
+    "docling>=2.68.0",
 ]
 ```
 
@@ -117,12 +117,8 @@ pdf = [
 ### Conversion Pipeline
 
 ```python
-from docling.document_converter import DocumentConverter
-
-def convert_pdf(pdf_path: Path) -> str:
-    converter = DocumentConverter()
-    result = converter.convert(str(pdf_path))
-    return result.document.export_to_markdown()
+# Docling API is fast-moving; consult Docling docs for the exact converter API.
+# The contract for erdos-banger is: PDF path -> extracted markdown/text + metadata.
 ```
 
 ### Math Preservation
@@ -164,22 +160,26 @@ $$p(n) = \frac{1}{\pi\sqrt{2}} \sum_{k=1}^{\infty} A_k(n) \sqrt{k} \frac{d}{dn}\
 ```json
 {
   "schema_version": 1,
-  "source": "paper.pdf",
-  "converter": "docling",
-  "title": "Paper Title",
-  "authors": ["Alice Smith", "Bob Jones"],
-  "sections": [
-    {
-      "heading": "Abstract",
-      "level": 1,
-      "content": "This paper proves that...",
-      "math_expressions": ["$p(n) \\sim ..."]
-    }
-  ],
-  "math_blocks": [
-    {"type": "inline", "latex": "p(n)", "location": {"page": 1, "line": 12}},
-    {"type": "display", "latex": "\\sum_{i=1}^n ...", "location": {"page": 2, "line": 5}}
-  ]
+  "command": "erdos convert",
+  "success": true,
+  "data": {
+    "source": "paper.pdf",
+    "converter": "docling",
+    "title": "Paper Title",
+    "authors": ["Alice Smith", "Bob Jones"],
+    "sections": [
+      {
+        "heading": "Abstract",
+        "level": 1,
+        "content": "This paper proves that...",
+        "math_expressions": ["$p(n) \\\\sim ..."]
+      }
+    ],
+    "math_blocks": [
+      {"type": "inline", "latex": "p(n)", "location": {"page": 1, "line": 12}},
+      {"type": "display", "latex": "\\\\sum_{i=1}^n ...", "location": {"page": 2, "line": 5}}
+    ]
+  }
 }
 ```
 
@@ -193,17 +193,14 @@ When Docling is unavailable:
 
 If paper is on arXiv, use LaTeX source instead of PDF.
 
-### Tier 2: PyMuPDF (Fast, Low Quality)
+### Tier 2: pdfplumber (Fast, Low Quality)
 
 ```python
-import fitz  # PyMuPDF
+import pdfplumber
 
-def convert_pymupdf(pdf_path: Path) -> str:
-    doc = fitz.open(str(pdf_path))
-    text = ""
-    for page in doc:
-        text += page.get_text()
-    return text
+def convert_pdfplumber(pdf_path: Path) -> str:
+    with pdfplumber.open(str(pdf_path)) as pdf:
+        return "\\n".join((page.extract_text() or "") for page in pdf.pages)
 ```
 
 **Limitation:** Math rendered as Unicode garbage or missing.
@@ -247,13 +244,13 @@ Standalone conversion command for testing and manual use.
 
 ```bash
 # Install PDF support
-pip install erdos-banger[pdf]
+uv sync --extra pdf
 
-# Convert test PDF
-uv run erdos convert tests/fixtures/sample_paper.pdf --format markdown
+# Convert a text-based PDF (user-provided path)
+uv run erdos convert /path/to/paper.pdf --format markdown
 
 # Verify math is preserved
-uv run erdos convert tests/fixtures/sample_paper.pdf | grep '\\sum'
+uv run erdos convert /path/to/paper.pdf | grep '\\sum'
 ```
 
 ### Unit Tests
@@ -261,7 +258,7 @@ uv run erdos convert tests/fixtures/sample_paper.pdf | grep '\\sum'
 - `tests/unit/test_pdf_converter.py`
   - Docling conversion produces markdown
   - Math expressions preserved
-  - Fallback to PyMuPDF when Docling unavailable
+  - Fallback to pdfplumber when Docling unavailable
 
 ### Integration Tests
 
@@ -309,8 +306,10 @@ As of 2026-01-18:
 
 ## References
 
-- Docling: `https://github.com/DS4SD/docling`
-- PyMuPDF: `https://pymupdf.readthedocs.io/`
+- Docling (repo): `https://github.com/docling-project/docling`
+- Docling (PyPI): `https://pypi.org/project/docling/`
+- pdfplumber (PyPI): `https://pypi.org/project/pdfplumber/`
+- PyMuPDF (license reference): `https://pypi.org/project/PyMuPDF/`
 - Master vision PDF strategy: `docs/specs/master-qualifications.md` (Section 4)
 
 ---
