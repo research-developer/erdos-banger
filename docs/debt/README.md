@@ -14,7 +14,13 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-*None currently active.*
+| ID | Title | Priority | Status | Affects |
+|----|-------|----------|--------|---------|
+| DEBT-006 | [Ephemeral Test Data](debt-006-ephemeral-test-data.md) | P1 | Open | Search index, CLI, data workflow |
+| DEBT-007 | [Lean CI Never Runs](debt-007-lean-ci-never-runs.md) | P1 | Open | Lean integration, CI pipeline |
+| DEBT-008 | [Unused Golden Fixtures](debt-008-unused-golden-fixtures.md) | P2 | Open | Test coverage, regression detection |
+| DEBT-009 | [Upstream Data Not Integrated](debt-009-upstream-data-not-integrated.md) | P1 | Open | Data loading, schema validation |
+| DEBT-010 | [No Smoke Test](debt-010-no-smoke-test.md) | P2 | Open | Developer onboarding, quick validation |
 
 ## Archived Debt
 
@@ -28,7 +34,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-004 | Lean scaffolding absent vs Spec 007 | P1 | Fixed | 7e17d21 |
 | DEBT-005 | Placeholder tests vs "real" coverage | P2 | Fixed | 59bdeac |
 
-**Next Debt ID:** DEBT-006
+**Next Debt ID:** DEBT-011
 
 ### Archived Debt Decks
 
