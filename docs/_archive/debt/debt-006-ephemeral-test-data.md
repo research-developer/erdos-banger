@@ -1,21 +1,28 @@
 # DEBT-006: Ephemeral Test Data - No Persistence Verification
 
 **Priority:** P1
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-18
+**Fixed:** 2026-01-18
+**Commit:** a47d9f2,57cf739
 **Affects:** Search index, CLI, data workflow
 
-## Problem
+## Resolution
 
-Every test creates temporary data that vanishes after test completion. No test proves:
-- SQLite index survives restart
-- Index can be rebuilt from YAML
-- Real `data/` directory workflow works
-- Production-like paths function correctly
+- Added an end-to-end persistence test that builds the default `index/erdos.sqlite` and reuses it in a new process.
+- Added tracked `data/` and `index/` directories (and gitignored `data/problems_enriched.yaml`) so the project-root layout exists by default.
+- Added a golden-file style regression test using `tests/fixtures/lean_outputs/` samples.
 
-All tests use pytest's `tmp_path` fixtures, meaning we have zero verification that the system works with persistent storage.
+## Problem (before fix)
 
-## Evidence
+Many tests create temporary data that vanishes after test completion. While we do cover index build/rebuild logic in `tmp_path`, we have no test that proves:
+- SQLite index survives a simulated "restart" (new process / new `SearchIndex`) when using the default `index/erdos.sqlite` path
+- The default `data/` + `index/` workflow works using persistent, project-root paths (not just ephemeral test directories)
+- Production-like paths function correctly (e.g., relative paths from repo root, filesystem permissions)
+
+Filesystem-touching tests rely on pytest's `tmp_path` fixtures (9/36 test files reference `tmp_path`), meaning we have zero verification that the default persistent workflow works end-to-end.
+
+## Evidence (before fix)
 
 **Missing directories:**
 ```bash
@@ -43,17 +50,17 @@ $ ls -la | grep -E "data|index"
 
 First real user runs `erdos list` and gets "no data found" or similar error because:
 1. Default paths don't exist
-2. Path resolution logic has never been tested with real directories
+2. Path resolution has only been tested inside `tmp_path` (via `monkeypatch.chdir`), not against persistent repo-root directories
 3. Permission issues on real filesystems could surface
 
 ## Proposed Resolution
 
 1. Add integration test that:
    - Creates `data/` with fixture YAML
-   - Runs `erdos index`
-   - Verifies `index/problems.db` is created
-   - Restarts (new process) and runs `erdos list`
-   - Verifies data persists
+   - Runs `erdos search --build-index prime` (or any query)
+   - Verifies `index/erdos.sqlite` is created
+   - Restarts (new process) and runs `erdos search prime` (without `--build-index`)
+   - Verifies the search uses the persisted index (`use_fts: true`) and returns results
 
 2. Add "golden file" tests:
    - Compare index SQLite schema against known-good snapshot

@@ -1,13 +1,22 @@
 # DEBT-010: No Smoke Test Script
 
 **Priority:** P2
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-18
+**Fixed:** 2026-01-18
+**Commit:** 70ae1ab,c9cbf24
 **Affects:** Developer onboarding, installation verification, quick validation
 
-## Problem
+## Resolution
+
+- Added `scripts/smoke-test.sh` and a `make smoke` target that exercises list/search/Lean-skeleton generation with fixture data.
+- Added a CI smoke step to enforce the smoke workflow on every PR.
+
+## Problem (before fix)
 
 There's no single command to verify "does this installation work?"
+
+A `Makefile` exists with `make ci`, but there is no fast end-to-end CLI smoke target (e.g., `make smoke`) that exercises the user-facing workflows.
 
 A professional project would have:
 ```bash
@@ -28,15 +37,15 @@ Currently, verifying the system works requires:
 3. Manual CLI testing
 4. Tribal knowledge about what "working" means
 
-## Evidence
+## Evidence (before fix)
 
 **No smoke test exists:**
 ```bash
 $ ls scripts/
-# (directory doesn't exist or empty)
+ls: scripts/: No such file or directory
 
 $ make smoke
-make: *** No rule to make target 'smoke'.  Stop.
+make: *** No rule to make target `smoke'.  Stop.
 
 $ cat Makefile | grep smoke
 # (no matches)
@@ -49,13 +58,15 @@ uv sync                           # Install deps
 uv run pytest                     # Run tests
 uv run erdos list                 # Manual CLI check
 uv run erdos search prime         # Manual search check
-uv run erdos lean skeleton 6      # Manual Lean check
+uv run erdos search prime --build-index  # Build index + search (FTS)
+uv run erdos lean init --no-mathlib      # Create Lean project (optional)
+uv run erdos lean formalize 6            # Generate Lean skeleton (optional)
 ```
 
-**No documented "it works" criteria:**
-- README doesn't define what success looks like
-- No "getting started" smoke test
-- New contributors don't know if their setup is correct
+**Documentation is multi-step and partially drifted:**
+- README includes a Quickstart, but there is no single smoke target/command
+- Quickstart currently references commands that don't exist (e.g., `erdos index build` vs `erdos search --build-index`)
+- New contributors still lack a fast, blessed "it works" command that mirrors CI
 
 ## Risk
 
@@ -77,13 +88,14 @@ uv run erdos lean skeleton 6      # Manual Lean check
    erdos list > /dev/null
 
    echo "[2/5] Building search index..."
-   erdos index > /dev/null
+   erdos search prime --build-index > /dev/null
 
    echo "[3/5] Searching..."
    erdos search prime > /dev/null
 
    echo "[4/5] Generating Lean skeleton..."
-   erdos lean skeleton 6 --dry-run > /dev/null
+   erdos lean init --no-mathlib > /dev/null
+   erdos lean formalize 6 > /dev/null
 
    echo "[5/5] Checking Lean (optional)..."
    if command -v lean &> /dev/null; then

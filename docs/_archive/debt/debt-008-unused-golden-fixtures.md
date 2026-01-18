@@ -1,11 +1,18 @@
 # DEBT-008: Unused Fixtures - No Golden File Testing
 
 **Priority:** P2
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-18
+**Fixed:** 2026-01-18
+**Commit:** 57cf739
 **Affects:** Test coverage, regression detection, output stability
 
-## Problem
+## Resolution
+
+- Added `tests/fixtures/README.md` to document fixture intent and “pending” areas.
+- Added golden-file style tests that parse `tests/fixtures/lean_outputs/` and assert stable structured results.
+
+## Problem (before fix)
 
 Several fixture directories exist but are **never used** in any test:
 - `tests/fixtures/arxiv_responses/` - API response mocks, unused
@@ -17,7 +24,7 @@ Additionally, there are no "golden file" tests that compare actual output agains
 - API response parsing could regress
 - Lean output interpretation could break
 
-## Evidence
+## Evidence (before fix)
 
 **Unused fixture directories:**
 ```
