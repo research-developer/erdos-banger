@@ -10,7 +10,9 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 ## Active Bugs
 
-*None currently active.*
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| BUG-006 | [Ruff lints submodule (CI failure)](bug-006-ruff-lints-submodule.md) | P1 | Open |
 
 ## Archived Bugs
 
@@ -24,7 +26,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-004 | `iter_problems()` allows duplicate IDs (index overwrite risk) | P2 | Fixed | e862a35 |
 | BUG-005 | Dead global flags: `--config`, `--no-network` | P2 | Fixed | a26d149 |
 
-**Next Bug ID:** BUG-006
+**Next Bug ID:** BUG-007
 
 ### Archived Bug Decks
 
