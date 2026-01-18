@@ -2,7 +2,7 @@
 
 > Defines `erdos loop` for an iterative “propose → apply → check” cycle to assist Lean formalization.
 
-**Status:** Deferred (v1.2+)  
+**Status:** Deferred (v1.2+)
 **Prerequisites (SSOT):**
 - Lean integration: `docs/_archive/specs/spec-007-lean-integration.md`
 - Search index: `docs/_archive/specs/spec-006-search-index.md`

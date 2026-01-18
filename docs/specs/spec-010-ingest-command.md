@@ -2,8 +2,8 @@
 
 > Adds `erdos ingest` to fetch and cache reference metadata/content for Erdős problems in a reproducible, testable way.
 
-**Status:** Pending  
-**Target:** v1.1  
+**Status:** Pending
+**Target:** v1.1
 **Prerequisites (SSOT):**
 - Problem loading: `docs/_archive/specs/spec-005-problem-loader.md`
 - Domain models: `docs/_archive/specs/spec-003-domain-models.md`

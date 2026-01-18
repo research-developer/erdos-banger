@@ -2,9 +2,9 @@
 
 > Removes duplicated CLI presentation code and standardizes JSON/human output behavior across commands **without changing** the user-facing CLI surface.
 
-**Status:** Complete  
-**Target:** v1.1  
-**Depends on:** Archived Specs 001–008 (especially 002, 003, 004)  
+**Status:** Complete
+**Target:** v1.1
+**Depends on:** Archived Specs 001–008 (especially 002, 003, 004)
 **Non-dependencies:** Does not introduce a new `domain/` / `application/` / `infrastructure/` package tree.
 
 ---
