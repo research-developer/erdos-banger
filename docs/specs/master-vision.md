@@ -76,44 +76,90 @@ Every run produces structured logs (e.g. JSON lines or YAML) capturing the opera
 ### Architecture Diagram (ASCII)
 
 ```
-[ teorth/erdosproblems dataset ] <-- (git submodule / import) --+
-                                                              |    Problem
-                                                     [ Data Importer ]
-                                                              v    YAML→JSON models
-                                                 +--------------------------+
-                                                 |    Problem DB (SQLite)   |
-                                                 |  - Problems meta        |
-                                                 |  - References meta      |
-                                                 |  - Index (FTS5, vectors)|
-                                                 +--------------------------+
-                                                   ^    ^           ^
-                        (metadata APIs)            |    |           | (search query)
-        Crossref/OpenAlex/Semantic Scholar         |    |           |
-                Unpaywall/CORE/zbMATH             |    |           |
-                        (fulltext APIs)           |    |           |
-                                                   |    |        [ Retrieval ]
-                        (Lean files)              |    |           |    + BM25, vector sim
-                                                   |    |           |    + rerank (future)
-                                         [ CLI commands ]        (result chunks+sources)
-                                         /   |   |   |   \
-            list/show/refs          ingest         search/ask              lean/formalize/loop
-          (info display)      (fetch refs, build   (retrieve info &      (Lean project management,
-                              manifest, convert)    answer with cites)    compilation, agent loop)
-
-                                                   v
-                                           [ Lean4 Project ]
-                                           - Lean files (theories, lemmas)
-                                           - Lake + mathlib dependency
-                                           - elan toolchain (Lean version)
-                                                   v
-                                            lake build (via CLI)
-                                                   v
-                                           Lean output (errors, proofs)
-                                                   ^
-                                                   |
-                                         [ Logging & Run Records ]
-                                          (all steps recorded)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              DATA SOURCES                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   teorth/erdosproblems          External APIs              Literature       │
+│   ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐    │
+│   │ problems.yaml   │      │ Crossref        │      │ arXiv           │    │
+│   │ (metadata SSOT) │      │ OpenAlex        │      │ Unpaywall       │    │
+│   └────────┬────────┘      │ Semantic Scholar│      │ CORE            │    │
+│            │               └────────┬────────┘      └────────┬────────┘    │
+│            │                        │                        │             │
+└────────────┼────────────────────────┼────────────────────────┼─────────────┘
+             │                        │                        │
+             v                        v                        v
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              STORAGE LAYER                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐    │
+│   │ Problem DB      │      │ Search Index    │      │ Literature      │    │
+│   │ (SQLite)        │      │ (SQLite FTS5)   │      │ Cache           │    │
+│   │                 │      │                 │      │                 │    │
+│   │ • problems      │      │ • text chunks   │      │ • manifests/    │    │
+│   │ • references    │      │ • vectors       │      │ • cache/        │    │
+│   │ • metadata      │      │ • embeddings    │      │ • extracts/     │    │
+│   └────────┬────────┘      └────────┬────────┘      └────────┬────────┘    │
+│            │                        │                        │             │
+└────────────┼────────────────────────┼────────────────────────┼─────────────┘
+             │                        │                        │
+             └────────────────────────┼────────────────────────┘
+                                      │
+                                      v
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              CLI COMMANDS                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   Info Display        Ingestion           Search/Q&A         Formalization │
+│   ┌───────────┐      ┌───────────┐      ┌───────────┐      ┌───────────┐   │
+│   │ list      │      │ ingest    │      │ search    │      │ lean init │   │
+│   │ show      │      │ index     │      │ ask       │      │ lean check│   │
+│   │ refs      │      │           │      │           │      │ lean form │   │
+│   └───────────┘      └───────────┘      └───────────┘      │ loop      │   │
+│                                                            └─────┬─────┘   │
+│                                                                  │         │
+└──────────────────────────────────────────────────────────────────┼─────────┘
+                                                                   │
+                                                                   v
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              LEAN 4 PROJECT                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   formal/lean/                                                              │
+│   ├── lean-toolchain        (version pin)                                   │
+│   ├── lakefile.lean         (dependencies: mathlib4)                        │
+│   └── Erdos/                                                                │
+│       ├── Problem001.lean   (generated skeletons)                           │
+│       └── ...                                                               │
+│                                      │                                      │
+│                                      v                                      │
+│                               lake build                                    │
+│                                      │                                      │
+│                                      v                                      │
+│                           errors / proofs                                   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      v
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              LOGGING & EVAL                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   logs/                                                                     │
+│   ├── runs.jsonl            (structured run records)                        │
+│   ├── batch_state.json      (batch operation state)                         │
+│   └── ...                                                                   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+**Data Flow:**
+1. **Import** → Problem dataset loads into SQLite, external APIs enrich references
+2. **Index** → Text chunks + embeddings populate FTS5 search index
+3. **Query** → CLI commands read/write to storage, invoke Lean compilation
+4. **Iterate** → Lean errors feed back to LLM loop, all steps logged
 
 **Diagram Summary:** The dataset feeds the problem DB. Ingestion fetches references (via external APIs) into manifests and possibly cached text. An index builder uses the DB content (problem statements, reference texts) to create a hybrid search index (text + vectors). The CLI commands orchestrate these: e.g., `erdos search` queries the index and returns relevant text chunks with citations; `erdos ask` uses LLM (via CLI integration) to answer questions with those citations. The Lean project is initialized by `erdos lean init` and contains Lean files. Commands like `erdos lean formalize` create a Lean stub for a problem, and `erdos loop` runs an iterative loop where the LLM proposes proofs, Lean checks them, and feedback is logged. Logging happens throughout to enable reproducibility and evaluation.
 
