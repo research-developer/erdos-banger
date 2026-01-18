@@ -105,9 +105,9 @@ import Erdos.Basic
 -- Erdos/Basic.lean
 -- Common definitions and imports for Erdős problem formalizations
 
-import Mathlib.Data.Nat.Prime
+import Mathlib.Data.Nat.Prime.Basic
 import Mathlib.Data.Finset.Basic
-import Mathlib.Algebra.BigOperators.Basic
+import Mathlib.Algebra.BigOperators.Group.Finset
 import Mathlib.Combinatorics.SimpleGraph.Basic
 
 -- Mark this as an Erdős problem (for metadata)
@@ -425,7 +425,7 @@ lean_lib Erdos where
         return '''-- Erdos/Basic.lean
 -- Common definitions for Erdős problem formalizations
 
-import Mathlib.Data.Nat.Prime
+import Mathlib.Data.Nat.Prime.Basic
 import Mathlib.Data.Finset.Basic
 
 -- Marker structure for Erdős problems
@@ -551,9 +551,9 @@ Statement:
 -/
 
 import Erdos.Basic
-import Mathlib.Data.Nat.Prime
 import Mathlib.Data.Finset.Basic
-import Mathlib.Algebra.BigOperators.Basic
+import Mathlib.Data.Nat.Prime.Basic
+import Mathlib.Algebra.BigOperators.Group.Finset
 
 namespace Erdos.Problem{{ problem_id_padded }}
 
