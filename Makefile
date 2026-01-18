@@ -13,6 +13,7 @@ PYTEST_FAST_MARKERS := not requires_lean and not requires_network
 	typecheck \
 	test test-all cov \
 	pre-commit hooks \
+	smoke \
 	ci
 
 help: ## Show available targets
@@ -59,5 +60,8 @@ pre-commit: ## Run all pre-commit hooks
 
 hooks: ## Install git hooks (pre-commit)
 	$(RUN) pre-commit install --install-hooks
+
+smoke: ## Run CLI smoke test
+	./scripts/smoke-test.sh
 
 ci: format-check lint typecheck cov ## Run CI-equivalent checks

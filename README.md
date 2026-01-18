@@ -42,13 +42,18 @@ git submodule update --init --recursive
 # Install dependencies (requires uv: https://docs.astral.sh/uv/)
 uv sync
 
+# Bootstrap a local enriched dataset (sample data)
+cp tests/fixtures/sample_problems.yaml data/problems_enriched.yaml
+
 # Verify it works
+make smoke
 uv run erdos --version
 uv run erdos list --status open --limit 5
 uv run erdos show 6
 
-# Build the search index
-uv run erdos index build
+# Build the search index (and search)
+uv run erdos search "prime arithmetic progression" --build-index
+# Subsequent searches reuse the persisted index
 uv run erdos search "prime arithmetic progression"
 
 # Lean integration (requires elan: https://github.com/leanprover/elan)
