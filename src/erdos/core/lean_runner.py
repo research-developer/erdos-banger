@@ -204,9 +204,26 @@ class LeanRunner:
 
             duration_ms = int((datetime.now(UTC) - start_time).total_seconds() * 1000)
 
-            parsed = self._parse_errors(result.stderr, str(relative))
+            parsed = self._parse_errors(result.stderr)
             warnings = [e for e in parsed if e.severity == "warning"]
             errors = [e for e in parsed if e.severity == "error"]
+
+            if result.returncode != 0 and not errors:
+                raw = (result.stderr or result.stdout).strip()
+                message = (
+                    raw[:500]
+                    if raw
+                    else f"lake build failed (exit {result.returncode})"
+                )
+                errors = [
+                    LeanError(
+                        file=str(relative),
+                        line=1,
+                        column=1,
+                        message=message,
+                        severity="error",
+                    )
+                ]
 
             env = self.check_environment()
 
@@ -234,7 +251,7 @@ class LeanRunner:
                 ],
             )
 
-    def _parse_errors(self, stderr: str, file_hint: str) -> list[LeanError]:
+    def _parse_errors(self, stderr: str) -> list[LeanError]:
         """
         Parse Lean compiler output into structured errors.
 
@@ -244,7 +261,6 @@ class LeanRunner:
 
         Args:
             stderr: Raw stderr from lean/lake
-            file_hint: Filename to use if not in error
 
         Returns:
             List of LeanError objects
@@ -264,17 +280,6 @@ class LeanRunner:
                     column=int(col),
                     message=message.strip(),
                     severity=cast('Literal["error", "warning", "info"]', severity),
-                )
-            )
-
-        if not errors and stderr.strip():
-            errors.append(
-                LeanError(
-                    file=file_hint,
-                    line=1,
-                    column=1,
-                    message=stderr.strip()[:500],
-                    severity="error",
                 )
             )
 

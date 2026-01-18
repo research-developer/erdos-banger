@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from erdos.core.lean_runner import LeanRunner, LeanRunnerError
+from erdos.core.lean_runner import LeanEnvironment, LeanRunner, LeanRunnerError
 
 
 if TYPE_CHECKING:
@@ -46,7 +46,7 @@ class TestLeanRunnerParseErrors:
         runner = LeanRunner.__new__(LeanRunner)
         stderr = "Erdos/Problem006.lean:12:5: error: unknown identifier 'Nat.prime'"
 
-        errors = runner._parse_errors(stderr, "test.lean")
+        errors = runner._parse_errors(stderr)
 
         assert len(errors) == 1
         assert errors[0].file == "Erdos/Problem006.lean"
@@ -61,7 +61,7 @@ class TestLeanRunnerParseErrors:
         stderr = """Erdos/Test.lean:10:1: error: first error
 Erdos/Test.lean:20:5: warning: some warning"""
 
-        errors = runner._parse_errors(stderr, "test.lean")
+        errors = runner._parse_errors(stderr)
 
         assert len(errors) == 2
         assert errors[0].severity == "error"
@@ -76,7 +76,7 @@ Erdos/Test.lean:20:5: warning: some warning"""
   but is expected to have type
     Prop"""
 
-        errors = runner._parse_errors(stderr, "test.lean")
+        errors = runner._parse_errors(stderr)
 
         assert len(errors) == 1
         assert "type mismatch" in errors[0].message
@@ -84,7 +84,7 @@ Erdos/Test.lean:20:5: warning: some warning"""
     def test_handles_empty_stderr(self) -> None:
         """Empty stderr produces no errors."""
         runner = LeanRunner.__new__(LeanRunner)
-        errors = runner._parse_errors("", "test.lean")
+        errors = runner._parse_errors("")
         assert errors == []
 
     def test_parses_type_error_fixture(self, fixtures_dir: Path) -> None:
@@ -94,7 +94,7 @@ Erdos/Test.lean:20:5: warning: some warning"""
             encoding="utf-8"
         )
 
-        errors = runner._parse_errors(stderr, "hint.lean")
+        errors = runner._parse_errors(stderr)
 
         assert [e.severity for e in errors] == ["error", "error"]
         assert errors[0].file == "Erdos/Problem006.lean"
@@ -111,7 +111,7 @@ Erdos/Test.lean:20:5: warning: some warning"""
             encoding="utf-8"
         )
 
-        errors = runner._parse_errors(stderr, "hint.lean")
+        errors = runner._parse_errors(stderr)
 
         assert len(errors) == 1
         assert errors[0].severity == "warning"
@@ -129,3 +129,51 @@ class TestLeanRunnerCheckEnvironment:
         assert env.project_path == tmp_path
         assert isinstance(env.elan_installed, bool)
         assert isinstance(env.lean_version, str)
+
+
+class TestLeanRunnerCheck:
+    def test_check_success_ignores_non_error_stderr(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Non-empty stderr (e.g. lake info output) does not imply failure."""
+        (tmp_path / "Erdos").mkdir(exist_ok=True)
+        test_file = tmp_path / "Erdos" / "Test.lean"
+        test_file.write_text("theorem simple : 1 + 1 = 2 := rfl\n", encoding="utf-8")
+
+        runner = LeanRunner(tmp_path)
+
+        monkeypatch.setattr(
+            shutil,
+            "which",
+            lambda name: "/usr/bin/lake" if name == "lake" else None,
+        )
+
+        monkeypatch.setattr(
+            LeanRunner,
+            "check_environment",
+            lambda self: LeanEnvironment(
+                lean_version="Lean (unknown)",
+                elan_installed=True,
+                lake_installed=True,
+                mathlib_available=False,
+                project_path=tmp_path,
+            ),
+        )
+
+        def fake_run(
+            *args: object, **kwargs: object
+        ) -> subprocess.CompletedProcess[str]:
+            return subprocess.CompletedProcess(
+                args=["lake", "build", "Erdos.Test"],
+                returncode=0,
+                stdout="",
+                stderr="info: creating manifest\n",
+            )
+
+        monkeypatch.setattr(subprocess, "run", fake_run)
+
+        result = runner.check(test_file)
+
+        assert result.success is True
+        assert result.errors == []
+        assert result.warnings == []
