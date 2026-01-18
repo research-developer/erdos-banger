@@ -7,7 +7,7 @@
 **Prerequisites (SSOT):**
 - CLI patterns: `docs/_archive/specs/spec-004-cli-architecture.md`
 - Domain models + `CLIOutput`: `docs/_archive/specs/spec-003-domain-models.md`
-- Presenter utilities (JSON routing): `docs/specs/spec-009-architecture-cleanup.md`
+- Presenter utilities (JSON routing): `docs/_archive/specs/spec-009-architecture-cleanup.md`
 - Search index: `docs/_archive/specs/spec-006-search-index.md`
 - Lean integration: `docs/_archive/specs/spec-007-lean-integration.md`
 - Optional tools require their owning specs:

@@ -26,7 +26,7 @@ A research harness for the [1,135 Erdos problems](https://github.com/teorth/erdo
 | Problem loader | Done | [Spec 005](docs/_archive/specs/spec-005-problem-loader.md) |
 | Search index (SQLite FTS5) | Done | [Spec 006](docs/_archive/specs/spec-006-search-index.md) |
 | Lean integration (init, check, formalize) | Done | [Spec 007](docs/_archive/specs/spec-007-lean-integration.md) |
-| Presenter cleanup | Done | [Spec 009](docs/specs/spec-009-architecture-cleanup.md) |
+| Presenter cleanup | Done | [Spec 009](docs/_archive/specs/spec-009-architecture-cleanup.md) |
 | Ingest command (arXiv + Crossref) | Pending | [Spec 010](docs/specs/spec-010-ingest-command.md) |
 | Ask command (RAG + LLM) | Pending | [Spec 011](docs/specs/spec-011-ask-command.md) |
 | Loop command (iterative proofs) | Deferred v1.2+ | [Spec 012](docs/specs/spec-012-loop-command.md) |
@@ -64,7 +64,7 @@ uv run erdos lean check Erdos/Problem006.lean
 
 ## Project Structure
 
-```
+```text
 erdos-banger/
 ├── src/erdos/           # Python package
 │   ├── cli.py           # Typer entry point

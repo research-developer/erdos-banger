@@ -8,6 +8,7 @@
 - Problem loading: `docs/_archive/specs/spec-005-problem-loader.md`
 - Domain models: `docs/_archive/specs/spec-003-domain-models.md`
 - CLI patterns: `docs/_archive/specs/spec-004-cli-architecture.md`
+- Presenter utilities: `docs/_archive/specs/spec-009-architecture-cleanup.md`
 - Fixture corpus: `docs/_archive/specs/spec-008-test-fixtures.md`
 
 ---
@@ -141,7 +142,7 @@ Reference: `https://www.crossref.org/documentation/retrieve-metadata/rest-api/`
 
 ## 5) Core Implementation (Modules to Create)
 
-This spec keeps the current v1 structure (`src/erdos/core`, `src/erdos/commands`) and does not require Spec 009.
+This spec keeps the current v1 structure (`src/erdos/core`, `src/erdos/commands`) and uses the shared presenter helpers from Spec 009 for output/exit behavior.
 
 ### 5.1 `src/erdos/core/ingest.py`
 

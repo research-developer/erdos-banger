@@ -146,7 +146,7 @@ def exit_with_result(
         raise typer.Exit(code=code)
 ```
 
-**Notes**
+### Notes
 
 - This spec intentionally does **not** change `CLIOutput` (it remains in `erdos.core.models`; see archived Spec 003).
 - `CLIOutput` invariants already ensure that on failures `error` is set and contains `{"type","message","code"}`.
@@ -184,7 +184,7 @@ Create `tests/unit/test_presenter.py`:
 - `test_output_result_error_writes_only_to_err_console`
 - `test_exit_with_result_raises_typer_exit_on_failure`
 
-**Recommended test technique**
+#### Recommended test technique
 
 - Use `Console(record=True)` to capture output.
 - `monkeypatch` `erdos.commands.presenter.console` and `erdos.commands.presenter.err_console`.
