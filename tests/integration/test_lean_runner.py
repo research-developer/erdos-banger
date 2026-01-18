@@ -3,15 +3,11 @@
 from __future__ import annotations
 
 import shutil
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 import pytest
 
 from erdos.core.lean_runner import LeanRunner
-
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 lean_available = shutil.which("lean") is not None
@@ -42,6 +38,16 @@ class TestLeanRunnerIntegration:
 
         # May fail without mathlib, but should not raise
         assert result.file == "Erdos/Test.lean"
+
+    def test_check_formal_project_compiles(self) -> None:
+        """check succeeds on the repo's formal/lean project."""
+        project_root = Path(__file__).resolve().parents[2]
+        project_path = project_root / "formal" / "lean"
+
+        runner = LeanRunner(project_path)
+        result = runner.check(project_path / "Erdos" / "Basic.lean")
+
+        assert result.success, f"Lean compile failed:\n{result}"
 
     def test_check_invalid_file(self, tmp_path: Path) -> None:
         """check captures errors from invalid file."""
