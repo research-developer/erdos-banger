@@ -97,6 +97,8 @@ uv run erdos convert paper.pdf --converter docling
 
 ### Installation
 
+Blocked: this install will fail until the Typer version conflict is resolved (see Blocker section above).
+
 ```bash
 uv sync --extra pdf
 ```
@@ -196,6 +198,8 @@ If paper is on arXiv, use LaTeX source instead of PDF.
 ### Tier 2: pdfplumber (Fast, Low Quality)
 
 ```python
+from pathlib import Path
+
 import pdfplumber
 
 def convert_pdfplumber(pdf_path: Path) -> str:
@@ -240,10 +244,11 @@ Standalone conversion command for testing and manual use.
 
 ## 7) Verification: This Spec is Testable
 
-### Vertical Slice Test
+### Vertical Slice Test (when unblocked)
 
 ```bash
 # Install PDF support
+# (Will fail while this spec is Blocked; run once the Typer conflict is resolved.)
 uv sync --extra pdf
 
 # Convert a text-based PDF (user-provided path)

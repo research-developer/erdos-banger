@@ -53,7 +53,7 @@ erdos lean status [PROBLEM_ID] [OPTIONS]
 
 - `PROBLEM_ID` (optional): Show status for specific problem
 
-**Options**
+**Options** (default: check both upstream and local; `--diff` requires both)
 
 - `--upstream`: Check upstream metadata for formalization status
 - `--local`: Check local `formal/lean/Erdos/` directory
@@ -76,6 +76,7 @@ erdos lean import PROBLEM_ID [OPTIONS]
 - `--force`: Overwrite existing local file
 - `--dry-run`: Show what would be imported without writing
 - `--no-network`: Use cached upstream file only (error if not cached)
+- `--skip-lean-validation`: Skip Lean syntax validation if Lean toolchain is unavailable (emits a warning)
 
 ### 1.3 `erdos lean formalize` (Extended)
 
@@ -175,18 +176,18 @@ Problems with both:    10
   "command": "erdos lean status",
   "success": true,
   "data": {
-      "problem_id": 6,
-      "upstream": {
-        "available": true,
-        "formalized": true,
-        "state": "yes",
-        "last_update": "2025-09-18",
-        "source": "google-deepmind/formal-conjectures",
-        "url": "https://raw.githubusercontent.com/google-deepmind/formal-conjectures/main/FormalConjectures/ErdosProblems/6.lean"
-      },
-      "local": {
-        "exists": true,
-        "path": "formal/lean/Erdos/Problem006.lean",
+    "problem_id": 6,
+    "upstream": {
+      "available": true,
+      "formalized": true,
+      "state": "yes",
+      "last_update": "2025-09-18",
+      "source": "google-deepmind/formal-conjectures",
+      "url": "https://raw.githubusercontent.com/google-deepmind/formal-conjectures/main/FormalConjectures/ErdosProblems/6.lean"
+    },
+    "local": {
+      "exists": true,
+      "path": "formal/lean/Erdos/Problem006.lean",
       "has_sorry": true,
       "hash": "abc123"
     },
@@ -204,7 +205,8 @@ Problems with both:    10
 1. Check upstream metadata for `formalized.state == "yes"` (if upstream metadata is available)
 2. Derive candidate source URL from known repository path patterns (or use `--source URL`)
 3. Fetch Lean file from source (unless `--no-network` and not cached)
-4. Validate it's syntactically valid Lean 4
+4. Validate it's syntactically valid Lean 4 using the local Lean toolchain
+   - If Lean is unavailable: fail with a clear error unless `--skip-lean-validation` is set
 5. Write to `formal/lean/Erdos/Problem{id:03d}.lean`
 6. Record provenance in local metadata
 

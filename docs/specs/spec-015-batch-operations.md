@@ -50,11 +50,12 @@ When `PROBLEM_ID` is omitted, batch mode is activated.
 - `--skip INT`: Skip first N problems (for manual pagination)
 - `--resume`: Resume from last incomplete batch run
 - `--dry-run`: Show what would be processed without doing it
+- `--no-network`: Do not make external API calls (ingest uses local/cache only; error if required)
 
 **Rate Limiting Options**
 
 - `--delay FLOAT`: Seconds between API calls (default: `3.0`)
-- `--max-concurrent INT`: Max parallel operations (default: `1` for ingest)
+- `--max-concurrent INT`: Max parallel operations (v1.3: ingest enforces `1`; values >1 are rejected)
 
 ### 1.2 `erdos lean formalize` (Extended)
 
@@ -150,12 +151,17 @@ When `--resume` is passed:
 ### Implementation
 
 ```python
+import asyncio
+
 from erdos.core.rate_limiter import RateLimiter
 
-limiter = RateLimiter(delay_seconds=3.0)
-for problem_id in problem_ids:
-    async with limiter:
-        await ingest_problem(problem_id)
+async def run(problem_ids: list[int]) -> None:
+    limiter = RateLimiter(delay_seconds=3.0)
+    for problem_id in problem_ids:
+        async with limiter:
+            await ingest_problem(problem_id)
+
+asyncio.run(run(problem_ids))
 ```
 
 ---
@@ -164,7 +170,7 @@ for problem_id in problem_ids:
 
 ### Human Mode
 
-```
+```text
 Batch ingest: 6 problems (status=open, prize_min=1)
 [1/6] Problem 4... ✓ (3 refs, 2 arxiv)
 [2/6] Problem 6... ✓ (2 refs, 1 arxiv)
@@ -259,7 +265,7 @@ Simple async rate limiter with configurable delay.
 ```bash
 # Prepare a local data dir (v1 expects enriched YAML with title/statement)
 tmp_data="$(mktemp -d)"
-cp tests/fixtures/sample_problems.yaml "$tmp_data/problems.yaml"
+cp tests/fixtures/sample_problems.yaml "$tmp_data/problems_enriched.yaml"
 export ERDOS_DATA_PATH="$tmp_data"
 
 # Dry run batch ingest
@@ -306,7 +312,7 @@ uv run pytest -m "not requires_lean and not requires_network"
 
 - Batch continues on individual problem failure
 - Failed problems recorded in state file
-- Exit code reflects overall success (0 if any succeeded, 1 if all failed)
+- Exit code reflects overall success (0 only if all succeeded; nonzero if any failed)
 
 ### Network Interruption
 

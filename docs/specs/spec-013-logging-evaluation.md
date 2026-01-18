@@ -44,7 +44,7 @@ Every command invocation automatically writes a log entry. No flags required.
 erdos logs [OPTIONS]
 ```
 
-**Options**
+#### Options
 
 - `--problem-id, -p INT`: Filter logs by problem ID
 - `--command TEXT`: Filter by command name (e.g., `lean check`, `ingest`)
@@ -53,7 +53,7 @@ erdos logs [OPTIONS]
 - `--limit, -n INT`: Max entries to return (default: `50`)
 - `--summary`: Show aggregated summary instead of individual entries
 
-**Global flags**
+#### Global flags
 
 - `--json` is a **global** flag (see `src/erdos/cli.py`) and must be supported.
 - `--log-level` is a **global** flag (see `src/erdos/cli.py`).
@@ -129,11 +129,14 @@ Each log entry is a single JSON object on one line:
 
 ## 3) Command-Specific Logging
 
+Note: Each log entry includes all required fields from Section 2. The examples below omit common fields (`schema_version`, `id`, `timestamp`, `duration_ms`) for brevity and show the command-specific fields only.
+
 ### 3.1 `erdos show`
 
 ```json
 {
   "command": "erdos show",
+  "success": true,
   "args": {"problem_id": 6},
   "problem_id": 6,
   "result": {"status": "open", "has_prize": true}
@@ -145,6 +148,7 @@ Each log entry is a single JSON object on one line:
 ```json
 {
   "command": "erdos search",
+  "success": true,
   "args": {"query": "prime arithmetic progression", "limit": 10},
   "result": {"hit_count": 5, "top_problem_ids": [4, 6, 123]}
 }
@@ -155,6 +159,7 @@ Each log entry is a single JSON object on one line:
 ```json
 {
   "command": "erdos lean check",
+  "success": false,
   "args": {"file": "Erdos/Problem006.lean"},
   "problem_id": 6,
   "result": {
@@ -174,6 +179,7 @@ Each log entry is a single JSON object on one line:
 ```json
 {
   "command": "erdos lean formalize",
+  "success": true,
   "args": {"problem_id": 6},
   "problem_id": 6,
   "result": {"file_created": "formal/lean/Erdos/Problem006.lean"}
@@ -185,6 +191,7 @@ Each log entry is a single JSON object on one line:
 ```json
 {
   "command": "erdos ingest",
+  "success": true,
   "args": {"problem_id": 6},
   "problem_id": 6,
   "result": {
@@ -201,6 +208,7 @@ Each log entry is a single JSON object on one line:
 ```json
 {
   "command": "erdos ask",
+  "success": true,
   "args": {"problem_id": 6, "question": "What partial results?"},
   "problem_id": 6,
   "result": {
@@ -216,6 +224,7 @@ Each log entry is a single JSON object on one line:
 ```json
 {
   "command": "erdos loop",
+  "success": true,
   "args": {"problem_id": 6, "max_iter": 10},
   "problem_id": 6,
   "result": {
@@ -298,7 +307,7 @@ Follow Spec 004 patterns. Call `RunLogger.query(...)` and format output.
 
 ## 6) File Layout
 
-```
+```text
 logs/
 ├── runs.jsonl          # Append-only run log (gitignored)
 └── .gitkeep            # Ensure directory exists
@@ -317,7 +326,7 @@ logs/
 ```bash
 # Prepare a local data dir (v1 expects enriched YAML with title/statement)
 tmp_data="$(mktemp -d)"
-cp tests/fixtures/sample_problems.yaml "$tmp_data/problems.yaml"
+cp tests/fixtures/sample_problems.yaml "$tmp_data/problems_enriched.yaml"
 export ERDOS_DATA_PATH="$tmp_data"
 
 # Run a command
@@ -328,7 +337,7 @@ uv run erdos --json logs --limit 1 | jq '.data[0].command'
 # Should output: "erdos show"
 
 # Run lean check
-uv run erdos lean check Erdos/Problem006.lean
+uv run erdos lean check formal/lean/Erdos/Basic.lean
 
 # Query logs for this problem
 uv run erdos logs --problem-id 6 --command "lean check"

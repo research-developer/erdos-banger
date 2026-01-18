@@ -141,7 +141,6 @@ Search the problem/literature index.
 }
 ```
 
-**Output:** Array of search results with scores
 **Output:** `CLIOutput` where `data` matches the `erdos search --json` schema (archived Spec 006).
 
 ### 2.5 `lean_check`
@@ -190,7 +189,7 @@ Ask a question about a problem (RAG).
   "properties": {
     "problem_id": {"type": "integer"},
     "question": {"type": "string"},
-    "no_llm": {"type": "boolean", "default": true, "description": "Return prompt only, don't call LLM"}
+    "no_llm": {"type": "boolean", "default": true, "description": "Default true: return prompt/sources only (MCP server does not call an LLM by default)"}
   },
   "required": ["problem_id", "question"]
 }
@@ -343,7 +342,7 @@ uv run pytest -m "not requires_lean and not requires_network"
 ### No Network by Default
 
 - `search_index` uses local index only
-- `ingest` tool not exposed (requires explicit CLI invocation)
+- `ingest` is intentionally not exposed as an MCP tool (it can trigger network I/O and filesystem writes); it remains CLI-only
 
 ### No Secrets
 

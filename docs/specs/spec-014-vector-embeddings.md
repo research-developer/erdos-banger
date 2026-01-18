@@ -7,6 +7,7 @@
 **Prerequisites (SSOT):**
 - Search index: `docs/_archive/specs/spec-006-search-index.md`
 - Domain models: `docs/_archive/specs/spec-003-domain-models.md`
+- Presenter utilities (JSON routing): `docs/_archive/specs/spec-009-architecture-cleanup.md`
 
 ---
 
@@ -44,7 +45,7 @@ erdos search QUERY [OPTIONS]
 **New Options**
 
 - `--semantic, -s`: Use semantic (vector) search instead of BM25
-- `--hybrid`: Combine BM25 and semantic scores (default when both indexes exist)
+- `--hybrid`: Combine BM25 and semantic scores
 - `--bm25-only`: Force BM25-only search (no vectors)
 - `--alpha FLOAT`: Hybrid weight (0.0 = BM25 only, 1.0 = semantic only, default: `0.5`)
 - `--build-embeddings`: Build/rebuild embeddings (requires embeddings optional deps)
@@ -60,6 +61,13 @@ erdos search QUERY [OPTIONS]
 
 - `--json` is a **global** flag (see `src/erdos/cli.py`) and must be supported.
 - `--log-level` is a **global** flag (see `src/erdos/cli.py`).
+
+**Mode selection and validation**
+
+- Mode flags are mutually exclusive: at most one of `--semantic`, `--hybrid`, `--bm25-only`.
+- If multiple mode flags are provided, treat this as a usage error (exit nonzero with a clear message).
+- `--alpha` is only valid with `--hybrid` (otherwise usage error).
+- Default when no mode flag is provided: BM25-only (v1 behavior). Use `--hybrid` or `--semantic` to enable embeddings.
 
 ### Examples
 
@@ -113,6 +121,7 @@ Create a separate embeddings table (preferred; avoids changing the v1 FTS schema
 CREATE TABLE chunk_embeddings (
     chunk_id TEXT PRIMARY KEY REFERENCES chunks(id),
     embedding BLOB NOT NULL,
+    dimension INTEGER NOT NULL,
     model TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
@@ -124,7 +133,7 @@ CREATE TABLE chunk_embeddings (
 
 - Stored as numpy array serialized via `numpy.save()` to bytes
 - On load: `numpy.load(BytesIO(blob))`
-- Dimension stored in index metadata for validation
+- Dimension stored in `chunk_embeddings.dimension` for validation
 
 ---
 
@@ -137,7 +146,7 @@ hybrid_score = (1 - alpha) * bm25_score_normalized + alpha * semantic_score
 ```
 
 Where:
-- `bm25_score_normalized` = BM25 score / max(BM25 scores in result set)
+- `bm25_score_normalized` = BM25 score normalized to 0..1 with a guard for empty/degenerate result sets
 - `raw_cosine` = dot product of normalized embeddings (range -1..1)
 - `semantic_score` = `(raw_cosine + 1) / 2` (range 0..1, stable for mixing with normalized BM25)
 - `alpha` = weight parameter (default 0.5)
@@ -148,6 +157,12 @@ Where:
 2. Run vector similarity on same candidates (or full corpus if small)
 3. Combine scores using hybrid formula
 4. Re-rank and return top-k
+
+**Edge cases**
+
+- If there are no candidates, return an empty result list (no division by zero).
+- If BM25 scores are all equal (or all zero), set `bm25_score_normalized = 0` for all candidates.
+- Candidate expansion factor (default: `2 * k`) is a configurable heuristic to ensure enough items for re-ranking.
 
 ---
 
@@ -201,6 +216,10 @@ from erdos.core.embeddings import EmbeddingModel
 model = EmbeddingModel("all-MiniLM-L6-v2")
 embedding = model.encode("prime arithmetic progression")  # np.ndarray
 similarity = model.cosine_similarity(embedding1, embedding2)  # float
+
+# Serialization helpers (SQLite BLOB)
+blob = model.to_blob(embedding)  # bytes
+roundtripped = model.from_blob(blob)  # np.ndarray
 ```
 
 ### 6.2 Extend: `src/erdos/core/search_index.py`
@@ -218,7 +237,11 @@ The CLI entry point for index building is `erdos search --build-index` (SSOT: `s
 - build embeddings when `--build-embeddings` is set, after chunks are indexed
 - record the active embedding model name in index metadata
 
-### 6.4 Dependencies
+### 6.4 CLI Output (Presenter)
+
+When extending `erdos search`, all output must route through the shared presenter utilities (archived Spec 009) so human/JSON output stays consistent and JSON mode never writes progress messages to stdout.
+
+### 6.5 Dependencies
 
 Add to `pyproject.toml`:
 
@@ -241,7 +264,7 @@ embeddings = [
 ```bash
 # Prepare a local data dir (v1 expects enriched YAML with title/statement)
 tmp_data="$(mktemp -d)"
-cp tests/fixtures/sample_problems.yaml "$tmp_data/problems.yaml"
+cp tests/fixtures/sample_problems.yaml "$tmp_data/problems_enriched.yaml"
 export ERDOS_DATA_PATH="$tmp_data"
 export ERDOS_INDEX_PATH="$(mktemp -d)/erdos.sqlite"
 
@@ -281,6 +304,9 @@ uv run pytest -m "not requires_lean and not requires_network"
 ```
 
 Note: Tests should mock the embedding model to avoid slow downloads.
+Recommended pattern:
+- monkeypatch `EmbeddingModel.encode()` to return a small deterministic vector (e.g., all zeros with a fixed dimension)
+- avoid network downloads by stubbing any model-loading logic in unit tests
 
 ---
 
