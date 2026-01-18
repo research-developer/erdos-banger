@@ -1,0 +1,447 @@
+# Ralph Wiggum Loop Protocol
+
+**Created:** 2026-01-18
+**Author:** Ray + Claude
+**Status:** Ready for Use
+
+---
+
+## What is the Ralph Wiggum Technique?
+
+The Ralph Wiggum technique (created by [Geoffrey Huntley](https://ghuntley.com/ralph/)) is an iterative AI development methodology where the **same prompt is run repeatedly** until objective completion criteria are met. The "self-referential" part is that each iteration sees its **previous work in files and git history**, not that model output is fed back as input.
+
+**Core insight:** Fresh context each iteration. No garbage accumulation.
+
+```bash
+while :; do cat PROMPT.md | claude ; done
+```
+
+### Why It Works
+
+- **Same prompt, repeated** = Iteration beats one-shot perfection
+- **State tracked in files** = Progress persists across iterations
+- **Atomic commits** = Easy to audit, revert, or cherry-pick
+- **Sandboxed branch** = Safe experimentation
+- **Fresh context** = No context pollution from failed attempts
+
+### Key Quote
+
+> "Deterministically bad in an undeterministic world" - failures are predictable, enabling systematic improvement through prompt tuning.
+
+---
+
+## Prerequisites
+
+### Tools Required
+
+```bash
+# Claude Code CLI
+npm install -g @anthropic-ai/claude-code
+
+# tmux (for persistent sessions)
+brew install tmux  # macOS
+apt install tmux   # Linux
+
+# uv (Python package manager)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+### Project Requirements
+
+1. **State file** (`PROGRESS.md`) - Tracks what's done/pending
+2. **Prompt file** (`PROMPT.md`) - Instructions for each iteration
+3. **Specs docs** (`docs/specs/`) - Detailed requirements for each task
+4. **Git repo** - For atomic commits and history
+
+---
+
+## Setup Protocol
+
+### Step 1: Create Branch Structure
+
+**CRITICAL:** Always sandbox Ralph work in a dedicated branch.
+
+```bash
+# Start from dev
+git checkout dev
+git pull origin dev
+
+# Create Ralph branch
+git checkout -b ralph-wiggum-v1.1
+
+# Push to remote for backup
+git push -u origin ralph-wiggum-v1.1
+```
+
+**Branch hierarchy:**
+```
+main (protected, production)
+  └── dev (integration, manual merges)
+        └── ralph-wiggum-v1.1 (autonomous work)
+```
+
+### Step 2: File Structure
+
+```
+erdos-banger/
+├── PROMPT.md                    # Loop prompt (root)
+├── PROGRESS.md                  # State tracker (root)
+├── docs/
+│   ├── _ralphwiggum/
+│   │   └── protocol.md          # This file
+│   └── specs/                   # SSOT specs
+│       ├── spec-010-ingest-command.md
+│       ├── spec-011-ask-command.md
+│       └── ...
+```
+
+### Step 3: Start tmux Session
+
+```bash
+# Create named session
+tmux new-session -s ralph
+
+# Or attach to existing
+tmux attach -t ralph
+
+# Detach without killing: Ctrl+B, then D
+# Kill session: tmux kill-session -t ralph
+```
+
+### Step 4: Run the Loop
+
+```bash
+# Navigate to project
+cd /path/to/erdos-banger
+git checkout ralph-wiggum-v1.1
+
+# THE RALPH LOOP (with iteration limit)
+MAX=50; for i in $(seq 1 $MAX); do
+  echo "=== Iteration $i/$MAX ==="
+  claude --dangerously-skip-permissions -p "$(cat PROMPT.md)"
+  # Check if all tasks complete (no unchecked boxes)
+  if ! grep -q "^\- \[ \]" PROGRESS.md; then
+    echo "All tasks complete!"
+    break
+  fi
+  sleep 2
+done
+```
+
+---
+
+## erdos-banger Specific Configuration
+
+### Quality Gates (MUST PASS)
+
+```bash
+uv run pre-commit run --all-files  # All hooks
+uv run ruff check .                # Lint
+uv run ruff format --check .       # Format check
+uv run mypy src/ tests/            # Type check
+uv run pytest -m "not requires_lean and not requires_network" --cov=erdos --cov-fail-under=80
+```
+
+Or use the Makefile:
+
+```bash
+make ci  # Runs format-check, lint, typecheck, cov
+```
+
+### Test Markers
+
+- `requires_lean` - Skip if Lean not installed
+- `requires_network` - Skip for offline tests
+- Default: `-m "not requires_lean and not requires_network"`
+
+### Atomic Commit Format
+
+```bash
+git add -A && git commit -m "$(cat <<'EOF'
+[SPEC-010] Implement: arXiv metadata client
+
+- Added src/erdos/core/arxiv_client.py
+- Unit tests in tests/unit/test_arxiv_client.py
+- Quality gates passed
+EOF
+)"
+```
+
+---
+
+## TDD Enforcement (Ironclad)
+
+### The TDD Cycle
+
+1. **RED**: Write a failing test first
+2. **GREEN**: Write minimal code to pass
+3. **REFACTOR**: Clean up, keep tests green
+
+### TDD Rules (Non-negotiable)
+
+1. **No production code without a failing test first**
+2. **One test at a time** - Don't batch tests
+3. **Minimal implementation** - Only enough to pass the current test
+4. **Refactor only when green** - Never refactor with failing tests
+5. **Tests document behavior** - Tests are the specification
+
+### Spec → Test → Code Flow
+
+```
+docs/specs/spec-010-ingest-command.md  # Read the spec
+    ↓
+tests/unit/test_arxiv_client.py        # Write failing test
+    ↓
+src/erdos/core/arxiv_client.py         # Implement to pass
+    ↓
+make ci                                 # Verify all gates pass
+    ↓
+git commit                              # Atomic commit
+```
+
+---
+
+## Critical Review Prompt
+
+Before changing code/docs based on feedback (human reviews, CodeRabbit, another model, your own prior output), apply this block and validate claims against SSOT:
+
+```text
+Review the claim or feedback (it may be from an internal or external agent).
+Validate every claim from first principles. If—and only if—it's true and
+helpful, update the system to align with the SSOT, implemented cleanly and
+completely (Rob C. Martin discipline). Find and fix all half-measures,
+reward hacks, and partial fixes if they exist. Be critically adversarial
+with good intentions for constructive criticism. Ship the exact end-to-end
+implementation we need.
+```
+
+---
+
+## SPEC-* Self-Review Protocol
+
+**Before picking up a new task**, check if the MOST RECENTLY completed item is a `SPEC-*` WITHOUT a `[REVIEWED]` marker.
+
+If yes, **THIS ITERATION IS A REVIEW ITERATION**:
+
+1. Read the spec doc and its acceptance criteria
+2. Verify the implementation matches ALL acceptance criteria
+3. Apply the Critical Review Prompt to your own prior work
+4. Check for half-measures:
+   - Are there TODO comments that should be resolved?
+   - Do tests cover all acceptance criteria?
+   - Does SSOT (code) match the spec?
+5. **If issues found**:
+   - Create a fixup task in PROGRESS.md
+   - Mark the original as `[NEEDS-FIX]` instead of `[REVIEWED]`
+   - Commit and exit
+6. **If verified clean**:
+   - Add `[REVIEWED]` marker to the spec line
+   - Commit and exit (do NOT start next task this iteration)
+
+---
+
+## Stop Conditions
+
+The loop stops when:
+
+1. **All tasks complete** - No unchecked `[ ]` in PROGRESS.md
+2. **Iteration limit reached** - MAX=50 by default
+3. **Manual intervention** - Ctrl+C
+
+**IMPORTANT: State-based verification prevents reward hacking.**
+
+```bash
+# Good: Check actual state
+if ! grep -q "^\- \[ \]" PROGRESS.md; then
+  echo "All tasks complete"
+  break
+fi
+
+# Bad: Parse model output for magic phrases (don't do this)
+# if output contains "PROJECT COMPLETE"; then break
+```
+
+---
+
+## Monitoring
+
+### Watch Progress
+
+```bash
+# In another terminal/tmux pane
+watch -n 5 'head -50 PROGRESS.md'
+
+# Or check git activity
+watch -n 5 'git log --oneline -10'
+```
+
+### Check Loop Status
+
+```bash
+# See recent commits
+git log --oneline -20
+
+# See what changed
+git diff HEAD~1
+
+# Quick verification
+make smoke
+```
+
+---
+
+## Post-Loop Audit
+
+### Review All Changes
+
+```bash
+# See all commits from Ralph
+git log dev..ralph-wiggum-v1.1 --oneline
+
+# See full diff
+git diff dev..ralph-wiggum-v1.1 --stat
+
+# Review specific commit
+git show <commit-hash>
+```
+
+### Final Verification
+
+```bash
+# All quality gates
+make ci
+
+# Smoke test
+make smoke
+
+# Full test suite (if Lean available)
+make test-all
+```
+
+### Merge if Good
+
+```bash
+# Option 1: Direct merge
+git checkout dev
+git merge ralph-wiggum-v1.1
+
+# Option 2: PR for review
+gh pr create --base dev --head ralph-wiggum-v1.1 \
+  --title "Ralph Wiggum v1.1: Implement specs 010-017" \
+  --body "Automated implementation via Ralph Wiggum loop"
+```
+
+### Revert if Bad
+
+```bash
+# Nuclear option - delete branch entirely
+git checkout dev
+git branch -D ralph-wiggum-v1.1
+
+# Or revert specific commits
+git revert <bad-commit-hash>
+```
+
+---
+
+## Best Practices
+
+### DO
+
+- Always sandbox in dedicated branch
+- Use detailed specs for each task
+- Require atomic commits
+- Set clear completion criteria
+- Set iteration limits
+- Monitor periodically
+- Audit before merging
+- Follow TDD strictly
+
+### DON'T
+
+- Run on main/dev branch directly
+- Skip the state file
+- Allow multi-task iterations
+- Trust without auditing
+- Use vague task descriptions
+- Run without iteration limits
+- Skip the review iteration for SPEC-* tasks
+
+---
+
+## Troubleshooting
+
+### Loop Stops Unexpectedly
+
+```bash
+# Check if Claude is running
+ps aux | grep claude
+
+# Check tmux session
+tmux list-sessions
+
+# Restart loop in tmux
+tmux attach -t ralph
+```
+
+### Quality Gates Failing
+
+- Loop should auto-fix on next iteration
+- If persistent, check the spec for clarity
+- May need manual intervention
+
+### Context Drift
+
+Fresh context each iteration prevents this. If issues arise:
+1. Check PROGRESS.md is being read first
+2. Ensure specs are clear and complete
+3. Reset to last known good commit if needed
+
+---
+
+## References
+
+- [Geoffrey Huntley - Ralph Wiggum](https://ghuntley.com/ralph/)
+- [how-to-ralph-wiggum repo](https://github.com/ghuntley/how-to-ralph-wiggum)
+- [Dev Interrupted interview](https://devinterrupted.substack.com/p/inventing-the-ralph-wiggum-loop-creator)
+
+---
+
+## Quick Start Checklist
+
+```bash
+# 1. Create sandbox branch
+git checkout dev && git pull
+git checkout -b ralph-wiggum-v1.1
+
+# 2. Ensure PROGRESS.md and PROMPT.md exist in root
+ls PROGRESS.md PROMPT.md
+
+# 3. Ensure spec docs exist
+ls docs/specs/spec-010*.md
+
+# 4. Start tmux
+tmux new -s ralph
+
+# 5. Run the loop
+MAX=50; for i in $(seq 1 $MAX); do
+  echo "=== Iteration $i/$MAX ==="
+  claude --dangerously-skip-permissions -p "$(cat PROMPT.md)"
+  if ! grep -q "^\- \[ \]" PROGRESS.md; then
+    echo "All tasks complete"
+    break
+  fi
+  sleep 2
+done
+
+# 6. Monitor in another pane (optional)
+watch -n 5 'git log --oneline -10'
+
+# 7. Audit when done
+git log dev..ralph-wiggum-v1.1 --oneline
+git diff dev..ralph-wiggum-v1.1 --stat
+make ci
+
+# 8. Merge if good
+git checkout dev && git merge ralph-wiggum-v1.1
+```
