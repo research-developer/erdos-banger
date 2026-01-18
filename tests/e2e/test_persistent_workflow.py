@@ -14,16 +14,14 @@ import pytest
 
 
 @pytest.mark.e2e
-def test_search_index_persists_across_process_restart() -> None:
+def test_search_index_persists_across_process_restart(fixtures_dir: Path) -> None:
     """Build index once, then reuse it in a new process via default paths."""
     with tempfile.TemporaryDirectory() as workdir:
         root = Path(workdir)
         data_dir = root / "data"
         data_dir.mkdir(parents=True)
 
-        fixture = (
-            Path(__file__).resolve().parents[1] / "fixtures" / "sample_problems.yaml"
-        )
+        fixture = fixtures_dir / "sample_problems.yaml"
         shutil.copyfile(fixture, data_dir / "problems_enriched.yaml")
 
         env = os.environ.copy()

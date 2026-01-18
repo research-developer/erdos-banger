@@ -36,8 +36,8 @@ class TestLeanRunnerIntegration:
 
         result = runner.check(test_file)
 
-        # May fail without mathlib, but should not raise
         assert result.file == "Erdos/Test.lean"
+        assert result.success, f"Lean compile failed:\n{result}"
 
     def test_check_formal_project_compiles(self) -> None:
         """check succeeds on the repo's formal/lean project."""

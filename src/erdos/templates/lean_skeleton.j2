@@ -34,7 +34,7 @@ may need refinement to accurately capture the problem.
 -- Problem metadata
 def problem : ErdosProblem := {
   id := {{ problem.id }}
-  title := "{{ problem.title | replace('\"', '\\\"') }}"
+  title := "{{ problem.title | replace('\\', '\\\\') | replace('\r', '\\r') | replace('\n', '\\n') | replace('\t', '\\t') | replace('\"', '\\\"') }}"
   status := "{{ problem.status.value }}"
 }
 
