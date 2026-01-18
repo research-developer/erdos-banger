@@ -7,7 +7,7 @@
 | [Specs](./specs/README.md) | Design specifications | SPEC-009 |
 | [Bugs](./bugs/README.md) | Bug reports & reviews | BUG-006 |
 | [Debt](./debt/README.md) | Technical debt tracking | DEBT-006 |
-| [Archive](./_archive/) | Completed bugs & debt | — |
+| [Archive](./_archive/) | Completed specs, bugs & debt | — |
 
 ## Master Documents
 
