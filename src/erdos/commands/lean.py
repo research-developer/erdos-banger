@@ -299,8 +299,7 @@ def formalize(
 
     start_time = time.perf_counter()
     path = project_path or Path("formal/lean")
-
-    duration_ms = int((time.perf_counter() - start_time) * 1000)
     result = formalize_problem(problem_id, path, force=force)
+    duration_ms = int((time.perf_counter() - start_time) * 1000)
     result.duration_ms = duration_ms
     exit_with_result(ctx, result, print_human=_print_human)

@@ -1,9 +1,9 @@
 -- Erdos/Basic.lean
 -- Common definitions and imports for Erdős problem formalizations
 
-import Mathlib.Data.Nat.Prime
 import Mathlib.Data.Finset.Basic
-import Mathlib.Algebra.BigOperators.Basic
+import Mathlib.Data.Nat.Prime.Basic
+import Mathlib.Algebra.BigOperators.Group.Finset
 import Mathlib.Combinatorics.SimpleGraph.Basic
 
 -- Mark this as an Erdős problem (for metadata)

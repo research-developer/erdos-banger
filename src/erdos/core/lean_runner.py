@@ -185,8 +185,13 @@ class LeanRunner:
         start_time = datetime.now(UTC)
 
         try:
-            relative = full_path.relative_to(self._project_path)
-            module_name = str(relative.with_suffix("")).replace("/", ".")
+            try:
+                relative = full_path.relative_to(self._project_path)
+            except ValueError as exc:
+                raise LeanRunnerError(
+                    f"Lean file must be under project path: {self._project_path}"
+                ) from exc
+            module_name = ".".join(relative.with_suffix("").parts)
 
             result = subprocess.run(  # noqa: S603
                 [lake_path, "build", module_name],
@@ -300,7 +305,7 @@ lean_lib Erdos where
         return """-- Erdos/Basic.lean
 -- Common definitions for Erdős problem formalizations
 
-import Mathlib.Data.Nat.Prime
+import Mathlib.Data.Nat.Prime.Basic
 import Mathlib.Data.Finset.Basic
 
 -- Marker structure for Erdős problems
