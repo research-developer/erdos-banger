@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import Annotated, Any, cast
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
 
+from erdos.commands.presenter import exit_with_result
 from erdos.core.formalizer import FormalizerError, generate_skeleton
 from erdos.core.lean_runner import LeanRunner, LeanRunnerError
 from erdos.core.models import CLIOutput, LeanCheckResult
@@ -17,33 +18,6 @@ from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 
 app = typer.Typer(help="Lean 4 theorem prover commands.")
 console = Console()
-err_console = Console(stderr=True)
-
-
-def _output(ctx: typer.Context, data: CLIOutput) -> None:
-    if (ctx.obj or {}).get("json"):
-        console.print_json(data.model_dump_json())
-    elif data.success:
-        result_data = cast("dict[str, Any]", data.data)
-        if isinstance(result_data, dict):
-            # LeanCheckResult has "file" and "success" keys
-            if {"file", "success"}.issubset(result_data.keys()):
-                _print_human_check_result(result_data)
-            # Formalize result has "problem_id" and "file" keys
-            elif {"problem_id", "file"}.issubset(result_data.keys()):
-                _print_human_formalize_result(result_data)
-            # Init result has "project_path" and "initialized" keys
-            elif {"project_path", "initialized"}.issubset(result_data.keys()):
-                console.print(
-                    f"[green]✓[/green] Initialized Lean project at {result_data['project_path']}"
-                )
-            else:
-                console.print(result_data)
-        else:
-            console.print(result_data)
-    else:
-        error = cast("dict[str, Any]", data.error)
-        err_console.print(f"[red]Error:[/red] {error['message']}")
 
 
 def _print_human_check_result(result_data: dict[str, Any]) -> None:
@@ -63,6 +37,25 @@ def _print_human_formalize_result(result_data: dict[str, Any]) -> None:
     output_file = result_data["file"]
     console.print(f"[green]✓[/green] Created {output_file}")
     console.print(f"  Run: erdos lean check {output_file}")
+
+
+def _print_human(result_data: Any) -> None:
+    if isinstance(result_data, dict):
+        # LeanCheckResult has "file" and "success" keys
+        if {"file", "success"}.issubset(result_data.keys()):
+            _print_human_check_result(result_data)
+        # Formalize result has "problem_id" and "file" keys
+        elif {"problem_id", "file"}.issubset(result_data.keys()):
+            _print_human_formalize_result(result_data)
+        # Init result has "project_path" and "initialized" keys
+        elif {"project_path", "initialized"}.issubset(result_data.keys()):
+            console.print(
+                f"[green]✓[/green] Initialized Lean project at {result_data['project_path']}"
+            )
+        else:
+            console.print(result_data)
+    else:
+        console.print(result_data)
 
 
 # ============================================================================
@@ -172,10 +165,7 @@ def init(
 
     # Add duration to result
     result.duration_ms = duration_ms
-    _output(ctx, result)
-    if not result.success:
-        error = cast("dict[str, Any]", result.error)
-        raise typer.Exit(code=int(error.get("code", 1)))
+    exit_with_result(ctx, result, print_human=_print_human)
 
 
 @app.command()
@@ -221,7 +211,7 @@ def check(
 
     # Add duration to result
     result.duration_ms = duration_ms
-    _output(ctx, result)
+    exit_with_result(ctx, result, print_human=_print_human)
 
     if (
         result.success
@@ -229,9 +219,6 @@ def check(
         and not result.data.get("success", True)
     ):
         raise typer.Exit(code=5)
-    if not result.success:
-        error = cast("dict[str, Any]", result.error)
-        raise typer.Exit(code=int(error.get("code", 1)))
 
 
 @app.command()
@@ -285,8 +272,8 @@ def formalize(
             message=str(e),
             code=1,
         )
-        _output(ctx, result)
-        raise typer.Exit(code=1) from None
+        exit_with_result(ctx, result)
+        return
 
     problem = loader.get_by_id(problem_id)
     if problem is None:
@@ -298,8 +285,8 @@ def formalize(
             code=3,
         )
         result.duration_ms = duration_ms
-        _output(ctx, result)
-        raise typer.Exit(code=3)
+        exit_with_result(ctx, result)
+        return
 
     try:
         output_file = generate_skeleton(problem, path, overwrite=force)
@@ -312,8 +299,8 @@ def formalize(
             code=1,
         )
         result.duration_ms = duration_ms
-        _output(ctx, result)
-        raise typer.Exit(code=1) from None
+        exit_with_result(ctx, result)
+        return
 
     duration_ms = int((time.perf_counter() - start_time) * 1000)
     result = CLIOutput.ok(
@@ -321,4 +308,4 @@ def formalize(
         data={"problem_id": problem_id, "file": str(output_file)},
     )
     result.duration_ms = duration_ms
-    _output(ctx, result)
+    exit_with_result(ctx, result, print_human=_print_human)
