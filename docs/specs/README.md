@@ -8,7 +8,7 @@ Specs currently in progress or awaiting implementation.
 
 | ID | Title | Status | Description |
 |----|-------|--------|-------------|
-| 009 | Architecture Cleanup | Pending | Presentation utilities refactor (dedupe `_output()`, standardize JSON/human output) |
+| 009 | Architecture Cleanup | Complete | Presentation utilities refactor (dedupe `_output()`, standardize JSON/human output) |
 | 010 | Ingest Command | Pending | Literature ingestion: arXiv cache + Crossref metadata (no Unpaywall/PDF in v1.1) |
 | 011 | Ask Command | Pending | RAG prompt builder + optional LLM via subprocess (citation-grounded) |
 

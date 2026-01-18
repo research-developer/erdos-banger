@@ -115,7 +115,7 @@ Use these existing models from `src/erdos/core/models.py` (archived Spec 003):
 
 ### arXiv export API (metadata)
 
-- Endpoint: `http://export.arxiv.org/api/query`
+- Endpoint: `https://export.arxiv.org/api/query`
 - Use `id_list=<id_without_version>` for a single id.
 - Politeness guidance: incorporate a 3-second delay when calling repeatedly.
 
@@ -194,7 +194,7 @@ Follow the command-module pattern from archived Spec 004:
 
 1. Parse arguments/options.
 2. Call a pure-ish core function (e.g., `ingest_problem_references(...) -> CLIOutput`).
-3. Print via the shared `_output()` pattern currently used by existing commands (or `erdos.commands.presenter` if Spec 009 lands).
+3. Print via the shared presenter helpers (`exit_with_result` from `erdos.commands.presenter`).
 4. Exit codes:
    - Not found problem id → `ExitCode.NOT_FOUND`
    - Network disabled but required → `ExitCode.NETWORK_ERROR`
@@ -257,4 +257,3 @@ uv run pytest --cov=erdos --cov-fail-under=80 -m "not requires_lean and not requ
 | Version | Date | Changes |
 |---------|------|---------|
 | 0.2.0 | 2026-01-18 | Rewrite: align with v1 `src/erdos/core` structure and Spec 003 models; scope v1.1 to arXiv + Crossref metadata only |
-

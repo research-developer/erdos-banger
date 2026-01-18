@@ -139,7 +139,8 @@ def test_exit_with_result_raises_typer_exit_on_failure(
 
 
 def test_no_duplicate_output_helpers() -> None:
-    commands = Path("src/erdos/commands")
+    repo_root = Path(__file__).resolve().parents[2]
+    commands = repo_root / "src" / "erdos" / "commands"
     offenders: list[str] = []
     for py_file in commands.glob("*.py"):
         if py_file.name in {"presenter.py", "__init__.py"}:

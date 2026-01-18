@@ -339,7 +339,7 @@ def cli_runner(tmp_path: Path, sample_problems_yaml: Path) -> Iterator[callable]
     project_root = Path(__file__).resolve().parents[2]
     uv_exe = shutil.which("uv")
     if uv_exe is None:
-        raise AssertionError("`uv` executable not found on PATH")
+        pytest.skip("`uv` executable not found on PATH")
 
     data_dir = tmp_path / "data" / "erdosproblems"
     data_dir.mkdir(parents=True)

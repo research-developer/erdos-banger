@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -11,6 +11,19 @@ console = Console()
 err_console = Console(stderr=True)
 
 HumanPrinter = Callable[[Any], None]
+
+
+def _error_details(result: CLIOutput) -> tuple[str, int]:
+    error = result.error
+    if isinstance(error, dict):
+        message = error.get("message", error)
+        raw_code = error.get("code", 1)
+        try:
+            code = int(raw_code)
+        except (TypeError, ValueError):
+            code = 1
+        return str(message), code
+    return str(error), 1
 
 
 def output_result(
@@ -33,8 +46,8 @@ def output_result(
             print_human(result.data)
         return
 
-    error = cast("dict[str, Any]", result.error)
-    err_console.print(f"[red]Error:[/red] {error['message']}")
+    message, _ = _error_details(result)
+    err_console.print(f"[red]Error:[/red] {message}")
 
 
 def exit_with_result(
@@ -47,5 +60,5 @@ def exit_with_result(
     output_result(ctx, result, print_human=print_human)
 
     if not result.success:
-        error = cast("dict[str, Any]", result.error)
-        raise typer.Exit(code=int(error.get("code", 1)))
+        _, code = _error_details(result)
+        raise typer.Exit(code=code)

@@ -8,6 +8,8 @@
 - Search index: `docs/_archive/specs/spec-006-search-index.md`
 - Ask command (prompt + optional LLM): `docs/specs/spec-011-ask-command.md`
 
+Note: Completed prerequisites are archived under `docs/_archive/specs/`, while pending specs live under `docs/specs/`.
+
 ---
 
 ## 0) Why Deferred?
@@ -186,4 +188,3 @@ When implemented, the following tests are required:
 | Version | Date | Changes |
 |---------|------|---------|
 | 0.2.0 | 2026-01-18 | Rewrite: align with v1 `src/erdos/core` structure and Spec 011 external LLM approach |
-

@@ -141,14 +141,19 @@ class LeanRunner:
             if lake_path is None:
                 raise LeanRunnerError("`lake` executable not found on PATH")
 
-            result = subprocess.run(  # noqa: S603
-                [lake_path, "update"],
-                cwd=self._project_path,
-                capture_output=True,
-                text=True,
-                timeout=600,
-                check=False,
-            )
+            try:
+                result = subprocess.run(  # noqa: S603
+                    [lake_path, "update"],
+                    cwd=self._project_path,
+                    capture_output=True,
+                    text=True,
+                    timeout=600,
+                    check=False,
+                )
+            except subprocess.TimeoutExpired as exc:
+                raise LeanRunnerError(
+                    "lake update timed out after 600 seconds"
+                ) from exc
             if result.returncode != 0:
                 raise LeanRunnerError(
                     f"lake update failed:\n{result.stderr}\n{result.stdout}"

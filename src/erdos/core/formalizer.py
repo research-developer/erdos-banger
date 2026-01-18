@@ -56,15 +56,18 @@ def generate_skeleton(
             f"File already exists: {output_path}. Use --force to overwrite."
         )
 
-    template = _env.get_template("lean_skeleton.j2")
-    content = template.render(
-        problem=problem,
-        problem_id_padded=f"{problem.id:03d}",
-    )
-
-    output_path.write_text(content, encoding="utf-8")
-
-    _update_root_module(project_path, problem.id)
+    try:
+        template = _env.get_template("lean_skeleton.j2")
+        content = template.render(
+            problem=problem,
+            problem_id_padded=f"{problem.id:03d}",
+        )
+        output_path.write_text(content, encoding="utf-8")
+        _update_root_module(project_path, problem.id)
+    except Exception as exc:
+        raise FormalizerError(
+            f"Failed to generate skeleton for Problem {problem.id}: {exc}"
+        ) from exc
 
     return output_path
 

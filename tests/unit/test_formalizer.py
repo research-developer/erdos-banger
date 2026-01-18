@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from erdos.core import formalizer
 from erdos.core.formalizer import FormalizerError, generate_skeleton
 from erdos.core.models import ProblemRecord, ProblemStatus
 
@@ -78,3 +79,20 @@ class TestGenerateSkeleton:
         output = generate_skeleton(sample_problem, tmp_path, overwrite=True)
 
         assert "Small primes" in output.read_text(encoding="utf-8")
+
+    def test_wraps_unexpected_errors(
+        self,
+        tmp_path: Path,
+        sample_problem: ProblemRecord,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        (tmp_path / "Erdos").mkdir()
+        (tmp_path / "Erdos.lean").write_text("import Erdos.Basic\n", encoding="utf-8")
+
+        def boom(template_name: str) -> object:
+            raise RuntimeError("boom")
+
+        monkeypatch.setattr(formalizer._env, "get_template", boom)
+
+        with pytest.raises(FormalizerError, match="Failed to generate skeleton"):
+            generate_skeleton(sample_problem, tmp_path)

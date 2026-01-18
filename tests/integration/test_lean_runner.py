@@ -28,6 +28,7 @@ class TestLeanRunnerIntegration:
         assert (tmp_path / "lean-toolchain").exists()
         assert (tmp_path / "lakefile.lean").exists()
         assert (tmp_path / "Erdos" / "Basic.lean").exists()
+        assert (tmp_path / "Erdos.lean").exists()
 
     def test_check_valid_file(self, tmp_path: Path) -> None:
         """check succeeds on valid Lean file."""

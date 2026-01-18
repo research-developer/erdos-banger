@@ -293,15 +293,15 @@ def test_cli_lean_check_success_and_failure(monkeypatch, tmp_path: Path) -> None
     file_path.write_text("-- test\n", encoding="utf-8")
 
     def fake_check_ok(self, file_path: Path) -> LeanCheckResult:
-        return LeanCheckResult(file=str(file_path), success=True)
+        return LeanCheckResult(file=file_path.name, success=True)
 
     def fake_check_fail(self, file_path: Path) -> LeanCheckResult:
         return LeanCheckResult(
-            file=str(file_path),
+            file=file_path.name,
             success=False,
             errors=[
                 LeanError(
-                    file=str(file_path), line=1, column=1, message="type mismatch"
+                    file=file_path.name, line=1, column=1, message="type mismatch"
                 ),
             ],
         )
@@ -324,7 +324,7 @@ def test_cli_lean_check_json_success(monkeypatch, tmp_path: Path) -> None:
     file_path.write_text("-- test\n", encoding="utf-8")
 
     def fake_check_ok(self, file_path: Path) -> LeanCheckResult:
-        return LeanCheckResult(file=str(file_path), success=True)
+        return LeanCheckResult(file=file_path.name, success=True)
 
     monkeypatch.setattr(LeanRunner, "check", fake_check_ok)
 

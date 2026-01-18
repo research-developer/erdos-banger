@@ -142,7 +142,7 @@ Responsibilities:
 ### 3.2 CLI command: `src/erdos/commands/ask.py`
 
 - Follow the command-module pattern (Spec 004).
-- Output via the shared `_output()` pattern used by existing commands (or `erdos.commands.presenter` if Spec 009 is implemented).
+- Output via the shared presenter helpers (`exit_with_result` from `erdos.commands.presenter`).
 - Exit codes:
   - Unknown problem id → `ExitCode.NOT_FOUND`
   - Index build failure → `ExitCode.ERROR`
@@ -228,4 +228,3 @@ uv run pytest -m "not requires_lean and not requires_network"
 | Version | Date | Changes |
 |---------|------|---------|
 | 0.2.0 | 2026-01-18 | Rewrite: align with v1 `src/erdos/core` structure; external LLM via subprocess (no SDK/API deps) |
-

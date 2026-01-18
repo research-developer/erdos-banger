@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import shutil
+import subprocess
 from typing import TYPE_CHECKING
 
 import pytest
@@ -18,6 +20,24 @@ class TestLeanRunnerInit:
         """Raises if project path doesn't exist."""
         with pytest.raises(LeanRunnerError, match="not found"):
             LeanRunner(tmp_path / "nonexistent")
+
+    def test_init_raises_on_lake_update_timeout(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        runner = LeanRunner(tmp_path)
+        monkeypatch.setattr(
+            shutil,
+            "which",
+            lambda name: "/usr/bin/lake" if name == "lake" else None,
+        )
+
+        def fake_run(*args: object, **kwargs: object) -> object:
+            raise subprocess.TimeoutExpired(cmd=["lake", "update"], timeout=600)
+
+        monkeypatch.setattr(subprocess, "run", fake_run)
+
+        with pytest.raises(LeanRunnerError, match="timed out"):
+            runner.init(fetch_mathlib=True)
 
 
 class TestLeanRunnerParseErrors:

@@ -100,7 +100,7 @@ def check_lean_file(file_path: Path, project_path: Path) -> CLIOutput:
     except LeanRunnerError as e:
         return CLIOutput.err(
             command="erdos lean check",
-            error_type="Error",
+            error_type="LeanRunnerError",
             message=str(e),
             code=1,
         )
@@ -118,6 +118,43 @@ def check_lean_file(file_path: Path, project_path: Path) -> CLIOutput:
             message=str(e),
             code=1,
         )
+
+
+def formalize_problem(problem_id: int, project_path: Path, *, force: bool) -> CLIOutput:
+    """Generate a Lean skeleton for a problem."""
+    try:
+        loader = ProblemLoader.from_default()
+    except ProblemLoaderError as e:
+        return CLIOutput.err(
+            command="erdos lean formalize",
+            error_type="LoaderError",
+            message=str(e),
+            code=1,
+        )
+
+    problem = loader.get_by_id(problem_id)
+    if problem is None:
+        return CLIOutput.err(
+            command="erdos lean formalize",
+            error_type="NotFound",
+            message=f"Problem {problem_id} not found",
+            code=3,
+        )
+
+    try:
+        output_file = generate_skeleton(problem, project_path, overwrite=force)
+    except FormalizerError as e:
+        return CLIOutput.err(
+            command="erdos lean formalize",
+            error_type="FormalizerError",
+            message=str(e),
+            code=1,
+        )
+
+    return CLIOutput.ok(
+        command="erdos lean formalize",
+        data={"problem_id": problem_id, "file": str(output_file)},
+    )
 
 
 # ============================================================================
@@ -263,49 +300,7 @@ def formalize(
     start_time = time.perf_counter()
     path = project_path or Path("formal/lean")
 
-    try:
-        loader = ProblemLoader.from_default()
-    except ProblemLoaderError as e:
-        result = CLIOutput.err(
-            command="erdos lean formalize",
-            error_type="LoaderError",
-            message=str(e),
-            code=1,
-        )
-        exit_with_result(ctx, result)
-        return
-
-    problem = loader.get_by_id(problem_id)
-    if problem is None:
-        duration_ms = int((time.perf_counter() - start_time) * 1000)
-        result = CLIOutput.err(
-            command="erdos lean formalize",
-            error_type="NotFound",
-            message=f"Problem {problem_id} not found",
-            code=3,
-        )
-        result.duration_ms = duration_ms
-        exit_with_result(ctx, result)
-        return
-
-    try:
-        output_file = generate_skeleton(problem, path, overwrite=force)
-    except FormalizerError as e:
-        duration_ms = int((time.perf_counter() - start_time) * 1000)
-        result = CLIOutput.err(
-            command="erdos lean formalize",
-            error_type="FormalizerError",
-            message=str(e),
-            code=1,
-        )
-        result.duration_ms = duration_ms
-        exit_with_result(ctx, result)
-        return
-
     duration_ms = int((time.perf_counter() - start_time) * 1000)
-    result = CLIOutput.ok(
-        command="erdos lean formalize",
-        data={"problem_id": problem_id, "file": str(output_file)},
-    )
+    result = formalize_problem(problem_id, path, force=force)
     result.duration_ms = duration_ms
     exit_with_result(ctx, result, print_human=_print_human)

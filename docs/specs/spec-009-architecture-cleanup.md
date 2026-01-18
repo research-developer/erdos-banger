@@ -2,7 +2,7 @@
 
 > Removes duplicated CLI presentation code and standardizes JSON/human output behavior across commands **without changing** the user-facing CLI surface.
 
-**Status:** Pending  
+**Status:** Complete  
 **Target:** v1.1  
 **Depends on:** Archived Specs 001–008 (especially 002, 003, 004)  
 **Non-dependencies:** Does not introduce a new `domain/` / `application/` / `infrastructure/` package tree.
@@ -81,7 +81,7 @@ Update all existing commands to:
 ```python
 # src/erdos/commands/presenter.py
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -93,6 +93,19 @@ console = Console()
 err_console = Console(stderr=True)
 
 HumanPrinter = Callable[[Any], None]
+
+
+def _error_details(result: CLIOutput) -> tuple[str, int]:
+    error = result.error
+    if isinstance(error, dict):
+        message = error.get("message", error)
+        raw_code = error.get("code", 1)
+        try:
+            code = int(raw_code)
+        except (TypeError, ValueError):
+            code = 1
+        return str(message), code
+    return str(error), 1
 
 
 def output_result(
@@ -111,12 +124,12 @@ def output_result(
     if result.success:
         if print_human is None:
             console.print(result.data)
-    else:
-        print_human(result.data)
-    return
+        else:
+            print_human(result.data)
+        return
 
-    error = cast("dict[str, Any]", result.error)
-    err_console.print(f"[red]Error:[/red] {error['message']}")
+    message, _ = _error_details(result)
+    err_console.print(f"[red]Error:[/red] {message}")
 
 
 def exit_with_result(
@@ -129,8 +142,8 @@ def exit_with_result(
     output_result(ctx, result, print_human=print_human)
 
     if not result.success:
-        error = cast("dict[str, Any]", result.error)
-        raise typer.Exit(code=int(error.get("code", 1)))
+        _, code = _error_details(result)
+        raise typer.Exit(code=code)
 ```
 
 **Notes**
@@ -186,7 +199,8 @@ from pathlib import Path
 
 
 def test_no_duplicate_output_helpers() -> None:
-    commands = Path("src/erdos/commands")
+    repo_root = Path(__file__).resolve().parents[2]
+    commands = repo_root / "src" / "erdos" / "commands"
     offenders: list[str] = []
     for py_file in commands.glob("*.py"):
         if py_file.name in {"presenter.py", "__init__.py"}:
