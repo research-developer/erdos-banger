@@ -59,6 +59,9 @@ jobs:
       - name: Tests (no Lean, no network)
         run: uv run --frozen pytest --cov=erdos --cov-report=xml --cov-fail-under=80 -m "not requires_lean and not requires_network"
 
+      - name: Smoke test
+        run: make smoke
+
       - name: Build (sdist + wheel)
         run: uv build
 
@@ -90,6 +93,14 @@ jobs:
         run: |
           curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
+
+      - name: Build formal Lean project
+        run: |
+          cd formal/lean
+          lean --version
+          lake --version
+          lake update
+          lake build
 
       - uses: astral-sh/setup-uv@v7
         with:
