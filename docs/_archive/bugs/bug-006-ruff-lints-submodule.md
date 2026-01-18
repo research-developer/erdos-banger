@@ -1,8 +1,10 @@
 # Bug: Ruff lints upstream submodule files (CI failure)
 
 **Priority:** P1
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-18
+**Fixed:** 2026-01-18
+**Commit:** 2f4124b
 
 ## Description
 

@@ -10,9 +10,7 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 ## Active Bugs
 
-| ID | Title | Priority | Status |
-|----|-------|----------|--------|
-| BUG-006 | [Ruff lints submodule (CI failure)](bug-006-ruff-lints-submodule.md) | P1 | Open |
+*None currently active.*
 
 ## Archived Bugs
 
@@ -25,6 +23,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-003 | `erdos search` crashes when index exists but dataset missing | P2 | Fixed | e862a35 |
 | BUG-004 | `iter_problems()` allows duplicate IDs (index overwrite risk) | P2 | Fixed | e862a35 |
 | BUG-005 | Dead global flags: `--config`, `--no-network` | P2 | Fixed | a26d149 |
+| BUG-006 | Ruff lints upstream submodule files | P1 | Fixed | 2f4124b |
 
 **Next Bug ID:** BUG-007
 
@@ -35,6 +34,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/bug-003-search-fts-loader-missing.md`
 - `docs/_archive/bugs/bug-004-iter-problems-duplicate-ids.md`
 - `docs/_archive/bugs/bug-005-dead-global-flags.md`
+- `docs/_archive/bugs/bug-006-ruff-lints-submodule.md`
 
 ## Bug Priority Definitions
 
