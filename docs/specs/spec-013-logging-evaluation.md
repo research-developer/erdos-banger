@@ -55,7 +55,8 @@ erdos logs [OPTIONS]
 
 **Global flags**
 
-- `--json` must be supported (Spec 004).
+- `--json` is a **global** flag (see `src/erdos/cli.py`) and must be supported.
+- `--log-level` is a **global** flag (see `src/erdos/cli.py`).
 
 ### Examples
 
@@ -303,6 +304,8 @@ logs/
 └── .gitkeep            # Ensure directory exists
 ```
 
+**Repo hygiene:** Add `logs/*.jsonl` to `.gitignore` (Spec 001) to prevent accidental commits.
+
 **Log rotation:** Not in v1.2 scope. For now, users can manually archive/delete old logs.
 
 ---
@@ -312,11 +315,16 @@ logs/
 ### Vertical Slice Test
 
 ```bash
+# Prepare a local data dir (v1 expects enriched YAML with title/statement)
+tmp_data="$(mktemp -d)"
+cp tests/fixtures/sample_problems.yaml "$tmp_data/problems.yaml"
+export ERDOS_DATA_PATH="$tmp_data"
+
 # Run a command
 uv run erdos show 6
 
 # Verify log was created
-uv run erdos logs --limit 1 --json | jq '.data[0].command'
+uv run erdos --json logs --limit 1 | jq '.data[0].command'
 # Should output: "erdos show"
 
 # Run lean check
@@ -337,7 +345,7 @@ uv run erdos logs --problem-id 6 --command "lean check"
 
 - `tests/integration/test_cli_logs.py`
   - Run `erdos show 6`, verify log entry exists
-  - Run `erdos logs --json`, verify valid JSON output
+  - Run `erdos --json logs`, verify valid JSON output
   - Run `erdos logs --summary`, verify aggregation
 
 ### Acceptance Criteria
