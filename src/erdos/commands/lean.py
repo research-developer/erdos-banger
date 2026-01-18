@@ -9,8 +9,8 @@ from typing import Annotated, Any, cast
 import typer
 from rich.console import Console
 
-from erdos.core.formalizer import generate_skeleton
-from erdos.core.lean_runner import LeanRunner
+from erdos.core.formalizer import FormalizerError, generate_skeleton
+from erdos.core.lean_runner import LeanRunner, LeanRunnerError
 from erdos.core.models import CLIOutput, LeanCheckResult
 from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 
@@ -70,19 +70,19 @@ def _print_human_formalize_result(result_data: dict[str, Any]) -> None:
 # ============================================================================
 
 
-def init_lean_project(project_path: Path) -> CLIOutput:
+def init_lean_project(project_path: Path, *, fetch_mathlib: bool = True) -> CLIOutput:
     """Initialize Lean project structure."""
     try:
         runner = LeanRunner(project_path)
-        runner.init()
+        runner.init(fetch_mathlib=fetch_mathlib)
         return CLIOutput.ok(
             command="erdos lean init",
             data={"project_path": str(project_path), "initialized": True},
         )
-    except NotImplementedError as e:
+    except LeanRunnerError as e:
         return CLIOutput.err(
             command="erdos lean init",
-            error_type="NotImplemented",
+            error_type="InitError",
             message=str(e),
             code=1,
         )
@@ -104,10 +104,10 @@ def check_lean_file(file_path: Path, project_path: Path) -> CLIOutput:
             command="erdos lean check",
             data=result.model_dump(mode="json"),
         )
-    except NotImplementedError as e:
+    except LeanRunnerError as e:
         return CLIOutput.err(
             command="erdos lean check",
-            error_type="NotImplemented",
+            error_type="Error",
             message=str(e),
             code=1,
         )
@@ -143,6 +143,10 @@ def init(
             help="Path to Lean project (default: formal/lean/)",
         ),
     ] = None,
+    no_mathlib: Annotated[
+        bool,
+        typer.Option("--no-mathlib", help="Skip fetching mathlib"),
+    ] = False,
     json_output: Annotated[
         bool,
         typer.Option(
@@ -162,7 +166,8 @@ def init(
 
     start_time = time.perf_counter()
     path = project_path or Path("formal/lean")
-    result = init_lean_project(path)
+    path.mkdir(parents=True, exist_ok=True)
+    result = init_lean_project(path, fetch_mathlib=not no_mathlib)
     duration_ms = int((time.perf_counter() - start_time) * 1000)
 
     # Add duration to result
@@ -247,6 +252,10 @@ def formalize(
             help="Path to Lean project (default: formal/lean/)",
         ),
     ] = None,
+    force: Annotated[
+        bool,
+        typer.Option("--force", "-f", help="Overwrite existing file"),
+    ] = False,
     json_output: Annotated[
         bool,
         typer.Option(
@@ -293,12 +302,12 @@ def formalize(
         raise typer.Exit(code=3)
 
     try:
-        output_file = generate_skeleton(problem, path)
-    except NotImplementedError as e:
+        output_file = generate_skeleton(problem, path, overwrite=force)
+    except FormalizerError as e:
         duration_ms = int((time.perf_counter() - start_time) * 1000)
         result = CLIOutput.err(
             command="erdos lean formalize",
-            error_type="NotImplemented",
+            error_type="FormalizerError",
             message=str(e),
             code=1,
         )

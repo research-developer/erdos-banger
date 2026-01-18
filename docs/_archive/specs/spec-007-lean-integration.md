@@ -2,6 +2,8 @@
 
 > Defines the Lean 4 project structure, runner, error parsing, and skeleton generation for theorem formalization.
 
+**Status:** Archived (implemented)
+
 ---
 
 ## Overview
@@ -121,6 +123,14 @@ structure ErdosProblem where
 ---
 
 ## 3) Lean Runner Implementation
+
+**SSOT:** `src/erdos/core/lean_runner.py`
+
+Implementation notes (repo-specific):
+- Uses `datetime.UTC` to satisfy Ruff `UP017`
+- Uses `TYPE_CHECKING` imports to satisfy Ruff `TC003`
+- Resolves `lake` via `shutil.which()` and raises `LeanRunnerError` with a clear message when missing
+- Casts parsed severities to satisfy `LeanError.severity: Literal["error", "warning", "info"]` under mypy strict mode
 
 ```python
 # src/erdos/core/lean_runner.py
@@ -431,6 +441,8 @@ structure ErdosProblem where
 
 ## 4) Skeleton Generator
 
+**SSOT:** `src/erdos/core/formalizer.py` + `src/erdos/templates/lean_skeleton.j2`
+
 ```python
 # src/erdos/core/formalizer.py
 """Generate Lean skeletons from problem statements."""
@@ -722,13 +734,17 @@ def formalize(
 # tests/unit/test_lean_runner.py
 """Unit tests for LeanRunner."""
 
-from pathlib import Path
-from unittest.mock import patch
+from __future__ import annotations
 
 import pytest
 
 from erdos.core.lean_runner import LeanRunner, LeanRunnerError
-from erdos.core.models import LeanError
+
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class TestLeanRunnerInit:
@@ -790,7 +806,7 @@ class TestLeanRunnerCheckEnvironment:
     def test_returns_environment_info(self, tmp_path: Path) -> None:
         """check_environment returns LeanEnvironment."""
         # Create minimal project
-        (tmp_path / "lakefile.lean").write_text("-- minimal")
+        (tmp_path / "lakefile.lean").write_text("-- minimal", encoding="utf-8")
         runner = LeanRunner(tmp_path)
 
         env = runner.check_environment()
@@ -835,7 +851,7 @@ class TestLeanRunnerIntegration:
 
         # Create a simple valid Lean file
         test_file = tmp_path / "Erdos" / "Test.lean"
-        test_file.write_text("theorem simple : 1 + 1 = 2 := rfl\n")
+        test_file.write_text("theorem simple : 1 + 1 = 2 := rfl\n", encoding="utf-8")
 
         result = runner.check(test_file)
 
@@ -849,7 +865,7 @@ class TestLeanRunnerIntegration:
 
         # Create invalid Lean file
         test_file = tmp_path / "Erdos" / "Bad.lean"
-        test_file.write_text("theorem bad : 1 = 2 := rfl\n")
+        test_file.write_text("theorem bad : 1 = 2 := rfl\n", encoding="utf-8")
 
         result = runner.check(test_file)
 
@@ -887,7 +903,7 @@ class TestGenerateSkeleton:
         """generate_skeleton creates .lean file."""
         # Create project structure
         (tmp_path / "Erdos").mkdir()
-        (tmp_path / "Erdos.lean").write_text("import Erdos.Basic\n")
+        (tmp_path / "Erdos.lean").write_text("import Erdos.Basic\n", encoding="utf-8")
 
         output = generate_skeleton(sample_problem, tmp_path)
 
@@ -897,7 +913,7 @@ class TestGenerateSkeleton:
     def test_file_contains_problem_info(self, tmp_path: Path, sample_problem: ProblemRecord) -> None:
         """Generated file contains problem information."""
         (tmp_path / "Erdos").mkdir()
-        (tmp_path / "Erdos.lean").write_text("import Erdos.Basic\n")
+        (tmp_path / "Erdos.lean").write_text("import Erdos.Basic\n", encoding="utf-8")
 
         output = generate_skeleton(sample_problem, tmp_path)
         content = output.read_text()
@@ -909,8 +925,8 @@ class TestGenerateSkeleton:
     def test_raises_if_file_exists(self, tmp_path: Path, sample_problem: ProblemRecord) -> None:
         """Raises if file exists and overwrite=False."""
         (tmp_path / "Erdos").mkdir()
-        (tmp_path / "Erdos.lean").write_text("import Erdos.Basic\n")
-        (tmp_path / "Erdos" / "Problem006.lean").write_text("-- existing")
+        (tmp_path / "Erdos.lean").write_text("import Erdos.Basic\n", encoding="utf-8")
+        (tmp_path / "Erdos" / "Problem006.lean").write_text("-- existing", encoding="utf-8")
 
         with pytest.raises(FormalizerError, match="already exists"):
             generate_skeleton(sample_problem, tmp_path, overwrite=False)
@@ -918,8 +934,8 @@ class TestGenerateSkeleton:
     def test_overwrites_with_force(self, tmp_path: Path, sample_problem: ProblemRecord) -> None:
         """Overwrites file when overwrite=True."""
         (tmp_path / "Erdos").mkdir()
-        (tmp_path / "Erdos.lean").write_text("import Erdos.Basic\n")
-        (tmp_path / "Erdos" / "Problem006.lean").write_text("-- old content")
+        (tmp_path / "Erdos.lean").write_text("import Erdos.Basic\n", encoding="utf-8")
+        (tmp_path / "Erdos" / "Problem006.lean").write_text("-- old content", encoding="utf-8")
 
         output = generate_skeleton(sample_problem, tmp_path, overwrite=True)
 

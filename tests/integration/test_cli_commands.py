@@ -4,18 +4,13 @@ from __future__ import annotations
 
 import json
 import shutil
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 from typer.testing import CliRunner
 
 from erdos.cli import app
-from erdos.commands import lean as lean_cmd
 from erdos.core.lean_runner import LeanRunner
 from erdos.core.models import LeanCheckResult, LeanError
-
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 runner = CliRunner()
@@ -221,54 +216,64 @@ def test_cli_search_fts_works_without_dataset_when_index_exists(
     assert any(r.get("title") is None for r in payload["data"]["results"])
 
 
-def test_cli_lean_init_not_implemented() -> None:
-    result = runner.invoke(app, ["lean", "init"], env={})
+def test_cli_lean_init_no_mathlib_human(tmp_path: Path) -> None:
+    project_path = tmp_path / "formal" / "lean"
+    project_path.mkdir(parents=True)
 
-    assert result.exit_code == 1
-    assert "Feature not yet implemented" in result.stderr
+    result = runner.invoke(
+        app,
+        ["lean", "init", "--no-mathlib", "--path", str(project_path)],
+        env={},
+    )
+
+    assert result.exit_code == 0
+    assert "Initialized Lean project" in result.stdout
 
 
-def test_cli_lean_init_json_not_implemented() -> None:
-    result = runner.invoke(app, ["lean", "init", "--json"], env={})
+def test_cli_lean_init_no_mathlib_json(tmp_path: Path) -> None:
+    project_path = tmp_path / "formal" / "lean"
+    project_path.mkdir(parents=True)
 
-    assert result.exit_code == 1
+    result = runner.invoke(
+        app,
+        ["lean", "init", "--no-mathlib", "--path", str(project_path), "--json"],
+        env={},
+    )
+
+    assert result.exit_code == 0
     data = json.loads(result.stdout)
     assert data["command"] == "erdos lean init"
-    assert data["success"] is False
+    assert data["success"] is True
+    assert data["data"]["project_path"] == str(project_path)
 
 
-def test_cli_lean_check_not_implemented(tmp_path: Path) -> None:
-    file_path = tmp_path / "Test.lean"
-    file_path.write_text("-- test\n", encoding="utf-8")
-
-    result = runner.invoke(app, ["lean", "check", str(file_path)], env={})
-
-    assert result.exit_code == 1
-    assert "Feature not yet implemented" in result.stderr
-
-
-def test_cli_lean_check_json_not_implemented(tmp_path: Path) -> None:
-    file_path = tmp_path / "Test.lean"
-    file_path.write_text("-- test\n", encoding="utf-8")
-
-    result = runner.invoke(app, ["lean", "check", str(file_path), "--json"], env={})
-
-    assert result.exit_code == 1
-    data = json.loads(result.stdout)
-    assert data["command"] == "erdos lean check"
-    assert data["success"] is False
-
-
-def test_cli_lean_formalize_not_implemented(
+def test_cli_lean_formalize_success_json(
     tmp_path: Path, sample_problems_yaml: Path
 ) -> None:
     data_dir = _data_dir(tmp_path, sample_problems_yaml)
+    project_path = tmp_path / "formal" / "lean"
+    project_path.mkdir(parents=True)
+
+    init = runner.invoke(
+        app,
+        ["lean", "init", "--no-mathlib", "--path", str(project_path)],
+        env={},
+    )
+    assert init.exit_code == 0
+
     result = runner.invoke(
-        app, ["lean", "formalize", "6"], env={"ERDOS_DATA_PATH": str(data_dir)}
+        app,
+        ["lean", "formalize", "6", "--path", str(project_path), "--json"],
+        env={"ERDOS_DATA_PATH": str(data_dir)},
     )
 
-    assert result.exit_code == 1
-    assert "Feature not yet implemented" in result.stderr
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["command"] == "erdos lean formalize"
+    assert payload["success"] is True
+    output_file = Path(payload["data"]["file"])
+    assert output_file.exists()
+    assert "Problem 6" in output_file.read_text(encoding="utf-8")
 
 
 def test_cli_lean_formalize_not_found(
@@ -314,32 +319,19 @@ def test_cli_lean_check_success_and_failure(monkeypatch, tmp_path: Path) -> None
     assert "has 1 error" in normalized
 
 
-def test_cli_lean_init_and_formalize_success(
-    monkeypatch, tmp_path: Path, sample_problems_yaml: Path
-) -> None:
-    def fake_init(self) -> None:
-        return None
+def test_cli_lean_check_json_success(monkeypatch, tmp_path: Path) -> None:
+    file_path = tmp_path / "Test.lean"
+    file_path.write_text("-- test\n", encoding="utf-8")
 
-    def fake_generate(problem, project_path: Path) -> Path:
-        out = project_path / "Erdos" / f"Problem{problem.id:03d}.lean"
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text("-- skeleton\n", encoding="utf-8")
-        return out
+    def fake_check_ok(self, file_path: Path) -> LeanCheckResult:
+        return LeanCheckResult(file=str(file_path), success=True)
 
-    monkeypatch.setattr(LeanRunner, "init", fake_init)
-    init = runner.invoke(app, ["lean", "init"], env={})
-    assert init.exit_code == 0
-    assert "initialized" in init.stdout.lower()
+    monkeypatch.setattr(LeanRunner, "check", fake_check_ok)
 
-    monkeypatch.setattr(lean_cmd, "generate_skeleton", fake_generate)
-    data_dir = _data_dir(tmp_path, sample_problems_yaml)
-    project_path = tmp_path / "formal" / "lean"
-    formalize = runner.invoke(
-        app,
-        ["lean", "formalize", "6", "--json", "--path", str(project_path)],
-        env={"ERDOS_DATA_PATH": str(data_dir)},
-    )
-    assert formalize.exit_code == 0
-    payload = json.loads(formalize.stdout)
-    assert payload["command"] == "erdos lean formalize"
+    result = runner.invoke(app, ["lean", "check", str(file_path), "--json"], env={})
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["command"] == "erdos lean check"
     assert payload["success"] is True
+    assert payload["data"]["success"] is True

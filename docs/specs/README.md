@@ -4,9 +4,7 @@ Design specifications for the erdos-banger CLI toolkit.
 
 ## Active Specs
 
-| ID | Title | Status |
-|----|-------|--------|
-| [007](./spec-007-lean-integration.md) | Lean Integration | Scaffolded |
+*None currently active.*
 
 ## Archived Specs
 
@@ -20,6 +18,7 @@ Completed specs that are fully implemented.
 | 004 | CLI Architecture | [archive](../_archive/specs/spec-004-cli-architecture.md) |
 | 005 | Problem Loader | [archive](../_archive/specs/spec-005-problem-loader.md) |
 | 006 | Search Index | [archive](../_archive/specs/spec-006-search-index.md) |
+| 007 | Lean Integration | [archive](../_archive/specs/spec-007-lean-integration.md) |
 | 008 | Test Fixtures | [archive](../_archive/specs/spec-008-test-fixtures.md) |
 
 **Next Spec ID:** SPEC-009

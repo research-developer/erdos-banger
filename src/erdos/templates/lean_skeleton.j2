@@ -1,0 +1,46 @@
+{# src/erdos/templates/lean_skeleton.j2 #}
+/-
+Problem {{ problem.id }}: {{ problem.title }}
+
+Status: {{ problem.status.value }}
+{% if problem.prize > 0 %}Prize: ${{ problem.prize }}{% endif %}
+{% if problem.tags %}Tags: {{ problem.tags | join(', ') }}{% endif %}
+
+Statement:
+{{ problem.statement }}
+-/
+
+import Erdos.Basic
+import Mathlib.Data.Nat.Prime
+import Mathlib.Data.Finset.Basic
+import Mathlib.Algebra.BigOperators.Basic
+
+namespace Erdos.Problem{{ problem_id_padded }}
+
+/-!
+# Problem {{ problem.id }}: {{ problem.title }}
+
+## Formalization Notes
+
+This is an auto-generated skeleton. The formal statement below
+may need refinement to accurately capture the problem.
+
+## TODO
+- [ ] Verify the formal statement matches the informal one
+- [ ] Add necessary definitions
+- [ ] Attempt proof or mark as `sorry`
+-/
+
+-- Problem metadata
+def problem : ErdosProblem := {
+  id := {{ problem.id }}
+  title := "{{ problem.title | replace('\"', '\\\"') }}"
+  status := "{{ problem.status.value }}"
+}
+
+-- Main theorem statement
+-- TODO: Refine this formal statement
+theorem problem_{{ problem.id }} : True := by
+  sorry
+
+end Erdos.Problem{{ problem_id_padded }}
