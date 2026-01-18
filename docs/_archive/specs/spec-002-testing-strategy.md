@@ -48,23 +48,29 @@ For v1.0, targeting approximately:
 tests/
 ├── __init__.py
 ├── conftest.py                 # Shared fixtures for all tests
+├── test_cli_structure.py        # CLI registration/meta-tests
+├── test_test_infrastructure.py  # Marker/fixture/meta-tests
+├── test_tooling.py              # Spec-001 tooling acceptance tests
 ├── unit/
 │   ├── __init__.py
 │   ├── conftest.py             # Unit-specific fixtures
+│   ├── test_exit_codes.py       # Exit code enum tests
 │   ├── test_models.py          # Domain model tests
+│   ├── test_models_hypothesis.py # Property-based model tests
 │   ├── test_problem_loader.py  # YAML parsing tests
-│   └── test_lean_parser.py     # Lean error parsing tests
+│   ├── test_search_index.py     # Search index unit tests
+│   └── test_show_logic.py       # Command logic unit tests
 ├── integration/
 │   ├── __init__.py
 │   ├── conftest.py             # Integration fixtures
 │   ├── test_cli_commands.py    # CLI command integration
+│   ├── test_show_command.py     # Show command integration
 │   ├── test_search_index.py    # SQLite FTS integration
 │   └── test_lean_runner.py     # Lean subprocess integration
 └── e2e/
     ├── __init__.py
     ├── conftest.py             # E2E fixtures (temp directories, etc.)
-    ├── test_full_workflow.py   # Complete user workflows
-    └── test_cli_outputs.py     # CLI JSON/human output verification
+    └── test_cli_show.py         # CLI JSON/human output verification
 ```
 
 ---
@@ -204,7 +210,8 @@ tests/
     │   └── arxiv_2203.00001.xml
     └── lean_outputs/
         ├── successful_compile.txt
-        └── type_error_line_42.txt
+        ├── type_error.txt
+        └── sorry_warning.txt
 ```
 
 ---
@@ -317,6 +324,8 @@ def temp_project_dir(tmp_path: Path) -> Iterator[Path]:
 ```python
 """Fixtures for end-to-end tests - full CLI invocation."""
 
+import os
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Iterator
@@ -325,14 +334,30 @@ import pytest
 
 
 @pytest.fixture
-def cli_runner(tmp_path: Path) -> Iterator[callable]:
+def cli_runner(tmp_path: Path, sample_problems_yaml: Path) -> Iterator[callable]:
     """Run CLI commands in an isolated environment."""
+    project_root = Path(__file__).resolve().parents[2]
+    uv_exe = shutil.which("uv")
+    if uv_exe is None:
+        pytest.skip("`uv` executable not found on PATH")
+
+    data_dir = tmp_path / "data" / "erdosproblems"
+    data_dir.mkdir(parents=True)
+    shutil.copyfile(sample_problems_yaml, data_dir / "problems.yaml")
+
     def run(*args: str, check: bool = True) -> subprocess.CompletedProcess:
-        result = subprocess.run(
-            ["uv", "run", "erdos", *args],
+        env = os.environ.copy()
+        # `uv run` needs to know which project to execute from.
+        env["UV_PROJECT"] = str(project_root)
+        env["ERDOS_DATA_PATH"] = str(data_dir)
+
+        result = subprocess.run(  # noqa: S603
+            [uv_exe, "run", "erdos", *args],
             capture_output=True,
             text=True,
             cwd=tmp_path,
+            env=env,
+            check=False,
         )
         if check and result.returncode != 0:
             raise AssertionError(

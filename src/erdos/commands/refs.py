@@ -9,6 +9,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from erdos.commands.presenter import exit_with_result
 from erdos.core.models import CLIOutput
 from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 
@@ -18,17 +19,6 @@ app = typer.Typer(
     context_settings={"allow_interspersed_args": True},
 )
 console = Console()
-err_console = Console(stderr=True)
-
-
-def _output(ctx: typer.Context, data: CLIOutput) -> None:
-    if (ctx.obj or {}).get("json"):
-        console.print_json(data.model_dump_json())
-    elif data.success:
-        _print_human(cast("dict[str, Any]", data.data))
-    else:
-        error = cast("dict[str, Any]", data.error)
-        err_console.print(f"[red]Error:[/red] {error['message']}")
 
 
 def _print_human(refs_data: dict[str, Any]) -> None:
@@ -114,16 +104,12 @@ def refs(
             message=str(e),
             code=1,
         )
-        _output(ctx, result)
-        raise typer.Exit(code=1) from None
+        exit_with_result(ctx, result)
+        return
 
     result = get_refs(problem_id, loader)
     duration_ms = int((time.perf_counter() - start_time) * 1000)
 
     # Add duration to result
     result.duration_ms = duration_ms
-    _output(ctx, result)
-
-    if not result.success:
-        error = cast("dict[str, Any]", result.error)
-        raise typer.Exit(code=int(error.get("code", 1)))
+    exit_with_result(ctx, result, print_human=_print_human)

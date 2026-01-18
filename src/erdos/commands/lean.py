@@ -4,46 +4,20 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import Annotated, Any, cast
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
 
-from erdos.core.formalizer import generate_skeleton
-from erdos.core.lean_runner import LeanRunner
+from erdos.commands.presenter import exit_with_result
+from erdos.core.formalizer import FormalizerError, generate_skeleton
+from erdos.core.lean_runner import LeanRunner, LeanRunnerError
 from erdos.core.models import CLIOutput, LeanCheckResult
 from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 
 
 app = typer.Typer(help="Lean 4 theorem prover commands.")
 console = Console()
-err_console = Console(stderr=True)
-
-
-def _output(ctx: typer.Context, data: CLIOutput) -> None:
-    if (ctx.obj or {}).get("json"):
-        console.print_json(data.model_dump_json())
-    elif data.success:
-        result_data = cast("dict[str, Any]", data.data)
-        if isinstance(result_data, dict):
-            # LeanCheckResult has "file" and "success" keys
-            if {"file", "success"}.issubset(result_data.keys()):
-                _print_human_check_result(result_data)
-            # Formalize result has "problem_id" and "file" keys
-            elif {"problem_id", "file"}.issubset(result_data.keys()):
-                _print_human_formalize_result(result_data)
-            # Init result has "project_path" and "initialized" keys
-            elif {"project_path", "initialized"}.issubset(result_data.keys()):
-                console.print(
-                    f"[green]✓[/green] Initialized Lean project at {result_data['project_path']}"
-                )
-            else:
-                console.print(result_data)
-        else:
-            console.print(result_data)
-    else:
-        error = cast("dict[str, Any]", data.error)
-        err_console.print(f"[red]Error:[/red] {error['message']}")
 
 
 def _print_human_check_result(result_data: dict[str, Any]) -> None:
@@ -65,24 +39,43 @@ def _print_human_formalize_result(result_data: dict[str, Any]) -> None:
     console.print(f"  Run: erdos lean check {output_file}")
 
 
+def _print_human(result_data: Any) -> None:
+    if isinstance(result_data, dict):
+        # LeanCheckResult has "file" and "success" keys
+        if {"file", "success"}.issubset(result_data.keys()):
+            _print_human_check_result(result_data)
+        # Formalize result has "problem_id" and "file" keys
+        elif {"problem_id", "file"}.issubset(result_data.keys()):
+            _print_human_formalize_result(result_data)
+        # Init result has "project_path" and "initialized" keys
+        elif {"project_path", "initialized"}.issubset(result_data.keys()):
+            console.print(
+                f"[green]✓[/green] Initialized Lean project at {result_data['project_path']}"
+            )
+        else:
+            console.print(result_data)
+    else:
+        console.print(result_data)
+
+
 # ============================================================================
 # Core Logic
 # ============================================================================
 
 
-def init_lean_project(project_path: Path) -> CLIOutput:
+def init_lean_project(project_path: Path, *, fetch_mathlib: bool = True) -> CLIOutput:
     """Initialize Lean project structure."""
     try:
         runner = LeanRunner(project_path)
-        runner.init()
+        runner.init(fetch_mathlib=fetch_mathlib)
         return CLIOutput.ok(
             command="erdos lean init",
             data={"project_path": str(project_path), "initialized": True},
         )
-    except NotImplementedError as e:
+    except LeanRunnerError as e:
         return CLIOutput.err(
             command="erdos lean init",
-            error_type="NotImplemented",
+            error_type="InitError",
             message=str(e),
             code=1,
         )
@@ -104,10 +97,10 @@ def check_lean_file(file_path: Path, project_path: Path) -> CLIOutput:
             command="erdos lean check",
             data=result.model_dump(mode="json"),
         )
-    except NotImplementedError as e:
+    except LeanRunnerError as e:
         return CLIOutput.err(
             command="erdos lean check",
-            error_type="NotImplemented",
+            error_type="LeanRunnerError",
             message=str(e),
             code=1,
         )
@@ -127,6 +120,43 @@ def check_lean_file(file_path: Path, project_path: Path) -> CLIOutput:
         )
 
 
+def formalize_problem(problem_id: int, project_path: Path, *, force: bool) -> CLIOutput:
+    """Generate a Lean skeleton for a problem."""
+    try:
+        loader = ProblemLoader.from_default()
+    except ProblemLoaderError as e:
+        return CLIOutput.err(
+            command="erdos lean formalize",
+            error_type="LoaderError",
+            message=str(e),
+            code=1,
+        )
+
+    problem = loader.get_by_id(problem_id)
+    if problem is None:
+        return CLIOutput.err(
+            command="erdos lean formalize",
+            error_type="NotFound",
+            message=f"Problem {problem_id} not found",
+            code=3,
+        )
+
+    try:
+        output_file = generate_skeleton(problem, project_path, overwrite=force)
+    except FormalizerError as e:
+        return CLIOutput.err(
+            command="erdos lean formalize",
+            error_type="FormalizerError",
+            message=str(e),
+            code=1,
+        )
+
+    return CLIOutput.ok(
+        command="erdos lean formalize",
+        data={"problem_id": problem_id, "file": str(output_file)},
+    )
+
+
 # ============================================================================
 # CLI Commands
 # ============================================================================
@@ -143,6 +173,10 @@ def init(
             help="Path to Lean project (default: formal/lean/)",
         ),
     ] = None,
+    no_mathlib: Annotated[
+        bool,
+        typer.Option("--no-mathlib", help="Skip fetching mathlib"),
+    ] = False,
     json_output: Annotated[
         bool,
         typer.Option(
@@ -162,15 +196,13 @@ def init(
 
     start_time = time.perf_counter()
     path = project_path or Path("formal/lean")
-    result = init_lean_project(path)
+    path.mkdir(parents=True, exist_ok=True)
+    result = init_lean_project(path, fetch_mathlib=not no_mathlib)
     duration_ms = int((time.perf_counter() - start_time) * 1000)
 
     # Add duration to result
     result.duration_ms = duration_ms
-    _output(ctx, result)
-    if not result.success:
-        error = cast("dict[str, Any]", result.error)
-        raise typer.Exit(code=int(error.get("code", 1)))
+    exit_with_result(ctx, result, print_human=_print_human)
 
 
 @app.command()
@@ -216,7 +248,7 @@ def check(
 
     # Add duration to result
     result.duration_ms = duration_ms
-    _output(ctx, result)
+    exit_with_result(ctx, result, print_human=_print_human)
 
     if (
         result.success
@@ -224,9 +256,6 @@ def check(
         and not result.data.get("success", True)
     ):
         raise typer.Exit(code=5)
-    if not result.success:
-        error = cast("dict[str, Any]", result.error)
-        raise typer.Exit(code=int(error.get("code", 1)))
 
 
 @app.command()
@@ -247,6 +276,10 @@ def formalize(
             help="Path to Lean project (default: formal/lean/)",
         ),
     ] = None,
+    force: Annotated[
+        bool,
+        typer.Option("--force", "-f", help="Overwrite existing file"),
+    ] = False,
     json_output: Annotated[
         bool,
         typer.Option(
@@ -266,50 +299,7 @@ def formalize(
 
     start_time = time.perf_counter()
     path = project_path or Path("formal/lean")
-
-    try:
-        loader = ProblemLoader.from_default()
-    except ProblemLoaderError as e:
-        result = CLIOutput.err(
-            command="erdos lean formalize",
-            error_type="LoaderError",
-            message=str(e),
-            code=1,
-        )
-        _output(ctx, result)
-        raise typer.Exit(code=1) from None
-
-    problem = loader.get_by_id(problem_id)
-    if problem is None:
-        duration_ms = int((time.perf_counter() - start_time) * 1000)
-        result = CLIOutput.err(
-            command="erdos lean formalize",
-            error_type="NotFound",
-            message=f"Problem {problem_id} not found",
-            code=3,
-        )
-        result.duration_ms = duration_ms
-        _output(ctx, result)
-        raise typer.Exit(code=3)
-
-    try:
-        output_file = generate_skeleton(problem, path)
-    except NotImplementedError as e:
-        duration_ms = int((time.perf_counter() - start_time) * 1000)
-        result = CLIOutput.err(
-            command="erdos lean formalize",
-            error_type="NotImplemented",
-            message=str(e),
-            code=1,
-        )
-        result.duration_ms = duration_ms
-        _output(ctx, result)
-        raise typer.Exit(code=1) from None
-
+    result = formalize_problem(problem_id, path, force=force)
     duration_ms = int((time.perf_counter() - start_time) * 1000)
-    result = CLIOutput.ok(
-        command="erdos lean formalize",
-        data={"problem_id": problem_id, "file": str(output_file)},
-    )
     result.duration_ms = duration_ms
-    _output(ctx, result)
+    exit_with_result(ctx, result, print_human=_print_human)

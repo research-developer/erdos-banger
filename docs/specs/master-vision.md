@@ -51,7 +51,7 @@ Handles reference material for a given problem. For each problem or reference, t
 
 ### Storage Layer (Metadata + Cache)
 
-Uses a local database (default SQLite for simplicity) to store structured metadata: problem records, reference metadata, chunked text, vector embeddings, etc. For v1, SQLite with FTS5 provides a lightweight full-text index. A separate local folder (e.g. `literature/cache/`) holds cached content like arXiv source or HTML, and possibly pre-processed text, keyed by content hashes/IDs. Nothing that violates licenses will be stored in git; the cache is user-local and git-ignored (see Legal Policy).
+Uses a local database (default SQLite for simplicity) to store structured metadata: problem records, reference metadata, chunked text, etc. (Future: vector embeddings for semantic/hybrid search.) For v1, SQLite with FTS5 provides a lightweight full-text index. A separate local folder (e.g. `literature/cache/`) holds cached content like arXiv source or HTML, and possibly pre-processed text, keyed by content hashes/IDs. Nothing that violates licenses will be stored in git; the cache is user-local and git-ignored (see Legal Policy).
 
 ### Hybrid Index (Search)
 
@@ -76,46 +76,94 @@ Every run produces structured logs (e.g. JSON lines or YAML) capturing the opera
 ### Architecture Diagram (ASCII)
 
 ```
-[ teorth/erdosproblems dataset ] <-- (git submodule / import) --+
-                                                              |    Problem
-                                                     [ Data Importer ]
-                                                              v    YAML→JSON models
-                                                 +--------------------------+
-                                                 |    Problem DB (SQLite)   |
-                                                 |  - Problems meta        |
-                                                 |  - References meta      |
-                                                 |  - Index (FTS5, vectors)|
-                                                 +--------------------------+
-                                                   ^    ^           ^
-                        (metadata APIs)            |    |           | (search query)
-        Crossref/OpenAlex/Semantic Scholar         |    |           |
-                Unpaywall/CORE/zbMATH             |    |           |
-                        (fulltext APIs)           |    |           |
-                                                   |    |        [ Retrieval ]
-                        (Lean files)              |    |           |    + BM25, vector sim
-                                                   |    |           |    + rerank (future)
-                                         [ CLI commands ]        (result chunks+sources)
-                                         /   |   |   |   \
-            list/show/refs          ingest         search/ask              lean/formalize/loop
-          (info display)      (fetch refs, build   (retrieve info &      (Lean project management,
-                              manifest, convert)    answer with cites)    compilation, agent loop)
-
-                                                   v
-                                           [ Lean4 Project ]
-                                           - Lean files (theories, lemmas)
-                                           - Lake + mathlib dependency
-                                           - elan toolchain (Lean version)
-                                                   v
-                                            lake build (via CLI)
-                                                   v
-                                           Lean output (errors, proofs)
-                                                   ^
-                                                   |
-                                         [ Logging & Run Records ]
-                                          (all steps recorded)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              DATA SOURCES                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   teorth/erdosproblems          External APIs              Literature       │
+│   ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐     │
+│   │ problems.yaml   │      │ Crossref        │      │ arXiv           │     │
+│   │ (metadata SSOT) │      │ OpenAlex        │      │ Unpaywall       │     │
+│   └────────┬────────┘      │ Semantic Scholar│      │ CORE            │     │
+│            │               └────────┬────────┘      └────────┬────────┘     │
+│            │                        │                        │              │
+└────────────┼────────────────────────┼────────────────────────┼──────────────┘
+             │                        │                        │
+             v                        v                        v
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              STORAGE LAYER                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐     │
+│   │ Problem DB      │      │ Search Index    │      │ Literature      │     │
+│   │ (SQLite)        │      │ (SQLite FTS5)   │      │ Cache           │     │
+│   │                 │      │                 │      │                 │     │
+│   │ • problems      │      │ • text chunks   │      │ • manifests/    │     │
+│   │ • references    │      │                 │      │ • cache/        │     │
+│   │ • metadata      │      │                 │      │ • extracts/     │     │
+│   └────────┬────────┘      └────────┬────────┘      └────────┬────────┘     │
+│            │                        │                        │              │
+└────────────┼────────────────────────┼────────────────────────┼──────────────┘
+             │                        │                        │
+             └────────────────────────┼────────────────────────┘
+                                      │
+                                      v
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              CLI COMMANDS                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   Info Display        Ingestion           Search/Q&A         Formalization  │
+│   ┌───────────┐      ┌───────────┐      ┌───────────┐      ┌───────────┐    │
+│   │ list      │      │ ingest    │      │ search    │      │ lean init │    │
+│   │ show      │      │ index     │      │ ask       │      │ lean check│    │
+│   │ refs      │      │           │      │           │      │ lean form │    │
+│   └───────────┘      └───────────┘      └───────────┘      │ loop      │    │
+│                                                            └─────┬─────┘    │
+│                                                                  │          │
+└──────────────────────────────────────────────────────────────────┼──────────┘
+                                                                   │
+                                                                   v
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              LEAN 4 PROJECT                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   formal/lean/                                                              │
+│   ├── lean-toolchain        (version pin)                                   │
+│   ├── lakefile.lean         (dependencies: mathlib4)                        │
+│   └── Erdos/                                                                │
+│       ├── Problem001.lean   (generated skeletons)                           │
+│       └── ...                                                               │
+│                                      │                                      │
+│                                      v                                      │
+│                               lake build                                    │
+│                                      │                                      │
+│                                      v                                      │
+│                           errors / proofs                                   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      v
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              LOGGING & EVAL                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   logs/                                                                     │
+│   ├── runs.jsonl            (structured run records)                        │
+│   ├── batch_state.json      (batch operation state)                         │
+│   └── ...                                                                   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Diagram Summary:** The dataset feeds the problem DB. Ingestion fetches references (via external APIs) into manifests and possibly cached text. An index builder uses the DB content (problem statements, reference texts) to create a hybrid search index (text + vectors). The CLI commands orchestrate these: e.g., `erdos search` queries the index and returns relevant text chunks with citations; `erdos ask` uses LLM (via CLI integration) to answer questions with those citations. The Lean project is initialized by `erdos lean init` and contains Lean files. Commands like `erdos lean formalize` create a Lean stub for a problem, and `erdos loop` runs an iterative loop where the LLM proposes proofs, Lean checks them, and feedback is logged. Logging happens throughout to enable reproducibility and evaluation.
+Note: In the diagram, "lean form" is shorthand for `erdos lean formalize`.
+
+**Data Flow:**
+1. **Import** → Problem dataset loads into SQLite, external APIs enrich references
+2. **Index** → Text chunks populate the FTS5 search index (v1); embeddings are a future extension
+3. **Query** → CLI commands read/write to storage, invoke Lean compilation
+4. **Iterate** → Lean errors feed back to LLM loop, all steps logged
+
+**Diagram Summary:** The dataset feeds the problem DB. Ingestion fetches references (via external APIs) into manifests and possibly cached text. An index builder uses the DB content (problem statements, reference texts) to create a lexical search index (FTS5) in v1; vector embeddings and hybrid reranking are a future extension. The CLI commands orchestrate these: e.g., `erdos search` queries the index and returns relevant text chunks with citations; `erdos ask` uses LLM (via CLI integration) to answer questions with those citations. The Lean project is initialized by `erdos lean init` and contains Lean files. Commands like `erdos lean formalize` create a Lean stub for a problem, and `erdos loop` runs an iterative loop where the LLM proposes proofs, Lean checks them, and feedback is logged. Logging happens throughout to enable reproducibility and evaluation.
 
 ---
 
@@ -252,13 +300,11 @@ The CLI, invoked as `erdos`, supports multiple subcommands corresponding to stag
 - Returns exit code 0 on success, nonzero on failure (different codes for different failure types)
 - Accepts `--json` to output machine-readable JSON (with a defined schema and version)
 - All commands respect global flags:
-  - `--config` (point to a config file)
-  - `--cache-dir` (override default cache location)
+  - `--json` (machine-readable output)
   - `--log-level` (e.g. DEBUG/INFO/WARN/ERROR)
-  - `--trace` (very verbose logging including tool invocations)
-  - `--no-network` (disallow any network calls; commands will fail if they require network)
-  - `--resume` (where applicable, resume from last checkpoint)
-  - `--yes`/`--no-input` (assume yes or no for any prompts, though by default we try not to have prompts)
+  - `--version` (print version and exit)
+
+  Deferred / command-scoped flags (not global in v1): `--config`, `--cache-dir`, `--trace`, `--no-network`, `--resume`, `--yes`/`--no-input`
 
 ### Commands and Usage
 
@@ -358,7 +404,7 @@ For each reference:
 
 **Idempotence:** Running `erdos ingest` again should skip already ingested references unless a `--force` is given to refresh.
 
-**Network:** Yes, requires network (Crossref, etc.) unless everything is cached. If `--no-network` flag is set, it will error out. If `--resume` is provided, we resume a previously interrupted ingestion.
+**Network:** Yes, requires network (Crossref, etc.) unless everything is cached. If the ingest command's `--no-network` option is set, it will error out. If `--resume` is provided, we resume a previously interrupted ingestion.
 
 **Example:** `erdos ingest 42 --json` might output for each reference: metadata plus local_path if downloaded.
 
@@ -369,7 +415,7 @@ Build or update the search index.
 **Behavior:**
 - Ensure the SQLite (or Postgres) DB is set up (if not, create schema)
 - Insert/update Problem texts: the problem statements themselves can be searchable content
-- Insert reference texts: For each reference that has an extracted text, break into chunks (maybe 200-300 words per chunk). Store each chunk with a link to the reference. Use SQLite FTS5 to index the text. Also compute an embedding for each chunk using a chosen model (perhaps sentence-transformers or similar).
+- Insert reference texts: For each reference that has an extracted text, break into chunks (maybe 200-300 words per chunk). Store each chunk with a link to the reference. Use SQLite FTS5 to index the text. Future extension: compute embeddings for each chunk (Spec 014).
 - Save the index
 
 **Output:** Human mode: some stats – "Indexed 50 problems and 120 references (980 chunks). FTS terms: ~10k, vector dim: 384." JSON: could output summary stats with counts.
@@ -458,12 +504,8 @@ Run an interactive (or automated) loop of Lean proof attempts using an LLM agent
 
 ### Global Flags and Behavior
 
-- `--config`: Specify a config file (YAML/JSON)
-- `--cache-dir`: Override default location
-- `--log-level`: default INFO, DEBUG/TRACE available
-- `--no-network`: Ensures no command will unexpectedly hit the internet
-- `--resume`: Continue where left off
-- `--yes`/`--no-input`: Control interactive prompts
+- Global flags implemented in v1 (SSOT: `src/erdos/cli.py`): `--json`, `--log-level`, `--version`
+- Deferred / command-scoped flags (not global in v1): `--config`, `--cache-dir`, `--trace`, `--no-network`, `--resume`, `--yes`/`--no-input`
 
 ### Error Model and JSON Failure Outputs
 

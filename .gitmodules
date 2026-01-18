@@ -1,0 +1,3 @@
+[submodule "data/erdosproblems"]
+	path = data/erdosproblems
+	url = https://github.com/teorth/erdosproblems

@@ -104,7 +104,7 @@ class ProblemStatus(str, Enum):
         import re
 
         normalized = value.lower().strip()
-        normalized = re.sub(r"\\s*\\([^)]*\\)\\s*$", "", normalized)  # e.g., "proved (Lean)" -> "proved"
+        normalized = re.sub(r"\s*\([^)]*\)\s*$", "", normalized)  # e.g., "proved (Lean)" -> "proved"
         normalized = normalized.replace("-", "_").replace(" ", "_")
         try:
             return cls(normalized)
@@ -195,7 +195,7 @@ class ReferenceEntry(ErdosBaseModel):
         Field(
             default=None,
             # Accept both post-2007 (YYMM.NNNN/NNNNN) and pre-2007 (archive/YYMMNNN) identifiers.
-            pattern=r"^(?:\d{4}\.\d{4,5}|[A-Za-z\\-]+(?:\\.[A-Za-z\\-]+)?/\\d{7})(?:v\\d+)?$",
+            pattern=r"^(?:\d{4}\.\d{4,5}|[A-Za-z\-]+(?:\.[A-Za-z\-]+)?/\d{7})(?:v\d+)?$",
         ),
     ]
     url: Annotated[str | None, Field(default=None)]

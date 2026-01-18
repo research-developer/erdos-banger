@@ -324,7 +324,7 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.13
     hooks:
-      - id: ruff
+      - id: ruff-check
         args: [--fix]
       - id: ruff-format
 
@@ -519,6 +519,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -529,8 +532,6 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
-    env:
-      UV_PYTHON: ${{ matrix.python-version }}
 
     steps:
       - uses: actions/checkout@v6
@@ -539,6 +540,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v7
         with:
+          python-version: ${{ matrix.python-version }}
           enable-cache: true
           cache-dependency-glob: |
             uv.lock
@@ -555,17 +557,22 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
+      - name: Pre-commit (repo hygiene)
+        run: uv run --frozen pre-commit run --all-files --show-diff-on-failure
+        env:
+          SKIP: ruff-check,ruff-format,mypy
+
       - name: Lint
-        run: uv run ruff check .
+        run: uv run --frozen ruff check .
 
       - name: Format (check)
-        run: uv run ruff format . --check
+        run: uv run --frozen ruff format . --check
 
       - name: Type check
-        run: uv run mypy src/
+        run: uv run --frozen mypy src/ tests/
 
       - name: Tests (no Lean, no network)
-        run: uv run pytest --cov=erdos --cov-report=xml --cov-fail-under=80 -m "not requires_lean and not requires_network"
+        run: uv run --frozen pytest --cov=erdos --cov-report=xml --cov-fail-under=80 -m "not requires_lean and not requires_network"
 
       - name: Build (sdist + wheel)
         run: uv build
@@ -574,11 +581,10 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           files: coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   test-with-lean:
     runs-on: ubuntu-latest
-    env:
-      UV_PYTHON: "3.11"
 
     steps:
       - uses: actions/checkout@v6
@@ -602,6 +608,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v7
         with:
+          python-version: "3.11"
           enable-cache: true
           cache-dependency-glob: |
             uv.lock
@@ -620,7 +627,7 @@ jobs:
       - name: Run Lean-dependent tests
         run: |
           set +e
-          uv run pytest -m "requires_lean"
+          uv run --frozen pytest -m "requires_lean"
           status=$?
           if [ $status -eq 5 ]; then
             echo "No tests collected for marker 'requires_lean'; skipping."
