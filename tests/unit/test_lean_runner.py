@@ -87,6 +87,36 @@ Erdos/Test.lean:20:5: warning: some warning"""
         errors = runner._parse_errors("", "test.lean")
         assert errors == []
 
+    def test_parses_type_error_fixture(self, fixtures_dir: Path) -> None:
+        """Parses a golden type-error sample from fixtures."""
+        runner = LeanRunner.__new__(LeanRunner)
+        stderr = (fixtures_dir / "lean_outputs" / "type_error.txt").read_text(
+            encoding="utf-8"
+        )
+
+        errors = runner._parse_errors(stderr, "hint.lean")
+
+        assert [e.severity for e in errors] == ["error", "error"]
+        assert errors[0].file == "Erdos/Problem006.lean"
+        assert errors[0].line == 12
+        assert "type mismatch" in errors[0].message
+        assert errors[1].file == "Erdos/Problem006.lean"
+        assert errors[1].line == 15
+        assert "unknown identifier" in errors[1].message
+
+    def test_parses_sorry_warning_fixture(self, fixtures_dir: Path) -> None:
+        """Parses a golden sorry-warning sample from fixtures."""
+        runner = LeanRunner.__new__(LeanRunner)
+        stderr = (fixtures_dir / "lean_outputs" / "sorry_warning.txt").read_text(
+            encoding="utf-8"
+        )
+
+        errors = runner._parse_errors(stderr, "hint.lean")
+
+        assert len(errors) == 1
+        assert errors[0].severity == "warning"
+        assert "sorry" in errors[0].message
+
 
 class TestLeanRunnerCheckEnvironment:
     def test_returns_environment_info(self, tmp_path: Path) -> None:
