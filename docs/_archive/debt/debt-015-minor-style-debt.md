@@ -1,7 +1,7 @@
 # Technical Debt 015: Minor Style Debt (Post v1.1)
 
 **Date:** 2026-01-19
-**Status:** Resolved
+**Status:** Archived (Resolved)
 **Priority:** P4 (Low - cosmetic/style)
 **Impact:** None functional, style consistency only
 

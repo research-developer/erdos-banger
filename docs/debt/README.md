@@ -56,3 +56,4 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-008-unused-golden-fixtures.md`
 - `docs/_archive/debt/debt-009-upstream-data-not-integrated.md`
 - `docs/_archive/debt/debt-010-no-smoke-test.md`
+- `docs/_archive/debt/debt-015-minor-style-debt.md`
