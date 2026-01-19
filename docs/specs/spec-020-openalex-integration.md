@@ -257,7 +257,7 @@ def find_pdf_url(work: dict) -> str | None:
 
 ### Updated Ingest Flow
 
-```
+```text
 erdos ingest PROBLEM_ID
     │
     ├─► Parse problem references (DOIs, arXiv IDs, URLs)

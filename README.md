@@ -42,6 +42,10 @@ git submodule update --init --recursive
 # Install dependencies (requires uv: https://docs.astral.sh/uv/)
 uv sync
 
+# Optional: enable the [pdf] extra (installs GPL-licensed tooling; deferred to v2.0+)
+# See docs/specs/spec-019-pdf-conversion.md for policy and rationale.
+uv sync --extra pdf
+
 # Bootstrap a local enriched dataset (sample data)
 cp tests/fixtures/sample_problems.yaml data/problems_enriched.yaml
 
@@ -110,3 +114,6 @@ See `docs/specs/` for detailed design documents and the v1.2+ roadmap.
 ## License
 
 Apache-2.0 (matching the upstream erdosproblems dataset)
+
+Optional dependencies:
+- The `[pdf]` extra installs `marker-pdf` (GPL-licensed). Installing it locally is opt-in; distributing builds that include it may trigger GPL obligations. See `docs/specs/spec-019-pdf-conversion.md`.

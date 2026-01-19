@@ -50,10 +50,8 @@ But `ingest.py` currently:
 
 ## Action Items
 
-- [ ] Update SPEC-020 status from "Ready" to "Deferred (v1.2+)"
-- [ ] Update SPEC-020 to clarify it augments (not replaces) SPEC-010
-- [ ] Add SPEC-020 to PROGRESS.md as "Phase 3" or similar
-- [ ] Document migration path from Crossref→OpenAlex
+None. This deck is informational: SPEC-020 remains **Ready** (fully specified for v1.2+) and
+is not expected to be implemented as part of v1.1.
 
 ## References
 

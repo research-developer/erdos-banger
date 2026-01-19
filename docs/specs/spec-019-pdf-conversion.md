@@ -2,7 +2,7 @@
 
 > Extends the ingest pipeline to convert PDF papers to searchable text, preserving mathematical notation.
 
-**Status:** Ready (Deferred to v2.0+)
+**Status:** Ready (v2.0+)
 **Target:** v2.0+
 **Prerequisites (SSOT):**
 - Ingest command: `docs/specs/spec-010-ingest-command.md`
