@@ -3,8 +3,12 @@
 Problem {{ problem.id }}: {{ problem.title }}
 
 Status: {{ problem.status.value }}
-{% if problem.prize > 0 %}Prize: ${{ problem.prize }}{% endif %}
-{% if problem.tags %}Tags: {{ problem.tags | join(', ') }}{% endif %}
+{% if problem.prize > 0 %}
+Prize: ${{ problem.prize }}
+{% endif %}
+{% if problem.tags %}
+Tags: {{ problem.tags | join(', ') }}
+{% endif %}
 
 Statement:
 {{ problem.statement }}

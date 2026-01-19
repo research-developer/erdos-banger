@@ -53,6 +53,24 @@ class TestGenerateSkeleton:
         assert "Small primes" in content
         assert "sorry" in content  # Has placeholder proof
 
+    def test_prize_and_tags_are_separate_lines(self, tmp_path: Path) -> None:
+        """Prize and tags render on separate lines (no whitespace-trimming join)."""
+        problem = ProblemRecord(
+            id=6,
+            title="Small primes",
+            statement="Prove that there are infinitely many primes.",
+            status=ProblemStatus.OPEN,
+            prize=100,
+            tags=["number theory"],
+        )
+        (tmp_path / "Erdos").mkdir()
+        (tmp_path / "Erdos.lean").write_text("import Erdos.Basic\n", encoding="utf-8")
+
+        output = generate_skeleton(problem, tmp_path)
+        content = output.read_text(encoding="utf-8")
+
+        assert "Prize: $100\nTags:" in content
+
     def test_raises_if_file_exists(
         self, tmp_path: Path, sample_problem: ProblemRecord
     ) -> None:
