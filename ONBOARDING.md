@@ -1,6 +1,6 @@
 # Erdős-Banger: Contributor Onboarding
 
-**TL;DR:** A CLI toolkit for iteratively proving Erdős problems with LLM + Lean 4.
+**TL;DR:** A CLI toolkit for researching and iteratively formalizing Erdős problems with LLM + Lean 4.
 
 ---
 
@@ -47,26 +47,30 @@ A **human-in-the-loop proving workbench** that combines:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Why this works:** Lean is the oracle. LLM can hallucinate all day, but Lean proofs either compile or they don't. No fake math possible.
+**Why this works:** Lean is the oracle. LLM can hallucinate all day, but Lean proofs either compile or they don't.
+
+**Where we are today:** In v1.1, you can run this loop manually with `erdos ask` + `erdos lean check`. In v1.2, `erdos loop` automates the iteration.
 
 ---
 
 ## What This Is
 
-- **CLI toolkit** for Erdős problem research (`erdos list`, `erdos search`, `erdos lean check`, etc.)
-- **Data harness** using [Terence Tao's erdosproblems dataset](https://github.com/teorth/erdosproblems) (1135 problems)
-- **Literature pipeline** - fetches paper metadata from arXiv/Crossref, caches source files
-- **RAG Q&A** - search indexed content, ask questions with citations
-- **Lean 4 integration** - create skeletons, compile, capture errors, iterate
-- **Logging** - every run is logged for reproducibility
+- **CLI toolkit** for Erdős problem research (`erdos list`, `erdos search`, `erdos ingest`, `erdos ask`, `erdos lean …`)
+- **Problem dataset harness**:
+  - upstream: [teorth/erdosproblems](https://github.com/teorth/erdosproblems) (metadata-only YAML; included as a submodule)
+  - v1 runtime input: a local **enriched** dataset at `data/problems_enriched.yaml` (titles/statements/references)
+- **Literature pipeline** - ingests *known* references (DOI/arXiv) from problem metadata via Crossref + arXiv, and caches what’s legal
+- **Search + Q&A** - SQLite FTS5 index + `erdos ask` prompt builder for citation-grounded answers (LLM is an external subprocess)
+- **Lean 4 integration** - generate skeleton files, compile, capture errors, iterate
 
 ---
 
 ## What This Is NOT
 
 - **Not an autonomous solver** - it's infrastructure to *assist* proving, not magic
+- **Not a paper discovery engine** - v1 ingests references already listed on a problem; it does not find “recent papers” automatically
 - **Not a web app** - CLI-first, designed for automation and AI agents
-- **Not storing paywalled PDFs** - only open-access content and metadata
+- **Not storing paywalled PDFs** - only metadata + open-access content (arXiv source); PDF conversion is deferred
 - **Not promising breakthroughs** - we're building tools, not claiming victories
 - **Not fully automated (yet)** - human guides the loop, LLM proposes, Lean verifies
 
@@ -79,10 +83,10 @@ A **human-in-the-loop proving workbench** that combines:
 │                              DATA SOURCES                                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│   teorth/erdosproblems         Metadata APIs            Literature          │
+│   Upstream dataset            Metadata APIs            Literature          │
 │   ┌─────────────────┐      ┌─────────────────┐     ┌─────────────────┐      │
-│   │ 1135 problems   │      │ Crossref (DOI)  │     │ arXiv (source)  │      │
-│   │ (YAML dataset)  │      │ OpenAlex (meta) │     │ Unpaywall (OA)  │      │
+│   │ erdosproblems   │      │ Crossref (DOI)  │     │ arXiv (source)  │      │
+│   │ (metadata-only) │      │                 │     │                 │      │
 │   └────────┬────────┘      └────────┬────────┘     └────────┬────────┘      │
 │            │                        │                       │               │
 └────────────┼────────────────────────┼───────────────────────┼───────────────┘
@@ -93,12 +97,12 @@ A **human-in-the-loop proving workbench** that combines:
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │   ┌─────────────────┐      ┌─────────────────┐     ┌─────────────────┐      │
-│   │ Problem DB      │      │ Search Index    │     │ Literature      │      │
-│   │ (SQLite)        │      │ (SQLite FTS5)   │     │ Cache           │      │
+│   │ Problems YAML   │      │ Search Index    │     │ Literature      │      │
+│   │ (gitignored)    │      │ (SQLite FTS5)   │     │ Cache           │      │
 │   │                 │      │                 │     │                 │      │
 │   │ • id, status    │      │ • text chunks   │     │ • manifests/    │      │
-│   │ • statement     │      │ • BM25 search   │     │ • cache/        │      │
-│   │ • references    │      │                 │     │ • extracts/     │      │
+│   │ • title/stmt    │      │ • BM25 search   │     │ • cache/        │      │
+│   │ • refs + tags   │      │                 │     │ • extracts/     │      │
 │   └────────┬────────┘      └────────┬────────┘     └────────┬────────┘      │
 │            │                        │                       │               │
 └────────────┼────────────────────────┼───────────────────────┼───────────────┘
@@ -114,7 +118,7 @@ A **human-in-the-loop proving workbench** that combines:
 │   ┌───────────┐    ┌───────────┐    ┌───────────┐    ┌───────────┐          │
 │   │ list      │    │ ingest    │    │ search    │    │ lean init │          │
 │   │ show      │    │           │    │ ask       │    │ lean check│          │
-│   │ refs      │    │           │    │           │    │ lean form │          │
+│   │ refs      │    │           │    │           │    │ formalize │          │
 │   └───────────┘    └───────────┘    └───────────┘    │ loop      │          │
 │                                                      └─────┬─────┘          │
 │                                                            │                │
@@ -139,6 +143,11 @@ A **human-in-the-loop proving workbench** that combines:
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+Notes:
+- `data/erdosproblems/` is upstream **metadata-only**; v1 requires a local enriched `data/problems_enriched.yaml` (see quickstart below).
+- `erdos loop` is planned for v1.2; in v1.1 you run the loop manually.
+- OpenAlex/Unpaywall integration is planned; v1.1 uses Crossref + arXiv.
+
 ---
 
 ## First 15 Minutes
@@ -147,25 +156,31 @@ A **human-in-the-loop proving workbench** that combines:
 # 1. Clone and setup
 git clone https://github.com/The-Obstacle-Is-The-Way/erdos-banger.git
 cd erdos-banger
-git submodule update --init
+git submodule update --init --recursive
 
 # 2. Install dependencies (requires uv: https://docs.astral.sh/uv/)
 uv sync
 
-# 3. Verify CLI works
+# 3. Bootstrap sample data (for local development)
+cp tests/fixtures/sample_problems.yaml data/problems_enriched.yaml
+
+# 4. Verify CLI works
 uv run erdos --version
 uv run erdos list --limit 5
 
-# 4. Look at a problem
+# 5. Look at a problem
 uv run erdos show 6
 
-# 5. See its references
+# 6. See its references
 uv run erdos refs 6
 
-# 6. Search the index
-uv run erdos search "prime numbers"
+# 7. Search (build index for best results)
+uv run erdos search "prime numbers" --build-index
 
-# 7. (Optional) Install Lean via elan
+# 8. Ask a question (prompt-only mode)
+uv run erdos ask 6 "What partial results are known?" --no-llm
+
+# 9. (Optional) Install Lean via elan
 curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh
 ```
 
@@ -175,11 +190,11 @@ curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf 
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| CLI scaffold | ✅ Done | `list`, `show`, `refs`, `search`, `lean` |
-| Problem loader | ✅ Done | 1135 problems from upstream dataset |
-| Ingest (arXiv/Crossref) | ✅ Done | Metadata + source caching |
+| CLI scaffold | ✅ Done | `list`, `show`, `refs`, `search`, `ingest`, `ask`, `lean …` |
+| Problem loader | ✅ Done | Loads local enriched dataset (`data/problems_enriched.yaml`) |
+| Ingest (arXiv/Crossref) | ✅ Done | Fetches metadata + caches arXiv source/extracts |
 | Search (FTS5) | ✅ Done | BM25 full-text search |
-| Ask (RAG Q&A) | ✅ Done | Citation-grounded answers |
+| Ask (RAG Q&A) | ✅ Done | Builds citation-grounded prompt; optional LLM subprocess |
 | Lean check | ✅ Done | Compile + error parsing |
 | Lean formalize | ✅ Done | Skeleton generation |
 | Loop command | 🚧 v1.2 | Iterative LLM+Lean loop |
@@ -218,9 +233,9 @@ Lean is a **formal proof assistant**. A proof either compiles or it doesn't. Thi
 [Paul Erdős](https://en.wikipedia.org/wiki/Paul_Erd%C5%91s) was a legendary mathematician who posed thousands of problems, many with cash prizes. [Terence Tao's dataset](https://github.com/teorth/erdosproblems) catalogs 1135 of them.
 
 Examples:
-- **Problem 6** ($100, proved): Small primes in arithmetic progressions
-- **Problem 4** ($10,000, proved): Arithmetic progressions in primes
-- **Problem 148** (open): Unit fractions representation
+- **Problem 6** ($100, proved) — example of a proved problem with a prize
+- **Problem 4** ($10,000, proved) — example of a higher-prize proved problem
+- **Problem 148** (open; tagged “unit fractions”) — example of an open problem area
 
 Some are solved. Some are open. Some have Lean formalizations. We're building tools to work on all of them.
 
@@ -236,7 +251,7 @@ We're not building a complex multi-agent system yet. We're building **solid CLI 
 1. Works reliably
 2. Has good test coverage
 3. Produces reproducible results
-4. Can support agents later (via MCP, skills)
+4. Can support agents later (via MCP)
 
 The fancy stuff comes after the plumbing works.
 
