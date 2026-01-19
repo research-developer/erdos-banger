@@ -62,7 +62,7 @@ All targets must call `uv` (not `pip`).
 - `format-check`: `uv run ruff format . --check`
 - `lint`: `uv run ruff check .`
 - `lint-fix`: `uv run ruff check . --fix`
-- `typecheck`: `uv run mypy src/`
+- `typecheck`: `uv run mypy src/ tests/`
 - `test`: `uv run pytest -m "not requires_lean and not requires_network"`
 - `test-all`: `uv run pytest`
 - `cov`: `uv run pytest --cov=erdos --cov-fail-under=80 -m "not requires_lean and not requires_network"`
