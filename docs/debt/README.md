@@ -14,7 +14,30 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-*None currently active.*
+| ID | Title | Priority | Status | Impact |
+|----|-------|----------|--------|--------|
+| DEBT-016 | [SRP Violation in models.py](debt-016-srp-models-violation.md) | P2 | Open | Maintainability |
+| DEBT-017 | [Function Length Violations](debt-017-function-length-violations.md) | P1 | Open | Maintainability, testability |
+| DEBT-018 | [DRY Violations (Duplication)](debt-018-dry-violations.md) | P1 | Open | Maintainability, consistency |
+| DEBT-019 | [Dependency Inversion Violations](debt-019-dependency-inversion-violations.md) | P2 | Open | Testability, flexibility |
+| DEBT-020 | [Magic Numbers and Naming](debt-020-magic-numbers-and-naming.md) | P3 | Open | Readability |
+| DEBT-021 | [Missing Abstractions](debt-021-missing-abstractions.md) | P2 | Open | Extensibility |
+
+### Debt Summary
+
+**Total Active Debt:** 6 items
+- **P1 (High):** 2 items - DEBT-017, DEBT-018
+- **P2 (Medium):** 3 items - DEBT-016, DEBT-019, DEBT-021
+- **P3 (Low):** 1 item - DEBT-020
+
+### Recommended Resolution Order
+
+1. **DEBT-018** (DRY) - Low effort, high impact. Fixes code duplication.
+2. **DEBT-017** (Function Length) - Medium effort, high impact. Extract helpers.
+3. **DEBT-020** (Magic Numbers) - Low effort. Define constants.
+4. **DEBT-016** (SRP) - Medium effort. Split models.py.
+5. **DEBT-019** (DI) - High effort. Add dependency injection.
+6. **DEBT-021** (Abstractions) - High effort. Add service layer.
 
 ## Archived Debt
 
@@ -38,7 +61,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-014 | Roadmap/tracking docs drift after v1.1 | P2 | Fixed | c526e10 |
 | DEBT-015 | Minor Style Debt (code=1 vs ExitCode.ERROR) | P4 | Fixed | 9df84ca |
 
-**Next Debt ID:** DEBT-016
+**Next Debt ID:** DEBT-022
 
 ### Archived Debt Decks
 
