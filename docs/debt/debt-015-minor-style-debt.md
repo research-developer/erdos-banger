@@ -9,7 +9,7 @@
 
 ### 1. `code=1` vs `ExitCode.ERROR` Inconsistency
 
-**Status:** Fixed (commit pending)
+**Status:** Fixed (commit `9df84ca`)
 
 **Files affected:**
 - `src/erdos/commands/lean.py` (6 occurrences)

@@ -36,7 +36,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-011 | SPEC-020 status clarification | P2 | Resolved | c526e10 |
 | DEBT-012 | Broad exception handling in ingest.py | P1 | Fixed | 2cb6fac |
 | DEBT-014 | Roadmap/tracking docs drift after v1.1 | P2 | Fixed | c526e10 |
-| DEBT-015 | Minor Style Debt (code=1 vs ExitCode.ERROR) | P4 | Fixed | (pending) |
+| DEBT-015 | Minor Style Debt (code=1 vs ExitCode.ERROR) | P4 | Fixed | 9df84ca |
 
 **Next Debt ID:** DEBT-016
 
