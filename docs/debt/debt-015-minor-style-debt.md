@@ -52,11 +52,36 @@
 
 **Decision:** Keep as-is. These guide users, not developer action items.
 
+### 4. Lean Formalize Template Missing Newline
+
+**File:** `src/erdos/templates/lean_skeleton.j2`
+**Status:** Fixed (commit `27c0a16`)
+
+**Issue:** The generated Lean file has "Prize: $100Tags:" with no newline between prize and tags.
+
+**Example output:**
+```lean
+Status: proved
+Prize: $100Tags: number theory, primes, arithmetic progressions
+```
+
+**Expected:**
+```lean
+Status: proved
+Prize: $100
+Tags: number theory, primes, arithmetic progressions
+```
+
+**Impact:** Low - cosmetic issue in generated comment block.
+
+**Fix:** Add newline before `Tags:` in the Jinja2 template.
+
 ## Resolution
 
 - Item 1: Fix when touching affected files (opportunistic cleanup)
 - Item 2: No action needed (valid pattern)
 - Item 3: No action needed (intentional UX)
+- Item 4: Fixed in commit `27c0a16`
 
 ## References
 
