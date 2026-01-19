@@ -76,7 +76,7 @@ A **human-in-the-loop proving workbench** that combines:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                              DATA SOURCES                                    │
+│                              DATA SOURCES                                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │   teorth/erdosproblems          Metadata APIs           Literature          │
@@ -89,7 +89,7 @@ A **human-in-the-loop proving workbench** that combines:
              │                        │                       │
              ▼                        ▼                       ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                              STORAGE LAYER                                   │
+│                              STORAGE LAYER                                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │   ┌─────────────────┐      ┌─────────────────┐     ┌─────────────────┐      │
@@ -107,22 +107,22 @@ A **human-in-the-loop proving workbench** that combines:
                                       │
                                       ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                              CLI COMMANDS                                    │
+│                              CLI COMMANDS                                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │   Browse            Ingest            Search/Q&A         Formalize          │
-│   ┌───────────┐    ┌───────────┐    ┌───────────┐    ┌───────────┐         │
-│   │ list      │    │ ingest    │    │ search    │    │ lean init │         │
-│   │ show      │    │           │    │ ask       │    │ lean check│         │
-│   │ refs      │    │           │    │           │    │ lean form │         │
-│   └───────────┘    └───────────┘    └───────────┘    │ loop      │         │
-│                                                      └─────┬─────┘         │
-│                                                            │               │
-└────────────────────────────────────────────────────────────┼───────────────┘
+│   ┌───────────┐    ┌───────────┐    ┌───────────┐    ┌───────────┐          │
+│   │ list      │    │ ingest    │    │ search    │    │ lean init │          │
+│   │ show      │    │           │    │ ask       │    │ lean check│          │
+│   │ refs      │    │           │    │           │    │ lean form │          │
+│   └───────────┘    └───────────┘    └───────────┘    │ loop      │          │
+│                                                      └─────┬─────┘          │
+│                                                            │                │
+└────────────────────────────────────────────────────────────┼────────────────┘
                                                              │
                                                              ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                              LEAN 4 PROJECT                                  │
+│                              LEAN 4 PROJECT                                 │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │   formal/lean/                                                              │
@@ -188,34 +188,6 @@ curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf 
 
 ---
 
-## Why This Might Actually Work
-
-**This isn't vaporware. It's already been done.**
-
-In 2026, Harmonic's **Aristotle** system:
-- Solved **Erdős Problem #124** in 6 hours with 100% autonomy
-- Achieved **gold-medal level on IMO 2025** (5 of 6 problems)
-- Was verified by **Terence Tao** personally
-
-Terence Tao's key insight:
-
-> "There are a large number of problems that are actually relatively easy to prove or disprove, but due to the limited number of expert mathematicians who can actually invest in research, these problems have received little attention."
-
-**The long tail is harvestable.** AI can tackle the easier Erdős problems while humans focus on the hard ones.
-
-### Our Stack vs. Aristotle
-
-| Component | Aristotle | erdos-banger |
-|-----------|-----------|--------------|
-| Verifier | Lean 4 | Lean 4 |
-| Tactic generation | RL + MCTS | LLM (GPT-5.2 via Lean Copilot) |
-| Guidance | Autonomous | Human-in-the-loop |
-| Scale | Production | Research/learning |
-
-We're building the same architecture, just with human steering instead of RL.
-
----
-
 ## Key Insight: Why Lean?
 
 **LLMs hallucinate. Lean doesn't.**
@@ -254,27 +226,6 @@ Some are solved. Some are open. Some have Lean formalizations. We're building to
 
 ---
 
-## Future: Lean Copilot Integration
-
-[Lean Copilot](https://github.com/lean-dojo/LeanCopilot) lets us plug **any LLM** directly into Lean:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Lean 4 Proof Environment                  │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   theorem erdos_42 : ... := by                              │
-│     suggest_tactics  ◄── Calls GPT-5.2 API                  │
-│                          "apply Nat.le_of_lt"               │
-│     search_proof     ◄── Multi-step tactic search           │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-This is on the roadmap (v1.2+). See `docs/future/future-ideations.md` for the full vision.
-
----
-
 ## Philosophy
 
 From [Google DeepMind's "Scaling Agent Systems"](https://arxiv.org/html/2512.08296v1):
@@ -285,7 +236,7 @@ We're not building a complex multi-agent system yet. We're building **solid CLI 
 1. Works reliably
 2. Has good test coverage
 3. Produces reproducible results
-4. Can support agents later (via MCP, Lean Copilot)
+4. Can support agents later (via MCP, skills)
 
 The fancy stuff comes after the plumbing works.
 
@@ -294,8 +245,6 @@ The fancy stuff comes after the plumbing works.
 ## Questions?
 
 - **Full architecture:** `docs/specs/master-vision.md`
-- **Pragmatic v1 scope:** `docs/specs/master-qualifications.md`
-- **Future vision (Lean Copilot, multi-model):** `docs/future/future-ideations.md`
 - **All specs:** `docs/specs/README.md`
 - **Bugs/debt tracking:** `docs/bugs/README.md`, `docs/debt/README.md`
 
