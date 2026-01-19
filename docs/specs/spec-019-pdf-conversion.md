@@ -2,18 +2,16 @@
 
 > Extends the ingest pipeline to convert PDF papers to searchable text, preserving mathematical notation.
 
-**Status:** Blocked (License Decision Required)
+**Status:** Ready (Deferred to v2.0+)
 **Target:** v2.0+
 **Prerequisites (SSOT):**
 - Ingest command: `docs/specs/spec-010-ingest-command.md`
 - Search index: `docs/_archive/specs/spec-006-search-index.md`
 
-**Blockers:**
-1. **Docling** (preferred for MIT license) pins `typer<0.20.0`, conflicts with our `typer>=0.21.1`
-2. **Marker** (best quality) is **GPL licensed**, conflicts with "no GPL/AGPL" policy
-3. **PyMuPDF** is **AGPL licensed**, prohibited
-
-**Decision Required:** Relax license policy for optional `[pdf]` extra, or wait for Docling typer fix.
+**License Decision (2026-01-19):** GPL accepted for optional `[pdf]` extra.
+- Marker selected as primary PDF converter
+- Rationale: erdos-banger is open source; GPL distribution requirements are satisfied
+- See `docs/specs/master-vision.md` Section 7 "Licensing Summary" for policy
 
 ---
 

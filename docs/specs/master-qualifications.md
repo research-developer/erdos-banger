@@ -92,7 +92,7 @@ The master draft has too many "possibly X or Y" statements. Here are hard decisi
 | Database | **SQLite with FTS5** | Not Postgres. Not until we have 10k+ documents |
 | Vector store | **None for v1** | BM25 only. Add vectors in v1.2 if retrieval quality demands it |
 | Embedding model | **Skip for v1** | If we add later: SPECTER2 (scientific text) over MiniLM |
-| PDF conversion | **Skip for v1** | arXiv HTML + LaTeX source only. `pdf` extra reserved; Docling currently conflicts with our Typer baseline |
+| PDF conversion | **Skip for v1** | arXiv HTML + LaTeX source only. `pdf` extra reserved for v2.0+ (Marker, see Spec 019) |
 | Lean version | **leanprover/lean4:v4.12.0** | Pin exact version in `lean-toolchain` |
 | mathlib4 | **Pin to tag matching Lean** | Use `mathlib4` tag matching `lean-toolchain` (e.g. `v4.12.0`) |
 | LLM integration | **Claude Code environment** | Not OpenAI API for v1. Claude skills + shell commands |
@@ -100,25 +100,32 @@ The master draft has too many "possibly X or Y" statements. Here are hard decisi
 
 ---
 
-## 4) Docling Risk Mitigation
+## 4) PDF Conversion Strategy
 
-The feedback correctly identifies Docling as risky:
-- Heavy dependency (PyTorch, multiple models)
-- PDF conversion is an edge case rabbit hole
-- Blocks progress on core functionality
-
-**Decision:** PDF conversion is out of scope for v1. The `pdf` extra is reserved for future work.
+PDF conversion is out of scope for v1. The `[pdf]` extra is reserved for v2.0+.
 
 ### Content Acquisition Strategy (Ordered by Priority)
 
 1. **arXiv HTML** (post-Dec 2023 papers) - Clean, structured, math preserved
 2. **arXiv source tarball** - LaTeX → text conversion is tractable
-3. **Abstract only** (via Crossref/OpenAlex) - For non-arXiv papers
+3. **Abstract only** (via OpenAlex/Crossref) - For non-arXiv papers
 4. **Metadata only** - For paywalled content
 
 If a paper isn't on arXiv and isn't open access, we record metadata and move on. We don't try to solve PDF extraction in v1.
 
-**Install path:** `pip install erdos-banger[pdf]` is reserved for future PDF tooling. As of 2026-01, Docling pins `typer<0.20.0`, which conflicts with our `typer>=0.21.1` baseline, so v1 ships without a PDF extra.
+### v2.0+ PDF Tooling Decision (Updated 2026-01-19)
+
+**Selected:** Marker (GPL) - best quality for math PDF with LLM enhancement
+
+**Rationale for GPL exception:**
+- Marker is the only tool with both MIT-quality AND excellent math support
+- Docling (MIT) is blocked by typer version conflict
+- PyMuPDF (AGPL) has stricter copyleft requirements
+- erdos-banger is already open source, so GPL distribution requirements are satisfied
+
+**Install path:** `uv sync --extra pdf` will install Marker when Spec 019 is implemented.
+
+See `docs/specs/spec-019-pdf-conversion.md` for full details.
 
 ---
 

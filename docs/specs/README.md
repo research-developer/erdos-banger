@@ -42,7 +42,8 @@ Specs designed for future versions.
 | 015 | [Batch Operations](spec-015-batch-operations.md) | Deferred | v1.3 | Batch ingest/formalize with rate limiting |
 | 016 | [Formal Conjectures](spec-016-formal-conjectures.md) | Deferred | v1.4 | Import existing formalizations |
 | 017 | [MCP Server](spec-017-mcp-server.md) | Deferred | v1.4 | Model Context Protocol for AI integration |
-| 019 | [PDF Conversion](spec-019-pdf-conversion.md) | Blocked | v2.0 | PDF to text with math preservation (Docling conflict) |
+| 019 | [PDF Conversion](spec-019-pdf-conversion.md) | Ready | v2.0 | PDF to text with math preservation (Marker + LLM) |
+| 020 | [OpenAlex Integration](spec-020-openalex-integration.md) | Ready | v1.2 | Primary academic metadata source (271M+ works) |
 
 ## Archived Specs
 
@@ -61,7 +62,7 @@ Completed specs that are fully implemented.
 | 009 | Architecture Cleanup | [archive](../_archive/specs/spec-009-architecture-cleanup.md) |
 | 018 | DevX Makefile | [spec](spec-018-devx-makefile.md) (Complete) |
 
-**Next Spec ID:** SPEC-020
+**Next Spec ID:** SPEC-021
 
 ## Dependency Graph
 
@@ -81,10 +82,11 @@ v1.1 Literature (PENDING)
 ├── 010 Ingest Command ────────────┐
 └── 011 Ask Command ←──────────────┘ (uses the local search index; ingested extracts become usable once indexed)
 
-v1.2 Iteration (DEFERRED)
+v1.2 Iteration & Metadata (DEFERRED)
 ├── 012-DESIGN Loop Design ←── research (approved SSOT)
 ├── 012 Loop Command ←── 012-DESIGN + 011 Ask + 007 Lean
-└── 013 Logging ←── all commands (tracks progress)
+├── 013 Logging ←── all commands (tracks progress)
+└── 020 OpenAlex Integration ←── augments 010 Ingest
 
 v1.3 Enhancement (FUTURE)
 ├── 014 Vector Embeddings ←── 006 Search Index
@@ -94,8 +96,8 @@ v1.4 Integration (FUTURE)
 ├── 016 Formal Conjectures ←── 007 Lean
 └── 017 MCP Server ←── all CLI commands
 
-v2.0 Expansion (BLOCKED)
-└── 019 PDF Conversion ←── 010 Ingest (blocked by Docling)
+v2.0 Expansion (READY)
+└── 019 PDF Conversion ←── 010 Ingest (Marker + LLM enhancement)
 ```
 
 ## Master Documents

@@ -699,19 +699,31 @@ Use Typer (built on Click) with Rich for formatting.
 
 ### Document Conversion
 
-**Docling:** MIT license, handles math and code. Candidate optional dependency (not included in v1 due to a Typer version conflict).
+**Primary (v2.0+):** Marker (GPL) - best quality for math PDF conversion with LLM enhancement.
+- Supports multiple LLM backends: Gemini, Claude, OpenAI, Ollama
+- See Spec 019 for configuration details
 
 **Alternatives considered:**
-- GROBID (AGPL - problematic license)
-- Nougat (non-commercial license concerns)
+- **Docling** (MIT) - blocked by Typer version conflict
+- **GROBID** (AGPL) - problematic viral license
+- **Nougat** - non-commercial license concerns
+- **PyMuPDF** (AGPL) - prohibited by license policy
 
 ### Metadata Sources
 
-- Crossref REST API (open usage with limits)
-- OpenAlex (100k/day)
-- Unpaywall (100k/day with email)
-- CORE
-- zbMATH
+**Primary (v1.2+):** OpenAlex - 271M+ works, 100k requests/day, no auth required
+- Aggregates: Crossref + MAG + arXiv + PubMed + institutional repos
+- See Spec 020 for integration details
+
+**Secondary:**
+- arXiv API (for LaTeX source, HTML) - 1 req/3s rate limit
+- Crossref REST API (fallback for DOI metadata)
+
+**Future/Optional:**
+- Unpaywall (100k/day with email) - open access PDF locations
+- Semantic Scholar - citation context
+- CORE - institutional repositories
+- zbMATH - math-specific metadata
 
 ### Lean Tools
 
@@ -721,10 +733,17 @@ Use Typer (built on Click) with Rich for formatting.
 
 ### Licensing Summary
 
-- Python libs: permissive (MIT/BSD/Apache)
-- Docling (future optional): MIT
-- Lean and mathlib: Apache2
-- No GPL components included
+- **Core dependencies:** permissive only (MIT/BSD/Apache)
+- **Optional extras:** may include GPL if no permissive alternative exists
+  - `[pdf]` extra: Marker (GPL) - best quality for math PDF conversion
+  - Rationale: GPL only affects distribution; erdos-banger is already open source
+- **Lean and mathlib:** Apache 2.0
+- **Data sources:** OpenAlex (CC0), arXiv (various), Crossref (open metadata)
+
+**Policy:** We prefer MIT/Apache for everything. GPL is acceptable ONLY for optional extras where:
+1. No permissive alternative exists with equivalent quality
+2. The feature is not required for core functionality
+3. Users must explicitly opt-in via `uv sync --extra <name>`
 
 ---
 

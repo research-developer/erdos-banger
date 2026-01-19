@@ -32,7 +32,7 @@
 
 - [x] **SPEC-010-A** [REVIEWED]: Literature path conventions → `literature_paths.py` + tests
 - [x] **SPEC-010-B** [REVIEWED]: arXiv client → `arxiv_client.py` + unit tests + fixtures
-- [ ] **SPEC-010-C**: Crossref client → `crossref_client.py` + unit tests + fixtures
+- [x] **SPEC-010-C**: Crossref client → `crossref_client.py` + unit tests + fixtures
 - [ ] **SPEC-010-D**: Ingest core logic → `ingest.py` + unit tests
 - [ ] **SPEC-010-E**: Ingest command → `commands/ingest.py` + integration tests
 - [ ] **SPEC-011**: Ask Command → `docs/specs/spec-011-ask-command.md`
@@ -117,6 +117,7 @@ v1.4 Integration
 - 2026-01-19: SPEC-010-A reviewed and verified - all acceptance criteria met, 100% test coverage, all quality gates pass
 - 2026-01-19: SPEC-010-B completed - created `src/erdos/core/arxiv_client.py` with `parse_arxiv_atom()`, `fetch_arxiv_atom()`, `extract_arxiv_text()` + `tests/unit/test_arxiv_client.py` (10 tests) + `tests/unit/test_arxiv_extract.py` (6 tests), added types-requests to dev dependencies, all quality gates pass
 - 2026-01-19: SPEC-010-B reviewed and verified - all acceptance criteria met, 89% coverage for arxiv_client.py, all quality gates pass, no TODO/half-measures
+- 2026-01-19: SPEC-010-C completed - created `src/erdos/core/crossref_client.py` with `parse_crossref_work()`, `fetch_crossref_work()` + `tests/unit/test_crossref_client.py` (9 tests), 88% coverage for crossref_client.py, all quality gates pass
 
 ---
 
