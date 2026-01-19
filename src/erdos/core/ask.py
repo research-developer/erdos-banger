@@ -163,7 +163,7 @@ def execute_llm(llm_command: str, prompt: str) -> tuple[str, int]:
         Tuple of (answer, exit_code)
 
     Raises:
-        FileNotFoundError: If the command executable doesn't exist
+        OSError: If the command executable doesn't exist or can't be invoked
     """
     # Parse command with shlex.split for shell-free execution
     cmd_args = shlex.split(llm_command)
@@ -293,6 +293,13 @@ def ask_question(  # noqa: PLR0911, PLR0912
                 command="erdos ask",
                 error_type="CONFIG_ERROR",
                 message=f"LLM command not found: {llm_command}",
+                code=ExitCode.CONFIG_ERROR,
+            )
+        except OSError as e:
+            return CLIOutput.err(
+                command="erdos ask",
+                error_type="CONFIG_ERROR",
+                message=f"LLM command error: {e}",
                 code=ExitCode.CONFIG_ERROR,
             )
         except Exception as e:

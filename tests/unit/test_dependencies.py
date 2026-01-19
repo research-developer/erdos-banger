@@ -1,6 +1,7 @@
 """Tests for project dependency configuration."""
 
 import re
+import tomllib
 from pathlib import Path
 
 import requests
@@ -49,26 +50,16 @@ def test_pyproject_toml_has_requests_dependency() -> None:
     """
     # Read pyproject.toml from project root
     pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
-    pyproject_content = pyproject_path.read_text()
 
-    # Check that requests is in [project] dependencies, not just [dependency-groups.dev]
-    lines = pyproject_content.split("\n")
-    in_project_deps = False
-    found_requests = False
+    with pyproject_path.open("rb") as f:
+        pyproject = tomllib.load(f)
 
-    for line in lines:
-        if line.strip().startswith("[project]"):
-            in_project_deps = True
-        elif line.strip().startswith("[") and not line.strip().startswith("[project."):
-            in_project_deps = False
-
-        if (
-            in_project_deps
-            and "requests>=" in line
-            and not line.strip().startswith("#")
-        ):
-            found_requests = True
-            break
+    dependencies = pyproject.get("project", {}).get("dependencies", [])
+    assert isinstance(dependencies, list)
+    found_requests = any(
+        isinstance(dep, str) and dep.lstrip().startswith("requests")
+        for dep in dependencies
+    )
 
     assert found_requests, (
         "requests>=2.32.5 must be in [project] dependencies section "

@@ -20,6 +20,10 @@ from erdos.core.models import OpenAccessStatus, ReferenceRecord
 # Atom namespace
 ATOM_NS = {"atom": "http://www.w3.org/2005/Atom"}
 
+ARXIV_USER_AGENT = (
+    "erdos-banger/1.0 (https://github.com/The-Obstacle-Is-The-Way/erdos-banger)"
+)
+
 
 def parse_arxiv_atom(xml_text: str) -> ReferenceRecord:
     """Parse arXiv Atom XML response into a ReferenceRecord.
@@ -112,8 +116,9 @@ def fetch_arxiv_atom(arxiv_id: str, *, timeout: float = 30.0) -> str:
 
     url = "https://export.arxiv.org/api/query"
     params = {"id_list": arxiv_id_clean}
+    headers = {"User-Agent": ARXIV_USER_AGENT}
 
-    response = requests.get(url, params=params, timeout=timeout)
+    response = requests.get(url, params=params, headers=headers, timeout=timeout)
     response.raise_for_status()
 
     return response.text

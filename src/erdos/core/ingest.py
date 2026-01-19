@@ -210,9 +210,10 @@ def ingest_problem_references(  # noqa: PLR0911, PLR0912, PLR0915
             entries.append(error_entry)
             continue
         except Exception as e:
-            # Unexpected internal error: record and stop (we'll return ExitCode.ERROR).
+            # Unexpected internal error: record and continue (we'll return ExitCode.ERROR).
             failed += 1
-            internal_error = e
+            if internal_error is None:
+                internal_error = e
             error_entry = ManifestEntry(
                 reference=ReferenceRecord(
                     doi=ref.doi,
@@ -225,7 +226,7 @@ def ingest_problem_references(  # noqa: PLR0911, PLR0912, PLR0915
                 ingested_at=datetime.now(UTC),
             )
             entries.append(error_entry)
-            break
+            continue
 
         entries.append(entry)
         if entry.error is not None:

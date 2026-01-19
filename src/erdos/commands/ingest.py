@@ -53,10 +53,10 @@ def _print_human(result_data: dict[str, Any]) -> None:
         for entry in entries[:10]:  # Show first 10
             ref = entry.get("reference", {})
             table.add_row(
-                str(ref.get("title", ""))[:50],
-                str(ref.get("source", "")),
-                str(ref.get("doi", "") or ""),
-                str(ref.get("arxiv_id", "") or ""),
+                str(ref.get("title") or "")[:50],
+                str(ref.get("source") or ""),
+                str(ref.get("doi") or ""),
+                str(ref.get("arxiv_id") or ""),
             )
 
         console.print(table)

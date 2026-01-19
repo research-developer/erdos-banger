@@ -9,13 +9,16 @@ Tests the ingest_problem_references function that orchestrates:
 
 import io
 import tarfile
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 import responses
+import yaml
 
+import erdos.core.ingest as ingest_module
 from erdos.core.ingest import ingest_problem_references
-from erdos.core.models import CLIOutput
+from erdos.core.models import CLIOutput, ManifestEntry, ReferenceRecord
 
 
 @pytest.fixture
@@ -318,3 +321,69 @@ def test_ingest_no_download_flag(
     entry = manifest_data["entries"][0]
     assert entry["cached"] is False
     assert entry["extracted"] is False
+
+
+def test_ingest_internal_error_does_not_truncate_manifest(
+    temp_repo_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Ensure unexpected exceptions don't cause partial manifests."""
+    problems_yaml = temp_repo_root / "data" / "problems_enriched.yaml"
+    problems_yaml.parent.mkdir(parents=True)
+    problems_yaml.write_text("""
+- id: 994
+  title: "Test problem internal error"
+  statement: "Test problem statement"
+  category: "Graph Theory"
+  references:
+    - key: "Boom2026"
+      doi: "10.1000/test"
+    - key: "Ok2026"
+      arxiv_id: "2203.00001"
+""")
+
+    monkeypatch.setenv("ERDOS_DATA_PATH", str(temp_repo_root / "data"))
+
+    def fake_fetch_reference_entry(
+        ref: object,
+        *,
+        repo_root: Path,
+        no_download: bool,
+        no_network: bool,
+        timeout: float,
+        mailto: str,
+    ) -> ManifestEntry:
+        if getattr(ref, "key", "") == "Boom2026":
+            raise Exception("boom")
+        return ManifestEntry(
+            reference=ReferenceRecord(
+                doi=getattr(ref, "doi", None),
+                arxiv_id=getattr(ref, "arxiv_id", None),
+                title="Ok",
+                authors=[],
+                source="stub",
+            ),
+            ingested_at=datetime.now(UTC),
+        )
+
+    monkeypatch.setattr(
+        ingest_module, "_fetch_reference_entry", fake_fetch_reference_entry
+    )
+
+    result = ingest_problem_references(
+        problem_id=994,
+        repo_root=temp_repo_root,
+        force=False,
+        no_download=True,
+        no_network=False,
+        timeout=30.0,
+        delay=0.0,
+        mailto="test@example.com",
+    )
+
+    assert result.success is False
+
+    manifest_path = temp_repo_root / "literature" / "manifests" / "0994.yaml"
+    assert manifest_path.exists()
+    manifest = yaml.safe_load(manifest_path.read_text())
+    assert isinstance(manifest, dict)
+    assert len(manifest.get("entries", [])) == 2

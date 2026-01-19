@@ -6,6 +6,8 @@ REST API.
 API Reference: https://www.crossref.org/documentation/retrieve-metadata/rest-api/
 """
 
+from urllib.parse import quote
+
 import requests
 
 from erdos.core.models import ReferenceRecord
@@ -97,10 +99,11 @@ def fetch_crossref_work(
         requests.HTTPError: If HTTP request fails (e.g., 404 for not found).
         requests.Timeout: If request times out.
     """
-    url = f"https://api.crossref.org/works/{doi}"
+    encoded_doi = quote(doi, safe="/")
+    url = f"https://api.crossref.org/works/{encoded_doi}"
     params = {"mailto": mailto}
     headers = {
-        "User-Agent": f"erdos-banger/1.0 (https://github.com/yourorg/erdos-banger; mailto:{mailto})"
+        "User-Agent": f"erdos-banger/1.0 (https://github.com/The-Obstacle-Is-The-Way/erdos-banger; mailto:{mailto})"
     }
 
     response = requests.get(url, params=params, headers=headers, timeout=timeout)
