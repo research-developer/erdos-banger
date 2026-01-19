@@ -14,9 +14,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-| ID | Title | Priority | Status |
-|----|-------|----------|--------|
-| DEBT-011 | [SPEC-020 Status Clarification](debt-011-spec-020-not-implemented.md) | P2 | Resolved (documented as v2.0+) |
+*No active debt items.*
 
 ## Archived Debt
 
@@ -35,6 +33,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-009 | Upstream data not integrated | P1 | Fixed | 70ae1ab,96eb024 |
 | DEBT-010 | No smoke test | P2 | Fixed | 70ae1ab,c9cbf24 |
 | DEBT-001 | Spec 010 scope planning | P1 | Fixed | (implemented) |
+| DEBT-011 | SPEC-020 status clarification | P2 | Resolved | (documented as v2.0+) |
 | DEBT-012 | Broad exception handling in ingest.py | P1 | Fixed | (pending commit) |
 
 **Next Debt ID:** DEBT-013
@@ -43,6 +42,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 
 - `docs/_archive/debt/debt-001-spec-005-ssot-drift.md`
 - `docs/_archive/debt/debt-001-spec-010-scope.md`
+- `docs/_archive/debt/debt-011-spec-020-not-implemented.md`
 - `docs/_archive/debt/debt-012-broad-exception-handling.md`
 - `docs/_archive/debt/debt-002-spec-006-search-cli-drift.md`
 - `docs/_archive/debt/debt-003-spec-008-fixtures-incomplete.md`

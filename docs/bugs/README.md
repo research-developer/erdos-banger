@@ -6,7 +6,7 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 | Date | Type | Summary | Status |
 |------|------|---------|--------|
-| 2026-01-17 | Adversarial Review | Full codebase audit covering specs 003-006 | Active |
+| 2026-01-17 | Adversarial Review | Full codebase audit covering specs 003-006 | Archived |
 
 ## Active Bugs
 
@@ -34,6 +34,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/bug-001-typer-clirunner-mix-stderr.md`
 - `docs/_archive/bugs/bug-007-missing-requests-dependency.md`
 - `docs/_archive/bugs/bug-008-hardcoded-exit-code-78.md`
+- `docs/_archive/bugs/adversarial-review-2026-01-17.md`
 - `docs/_archive/bugs/bug-002-search-build-index-json-stdout.md`
 - `docs/_archive/bugs/bug-003-search-fts-loader-missing.md`
 - `docs/_archive/bugs/bug-004-iter-problems-duplicate-ids.md`
