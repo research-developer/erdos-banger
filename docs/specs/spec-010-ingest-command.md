@@ -318,6 +318,7 @@ Create tests that use fixtures from `tests/fixtures/` (Spec 008):
   - Builds a manifest for a problem containing both DOI + arXiv refs (use `tests/fixtures/sample_problems.yaml`)
   - Asserts `--no-download` avoids writing cache files
   - Asserts `--no-network` returns existing manifest when present
+  - Asserts partial failure still writes a manifest file before returning `CLIOutput.err(...)` (e.g., Crossref 404 for one DOI while another ref succeeds)
 
 **Mocking rule:** All HTTP fetch functions must be covered by tests using `responses` (no real network).
 
