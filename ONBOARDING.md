@@ -83,7 +83,7 @@ A **human-in-the-loop proving workbench** that combines:
 │                              DATA SOURCES                                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│   Upstream dataset            Metadata APIs            Literature          │
+│   Upstream dataset            Metadata APIs            Literature           │
 │   ┌─────────────────┐      ┌─────────────────┐     ┌─────────────────┐      │
 │   │ erdosproblems   │      │ Crossref (DOI)  │     │ arXiv (source)  │      │
 │   │ (metadata-only) │      │                 │     │                 │      │
