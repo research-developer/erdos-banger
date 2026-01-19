@@ -33,7 +33,7 @@
 - [x] **SPEC-010-A** [REVIEWED]: Literature path conventions → `literature_paths.py` + tests
 - [x] **SPEC-010-B** [REVIEWED]: arXiv client → `arxiv_client.py` + unit tests + fixtures
 - [x] **SPEC-010-C** [REVIEWED]: Crossref client → `crossref_client.py` + unit tests + fixtures
-- [ ] **SPEC-010-D**: Ingest core logic → `ingest.py` + unit tests
+- [x] **SPEC-010-D**: Ingest core logic → `ingest.py` + unit tests
 - [ ] **SPEC-010-E**: Ingest command → `commands/ingest.py` + integration tests
 - [ ] **SPEC-011**: Ask Command → `docs/specs/spec-011-ask-command.md`
 
@@ -119,6 +119,7 @@ v1.4 Integration
 - 2026-01-19: SPEC-010-B reviewed and verified - all acceptance criteria met, 89% coverage for arxiv_client.py, all quality gates pass, no TODO/half-measures
 - 2026-01-19: SPEC-010-C completed - created `src/erdos/core/crossref_client.py` with `parse_crossref_work()`, `fetch_crossref_work()` + `tests/unit/test_crossref_client.py` (9 tests), 88% coverage for crossref_client.py, all quality gates pass
 - 2026-01-19: SPEC-010-C reviewed and verified - all acceptance criteria met, two-layer API (fetch+parse) for network-free testing, proper Crossref polite pool compliance, 88% coverage, all quality gates pass
+- 2026-01-19: SPEC-010-D completed - created `src/erdos/core/ingest.py` with `ingest_problem_references()` orchestrating problem loading, metadata fetching (arXiv/Crossref), manifest creation/updates + `tests/unit/test_ingest_service.py` (5 comprehensive tests covering DOI-only, arXiv-only, merged DOI+arXiv, idempotence, flags), 71% coverage for ingest.py, 84% overall, all quality gates pass
 
 ---
 
