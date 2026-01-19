@@ -37,7 +37,7 @@ This spec is also consistent with the master vision’s mention of a Makefile/Ju
 
 ### Out of scope
 
-- Changing CI to use `make` (CI remains defined by GitHub Actions workflows).
+- Making `make` the CI SSOT (CI remains defined by GitHub Actions workflows; workflows may invoke `make` targets as thin wrappers).
 - Adding new runtime dependencies.
 - Supporting Windows environments without GNU Make.
 
@@ -68,6 +68,7 @@ All targets must call `uv` (not `pip`).
 - `cov`: `uv run pytest --cov=erdos --cov-fail-under=80 -m "not requires_lean and not requires_network"`
 - `pre-commit`: `uv run pre-commit run --all-files`
 - `hooks`: `uv run pre-commit install --install-hooks`
+- `smoke`: `./scripts/smoke-test.sh`
 - `ci`: run `format-check`, `lint`, `typecheck`, `cov`
 
 ---
@@ -84,4 +85,5 @@ make lint
 make typecheck
 make test
 make pre-commit
+make smoke
 ```

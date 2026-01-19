@@ -26,9 +26,9 @@ The master draft describes many capabilities. Here's what we're **actually build
 
 | Component | Scope | Notes |
 |-----------|-------|-------|
-| `erdos ingest` | arXiv only | HTML + source tarball, no PDF conversion |
+| `erdos ingest` | arXiv source + Crossref metadata | arXiv source tarball + extract; Crossref metadata for DOI; no PDF conversion |
 | Reference enrichment | Crossref + arXiv API | Skip OpenAlex, Semantic Scholar, CORE for now |
-| Full-text indexing | Chunked extracts | Add ingested content to search |
+| Full-text indexing | Deferred | v1 index/search uses problem statements/notes only; ingested extracts are stored for a future indexing spec |
 | `erdos ask` | Basic RAG | Retrieval + LLM prompt, no reranking |
 
 ### V1.2+ (Deferred)

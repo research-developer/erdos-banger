@@ -2,11 +2,12 @@
 
 > Imports and tracks existing formalizations from the Lean community to avoid duplicating work.
 
-**Status:** Pending
+**Status:** Deferred
 **Target:** v1.4
 **Prerequisites (SSOT):**
 - Lean integration: `docs/_archive/specs/spec-007-lean-integration.md`
 - Problem loader: `docs/_archive/specs/spec-005-problem-loader.md`
+- Upstream metadata checkout: `data/erdosproblems/data/problems.yaml` (git submodule; see `data/README.md`)
 
 ---
 
@@ -24,7 +25,7 @@
 
 - Automatic proof merging
 - Contributing back to upstream repositories
-- Verifying upstream proofs (assume they compile)
+- Semantic proof checking beyond compilation (we only validate that imported files typecheck when Lean is available)
 
 ### Background
 
@@ -57,8 +58,11 @@ erdos lean status [PROBLEM_ID] [OPTIONS]
 
 - `--upstream`: Check upstream metadata for formalization status
 - `--local`: Check local `formal/lean/Erdos/` directory
-- `--diff`: Show differences between local and upstream (if both exist)
-- `--no-network`: Do not fetch remote Lean sources (diff/import checks use cache only)
+- `--diff`: Show differences between local and upstream (requires `PROBLEM_ID`)
+- `--no-network`: Do not fetch remote Lean sources. For `--diff`: if the upstream Lean file is not already cached, return `ExitCode.NETWORK_ERROR` (otherwise use cache).
+
+For `--diff`:
+- If the upstream file is not cached and `--no-network` is **not** set, fetch it into the cache first, then compare.
 
 ### 1.2 `erdos lean import`
 
@@ -76,15 +80,15 @@ erdos lean import PROBLEM_ID [OPTIONS]
 - `--force`: Overwrite existing local file
 - `--dry-run`: Show what would be imported without writing
 - `--no-network`: Use cached upstream file only (error if not cached)
-- `--skip-lean-validation`: Skip Lean syntax validation if Lean toolchain is unavailable (emits a warning)
+- `--skip-lean-validation`: Do not run `erdos lean check` on the imported file (emits a warning in human mode; emits `data.lean_validated=false` in JSON mode)
 
 ### 1.3 `erdos lean formalize` (Extended)
 
 Add option:
 
-- `--no-import`: Generate fresh skeleton even if upstream formalization exists
+- `--import-upstream`: If an upstream formalization is available, import it instead of generating a skeleton. (Default: generate a local skeleton; no network I/O.)
 
-Default behavior: Check upstream first, import if available, else generate skeleton.
+Default behavior: preserve v1 behavior (`erdos lean formalize` generates a local skeleton). Import is explicit via `erdos lean import` or `--import-upstream`.
 
 ### Examples
 
@@ -98,12 +102,23 @@ uv run erdos lean status 6
 # Import upstream formalization
 uv run erdos lean import 6
 
-# Force fresh skeleton (ignore upstream)
-uv run erdos lean formalize 6 --no-import
+# Import upstream instead of generating a local skeleton
+uv run erdos lean formalize 6 --import-upstream
 
 # Diff local vs upstream
 uv run erdos lean status 6 --diff
 ```
+
+### Exit Codes (SSOT)
+
+Use `ExitCode` from `src/erdos/core/exit_codes.py`:
+
+- `ExitCode.SUCCESS` (0): command completed successfully
+- `ExitCode.NOT_FOUND` (3): unknown problem id, missing local file, or no upstream formalization available for import/diff
+- `ExitCode.NETWORK_ERROR` (4): `--no-network` prevents required remote fetch
+- `ExitCode.LEAN_ERROR` (5): Lean validation failed (when validation is enabled)
+- `ExitCode.CONFIG_ERROR` (10): missing upstream metadata checkout (`data/erdosproblems/data/problems.yaml`) when `--upstream` is requested
+- `ExitCode.ERROR` (1): all other errors
 
 ---
 
@@ -130,6 +145,14 @@ Deterministic sources for import (derived; not present in upstream metadata):
 |------------|--------------|
 | google-deepmind/formal-conjectures | `FormalConjectures/ErdosProblems/{id}.lean` |
 | leanprover-community/mathlib4 | (future) best-effort heuristics; not in v1.4 scope |
+
+**Upstream metadata source (SSOT):**
+- Read upstream metadata from `data/erdosproblems/data/problems.yaml` (git submodule).
+- If this file is missing and `--upstream` is requested, return `CLIOutput.err(...)` with `error.type="ConfigError"` and `error.code=ExitCode.CONFIG_ERROR` (SSOT: `src/erdos/core/exit_codes.py`).
+
+**Upstream file fetch (default source):**
+- Base raw URL: `https://raw.githubusercontent.com/google-deepmind/formal-conjectures/main/`
+- Default file URL for a problem id: `{base}FormalConjectures/ErdosProblems/{problem_id}.lean` (verified for problem 6 as of 2026-01).
 
 ---
 
@@ -189,10 +212,28 @@ Problems with both:    10
       "exists": true,
       "path": "formal/lean/Erdos/Problem006.lean",
       "has_sorry": true,
-      "hash": "abc123"
+      "sha256": "abc123"
     },
     "comparison": "differs"
   }
+}
+```
+
+### JSON Mode (`erdos lean import`)
+
+On success, `erdos lean import --json` returns `CLIOutput.ok(...)` where `data` includes:
+
+```json
+{
+  "problem_id": 6,
+  "dry_run": false,
+  "written": true,
+  "path": "formal/lean/Erdos/Problem006.lean",
+  "cache_path": "formal/lean/.upstream_cache/formal-conjectures/ErdosProblems/6.lean",
+  "source": "google-deepmind/formal-conjectures",
+  "url": "https://raw.githubusercontent.com/google-deepmind/formal-conjectures/main/FormalConjectures/ErdosProblems/6.lean",
+  "sha256": "def456",
+  "lean_validated": true
 }
 ```
 
@@ -205,10 +246,14 @@ Problems with both:    10
 1. Check upstream metadata for `formalized.state == "yes"` (if upstream metadata is available)
 2. Derive candidate source URL from known repository path patterns (or use `--source URL`)
 3. Fetch Lean file from source (unless `--no-network` and not cached)
-4. Validate it's syntactically valid Lean 4 using the local Lean toolchain
-   - If Lean is unavailable: fail with a clear error unless `--skip-lean-validation` is set
-5. Write to `formal/lean/Erdos/Problem{id:03d}.lean`
-6. Record provenance in local metadata
+   - Cache path (SSOT): `formal/lean/.upstream_cache/formal-conjectures/ErdosProblems/{problem_id}.lean`
+4. If `--skip-lean-validation` is not set, validate the imported file by running `erdos lean check` on it (requires Lean toolchain).
+5. Write to `formal/lean/Erdos/Problem{id:03d}.lean` (or print the planned write in `--dry-run` mode)
+6. Record provenance in local metadata (`.provenance.yaml`, below)
+
+**Hashing (SSOT):**
+- Use SHA-256 for file content hashes in both JSON output and `.provenance.yaml`.
+- `sha256` must be computed on the raw file bytes written (post-download; pre/post newline normalization is not allowed).
 
 ### Provenance Tracking
 
@@ -221,8 +266,8 @@ imports:
     source: "google-deepmind/formal-conjectures"
     url: "https://raw.githubusercontent.com/google-deepmind/formal-conjectures/main/FormalConjectures/ErdosProblems/6.lean"
     imported_at: "2026-01-18T10:30:45Z"
-    commit: "abc123"
-    local_hash: "def456"
+    remote_etag: "\"5feb9d6a...\""
+    sha256: "def456"
 ```
 
 ### Conflict Handling
@@ -283,17 +328,18 @@ cat formal/lean/Erdos/.provenance.yaml
 ### Unit Tests
 
 - `tests/unit/test_formal_conjectures.py`
-  - Parse formalization metadata from problem record
+  - Parse formalization metadata from upstream YAML (`data/erdosproblems/data/problems.yaml` or a fixture copy)
   - Provenance file serialization
-  - Diff detection between local and upstream
+  - Diff detection between local and cached upstream (SHA-256 compare)
+  - `has_sorry` detection on small Lean snippets (regex token match; ignore lines starting with `--`)
 
 ### Integration Tests
 
 - `tests/integration/test_lean_import.py`
   - `erdos lean status` returns correct counts
-  - `erdos lean import` with fixture source
+  - `erdos lean import` with fixture source (network mocked via `responses`; no real network)
   - `--force` overwrites existing file
-  - `--no-import` on formalize generates skeleton
+  - `--import-upstream` on formalize imports when cached; without cache and with `--no-network`, returns `ExitCode.NETWORK_ERROR`
 
 ### Acceptance Criteria
 
@@ -310,7 +356,7 @@ uv run pytest -m "not requires_lean and not requires_network"
 ### Fetching Upstream Files
 
 - Use GitHub raw URLs for known repositories (Formal Conjectures)
-- Cache fetched files locally
+- Cache fetched files locally under `formal/lean/.upstream_cache/` (see Section 4)
 - Respect rate limits (GitHub: 60 req/hour unauthenticated)
 - `--no-network` (command option) must use cached/local data only
 

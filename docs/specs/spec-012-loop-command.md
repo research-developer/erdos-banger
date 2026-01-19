@@ -102,6 +102,7 @@ At a high level:
 
 1. **Patch-only edits**
    - The LLM must output **exactly one** SEARCH/REPLACE block (SSOT: `docs/specs/spec-012-design.md`).
+   - If no fix is possible, the LLM may respond with exactly `NO_FIX_POSSIBLE` (SSOT: `docs/specs/spec-012-design.md`). The loop must treat this as a terminal “no progress possible” outcome (do not apply changes).
    - Reject free-form code dumps or multi-block outputs.
 2. **Scoped edits**
    - Only allow modifications under `formal/lean/Erdos/`.
@@ -167,6 +168,7 @@ On success, `data` must include:
 Notes:
 
 - When `--no-apply` is set, `status` may be `no_progress` even if a patch was proposed.
+- When the LLM returns `NO_FIX_POSSIBLE`, `status` must be `no_fix_possible` and the command must return `CLIOutput.err(...)` with `error.type="NoFixPossible"`.
 - When `--json` is enabled, no progress/human text may be written to stdout.
 
 ### 4.1 Run Log File (`run_log_path`)
@@ -227,6 +229,7 @@ When implemented, the following tests are required:
   - edits outside `formal/lean/Erdos/`
   - oversized patches
   - non-SEARCH/REPLACE outputs
+- Patch validation accepts `NO_FIX_POSSIBLE` as a distinct terminal outcome (no patch applied).
 
 ### Integration tests (optional; marked `requires_lean`)
 

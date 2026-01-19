@@ -154,6 +154,8 @@ Responsibilities:
   - Unknown problem id → `ExitCode.NOT_FOUND`
   - Index build failure → `ExitCode.ERROR`
   - LLM command configured but fails (non-zero exit) → `ExitCode.ERROR`
+  - LLM command configured but executable not found / cannot be invoked → `ExitCode.CONFIG_ERROR`
+  - Empty question after parsing stdin (`QUESTION="-"`) → `ExitCode.USAGE_ERROR`
 
 ---
 
@@ -209,6 +211,7 @@ Instructions:
     - stdout is valid JSON (`CLIOutput`)
     - `data.answer is null`
     - `data.sources` is non-empty
+    - `data.prompt` contains the real `ProblemRecord.statement` for problem 6 (guards against mocking the prompt builder)
   - Run with a fake LLM command (e.g., a small Python one-liner that echoes stdin) and assert:
     - `data.answer` is non-empty
     - `llm.enabled=true` and `llm.exit_code=0`

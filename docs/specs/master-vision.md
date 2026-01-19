@@ -388,6 +388,12 @@ Or a placeholder if minimal info. JSON output would give an array of ReferenceRe
 
 Ingest (fetch) reference data for a problem. This is a key step involving external APIs, and may be interactive or lengthy.
 
+**v1.1 SSOT:** `docs/specs/spec-010-ingest-command.md`. In v1.1, ingest is intentionally scoped to:
+- arXiv metadata + source tarball caching + best-effort plain-text extract
+- Crossref metadata for DOI references (no full-text download)
+- No Unpaywall/OpenAlex/Semantic Scholar fallbacks
+- No PDF conversion (deferred; see Spec 019)
+
 **Behavior:** Looks up each reference associated with the problem:
 - If a reference has a DOI, use Crossref API to get full citation
 - If it has an arXiv ID, use arXiv API to get metadata (title, authors, etc.)
@@ -397,14 +403,16 @@ Ingest (fetch) reference data for a problem. This is a key step involving extern
 For each reference:
 - Create a ReferenceRecord with metadata
 - If an open-access PDF or arXiv source is available, download it to `literature/cache/` (only if legally allowed: e.g. if Unpaywall says there is an open repository PDF, or arXiv PDF which is CC BY). For arXiv: since Dec 2023, arXiv provides HTML for TeX submissions, which we prefer to download (or the TeX source via arXiv API's e-print if needed). We avoid downloading publisher PDFs unless clearly open (e.g. Creative Commons).
-- If PDF is downloaded, run a conversion pipeline: first preference is arXiv HTML or LaTeX. If not arXiv, use Docling or similar to convert PDF to Markdown/HTML, preserving math via MathML or LaTeX. (Docling is a candidate optional dependency; as of 2026-01 it is not included in v1 due to a Typer version conflict.)
+- If PDF is downloaded, run a conversion pipeline: first preference is arXiv HTML or LaTeX. If not arXiv, use Docling or similar to convert PDF to Markdown/HTML, preserving math via MathML or LaTeX. (Deferred to Spec 019; Docling is not included in v1 due to a Typer version conflict.)
 - Save a manifest file `literature/manifests/<id>.yaml` with all reference entries and a summary of their status. Include checksums (e.g. MD5 of PDF/TeX) for reproducibility.
 
 **Output:** In human mode, print a summary: e.g. "Fetched 3 references. 2 PDFs downloaded (1 via arXiv, 1 via Unpaywall), 1 metadata only." JSON output would detail each reference and what happened.
 
 **Idempotence:** Running `erdos ingest` again should skip already ingested references unless a `--force` is given to refresh.
 
-**Network:** Yes, requires network (Crossref, etc.) unless everything is cached. If the ingest command's `--no-network` option is set, it will error out. If `--resume` is provided, we resume a previously interrupted ingestion.
+**Network:** Yes, requires network (Crossref, arXiv) unless everything is cached. If the ingest command's `--no-network` option is set:
+- if a manifest already exists on disk and `--force` is not set, return the existing manifest without network access
+- otherwise, return a clear error indicating which reference(s) require network
 
 **Example:** `erdos ingest 42 --json` might output for each reference: metadata plus local_path if downloaded.
 
@@ -415,7 +423,7 @@ Build or update the search index.
 **Behavior:**
 - Ensure the SQLite (or Postgres) DB is set up (if not, create schema)
 - Insert/update Problem texts: the problem statements themselves can be searchable content
-- Insert reference texts: For each reference that has an extracted text, break into chunks (maybe 200-300 words per chunk). Store each chunk with a link to the reference. Use SQLite FTS5 to index the text. Future extension: compute embeddings for each chunk (Spec 014).
+- Insert reference texts (future): For each reference that has an extracted text, break into chunks (maybe 200-300 words per chunk). Store each chunk with a link to the reference and index it in SQLite FTS5. (In v1.0 the index builder only indexes problem statements/notes; ingestion extracts become searchable once a later indexing spec adds reference chunk indexing.) Future extension: compute embeddings for each chunk (Spec 014).
 - Save the index
 
 **Output:** Human mode: some stats – "Indexed 50 problems and 120 references (980 chunks). FTS terms: ~10k, vector dim: 384." JSON: could output summary stats with counts.
@@ -892,7 +900,7 @@ erdos lean check Erdos/Problem001.lean
 
 ```bash
 erdos refs 1           # see what references problem 1 has pre-ingest
-erdos ingest 1 --no-network  # should error (tests error handling)
+erdos ingest 1 --no-network  # should succeed only if a manifest already exists; otherwise error (tests error handling)
 erdos search "keyword"
 ```
 

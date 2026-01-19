@@ -8,7 +8,7 @@
 - Ingest command: `docs/specs/spec-010-ingest-command.md`
 - Search index: `docs/_archive/specs/spec-006-search-index.md`
 
-**Blocker:** Docling (preferred library) pins `typer<0.20.0`, which conflicts with our `typer>=0.21.1` baseline. This spec is deferred until the dependency conflict is resolved.
+**Blocker:** Docling (preferred library) pins `typer<0.20.0` (verified from `docling==2.68.0` PyPI metadata), which conflicts with our `typer>=0.21.1` baseline. This spec is deferred until the dependency conflict is resolved.
 
 ---
 
@@ -20,7 +20,7 @@
 2. **Docling integration** as optional dependency
 3. **Fallback converters** for when Docling unavailable
 4. **Math notation handling** (LaTeX, MathML, Unicode)
-5. **Structured extraction** (sections, figures, tables)
+5. **Lightweight structure extraction** (headings/paragraphs, best-effort)
 
 ### Out of scope
 
@@ -28,6 +28,7 @@
 - Image extraction and analysis
 - Citation graph extraction
 - Automatic reference resolution
+- High-fidelity table/figure extraction (defer until a converter supports this reliably without a large dependency surface)
 
 ### Why PDF Conversion Matters
 
@@ -118,9 +119,37 @@ pdf = [
 
 ### Conversion Pipeline
 
+Docling’s API is fast-moving. To keep erdos-banger stable, this spec defines an internal adapter interface that Docling (or any future converter) must implement.
+
+**Internal converter contract (SSOT for v2.0):**
+- Input: local `Path` to a PDF
+- Output: extracted `text` (markdown or plain text) plus minimal metadata
+- No network I/O inside the converter (the ingest layer owns download/caching)
+
 ```python
-# Docling API is fast-moving; consult Docling docs for the exact converter API.
-# The contract for erdos-banger is: PDF path -> extracted markdown/text + metadata.
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Literal
+
+
+@dataclass(frozen=True)
+class PDFConversionResult:
+    converter: str
+    text: str
+    title: str | None = None
+    authors: list[str] | None = None
+
+
+class PDFConverter:
+    def convert(
+        self,
+        pdf_path: Path,
+        *,
+        output_format: Literal["markdown", "text"],
+    ) -> PDFConversionResult:
+        raise NotImplementedError
 ```
 
 ### Math Preservation
@@ -236,6 +265,14 @@ if reference.has_pdf and pdf_conversion_enabled:
     create_extract(reference, text)
 ```
 
+**Cache/extract layout (SSOT, v2.0):**
+- Cached PDFs: `literature/cache/pdf/{reference_id}/paper.pdf`
+- Extracted text: `literature/extracts/pdf/{reference_id}/fulltext.md` (markdown) or `fulltext.txt` (plain)
+
+Where `reference_id` is a deterministic, filesystem-safe identifier derived from the reference’s primary identifier:
+- Prefer DOI when present (lowercased; replace `/` with `_`).
+- Else prefer arXiv id (as written).
+
 ### 6.3 New Command: `src/erdos/commands/convert.py`
 
 Standalone conversion command for testing and manual use.
@@ -303,9 +340,7 @@ As of 2026-01-18:
 
 ### Math Extraction Accuracy
 
-- Simple inline math: ~95% accurate
-- Complex display math: ~80% accurate
-- Hand-drawn diagrams: Not extracted
+PDF-to-text quality is inherently variable across papers and converters. This spec does **not** claim numeric accuracy. Quality must be evaluated using fixed fixture PDFs once the dependency blocker is resolved.
 
 ---
 
