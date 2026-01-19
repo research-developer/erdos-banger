@@ -4,10 +4,33 @@ You are implementing specs for the erdos-banger CLI toolkit using **Ironclad TDD
 This prompt runs headless via:
 
 ```bash
-while true; do
-  claude --dangerously-skip-permissions -p "$(cat PROMPT.md)"
-  sleep 2
-done
+MAX=50
+TIMEOUT=14400
+ITER_TIMEOUT=600
+
+TIMEOUT_CMD="${TIMEOUT_CMD:-}"
+if [[ -z "$TIMEOUT_CMD" ]]; then
+  if command -v timeout >/dev/null 2>&1; then
+    TIMEOUT_CMD="timeout"
+  elif command -v gtimeout >/dev/null 2>&1; then
+    TIMEOUT_CMD="gtimeout"
+  else
+    echo "Missing timeout command. Install coreutils (macOS) or use Linux `timeout`." >&2
+    exit 1
+  fi
+fi
+
+mkdir -p logs/ralph
+
+"$TIMEOUT_CMD" "$TIMEOUT" bash -c '
+  for i in $(seq 1 '"$MAX"'); do
+    n=$(printf "%03d" "$i")
+    log="logs/ralph/iteration_${n}.log"
+    echo "=== Iteration $i/'"$MAX"' ===" | tee -a "$log"
+    '"$TIMEOUT_CMD"' '"$ITER_TIMEOUT"' claude --dangerously-skip-permissions -p "$(cat PROMPT.md)" 2>&1 | tee -a "$log"
+    sleep 2
+  done
+'
 ```
 
 If `PROGRESS.md` has no unchecked items, exit cleanly without making changes.

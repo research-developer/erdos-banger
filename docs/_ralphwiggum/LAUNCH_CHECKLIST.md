@@ -11,6 +11,7 @@ Use this checklist before starting an overnight autonomous run.
 - [ ] `uv` installed (`uv --version`)
 - [ ] Claude Code CLI installed (`claude --version`)
 - [ ] `tmux` installed (recommended for overnight runs)
+- [ ] Timeout command available (Linux: `timeout`; macOS: `brew install coreutils` for `gtimeout`)
 
 ---
 
@@ -65,15 +66,36 @@ Run the loop:
 
 ```bash
 MAX=50
-for i in $(seq 1 $MAX); do
-  echo "=== Iteration $i/$MAX ==="
-  claude --dangerously-skip-permissions -p "$(cat PROMPT.md)"
-  if ! grep -q "^\\- \\[ \\]" PROGRESS.md; then
-    echo "All tasks complete"
-    break
+TIMEOUT=14400
+ITER_TIMEOUT=600
+
+TIMEOUT_CMD="${TIMEOUT_CMD:-}"
+if [[ -z "$TIMEOUT_CMD" ]]; then
+  if command -v timeout >/dev/null 2>&1; then
+    TIMEOUT_CMD="timeout"
+  elif command -v gtimeout >/dev/null 2>&1; then
+    TIMEOUT_CMD="gtimeout"
+  else
+    echo "Missing timeout command. Install coreutils (macOS) or use Linux `timeout`." >&2
+    exit 1
   fi
-  sleep 2
-done
+fi
+
+mkdir -p logs/ralph
+
+"$TIMEOUT_CMD" "$TIMEOUT" bash -c '
+  for i in $(seq 1 '"$MAX"'); do
+    n=$(printf "%03d" "$i")
+    log="logs/ralph/iteration_${n}.log"
+    echo "=== Iteration $i/'"$MAX"' ===" | tee -a "$log"
+    '"$TIMEOUT_CMD"' '"$ITER_TIMEOUT"' claude --dangerously-skip-permissions -p "$(cat PROMPT.md)" 2>&1 | tee -a "$log"
+    if ! grep -q "^\\- \\[ \\]" PROGRESS.md; then
+      echo "All tasks complete" | tee -a "$log"
+      break
+    fi
+    sleep 2
+  done
+'
 ```
 
 ---

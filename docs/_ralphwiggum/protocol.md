@@ -115,17 +115,47 @@ tmux attach -t ralph
 cd /path/to/erdos-banger
 git checkout ralph-wiggum-v1.1
 
-# THE RALPH LOOP (with iteration limit)
-MAX=50; for i in $(seq 1 $MAX); do
-  echo "=== Iteration $i/$MAX ==="
-  claude --dangerously-skip-permissions -p "$(cat PROMPT.md)"
-  # Check if all tasks complete (no unchecked boxes)
-  if ! grep -q "^\- \[ \]" PROGRESS.md; then
-    echo "All tasks complete!"
-    break
+# THE RALPH LOOP (bounded by iteration + wall-clock timeouts)
+#
+# Linux: `timeout` is typically available.
+# macOS: install coreutils and use `gtimeout`:
+#   brew install coreutils
+#
+# Optional: set TIMEOUT_CMD explicitly:
+#   TIMEOUT_CMD=gtimeout
+
+MAX=50
+TIMEOUT=14400      # 4 hours total max
+ITER_TIMEOUT=600   # 10 minutes per iteration max
+
+TIMEOUT_CMD="${TIMEOUT_CMD:-}"
+if [[ -z "$TIMEOUT_CMD" ]]; then
+  if command -v timeout >/dev/null 2>&1; then
+    TIMEOUT_CMD="timeout"
+  elif command -v gtimeout >/dev/null 2>&1; then
+    TIMEOUT_CMD="gtimeout"
+  else
+    echo "Missing timeout command. Install coreutils (macOS) or use Linux `timeout`." >&2
+    exit 1
   fi
-  sleep 2
-done
+fi
+
+mkdir -p logs/ralph
+
+"$TIMEOUT_CMD" "$TIMEOUT" bash -c '
+  for i in $(seq 1 '"$MAX"'); do
+    n=$(printf "%03d" "$i")
+    log="logs/ralph/iteration_${n}.log"
+    echo "=== Iteration $i/'"$MAX"' ===" | tee -a "$log"
+    '"$TIMEOUT_CMD"' '"$ITER_TIMEOUT"' claude --dangerously-skip-permissions -p "$(cat PROMPT.md)" 2>&1 | tee -a "$log"
+    # Check if all tasks complete (no unchecked boxes)
+    if ! grep -q "^\- \[ \]" PROGRESS.md; then
+      echo "All tasks complete!" | tee -a "$log"
+      break
+    fi
+    sleep 2
+  done
+'
 ```
 
 ---
@@ -192,7 +222,15 @@ Dependency manifests:
 - Max files changed per iteration: **10**
 - Max net-new lines per iteration: **~500**
 - Max iterations per overnight run: **50** (hard stop)
+- Max wall-clock runtime per run: **4 hours** (recommended)
+- Max wall-clock runtime per iteration: **10 minutes** (recommended)
 - Max “stuck” retries on the same failing gate: **3**
+
+### Cost / Budget Awareness (Recommended)
+
+- Treat long runs as potentially expensive (LLM usage + CI cycles). Use `MAX`, `TIMEOUT`, and `ITER_TIMEOUT` as your primary budget caps.
+- Monitor output under `logs/ralph/` and watch `git log --oneline -10` to confirm forward progress.
+- If you see repeated failures or no commits for multiple iterations, abort and investigate rather than letting the loop burn time/budget.
 
 ### No-Reward-Hack Rules
 
@@ -485,16 +523,38 @@ ls docs/specs/spec-010*.md
 # 4. Start tmux
 tmux new -s ralph
 
-# 5. Run the loop
-MAX=50; for i in $(seq 1 $MAX); do
-  echo "=== Iteration $i/$MAX ==="
-  claude --dangerously-skip-permissions -p "$(cat PROMPT.md)"
-  if ! grep -q "^\- \[ \]" PROGRESS.md; then
-    echo "All tasks complete"
-    break
+# 5. Run the loop (bounded by timeouts; logs captured)
+MAX=50
+TIMEOUT=14400
+ITER_TIMEOUT=600
+
+TIMEOUT_CMD="${TIMEOUT_CMD:-}"
+if [[ -z "$TIMEOUT_CMD" ]]; then
+  if command -v timeout >/dev/null 2>&1; then
+    TIMEOUT_CMD="timeout"
+  elif command -v gtimeout >/dev/null 2>&1; then
+    TIMEOUT_CMD="gtimeout"
+  else
+    echo "Missing timeout command. Install coreutils (macOS) or use Linux `timeout`." >&2
+    exit 1
   fi
-  sleep 2
-done
+fi
+
+mkdir -p logs/ralph
+
+"$TIMEOUT_CMD" "$TIMEOUT" bash -c '
+  for i in $(seq 1 '"$MAX"'); do
+    n=$(printf "%03d" "$i")
+    log="logs/ralph/iteration_${n}.log"
+    echo "=== Iteration $i/'"$MAX"' ===" | tee -a "$log"
+    '"$TIMEOUT_CMD"' '"$ITER_TIMEOUT"' claude --dangerously-skip-permissions -p "$(cat PROMPT.md)" 2>&1 | tee -a "$log"
+    if ! grep -q "^\- \[ \]" PROGRESS.md; then
+      echo "All tasks complete" | tee -a "$log"
+      break
+    fi
+    sleep 2
+  done
+'
 
 # 6. Monitor in another pane (optional)
 watch -n 5 'git log --oneline -10'
