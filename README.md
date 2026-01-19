@@ -46,7 +46,11 @@ uv sync
 # See docs/specs/spec-019-pdf-conversion.md for policy and rationale.
 uv sync --extra pdf
 
-# Bootstrap a local enriched dataset (sample data)
+## Data
+
+By default, `erdos` uses a built-in sample dataset so the CLI works out of the box.
+
+# Optional: create a local dataset override (editable copy)
 cp tests/fixtures/sample_problems.yaml data/problems_enriched.yaml
 
 # Verify it works

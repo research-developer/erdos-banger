@@ -210,7 +210,9 @@ git submodule update --init --recursive
 # 2. Install dependencies (requires uv: https://docs.astral.sh/uv/)
 uv sync
 
-# 3. Bootstrap sample data (for local development)
+# 3. Data
+# By default, `erdos` uses a built-in sample dataset so the CLI works out of the box.
+# Optional: create a local dataset override (editable copy)
 cp tests/fixtures/sample_problems.yaml data/problems_enriched.yaml
 
 # 4. Verify CLI works
