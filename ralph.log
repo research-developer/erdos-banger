@@ -297,3 +297,63 @@ Excellent! SPEC-011 has been successfully implemented with:
 
 The implementation is complete, tested, and ready for use!
 === Mon Jan 19 09:35:09 EST 2026 ===
+Perfect!
+
+## Summary
+
+**SPEC-011 Review Iteration Complete**
+
+I successfully reviewed SPEC-011 (Ask Command) and verified all acceptance criteria:
+
+✅ **Implementation Verified:**
+- Core logic in `src/erdos/core/ask.py` with `build_prompt()`, `perform_retrieval()`, `execute_llm()`, `ask_question()`
+- CLI command in `src/erdos/commands/ask.py` properly registered
+- Deterministic prompt builder matches spec SSOT template
+- Retrieval using `SearchIndex.search()` with problem_id filter
+- LLM execution with `shell=False` for security
+- FTS5 query escaping for special characters
+
+✅ **Test Coverage:**
+- 21 unit tests (prompt, retrieval, LLM execution)
+- 8 integration tests (CLI scenarios)
+- 83% overall coverage (exceeds 80% requirement)
+
+✅ **Quality Gates:**
+- All pre-commit hooks pass
+- ruff check ✓
+- ruff format ✓
+- mypy ✓
+- pytest ✓
+
+✅ **No Issues Found:**
+- No TODO/FIXME comments
+- All acceptance criteria fully met
+- No half-measures detected
+
+**Actions Taken:**
+- Marked SPEC-011 as `[REVIEWED]` in PROGRESS.md
+- Updated work log with review findings
+- Committed changes with proper format
+- Clean working tree
+
+The review iteration is complete. Exiting as per protocol.
+=== Mon Jan 19 09:38:25 EST 2026 ===
+node:internal/modules/cjs/loader:1404
+  throw err;
+  ^
+
+Error: Cannot find module '/Users/ray/.nvm/versions/node/v22.16.0/bin/claude'
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1057:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1062:22)
+    at Function._load (node:internal/modules/cjs/loader:1211:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+}
+
+Node.js v22.16.0
+=== Mon Jan 19 09:38:30 EST 2026 ===
