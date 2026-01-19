@@ -4,6 +4,7 @@ import os
 import shlex
 import subprocess
 
+from erdos.core.exit_codes import ExitCode
 from erdos.core.index_builder import build_index
 from erdos.core.models import CLIOutput, ProblemRecord
 from erdos.core.problem_loader import ProblemLoader
@@ -244,7 +245,7 @@ def ask_question(  # noqa: PLR0911
                 command="erdos ask",
                 error_type="CONFIG_ERROR",
                 message=f"LLM command not found: {llm_command}",
-                code=78,
+                code=ExitCode.CONFIG_ERROR,
             )
         except Exception as e:
             return CLIOutput.err(

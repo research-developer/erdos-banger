@@ -579,3 +579,23 @@ Added Phase 1.5 to PROGRESS.md with two unchecked bug fix tasks. These must be c
 
 Committing bug/debt documentation and updated PROGRESS.md.
 === Mon Jan 19 09:49:15 EST 2026 ===
+Perfect! Working tree is clean.
+
+## Summary
+
+This iteration was a **bug discovery and triage iteration**. I found that:
+
+1. All Phase 1 (v1.1 Literature) tasks in PROGRESS.md were marked complete with `[REVIEWED]` markers
+2. However, there were unstaged changes from a prior iteration documenting critical bugs
+3. Two **P0 critical bugs** were found that violate spec acceptance criteria:
+   - **BUG-007**: Missing `requests` dependency in pyproject.toml (SPEC-010 requires `requests>=2.32.5`)
+   - **BUG-008**: Hardcoded exit code 78 instead of `ExitCode.CONFIG_ERROR` (SPEC-011 Section 3.2 violation)
+
+4. Two **P1 debt items** were also documented:
+   - **DEBT-011**: SPEC-020 status mismatch (documentation issue)
+   - **DEBT-012**: Broad exception handling in ingest.py (code quality issue)
+
+I added **Phase 1.5** to PROGRESS.md with the two P0 bug fixes as unchecked items. These must be completed before v1.1 can be considered production-ready.
+
+All changes have been committed cleanly. The next iteration will pick up BUG-007 as the first unchecked task.
+=== Mon Jan 19 09:51:38 EST 2026 ===

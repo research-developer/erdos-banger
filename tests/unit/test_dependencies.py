@@ -1,0 +1,70 @@
+"""Tests for project dependency configuration."""
+
+from pathlib import Path
+
+import requests
+
+
+def test_requests_is_installed() -> None:
+    """Verify requests library is installed and importable.
+
+    This test ensures BUG-007 is fixed: requests must be in pyproject.toml
+    dependencies, not just types-requests in dev dependencies.
+
+    Relates to:
+    - src/erdos/core/ingest.py (imports requests)
+    - src/erdos/core/arxiv_client.py (imports requests)
+    - src/erdos/core/crossref_client.py (imports requests)
+    """
+    # If we got here, requests imported successfully at module level
+    assert requests is not None
+
+
+def test_requests_version_meets_spec() -> None:
+    """Verify requests version meets SPEC-010 requirement (>=2.32.5).
+
+    SPEC-010 Section 5.0 requires requests>=2.32.5 for security fixes.
+    """
+    # Parse version (e.g., "2.32.5" -> (2, 32, 5))
+    version_parts = tuple(int(x) for x in requests.__version__.split(".")[:3])
+    required = (2, 32, 5)
+
+    assert version_parts >= required, (
+        f"requests version {requests.__version__} is below required "
+        f"{'.'.join(map(str, required))}"
+    )
+
+
+def test_pyproject_toml_has_requests_dependency() -> None:
+    """Verify pyproject.toml explicitly lists requests in dependencies.
+
+    This prevents regression of BUG-007 where requests was imported but
+    not declared as a dependency.
+    """
+    # Read pyproject.toml from project root
+    pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
+    pyproject_content = pyproject_path.read_text()
+
+    # Check that requests is in [project] dependencies, not just [dependency-groups.dev]
+    lines = pyproject_content.split("\n")
+    in_project_deps = False
+    found_requests = False
+
+    for line in lines:
+        if line.strip().startswith("[project]"):
+            in_project_deps = True
+        elif line.strip().startswith("[") and not line.strip().startswith("[project."):
+            in_project_deps = False
+
+        if (
+            in_project_deps
+            and "requests>=" in line
+            and not line.strip().startswith("#")
+        ):
+            found_requests = True
+            break
+
+    assert found_requests, (
+        "requests>=2.32.5 must be in [project] dependencies section "
+        "of pyproject.toml (not just in dev dependencies)"
+    )

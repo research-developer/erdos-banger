@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from typer.testing import CliRunner
 
 from erdos.cli import app
+from erdos.core.exit_codes import ExitCode
 from erdos.core.index_builder import build_index
 from erdos.core.problem_loader import ProblemLoader
 from erdos.core.search_index import SearchIndex
@@ -264,3 +265,38 @@ def test_ask_command_human_output(
     # Should contain human-friendly formatting
     assert "Problem" in result.stdout
     assert "sources" in result.stdout.lower()
+
+
+def test_ask_command_config_error_exit_code(
+    tmp_path: Path,
+    sample_problems_yaml: Path,
+) -> None:
+    """Test erdos ask returns ExitCode.CONFIG_ERROR (10) not 78 when LLM not found.
+
+    This test verifies BUG-008 is fixed: hardcoded exit code 78 should be
+    replaced with ExitCode.CONFIG_ERROR (10) per SPEC-011 Section 3.2.
+    """
+    data_dir, index_path = _setup_test_env(tmp_path, sample_problems_yaml)
+
+    # Run command with nonexistent LLM command (not --no-llm)
+    result = runner.invoke(
+        app,
+        ["ask", "6", "test?", "--json", "--llm-cmd", "/nonexistent/llm"],
+        env={
+            "ERDOS_DATA_PATH": str(data_dir),
+            "ERDOS_INDEX_PATH": str(index_path),
+        },
+    )
+
+    # Should fail with CONFIG_ERROR (10), not 78
+    assert result.exit_code == ExitCode.CONFIG_ERROR
+    assert result.exit_code == 10  # Explicit value check
+    assert result.exit_code != 78  # Verify old hardcoded value is gone
+
+    # Verify error message in JSON output
+    if result.stdout:
+        data = json.loads(result.stdout)
+        assert data["success"] is False
+        assert data["error"]["type"] == "CONFIG_ERROR"
+        assert "not found" in data["error"]["message"].lower()
+        assert data["error"]["code"] == 10  # ExitCode.CONFIG_ERROR value

@@ -10,10 +10,7 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 ## Active Bugs
 
-| ID | Title | Priority | Status |
-|----|-------|----------|--------|
-| BUG-007 | [Missing `requests` Dependency](bug-007-missing-requests-dependency.md) | P0 | Open |
-| BUG-008 | [Hardcoded Exit Code 78](bug-008-hardcoded-exit-code-78.md) | P0 | Open |
+*None currently active.*
 
 ## Archived Bugs
 
@@ -27,12 +24,16 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-004 | `iter_problems()` allows duplicate IDs (index overwrite risk) | P2 | Fixed | e862a35 |
 | BUG-005 | Dead global flags: `--config`, `--no-network` | P2 | Fixed | a26d149 |
 | BUG-006 | Ruff lints upstream submodule files | P1 | Fixed | 2f4124b |
+| BUG-007 | Missing `requests` dependency in pyproject.toml | P0 | Fixed | (pending commit) |
+| BUG-008 | Hardcoded exit code 78 in ask.py | P0 | Fixed | (pending commit) |
 
 **Next Bug ID:** BUG-009
 
 ### Archived Bug Decks
 
 - `docs/_archive/bugs/bug-001-typer-clirunner-mix-stderr.md`
+- `docs/_archive/bugs/bug-007-missing-requests-dependency.md`
+- `docs/_archive/bugs/bug-008-hardcoded-exit-code-78.md`
 - `docs/_archive/bugs/bug-002-search-build-index-json-stdout.md`
 - `docs/_archive/bugs/bug-003-search-fts-loader-missing.md`
 - `docs/_archive/bugs/bug-004-iter-problems-duplicate-ids.md`
