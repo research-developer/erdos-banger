@@ -7,10 +7,10 @@ Design specifications for the erdos-banger CLI toolkit.
 ```text
 v1.0 (DONE)     Foundation: CLI, data loading, search, Lean integration
 v1.1 (PENDING)  Literature: Ingest + RAG Q&A
-v1.2 (DEFERRED) Iteration: Loop command + logging
+v1.2 (DEFERRED) Iteration: Loop + logging + OpenAlex metadata
 v1.3 (FUTURE)   Enhancement: Vectors + batch ops
 v1.4 (FUTURE)   Integration: Formal conjectures + MCP
-v2.0 (BLOCKED)  Expansion: PDF conversion
+v2.0 (READY)    Expansion: PDF conversion (Marker + LLM)
 ```
 
 ## Active Specs
