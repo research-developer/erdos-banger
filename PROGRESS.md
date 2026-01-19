@@ -28,7 +28,13 @@
 
 ### Phase 1: v1.1 Literature (Critical Path)
 
-- [ ] **SPEC-010**: Ingest Command → `docs/specs/spec-010-ingest-command.md`
+**Note:** SPEC-010 has been broken down into atomic subtasks per debt-001-spec-010-scope.md
+
+- [ ] **SPEC-010-A**: Literature path conventions → `literature_paths.py` + tests
+- [ ] **SPEC-010-B**: arXiv client → `arxiv_client.py` + unit tests + fixtures
+- [ ] **SPEC-010-C**: Crossref client → `crossref_client.py` + unit tests + fixtures
+- [ ] **SPEC-010-D**: Ingest core logic → `ingest.py` + unit tests
+- [ ] **SPEC-010-E**: Ingest command → `commands/ingest.py` + integration tests
 - [ ] **SPEC-011**: Ask Command → `docs/specs/spec-011-ask-command.md`
 
 ### Phase 2: v1.2 Iteration (Deferred but Ready)
@@ -77,7 +83,11 @@
 
 ```
 v1.1 Literature (START HERE)
-├── SPEC-010 Ingest Command
+├── SPEC-010-A Literature paths
+├── SPEC-010-B arXiv client
+├── SPEC-010-C Crossref client
+├── SPEC-010-D Ingest core logic
+├── SPEC-010-E Ingest command
 └── SPEC-011 Ask Command ← uses the local search index (ingested extracts become usable once indexed)
 
 v1.2 Iteration
@@ -102,6 +112,7 @@ v1.4 Integration
 - 2026-01-18: Created SPEC-012-DESIGN with D1-D8 design decisions (vaporware → concrete)
 - 2026-01-19: SPEC-010 attempted but exceeds single-iteration scope (>10 files, ~800-1000 LoC)
 - 2026-01-19: Created debt-001-spec-010-scope.md documenting scope issue and recommending task breakdown
+- 2026-01-19: Updated PROGRESS.md to replace SPEC-010 with atomic subtasks (SPEC-010-A through SPEC-010-E)
 
 ---
 
