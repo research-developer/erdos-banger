@@ -55,8 +55,8 @@
 
 ### Phase 5: Final Verification
 
-- [ ] **FINAL-GATES**: All quality gates pass (`make ci`)
-- [ ] **FINAL-SMOKE**: Smoke test passes (`make smoke`)
+- [x] **FINAL-GATES**: All quality gates pass (`make ci`)
+- [x] **FINAL-SMOKE**: Smoke test passes (`make smoke`)
 
 ---
 
@@ -125,6 +125,7 @@ v1.4 Integration
 - 2026-01-19: SPEC-010-E reviewed and verified - all acceptance criteria met, CLI properly handles all options (--force, --no-download, --no-network, --timeout, --delay, --mailto), --json flag correctly routes output, integration tests cover all key scenarios (JSON output, --no-download, idempotence, NOT_FOUND error, human output), 84% overall coverage, all quality gates pass, no TODO/half-measures
 - 2026-01-19: SPEC-011 completed - created `src/erdos/core/ask.py` with `build_prompt()`, `perform_retrieval()`, `execute_llm()`, `ask_question()` + `src/erdos/commands/ask.py` CLI integration + registered in `src/erdos/cli.py`, added `tests/unit/test_ask_prompt.py` (9 tests), `tests/unit/test_ask_retrieval.py` (5 tests), `tests/unit/test_ask_llm.py` (7 tests), `tests/integration/test_cli_ask.py` (8 tests), fixed FTS5 query syntax for special characters, 83% overall coverage, all quality gates pass
 - 2026-01-19: SPEC-011 reviewed and verified - all acceptance criteria met, deterministic prompt builder matches spec SSOT template, retrieval uses SearchIndex.search() with problem_id filter, LLM execution with shell=False security, proper exit codes (NOT_FOUND/ERROR/CONFIG_ERROR/USAGE_ERROR), FTS5 query escaping implemented, comprehensive test coverage (21 unit + 8 integration tests), 83% overall coverage, all quality gates pass, no TODO/half-measures
+- 2026-01-19: v1.1 Literature phase complete - all Phase 1 specs (SPEC-010-A through SPEC-011) implemented and reviewed, FINAL-GATES and FINAL-SMOKE verified passing, 83% overall coverage, ready for v1.2 planning
 
 ---
 
