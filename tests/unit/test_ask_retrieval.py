@@ -70,8 +70,9 @@ def test_retrieval_constructs_query_from_problem_and_question():
     # Verify query was constructed and search was called with problem_id filter
     call_args = mock_index.search.call_args
     query = call_args.args[0]
-    # Query is the escaped question in quotes
-    assert question in query
+    # Query should include tokens from both the problem title and the question.
+    assert '"small"' in query
+    assert '"partial"' in query
     # Problem ID should be passed as a filter
     assert call_args.kwargs["problem_id"] == problem.id
 

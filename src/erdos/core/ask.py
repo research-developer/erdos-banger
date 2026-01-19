@@ -1,6 +1,7 @@
 """Ask command: retrieval-augmented Q&A for Erdős problems."""
 
 import os
+import re
 import shlex
 import subprocess
 
@@ -100,10 +101,24 @@ def perform_retrieval(
     Returns:
         List of search results, ordered by relevance
     """
-    # Construct query that includes problem context
-    # Escape quotes in the question to avoid FTS5 syntax errors
-    escaped_question = question.replace('"', '""')
-    query = f'"{escaped_question}"'
+    # Build a safe FTS5 query. Using an exact phrase match for the full question is
+    # too strict (it often returns zero results). Instead, extract tokens from the
+    # problem title + question and OR them together.
+    haystack = f"{problem.title} {question}".lower()
+    tokens = re.findall(r"[a-z0-9]+", haystack)
+
+    # De-duplicate tokens while preserving order.
+    seen: set[str] = set()
+    unique: list[str] = []
+    for token in tokens:
+        if token in seen:
+            continue
+        seen.add(token)
+        unique.append(token)
+
+    # Quote terms to avoid operators like OR/AND/NOT being interpreted.
+    terms = [f'"{t}"' for t in unique if t]
+    query = " OR ".join(terms[:25])
 
     # Search with problem_id filter to bias towards this problem
     results = index.search(
@@ -260,12 +275,25 @@ def ask_question(  # noqa: PLR0911, PLR0912
         sources = _fallback_sources(problem, limit=limit)
         used_fts = False
     else:
-        sources = perform_retrieval(
+        baseline = _fallback_sources(problem, limit=limit)
+        retrieved = perform_retrieval(
             index=index,
             problem=problem,
             question=question,
             limit=limit,
         )
+        # Always include the problem statement/notes, then add retrieved chunks.
+        combined: list[SearchResult] = []
+        seen_ids: set[str] = set()
+        for source in [*baseline, *retrieved]:
+            if source.chunk_id in seen_ids:
+                continue
+            seen_ids.add(source.chunk_id)
+            combined.append(source)
+            if len(combined) >= limit:
+                break
+
+        sources = combined
         used_fts = True
 
     # Build query string for metadata
