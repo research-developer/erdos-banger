@@ -10,6 +10,7 @@ import responses
 from typer.testing import CliRunner
 
 from erdos.cli import app
+from erdos.core.exit_codes import ExitCode
 
 
 if TYPE_CHECKING:
@@ -59,7 +60,7 @@ def test_ingest_command_json_output(
 
     # Assert stdout is valid JSON
     data = json.loads(result.stdout)
-    assert data["command"] == "ingest"
+    assert data["command"] == "erdos ingest"
     assert data["success"] is True
     assert "data" in data
 
@@ -70,6 +71,7 @@ def test_ingest_command_json_output(
     assert "entries_written" in data["data"]
     assert "skipped" in data["data"]
     assert "manifest" in data["data"]
+    assert data["data"]["entries_written"] == len(data["data"]["manifest"]["entries"])
 
 
 @responses.activate
@@ -169,11 +171,12 @@ def test_ingest_command_not_found(tmp_path: Path, sample_problems_yaml: Path) ->
     )
 
     # Should fail with NOT_FOUND exit code (3)
-    assert result.exit_code == 3
+    assert result.exit_code == ExitCode.NOT_FOUND
 
     # Parse error output
     data = json.loads(result.stdout)
     assert data["success"] is False
+    assert data["error"]["code"] == ExitCode.NOT_FOUND
     assert "not found" in data["error"]["message"].lower()
 
 

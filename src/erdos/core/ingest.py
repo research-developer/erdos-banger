@@ -8,13 +8,15 @@ This module orchestrates:
 """
 
 import hashlib
+import tarfile
 import time
+import xml.etree.ElementTree as ET
 from datetime import UTC, datetime
 from pathlib import Path
 
 import requests
 import yaml
-from pydantic import TypeAdapter
+from pydantic import TypeAdapter, ValidationError
 
 from erdos.core.arxiv_client import (
     extract_arxiv_text,
@@ -35,10 +37,10 @@ from erdos.core.models import (
     ReferenceEntry,
     ReferenceRecord,
 )
-from erdos.core.problem_loader import ProblemLoader
+from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 
 
-def ingest_problem_references(  # noqa: PLR0912, PLR0915
+def ingest_problem_references(  # noqa: PLR0911, PLR0912, PLR0915
     problem_id: int,
     *,
     repo_root: Path,
@@ -64,22 +66,34 @@ def ingest_problem_references(  # noqa: PLR0912, PLR0915
     Returns:
         CLIOutput with ingestion results.
     """
+    command = "erdos ingest"
+
     # Load problem
     try:
         loader = ProblemLoader.from_default()
-        problem = loader.get_by_id(problem_id)
-        if problem is None:
-            return CLIOutput.err(
-                command="ingest",
-                error_type="NotFoundError",
-                message=f"Problem {problem_id} not found",
-                code=ExitCode.NOT_FOUND,
-            )
-    except Exception as e:
+    except ProblemLoaderError as e:
         return CLIOutput.err(
-            command="ingest",
+            command=command,
+            error_type="LoaderError",
+            message=str(e),
+            code=ExitCode.ERROR,
+        )
+
+    try:
+        problem = loader.get_by_id(problem_id)
+    except ProblemLoaderError as e:
+        return CLIOutput.err(
+            command=command,
+            error_type="LoaderError",
+            message=str(e),
+            code=ExitCode.ERROR,
+        )
+
+    if problem is None:
+        return CLIOutput.err(
+            command=command,
             error_type="NotFoundError",
-            message=f"Problem {problem_id} not found: {e}",
+            message=f"Problem {problem_id} not found",
             code=ExitCode.NOT_FOUND,
         )
 
@@ -95,7 +109,7 @@ def ingest_problem_references(  # noqa: PLR0912, PLR0915
             # Use TypeAdapter with strict=False to allow string->enum/datetime conversion
             adapter = TypeAdapter(ProblemManifest)
             existing_manifest = adapter.validate_python(manifest_data, strict=False)
-        except Exception:  # noqa: S110
+        except (OSError, yaml.YAMLError, ValidationError, TypeError, ValueError):
             # If manifest is corrupted, proceed with fresh ingestion
             pass
 
@@ -104,6 +118,7 @@ def ingest_problem_references(  # noqa: PLR0912, PLR0915
     entries: list[ManifestEntry] = []
     skipped = 0
     failed = 0
+    internal_error: Exception | None = None
 
     for ref in problem.references:
         # Skip references without identifiers
@@ -135,12 +150,16 @@ def ingest_problem_references(  # noqa: PLR0912, PLR0915
                 timeout=timeout,
                 mailto=mailto,
             )
-            entries.append(entry)
-
-            # Rate limiting
-            if delay > 0:
-                time.sleep(delay)
-        except Exception as e:
+        except (
+            ET.ParseError,
+            OSError,
+            RuntimeError,
+            ValueError,
+            KeyError,
+            TypeError,
+            requests.RequestException,
+            tarfile.TarError,
+        ) as e:
             # Record failure but continue
             failed += 1
             error_entry = ManifestEntry(
@@ -155,6 +174,32 @@ def ingest_problem_references(  # noqa: PLR0912, PLR0915
                 ingested_at=datetime.now(UTC),
             )
             entries.append(error_entry)
+            continue
+        except Exception as e:
+            # Unexpected internal error: record and stop (we'll return ExitCode.ERROR).
+            failed += 1
+            internal_error = e
+            error_entry = ManifestEntry(
+                reference=ReferenceRecord(
+                    doi=ref.doi,
+                    arxiv_id=ref.arxiv_id,
+                    title=f"Unexpected error: {ref.key}",
+                    authors=[],
+                    source="error",
+                ),
+                error=f"{type(e).__name__}: {e}",
+                ingested_at=datetime.now(UTC),
+            )
+            entries.append(error_entry)
+            break
+
+        entries.append(entry)
+        if entry.error is not None:
+            failed += 1
+
+        # Rate limiting
+        if delay > 0:
+            time.sleep(delay)
 
     # Check for duplicate stable keys
     seen_keys = set()
@@ -162,7 +207,7 @@ def ingest_problem_references(  # noqa: PLR0912, PLR0915
         key = _get_stable_key_from_record(entry.reference)
         if key in seen_keys:
             return CLIOutput.err(
-                command="ingest",
+                command=command,
                 error_type="ConfigError",
                 message=f"Duplicate reference key detected: {key}",
                 code=ExitCode.CONFIG_ERROR,
@@ -186,18 +231,18 @@ def ingest_problem_references(  # noqa: PLR0912, PLR0915
         with temp_path.open("w") as f:
             yaml.dump(manifest.model_dump(mode="json"), f, default_flow_style=False)
         temp_path.replace(manifest_path)
-    except Exception as e:
+    except (OSError, yaml.YAMLError) as e:
         if temp_path.exists():
             temp_path.unlink()
         return CLIOutput.err(
-            command="ingest",
+            command=command,
             error_type="IOError",
             message=f"Failed to write manifest: {e}",
             code=ExitCode.ERROR,
         )
 
     # Return result
-    entries_written = len([e for e in entries if e.error is None])
+    entries_written = len(entries)
     data = {
         "problem_id": problem_id,
         "manifest_path": str(get_manifest_path(problem_id)),
@@ -208,14 +253,40 @@ def ingest_problem_references(  # noqa: PLR0912, PLR0915
     }
 
     if failed > 0:
-        return CLIOutput.err(
-            command="ingest",
+        if internal_error is not None:
+            result = CLIOutput.err(
+                command=command,
+                error_type="Error",
+                message=f"Unexpected error during ingestion: {type(internal_error).__name__}: {internal_error}",
+                code=ExitCode.ERROR,
+            )
+            if isinstance(result.error, dict):
+                result.error.update(
+                    {
+                        "manifest_path": str(get_manifest_path(problem_id)),
+                        "references_processed": entries_written,
+                        "references_failed": failed,
+                    }
+                )
+            return result
+
+        result = CLIOutput.err(
+            command=command,
             error_type="NetworkError",
             message=f"{failed} reference(s) failed (see manifest)",
             code=ExitCode.NETWORK_ERROR,
         )
+        if isinstance(result.error, dict):
+            result.error.update(
+                {
+                    "manifest_path": str(get_manifest_path(problem_id)),
+                    "references_processed": entries_written,
+                    "references_failed": failed,
+                }
+            )
+        return result
 
-    return CLIOutput.ok(command="ingest", data=data)
+    return CLIOutput.ok(command=command, data=data)
 
 
 def _get_stable_key(ref: ReferenceEntry) -> str:
@@ -290,10 +361,10 @@ def _fetch_reference_entry(  # noqa: PLR0915
                     arxiv_extract_path.write_text(text, encoding="utf-8")
                     extract_path = get_arxiv_extract_path(ref.arxiv_id)
                     extracted = True
-                except Exception as e:
+                except (OSError, ValueError, tarfile.TarError) as e:
                     error = f"Extraction failed: {e}"
                     extracted = False
-            except Exception as e:
+            except (OSError, requests.RequestException) as e:
                 error = f"Download failed: {e}"
 
         return ManifestEntry(
@@ -355,10 +426,10 @@ def _fetch_reference_entry(  # noqa: PLR0915
                     arxiv_extract_path.write_text(text, encoding="utf-8")
                     extract_path = get_arxiv_extract_path(ref.arxiv_id)
                     extracted = True
-                except Exception as e:
+                except (OSError, ValueError, tarfile.TarError) as e:
                     error = f"Extraction failed: {e}"
                     extracted = False
-            except Exception as e:
+            except (OSError, requests.RequestException) as e:
                 error = f"Download failed: {e}"
 
         return ManifestEntry(
