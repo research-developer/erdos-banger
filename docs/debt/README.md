@@ -14,7 +14,10 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-_No active debt items._
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| DEBT-011 | [SPEC-020 Not Implemented](debt-011-spec-020-not-implemented.md) | P1 | Open |
+| DEBT-012 | [Broad Exception Handling](debt-012-broad-exception-handling.md) | P1 | Open |
 
 ## Archived Debt
 
@@ -32,12 +35,14 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-008 | Unused fixtures / no golden tests | P2 | Fixed | 57cf739 |
 | DEBT-009 | Upstream data not integrated | P1 | Fixed | 70ae1ab,96eb024 |
 | DEBT-010 | No smoke test | P2 | Fixed | 70ae1ab,c9cbf24 |
+| DEBT-001 | Spec 010 scope planning | P1 | Fixed | (implemented) |
 
-**Next Debt ID:** DEBT-011
+**Next Debt ID:** DEBT-013
 
 ### Archived Debt Decks
 
 - `docs/_archive/debt/debt-001-spec-005-ssot-drift.md`
+- `docs/_archive/debt/debt-001-spec-010-scope.md`
 - `docs/_archive/debt/debt-002-spec-006-search-cli-drift.md`
 - `docs/_archive/debt/debt-003-spec-008-fixtures-incomplete.md`
 - `docs/_archive/debt/debt-004-lean-scaffolding-missing.md`

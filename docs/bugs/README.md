@@ -10,7 +10,10 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 ## Active Bugs
 
-*None currently active.*
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| BUG-007 | [Missing `requests` Dependency](bug-007-missing-requests-dependency.md) | P0 | Open |
+| BUG-008 | [Hardcoded Exit Code 78](bug-008-hardcoded-exit-code-78.md) | P0 | Open |
 
 ## Archived Bugs
 
@@ -25,7 +28,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-005 | Dead global flags: `--config`, `--no-network` | P2 | Fixed | a26d149 |
 | BUG-006 | Ruff lints upstream submodule files | P1 | Fixed | 2f4124b |
 
-**Next Bug ID:** BUG-007
+**Next Bug ID:** BUG-009
 
 ### Archived Bug Decks
 

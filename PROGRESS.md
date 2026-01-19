@@ -37,6 +37,13 @@
 - [x] **SPEC-010-E** [REVIEWED]: Ingest command → `commands/ingest.py` + integration tests
 - [x] **SPEC-011** [REVIEWED]: Ask Command → `docs/specs/spec-011-ask-command.md`
 
+### Phase 1.5: v1.1 Bug Fixes (Critical)
+
+**Critical bugs found during v1.1 review - must fix before v1.1 release:**
+
+- [ ] **BUG-007**: Add missing `requests` dependency to pyproject.toml → `docs/bugs/bug-007-missing-requests-dependency.md`
+- [ ] **BUG-008**: Fix hardcoded exit code 78 in ask.py → `docs/bugs/bug-008-hardcoded-exit-code-78.md`
+
 ### Phase 2: v1.2 Iteration (Deferred but Ready)
 
 - [x] **SPEC-012-DESIGN**: Loop Command Design Decisions → `docs/specs/spec-012-design.md` *(Approved SSOT)*
@@ -126,6 +133,7 @@ v1.4 Integration
 - 2026-01-19: SPEC-011 completed - created `src/erdos/core/ask.py` with `build_prompt()`, `perform_retrieval()`, `execute_llm()`, `ask_question()` + `src/erdos/commands/ask.py` CLI integration + registered in `src/erdos/cli.py`, added `tests/unit/test_ask_prompt.py` (9 tests), `tests/unit/test_ask_retrieval.py` (5 tests), `tests/unit/test_ask_llm.py` (7 tests), `tests/integration/test_cli_ask.py` (8 tests), fixed FTS5 query syntax for special characters, 83% overall coverage, all quality gates pass
 - 2026-01-19: SPEC-011 reviewed and verified - all acceptance criteria met, deterministic prompt builder matches spec SSOT template, retrieval uses SearchIndex.search() with problem_id filter, LLM execution with shell=False security, proper exit codes (NOT_FOUND/ERROR/CONFIG_ERROR/USAGE_ERROR), FTS5 query escaping implemented, comprehensive test coverage (21 unit + 8 integration tests), 83% overall coverage, all quality gates pass, no TODO/half-measures
 - 2026-01-19: v1.1 Literature phase complete - all Phase 1 specs (SPEC-010-A through SPEC-011) implemented and reviewed, FINAL-GATES and FINAL-SMOKE verified passing, 83% overall coverage, ready for v1.2 planning
+- 2026-01-19: Post-v1.1 review - discovered two P0 bugs (BUG-007: missing requests dependency, BUG-008: hardcoded exit code 78), documented in docs/bugs/, added to PROGRESS.md as Phase 1.5, also documented two P1 debt items (DEBT-011: SPEC-020 status mismatch, DEBT-012: broad exception handling), archived DEBT-001
 
 ---
 
