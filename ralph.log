@@ -72,3 +72,40 @@ I successfully completed the mandatory review iteration for SPEC-010-A:
 
 **Next iteration will pick up SPEC-010-B** (arXiv client implementation).
 === Mon Jan 19 08:30:42 EST 2026 ===
+Perfect! All tests pass. Let me create a final summary:
+
+## Summary
+
+**SPEC-010-B completed successfully** following Ironclad TDD principles.
+
+### What was implemented:
+1. **`src/erdos/core/arxiv_client.py`** with three core functions:
+   - `parse_arxiv_atom()`: Parses arXiv Atom XML responses into ReferenceRecord objects
+   - `fetch_arxiv_atom()`: Fetches metadata from the arXiv export API with timeout and version stripping
+   - `extract_arxiv_text()`: Extracts text from arXiv source tarballs using the "largest .tex file" heuristic (capped at 2 MiB)
+
+2. **Tests (16 total)**:
+   - `tests/unit/test_arxiv_client.py` (10 tests): Covers parsing, fetching, error handling, and timeout scenarios
+   - `tests/unit/test_arxiv_extract.py` (6 tests): Covers extraction logic, nested files, size caps, and error cases
+
+3. **Dependencies**:
+   - Added `types-requests>=2.32.0` to dev dependencies for mypy type checking
+
+### Quality gates status:
+- ✅ All ruff checks pass
+- ✅ mypy type checking passes
+- ✅ All 16 new tests pass
+- ✅ Overall test coverage: 86% (exceeds 80% requirement)
+- ✅ Pre-commit hooks pass
+- ✅ Clean git working tree
+
+### Files modified:
+- `src/erdos/core/arxiv_client.py` (new)
+- `tests/unit/test_arxiv_client.py` (new)
+- `tests/unit/test_arxiv_extract.py` (new)
+- `pyproject.toml` (added types-requests)
+- `uv.lock` (synced dependencies)
+- `PROGRESS.md` (marked SPEC-010-B complete, added work log entry)
+
+The implementation follows TDD (test-first), adheres to the spec's acceptance criteria, and is ready for the next subtask: **SPEC-010-C** (Crossref client).
+=== Mon Jan 19 08:38:42 EST 2026 ===
