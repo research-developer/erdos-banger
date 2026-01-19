@@ -150,6 +150,19 @@ Notes:
 
 ---
 
+## How We Work (Memory + Human Steering)
+
+For most problems, brute-force “try random tactics until it compiles” doesn’t work — the search space is huge. The practical approach is:
+
+- **Iterate**: propose a step → run `erdos lean check` → feed back errors → revise.
+- **Record attempts**: write down what you tried, what failed, and the next promising idea, so you don’t repeat dead ends.
+- **Prefer small steps**: one lemma / one patch at a time; keep diffs reviewable.
+- **Use reproducible artifacts**: prompts, Lean errors, and patches should be saved so others (or future-you) can resume.
+
+This philosophy is the motivation behind planned structured run logs (Spec-013): a local-first “attempt history” that a future web UI could display without requiring a server.
+
+---
+
 ## First 15 Minutes
 
 ```bash
