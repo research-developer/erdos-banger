@@ -36,7 +36,7 @@ The master draft describes many capabilities. Here's what we're **actually build
 | Component | Why Deferred |
 |-----------|--------------|
 | Vector embeddings | BM25 is surprisingly good for technical text; adds complexity |
-| PDF conversion (Docling) | Heavy dependency, edge case hell, arXiv HTML covers most math |
+| PDF conversion (deferred to v2.0+) | Heavy dependency + edge case hell; use arXiv HTML/LaTeX in v1; optional `[pdf]` extra (Marker) is v2.0+ |
 | MCP server | CLI + Claude skills sufficient for now |
 | `erdos loop` automation | Need manual workflow validated first |
 | Postgres/pgvector | SQLite handles our scale |
@@ -299,7 +299,7 @@ Given scope reduction:
 | Lean integration | 2 days | `lean init`/`check`/`formalize` working |
 | Basic search | 1 day | SQLite FTS, `search` command |
 | **V1.0 complete** | **~5 days** | Core workflow functional |
-| Ingestion (arXiv) | 2-3 days | `ingest` with arXiv HTML/source |
+| Ingestion (arXiv + Crossref) | 2-3 days | `ingest` with arXiv source tarball + best-effort extract; Crossref metadata for DOI |
 | Full-text search | 1 day | Chunked extracts in index |
 | `erdos ask` | 1-2 days | Basic RAG with Claude |
 | **V1.1 complete** | **~10 days total** | Research-usable tool |
@@ -322,7 +322,7 @@ Before coding starts:
 
 | Master Draft Says | Qualification Says |
 |-------------------|-------------------|
-| "Possibly Docling or Nougat or GROBID" | Skip PDF in v1; Docling is a future optional extra (currently incompatible with our Typer baseline) |
+| "Possibly Docling or Nougat or GROBID" | Skip PDF in v1; PDF conversion is deferred to v2.0+; optional `[pdf]` extra uses Marker (GPL) |
 | "Maybe SQLite or Postgres or Qdrant" | SQLite only, period |
 | "Perhaps sentence-transformers" | No vectors in v1, BM25 only |
 | Vertical slice includes ingestion + LLM | True vertical: show → lean init → formalize → check |
