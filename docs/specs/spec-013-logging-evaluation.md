@@ -353,11 +353,13 @@ uv run erdos logs --problem-id 6 --command "lean check"
   - Log entry generation with correct schema
   - Timing capture via context manager
   - Query filtering by problem_id, command, since, status
+  - Failure logging: when `CLIOutput.success=false`, the log entry includes `success=false` and an `error` object
 
 ### Integration Tests
 
 - `tests/integration/test_cli_logs.py`
   - Run `erdos show 6`, verify log entry exists
+  - Run a failing command (e.g., `erdos show 999999` with fixtures) and verify a failure log entry exists with `success=false`
   - Run `erdos --json logs`, verify valid JSON output
   - Run `erdos logs --summary`, verify aggregation
 
