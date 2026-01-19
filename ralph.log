@@ -143,3 +143,59 @@ I performed a comprehensive review of SPEC-010-B (arXiv client implementation) a
 The `[REVIEWED]` marker has been added to SPEC-010-B in PROGRESS.md and the review has been committed.
 === Mon Jan 19 08:41:45 EST 2026 ===
 === Mon Jan 19 08:50:23 EST 2026 ===
+Perfect! Everything is committed and clean. Let me create a summary of what was accomplished:
+
+## Summary
+
+**SPEC-010-D has been successfully completed!**
+
+### What Was Implemented
+
+Created the **ingest core logic** in `src/erdos/core/ingest.py` with the following features:
+
+1. **Main Function: `ingest_problem_references()`**
+   - Orchestrates problem loading via ProblemLoader
+   - Processes each reference based on available identifiers (DOI, arXiv ID, or both)
+   - Manages manifest creation and updates with idempotence
+   - Supports flags: `--force`, `--no-download`, `--no-network`
+   - Handles errors gracefully with partial failure support
+
+2. **Reference Processing Logic**
+   - **DOI-only**: Fetches metadata from Crossref (no download)
+   - **arXiv-only**: Fetches metadata + downloads source tarball + extracts text
+   - **DOI + arXiv (merged)**: Fetches Crossref metadata + arXiv tarball, creates ONE entry
+   - Skips references without identifiers
+   - Detects duplicate DOI/arXiv IDs as fatal config errors
+
+3. **Manifest Management**
+   - Atomic writes using temp files
+   - Idempotent: reuses existing entries unless `--force` is set
+   - Tracks cache state (MD5 hashes, paths, extraction status)
+   - Stores relative paths for portability
+
+### Tests
+
+Created comprehensive unit tests in `tests/unit/test_ingest_service.py`:
+- Test with no references
+- Test with arXiv reference (with download + extraction)
+- Test with DOI reference (metadata only)
+- Test with merged DOI+arXiv entry
+- Test `--no-download` flag
+
+All tests use mocked HTTP responses (no network), following TDD principles.
+
+### Quality Metrics
+
+- ✅ All tests pass (176 total, 5 new ingest tests)
+- ✅ Ruff check: No issues
+- ✅ Mypy: No type errors
+- ✅ Coverage: 84% overall (71% for ingest.py, will increase with SPEC-010-E integration tests)
+- ✅ Clean git working tree
+
+### Commits
+
+1. `[SPEC-010-D] Implement: Ingest core logic` - Implementation + tests
+2. `[SPEC-010-D] Update PROGRESS.md - mark task complete` - Documentation
+
+The implementation follows TDD (RED-GREEN-REFACTOR), adheres to the spec's acceptance criteria, and is ready for the next task: **SPEC-010-E** (Ingest command CLI wrapper).
+=== Mon Jan 19 08:58:31 EST 2026 ===
