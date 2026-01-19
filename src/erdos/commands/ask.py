@@ -44,7 +44,7 @@ def _print_human(result_data: dict[str, Any]) -> None:
             rank = source.get("rank", "?")
             source_type = source.get("source_type", "?")
             chunk_id = source.get("chunk_id", "?")
-            text_preview = source.get("text", "")[:100]
+            text_preview = (source.get("text") or "")[:100]
             console.print(f"  [{rank}] ({source_type}) {chunk_id}")
             console.print(f"      {text_preview}...")
     else:

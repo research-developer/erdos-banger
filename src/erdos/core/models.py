@@ -177,7 +177,15 @@ class ReferenceRecord(ErdosBaseModel):
 
     # Identifiers (at least one required)
     doi: Annotated[str | None, Field(default=None, pattern=r"^10\.\d{4,}/.*$")] = None
-    arxiv_id: Annotated[str | None, Field(default=None)] = None
+    arxiv_id: Annotated[
+        str | None,
+        Field(
+            default=None,
+            # Accept both post-2007 (YYMM.NNNN/NNNNN) and pre-2007 (archive/YYMMNNN) identifiers.
+            # Defense-in-depth: prevents path traversal attacks when used in file paths.
+            pattern=r"^(?:\d{4}\.\d{4,5}|[A-Za-z\-]+(?:\.[A-Za-z\-]+)?/\d{7})(?:v\d+)?$",
+        ),
+    ] = None
     semantic_scholar_id: Annotated[str | None, Field(default=None)] = None
 
     # Bibliographic metadata

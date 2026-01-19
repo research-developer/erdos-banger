@@ -100,7 +100,7 @@ def fetch_crossref_work(
     url = f"https://api.crossref.org/works/{doi}"
     params = {"mailto": mailto}
     headers = {
-        "User-Agent": "erdos-banger/1.0 (https://github.com/yourorg/erdos-banger; mailto:{mailto})"
+        "User-Agent": f"erdos-banger/1.0 (https://github.com/yourorg/erdos-banger; mailto:{mailto})"
     }
 
     response = requests.get(url, params=params, headers=headers, timeout=timeout)

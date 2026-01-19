@@ -272,9 +272,9 @@ def ingest_problem_references(  # noqa: PLR0911, PLR0912, PLR0915
 
         result = CLIOutput.err(
             command=command,
-            error_type="NetworkError",
+            error_type="IngestError",
             message=f"{failed} reference(s) failed (see manifest)",
-            code=ExitCode.NETWORK_ERROR,
+            code=ExitCode.ERROR,
         )
         if isinstance(result.error, dict):
             result.error.update(

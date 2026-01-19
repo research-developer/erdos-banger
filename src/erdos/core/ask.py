@@ -241,7 +241,7 @@ def ask_question(  # noqa: PLR0911, PLR0912
                 command="erdos ask",
                 error_type="ERROR",
                 message=f"Failed to build index: {e}",
-                code=1,
+                code=ExitCode.ERROR,
             )
 
     # Get search index
@@ -252,7 +252,7 @@ def ask_question(  # noqa: PLR0911, PLR0912
             command="erdos ask",
             error_type="ERROR",
             message=f"Failed to open search index: {e}",
-            code=1,
+            code=ExitCode.ERROR,
         )
 
     # Perform retrieval
@@ -300,7 +300,7 @@ def ask_question(  # noqa: PLR0911, PLR0912
                 command="erdos ask",
                 error_type="ERROR",
                 message=f"LLM execution failed: {e}",
-                code=1,
+                code=ExitCode.ERROR,
             )
 
         # Check exit code
@@ -309,7 +309,7 @@ def ask_question(  # noqa: PLR0911, PLR0912
                 command="erdos ask",
                 error_type="ERROR",
                 message=f"LLM command exited with code {llm_exit_code}",
-                code=1,
+                code=ExitCode.ERROR,
             )
 
     # Build response data

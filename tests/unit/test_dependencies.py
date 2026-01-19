@@ -1,5 +1,6 @@
 """Tests for project dependency configuration."""
 
+import re
 from pathlib import Path
 
 import requests
@@ -25,12 +26,17 @@ def test_requests_version_meets_spec() -> None:
 
     SPEC-010 Section 5.0 requires requests>=2.32.5 for security fixes.
     """
-    # Parse version (e.g., "2.32.5" -> (2, 32, 5))
-    version_parts = tuple(int(x) for x in requests.__version__.split(".")[:3])
+    # Parse version, handling pre-release/post-release suffixes
+    # e.g., "2.32.5" or "2.32.5.post1" or "2.32.5rc1" -> (2, 32, 5)
+    version_str = requests.__version__
+    # Extract numeric parts using regex (handles suffixes like .post1, rc1, etc.)
+    match = re.match(r"(\d+)\.(\d+)\.(\d+)", version_str)
+    assert match, f"Could not parse version string: {version_str}"
+    version_parts = tuple(int(x) for x in match.groups())
     required = (2, 32, 5)
 
     assert version_parts >= required, (
-        f"requests version {requests.__version__} is below required "
+        f"requests version {version_str} is below required "
         f"{'.'.join(map(str, required))}"
     )
 

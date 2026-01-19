@@ -128,7 +128,7 @@ def extract_arxiv_text(tarball_bytes: bytes) -> bytes:
     3. Return its raw content (up to 2 MiB)
 
     Args:
-        tarball_bytes: Raw bytes of a gzipped tar archive.
+        tarball_bytes: Raw bytes of a tar archive (gzip, bzip2, xz, or uncompressed).
 
     Returns:
         Raw bytes of the largest .tex file (capped at 2 MiB).
@@ -142,7 +142,7 @@ def extract_arxiv_text(tarball_bytes: bytes) -> bytes:
     tar_buffer = io.BytesIO(tarball_bytes)
     tex_files = []
 
-    with tarfile.open(fileobj=tar_buffer, mode="r:gz") as tar:
+    with tarfile.open(fileobj=tar_buffer, mode="r:*") as tar:
         for member in tar.getmembers():
             if member.isfile() and member.name.endswith(".tex"):
                 tex_files.append((member.name, member.size))
@@ -156,7 +156,7 @@ def extract_arxiv_text(tarball_bytes: bytes) -> bytes:
 
     # Extract the largest file
     tar_buffer.seek(0)
-    with tarfile.open(fileobj=tar_buffer, mode="r:gz") as tar:
+    with tarfile.open(fileobj=tar_buffer, mode="r:*") as tar:
         file_obj = tar.extractfile(largest_name)
         if file_obj is None:
             raise ValueError(f"Could not extract {largest_name}")
