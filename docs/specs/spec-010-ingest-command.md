@@ -233,11 +233,12 @@ Responsibilities:
 
 Mapping rules (in `parse_crossref_work`):
 
-- Fetch metadata by DOI and map to `ReferenceRecord`:
+- Map the Crossref JSON payload to `ReferenceRecord`:
   - Must supply non-empty `title` (required by `ReferenceRecord`)
   - Map authors to a list of display strings
   - Set `source="crossref"`
-- Use `mailto=` query parameter (polite pool) and a descriptive User-Agent.
+
+Note: The `mailto=` query parameter and User-Agent belong in `fetch_crossref_work`, not `parse_crossref_work`.
 
 ### 5.4 `src/erdos/core/literature_paths.py`
 

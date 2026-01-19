@@ -272,7 +272,7 @@ uv run erdos ingest --status open --limit 3 --dry-run
 uv run erdos lean formalize --limit 2 --skip-existing
 
 # Check batch state was created
-cat logs/batch_state.json | jq '.completed'
+cat logs/batches/latest.json | jq '.completed'
 ```
 
 ### Unit Tests

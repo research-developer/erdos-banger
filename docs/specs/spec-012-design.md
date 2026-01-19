@@ -429,8 +429,8 @@ def find_match(search_text: str, file_content: str) -> MatchResult:
         return MatchResult.ambiguous(len(locations))
 
     # Pass 2: Newline-normalized match (\r\n -> \n)
-    normalized_search = search_text.replace("\\r\\n", "\\n")
-    normalized_file = file_content.replace("\\r\\n", "\\n")
+    normalized_search = search_text.replace("\r\n", "\n")
+    normalized_file = file_content.replace("\r\n", "\n")
     if normalized_search in normalized_file:
         return MatchResult.newline_normalized()
 

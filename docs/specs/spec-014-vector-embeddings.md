@@ -181,7 +181,7 @@ Extend existing search output (SSOT: archived Spec 006 JSON schema). Existing fi
     "alpha": 0.5,
     "limit": 10,
     "count": 5,
-    "use_fts": true,
+    "used_fts": true,
     "results": [
       {
         "chunk_id": "problem_6_statement",

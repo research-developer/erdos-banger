@@ -141,7 +141,8 @@ On success, `data` must include:
   "last_check": {
     "success": true,
     "error_count": 0,
-    "has_sorry": false
+    "has_sorry": false,
+    "has_admit": false
   },
   "iterations": [
     {
