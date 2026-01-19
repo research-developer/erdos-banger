@@ -5,7 +5,7 @@
 **Priority:** P2
 **Impact:** Documentation clarity
 **Resolved:** 2026-01-19
-**Commit:** (pending)
+**Commit:** c526e10
 
 ## Problem
 

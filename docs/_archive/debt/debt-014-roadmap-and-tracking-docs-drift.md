@@ -5,7 +5,7 @@
 **Priority:** P2
 **Impact:** Contributor confusion, incorrect SSOT pointers
 **Fixed:** 2026-01-19
-**Commit:** (pending)
+**Commit:** c526e10
 
 ## Problem
 

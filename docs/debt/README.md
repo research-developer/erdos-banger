@@ -33,9 +33,9 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-009 | Upstream data not integrated | P1 | Fixed | 70ae1ab,96eb024 |
 | DEBT-010 | No smoke test | P2 | Fixed | 70ae1ab,c9cbf24 |
 | DEBT-013 | Spec 010 scope planning | P1 | Fixed | 931b98b |
-| DEBT-011 | SPEC-020 status clarification | P2 | Resolved | (pending) |
+| DEBT-011 | SPEC-020 status clarification | P2 | Resolved | c526e10 |
 | DEBT-012 | Broad exception handling in ingest.py | P1 | Fixed | 2cb6fac |
-| DEBT-014 | Roadmap/tracking docs drift after v1.1 | P2 | Fixed | (pending) |
+| DEBT-014 | Roadmap/tracking docs drift after v1.1 | P2 | Fixed | c526e10 |
 
 **Next Debt ID:** DEBT-015
 
