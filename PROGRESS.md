@@ -100,6 +100,8 @@ v1.4 Integration
 
 - 2026-01-18: Initial setup - created PROGRESS.md, PROMPT.md, protocol.md
 - 2026-01-18: Created SPEC-012-DESIGN with D1-D8 design decisions (vaporware → concrete)
+- 2026-01-19: SPEC-010 attempted but exceeds single-iteration scope (>10 files, ~800-1000 LoC)
+- 2026-01-19: Created debt-001-spec-010-scope.md documenting scope issue and recommending task breakdown
 
 ---
 
