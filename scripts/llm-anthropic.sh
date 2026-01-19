@@ -1,23 +1,45 @@
 #!/usr/bin/env bash
-# LLM wrapper for erdos CLI - calls Anthropic API.
-# Reads prompt from stdin, writes response to stdout.
+# LLM wrapper for erdos CLI - Anthropic Messages API.
+# Reads prompt from stdin, writes response text to stdout.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# Load environment (optional, local-only).
-if [[ -f "${REPO_ROOT}/.env" ]]; then
-  set -a
-  # shellcheck disable=SC1091
-  source "${REPO_ROOT}/.env"
-  set +a
-fi
+load_env_file() {
+  local env_file="$1"
+  [[ -f "$env_file" ]] || return 0
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ "$line" =~ ^[[:space:]]*$ ]] && continue
+    local key="${line%%=*}"
+    local value="${line#*=}"
+
+    key="${key#"${key%%[![:space:]]*}"}"
+    key="${key%"${key##*[![:space:]]}"}"
+
+    value="${value%%#*}"
+    value="${value#"${value%%[![:space:]]*}"}"
+    value="${value%"${value##*[![:space:]]}"}"
+
+    if [[ "$value" =~ ^\".*\"$ ]]; then
+      value="${value:1:-1}"
+    elif [[ "$value" =~ ^\'.*\'$ ]]; then
+      value="${value:1:-1}"
+    fi
+
+    export "${key}=${value}"
+  done < "$env_file"
+}
+
+load_env_file "${REPO_ROOT}/.env"
 
 : "${ANTHROPIC_API_KEY:?ANTHROPIC_API_KEY not set}"
-: "${ANTHROPIC_MODEL:=claude-sonnet-4-20250514}"
-: "${ANTHROPIC_MAX_TOKENS:=4096}"
+: "${ANTHROPIC_MODEL:=claude-opus-4-5-20251101}"
+: "${ANTHROPIC_MAX_TOKENS:=1024}"
+: "${ANTHROPIC_VERSION:=2023-06-01}"
+: "${ANTHROPIC_BASE_URL:=https://api.anthropic.com}"
 
 BUILD_PAYLOAD_PY=$(cat <<'PY'
 import json
@@ -25,10 +47,14 @@ import os
 import sys
 
 prompt = sys.stdin.read()
-model = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
-max_tokens = int(os.environ.get("ANTHROPIC_MAX_TOKENS", "4096"))
+model = os.environ.get("ANTHROPIC_MODEL", "claude-opus-4-5-20251101")
+max_tokens_raw = os.environ.get("ANTHROPIC_MAX_TOKENS", "1024")
+try:
+    max_tokens = int(max_tokens_raw)
+except ValueError:
+    max_tokens = 1024
 
-payload = {
+payload: dict[str, object] = {
     "model": model,
     "max_tokens": max_tokens,
     "messages": [{"role": "user", "content": prompt}],
@@ -50,30 +76,35 @@ except json.JSONDecodeError:
     print(raw[:4000], file=sys.stderr)
     raise SystemExit(1)
 
-if isinstance(data, dict) and "error" in data:
-    err = data["error"]
-    if isinstance(err, dict) and "message" in err:
+if isinstance(data, dict) and data.get("type") == "error":
+    err = data.get("error")
+    if isinstance(err, dict) and isinstance(err.get("message"), str):
         print(err["message"], file=sys.stderr)
         raise SystemExit(1)
-    print("Anthropic API error:", data, file=sys.stderr)
+    print("Anthropic API error", file=sys.stderr)
     raise SystemExit(1)
 
-try:
-    # Anthropic returns content as a list of blocks
-    content = data["content"]
-    text_parts = [block["text"] for block in content if block.get("type") == "text"]
-    print("".join(text_parts))
-except Exception:
-    print("Unexpected response shape:", file=sys.stderr)
-    print(raw[:4000], file=sys.stderr)
-    raise SystemExit(1)
+content = data.get("content") if isinstance(data, dict) else None
+parts: list[str] = []
+if isinstance(content, list):
+    for item in content:
+        if isinstance(item, dict) and item.get("type") == "text" and isinstance(item.get("text"), str):
+            parts.append(item["text"])
+
+if parts:
+    print("".join(parts))
+    raise SystemExit(0)
+
+print("Unexpected response shape:", file=sys.stderr)
+print(raw[:4000], file=sys.stderr)
+raise SystemExit(1)
 PY
 )
 
 python3 -c "$BUILD_PAYLOAD_PY" \
-  | curl -sS "https://api.anthropic.com/v1/messages" \
+  | curl -sS "${ANTHROPIC_BASE_URL}/v1/messages" \
       -H "x-api-key: ${ANTHROPIC_API_KEY}" \
-      -H "anthropic-version: 2023-06-01" \
+      -H "anthropic-version: ${ANTHROPIC_VERSION}" \
       -H "Content-Type: application/json" \
       -d @- \
   | python3 -c "$PARSE_RESPONSE_PY"
