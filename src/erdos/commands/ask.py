@@ -13,6 +13,8 @@ from rich.panel import Panel
 
 from erdos.commands.presenter import exit_with_result
 from erdos.core.ask import ask_question
+from erdos.core.exit_codes import ExitCode
+from erdos.core.models import CLIOutput
 
 
 app = typer.Typer(
@@ -146,8 +148,14 @@ def ask(
             question = question[:-1]
         # Validate non-empty
         if not question.strip():
-            err_console.print("[red]Error:[/red] Question cannot be empty")
-            raise typer.Exit(code=64)  # USAGE_ERROR
+            result = CLIOutput.err(
+                command="erdos ask",
+                error_type="UsageError",
+                message="Question cannot be empty",
+                code=ExitCode.USAGE_ERROR,
+            )
+            exit_with_result(ctx, result)
+            return
     else:
         question = question_arg
 

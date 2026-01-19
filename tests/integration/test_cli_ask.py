@@ -42,6 +42,20 @@ def _setup_test_env(tmp_path: Path, sample_problems_yaml: Path) -> tuple[Path, P
     return data_dir, index_path
 
 
+def _setup_test_env_no_index(
+    tmp_path: Path, sample_problems_yaml: Path
+) -> tuple[Path, Path]:
+    """Create test environment with data but no built index."""
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    shutil.copyfile(sample_problems_yaml, data_dir / "problems.yaml")
+
+    index_dir = tmp_path / "index"
+    index_dir.mkdir()
+    index_path = index_dir / "erdos.sqlite"
+    return data_dir, index_path
+
+
 def test_ask_command_json_output_no_llm(
     tmp_path: Path,
     sample_problems_yaml: Path,
@@ -211,13 +225,11 @@ def test_ask_command_not_found_error(
         },
     )
 
-    # Should fail with NOT_FOUND
-    assert result.exit_code != 0
-    # In JSON mode, errors still go to stdout
-    if result.stdout:
-        data = json.loads(result.stdout)
-        assert data["success"] is False
-        assert "not found" in data["error"]["message"].lower()
+    assert result.exit_code == ExitCode.NOT_FOUND
+    data = json.loads(result.stdout)
+    assert data["success"] is False
+    assert data["error"]["code"] == ExitCode.NOT_FOUND
+    assert "not found" in data["error"]["message"].lower()
 
 
 def test_ask_command_stdin_question(
@@ -242,6 +254,55 @@ def test_ask_command_stdin_question(
     data = json.loads(result.stdout)
     # Should strip trailing newline
     assert data["data"]["question"] == "What is the status?"
+
+
+def test_ask_command_empty_stdin_question_is_usage_error_json(
+    tmp_path: Path,
+    sample_problems_yaml: Path,
+) -> None:
+    """Test erdos ask '-' stdin question cannot be empty in JSON mode."""
+    data_dir, index_path = _setup_test_env(tmp_path, sample_problems_yaml)
+
+    result = runner.invoke(
+        app,
+        ["ask", "6", "-", "--json", "--no-llm"],
+        input="\n",
+        env={
+            "ERDOS_DATA_PATH": str(data_dir),
+            "ERDOS_INDEX_PATH": str(index_path),
+        },
+    )
+
+    assert result.exit_code == ExitCode.USAGE_ERROR
+    data = json.loads(result.stdout)
+    assert data["success"] is False
+    assert data["error"]["code"] == ExitCode.USAGE_ERROR
+    assert "empty" in data["error"]["message"].lower()
+
+
+def test_ask_command_falls_back_when_index_empty(
+    tmp_path: Path,
+    sample_problems_yaml: Path,
+) -> None:
+    """When no index exists yet, ask should return statement/notes sources (used_fts=false)."""
+    data_dir, index_path = _setup_test_env_no_index(tmp_path, sample_problems_yaml)
+
+    result = runner.invoke(
+        app,
+        ["ask", "6", "primes", "--json", "--no-llm"],
+        env={
+            "ERDOS_DATA_PATH": str(data_dir),
+            "ERDOS_INDEX_PATH": str(index_path),
+        },
+    )
+
+    assert result.exit_code == 0
+    data = json.loads(result.stdout)
+    assert data["success"] is True
+    retrieval = data["data"]["retrieval"]
+    assert retrieval["used_fts"] is False
+    assert data["data"]["sources"]
+    assert data["data"]["sources"][0]["chunk_id"] == "problem_6_statement"
 
 
 def test_ask_command_human_output(
@@ -294,9 +355,8 @@ def test_ask_command_config_error_exit_code(
     assert result.exit_code != 78  # Verify old hardcoded value is gone
 
     # Verify error message in JSON output
-    if result.stdout:
-        data = json.loads(result.stdout)
-        assert data["success"] is False
-        assert data["error"]["type"] == "CONFIG_ERROR"
-        assert "not found" in data["error"]["message"].lower()
-        assert data["error"]["code"] == 10  # ExitCode.CONFIG_ERROR value
+    data = json.loads(result.stdout)
+    assert data["success"] is False
+    assert data["error"]["type"] == "CONFIG_ERROR"
+    assert "not found" in data["error"]["message"].lower()
+    assert data["error"]["code"] == 10  # ExitCode.CONFIG_ERROR value

@@ -6,8 +6,8 @@ import subprocess
 
 from erdos.core.exit_codes import ExitCode
 from erdos.core.index_builder import build_index
-from erdos.core.models import CLIOutput, ProblemRecord
-from erdos.core.problem_loader import ProblemLoader
+from erdos.core.models import ChunkSource, CLIOutput, ProblemRecord
+from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 from erdos.core.search_index import SearchIndex, SearchResult
 
 
@@ -115,6 +115,42 @@ def perform_retrieval(
     return results
 
 
+def _fallback_sources(problem: ProblemRecord, *, limit: int) -> list[SearchResult]:
+    """Fallback retrieval when the FTS index has no data yet."""
+    sources: list[SearchResult] = []
+
+    # Always include the statement first (matches TextChunk.from_problem conventions).
+    statement = problem.statement
+    sources.append(
+        SearchResult(
+            chunk_id=f"problem_{problem.id}_statement",
+            text=statement,
+            snippet=statement[:200] + "..." if len(statement) > 200 else statement,
+            score=1.0,
+            source_type=ChunkSource.PROBLEM_STATEMENT,
+            problem_id=problem.id,
+            reference_doi=None,
+        )
+    )
+
+    # Include notes if present and within limit.
+    if problem.notes and len(sources) < limit:
+        notes = problem.notes
+        sources.append(
+            SearchResult(
+                chunk_id=f"problem_{problem.id}_notes",
+                text=notes,
+                snippet=notes[:200] + "..." if len(notes) > 200 else notes,
+                score=0.5,
+                source_type=ChunkSource.PROBLEM_NOTES,
+                problem_id=problem.id,
+                reference_doi=None,
+            )
+        )
+
+    return sources[: max(limit, 0)]
+
+
 def execute_llm(llm_command: str, prompt: str) -> tuple[str, int]:
     """
     Execute an external LLM command with the prompt.
@@ -144,7 +180,7 @@ def execute_llm(llm_command: str, prompt: str) -> tuple[str, int]:
     return result.stdout, result.returncode
 
 
-def ask_question(  # noqa: PLR0911
+def ask_question(  # noqa: PLR0911, PLR0912
     problem_id: int,
     question: str,
     *,
@@ -170,24 +206,31 @@ def ask_question(  # noqa: PLR0911
     # Load problem
     try:
         loader = ProblemLoader.from_default()
-        problem = loader.get_by_id(problem_id)
-    except ValueError:
+    except ProblemLoaderError as e:
         return CLIOutput.err(
             command="erdos ask",
-            error_type="NOT_FOUND",
-            message=f"Problem {problem_id} not found",
-            code=4,
-        )
-    except Exception as e:
-        return CLIOutput.err(
-            command="erdos ask",
-            error_type="ERROR",
-            message=f"Failed to load problem: {e}",
-            code=1,
+            error_type="LoaderError",
+            message=str(e),
+            code=ExitCode.ERROR,
         )
 
-    # Type narrowing: problem is ProblemRecord after successful load
-    assert problem is not None  # noqa: S101
+    try:
+        problem = loader.get_by_id(problem_id)
+    except ProblemLoaderError as e:
+        return CLIOutput.err(
+            command="erdos ask",
+            error_type="LoaderError",
+            message=str(e),
+            code=ExitCode.ERROR,
+        )
+
+    if problem is None:
+        return CLIOutput.err(
+            command="erdos ask",
+            error_type="NotFound",
+            message=f"Problem {problem_id} not found",
+            code=ExitCode.NOT_FOUND,
+        )
 
     # Build/rebuild index if requested
     if build_index_flag:
@@ -213,12 +256,17 @@ def ask_question(  # noqa: PLR0911
         )
 
     # Perform retrieval
-    sources = perform_retrieval(
-        index=index,
-        problem=problem,
-        question=question,
-        limit=limit,
-    )
+    if index.chunk_count() == 0:
+        sources = _fallback_sources(problem, limit=limit)
+        used_fts = False
+    else:
+        sources = perform_retrieval(
+            index=index,
+            problem=problem,
+            question=question,
+            limit=limit,
+        )
+        used_fts = True
 
     # Build query string for metadata
     query = f"Problem {problem.id}: {problem.title}. Question: {question}"
@@ -285,7 +333,7 @@ def ask_question(  # noqa: PLR0911
             "query": query,
             "limit": limit,
             "count": len(sources),
-            "used_fts": True,
+            "used_fts": used_fts,
         },
         "llm": {
             "enabled": llm_enabled,
