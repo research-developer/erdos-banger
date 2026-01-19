@@ -35,7 +35,7 @@
 - [x] **SPEC-010-C** [REVIEWED]: Crossref client → `crossref_client.py` + unit tests + fixtures
 - [x] **SPEC-010-D** [REVIEWED]: Ingest core logic → `ingest.py` + unit tests
 - [x] **SPEC-010-E** [REVIEWED]: Ingest command → `commands/ingest.py` + integration tests
-- [ ] **SPEC-011**: Ask Command → `docs/specs/spec-011-ask-command.md`
+- [x] **SPEC-011**: Ask Command → `docs/specs/spec-011-ask-command.md`
 
 ### Phase 2: v1.2 Iteration (Deferred but Ready)
 
@@ -123,6 +123,7 @@ v1.4 Integration
 - 2026-01-19: SPEC-010-D reviewed and verified - all acceptance criteria met, core orchestration logic complete with proper reference merging/deduplication/idempotence, atomic manifest writes, 84% overall coverage (exceeds 80% requirement), all quality gates pass, no TODO/half-measures
 - 2026-01-19: SPEC-010-E completed - created `src/erdos/commands/ingest.py` with full CLI integration (arguments, options, --json support, human output), registered in `src/erdos/cli.py`, added `tests/integration/test_cli_ingest.py` (5 tests), fixed manifest deserialization bug (TypeAdapter with strict=False for enum/datetime conversion), all quality gates pass, 84% overall coverage
 - 2026-01-19: SPEC-010-E reviewed and verified - all acceptance criteria met, CLI properly handles all options (--force, --no-download, --no-network, --timeout, --delay, --mailto), --json flag correctly routes output, integration tests cover all key scenarios (JSON output, --no-download, idempotence, NOT_FOUND error, human output), 84% overall coverage, all quality gates pass, no TODO/half-measures
+- 2026-01-19: SPEC-011 completed - created `src/erdos/core/ask.py` with `build_prompt()`, `perform_retrieval()`, `execute_llm()`, `ask_question()` + `src/erdos/commands/ask.py` CLI integration + registered in `src/erdos/cli.py`, added `tests/unit/test_ask_prompt.py` (9 tests), `tests/unit/test_ask_retrieval.py` (5 tests), `tests/unit/test_ask_llm.py` (7 tests), `tests/integration/test_cli_ask.py` (8 tests), fixed FTS5 query syntax for special characters, 83% overall coverage, all quality gates pass
 
 ---
 
