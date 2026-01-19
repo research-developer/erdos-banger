@@ -10,6 +10,7 @@ from rich.console import Console
 from rich.table import Table
 
 from erdos.commands.presenter import exit_with_result
+from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord, ProblemStatus
 from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 
@@ -87,7 +88,7 @@ def list_problems(
             command="erdos list",
             error_type="Error",
             message=str(e),
-            code=1,
+            code=ExitCode.ERROR,
         )
 
 
@@ -176,7 +177,7 @@ def list_(
             command="erdos list",
             error_type="LoaderError",
             message=str(e),
-            code=1,
+            code=ExitCode.ERROR,
         )
         exit_with_result(ctx, result)
         return

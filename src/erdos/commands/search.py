@@ -9,6 +9,7 @@ import typer
 from rich.console import Console
 
 from erdos.commands.presenter import exit_with_result
+from erdos.core.exit_codes import ExitCode
 from erdos.core.index_builder import build_index as do_build_index
 from erdos.core.models import CLIOutput, ProblemRecord
 from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
@@ -124,7 +125,7 @@ def search_problems_fts(
             command="erdos search",
             error_type="IndexError",
             message=str(e),
-            code=1,
+            code=ExitCode.ERROR,
         )
 
 
@@ -176,7 +177,7 @@ def search_problems_basic(
             command="erdos search",
             error_type="Error",
             message=str(e),
-            code=1,
+            code=ExitCode.ERROR,
         )
 
 
@@ -250,7 +251,7 @@ def search(
                 command="erdos search",
                 error_type=error_type,
                 message=str(e),
-                code=1,
+                code=ExitCode.ERROR,
             )
             result.duration_ms = duration_ms
             exit_with_result(ctx, result)
@@ -269,7 +270,7 @@ def search(
                 command="erdos search",
                 error_type="LoaderError",
                 message=str(e),
-                code=1,
+                code=ExitCode.ERROR,
             )
 
     duration_ms = int((time.perf_counter() - start_time) * 1000)

@@ -1,13 +1,15 @@
 # Technical Debt 015: Minor Style Debt (Post v1.1)
 
 **Date:** 2026-01-19
-**Status:** Open
+**Status:** Resolved
 **Priority:** P4 (Low - cosmetic/style)
 **Impact:** None functional, style consistency only
 
 ## Items
 
 ### 1. `code=1` vs `ExitCode.ERROR` Inconsistency
+
+**Status:** Fixed (commit pending)
 
 **Files affected:**
 - `src/erdos/commands/lean.py` (6 occurrences)
@@ -22,7 +24,7 @@
 
 **Impact:** None - `ExitCode.ERROR = 1`, so functionally equivalent.
 
-**Fix:** Replace `code=1` with `code=ExitCode.ERROR` for consistency.
+**Fix:** Replaced all 16 occurrences with `code=ExitCode.ERROR` and added imports.
 
 ### 2. Broad `except Exception` at CLI Boundary
 
@@ -78,10 +80,12 @@ Tags: number theory, primes, arithmetic progressions
 
 ## Resolution
 
-- Item 1: Fix when touching affected files (opportunistic cleanup)
+- Item 1: Fixed - all 16 occurrences normalized to `ExitCode.ERROR`
 - Item 2: No action needed (valid pattern)
 - Item 3: No action needed (intentional UX)
 - Item 4: Fixed in commit `27c0a16`
+
+**All actionable items resolved.**
 
 ## References
 

@@ -10,6 +10,7 @@ import typer
 from rich.console import Console
 
 from erdos.commands.presenter import exit_with_result
+from erdos.core.exit_codes import ExitCode
 from erdos.core.formalizer import FormalizerError, generate_skeleton
 from erdos.core.lean_runner import LeanRunner, LeanRunnerError
 from erdos.core.models import CLIOutput, LeanCheckResult
@@ -77,14 +78,14 @@ def init_lean_project(project_path: Path, *, fetch_mathlib: bool = True) -> CLIO
             command="erdos lean init",
             error_type="InitError",
             message=str(e),
-            code=1,
+            code=ExitCode.ERROR,
         )
     except Exception as e:
         return CLIOutput.err(
             command="erdos lean init",
             error_type="InitError",
             message=str(e),
-            code=1,
+            code=ExitCode.ERROR,
         )
 
 
@@ -102,7 +103,7 @@ def check_lean_file(file_path: Path, project_path: Path) -> CLIOutput:
             command="erdos lean check",
             error_type="LeanRunnerError",
             message=str(e),
-            code=1,
+            code=ExitCode.ERROR,
         )
     except FileNotFoundError:
         return CLIOutput.err(
@@ -116,7 +117,7 @@ def check_lean_file(file_path: Path, project_path: Path) -> CLIOutput:
             command="erdos lean check",
             error_type="Error",
             message=str(e),
-            code=1,
+            code=ExitCode.ERROR,
         )
 
 
@@ -129,7 +130,7 @@ def formalize_problem(problem_id: int, project_path: Path, *, force: bool) -> CL
             command="erdos lean formalize",
             error_type="LoaderError",
             message=str(e),
-            code=1,
+            code=ExitCode.ERROR,
         )
 
     problem = loader.get_by_id(problem_id)
@@ -148,7 +149,7 @@ def formalize_problem(problem_id: int, project_path: Path, *, force: bool) -> CL
             command="erdos lean formalize",
             error_type="FormalizerError",
             message=str(e),
-            code=1,
+            code=ExitCode.ERROR,
         )
 
     return CLIOutput.ok(
