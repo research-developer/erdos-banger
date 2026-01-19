@@ -14,7 +14,9 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-*No active debt items.*
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| DEBT-015 | [Minor Style Debt](debt-015-minor-style-debt.md) | P4 | Open (opportunistic) |
 
 ## Archived Debt
 
@@ -37,7 +39,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-012 | Broad exception handling in ingest.py | P1 | Fixed | 2cb6fac |
 | DEBT-014 | Roadmap/tracking docs drift after v1.1 | P2 | Fixed | c526e10 |
 
-**Next Debt ID:** DEBT-015
+**Next Debt ID:** DEBT-016
 
 ### Archived Debt Decks
 
