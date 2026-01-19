@@ -1,0 +1,29 @@
+created_at: '2026-01-19T21:10:57.623896Z'
+entries:
+- cache_hash: null
+  cache_path: null
+  cached: false
+  error: null
+  extract_path: null
+  extracted: false
+  ingested_at: '2026-01-19T21:10:54.618732Z'
+  reference:
+    abstract: null
+    arxiv_id: math/0404188
+    authors:
+    - Benjamin Green
+    - Terence Tao
+    doi: 10.4007/annals.2008.167.481
+    fetched_at: null
+    license: null
+    oa_status: unknown
+    oa_url: null
+    semantic_scholar_id: null
+    source: crossref
+    title: The primes contain arbitrarily long arithmetic progressions
+    venue: Annals of Mathematics
+    year: 2008
+  schema_version: 1
+problem_id: 6
+schema_version: 1
+updated_at: '2026-01-19T21:11:04.178698Z'
