@@ -599,3 +599,60 @@ I added **Phase 1.5** to PROGRESS.md with the two P0 bug fixes as unchecked item
 
 All changes have been committed cleanly. The next iteration will pick up BUG-007 as the first unchecked task.
 === Mon Jan 19 09:51:38 EST 2026 ===
+Perfect! All completion criteria are met:
+
+1. ✅ All `[ ]` items in Active Queue are `[x]` (Phase 1 & 1.5 complete)
+2. ✅ All SPEC-* items have `[REVIEWED]` markers
+3. ✅ `make ci` passes
+4. ✅ `make smoke` passes
+
+## Summary
+
+I've successfully completed BUG-007 and BUG-008:
+
+**BUG-007: Missing `requests` dependency**
+- Added `requests>=2.32.5` to `pyproject.toml` dependencies
+- Created `tests/unit/test_dependencies.py` with 3 tests to verify:
+  - requests is installed and importable
+  - requests version meets SPEC-010 requirement (>=2.32.5)
+  - pyproject.toml explicitly lists requests in [project] dependencies
+
+**BUG-008: Hardcoded exit code 78**
+- Imported `ExitCode` enum in `src/erdos/core/ask.py`
+- Replaced hardcoded `78` with `ExitCode.CONFIG_ERROR` (value 10)
+- Added `test_ask_command_config_error_exit_code` integration test verifying:
+  - Exit code is 10 (CONFIG_ERROR) not 78
+  - JSON error response has correct type and code fields
+
+All quality gates pass (pre-commit, ruff, mypy, pytest with 83% coverage). Phase 1 and Phase 1.5 are now 100% complete. Phase 2+ items are deferred to future versions.
+=== Mon Jan 19 09:58:28 EST 2026 ===
+
+## Current Status Check
+
+Checked PROGRESS.md for active work:
+- Phase 1 (v1.1 Literature): ALL COMPLETE [x] + [REVIEWED]
+  - SPEC-010-A through SPEC-010-E: Complete
+  - SPEC-011: Complete
+- Phase 1.5 (v1.1 Bug Fixes): ALL COMPLETE [x]
+  - BUG-007: Complete
+  - BUG-008: Complete
+- FINAL-GATES and FINAL-SMOKE: PASS
+
+Quality Gates Status:
+✅ make ci: PASS (83% coverage)
+✅ make smoke: PASS
+
+Remaining unchecked items:
+- [ ] SPEC-012: Loop Command *(deferred to v1.2+)*
+- [ ] SPEC-013: Logging & Evaluation *(deferred to v1.2+)*
+- [ ] SPEC-014: Vector Embeddings (Phase 3: v1.3)
+- [ ] SPEC-015: Batch Operations (Phase 3: v1.3)
+- [ ] SPEC-016: Formal Conjectures (Phase 4: v1.4)
+- [ ] SPEC-017: MCP Server (Phase 4: v1.4)
+
+All unchecked items are explicitly deferred to future versions (v1.2+, v1.3, v1.4).
+
+**Interpretation:** v1.1 scope is complete. The next unchecked item (SPEC-012) is marked "deferred to v1.2+" which indicates it requires explicit human approval to proceed with v1.2 work.
+
+**Decision:** Exiting cleanly without making changes. v1.1 is complete per the Work Log and completion criteria. Future versions require planning/approval.
+=== Mon Jan 19 10:00:22 EST 2026 ===
