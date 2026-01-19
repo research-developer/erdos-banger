@@ -49,3 +49,23 @@ def in_memory_db() -> Iterator[sqlite3.Connection]:
         yield conn
     finally:
         conn.close()
+
+
+@pytest.fixture
+def arxiv_atom_fixture(fixtures_dir: Path) -> str:
+    """Load arXiv atom XML fixture for testing."""
+    return (fixtures_dir / "arxiv_responses" / "arxiv_2203.00001.xml").read_text()
+
+
+@pytest.fixture
+def arxiv_math_0404188_fixture(fixtures_dir: Path) -> str:
+    """Load arXiv atom XML fixture for math/0404188 (problem 6)."""
+    return (fixtures_dir / "arxiv_responses" / "arxiv_math_0404188.xml").read_text()
+
+
+@pytest.fixture
+def crossref_annals_fixture(fixtures_dir: Path) -> str:
+    """Load Crossref JSON fixture for 10.4007/annals.2008.167.481 (problem 6)."""
+    return (
+        fixtures_dir / "crossref_responses" / "doi_10.4007_annals.2008.167.481.json"
+    ).read_text()

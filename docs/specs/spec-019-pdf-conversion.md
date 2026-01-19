@@ -2,13 +2,16 @@
 
 > Extends the ingest pipeline to convert PDF papers to searchable text, preserving mathematical notation.
 
-**Status:** Blocked
+**Status:** Ready (v2.0+)
 **Target:** v2.0+
 **Prerequisites (SSOT):**
 - Ingest command: `docs/specs/spec-010-ingest-command.md`
 - Search index: `docs/_archive/specs/spec-006-search-index.md`
 
-**Blocker:** Docling (preferred library) pins `typer<0.20.0` (verified from `docling==2.68.0` PyPI metadata), which conflicts with our `typer>=0.21.1` baseline. This spec is deferred until the dependency conflict is resolved.
+**License Decision (2026-01-19):** GPL accepted for optional `[pdf]` extra.
+- Marker selected as primary PDF converter
+- Rationale: GPL is acceptable only as an opt-in extra; distributing builds that include it must comply with GPL obligations (core remains permissive)
+- See `docs/specs/master-vision.md` Section 7 "Licensing Summary" for policy
 
 ---
 
@@ -17,10 +20,10 @@
 ### In scope
 
 1. **PDF to text conversion** with math preservation
-2. **Docling integration** as optional dependency
-3. **Fallback converters** for when Docling unavailable
+2. **Converter integration** as optional dependency
+3. **Fallback converters** for when primary unavailable
 4. **Math notation handling** (LaTeX, MathML, Unicode)
-5. **Lightweight structure extraction** (headings/paragraphs, best-effort)
+5. **LLM-enhanced extraction** (optional, for highest accuracy)
 
 ### Out of scope
 
@@ -28,7 +31,7 @@
 - Image extraction and analysis
 - Citation graph extraction
 - Automatic reference resolution
-- High-fidelity table/figure extraction (defer until a converter supports this reliably without a large dependency surface)
+- High-fidelity table/figure extraction
 
 ### Why PDF Conversion Matters
 
@@ -36,9 +39,146 @@ While arXiv provides LaTeX source for most math papers, many older papers and no
 
 ---
 
-## 1) CLI Interface
+## 1) Converter Comparison (Updated 2026-01)
 
-### 1.1 `erdos ingest` (Extended)
+| Converter | License | Math Quality | Speed | LLM Mode | Status |
+|-----------|---------|--------------|-------|----------|--------|
+| **Marker** | GPL | Excellent | 11.3s | ✅ Yes | Primary `[pdf]` extra (opt-in GPL) |
+| **Docling** | MIT | Excellent | Medium | ✅ Yes | Typer version conflict |
+| **PyMuPDF4LLM** | AGPL | Great | 0.14s | ❌ No | License prohibited |
+| **pdfplumber** | MIT | Poor | Fast | ❌ No | Fallback only |
+
+### License Policy (SSOT)
+
+From `docs/specs/master-vision.md`: No GPL/AGPL components in core dependencies.
+
+**Decision (2026-01-19):** GPL is acceptable for optional extras. Marker is the default converter for the `[pdf]` extra.
+
+**Alternatives (if you cannot/will not use GPL):**
+1. **Wait for Docling** - MIT license, typer fix expected
+2. **Use pdfplumber** - MIT but poor math quality (fallback only)
+
+---
+
+## 2) Marker Integration (Primary)
+
+[Marker](https://github.com/datalab-to/marker) is the highest quality option for math PDF conversion.
+
+### Installation
+
+```bash
+uv sync --extra pdf
+```
+
+In `pyproject.toml`:
+
+```toml
+[project.optional-dependencies]
+pdf = [
+    "marker-pdf>=1.0.0",
+]
+```
+
+**License note:** Marker code is GPL. Model weights use AI Pubs Open Rail-M (free for research, personal use, startups <$2M revenue).
+
+### Environment Variables
+
+```bash
+# .env file - Marker LLM configuration
+
+# Option 1: Google Gemini (default for --use_llm)
+GOOGLE_API_KEY=your-gemini-key
+
+# Option 2: Claude (preferred for erdos-banger users)
+# Use via: --llm_service marker.services.claude.ClaudeService
+# (Uses existing ANTHROPIC_API_KEY)
+
+# Option 3: OpenAI
+# Use via: --llm_service marker.services.openai.OpenAIService
+# (Uses existing OPENAI_API_KEY)
+
+# Option 4: Ollama (local, no API key needed)
+# Use via: --llm_service marker.services.ollama.OllamaService
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.2
+
+# Torch device (auto-detected, but can override)
+# TORCH_DEVICE=cuda
+# TORCH_DEVICE=mps  # Apple Silicon
+```
+
+### LLM Service Options
+
+Marker supports multiple LLM backends for enhanced accuracy:
+
+| Service | Config Flag | API Key Env Var |
+|---------|-------------|-----------------|
+| **Gemini** (default) | `--llm_service marker.services.gemini.GoogleGeminiService` | `GOOGLE_API_KEY` |
+| **Claude** | `--llm_service marker.services.claude.ClaudeService` | `ANTHROPIC_API_KEY` |
+| **OpenAI** | `--llm_service marker.services.openai.OpenAIService` | `OPENAI_API_KEY` |
+| **Ollama** | `--llm_service marker.services.ollama.OllamaService` | None (local) |
+| **Vertex AI** | `--llm_service marker.services.vertex.GoogleVertexService` | `GOOGLE_APPLICATION_CREDENTIALS` |
+
+### CLI Usage
+
+```bash
+# Basic conversion
+marker_single input.pdf output.md
+
+# With LLM enhancement (highest quality for math)
+marker_single input.pdf output.md --use_llm
+
+# With Claude as LLM backend
+marker_single input.pdf output.md --use_llm \
+  --llm_service marker.services.claude.ClaudeService
+
+# Force OCR (for bad text extraction)
+marker_single input.pdf output.md --force_ocr
+
+# Maximum quality (LLM + inline math redo)
+marker_single input.pdf output.md --use_llm --redo_inline_math
+```
+
+### Python API
+
+```python
+from pathlib import Path
+from marker.converters.pdf import PdfConverter
+from marker.config.parser import ConfigParser
+
+def convert_pdf_with_marker(
+    pdf_path: Path,
+    use_llm: bool = False,
+    llm_service: str | None = None,
+) -> str:
+    """Convert PDF to markdown using Marker.
+
+    Args:
+        pdf_path: Path to input PDF
+        use_llm: Enable LLM-enhanced extraction
+        llm_service: LLM service class path (e.g., 'marker.services.claude.ClaudeService')
+
+    Returns:
+        Markdown text with preserved math notation
+    """
+    config = ConfigParser()
+
+    if use_llm:
+        config.use_llm = True
+        if llm_service:
+            config.llm_service = llm_service
+
+    converter = PdfConverter(config=config)
+    result = converter(str(pdf_path))
+
+    return result.markdown
+```
+
+---
+
+## 3) CLI Interface
+
+### 3.1 `erdos ingest` (Extended)
 
 When PDF conversion is available:
 
@@ -49,10 +189,11 @@ erdos ingest PROBLEM_ID [OPTIONS]
 **New Options**
 
 - `--pdf`: Enable PDF conversion for non-arXiv references
-- `--pdf-converter TEXT`: Converter to use (`docling`, `pdfplumber`)
+- `--pdf-converter TEXT`: Converter to use (`marker`, `pdfplumber`)
+- `--use-llm`: Enable LLM-enhanced PDF extraction
 - `--no-pdf`: Skip PDFs entirely (metadata only)
 
-### 1.2 `erdos convert` (New Command)
+### 3.2 `erdos convert` (New Command)
 
 Standalone PDF conversion for testing:
 
@@ -65,6 +206,8 @@ erdos convert PDF_PATH [OPTIONS]
 - `--output, -o PATH`: Output file (default: stdout)
 - `--format TEXT`: Output format (`markdown`, `text`, `json`)
 - `--converter TEXT`: Converter to use
+- `--use-llm`: Enable LLM enhancement
+- `--llm-service TEXT`: LLM backend (gemini, claude, openai, ollama)
 
 ### Examples
 
@@ -72,242 +215,97 @@ erdos convert PDF_PATH [OPTIONS]
 # Ingest with PDF support
 uv run erdos ingest 42 --pdf
 
-# Convert a single PDF
-uv run erdos convert paper.pdf --format markdown > paper.md
+# Convert with LLM enhancement
+uv run erdos convert paper.pdf --use-llm --llm-service claude
 
-# Test converter
-uv run erdos convert paper.pdf --converter docling
+# Maximum quality conversion
+uv run erdos convert paper.pdf --use-llm --format markdown > paper.md
+
+# Verify math is preserved
+uv run erdos convert paper.pdf | grep '\\sum'
 ```
 
 ---
 
-## 2) Converter Comparison
+## 4) Fallback Strategy
 
-| Converter | License | Math Support | Quality | Speed |
-|-----------|---------|--------------|---------|-------|
-| **Docling** | MIT | Excellent (LaTeX) | High | Medium |
-| pdfplumber | MIT | Poor | Medium | Fast |
-
-**Decision:** Docling is the preferred converter due to superior math handling. `pdfplumber` is a low-quality fallback for cases where math fidelity is not required.
-
-**License policy (SSOT):** No GPL/AGPL components included (see `docs/specs/master-vision.md`). Therefore PyMuPDF (AGPL/commercial) is **prohibited**, even as an optional fallback.
-
----
-
-## 3) Docling Integration
-
-### Installation
-
-Blocked: this install will fail until the Typer version conflict is resolved (see Blocker section above).
-
-```bash
-uv sync --extra pdf
-```
-
-In `pyproject.toml`:
-
-```toml
-[project.optional-dependencies]
-pdf = [
-    "docling>=2.68.0",
-]
-```
-
-**Note:** As of 2026-01, Docling requires `typer<0.20.0`. This spec is blocked until:
-1. Docling updates to support `typer>=0.21.1`, OR
-2. We find an alternative converter with equivalent math support
-
-### Conversion Pipeline
-
-Docling’s API is fast-moving. To keep erdos-banger stable, this spec defines an internal adapter interface that Docling (or any future converter) must implement.
-
-**Internal converter contract (SSOT for v2.0):**
-- Input: local `Path` to a PDF
-- Output: extracted `text` (markdown or plain text) plus minimal metadata
-- No network I/O inside the converter (the ingest layer owns download/caching)
-
-```python
-from __future__ import annotations
-
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Literal
-
-
-@dataclass(frozen=True)
-class PDFConversionResult:
-    converter: str
-    text: str
-    title: str | None = None
-    authors: list[str] | None = None
-
-
-class PDFConverter:
-    def convert(
-        self,
-        pdf_path: Path,
-        *,
-        output_format: Literal["markdown", "text"],
-    ) -> PDFConversionResult:
-        raise NotImplementedError
-```
-
-### Math Preservation
-
-Docling extracts math as:
-- LaTeX: `$x^2 + y^2 = z^2$`
-- Display math: `$$\sum_{i=1}^n i = \frac{n(n+1)}{2}$$`
-
-These are preserved in markdown output and indexed for search.
-
----
-
-## 4) Output Schema
-
-### Markdown Output
-
-```markdown
-# Paper Title
-
-**Authors:** Alice Smith, Bob Jones
-**DOI:** 10.1234/example
-
-## Abstract
-
-This paper proves that $p(n) \sim \frac{1}{4n\sqrt{3}} e^{\pi\sqrt{2n/3}}$.
-
-## 1. Introduction
-
-The partition function $p(n)$ counts the number of ways...
-
-## 2. Main Result
-
-**Theorem 2.1.** For all $n \geq 1$,
-$$p(n) = \frac{1}{\pi\sqrt{2}} \sum_{k=1}^{\infty} A_k(n) \sqrt{k} \frac{d}{dn}\left(\frac{\sinh(\frac{\pi}{k}\sqrt{\frac{2}{3}(n-\frac{1}{24})})}{\sqrt{n-\frac{1}{24}}}\right)$$
-```
-
-### JSON Output
-
-```json
-{
-  "schema_version": 1,
-  "command": "erdos convert",
-  "success": true,
-  "data": {
-    "source": "paper.pdf",
-    "converter": "docling",
-    "title": "Paper Title",
-    "authors": ["Alice Smith", "Bob Jones"],
-    "sections": [
-      {
-        "heading": "Abstract",
-        "level": 1,
-        "content": "This paper proves that...",
-        "math_expressions": ["$p(n) \\\\sim ..."]
-      }
-    ],
-    "math_blocks": [
-      {"type": "inline", "latex": "p(n)", "location": {"page": 1, "line": 12}},
-      {"type": "display", "latex": "\\\\sum_{i=1}^n ...", "location": {"page": 2, "line": 5}}
-    ]
-  }
-}
-```
-
----
-
-## 5) Fallback Strategy
-
-When Docling is unavailable:
+When primary converter unavailable:
 
 ### Tier 1: arXiv Source (Preferred)
 
-If paper is on arXiv, use LaTeX source instead of PDF.
+If paper is on arXiv, use LaTeX source instead of PDF. This is always higher quality.
 
-### Tier 2: pdfplumber (Fast, Low Quality)
+### Tier 2: Primary Converter (Marker or Docling)
+
+Use configured converter with optional LLM enhancement.
+
+### Tier 3: pdfplumber (Fast, Low Quality)
 
 ```python
 from pathlib import Path
-
 import pdfplumber
 
 def convert_pdfplumber(pdf_path: Path) -> str:
     with pdfplumber.open(str(pdf_path)) as pdf:
-        return "\\n".join((page.extract_text() or "") for page in pdf.pages)
+        return "\n".join((page.extract_text() or "") for page in pdf.pages)
 ```
 
 **Limitation:** Math rendered as Unicode garbage or missing.
 
-### Tier 3: Metadata Only
+### Tier 4: Metadata Only
 
 Store reference metadata without full text. Log warning.
 
 ---
 
-## 6) Implementation
+## 5) Implementation
 
-### 6.1 New Module: `src/erdos/core/pdf_converter.py`
+### 5.1 New Module: `src/erdos/core/pdf_converter.py`
 
 Responsibilities:
 
 1. Detect available converters
 2. Convert PDF to markdown/text
-3. Extract structured metadata
+3. Support LLM enhancement
 4. Handle math notation
+5. Abstract over converter differences
 
-### 6.2 Extend: `src/erdos/core/ingest.py`
+### 5.2 Extend: `src/erdos/core/ingest.py`
 
 Add PDF conversion step after download:
 
 ```python
 if reference.has_pdf and pdf_conversion_enabled:
-    text = pdf_converter.convert(pdf_path)
+    text = pdf_converter.convert(pdf_path, use_llm=use_llm)
     create_extract(reference, text)
 ```
 
 **Cache/extract layout (SSOT, v2.0):**
 - Cached PDFs: `literature/cache/pdf/{reference_id}/paper.pdf`
-- Extracted text: `literature/extracts/pdf/{reference_id}/fulltext.md` (markdown) or `fulltext.txt` (plain)
+- Extracted text: `literature/extracts/pdf/{reference_id}/fulltext.md`
 
-Where `reference_id` is a deterministic, filesystem-safe identifier derived from the reference’s primary identifier:
-- Prefer DOI when present (lowercased; replace `/` with `_`).
-- Else prefer arXiv id (as written).
-
-### 6.3 New Command: `src/erdos/commands/convert.py`
+### 5.3 New Command: `src/erdos/commands/convert.py`
 
 Standalone conversion command for testing and manual use.
 
 ---
 
-## 7) Verification: This Spec is Testable
-
-### Vertical Slice Test (when unblocked)
-
-```bash
-# Install PDF support
-# (Will fail while this spec is Blocked; run once the Typer conflict is resolved.)
-uv sync --extra pdf
-
-# Convert a text-based PDF (user-provided path)
-uv run erdos convert /path/to/paper.pdf --format markdown
-
-# Verify math is preserved
-uv run erdos convert /path/to/paper.pdf | grep '\\sum'
-```
+## 6) Verification
 
 ### Unit Tests
 
 - `tests/unit/test_pdf_converter.py`
-  - Docling conversion produces markdown
-  - Math expressions preserved
-  - Fallback to pdfplumber when Docling unavailable
+  - Converter detection works
+  - LLM service selection works
+  - Math expressions preserved (with fixture PDF)
+  - Fallback to pdfplumber when primary unavailable
 
 ### Integration Tests
 
 - `tests/integration/test_pdf_ingest.py`
   - `erdos ingest` with `--pdf` converts PDFs
-  - Extracted text appears in search index
-  - Math notation searchable
+  - Extracted text appears in correct location
+  - `--use-llm` flag works with configured service
 
 ### Acceptance Criteria
 
@@ -319,38 +317,33 @@ uv run pytest -m "not requires_lean and not requires_network"
 
 ---
 
-## 8) Known Limitations
+## 7) Known Limitations
 
-### Docling Dependency Conflict
+### License Constraints
 
-As of 2026-01-18:
-- erdos-banger requires `typer>=0.21.1`
-- Docling requires `typer<0.20.0`
-
-**Resolution paths:**
-1. Wait for Docling to update Typer dependency
-2. Fork Docling with updated dependency
-3. Use alternative converter
+- **Marker**: GPL code; allowed only as opt-in `[pdf]` extra (not a core dependency)
+- **PyMuPDF**: AGPL, prohibited by policy
+- **Docling**: MIT but typer conflict (waiting on upstream fix)
 
 ### PDF Quality Variance
 
-- Scanned PDFs: Not supported (no OCR)
+- Scanned PDFs: Not supported (no OCR in scope)
 - Complex layouts: May lose structure
 - Embedded fonts: May cause Unicode issues
 
-### Math Extraction Accuracy
+### LLM Costs
 
-PDF-to-text quality is inherently variable across papers and converters. This spec does **not** claim numeric accuracy. Quality must be evaluated using fixed fixture PDFs once the dependency blocker is resolved.
+Using `--use-llm` incurs API costs. For batch processing, consider Ollama (local, free).
 
 ---
 
 ## References
 
+- Marker (repo): `https://github.com/datalab-to/marker`
+- Marker (PyPI): `https://pypi.org/project/marker-pdf/`
 - Docling (repo): `https://github.com/docling-project/docling`
-- Docling (PyPI): `https://pypi.org/project/docling/`
 - pdfplumber (PyPI): `https://pypi.org/project/pdfplumber/`
-- PyMuPDF (license reference): `https://pypi.org/project/PyMuPDF/`
-- Master vision PDF strategy: `docs/specs/master-qualifications.md` (Section 4)
+- Master vision license policy: `docs/specs/master-vision.md`
 
 ---
 
@@ -359,3 +352,4 @@ PDF-to-text quality is inherently variable across papers and converters. This sp
 | Version | Date | Changes |
 |---------|------|---------|
 | 0.1.0 | 2026-01-18 | Initial spec (blocked) |
+| 0.2.0 | 2026-01-19 | Adopted Marker as primary `[pdf]` extra, added LLM integration details, documented GPL exception |

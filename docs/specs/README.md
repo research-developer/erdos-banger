@@ -6,21 +6,18 @@ Design specifications for the erdos-banger CLI toolkit.
 
 ```text
 v1.0 (DONE)     Foundation: CLI, data loading, search, Lean integration
-v1.1 (PENDING)  Literature: Ingest + RAG Q&A
-v1.2 (DEFERRED) Iteration: Loop command + logging
+v1.1 (DONE)     Literature: Ingest + RAG Q&A
+v1.2 (DEFERRED) Iteration: Loop + logging + OpenAlex metadata
 v1.3 (FUTURE)   Enhancement: Vectors + batch ops
 v1.4 (FUTURE)   Integration: Formal conjectures + MCP
-v2.0 (BLOCKED)  Expansion: PDF conversion
+v2.0 (READY)    Expansion: PDF conversion (Marker + LLM)
 ```
 
 ## Active Specs
 
 Specs currently in progress or awaiting implementation.
 
-| ID | Title | Status | Target | Description |
-|----|-------|--------|--------|-------------|
-| 010 | [Ingest Command](spec-010-ingest-command.md) | Pending | v1.1 | Literature ingestion: arXiv cache + Crossref metadata |
-| 011 | [Ask Command](spec-011-ask-command.md) | Pending | v1.1 | RAG prompt builder + optional LLM via subprocess |
+*None currently active.*
 
 ## Design Documents
 
@@ -42,7 +39,8 @@ Specs designed for future versions.
 | 015 | [Batch Operations](spec-015-batch-operations.md) | Deferred | v1.3 | Batch ingest/formalize with rate limiting |
 | 016 | [Formal Conjectures](spec-016-formal-conjectures.md) | Deferred | v1.4 | Import existing formalizations |
 | 017 | [MCP Server](spec-017-mcp-server.md) | Deferred | v1.4 | Model Context Protocol for AI integration |
-| 019 | [PDF Conversion](spec-019-pdf-conversion.md) | Blocked | v2.0 | PDF to text with math preservation (Docling conflict) |
+| 019 | [PDF Conversion](spec-019-pdf-conversion.md) | Ready | v2.0 | PDF to text with math preservation (Marker + LLM) |
+| 020 | [OpenAlex Integration](spec-020-openalex-integration.md) | Ready | v1.2 | Primary academic metadata source (271M+ works) |
 
 ## Archived Specs
 
@@ -50,6 +48,8 @@ Completed specs that are fully implemented.
 
 | ID | Title | Location |
 |----|-------|----------|
+| 010 | Ingest Command | [spec](spec-010-ingest-command.md) (Complete) |
+| 011 | Ask Command | [spec](spec-011-ask-command.md) (Complete) |
 | 001 | Dev Environment & Tooling | [archive](../_archive/specs/spec-001-dev-environment-tooling.md) |
 | 002 | Testing Strategy | [archive](../_archive/specs/spec-002-testing-strategy.md) |
 | 003 | Domain Models | [archive](../_archive/specs/spec-003-domain-models.md) |
@@ -61,7 +61,7 @@ Completed specs that are fully implemented.
 | 009 | Architecture Cleanup | [archive](../_archive/specs/spec-009-architecture-cleanup.md) |
 | 018 | DevX Makefile | [spec](spec-018-devx-makefile.md) (Complete) |
 
-**Next Spec ID:** SPEC-020
+**Next Spec ID:** SPEC-021
 
 ## Dependency Graph
 
@@ -77,14 +77,15 @@ v1.0 Foundation (DONE)
 ├── 008 Test Fixtures
 └── 009 Architecture Cleanup
 
-v1.1 Literature (PENDING)
+v1.1 Literature (DONE)
 ├── 010 Ingest Command ────────────┐
 └── 011 Ask Command ←──────────────┘ (uses the local search index; ingested extracts become usable once indexed)
 
-v1.2 Iteration (DEFERRED)
+v1.2 Iteration & Metadata (DEFERRED)
 ├── 012-DESIGN Loop Design ←── research (approved SSOT)
 ├── 012 Loop Command ←── 012-DESIGN + 011 Ask + 007 Lean
-└── 013 Logging ←── all commands (tracks progress)
+├── 013 Logging ←── all commands (tracks progress)
+└── 020 OpenAlex Integration ←── augments 010 Ingest
 
 v1.3 Enhancement (FUTURE)
 ├── 014 Vector Embeddings ←── 006 Search Index
@@ -94,8 +95,8 @@ v1.4 Integration (FUTURE)
 ├── 016 Formal Conjectures ←── 007 Lean
 └── 017 MCP Server ←── all CLI commands
 
-v2.0 Expansion (BLOCKED)
-└── 019 PDF Conversion ←── 010 Ingest (blocked by Docling)
+v2.0 Expansion (READY)
+└── 019 PDF Conversion ←── 010 Ingest (Marker + LLM enhancement)
 ```
 
 ## Master Documents
@@ -107,11 +108,12 @@ v2.0 Expansion (BLOCKED)
 
 1. **Draft** - Initial design, open for discussion
 2. **Pending** - Approved, awaiting implementation
-3. **Deferred** - Intentionally postponed to a later version
-4. **Active** - Implementation in progress
-5. **Complete** - Fully implemented and tested
-6. **Archived** - Completed, locked in
-7. **Blocked** - Cannot proceed due to external dependency
+3. **Ready** - Fully specified and implementable, scheduled for a later version
+4. **Deferred** - Intentionally postponed (may require more design work)
+5. **Active** - Implementation in progress
+6. **Complete** - Fully implemented and tested
+7. **Archived** - Completed, locked in
+8. **Blocked** - Cannot proceed due to external dependency
 
 ## Writing a New Spec
 

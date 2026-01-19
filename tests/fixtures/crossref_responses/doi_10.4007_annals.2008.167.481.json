@@ -1,0 +1,36 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "DOI": "10.4007/annals.2008.167.481",
+    "type": "journal-article",
+    "title": [
+      "The primes contain arbitrarily long arithmetic progressions"
+    ],
+    "author": [
+      {
+        "given": "Ben",
+        "family": "Green",
+        "sequence": "first",
+        "affiliation": []
+      },
+      {
+        "given": "Terence",
+        "family": "Tao",
+        "sequence": "additional",
+        "affiliation": []
+      }
+    ],
+    "container-title": [
+      "Annals of Mathematics"
+    ],
+    "published": {
+      "date-parts": [
+        [2008]
+      ]
+    },
+    "volume": "167",
+    "page": "481-547"
+  }
+}

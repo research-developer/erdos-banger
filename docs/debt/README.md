@@ -14,7 +14,9 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-_No active debt items._
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| DEBT-015 | [Minor Style Debt](debt-015-minor-style-debt.md) | P4 | Open (opportunistic) |
 
 ## Archived Debt
 
@@ -32,12 +34,20 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-008 | Unused fixtures / no golden tests | P2 | Fixed | 57cf739 |
 | DEBT-009 | Upstream data not integrated | P1 | Fixed | 70ae1ab,96eb024 |
 | DEBT-010 | No smoke test | P2 | Fixed | 70ae1ab,c9cbf24 |
+| DEBT-013 | Spec 010 scope planning | P1 | Fixed | 931b98b |
+| DEBT-011 | SPEC-020 status clarification | P2 | Resolved | c526e10 |
+| DEBT-012 | Broad exception handling in ingest.py | P1 | Fixed | 2cb6fac |
+| DEBT-014 | Roadmap/tracking docs drift after v1.1 | P2 | Fixed | c526e10 |
 
-**Next Debt ID:** DEBT-011
+**Next Debt ID:** DEBT-016
 
 ### Archived Debt Decks
 
 - `docs/_archive/debt/debt-001-spec-005-ssot-drift.md`
+- `docs/_archive/debt/debt-013-spec-010-scope.md`
+- `docs/_archive/debt/debt-011-spec-020-not-implemented.md`
+- `docs/_archive/debt/debt-012-broad-exception-handling.md`
+- `docs/_archive/debt/debt-014-roadmap-and-tracking-docs-drift.md`
 - `docs/_archive/debt/debt-002-spec-006-search-cli-drift.md`
 - `docs/_archive/debt/debt-003-spec-008-fixtures-incomplete.md`
 - `docs/_archive/debt/debt-004-lean-scaffolding-missing.md`

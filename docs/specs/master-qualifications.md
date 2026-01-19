@@ -36,7 +36,7 @@ The master draft describes many capabilities. Here's what we're **actually build
 | Component | Why Deferred |
 |-----------|--------------|
 | Vector embeddings | BM25 is surprisingly good for technical text; adds complexity |
-| PDF conversion (Docling) | Heavy dependency, edge case hell, arXiv HTML covers most math |
+| PDF conversion (deferred to v2.0+) | Heavy dependency + edge case hell; use arXiv HTML/LaTeX in v1; optional `[pdf]` extra (Marker) is v2.0+ |
 | MCP server | CLI + Claude skills sufficient for now |
 | `erdos loop` automation | Need manual workflow validated first |
 | Postgres/pgvector | SQLite handles our scale |
@@ -92,7 +92,7 @@ The master draft has too many "possibly X or Y" statements. Here are hard decisi
 | Database | **SQLite with FTS5** | Not Postgres. Not until we have 10k+ documents |
 | Vector store | **None for v1** | BM25 only. Add vectors in v1.2 if retrieval quality demands it |
 | Embedding model | **Skip for v1** | If we add later: SPECTER2 (scientific text) over MiniLM |
-| PDF conversion | **Skip for v1** | arXiv HTML + LaTeX source only. `pdf` extra reserved; Docling currently conflicts with our Typer baseline |
+| PDF conversion | **Skip for v1** | arXiv HTML + LaTeX source only. `pdf` extra reserved for v2.0+ (Marker, see Spec 019) |
 | Lean version | **leanprover/lean4:v4.12.0** | Pin exact version in `lean-toolchain` |
 | mathlib4 | **Pin to tag matching Lean** | Use `mathlib4` tag matching `lean-toolchain` (e.g. `v4.12.0`) |
 | LLM integration | **Claude Code environment** | Not OpenAI API for v1. Claude skills + shell commands |
@@ -100,25 +100,32 @@ The master draft has too many "possibly X or Y" statements. Here are hard decisi
 
 ---
 
-## 4) Docling Risk Mitigation
+## 4) PDF Conversion Strategy
 
-The feedback correctly identifies Docling as risky:
-- Heavy dependency (PyTorch, multiple models)
-- PDF conversion is an edge case rabbit hole
-- Blocks progress on core functionality
-
-**Decision:** PDF conversion is out of scope for v1. The `pdf` extra is reserved for future work.
+PDF conversion is out of scope for v1. The `[pdf]` extra is reserved for v2.0+.
 
 ### Content Acquisition Strategy (Ordered by Priority)
 
 1. **arXiv HTML** (post-Dec 2023 papers) - Clean, structured, math preserved
 2. **arXiv source tarball** - LaTeX → text conversion is tractable
-3. **Abstract only** (via Crossref/OpenAlex) - For non-arXiv papers
+3. **Abstract only** (via OpenAlex/Crossref) - For non-arXiv papers
 4. **Metadata only** - For paywalled content
 
 If a paper isn't on arXiv and isn't open access, we record metadata and move on. We don't try to solve PDF extraction in v1.
 
-**Install path:** `pip install erdos-banger[pdf]` is reserved for future PDF tooling. As of 2026-01, Docling pins `typer<0.20.0`, which conflicts with our `typer>=0.21.1` baseline, so v1 ships without a PDF extra.
+### v2.0+ PDF Tooling Decision (Updated 2026-01-19)
+
+**Selected:** Marker (GPL) - best quality for math PDF with LLM enhancement
+
+**Rationale for GPL exception:**
+- Marker is the only tool with both MIT-quality AND excellent math support
+- Docling (MIT) is blocked by typer version conflict
+- PyMuPDF (AGPL) has stricter copyleft requirements
+- GPL is acceptable only as an opt-in extra; distributing builds that include it must comply with GPL obligations (core remains permissive)
+
+**Install path:** `uv sync --extra pdf` will install Marker when Spec 019 is implemented.
+
+See `docs/specs/spec-019-pdf-conversion.md` for full details.
 
 ---
 
@@ -292,7 +299,7 @@ Given scope reduction:
 | Lean integration | 2 days | `lean init`/`check`/`formalize` working |
 | Basic search | 1 day | SQLite FTS, `search` command |
 | **V1.0 complete** | **~5 days** | Core workflow functional |
-| Ingestion (arXiv) | 2-3 days | `ingest` with arXiv HTML/source |
+| Ingestion (arXiv + Crossref) | 2-3 days | `ingest` with arXiv source tarball + best-effort extract; Crossref metadata for DOI |
 | Full-text search | 1 day | Chunked extracts in index |
 | `erdos ask` | 1-2 days | Basic RAG with Claude |
 | **V1.1 complete** | **~10 days total** | Research-usable tool |
@@ -315,7 +322,7 @@ Before coding starts:
 
 | Master Draft Says | Qualification Says |
 |-------------------|-------------------|
-| "Possibly Docling or Nougat or GROBID" | Skip PDF in v1; Docling is a future optional extra (currently incompatible with our Typer baseline) |
+| "Possibly Docling or Nougat or GROBID" | Skip PDF in v1; PDF conversion is deferred to v2.0+; optional `[pdf]` extra uses Marker (GPL) |
 | "Maybe SQLite or Postgres or Qdrant" | SQLite only, period |
 | "Perhaps sentence-transformers" | No vectors in v1, BM25 only |
 | Vertical slice includes ingestion + LLM | True vertical: show → lean init → formalize → check |

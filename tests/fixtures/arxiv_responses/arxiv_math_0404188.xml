@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <entry>
+    <id>http://arxiv.org/abs/math/0404188v1</id>
+    <title>The primes contain arbitrarily long arithmetic progressions</title>
+    <summary>We prove that there are arbitrarily long arithmetic progressions of primes.</summary>
+    <author>
+      <name>Ben Green</name>
+    </author>
+    <author>
+      <name>Terence Tao</name>
+    </author>
+    <published>2004-04-13T00:00:00Z</published>
+    <link href="http://arxiv.org/abs/math/0404188v1" rel="alternate" type="text/html"/>
+    <link href="http://arxiv.org/pdf/math/0404188v1" title="pdf" rel="related" type="application/pdf"/>
+  </entry>
+</feed>

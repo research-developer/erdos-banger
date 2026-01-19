@@ -235,8 +235,10 @@ Dependency manifests:
 ### No-Reward-Hack Rules
 
 - Never delete/disable tests to make CI green.
-- Never “mock the unit under test”; mock only boundaries (network/subprocess/time).
+- Never "mock the unit under test"; mock only boundaries (network/subprocess/time).
 - Never lower coverage thresholds, relax lint rules, or bypass mypy strictness.
+- **Never write documentation ABOUT work as a substitute for DOING work.** If a task is too big, break it into subtasks in PROGRESS.md AND start the first subtask in the same iteration. Escalation documents (debt docs) are only valid if you've genuinely hit a blocker (missing deps, spec contradiction, repeated gate failures) - not because "it's big."
+- **"Too big" is not a blocker.** Break it down and keep working. The only valid blockers are: missing dependencies, spec contradictions, and quality gate failures after 3 attempts.
 
 ### Push Strategy (Remote Backup)
 

@@ -7,7 +7,7 @@ import typer
 from rich.console import Console
 
 from erdos import __version__
-from erdos.commands import lean, list_cmd, refs, search, show
+from erdos.commands import ask, ingest, lean, list_cmd, refs, search, show
 
 
 def _configure_logging(level: str) -> None:
@@ -97,6 +97,8 @@ app.add_typer(show.app, name="show")
 app.add_typer(refs.app, name="refs")
 app.add_typer(search.app, name="search")
 app.add_typer(lean.app, name="lean")
+app.add_typer(ingest.app, name="ingest")
+app.add_typer(ask.app, name="ask")
 
 
 if __name__ == "__main__":

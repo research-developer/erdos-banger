@@ -1,8 +1,8 @@
 # erdos-banger - Ralph Wiggum Progress Tracker
 
 **Last Updated:** 2026-01-19
-**Status:** Active (Ready to Start)
-**Branch:** ralph-wiggum-v1.1
+**Status:** Active (v1.1 DONE; v1.2+ queued)
+**Branch:** ralph-wiggum-spec-010
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
 ---
@@ -28,8 +28,21 @@
 
 ### Phase 1: v1.1 Literature (Critical Path)
 
-- [ ] **SPEC-010**: Ingest Command → `docs/specs/spec-010-ingest-command.md`
-- [ ] **SPEC-011**: Ask Command → `docs/specs/spec-011-ask-command.md`
+**Note:** SPEC-010 has been broken down into atomic subtasks per DEBT-013 (`docs/_archive/debt/debt-013-spec-010-scope.md`)
+
+- [x] **SPEC-010-A** [REVIEWED]: Literature path conventions → `literature_paths.py` + tests
+- [x] **SPEC-010-B** [REVIEWED]: arXiv client → `arxiv_client.py` + unit tests + fixtures
+- [x] **SPEC-010-C** [REVIEWED]: Crossref client → `crossref_client.py` + unit tests + fixtures
+- [x] **SPEC-010-D** [REVIEWED]: Ingest core logic → `ingest.py` + unit tests
+- [x] **SPEC-010-E** [REVIEWED]: Ingest command → `commands/ingest.py` + integration tests
+- [x] **SPEC-011** [REVIEWED]: Ask Command → `docs/specs/spec-011-ask-command.md`
+
+### Phase 1.5: v1.1 Bug Fixes (Critical)
+
+**Critical bugs found during v1.1 review - must fix before v1.1 release:**
+
+- [x] **BUG-007**: Add missing `requests` dependency to pyproject.toml → `docs/bugs/bug-007-missing-requests-dependency.md`
+- [x] **BUG-008**: Fix hardcoded exit code 78 in ask.py → `docs/bugs/bug-008-hardcoded-exit-code-78.md`
 
 ### Phase 2: v1.2 Iteration (Deferred but Ready)
 
@@ -49,8 +62,8 @@
 
 ### Phase 5: Final Verification
 
-- [ ] **FINAL-GATES**: All quality gates pass (`make ci`)
-- [ ] **FINAL-SMOKE**: Smoke test passes (`make smoke`)
+- [x] **FINAL-GATES**: All quality gates pass (`make ci`)
+- [x] **FINAL-SMOKE**: Smoke test passes (`make smoke`)
 
 ---
 
@@ -59,7 +72,7 @@
 | Spec | Status | Reason |
 |------|--------|--------|
 | SPEC-018 | Complete | DevX Makefile already implemented |
-| SPEC-019 | Blocked | Docling typer conflict (v2.0+) |
+| SPEC-019 | Deferred | PDF conversion (Marker, v2.0+) |
 
 ---
 
@@ -77,7 +90,11 @@
 
 ```
 v1.1 Literature (START HERE)
-├── SPEC-010 Ingest Command
+├── SPEC-010-A Literature paths
+├── SPEC-010-B arXiv client
+├── SPEC-010-C Crossref client
+├── SPEC-010-D Ingest core logic
+├── SPEC-010-E Ingest command
 └── SPEC-011 Ask Command ← uses the local search index (ingested extracts become usable once indexed)
 
 v1.2 Iteration
@@ -100,6 +117,24 @@ v1.4 Integration
 
 - 2026-01-18: Initial setup - created PROGRESS.md, PROMPT.md, protocol.md
 - 2026-01-18: Created SPEC-012-DESIGN with D1-D8 design decisions (vaporware → concrete)
+- 2026-01-19: SPEC-010 attempted but exceeds single-iteration scope (>10 files, ~800-1000 LoC)
+- 2026-01-19: Created DEBT-013 (`docs/_archive/debt/debt-013-spec-010-scope.md`) documenting scope issue and recommending task breakdown
+- 2026-01-19: Updated PROGRESS.md to replace SPEC-010 with atomic subtasks (SPEC-010-A through SPEC-010-E)
+- 2026-01-19: SPEC-010-A completed - created `src/erdos/core/literature_paths.py` with path conventions + `tests/unit/test_literature_paths.py` (10 tests, 100% coverage)
+- 2026-01-19: SPEC-010-A reviewed and verified - all acceptance criteria met, 100% test coverage, all quality gates pass
+- 2026-01-19: SPEC-010-B completed - created `src/erdos/core/arxiv_client.py` with `parse_arxiv_atom()`, `fetch_arxiv_atom()`, `extract_arxiv_text()` + `tests/unit/test_arxiv_client.py` (10 tests) + `tests/unit/test_arxiv_extract.py` (6 tests), added types-requests to dev dependencies, all quality gates pass
+- 2026-01-19: SPEC-010-B reviewed and verified - all acceptance criteria met, 89% coverage for arxiv_client.py, all quality gates pass, no TODO/half-measures
+- 2026-01-19: SPEC-010-C completed - created `src/erdos/core/crossref_client.py` with `parse_crossref_work()`, `fetch_crossref_work()` + `tests/unit/test_crossref_client.py` (9 tests), 88% coverage for crossref_client.py, all quality gates pass
+- 2026-01-19: SPEC-010-C reviewed and verified - all acceptance criteria met, two-layer API (fetch+parse) for network-free testing, proper Crossref polite pool compliance, 88% coverage, all quality gates pass
+- 2026-01-19: SPEC-010-D completed - created `src/erdos/core/ingest.py` with `ingest_problem_references()` orchestrating problem loading, metadata fetching (arXiv/Crossref), manifest creation/updates + `tests/unit/test_ingest_service.py` (5 comprehensive tests covering DOI-only, arXiv-only, merged DOI+arXiv, idempotence, flags), 71% coverage for ingest.py, 84% overall, all quality gates pass
+- 2026-01-19: SPEC-010-D reviewed and verified - all acceptance criteria met, core orchestration logic complete with proper reference merging/deduplication/idempotence, atomic manifest writes, 84% overall coverage (exceeds 80% requirement), all quality gates pass, no TODO/half-measures
+- 2026-01-19: SPEC-010-E completed - created `src/erdos/commands/ingest.py` with full CLI integration (arguments, options, --json support, human output), registered in `src/erdos/cli.py`, added `tests/integration/test_cli_ingest.py` (5 tests), fixed manifest deserialization bug (TypeAdapter with strict=False for enum/datetime conversion), all quality gates pass, 84% overall coverage
+- 2026-01-19: SPEC-010-E reviewed and verified - all acceptance criteria met, CLI properly handles all options (--force, --no-download, --no-network, --timeout, --delay, --mailto), --json flag correctly routes output, integration tests cover all key scenarios (JSON output, --no-download, idempotence, NOT_FOUND error, human output), 84% overall coverage, all quality gates pass, no TODO/half-measures
+- 2026-01-19: SPEC-011 completed - created `src/erdos/core/ask.py` with `build_prompt()`, `perform_retrieval()`, `execute_llm()`, `ask_question()` + `src/erdos/commands/ask.py` CLI integration + registered in `src/erdos/cli.py`, added `tests/unit/test_ask_prompt.py` (9 tests), `tests/unit/test_ask_retrieval.py` (5 tests), `tests/unit/test_ask_llm.py` (7 tests), `tests/integration/test_cli_ask.py` (8 tests), fixed FTS5 query syntax for special characters, 83% overall coverage, all quality gates pass
+- 2026-01-19: SPEC-011 reviewed and verified - all acceptance criteria met, deterministic prompt builder matches spec SSOT template, retrieval uses SearchIndex.search() with problem_id filter, LLM execution with shell=False security, proper exit codes (NOT_FOUND/ERROR/CONFIG_ERROR/USAGE_ERROR), FTS5 query escaping implemented, comprehensive test coverage (21 unit + 8 integration tests), 83% overall coverage, all quality gates pass, no TODO/half-measures
+- 2026-01-19: v1.1 Literature phase complete - all Phase 1 specs (SPEC-010-A through SPEC-011) implemented and reviewed, FINAL-GATES and FINAL-SMOKE verified passing, 83% overall coverage, ready for v1.2 planning
+- 2026-01-19: Post-v1.1 review - discovered two P0 bugs (BUG-007: missing requests dependency, BUG-008: hardcoded exit code 78), documented in docs/bugs/, added to PROGRESS.md as Phase 1.5, also documented two P1 debt items (DEBT-011: SPEC-020 status mismatch, DEBT-012: broad exception handling), archived DEBT-001
+- 2026-01-19: BUG-007 and BUG-008 fixed - added `requests>=2.32.5` to pyproject.toml dependencies (BUG-007), replaced hardcoded exit code 78 with ExitCode.CONFIG_ERROR in ask.py (BUG-008), added `tests/unit/test_dependencies.py` (3 tests verifying requests dependency), added test_ask_command_config_error_exit_code to test_cli_ask.py (verifies exit code 10 not 78), all quality gates pass, 83% coverage
 
 ---
 

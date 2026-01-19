@@ -395,18 +395,21 @@ Ingest (fetch) reference data for a problem. This is a key step involving extern
 - No PDF conversion (deferred; see Spec 019)
 
 **Behavior:** Looks up each reference associated with the problem:
-- If a reference has a DOI, use Crossref API to get full citation
-- If it has an arXiv ID, use arXiv API to get metadata (title, authors, etc.)
-- If references are only described textually, attempt to find them via search (Crossref title search, or OpenAlex by title & author)
-- Use Unpaywall to find open access links (Unpaywall recommends including an email and allows ~100k/day)
+- If a reference has a DOI, use the Crossref API to fetch bibliographic metadata (metadata-only in v1.1).
+- If it has an arXiv ID, use the arXiv export API to fetch metadata and (unless downloads are disabled) cache the arXiv source tarball and write a best-effort plain-text extract.
+- If it has neither, skip it with a structured "no identifier" reason (do not attempt resolution/search in v1.1).
 
 For each reference:
 - Create a ReferenceRecord with metadata
-- If an open-access PDF or arXiv source is available, download it to `literature/cache/` (only if legally allowed: e.g. if Unpaywall says there is an open repository PDF, or arXiv PDF which is CC BY). For arXiv: since Dec 2023, arXiv provides HTML for TeX submissions, which we prefer to download (or the TeX source via arXiv API's e-print if needed). We avoid downloading publisher PDFs unless clearly open (e.g. Creative Commons).
-- If PDF is downloaded, run a conversion pipeline: first preference is arXiv HTML or LaTeX. If not arXiv, use Docling or similar to convert PDF to Markdown/HTML, preserving math via MathML or LaTeX. (Deferred to Spec 019; Docling is not included in v1 due to a Typer version conflict.)
-- Save a manifest file `literature/manifests/<id>.yaml` with all reference entries and a summary of their status. Include checksums (e.g. MD5 of PDF/TeX) for reproducibility.
+- For arXiv references, cache the source tarball under `literature/cache/` and write extracts under `literature/extracts/` (both git-ignored).
+- Save a manifest file `literature/manifests/<id>.yaml` with reference entries and checksums for reproducibility.
 
-**Output:** In human mode, print a summary: e.g. "Fetched 3 references. 2 PDFs downloaded (1 via arXiv, 1 via Unpaywall), 1 metadata only." JSON output would detail each reference and what happened.
+**Future extensions (explicitly not in v1.1):**
+- OpenAlex as a primary metadata source (Spec 020, v1.2+)
+- Open-access link discovery (e.g., Unpaywall) (future spec)
+- PDF conversion for non-arXiv references via Marker `[pdf]` extra (Spec 019, v2.0+)
+
+**Output:** In human mode, print a summary: e.g. "Fetched 3 references. 1 arXiv source cached + extract written, 2 metadata-only." JSON output would detail each reference and what happened.
 
 **Idempotence:** Running `erdos ingest` again should skip already ingested references unless a `--force` is given to refresh.
 
@@ -416,9 +419,9 @@ For each reference:
 
 **Example:** `erdos ingest 42 --json` might output for each reference: metadata plus local_path if downloaded.
 
-#### 5. `erdos index build`
+#### 5. Index building (`erdos search --build-index`)
 
-Build or update the search index.
+Build or update the search index. In v1, this is exposed via `erdos search --build-index` rather than a dedicated `erdos index build` command.
 
 **Behavior:**
 - Ensure the SQLite (or Postgres) DB is set up (if not, create schema)
@@ -430,7 +433,7 @@ Build or update the search index.
 
 **Exit codes:** 0 on success, nonzero on failure.
 
-**Example:** `erdos index build` (no args needed, uses config for which model etc.).
+**Example:** `erdos search --build-index "prime number"` (builds if needed, then queries).
 
 #### 6. `erdos search "<query>"`
 
@@ -561,10 +564,11 @@ erdos ingest X
 ```
 
 Triggers:
-- Crossref/OpenAlex query for each reference
-- ArXiv PDF/HTML download if available
-- Conversion via optional PDF tooling (Docling or similar)
-- Save manifest file
+- Crossref metadata fetch for DOI references
+- arXiv metadata fetch + source tarball caching for arXiv references
+- Best-effort plain-text extract from the largest `.tex` file (for future indexing)
+- Save a portable manifest file (relative paths, deterministic hashes)
+- (v2.0+) Optional PDF conversion via Marker (Spec 019)
 
 **Verification:** `literature/manifests/X.yaml` exists with proper structure.
 
@@ -573,10 +577,10 @@ Triggers:
 #### 4. Build Index
 
 ```bash
-erdos index build
+erdos search --build-index "keyword"
 ```
 
-**Verification:** Quick search query returns snippets from ingested content.
+**Verification:** Search returns snippets from problem statements/notes. Ingested paper extracts are cached for future indexing and will not appear in search results until a later indexing spec adds reference chunk indexing.
 
 **Milestone:** Functional retrieval.
 
@@ -616,7 +620,7 @@ Verify log file created with:
 ### Vertical Slice One-Liner
 
 ```bash
-erdos ingest 295 && erdos index build && erdos ask 295 "What's the status?" && erdos lean formalize 295 && erdos lean check Erdos/Problem295.lean
+erdos ingest 295 && erdos search --build-index "keyword" && erdos ask 295 "What's the status?" && erdos lean formalize 295 && erdos lean check Erdos/Problem295.lean
 ```
 
 ---
@@ -699,19 +703,31 @@ Use Typer (built on Click) with Rich for formatting.
 
 ### Document Conversion
 
-**Docling:** MIT license, handles math and code. Candidate optional dependency (not included in v1 due to a Typer version conflict).
+**Primary (v2.0+):** Marker (GPL) - best quality for math PDF conversion with LLM enhancement.
+- Supports multiple LLM backends: Gemini, Claude, OpenAI, Ollama
+- See Spec 019 for configuration details
 
 **Alternatives considered:**
-- GROBID (AGPL - problematic license)
-- Nougat (non-commercial license concerns)
+- **Docling** (MIT) - blocked by Typer version conflict
+- **GROBID** (AGPL) - problematic viral license
+- **Nougat** - non-commercial license concerns
+- **PyMuPDF** (AGPL) - prohibited by license policy
 
 ### Metadata Sources
 
-- Crossref REST API (open usage with limits)
-- OpenAlex (100k/day)
-- Unpaywall (100k/day with email)
-- CORE
-- zbMATH
+**Primary (v1.2+):** OpenAlex - 271M+ works, 100k requests/day, no auth required
+- Aggregates: Crossref + MAG + arXiv + PubMed + institutional repos
+- See Spec 020 for integration details
+
+**Secondary:**
+- arXiv API (for LaTeX source, HTML) - 1 req/3s rate limit
+- Crossref REST API (fallback for DOI metadata)
+
+**Future/Optional:**
+- Unpaywall (100k/day with email) - open access PDF locations
+- Semantic Scholar - citation context
+- CORE - institutional repositories
+- zbMATH - math-specific metadata
 
 ### Lean Tools
 
@@ -721,10 +737,17 @@ Use Typer (built on Click) with Rich for formatting.
 
 ### Licensing Summary
 
-- Python libs: permissive (MIT/BSD/Apache)
-- Docling (future optional): MIT
-- Lean and mathlib: Apache2
-- No GPL components included
+- **Core dependencies:** permissive only (MIT/BSD/Apache)
+- **Optional extras:** may include GPL if no permissive alternative exists
+  - `[pdf]` extra: Marker (GPL) - best quality for math PDF conversion
+  - Rationale: GPL is acceptable only as an opt-in extra; distributing builds that include it must comply with GPL obligations (core remains permissive)
+- **Lean and mathlib:** Apache 2.0
+- **Data sources:** OpenAlex (CC0), arXiv (various), Crossref (open metadata)
+
+**Policy:** We prefer MIT/Apache for everything. GPL is acceptable ONLY for optional extras where:
+1. No permissive alternative exists with equivalent quality
+2. The feature is not required for core functionality
+3. Users must explicitly opt-in via `uv sync --extra <name>`
 
 ---
 
@@ -940,7 +963,7 @@ erdos search "keyword"
 
 ### 6. Download & Conversion Pipeline (#6)
 
-**Description:** Implement PDF/HTML download and conversion (Docling or similar; deferred until PDF tooling is added to the dependency set).
+**Description:** Implement arXiv source download + best-effort extraction (v1.1). PDF conversion is deferred to Spec 019 (Marker, v2.0+).
 
 **Acceptance:** On sample arXiv paper, produces extracted text file.
 
@@ -954,7 +977,7 @@ erdos search "keyword"
 
 **Description:** Define SQLite tables with FTS5 virtual table.
 
-**Acceptance:** After ingesting, `erdos index build` creates SQLite file.
+**Acceptance:** After ingesting, `erdos search --build-index "<query>"` creates/updates the SQLite index file.
 
 ### 9. Vector Embeddings and Hybrid Search (#9)
 

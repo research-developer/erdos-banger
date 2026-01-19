@@ -91,20 +91,30 @@ If yes, **THIS ITERATION IS A REVIEW ITERATION**:
 
 **DO NOT** attempt multiple tasks. One task per iteration.
 
-### Stop Conditions (Escalate, Don’t Thrash)
+### Stop Conditions (Escalate, Don't Thrash)
 
 If you hit any of the following, STOP and request human input (do not keep looping blindly):
 
 1. A spec is ambiguous, contradictory, or references missing SSOT.
 2. A tool/dep is missing or incompatible (e.g., `uv sync --frozen` cannot succeed).
 3. Quality gates fail after 3 fix attempts for the same root cause.
-4. A change would touch >10 files or exceed ~500 LoC for a single task.
-5. The task would require network access but the spec requires offline determinism.
+4. The task would require network access but the spec requires offline determinism.
 
 In these cases:
 - write a short `docs/bugs/bug-XXX-*.md` or `docs/debt/debt-XXX-*.md` with reproduced evidence
 - add a new unchecked item to `PROGRESS.md`
 - commit and exit
+
+### ANTI-REWARD-HACK: "Too Big" Is NOT a Blocker
+
+**CRITICAL:** If a task would touch >10 files or exceed ~500 LoC:
+1. Break it into subtasks in PROGRESS.md (e.g., SPEC-010-A, SPEC-010-B, etc.)
+2. **IMMEDIATELY start the first subtask in the SAME iteration**
+3. Do NOT write a debt doc and exit - that is a reward hack
+
+**Writing documentation ABOUT work is NOT the same as DOING work.**
+Escalation docs are only valid for: missing deps, spec contradictions, repeated gate failures.
+"It's big" is never a valid reason to stop working.
 
 ---
 
