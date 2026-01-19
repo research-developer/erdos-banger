@@ -10,7 +10,7 @@
 
 **License Decision (2026-01-19):** GPL accepted for optional `[pdf]` extra.
 - Marker selected as primary PDF converter
-- Rationale: erdos-banger is open source; GPL distribution requirements are satisfied
+- Rationale: GPL is acceptable only as an opt-in extra; distributing builds that include it must comply with GPL obligations (core remains permissive)
 - See `docs/specs/master-vision.md` Section 7 "Licensing Summary" for policy
 
 ---
@@ -43,7 +43,7 @@ While arXiv provides LaTeX source for most math papers, many older papers and no
 
 | Converter | License | Math Quality | Speed | LLM Mode | Status |
 |-----------|---------|--------------|-------|----------|--------|
-| **Marker** | GPL | Excellent | 11.3s | ✅ Yes | Best quality, license conflict |
+| **Marker** | GPL | Excellent | 11.3s | ✅ Yes | Primary `[pdf]` extra (opt-in GPL) |
 | **Docling** | MIT | Excellent | Medium | ✅ Yes | Typer version conflict |
 | **PyMuPDF4LLM** | AGPL | Great | 0.14s | ❌ No | License prohibited |
 | **pdfplumber** | MIT | Poor | Fast | ❌ No | Fallback only |
@@ -52,14 +52,15 @@ While arXiv provides LaTeX source for most math papers, many older papers and no
 
 From `docs/specs/master-vision.md`: No GPL/AGPL components in core dependencies.
 
-**Options for v2.0:**
+**Decision (2026-01-19):** GPL is acceptable for optional extras. Marker is the default converter for the `[pdf]` extra.
+
+**Alternatives (if you cannot/will not use GPL):**
 1. **Wait for Docling** - MIT license, typer fix expected
-2. **Relax for optional extras** - Allow GPL in `[pdf]` extra only
-3. **Use pdfplumber** - MIT but poor math quality
+2. **Use pdfplumber** - MIT but poor math quality (fallback only)
 
 ---
 
-## 2) Marker Integration (If License Relaxed)
+## 2) Marker Integration (Primary)
 
 [Marker](https://github.com/datalab-to/marker) is the highest quality option for math PDF conversion.
 
@@ -320,7 +321,7 @@ uv run pytest -m "not requires_lean and not requires_network"
 
 ### License Constraints
 
-- **Marker**: GPL code, requires license decision for `[pdf]` extra
+- **Marker**: GPL code; allowed only as opt-in `[pdf]` extra (not a core dependency)
 - **PyMuPDF**: AGPL, prohibited by policy
 - **Docling**: MIT but typer conflict (waiting on upstream fix)
 
@@ -351,4 +352,4 @@ Using `--use-llm` incurs API costs. For batch processing, consider Ollama (local
 | Version | Date | Changes |
 |---------|------|---------|
 | 0.1.0 | 2026-01-18 | Initial spec (blocked) |
-| 0.2.0 | 2026-01-19 | Added Marker as primary option, LLM integration details, license decision required |
+| 0.2.0 | 2026-01-19 | Adopted Marker as primary `[pdf]` extra, added LLM integration details, documented GPL exception |

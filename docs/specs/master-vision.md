@@ -740,7 +740,7 @@ Use Typer (built on Click) with Rich for formatting.
 - **Core dependencies:** permissive only (MIT/BSD/Apache)
 - **Optional extras:** may include GPL if no permissive alternative exists
   - `[pdf]` extra: Marker (GPL) - best quality for math PDF conversion
-  - Rationale: GPL only affects distribution; erdos-banger is already open source
+  - Rationale: GPL is acceptable only as an opt-in extra; distributing builds that include it must comply with GPL obligations (core remains permissive)
 - **Lean and mathlib:** Apache 2.0
 - **Data sources:** OpenAlex (CC0), arXiv (various), Crossref (open metadata)
 

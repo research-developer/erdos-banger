@@ -14,6 +14,7 @@ from pathlib import Path
 
 import requests
 import yaml
+from pydantic import TypeAdapter
 
 from erdos.core.arxiv_client import (
     extract_arxiv_text,
@@ -91,7 +92,9 @@ def ingest_problem_references(  # noqa: PLR0912, PLR0915
         try:
             with manifest_path.open() as f:
                 manifest_data = yaml.safe_load(f)
-            existing_manifest = ProblemManifest.model_validate(manifest_data)
+            # Use TypeAdapter with strict=False to allow string->enum/datetime conversion
+            adapter = TypeAdapter(ProblemManifest)
+            existing_manifest = adapter.validate_python(manifest_data, strict=False)
         except Exception:  # noqa: S110
             # If manifest is corrupted, proceed with fresh ingestion
             pass
@@ -117,8 +120,8 @@ def ingest_problem_references(  # noqa: PLR0912, PLR0915
                     existing_entry = entry
                     break
 
-        if existing_entry and not no_network:
-            # Reuse existing entry
+        if existing_entry:
+            # Reuse existing entry (idempotence)
             entries.append(existing_entry)
             continue
 

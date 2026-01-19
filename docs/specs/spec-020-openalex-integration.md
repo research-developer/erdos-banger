@@ -80,7 +80,7 @@ OPENALEX_EMAIL=your-email@example.com
 
 ## 3) Python Client Options
 
-### Option A: PyAlex (Recommended)
+### Option A: PyAlex (Optional convenience layer)
 
 [PyAlex](https://github.com/J535D165/pyalex) is a lightweight Python wrapper for OpenAlex.
 
@@ -120,20 +120,21 @@ recent_math = (
 )
 ```
 
-### Option B: Direct HTTP (No Dependency)
+### Option B: Direct HTTP (SSOT; requests + responses for tests)
 
 ```python
-import httpx
+import requests
 from typing import Any
 
 class OpenAlexClient:
-    """Minimal OpenAlex client using httpx."""
+    """Minimal OpenAlex client using requests."""
 
     BASE_URL = "https://api.openalex.org"
 
     def __init__(self, email: str | None = None):
         self.email = email
-        self.client = httpx.Client(timeout=30.0)
+        self.timeout = 30.0
+        self.session = requests.Session()
 
     def _params(self, **kwargs: Any) -> dict[str, Any]:
         params = dict(kwargs)
@@ -144,16 +145,15 @@ class OpenAlexClient:
     def get_work_by_doi(self, doi: str) -> dict[str, Any]:
         """Fetch work by DOI."""
         url = f"{self.BASE_URL}/works/https://doi.org/{doi}"
-        response = self.client.get(url, params=self._params())
+        response = self.session.get(url, params=self._params(), timeout=self.timeout)
         response.raise_for_status()
         return response.json()
 
     def get_work_by_arxiv(self, arxiv_id: str) -> dict[str, Any]:
         """Fetch work by arXiv ID."""
-        # OpenAlex indexes arXiv via DOI
         url = f"{self.BASE_URL}/works"
         params = self._params(filter=f"ids.arxiv:{arxiv_id}")
-        response = self.client.get(url, params=params)
+        response = self.session.get(url, params=params, timeout=self.timeout)
         response.raise_for_status()
         results = response.json().get("results", [])
         if not results:
@@ -170,7 +170,7 @@ class OpenAlexClient:
         """Search works by title/abstract."""
         url = f"{self.BASE_URL}/works"
         params = self._params(search=query, per_page=per_page, page=page)
-        response = self.client.get(url, params=params)
+        response = self.session.get(url, params=params, timeout=self.timeout)
         response.raise_for_status()
         return response.json().get("results", [])
 ```
@@ -269,11 +269,11 @@ erdos ingest PROBLEM_ID
     │   │
     │   ├─► If arXiv ID present:
     │   │   └─► Fetch arXiv source tarball (for LaTeX)
-    │   │   └─► Fetch ar5iv HTML (for clean text)
+    │   │   └─► (Optional) Fetch ar5iv HTML (for clean text)
     │   │
-    │   └─► Store in literature/manifests/
+    │   └─► Write/merge manifest + extracts under literature/ (Spec 010)
     │
-    └─► Update search index
+    └─► Indexing remains explicit (e.g., `erdos search --build-index` / Spec 006)
 ```
 
 ### Why Keep arXiv API?
@@ -340,7 +340,7 @@ import os
 from dataclasses import dataclass
 from typing import Any
 
-import httpx
+import requests
 
 from erdos.core.models import ReferenceRecord
 
@@ -367,7 +367,7 @@ class OpenAlexClient:
 
     def __init__(self, config: OpenAlexConfig | None = None):
         self.config = config or OpenAlexConfig.from_env()
-        self.client = httpx.Client(timeout=self.config.timeout)
+        self.session = requests.Session()
 
     def get_by_doi(self, doi: str) -> ReferenceRecord:
         """Fetch work by DOI."""
@@ -396,7 +396,7 @@ Add OpenAlex as primary metadata source:
 
 ```python
 from erdos.core.openalex_client import OpenAlexClient
-from erdos.core.arxiv_client import ArxivClient
+from erdos.core.arxiv_client import fetch_arxiv_atom, parse_arxiv_atom
 
 def ingest_reference(ref_id: str, source: str = "openalex") -> ReferenceRecord:
     """Ingest reference metadata from specified source."""
@@ -411,8 +411,7 @@ def ingest_reference(ref_id: str, source: str = "openalex") -> ReferenceRecord:
             raise ValueError(f"Unknown reference format: {ref_id}")
 
     elif source == "arxiv":
-        client = ArxivClient()
-        return client.get_metadata(ref_id)
+        return parse_arxiv_atom(fetch_arxiv_atom(ref_id))
 
     # ... other sources
 ```
@@ -427,7 +426,7 @@ Add to `pyproject.toml`:
 [project]
 dependencies = [
     # ... existing deps
-    "httpx>=0.27.0",  # Already likely present
+    "requests>=2.32.5",  # Used by ingest + OpenAlex client
 ]
 
 [project.optional-dependencies]
@@ -436,7 +435,7 @@ openalex = [
 ]
 ```
 
-**Note:** httpx is likely already a dependency. PyAlex is optional but recommended.
+**Note:** PyAlex is optional but recommended for interactive exploration; the SSOT implementation uses requests so tests can stay network-free with `responses`.
 
 ---
 

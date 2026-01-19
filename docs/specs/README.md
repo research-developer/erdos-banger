@@ -109,11 +109,12 @@ v2.0 Expansion (READY)
 
 1. **Draft** - Initial design, open for discussion
 2. **Pending** - Approved, awaiting implementation
-3. **Deferred** - Intentionally postponed to a later version
-4. **Active** - Implementation in progress
-5. **Complete** - Fully implemented and tested
-6. **Archived** - Completed, locked in
-7. **Blocked** - Cannot proceed due to external dependency
+3. **Ready** - Fully specified and implementable, scheduled for a later version
+4. **Deferred** - Intentionally postponed (may require more design work)
+5. **Active** - Implementation in progress
+6. **Complete** - Fully implemented and tested
+7. **Archived** - Completed, locked in
+8. **Blocked** - Cannot proceed due to external dependency
 
 ## Writing a New Spec
 

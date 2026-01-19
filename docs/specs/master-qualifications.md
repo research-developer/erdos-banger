@@ -121,7 +121,7 @@ If a paper isn't on arXiv and isn't open access, we record metadata and move on.
 - Marker is the only tool with both MIT-quality AND excellent math support
 - Docling (MIT) is blocked by typer version conflict
 - PyMuPDF (AGPL) has stricter copyleft requirements
-- erdos-banger is already open source, so GPL distribution requirements are satisfied
+- GPL is acceptable only as an opt-in extra; distributing builds that include it must comply with GPL obligations (core remains permissive)
 
 **Install path:** `uv sync --extra pdf` will install Marker when Spec 019 is implemented.
 
