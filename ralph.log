@@ -262,3 +262,38 @@ Excellent! The review iteration is complete. Here's a summary of what was accomp
 ### Exit Status
 Clean working tree, all changes committed, ready for next iteration.
 === Mon Jan 19 09:18:58 EST 2026 ===
+Excellent! SPEC-011 has been successfully implemented with:
+
+## Summary
+
+**Completed:** SPEC-011 Ask Command (RAG Q&A for Erdős problems)
+
+### Files Created:
+- `src/erdos/core/ask.py`: Core RAG orchestration (300 lines)
+  - `build_prompt()`: Deterministic prompt formatting
+  - `perform_retrieval()`: FTS5 search with problem filtering
+  - `execute_llm()`: Shell-free subprocess execution
+  - `ask_question()`: Full orchestration with error handling
+
+- `src/erdos/commands/ask.py`: CLI integration (190 lines)
+  - Arguments: problem_id, question (supports stdin with `-`)
+  - Options: --limit, --build-index, --no-llm, --llm-cmd
+  - Outputs: JSON and human-readable with rich formatting
+
+- Test files (29 total tests):
+  - `tests/unit/test_ask_prompt.py`: 9 prompt tests
+  - `tests/unit/test_ask_retrieval.py`: 5 retrieval tests
+  - `tests/unit/test_ask_llm.py`: 7 LLM execution tests
+  - `tests/integration/test_cli_ask.py`: 8 end-to-end tests
+
+### All Acceptance Criteria Met:
+✅ Retrieves top-k chunks using FTS5 search with problem_id filter
+✅ Builds deterministic prompts with numbered sources
+✅ Optional external LLM execution via subprocess (shell-free)
+✅ Returns sources, prompt, and optional answer
+✅ JSON and human output modes
+✅ All quality gates pass (ruff, mypy, pytest)
+✅ 83% test coverage (exceeds 80% requirement)
+
+The implementation is complete, tested, and ready for use!
+=== Mon Jan 19 09:35:09 EST 2026 ===
