@@ -100,7 +100,7 @@ On success (`success=true`), `CLIOutput.data` must include:
 Notes:
 - `entries_written` is the number of `manifest.entries` written (which may be less than `references_total` because v1.1 skips references without DOI/arXiv ids).
 - `manifest` must be `ProblemManifest.model_dump(mode="json")` so `Path` and `datetime` fields serialize deterministically.
-- When `--json` is enabled, no progress/human text may be written to stdout.
+- When `--json` is enabled, only the JSON payload may be written to stdout; all progress/human text must go to stderr.
 
 ---
 
@@ -342,7 +342,7 @@ uv run pytest --cov=erdos --cov-fail-under=80 -m "not requires_lean and not requ
 
 ## 8) Error Handling (Non-negotiable)
 
-- Never print human text to stdout when `--json` is enabled.
+- Never print human text to stdout when `--json` is enabled (use stderr for progress/warnings).
 - Network failures must be surfaced as a structured `CLIOutput.err(...)` with an actionable message.
 - A single reference failure must not abort ingestion of other references unless it’s a fatal configuration error (e.g., invalid manifest path).
 

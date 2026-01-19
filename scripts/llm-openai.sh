@@ -112,7 +112,7 @@ PY
 )
 
 python3 -c "$BUILD_PAYLOAD_PY" \
-  | curl -sS "${OPENAI_BASE_URL}/v1/responses" \
+  | curl -sS --max-time 120 "${OPENAI_BASE_URL}/v1/responses" \
       -H "Authorization: Bearer ${OPENAI_API_KEY}" \
       -H "Content-Type: application/json" \
       -d @- \

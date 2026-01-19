@@ -15,7 +15,7 @@ if [[ -z "$TIMEOUT_CMD" ]]; then
   elif command -v gtimeout >/dev/null 2>&1; then
     TIMEOUT_CMD="gtimeout"
   else
-    echo "Missing timeout command. Install coreutils (macOS) or use Linux `timeout`." >&2
+    echo "Missing timeout command. Install coreutils (macOS) or use Linux 'timeout'." >&2
     exit 1
   fi
 fi

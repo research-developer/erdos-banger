@@ -42,6 +42,7 @@ if [[ -z "$provider" ]]; then
   elif [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
     provider="anthropic"
   else
+    echo "Warning: No API keys configured. Set OPENAI_API_KEY or ANTHROPIC_API_KEY in .env" >&2
     provider="openai"
   fi
 fi

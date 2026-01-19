@@ -102,7 +102,7 @@ PY
 )
 
 python3 -c "$BUILD_PAYLOAD_PY" \
-  | curl -sS "${ANTHROPIC_BASE_URL}/v1/messages" \
+  | curl -sS --max-time 120 "${ANTHROPIC_BASE_URL}/v1/messages" \
       -H "x-api-key: ${ANTHROPIC_API_KEY}" \
       -H "anthropic-version: ${ANTHROPIC_VERSION}" \
       -H "Content-Type: application/json" \

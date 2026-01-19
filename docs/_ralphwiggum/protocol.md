@@ -215,7 +215,7 @@ Forbidden to change (treat as immutable SSOT unless a human explicitly authorize
 - `data/erdosproblems/**` (git submodule)
 
 Dependency manifests:
-- `pyproject.toml` and `uv.lock` may be edited **only when a spec explicitly requires it**, and must be followed by `uv lock --check` and `uv sync --frozen`.
+- `pyproject.toml` and `uv.lock` may be edited **only when a spec explicitly requires it** (e.g., when a spec's "Dependencies" section lists a new runtime dependency), and must be followed by `uv lock --check` and `uv sync --frozen`.
 
 ### Resource Limits
 
