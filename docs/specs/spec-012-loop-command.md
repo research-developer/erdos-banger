@@ -4,6 +4,7 @@
 
 **Status:** Deferred (v1.2+)
 **Prerequisites (SSOT):**
+- Loop design decisions (SSOT): `docs/specs/spec-012-design.md`
 - Lean integration: `docs/_archive/specs/spec-007-lean-integration.md`
 - Search index: `docs/_archive/specs/spec-006-search-index.md`
 - Ask command (prompt + optional LLM): `docs/specs/spec-011-ask-command.md`
@@ -43,6 +44,10 @@ erdos loop PROBLEM_ID [OPTIONS]
 - `--yes, -y`: non-interactive; automatically apply changes
 - `--no-apply`: propose changes only; never write to disk
 - `--timeout SECONDS`: Lean check timeout (default: `120`)
+- `--allow-sorry-increase INT`: allow a patch to increase `sorry` count by up to N (default: `0`)
+- `--max-patch-lines INT`: reject patches larger than this many lines (default: `50`)
+- `--max-patch-bytes INT`: reject patches larger than this many bytes (default: `8192`)
+- `--rag-limit INT`: maximum retrieved context chunks to include in the loop prompt (default: `5`)
 - `--llm-cmd TEXT`: override LLM command (default: from `ERDOS_LLM_COMMAND`)
 - `--from-iteration INT`: resume from a previous loop log (future; optional)
 
@@ -72,7 +77,7 @@ At a high level:
 1. Ensure `formal/lean/` exists and is initialized (reuse `erdos lean init` logic if needed).
 2. Ensure the target file exists:
    - default: `formal/lean/Erdos/Problem{PROBLEM_ID:03d}.lean`
-   - create via `Formalizer.generate_skeleton(...)` if missing
+   - create via `erdos.core.formalizer.generate_skeleton(...)` if missing
 3. Run Lean check via `LeanRunner.check(...)`.
 4. If compilation succeeds and there are **no `sorry`** occurrences, exit success.
 5. Otherwise:
@@ -96,8 +101,8 @@ At a high level:
 ## 3) Safety Guardrails (Non-negotiable)
 
 1. **Patch-only edits**
-   - The LLM must output a unified diff (or a structured “replace lines X–Y” patch).
-   - Reject free-form code dumps.
+   - The LLM must output **exactly one** SEARCH/REPLACE block (SSOT: `docs/specs/spec-012-design.md`).
+   - Reject free-form code dumps or multi-block outputs.
 2. **Scoped edits**
    - Only allow modifications under `formal/lean/Erdos/`.
 3. **Hard limits**
@@ -112,13 +117,19 @@ At a high level:
 
 ## 4) Output Schema (JSON)
 
-All JSON output must be wrapped in `CLIOutput` (Spec 003). `data` must include:
+All JSON output must be wrapped in `CLIOutput` (Spec 003).
+
+**Success semantics (strict):**
+- `CLIOutput.success=true` only when the final Lean file compiles and contains **zero** `sorry` and **zero** `admit`.
+- All other terminal outcomes are `CLIOutput.success=false` with a structured `error` object that includes the required keys (`type`, `message`, `code`) plus extra summary keys (allowed by `CLIOutput` invariants).
+
+On success, `data` must include:
 
 ```json
 {
   "problem_id": 6,
-  "status": "max_iterations",
-  "iterations_completed": 10,
+  "status": "success",
+  "iterations_completed": 3,
   "iterations_max": 10,
   "file": "formal/lean/Erdos/Problem006.lean",
   "no_apply": true,
@@ -126,11 +137,29 @@ All JSON output must be wrapped in `CLIOutput` (Spec 003). `data` must include:
     "enabled": true,
     "command": "./scripts/llm.sh"
   },
+  "run_log_path": "logs/loop/run_20260118_103045_a1b2c3.jsonl",
   "last_check": {
-    "success": false,
-    "error_count": 2,
-    "has_sorry": true
-  }
+    "success": true,
+    "error_count": 0,
+    "has_sorry": false
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "patch_applied": false,
+      "reason": "no_apply"
+    },
+    {
+      "iteration": 2,
+      "patch_applied": true,
+      "sorry_before": 2,
+      "sorry_after": 2,
+      "admit_before": 0,
+      "admit_after": 0,
+      "check_success": false,
+      "error_count": 1
+    }
+  ]
 }
 ```
 
@@ -138,6 +167,27 @@ Notes:
 
 - When `--no-apply` is set, `status` may be `no_progress` even if a patch was proposed.
 - When `--json` is enabled, no progress/human text may be written to stdout.
+
+### 4.1 Run Log File (`run_log_path`)
+
+`run_log_path` points to a JSON Lines file (one JSON object per line) intended for debugging and reproducibility. Minimum required fields per line:
+
+```json
+{
+  "schema_version": 1,
+  "iteration": 2,
+  "event": "llm_prompt",
+  "timestamp": "2026-01-18T10:31:12.345Z",
+  "data": {}
+}
+```
+
+Required `event` values:
+- `llm_prompt` (includes the exact prompt text sent)
+- `llm_response` (includes the raw model output)
+- `patch_applied` (includes file hash before/after)
+- `lean_check` (includes `LeanCheckResult` summary)
+- `user_decision` (`yes`/`no`/`skip`/`quit`, omitted in `--yes` mode)
 
 ---
 
@@ -150,9 +200,16 @@ Responsibilities:
 - Orchestrate the loop and return `CLIOutput` summaries.
 - Provide helpers:
   - `count_sorries(text: str) -> int`
-  - `apply_unified_diff(path: Path, diff_text: str) -> None` (strict validation)
+  - Patch parsing/application for SEARCH/REPLACE blocks (SSOT: `docs/specs/spec-012-design.md`)
 
-### 5.2 `src/erdos/commands/loop.py`
+### 5.2 Additional modules (SSOT: `docs/specs/spec-012-design.md`)
+
+- `src/erdos/core/loop_config.py` (`LoopConfig`)
+- `src/erdos/core/patch_validator.py` (SEARCH/REPLACE parsing + validation)
+- `src/erdos/core/loop_verifier.py` (sorry/admit counting + regression checks)
+- `src/erdos/templates/loop_prompt.jinja2` (deterministic prompt template)
+
+### 5.3 `src/erdos/commands/loop.py`
 
 Follow Spec 004 patterns and call core loop logic.
 
@@ -168,7 +225,7 @@ When implemented, the following tests are required:
 - Patch validation rejects:
   - edits outside `formal/lean/Erdos/`
   - oversized patches
-  - non-diff outputs
+  - non-SEARCH/REPLACE outputs
 
 ### Integration tests (optional; marked `requires_lean`)
 

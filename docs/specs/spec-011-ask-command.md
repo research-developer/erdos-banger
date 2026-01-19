@@ -49,6 +49,7 @@ erdos ask PROBLEM_ID QUESTION [OPTIONS]
 
 - `PROBLEM_ID` (int, required)
 - `QUESTION` (string, required)
+  - If `QUESTION` is exactly `-`, read the question from stdin (UTF-8). Trim a single trailing newline.
 
 **Options**
 
@@ -88,8 +89,8 @@ All JSON output must be wrapped in `CLIOutput` (Spec 003). `data` must include:
   "answer": null,
   "sources": [
     {
-      "id": 1,
       "chunk_id": "problem_6_statement",
+      "rank": 1,
       "source_type": "problem_statement",
       "problem_id": 6,
       "reference_doi": null,
@@ -116,6 +117,10 @@ Notes:
 - When LLM is enabled, `llm.exit_code` is required and `answer` must be non-empty on success.
 - When `--json` is enabled, no progress/human text may be written to stdout.
 
+**Source types:** `sources[].source_type` must be one of the `ChunkSource` values from `src/erdos/core/models.py`.
+
+**Current limitation (v1.1):** `erdos ask` retrieves from whatever is currently indexed in SQLite. In v1.0, the index builder only indexes problem statements/notes. Ingested paper extracts will not appear as sources until a later spec adds reference chunk indexing.
+
 ---
 
 ## 3) Implementation (Modules to Create)
@@ -137,6 +142,8 @@ Responsibilities:
    - If `--no-llm` is false and an LLM command is configured, execute it via `subprocess.run`.
    - Provide the prompt via stdin.
    - Capture stdout as the answer.
+
+**LLM command execution is shell-free:** `--llm-cmd` / `ERDOS_LLM_COMMAND` is parsed with `shlex.split` and executed with `shell=False`. If users need pipes/redirection, they must wrap in a script.
 6. Return `CLIOutput.ok(command="erdos ask", data=...)` on success; `CLIOutput.err(...)` on failures.
 
 ### 3.2 CLI command: `src/erdos/commands/ask.py`

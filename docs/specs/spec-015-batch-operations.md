@@ -109,7 +109,12 @@ uv run erdos lean formalize --all --max-concurrent 8
 
 ### State File
 
-Batch operations write state to `logs/batch_state.json`:
+Batch operations write state to a per-run file:
+
+- `logs/batches/{batch_id}.json` (append/overwrite as the run progresses)
+- `logs/batches/latest.json` (pointer to the most recent batch run for `--resume`)
+
+Example state (`logs/batches/{batch_id}.json`):
 
 ```json
 {
@@ -132,7 +137,8 @@ Batch operations write state to `logs/batch_state.json`:
 ### Resume Behavior
 
 When `--resume` is passed:
-1. Load most recent batch state for the same command + filters
+1. Load `logs/batches/latest.json`, then load the referenced `{batch_id}.json`
+2. Verify the saved `command` and `filters` match the current invocation (otherwise usage error)
 2. Skip problems in `completed` list
 3. Retry problems in `failed` list
 4. Continue with `pending` list
@@ -143,25 +149,18 @@ When `--resume` is passed:
 
 ### Default Delays
 
-| API | Default Delay | Rationale |
-|-----|---------------|-----------|
-| arXiv | 3s | arXiv API terms |
-| Crossref | 1s | Polite pool with mailto |
+This spec uses a single `--delay` option (default `3.0`) applied to all external API calls. This is conservative for Crossref and aligned with arXiv politeness guidance.
 
 ### Implementation
 
 ```python
-import asyncio
-
 from erdos.core.rate_limiter import RateLimiter
 
-async def run(problem_ids: list[int]) -> None:
+def run(problem_ids: list[int]) -> None:
     limiter = RateLimiter(delay_seconds=3.0)
     for problem_id in problem_ids:
-        async with limiter:
-            await ingest_problem(problem_id)
-
-asyncio.run(run(problem_ids))
+        limiter.sleep_if_needed()
+        ingest_problem(problem_id)
 ```
 
 ---
@@ -219,18 +218,15 @@ Failed: [67]
 ### Implementation
 
 ```python
-import asyncio
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-async def batch_formalize(problem_ids: list[int], max_concurrent: int):
-    semaphore = asyncio.Semaphore(max_concurrent)
-
-    async def formalize_one(pid: int):
-        async with semaphore:
-            return await run_lean_formalize(pid)
-
-    results = await asyncio.gather(*[formalize_one(p) for p in problem_ids])
-    return results
+def batch_formalize(problem_ids: list[int], max_concurrent: int):
+    with ThreadPoolExecutor(max_workers=max_concurrent) as pool:
+        futures = {pool.submit(run_lean_formalize, pid): pid for pid in problem_ids}
+        results = []
+        for fut in as_completed(futures):
+            results.append(fut.result())
+        return results
 ```
 
 ---
@@ -249,7 +245,7 @@ Responsibilities:
 
 ### 6.2 New Module: `src/erdos/core/rate_limiter.py`
 
-Simple async rate limiter with configurable delay.
+Simple synchronous rate limiter with configurable delay.
 
 ### 6.3 Extend Commands
 

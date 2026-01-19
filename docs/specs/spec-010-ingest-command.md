@@ -96,6 +96,11 @@ This spec uses paths consistent with existing `.gitignore`:
 
 **Rule:** Cache and extract paths stored in manifests must be **relative paths** rooted at repo root, so manifests are portable across machines.
 
+**Serialization note (Pydantic SSOT):**
+- `ManifestEntry.cache_path` and `ManifestEntry.extract_path` are `Path | None` in `src/erdos/core/models.py`.
+- When writing YAML, dump using `ProblemManifest.model_dump(mode="json")` so `Path` values serialize as POSIX strings.
+- Reject absolute paths at write time (treat as `ExitCode.CONFIG_ERROR`).
+
 ---
 
 ## 3) Models (SSOT)
@@ -138,11 +143,26 @@ Verified via HTTP HEAD requests against `2203.00001` (2026-01-18).
 
 Reference: `https://www.crossref.org/documentation/retrieve-metadata/rest-api/`
 
+**Polite pool:** Crossref considers clients “polite” if they include contact info via either:
+- a `mailto=` query parameter, or
+- a `mailto:` entry in the `User-Agent` header.
+
+Reference: `https://github.com/CrossRef/rest-api-doc` (API etiquette / polite pool).
+
 ---
 
 ## 5) Core Implementation (Modules to Create)
 
 This spec keeps the current v1 structure (`src/erdos/core`, `src/erdos/commands`) and uses the shared presenter helpers from Spec 009 for output/exit behavior.
+
+### 5.0 Dependencies (Explicit)
+
+To keep HTTP behavior testable and consistent, v1.1 ingestion uses:
+
+- Runtime dependency: `requests>=2.32.5`
+- Test dependency (already present): `responses` for mocking `requests` calls
+
+Rationale: unit/integration tests must be able to run with **zero network** and still exercise HTTP error paths deterministically.
 
 ### 5.1 `src/erdos/core/ingest.py`
 
@@ -151,27 +171,67 @@ Responsibilities:
 - Load `ProblemRecord` via `ProblemLoader.from_default()` + `get_by_id()`
 - Iterate `problem.references`
 - For each reference:
-  - If `arxiv_id` → fetch arXiv metadata + optionally download source tarball + compute hash + write extract
+  - If `arxiv_id` → fetch arXiv metadata + optionally download source tarball + compute MD5 (`ManifestEntry.cache_hash`) + write extract
   - Else if `doi` → fetch Crossref metadata only
   - Else → record “skipped (no identifier)” in CLI output (no manifest entry in v1.1)
 - Read/merge existing manifest if present (idempotent):
-  - if an entry already exists and `--force` is false, keep existing cache paths + hashes
+  - if an entry already exists and `--force` is false, keep existing cache paths + hashes **and do not re-fetch metadata**
   - if `--force`, overwrite cached state for that reference
+- If the current problem YAML reference list removes a previously ingested reference, drop that entry from the rewritten manifest (cached files remain on disk; manifest reflects current YAML refs).
 - Write updated manifest to `literature/manifests/{problem_id:04d}.yaml`
-- Return `CLIOutput.ok(...)` with a summary payload and manifest path
+- Return:
+  - `CLIOutput.ok(...)` when **all** references were processed without errors, or
+  - `CLIOutput.err(...)` when **any** reference failed, but still write the manifest first.
+
+For error returns, include structured details as extra keys under `CLIOutput.error` (allowed by `CLIOutput` invariants), e.g.:
+
+```json
+{
+  "type": "NetworkError",
+  "message": "1 reference failed (see manifest)",
+  "code": 4,
+  "manifest_path": "literature/manifests/0006.yaml",
+  "references_processed": 3,
+  "references_failed": 1
+}
+```
 
 ### 5.2 `src/erdos/core/arxiv_client.py`
 
 Responsibilities:
 
-- Fetch metadata via export API and map to `ReferenceRecord`:
+- Provide **two-layer API** to keep tests network-free:
+  - `fetch_arxiv_atom(arxiv_id: str, *, timeout: float) -> str`
+  - `parse_arxiv_atom(xml_text: str) -> ReferenceRecord`
+
+Mapping rules (in `parse_arxiv_atom`):
+
+- Map to `ReferenceRecord`:
   - `ReferenceRecord(arxiv_id=..., title=..., authors=[...], year=..., source="arxiv")`
   - Set `oa_status=OpenAccessStatus.GREEN` and `oa_url=https://arxiv.org/abs/<id>`
 - Download source tarball via `https://arxiv.org/e-print/<arxiv_id>` into deterministic cache path.
+  - Strip any version suffix for export API queries (`2203.00001v1` → `2203.00001`) but preserve the versioned id for cache paths if present.
+
+**Source extraction (best-effort, but specified):**
+
+- If `--no-download` is set, skip download and extraction.
+- If downloading succeeds, write `literature/extracts/arxiv/{arxiv_id}/fulltext.txt` using this deterministic heuristic:
+  1. Extract the tarball to a temp directory.
+  2. Collect `*.tex` files (recursively). If none exist, mark `ManifestEntry.extracted=false` and set `ManifestEntry.error`.
+  3. Choose the **largest** `.tex` file by byte size as the “main” source file.
+  4. Write its raw text to `fulltext.txt` (UTF-8 decode with `errors="replace"`), capped at 2 MiB.
+
+Note: this is not “PDF-quality text”; it is an inexpensive searchable proxy for later indexing.
 
 ### 5.3 `src/erdos/core/crossref_client.py`
 
 Responsibilities:
+
+- Provide **two-layer API** to keep tests network-free:
+  - `fetch_crossref_work(doi: str, *, mailto: str, timeout: float) -> dict[str, object]`
+  - `parse_crossref_work(payload: dict[str, object], *, doi: str) -> ReferenceRecord`
+
+Mapping rules (in `parse_crossref_work`):
 
 - Fetch metadata by DOI and map to `ReferenceRecord`:
   - Must supply non-empty `title` (required by `ReferenceRecord`)
@@ -210,15 +270,19 @@ Follow the command-module pattern from archived Spec 004:
 Create tests that use fixtures from `tests/fixtures/` (Spec 008):
 
 - `tests/unit/test_arxiv_client.py`
-  - Parse `tests/fixtures/arxiv_responses/arxiv_2203.00001.xml`
-  - Handle not-found `tests/fixtures/arxiv_responses/arxiv_not_found.xml`
+  - `parse_arxiv_atom` parses `tests/fixtures/arxiv_responses/arxiv_2203.00001.xml`
+  - Not-found handling parses `tests/fixtures/arxiv_responses/arxiv_not_found.xml`
+- `tests/unit/test_arxiv_extract.py`
+  - Builds a tiny synthetic `tar.gz` with two `.tex` files and asserts the “largest .tex wins” heuristic and the 2 MiB cap.
 - `tests/unit/test_crossref_client.py`
-  - Parse `tests/fixtures/crossref_responses/doi_10.1007_BF01940595.json`
-  - Handle not-found `tests/fixtures/crossref_responses/doi_not_found.json`
+  - `parse_crossref_work` parses `tests/fixtures/crossref_responses/doi_10.1007_BF01940595.json` (fixture-shaped Crossref JSON)
+  - Not-found handling parses `tests/fixtures/crossref_responses/doi_not_found.json`
 - `tests/unit/test_ingest_service.py`
   - Builds a manifest for a problem containing both DOI + arXiv refs (use `tests/fixtures/sample_problems.yaml`)
   - Asserts `--no-download` avoids writing cache files
   - Asserts `--no-network` returns existing manifest when present
+
+**Mocking rule:** All HTTP fetch functions must be covered by tests using `responses` (no real network).
 
 ### Integration tests (still no network)
 

@@ -22,13 +22,21 @@ Specs currently in progress or awaiting implementation.
 | 010 | [Ingest Command](spec-010-ingest-command.md) | Pending | v1.1 | Literature ingestion: arXiv cache + Crossref metadata |
 | 011 | [Ask Command](spec-011-ask-command.md) | Pending | v1.1 | RAG prompt builder + optional LLM via subprocess |
 
+## Design Documents
+
+Research-backed design decisions for complex specs.
+
+| ID | Title | Status | Prerequisite For |
+|----|-------|--------|------------------|
+| 012-DESIGN | [Loop Command Design](spec-012-design.md) | Approved | SPEC-012 |
+
 ## Deferred Specs
 
 Specs designed for future versions.
 
 | ID | Title | Status | Target | Description |
 |----|-------|--------|--------|-------------|
-| 012 | [Loop Command](spec-012-loop-command.md) | Deferred | v1.2 | Iterative LLM-assisted Lean proof attempts |
+| 012 | [Loop Command](spec-012-loop-command.md) | Deferred (blocked by 012-DESIGN) | v1.2 | Iterative LLM-assisted Lean proof attempts |
 | 013 | [Logging & Evaluation](spec-013-logging-evaluation.md) | Deferred | v1.2 | Structured run logs + progress tracking |
 | 014 | [Vector Embeddings](spec-014-vector-embeddings.md) | Deferred | v1.3 | Semantic search via embeddings |
 | 015 | [Batch Operations](spec-015-batch-operations.md) | Deferred | v1.3 | Batch ingest/formalize with rate limiting |
@@ -71,10 +79,11 @@ v1.0 Foundation (DONE)
 
 v1.1 Literature (PENDING)
 ├── 010 Ingest Command ────────────┐
-└── 011 Ask Command ←──────────────┘ (uses ingested content)
+└── 011 Ask Command ←──────────────┘ (uses the local search index; ingested extracts become usable once indexed)
 
 v1.2 Iteration (DEFERRED)
-├── 012 Loop Command ←── 011 Ask + 007 Lean
+├── 012-DESIGN Loop Design ←── research (approved SSOT)
+├── 012 Loop Command ←── 012-DESIGN + 011 Ask + 007 Lean
 └── 013 Logging ←── all commands (tracks progress)
 
 v1.3 Enhancement (FUTURE)

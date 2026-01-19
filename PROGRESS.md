@@ -16,7 +16,8 @@
 
 ### Phase 2: v1.2 Iteration (Deferred but Ready)
 
-- [ ] **SPEC-012**: Loop Command → `docs/specs/spec-012-loop-command.md`
+- [ ] **SPEC-012-DESIGN**: Loop Command Design Decisions → `docs/specs/spec-012-design.md` *(senior review required)*
+- [ ] **SPEC-012**: Loop Command → `docs/specs/spec-012-loop-command.md` *(blocked by SPEC-012-DESIGN)*
 - [ ] **SPEC-013**: Logging & Evaluation → `docs/specs/spec-013-logging-evaluation.md`
 
 ### Phase 3: v1.3 Enhancement
@@ -63,7 +64,8 @@ v1.1 Literature (START HERE)
 └── SPEC-011 Ask Command ← uses 010 for ingested content (optional)
 
 v1.2 Iteration
-├── SPEC-012 Loop Command ← needs 011 Ask + 007 Lean
+├── SPEC-012-DESIGN Loop Design Decisions ← research-backed, needs senior review
+├── SPEC-012 Loop Command ← blocked by SPEC-012-DESIGN + needs 011 Ask + 007 Lean
 └── SPEC-013 Logging ← all commands (tracks progress)
 
 v1.3 Enhancement
@@ -80,6 +82,7 @@ v1.4 Integration
 ## Work Log
 
 - 2026-01-18: Initial setup - created PROGRESS.md, PROMPT.md, protocol.md
+- 2026-01-18: Created SPEC-012-DESIGN with D1-D8 design decisions (vaporware → concrete)
 
 ---
 

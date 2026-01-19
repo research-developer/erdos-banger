@@ -92,7 +92,7 @@ uv run erdos search "prime gaps" --semantic
 
 ### Default Model
 
-**`all-MiniLM-L6-v2`** via `sentence-transformers`
+**`sentence-transformers/all-MiniLM-L6-v2`** via `sentence-transformers`
 
 - 384 dimensions
 - Fast inference (CPU-friendly)
@@ -181,6 +181,7 @@ Extend existing search output (SSOT: archived Spec 006 JSON schema). Existing fi
     "alpha": 0.5,
     "limit": 10,
     "count": 5,
+    "use_fts": true,
     "results": [
       {
         "chunk_id": "problem_6_statement",

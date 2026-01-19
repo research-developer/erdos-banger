@@ -38,6 +38,12 @@ Every command invocation automatically writes a log entry. No flags required.
 
 **Log location:** `logs/runs.jsonl` (append-only)
 
+**Integration SSOT (v1.2):** Logging is implemented centrally in `erdos.commands.presenter.exit_with_result(...)` so:
+- every command that uses the presenter is logged automatically
+- commands do not need bespoke logging code
+
+**Captured args:** Use `typer.Context` to capture a sanitized snapshot of `ctx.command_path` and `ctx.params` (no secrets; redact values for keys containing `token`, `key`, or `secret`).
+
 ### 1.2 `erdos logs` Command
 
 ```text
@@ -115,6 +121,8 @@ Each log entry is a single JSON object on one line:
 | `args` | object | Command arguments (sanitized, no secrets) |
 | `duration_ms` | int | Execution time in milliseconds |
 | `success` | bool | Whether command succeeded |
+
+**Command string SSOT:** `entry.command` must equal the `CLIOutput.command` value produced by the command (so log filtering and JSON output are consistent).
 
 ### Optional Fields
 
@@ -287,17 +295,12 @@ Responsibilities:
 from erdos.core.run_logger import RunLogger
 
 logger = RunLogger()
-
-with logger.run("erdos lean check", args={"file": "..."}) as run:
-    # ... execute command ...
-    run.set_problem_id(6)
-    run.set_result({"error_count": 0})
-    # on exit, log entry is written
+logger.log(ctx, cli_output)
 ```
 
 ### 5.2 Command Integration
 
-Each command module uses the `RunLogger` context manager. The presenter layer can also integrate logging.
+`erdos.commands.presenter.exit_with_result(...)` calls `RunLogger.log(ctx, result)` immediately before raising a non-zero `typer.Exit` (for failures) and after printing output (for successes). This ensures that logs match user-visible results and JSON outputs.
 
 ### 5.3 CLI Command: `src/erdos/commands/logs.py`
 
