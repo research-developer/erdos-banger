@@ -79,7 +79,7 @@ A **human-in-the-loop proving workbench** that combines:
 │                              DATA SOURCES                                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│   teorth/erdosproblems          Metadata APIs           Literature          │
+│   teorth/erdosproblems         Metadata APIs            Literature          │
 │   ┌─────────────────┐      ┌─────────────────┐     ┌─────────────────┐      │
 │   │ 1135 problems   │      │ Crossref (DOI)  │     │ arXiv (source)  │      │
 │   │ (YAML dataset)  │      │ OpenAlex (meta) │     │ Unpaywall (OA)  │      │
@@ -110,7 +110,7 @@ A **human-in-the-loop proving workbench** that combines:
 │                              CLI COMMANDS                                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│   Browse            Ingest            Search/Q&A         Formalize          │
+│      Browse            Ingest        Search/Q&A        Formalize            │
 │   ┌───────────┐    ┌───────────┐    ┌───────────┐    ┌───────────┐          │
 │   │ list      │    │ ingest    │    │ search    │    │ lean init │          │
 │   │ show      │    │           │    │ ask       │    │ lean check│          │
