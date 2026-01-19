@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from erdos.core import problem_loader
 from erdos.core.models import ProblemRecord, ProblemStatus
 from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 
@@ -177,7 +178,7 @@ class TestProblemLoaderFromDefault:
     def test_uses_env_var(
         self, tmp_path: Path, sample_problems_yaml: Path, monkeypatch
     ) -> None:
-        """from_default() respects ERDOS_DATA_PATH env var."""
+        """from_default() respects ERDOS_DATA_PATH when it points to a directory."""
         problems_dir = tmp_path / "data"
         problems_dir.mkdir()
         yaml_file = problems_dir / "problems.yaml"
@@ -187,6 +188,16 @@ class TestProblemLoaderFromDefault:
         loader = ProblemLoader.from_default()
 
         assert loader.yaml_path == yaml_file
+
+    def test_uses_env_var_file_path(
+        self, sample_problems_yaml: Path, monkeypatch
+    ) -> None:
+        """from_default() respects ERDOS_DATA_PATH when it points to a file."""
+        monkeypatch.setenv("ERDOS_DATA_PATH", str(sample_problems_yaml))
+
+        loader = ProblemLoader.from_default()
+
+        assert loader.yaml_path.resolve() == sample_problems_yaml.resolve()
 
     def test_uses_local_enriched_default(
         self, tmp_path: Path, sample_problems_yaml: Path, monkeypatch
@@ -203,25 +214,26 @@ class TestProblemLoaderFromDefault:
         loader = ProblemLoader.from_default()
         assert loader.yaml_path.resolve() == yaml_file.resolve()
 
-    def test_uses_relative_upstream_path(
-        self, tmp_path: Path, sample_problems_yaml: Path, monkeypatch
-    ) -> None:
-        """from_default() falls back to ./data/erdosproblems/data/problems.yaml."""
+    def test_uses_package_sample_fallback(self, tmp_path: Path, monkeypatch) -> None:
+        """from_default() falls back to the built-in sample dataset when no local data exists."""
         monkeypatch.delenv("ERDOS_DATA_PATH", raising=False)
         monkeypatch.chdir(tmp_path)
 
-        upstream = tmp_path / "data" / "erdosproblems" / "data"
-        upstream.mkdir(parents=True)
-        yaml_file = upstream / "problems.yaml"
-        shutil.copyfile(sample_problems_yaml, yaml_file)
-
         loader = ProblemLoader.from_default()
-        assert loader.yaml_path.resolve() == yaml_file.resolve()
+        problems = loader.load_all(use_cache=False)
+
+        assert loader.yaml_path.name == "problems_enriched.yaml"
+        assert len(problems) > 0
 
     def test_raises_when_no_data_found(self, tmp_path: Path, monkeypatch) -> None:
         """from_default() raises when no dataset is available."""
         monkeypatch.delenv("ERDOS_DATA_PATH", raising=False)
         monkeypatch.chdir(tmp_path)
+
+        def _missing_pkg_files(_: str) -> object:
+            raise FileNotFoundError
+
+        monkeypatch.setattr(problem_loader, "files", _missing_pkg_files)
 
         with pytest.raises(ProblemLoaderError, match="Could not find problems YAML"):
             ProblemLoader.from_default()
