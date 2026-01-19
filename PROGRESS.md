@@ -1,11 +1,28 @@
 # erdos-banger - Ralph Wiggum Progress Tracker
 
-**Last Updated:** 2026-01-18
+**Last Updated:** 2026-01-19
 **Status:** Active (Ready to Start)
 **Branch:** ralph-wiggum-v1.1
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
 ---
+
+## Operating Rules (SSOT)
+
+1. **One task per iteration** (never batch)
+2. **TDD required**: add a failing test before production code
+3. **No reward hacks**:
+   - never delete/disable tests to “make CI green”
+   - never mock the unit under test (mock only boundaries: network/subprocess/time)
+   - never lower quality gates (coverage, lint, mypy)
+4. **Checkpoint discipline**:
+   - commit after each completed task
+   - push after each commit (remote is the backup)
+5. **Escalate early** (stop and request human review) if:
+   - a spec is ambiguous or contradicts SSOT
+   - required deps are missing / incompatible
+   - quality gates fail after 3 fix attempts
+   - the change would exceed ~500 LoC or touch >10 files for a single task
 
 ## Active Queue
 
@@ -16,9 +33,9 @@
 
 ### Phase 2: v1.2 Iteration (Deferred but Ready)
 
-- [ ] **SPEC-012-DESIGN**: Loop Command Design Decisions → `docs/specs/spec-012-design.md` *(senior review required)*
-- [ ] **SPEC-012**: Loop Command → `docs/specs/spec-012-loop-command.md` *(blocked by SPEC-012-DESIGN)*
-- [ ] **SPEC-013**: Logging & Evaluation → `docs/specs/spec-013-logging-evaluation.md`
+- [x] **SPEC-012-DESIGN**: Loop Command Design Decisions → `docs/specs/spec-012-design.md` *(Approved SSOT)*
+- [ ] **SPEC-012**: Loop Command → `docs/specs/spec-012-loop-command.md` *(deferred to v1.2+)*
+- [ ] **SPEC-013**: Logging & Evaluation → `docs/specs/spec-013-logging-evaluation.md` *(deferred to v1.2+)*
 
 ### Phase 3: v1.3 Enhancement
 
@@ -61,11 +78,11 @@
 ```
 v1.1 Literature (START HERE)
 ├── SPEC-010 Ingest Command
-└── SPEC-011 Ask Command ← uses 010 for ingested content (optional)
+└── SPEC-011 Ask Command ← uses the local search index (ingested extracts become usable once indexed)
 
 v1.2 Iteration
-├── SPEC-012-DESIGN Loop Design Decisions ← research-backed, needs senior review
-├── SPEC-012 Loop Command ← blocked by SPEC-012-DESIGN + needs 011 Ask + 007 Lean
+├── SPEC-012-DESIGN Loop Design Decisions ← approved SSOT
+├── SPEC-012 Loop Command ← 012-DESIGN + 011 Ask + 007 Lean
 └── SPEC-013 Logging ← all commands (tracks progress)
 
 v1.3 Enhancement
@@ -95,3 +112,13 @@ The queue is complete when:
 4. `make smoke` passes
 
 The loop operator verifies completion via this file's state (no unchecked items), not by parsing model output.
+
+---
+
+## Rollback / Recovery (If Something Goes Sideways)
+
+- Abort the loop: stop the process / kill the tmux session.
+- Inspect current state: `git status`, `git log -10 --oneline`.
+- To undo the last commit (keep working tree changes): `git reset --soft HEAD~1`
+- To undo the last commit (discard working tree changes): `git reset --hard HEAD~1`
+- To revert a commit on a shared branch: `git revert <sha>`

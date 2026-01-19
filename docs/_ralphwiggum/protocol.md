@@ -169,6 +169,48 @@ EOF
 
 ---
 
+## Overnight Safety Guardrails (Non-negotiable)
+
+### File Modification Boundaries
+
+Allowed to change:
+- `src/erdos/**`
+- `tests/**`
+- `docs/specs/**` (active specs only)
+- `docs/bugs/**`, `docs/debt/**`
+- `PROMPT.md`, `PROGRESS.md`, `docs/_ralphwiggum/**`
+
+Forbidden to change (treat as immutable SSOT unless a human explicitly authorizes it):
+- `docs/_archive/**`
+- `data/erdosproblems/**` (git submodule)
+
+Dependency manifests:
+- `pyproject.toml` and `uv.lock` may be edited **only when a spec explicitly requires it**, and must be followed by `uv lock --check` and `uv sync --frozen`.
+
+### Resource Limits
+
+- Max files changed per iteration: **10**
+- Max net-new lines per iteration: **~500**
+- Max iterations per overnight run: **50** (hard stop)
+- Max “stuck” retries on the same failing gate: **3**
+
+### No-Reward-Hack Rules
+
+- Never delete/disable tests to make CI green.
+- Never “mock the unit under test”; mock only boundaries (network/subprocess/time).
+- Never lower coverage thresholds, relax lint rules, or bypass mypy strictness.
+
+### Push Strategy (Remote Backup)
+
+After each atomic commit:
+```bash
+git push
+```
+
+If pushing is blocked (auth/CI outage), stop the loop and request human intervention.
+
+---
+
 ## TDD Enforcement (Ironclad)
 
 ### The TDD Cycle
@@ -247,6 +289,7 @@ The loop stops when:
 1. **All tasks complete** - No unchecked `[ ]` in PROGRESS.md
 2. **Iteration limit reached** - MAX=50 by default
 3. **Manual intervention** - Ctrl+C
+4. **Escalation trigger** - A stop condition from PROMPT.md is hit (ambiguous spec, missing deps, repeated gate failures, etc.)
 
 **IMPORTANT: State-based verification prevents reward hacking.**
 
@@ -346,6 +389,18 @@ git revert <bad-commit-hash>
 
 ## Best Practices
 
+### Research Notes (2025–2026)
+
+These sources inform the guardrails and the “why” behind the protocol:
+
+- Ralph Wiggum technique: repeated identical prompts, state in files, deterministic iteration loop. https://ghuntley.com/ralph/
+- Field report: running agents in loops overnight; emphasizes frequent commits/pushes and keeping scope bounded. https://github.com/repomirrorhq/repomirror/blob/main/repomirror.md
+- Aider edit formats: search/replace (“diff”) blocks reduce brittle line-number failures compared to unified diffs. https://aider.chat/docs/more/edit-formats.html
+- Aider benchmarks: deterministic harnesses; validate success by passing real unit tests; limit the amount of error output fed back to reduce noise. https://aider.chat/docs/benchmarks.html
+- SWE-agent: interface design (agent-computer interface) strongly impacts autonomous SE performance; a structured ACI improves navigation/edit/test execution. https://arxiv.org/abs/2405.15793
+- Context “rot”: long contexts degrade reliability; keep prompts small and use byte/line caps. https://research.trychroma.com/context-rot
+- Reward hacking: feedback loops need explicit constraints and invariants to prevent gaming metrics. https://arxiv.org/html/2402.06627v3
+
 ### DO
 
 - Always sandbox in dedicated branch
@@ -356,6 +411,9 @@ git revert <bad-commit-hash>
 - Monitor periodically
 - Audit before merging
 - Follow TDD strictly
+- Keep prompts and error logs small (avoid context rot): prefer summaries and capped error output
+- Prefer “state-based” completion checks (PROGRESS.md), not “model said done”
+- Push after each commit (remote backup)
 
 ### DON'T
 
@@ -366,6 +424,8 @@ git revert <bad-commit-hash>
 - Use vague task descriptions
 - Run without iteration limits
 - Skip the review iteration for SPEC-* tasks
+- Let the agent mutate `docs/_archive/` or `data/erdosproblems/` as “fixes”
+- Let the agent change quality gates or coverage thresholds to make CI green
 
 ---
 
@@ -408,6 +468,8 @@ Fresh context each iteration prevents this. If issues arise:
 ---
 
 ## Quick Start Checklist
+
+For a step-by-step pre-flight, see `docs/_ralphwiggum/LAUNCH_CHECKLIST.md`.
 
 ```bash
 # 1. Create sandbox branch

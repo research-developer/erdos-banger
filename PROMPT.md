@@ -68,6 +68,21 @@ If yes, **THIS ITERATION IS A REVIEW ITERATION**:
 
 **DO NOT** attempt multiple tasks. One task per iteration.
 
+### Stop Conditions (Escalate, Don’t Thrash)
+
+If you hit any of the following, STOP and request human input (do not keep looping blindly):
+
+1. A spec is ambiguous, contradictory, or references missing SSOT.
+2. A tool/dep is missing or incompatible (e.g., `uv sync --frozen` cannot succeed).
+3. Quality gates fail after 3 fix attempts for the same root cause.
+4. A change would touch >10 files or exceed ~500 LoC for a single task.
+5. The task would require network access but the spec requires offline determinism.
+
+In these cases:
+- write a short `docs/bugs/bug-XXX-*.md` or `docs/debt/debt-XXX-*.md` with reproduced evidence
+- add a new unchecked item to `PROGRESS.md`
+- commit and exit
+
 ---
 
 ## Critical Review Prompt (MANDATORY)
