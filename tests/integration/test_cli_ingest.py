@@ -159,6 +159,26 @@ def test_ingest_command_idempotent(
     assert data1["data"]["entries_written"] == data2["data"]["entries_written"]
 
 
+def test_ingest_command_no_network_without_existing_manifest(
+    tmp_path: Path, sample_problems_yaml: Path
+) -> None:
+    """--no-network should fail when manifest doesn't exist yet."""
+    data_dir = _data_dir(tmp_path, sample_problems_yaml)
+    repo_root = tmp_path
+
+    result = runner.invoke(
+        app,
+        ["ingest", "6", "--no-network", "--json"],
+        env={"ERDOS_DATA_PATH": str(data_dir), "ERDOS_REPO_ROOT": str(repo_root)},
+    )
+
+    assert result.exit_code == ExitCode.NETWORK_ERROR
+    data = json.loads(result.stdout)
+    assert data["success"] is False
+    assert data["error"]["type"] == "NetworkError"
+    assert data["error"]["code"] == ExitCode.NETWORK_ERROR
+
+
 def test_ingest_command_not_found(tmp_path: Path, sample_problems_yaml: Path) -> None:
     """Test erdos ingest with non-existent problem ID."""
     data_dir = _data_dir(tmp_path, sample_problems_yaml)

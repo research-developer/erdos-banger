@@ -119,6 +119,8 @@ def ingest_problem_references(  # noqa: PLR0911, PLR0912, PLR0915
     skipped = 0
     failed = 0
     internal_error: Exception | None = None
+    network_failed = False
+    non_network_failed = False
 
     for ref in problem.references:
         # Skip references without identifiers
@@ -150,18 +152,50 @@ def ingest_problem_references(  # noqa: PLR0911, PLR0912, PLR0915
                 timeout=timeout,
                 mailto=mailto,
             )
+        except requests.RequestException as e:
+            failed += 1
+            network_failed = True
+            error_entry = ManifestEntry(
+                reference=ReferenceRecord(
+                    doi=ref.doi,
+                    arxiv_id=ref.arxiv_id,
+                    title=f"Failed to fetch: {ref.key}",
+                    authors=[],
+                    source="error",
+                ),
+                error=str(e),
+                ingested_at=datetime.now(UTC),
+            )
+            entries.append(error_entry)
+            continue
+        except RuntimeError as e:
+            # Network policy errors (e.g., --no-network) should return NETWORK_ERROR.
+            failed += 1
+            network_failed = True
+            error_entry = ManifestEntry(
+                reference=ReferenceRecord(
+                    doi=ref.doi,
+                    arxiv_id=ref.arxiv_id,
+                    title=f"Failed to fetch: {ref.key}",
+                    authors=[],
+                    source="error",
+                ),
+                error=str(e),
+                ingested_at=datetime.now(UTC),
+            )
+            entries.append(error_entry)
+            continue
         except (
             ET.ParseError,
             OSError,
-            RuntimeError,
             ValueError,
             KeyError,
             TypeError,
-            requests.RequestException,
             tarfile.TarError,
         ) as e:
             # Record failure but continue
             failed += 1
+            non_network_failed = True
             error_entry = ManifestEntry(
                 reference=ReferenceRecord(
                     doi=ref.doi,
@@ -196,6 +230,10 @@ def ingest_problem_references(  # noqa: PLR0911, PLR0912, PLR0915
         entries.append(entry)
         if entry.error is not None:
             failed += 1
+            if entry.error.startswith("Download failed:"):
+                network_failed = True
+            else:
+                non_network_failed = True
 
         # Rate limiting
         if delay > 0:
@@ -272,9 +310,13 @@ def ingest_problem_references(  # noqa: PLR0911, PLR0912, PLR0915
 
         result = CLIOutput.err(
             command=command,
-            error_type="IngestError",
+            error_type="NetworkError"
+            if network_failed and not non_network_failed
+            else "IngestError",
             message=f"{failed} reference(s) failed (see manifest)",
-            code=ExitCode.ERROR,
+            code=ExitCode.NETWORK_ERROR
+            if network_failed and not non_network_failed
+            else ExitCode.ERROR,
         )
         if isinstance(result.error, dict):
             result.error.update(
