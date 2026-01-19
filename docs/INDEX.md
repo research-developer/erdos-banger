@@ -4,9 +4,9 @@
 
 | Category | Index | Next ID |
 |----------|-------|---------|
-| [Specs](./specs/README.md) | Design specifications | SPEC-020 |
-| [Bugs](./bugs/README.md) | Bug reports & reviews | BUG-006 |
-| [Debt](./debt/README.md) | Technical debt tracking | DEBT-006 |
+| [Specs](./specs/README.md) | Design specifications | SPEC-021 |
+| [Bugs](./bugs/README.md) | Bug reports & reviews | BUG-010 |
+| [Debt](./debt/README.md) | Technical debt tracking | DEBT-015 |
 | [Archive](./_archive/) | Completed specs, bugs & debt | — |
 
 ## Master Documents

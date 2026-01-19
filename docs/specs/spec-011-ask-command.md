@@ -2,7 +2,7 @@
 
 > Adds `erdos ask` for retrieval-augmented Q&A about a specific Erdős problem, with citation-grounded answers.
 
-**Status:** Pending
+**Status:** Complete
 **Target:** v1.1
 **Prerequisites (SSOT):**
 - Search index: `docs/_archive/specs/spec-006-search-index.md`

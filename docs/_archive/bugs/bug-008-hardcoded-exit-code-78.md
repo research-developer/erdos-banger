@@ -1,10 +1,10 @@
 # Bug 008: Hardcoded Exit Code 78 Instead of ExitCode.CONFIG_ERROR
 
 **Priority:** P0 (Critical)
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-19
-**Fixed:** —
-**Commit:** —
+**Fixed:** 2026-01-19
+**Commit:** d97b218
 
 ## Description
 

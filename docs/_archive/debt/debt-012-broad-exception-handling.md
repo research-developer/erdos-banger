@@ -1,9 +1,11 @@
 # Technical Debt 012: Broad Exception Handling in ingest.py
 
 **Date:** 2026-01-19
-**Status:** Open
+**Status:** Fixed
 **Priority:** P1
 **Impact:** Masks real bugs, makes debugging difficult
+**Fixed:** 2026-01-19
+**Commit:** 2cb6fac
 
 ## Problem
 

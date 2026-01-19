@@ -27,8 +27,8 @@ A research harness for the [1,135 Erdos problems](https://github.com/teorth/erdo
 | Search index (SQLite FTS5) | Done | [Spec 006](docs/_archive/specs/spec-006-search-index.md) |
 | Lean integration (init, check, formalize) | Done | [Spec 007](docs/_archive/specs/spec-007-lean-integration.md) |
 | Presenter cleanup | Done | [Spec 009](docs/_archive/specs/spec-009-architecture-cleanup.md) |
-| Ingest command (arXiv + Crossref) | Pending | [Spec 010](docs/specs/spec-010-ingest-command.md) |
-| Ask command (RAG + LLM) | Pending | [Spec 011](docs/specs/spec-011-ask-command.md) |
+| Ingest command (arXiv + Crossref) | Done | [Spec 010](docs/specs/spec-010-ingest-command.md) |
+| Ask command (RAG + LLM) | Done | [Spec 011](docs/specs/spec-011-ask-command.md) |
 | Loop command (iterative proofs) | Deferred v1.2+ | [Spec 012](docs/specs/spec-012-loop-command.md) |
 
 ## Quickstart
@@ -99,7 +99,7 @@ uv run mypy src/
 uv run pytest -m "not requires_lean and not requires_network"
 ```
 
-See `docs/specs/` for detailed design documents. Each pending spec (010, 011) describes what needs to be built.
+See `docs/specs/` for detailed design documents and the v1.2+ roadmap.
 
 ## Documentation
 

@@ -6,7 +6,7 @@ Design specifications for the erdos-banger CLI toolkit.
 
 ```text
 v1.0 (DONE)     Foundation: CLI, data loading, search, Lean integration
-v1.1 (PENDING)  Literature: Ingest + RAG Q&A
+v1.1 (DONE)     Literature: Ingest + RAG Q&A
 v1.2 (DEFERRED) Iteration: Loop + logging + OpenAlex metadata
 v1.3 (FUTURE)   Enhancement: Vectors + batch ops
 v1.4 (FUTURE)   Integration: Formal conjectures + MCP
@@ -17,10 +17,7 @@ v2.0 (READY)    Expansion: PDF conversion (Marker + LLM)
 
 Specs currently in progress or awaiting implementation.
 
-| ID | Title | Status | Target | Description |
-|----|-------|--------|--------|-------------|
-| 010 | [Ingest Command](spec-010-ingest-command.md) | Pending | v1.1 | Literature ingestion: arXiv cache + Crossref metadata |
-| 011 | [Ask Command](spec-011-ask-command.md) | Pending | v1.1 | RAG prompt builder + optional LLM via subprocess |
+*None currently active.*
 
 ## Design Documents
 
@@ -51,6 +48,8 @@ Completed specs that are fully implemented.
 
 | ID | Title | Location |
 |----|-------|----------|
+| 010 | Ingest Command | [spec](spec-010-ingest-command.md) (Complete) |
+| 011 | Ask Command | [spec](spec-011-ask-command.md) (Complete) |
 | 001 | Dev Environment & Tooling | [archive](../_archive/specs/spec-001-dev-environment-tooling.md) |
 | 002 | Testing Strategy | [archive](../_archive/specs/spec-002-testing-strategy.md) |
 | 003 | Domain Models | [archive](../_archive/specs/spec-003-domain-models.md) |
@@ -78,7 +77,7 @@ v1.0 Foundation (DONE)
 ├── 008 Test Fixtures
 └── 009 Architecture Cleanup
 
-v1.1 Literature (PENDING)
+v1.1 Literature (DONE)
 ├── 010 Ingest Command ────────────┐
 └── 011 Ask Command ←──────────────┘ (uses the local search index; ingested extracts become usable once indexed)
 

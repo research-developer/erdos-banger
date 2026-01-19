@@ -1,8 +1,8 @@
 # erdos-banger - Ralph Wiggum Progress Tracker
 
 **Last Updated:** 2026-01-19
-**Status:** Active (Ready to Start)
-**Branch:** ralph-wiggum-v1.1
+**Status:** Active (v1.1 DONE; v1.2+ queued)
+**Branch:** ralph-wiggum-spec-010
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
 ---
@@ -28,7 +28,7 @@
 
 ### Phase 1: v1.1 Literature (Critical Path)
 
-**Note:** SPEC-010 has been broken down into atomic subtasks per debt-001-spec-010-scope.md
+**Note:** SPEC-010 has been broken down into atomic subtasks per DEBT-013 (`docs/_archive/debt/debt-013-spec-010-scope.md`)
 
 - [x] **SPEC-010-A** [REVIEWED]: Literature path conventions → `literature_paths.py` + tests
 - [x] **SPEC-010-B** [REVIEWED]: arXiv client → `arxiv_client.py` + unit tests + fixtures
@@ -72,7 +72,7 @@
 | Spec | Status | Reason |
 |------|--------|--------|
 | SPEC-018 | Complete | DevX Makefile already implemented |
-| SPEC-019 | Blocked | Docling typer conflict (v2.0+) |
+| SPEC-019 | Deferred | PDF conversion (Marker, v2.0+) |
 
 ---
 
@@ -118,7 +118,7 @@ v1.4 Integration
 - 2026-01-18: Initial setup - created PROGRESS.md, PROMPT.md, protocol.md
 - 2026-01-18: Created SPEC-012-DESIGN with D1-D8 design decisions (vaporware → concrete)
 - 2026-01-19: SPEC-010 attempted but exceeds single-iteration scope (>10 files, ~800-1000 LoC)
-- 2026-01-19: Created debt-001-spec-010-scope.md documenting scope issue and recommending task breakdown
+- 2026-01-19: Created DEBT-013 (`docs/_archive/debt/debt-013-spec-010-scope.md`) documenting scope issue and recommending task breakdown
 - 2026-01-19: Updated PROGRESS.md to replace SPEC-010 with atomic subtasks (SPEC-010-A through SPEC-010-E)
 - 2026-01-19: SPEC-010-A completed - created `src/erdos/core/literature_paths.py` with path conventions + `tests/unit/test_literature_paths.py` (10 tests, 100% coverage)
 - 2026-01-19: SPEC-010-A reviewed and verified - all acceptance criteria met, 100% test coverage, all quality gates pass

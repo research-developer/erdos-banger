@@ -1,17 +1,22 @@
 # Technical Debt 011: SPEC-020 (OpenAlex) Status Mismatch
 
 **Date:** 2026-01-19
-**Status:** Open
-**Priority:** P1
-**Impact:** Spec drift, future refactoring required
+**Status:** Resolved
+**Priority:** P2
+**Impact:** Documentation clarity
+**Resolved:** 2026-01-19
+**Commit:** (pending)
 
 ## Problem
 
-SPEC-020 (OpenAlex Integration) is marked "Status: Ready" but:
+This deck was created during a v1.1 post-completion review as a caution that SPEC-020 was
+marked **Ready** while not yet implemented.
 
-1. **No implementation exists** - `openalex_client.py` not created
-2. **Conflicts with SPEC-010** - SPEC-020 says OpenAlex should be PRIMARY source, but SPEC-010 (already implemented) uses Crossref/arXiv only
-3. **PROGRESS.md doesn't mention it** - unclear if intentional deferral or oversight
+After review, this is **not** a mismatch:
+
+- **Ready** means "fully specified and implementable" (not "already implemented").
+- SPEC-020 targets **v1.2+**, while SPEC-010 targets **v1.1**; the intent is a future
+  augmentation/refactor of ingestion metadata sources.
 
 ## Spec Conflict
 
@@ -40,7 +45,8 @@ But `ingest.py` currently:
 2. **(B) Defer to v1.2+** - Update SPEC-020 status from "Ready" to "Deferred"
 3. **(C) Make Optional** - Keep Crossref primary in v1.1, add OpenAlex as `--source openalex` option in v1.2
 
-**Recommended:** Option B - Defer to v1.2+ with clear documentation.
+**Resolution:** Keep SPEC-020 as a v1.2+ spec (Ready) and treat the provider choice
+(OpenAlex primary vs augment) as a future design/implementation decision, not a v1.1 defect.
 
 ## Action Items
 

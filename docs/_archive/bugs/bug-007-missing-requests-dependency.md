@@ -1,10 +1,10 @@
 # Bug 007: Missing `requests` Dependency in pyproject.toml
 
 **Priority:** P0 (Critical)
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-19
-**Fixed:** —
-**Commit:** —
+**Fixed:** 2026-01-19
+**Commit:** d97b218
 
 ## Description
 

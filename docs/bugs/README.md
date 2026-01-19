@@ -24,16 +24,18 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-004 | `iter_problems()` allows duplicate IDs (index overwrite risk) | P2 | Fixed | e862a35 |
 | BUG-005 | Dead global flags: `--config`, `--no-network` | P2 | Fixed | a26d149 |
 | BUG-006 | Ruff lints upstream submodule files | P1 | Fixed | 2f4124b |
-| BUG-007 | Missing `requests` dependency in pyproject.toml | P0 | Fixed | (pending commit) |
-| BUG-008 | Hardcoded exit code 78 in ask.py | P0 | Fixed | (pending commit) |
+| BUG-007 | Missing `requests` dependency in pyproject.toml | P0 | Fixed | d97b218 |
+| BUG-008 | Hardcoded exit code 78 in ask.py | P0 | Fixed | d97b218 |
+| BUG-009 | `erdos ask` crashes on NOT_FOUND + breaks `--json` contract | P0 | Fixed | 0310d62 |
 
-**Next Bug ID:** BUG-009
+**Next Bug ID:** BUG-010
 
 ### Archived Bug Decks
 
 - `docs/_archive/bugs/bug-001-typer-clirunner-mix-stderr.md`
 - `docs/_archive/bugs/bug-007-missing-requests-dependency.md`
 - `docs/_archive/bugs/bug-008-hardcoded-exit-code-78.md`
+- `docs/_archive/bugs/bug-009-ask-crash-not-found-json-contract.md`
 - `docs/_archive/bugs/adversarial-review-2026-01-17.md`
 - `docs/_archive/bugs/bug-002-search-build-index-json-stdout.md`
 - `docs/_archive/bugs/bug-003-search-fts-loader-missing.md`
