@@ -2,7 +2,7 @@
 
 > Adds semantic search via vector embeddings to complement the existing BM25 index.
 
-**Status:** Pending
+**Status:** Deferred
 **Target:** v1.3
 **Prerequisites (SSOT):**
 - Search index: `docs/_archive/specs/spec-006-search-index.md`
@@ -15,7 +15,9 @@
 
 ### In scope
 
-1. **Embedding generation** for problem statements and ingested content
+1. **Embedding generation** for indexed text chunks
+   - v1.0 indexes problem statements/notes (archived Spec 006).
+   - Reference chunks (e.g., arXiv extracts from Spec 010) are only embedded once they are actually indexed as `TextChunk`s (future extension; not assumed in v1.3).
 2. **Vector storage** in SQLite (BLOB columns with numpy serialization)
 3. **Semantic search** via cosine similarity
 4. **Hybrid ranking** combining BM25 and vector scores
@@ -134,6 +136,14 @@ CREATE TABLE chunk_embeddings (
 - Stored as numpy array serialized via `numpy.save()` to bytes
 - On load: `numpy.load(BytesIO(blob))`
 - Dimension stored in `chunk_embeddings.dimension` for validation
+
+**Model/dimension mismatch prevention (non-negotiable):**
+- The index must record the active embedding model name and dimension in SQLite metadata (e.g., `schema_meta` keys: `embedding_model`, `embedding_dimension`).
+- `SearchIndex.search_semantic(...)` / `search_hybrid(...)` must validate that:
+  - embeddings exist, and
+  - the stored model name equals the requested model name, and
+  - the stored dimension equals the loaded model’s output dimension
+- If any check fails, return a structured `CLIOutput.err(...)` with `error.type="ConfigError"` and `error.code=ExitCode.CONFIG_ERROR` (SSOT: `src/erdos/core/exit_codes.py`) advising the user to run `erdos search --build-embeddings`.
 
 ---
 
@@ -306,8 +316,17 @@ uv run pytest -m "not requires_lean and not requires_network"
 
 Note: Tests should mock the embedding model to avoid slow downloads.
 Recommended pattern:
-- monkeypatch `EmbeddingModel.encode()` to return a small deterministic vector (e.g., all zeros with a fixed dimension)
-- avoid network downloads by stubbing any model-loading logic in unit tests
+- avoid any network/model downloads in tests by using a local stub model implementation
+- monkeypatch `EmbeddingModel.encode()` to return a small deterministic vector derived from the input text (so ranking is testable), e.g.:
+
+```python
+def fake_encode(text: str) -> "np.ndarray":
+    # Deterministic 3-d embedding based on simple character counts.
+    t = text.lower()
+    return np.array([t.count("a"), t.count("e"), t.count("i")], dtype=np.float32)
+```
+
+This prevents reward-hacking where semantic scores are constant and tests still pass.
 
 ---
 

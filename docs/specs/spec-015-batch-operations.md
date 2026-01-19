@@ -2,7 +2,7 @@
 
 > Adds batch processing for ingest and formalize commands to scale across multiple problems.
 
-**Status:** Pending
+**Status:** Deferred
 **Target:** v1.3
 **Prerequisites (SSOT):**
 - Ingest command: `docs/specs/spec-010-ingest-command.md`
@@ -138,10 +138,16 @@ Example state (`logs/batches/{batch_id}.json`):
 
 When `--resume` is passed:
 1. Load `logs/batches/latest.json`, then load the referenced `{batch_id}.json`
-2. Verify the saved `command` and `filters` match the current invocation (otherwise usage error)
-2. Skip problems in `completed` list
-3. Retry problems in `failed` list
-4. Continue with `pending` list
+2. Verify the saved `schema_version` is supported (v1.3: only `1`). If unsupported, return `CLIOutput.err(...)` with `error.type="ConfigError"` and `error.code=ExitCode.CONFIG_ERROR`.
+3. Verify the saved `command` and `filters` match the current invocation (otherwise usage error: `error.type="UsageError"`, `error.code=ExitCode.USAGE_ERROR`)
+4. Skip problems in `completed` list
+5. Retry problems in `failed` list
+6. Continue with `pending` list
+
+**Corrupted or missing state handling (non-negotiable):**
+- If `logs/batches/latest.json` is missing, return `ExitCode.NOT_FOUND` with an actionable message (“no previous batch run found; re-run without --resume”).
+- If either JSON file cannot be parsed, return `ExitCode.CONFIG_ERROR` with a message indicating which file is corrupted.
+- If `{batch_id}.json` is missing but `latest.json` exists, return `ExitCode.NOT_FOUND` and advise deleting `latest.json` or re-running without `--resume`.
 
 ---
 
@@ -303,6 +309,17 @@ uv run pytest -m "not requires_lean and not requires_network"
 ---
 
 ## 8) Error Handling
+
+### Exit Codes (SSOT)
+
+Use `ExitCode` from `src/erdos/core/exit_codes.py`:
+
+- `ExitCode.SUCCESS` (0): all problems succeeded
+- `ExitCode.ERROR` (1): one or more problems failed
+- `ExitCode.USAGE_ERROR` (2): invalid flag combinations / resume mismatch
+- `ExitCode.NOT_FOUND` (3): `--resume` requested but no prior state exists
+- `ExitCode.NETWORK_ERROR` (4): `--no-network` prevents required external fetch
+- `ExitCode.CONFIG_ERROR` (10): corrupted/unsupported state files
 
 ### Partial Failure
 

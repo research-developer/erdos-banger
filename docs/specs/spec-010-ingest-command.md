@@ -76,6 +76,32 @@ uv run erdos ingest 6 --no-network
 uv run erdos ingest 6 --force
 ```
 
+### JSON Output Schema (SSOT)
+
+All JSON output must be wrapped in `CLIOutput` (archived Spec 003).
+
+On success (`success=true`), `CLIOutput.data` must include:
+
+```json
+{
+  "problem_id": 6,
+  "manifest_path": "literature/manifests/0006.yaml",
+  "references_total": 2,
+  "entries_written": 1,
+  "skipped": 0,
+  "manifest": {
+    "schema_version": 1,
+    "problem_id": 6,
+    "entries": []
+  }
+}
+```
+
+Notes:
+- `entries_written` is the number of `manifest.entries` written (which may be less than `references_total` because v1.1 skips references without DOI/arXiv ids).
+- `manifest` must be `ProblemManifest.model_dump(mode="json")` so `Path` and `datetime` fields serialize deterministically.
+- When `--json` is enabled, only the JSON payload may be written to stdout; all progress/human text must go to stderr.
+
 ---
 
 ## 2) Data Layout (File/Folder SSOT)
@@ -171,14 +197,24 @@ Responsibilities:
 - Load `ProblemRecord` via `ProblemLoader.from_default()` + `get_by_id()`
 - Iterate `problem.references`
 - For each reference:
-  - If `arxiv_id` → fetch arXiv metadata + optionally download source tarball + compute MD5 (`ManifestEntry.cache_hash`) + write extract
-  - Else if `doi` → fetch Crossref metadata only
+  - If `doi` → fetch Crossref metadata. If `arxiv_id` is also present and downloads are enabled, download/extract the arXiv source tarball and attach it to the same manifest entry.
+  - Else if `arxiv_id` → fetch arXiv metadata + optionally download source tarball + compute MD5 (`ManifestEntry.cache_hash`) + write extract
   - Else → record “skipped (no identifier)” in CLI output (no manifest entry in v1.1)
+- **Reference identity and merging (non-negotiable):**
+  - Each `ReferenceEntry` maps to **at most one** `ManifestEntry`.
+  - If a `ReferenceEntry` has **both** `doi` and `arxiv_id`, treat it as **one** reference:
+    - Fetch metadata via Crossref (DOI is authoritative for bibliographic metadata).
+    - Set `ReferenceRecord.doi=<doi>` and `ReferenceRecord.arxiv_id=<arxiv_id>`.
+    - If downloads are enabled, download/extract the arXiv tarball and attach the cache/extract state to the same `ManifestEntry`.
+  - Manifest entry matching for idempotence uses this stable key:
+    - Prefer DOI when present (`doi` lowercased).
+    - Else use `arxiv_id` as written in the YAML (including version suffix if present).
+  - If two references in the current YAML resolve to the same stable key (duplicate DOI/arXiv id), treat this as a fatal configuration error: return `CLIOutput.err(...)` with `error.type="ConfigError"` and `error.code=ExitCode.CONFIG_ERROR` (SSOT: `src/erdos/core/exit_codes.py`) and do not write/modify the manifest.
 - Read/merge existing manifest if present (idempotent):
   - if an entry already exists and `--force` is false, keep existing cache paths + hashes **and do not re-fetch metadata**
   - if `--force`, overwrite cached state for that reference
 - If the current problem YAML reference list removes a previously ingested reference, drop that entry from the rewritten manifest (cached files remain on disk; manifest reflects current YAML refs).
-- Write updated manifest to `literature/manifests/{problem_id:04d}.yaml`
+- Write updated manifest to `literature/manifests/{problem_id:04d}.yaml` **atomically** (write to a temp file in the same directory, then replace).
 - Return:
   - `CLIOutput.ok(...)` when **all** references were processed without errors, or
   - `CLIOutput.err(...)` when **any** reference failed, but still write the manifest first.
@@ -282,6 +318,7 @@ Create tests that use fixtures from `tests/fixtures/` (Spec 008):
   - Builds a manifest for a problem containing both DOI + arXiv refs (use `tests/fixtures/sample_problems.yaml`)
   - Asserts `--no-download` avoids writing cache files
   - Asserts `--no-network` returns existing manifest when present
+  - Asserts partial failure still writes a manifest file before returning `CLIOutput.err(...)` (e.g., Crossref 404 for one DOI while another ref succeeds)
 
 **Mocking rule:** All HTTP fetch functions must be covered by tests using `responses` (no real network).
 
@@ -305,7 +342,7 @@ uv run pytest --cov=erdos --cov-fail-under=80 -m "not requires_lean and not requ
 
 ## 8) Error Handling (Non-negotiable)
 
-- Never print human text to stdout when `--json` is enabled.
+- Never print human text to stdout when `--json` is enabled (use stderr for progress/warnings).
 - Network failures must be surfaced as a structured `CLIOutput.err(...)` with an actionable message.
 - A single reference failure must not abort ingestion of other references unless it’s a fatal configuration error (e.g., invalid manifest path).
 

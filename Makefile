@@ -44,7 +44,7 @@ lint-fix: ## Lint and apply fixes (ruff)
 	$(RUN) ruff check . --fix
 
 typecheck: ## Type-check (mypy)
-	$(RUN) mypy src/
+	$(RUN) mypy src/ tests/
 
 test: ## Run tests (skip Lean + network)
 	$(RUN) pytest -m "$(PYTEST_FAST_MARKERS)"

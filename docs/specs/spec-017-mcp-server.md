@@ -2,7 +2,7 @@
 
 > Exposes erdos-banger functionality via Model Context Protocol for AI assistant integration.
 
-**Status:** Pending
+**Status:** Deferred
 **Target:** v1.4
 **Prerequisites (SSOT):**
 - CLI patterns: `docs/_archive/specs/spec-004-cli-architecture.md`
@@ -64,6 +64,18 @@ python -m erdos.mcp.server
 ---
 
 ## 2) Exposed Tools
+
+### Tool Availability (Non-negotiable)
+
+- Core v1 tools are always registered:
+  - `get_problem`, `list_problems`, `get_references`, `search_index`, `lean_check`, `lean_formalize`
+- Optional tools are registered **only if** their prerequisite spec is implemented and importable:
+  - `ask_question` requires Spec 011 modules to exist
+  - `get_logs` requires Spec 013 modules to exist
+  - semantic/hybrid modes require Spec 014 modules to exist
+  - formalization import/status requires Spec 016 modules to exist
+
+If an optional tool is not registered, it must not appear in the MCP tool list.
 
 ### 2.1 `get_problem`
 
@@ -242,12 +254,13 @@ MCP server entry point using the MCP Python SDK (`mcp` on PyPI).
 ```python
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("erdos-banger", json_response=True)
+mcp = FastMCP("erdos-banger")
 
 @mcp.tool()
 def get_problem(problem_id: int) -> dict:
     """Get details for a specific Erdős problem."""
-    # Call existing core logic and return CLIOutput-compatible dicts.
+    # Call existing Python core logic (do NOT shell out to `erdos ...` via subprocess)
+    # and return CLIOutput-compatible dicts.
     ...
 
 # ... register all tools, then:
@@ -270,7 +283,7 @@ Add to `pyproject.toml`:
 ```toml
 [project.optional-dependencies]
 mcp = [
-    "mcp[cli]>=1.25.0",
+    "mcp[cli]>=1.25.0,<2",
 ]
 ```
 
@@ -283,6 +296,22 @@ mcp = [
 ### Tool Errors
 
 Return errors using `CLIOutput.err(...)` (SSOT: archived Spec 003) so the MCP surface matches the CLI `--json` surface.
+
+If a tool depends on an optional spec that is not implemented/installed, return:
+
+```json
+{
+  "schema_version": 1,
+  "command": "<tool_name>",
+  "success": false,
+  "data": null,
+  "error": {
+    "type": "NotImplemented",
+    "message": "Feature not yet implemented (requires SPEC-0XX)",
+    "code": 1
+  }
+}
+```
 
 ### Server Errors
 
@@ -311,7 +340,9 @@ uv run erdos-mcp
 - `tests/unit/test_mcp_tools.py`
   - Each tool returns correct schema
   - Error handling for invalid inputs
+  - Core tools (`get_problem`, `list_problems`, `get_references`, `search_index`) must be exercised against `tests/fixtures/sample_problems.yaml` (no network) and assert key fields (e.g., `get_problem(...).data.id == problem_id`)
   - Tool schemas match expected format
+  - Tests must be guarded with `pytest.importorskip("mcp")` so the base test suite can run without the optional extra.
 
 ### Integration Tests
 
@@ -324,6 +355,7 @@ uv run erdos-mcp
 ### Acceptance Criteria
 
 ```bash
+uv sync --extra mcp
 uv run ruff check .
 uv run mypy src/
 uv run pytest -m "not requires_lean and not requires_network"
@@ -338,6 +370,7 @@ uv run pytest -m "not requires_lean and not requires_network"
 - Tools only access files within the erdos-banger project directory
 - No arbitrary file read/write
 - Lean files restricted to `formal/lean/`
+- Path traversal must be rejected (e.g., `../../etc/passwd`), returning `CLIOutput.err(...)` with `error.type="UsageError"` and `error.code=ExitCode.USAGE_ERROR` (SSOT: `src/erdos/core/exit_codes.py`).
 
 ### No Network by Default
 

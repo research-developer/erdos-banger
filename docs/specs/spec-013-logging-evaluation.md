@@ -2,7 +2,7 @@
 
 > Adds structured logging for all CLI commands and a run log query interface for evaluating progress.
 
-**Status:** Pending
+**Status:** Deferred
 **Target:** v1.2
 **Prerequisites (SSOT):**
 - CLI architecture: `docs/_archive/specs/spec-004-cli-architecture.md`
@@ -317,6 +317,7 @@ logs/
 ```
 
 **Repo hygiene:** Add `logs/*.jsonl` to `.gitignore` (Spec 001) to prevent accidental commits.
+Note: v1 already ignores `logs/*.json`; this spec adds `logs/*.jsonl` specifically for JSON Lines run logs.
 
 **Log rotation:** Not in v1.2 scope. For now, users can manually archive/delete old logs.
 
@@ -352,11 +353,13 @@ uv run erdos logs --problem-id 6 --command "lean check"
   - Log entry generation with correct schema
   - Timing capture via context manager
   - Query filtering by problem_id, command, since, status
+  - Failure logging: when `CLIOutput.success=false`, the log entry includes `success=false` and an `error` object
 
 ### Integration Tests
 
 - `tests/integration/test_cli_logs.py`
   - Run `erdos show 6`, verify log entry exists
+  - Run a failing command (e.g., `erdos show 999999` with fixtures) and verify a failure log entry exists with `success=false`
   - Run `erdos --json logs`, verify valid JSON output
   - Run `erdos logs --summary`, verify aggregation
 

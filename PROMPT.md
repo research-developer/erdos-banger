@@ -4,10 +4,33 @@ You are implementing specs for the erdos-banger CLI toolkit using **Ironclad TDD
 This prompt runs headless via:
 
 ```bash
-while true; do
-  claude --dangerously-skip-permissions -p "$(cat PROMPT.md)"
-  sleep 2
-done
+MAX=50
+TIMEOUT=14400
+ITER_TIMEOUT=600
+
+TIMEOUT_CMD="${TIMEOUT_CMD:-}"
+if [[ -z "$TIMEOUT_CMD" ]]; then
+  if command -v timeout >/dev/null 2>&1; then
+    TIMEOUT_CMD="timeout"
+  elif command -v gtimeout >/dev/null 2>&1; then
+    TIMEOUT_CMD="gtimeout"
+  else
+    echo "Missing timeout command. Install coreutils (macOS) or use Linux 'timeout'." >&2
+    exit 1
+  fi
+fi
+
+mkdir -p logs/ralph
+
+"$TIMEOUT_CMD" "$TIMEOUT" bash -c '
+  for i in $(seq 1 '"$MAX"'); do
+    n=$(printf "%03d" "$i")
+    log="logs/ralph/iteration_${n}.log"
+    echo "=== Iteration $i/'"$MAX"' ===" | tee -a "$log"
+    '"$TIMEOUT_CMD"' '"$ITER_TIMEOUT"' claude --dangerously-skip-permissions -p "$(cat PROMPT.md)" 2>&1 | tee -a "$log"
+    sleep 2
+  done
+'
 ```
 
 If `PROGRESS.md` has no unchecked items, exit cleanly without making changes.
@@ -67,6 +90,21 @@ If yes, **THIS ITERATION IS A REVIEW ITERATION**:
 11. Exit
 
 **DO NOT** attempt multiple tasks. One task per iteration.
+
+### Stop Conditions (Escalate, Don’t Thrash)
+
+If you hit any of the following, STOP and request human input (do not keep looping blindly):
+
+1. A spec is ambiguous, contradictory, or references missing SSOT.
+2. A tool/dep is missing or incompatible (e.g., `uv sync --frozen` cannot succeed).
+3. Quality gates fail after 3 fix attempts for the same root cause.
+4. A change would touch >10 files or exceed ~500 LoC for a single task.
+5. The task would require network access but the spec requires offline determinism.
+
+In these cases:
+- write a short `docs/bugs/bug-XXX-*.md` or `docs/debt/debt-XXX-*.md` with reproduced evidence
+- add a new unchecked item to `PROGRESS.md`
+- commit and exit
 
 ---
 
