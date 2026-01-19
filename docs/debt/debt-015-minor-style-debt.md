@@ -15,7 +15,8 @@
 - `src/erdos/commands/search.py` (4 occurrences)
 - `src/erdos/commands/show.py` (2 occurrences)
 - `src/erdos/commands/list_cmd.py` (2 occurrences)
-- `src/erdos/core/ask.py` (4 occurrences)
+
+**Note:** `src/erdos/core/ask.py` was normalized to `ExitCode.ERROR` in commit `8acca96`.
 
 **Issue:** Some error returns use `code=1` directly instead of `code=ExitCode.ERROR`.
 
@@ -26,14 +27,14 @@
 ### 2. Broad `except Exception` at CLI Boundary
 
 **Files affected:**
-- `src/erdos/commands/lean.py:82, 114`
-- `src/erdos/commands/refs.py:61`
-- `src/erdos/commands/search.py:174`
-- `src/erdos/commands/show.py:74`
-- `src/erdos/commands/list_cmd.py:85`
-- `src/erdos/core/ask.py:239, 250, 298`
-- `src/erdos/core/formalizer.py:67`
-- `src/erdos/core/search_index.py:84`
+- `src/erdos/commands/lean.py`
+- `src/erdos/commands/refs.py`
+- `src/erdos/commands/search.py`
+- `src/erdos/commands/show.py`
+- `src/erdos/commands/list_cmd.py`
+- `src/erdos/core/ask.py`
+- `src/erdos/core/formalizer.py`
+- `src/erdos/core/search_index.py`
 
 **Issue:** Broad exception catching at CLI command boundaries.
 

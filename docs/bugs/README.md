@@ -27,8 +27,9 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-007 | Missing `requests` dependency in pyproject.toml | P0 | Fixed | d97b218 |
 | BUG-008 | Hardcoded exit code 78 in ask.py | P0 | Fixed | d97b218 |
 | BUG-009 | `erdos ask` crashes on NOT_FOUND + breaks `--json` contract | P0 | Fixed | 0310d62 |
+| BUG-010 | `erdos ingest --no-network` wrong exit code on first run | P2 | Fixed | 49ba46f |
 
-**Next Bug ID:** BUG-010
+**Next Bug ID:** BUG-011
 
 ### Archived Bug Decks
 
@@ -36,6 +37,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/bug-007-missing-requests-dependency.md`
 - `docs/_archive/bugs/bug-008-hardcoded-exit-code-78.md`
 - `docs/_archive/bugs/bug-009-ask-crash-not-found-json-contract.md`
+- `docs/_archive/bugs/bug-010-ingest-no-network-exit-code.md`
 - `docs/_archive/bugs/adversarial-review-2026-01-17.md`
 - `docs/_archive/bugs/bug-002-search-build-index-json-stdout.md`
 - `docs/_archive/bugs/bug-003-search-fts-loader-missing.md`
