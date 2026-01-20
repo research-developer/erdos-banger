@@ -7,32 +7,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-load_env_file() {
-  local env_file="$1"
-  [[ -f "$env_file" ]] || return 0
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    [[ "$line" =~ ^[[:space:]]*# ]] && continue
-    [[ "$line" =~ ^[[:space:]]*$ ]] && continue
-    local key="${line%%=*}"
-    local value="${line#*=}"
-
-    key="${key#"${key%%[![:space:]]*}"}"
-    key="${key%"${key##*[![:space:]]}"}"
-
-    value="${value%%#*}"
-    value="${value#"${value%%[![:space:]]*}"}"
-    value="${value%"${value##*[![:space:]]}"}"
-
-    if [[ "$value" =~ ^\".*\"$ ]]; then
-      value="${value:1:-1}"
-    elif [[ "$value" =~ ^\'.*\'$ ]]; then
-      value="${value:1:-1}"
-    fi
-
-    export "${key}=${value}"
-  done < "$env_file"
-}
-
+# shellcheck source=lib/load-env.sh
+source "${SCRIPT_DIR}/lib/load-env.sh"
 load_env_file "${REPO_ROOT}/.env"
 
 : "${OPENAI_API_KEY:?OPENAI_API_KEY not set}"

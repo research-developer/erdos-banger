@@ -1,7 +1,8 @@
 # Technical Debt 025: DRY Violation in Shell LLM Wrappers (`load_env_file`)
 
 **Date:** 2026-01-20
-**Status:** Open
+**Status:** Fixed
+**Fixed In:** (pending commit)
 **Priority:** P4 (Nice-to-have)
 **Impact:** Small maintenance risk; changes must be duplicated across scripts
 

@@ -38,7 +38,7 @@ This queue is the SSOT for the next Ralph run. Fix debt/bugs first; do not start
   - Deck: `docs/debt/debt-023-security-lint-suppressions.md`
   - Acceptance: Either remove `# noqa: S314` / `# noqa: S324` via safer primitives, or document the threat model explicitly; `make ci` stays green.
 
-- [ ] **DEBT-025**: DRY violation in shell LLM wrappers (`load_env_file`)
+- [x] **DEBT-025**: DRY violation in shell LLM wrappers (`load_env_file`)
   - Deck: `docs/debt/debt-025-shell-llm-wrapper-duplication.md`
   - Acceptance: `.env` loading logic defined once (shared helper or explicitly documented constraints) and validated by tests that run offline.
 
@@ -171,6 +171,7 @@ Historical record of completed sprint items (kept for auditability):
 - 2026-01-20: Sprint Complete - All 6 debt items (DEBT-016 through DEBT-021) resolved. PR #9 opened for CodeRabbit review.
 - 2026-01-20: [DEBT-024] Fixed placeholder metadata - Replaced `Your Name` with `The-Obstacle-Is-The-Way` in pyproject.toml authors field, removed placeholder email (GitHub handle only). Spec-020 examples are legitimate documentation for API usage. Files: pyproject.toml, docs/debt/debt-024-placeholder-metadata-identifiers.md, docs/debt/README.md, PROGRESS.md
 - 2026-01-20: [DEBT-023] Fixed security lint suppressions - Replaced `xml.etree.ElementTree` with `defusedxml` for safer XML parsing (removes S314 suppression), replaced MD5 with SHA256 for cache hash (removes S324 suppression). Added defusedxml as dependency with type stubs. Files: src/erdos/core/arxiv_client.py, src/erdos/core/ingest.py, pyproject.toml
+- 2026-01-20: [DEBT-025] Fixed DRY violation in shell LLM wrappers - Extracted `load_env_file()` to `scripts/lib/load-env.sh`, updated all 3 wrapper scripts (llm.sh, llm-openai.sh, llm-anthropic.sh) to source shared helper, fixed bash 3.2 compatibility for quote stripping, added 15 unit tests for .env parsing. Files: scripts/lib/load-env.sh (new), scripts/llm.sh, scripts/llm-openai.sh, scripts/llm-anthropic.sh, tests/unit/test_load_env_sh.py (new)
 
 ---
 
