@@ -1,8 +1,8 @@
 # erdos-banger - Ralph Wiggum Progress Tracker
 
 **Last Updated:** 2026-01-19
-**Status:** Active (v1.1 DONE; v1.2+ queued)
-**Branch:** ralph-wiggum-spec-010
+**Status:** Active (Technical Debt Sprint)
+**Branch:** ralph-wiggum-debt
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
 ---
@@ -12,7 +12,7 @@
 1. **One task per iteration** (never batch)
 2. **TDD required**: add a failing test before production code
 3. **No reward hacks**:
-   - never delete/disable tests to “make CI green”
+   - never delete/disable tests to "make CI green"
    - never mock the unit under test (mock only boundaries: network/subprocess/time)
    - never lower quality gates (coverage, lint, mypy)
 4. **Checkpoint discipline**:
@@ -26,115 +26,50 @@
 
 ## Active Queue
 
-### Phase 1: v1.1 Literature (Critical Path)
+### Technical Debt Sprint (Recommended Order)
 
-**Note:** SPEC-010 has been broken down into atomic subtasks per DEBT-013 (`docs/_archive/debt/debt-013-spec-010-scope.md`)
+Per `docs/debt/README.md`, these are the active debt items ordered by recommended resolution:
 
-- [x] **SPEC-010-A** [REVIEWED]: Literature path conventions → `literature_paths.py` + tests
-- [x] **SPEC-010-B** [REVIEWED]: arXiv client → `arxiv_client.py` + unit tests + fixtures
-- [x] **SPEC-010-C** [REVIEWED]: Crossref client → `crossref_client.py` + unit tests + fixtures
-- [x] **SPEC-010-D** [REVIEWED]: Ingest core logic → `ingest.py` + unit tests
-- [x] **SPEC-010-E** [REVIEWED]: Ingest command → `commands/ingest.py` + integration tests
-- [x] **SPEC-011** [REVIEWED]: Ask Command → `docs/specs/spec-011-ask-command.md`
+- [ ] **DEBT-020**: Magic Numbers and Naming - Define constants, use ExitCode enum
+  - Spec: `docs/debt/debt-020-magic-numbers-and-naming.md`
+  - Acceptance: `constants.py` created, all `[:200]` → `PREVIEW_LENGTH`, all `code=3` → `ExitCode.NOT_FOUND`, all `code=2` → `ExitCode.USAGE_ERROR`
 
-### Phase 1.5: v1.1 Bug Fixes (Critical)
+- [ ] **DEBT-018**: DRY Violations - Consolidate duplicated code patterns
+  - Spec: `docs/debt/debt-018-dry-violations.md`
+  - Acceptance: arXiv download logic in ONE place, stable key function in ONE place, time measurement helper
 
-**Critical bugs found during v1.1 review - must fix before v1.1 release:**
+- [ ] **DEBT-017**: Function Length Violations - Extract helper functions
+  - Spec: `docs/debt/debt-017-function-length-violations.md`
+  - Acceptance: Remove `# noqa: PLR0911,PLR0912,PLR0915` suppressions, no function >50 lines
 
-- [x] **BUG-007**: Add missing `requests` dependency to pyproject.toml → `docs/bugs/bug-007-missing-requests-dependency.md`
-- [x] **BUG-008**: Fix hardcoded exit code 78 in ask.py → `docs/bugs/bug-008-hardcoded-exit-code-78.md`
+- [ ] **DEBT-016**: SRP Violation in models.py - Split into focused modules
+  - Spec: `docs/debt/debt-016-srp-models-violation.md`
+  - Acceptance: `models/` package with focused modules, backward-compatible imports, each module <150 lines
 
-### Phase 2: v1.2 Iteration (Deferred but Ready)
+- [ ] **DEBT-019**: Dependency Inversion Violations - Add protocols and context
+  - Spec: `docs/debt/debt-019-dependency-inversion-violations.md`
+  - Acceptance: `ProblemRepository` protocol, `AppContext` container, no `from_default()` in business logic
 
-- [x] **SPEC-012-DESIGN**: Loop Command Design Decisions → `docs/specs/spec-012-design.md` *(Approved SSOT)*
-- [ ] **SPEC-012**: Loop Command → `docs/specs/spec-012-loop-command.md` *(deferred to v1.2+)*
-- [ ] **SPEC-013**: Logging & Evaluation → `docs/specs/spec-013-logging-evaluation.md` *(deferred to v1.2+)*
-
-### Phase 3: v1.3 Enhancement
-
-- [ ] **SPEC-014**: Vector Embeddings → `docs/specs/spec-014-vector-embeddings.md`
-- [ ] **SPEC-015**: Batch Operations → `docs/specs/spec-015-batch-operations.md`
-
-### Phase 4: v1.4 Integration
-
-- [ ] **SPEC-016**: Formal Conjectures → `docs/specs/spec-016-formal-conjectures.md`
-- [ ] **SPEC-017**: MCP Server → `docs/specs/spec-017-mcp-server.md`
-
-### Phase 5: Final Verification
-
-- [x] **FINAL-GATES**: All quality gates pass (`make ci`)
-- [x] **FINAL-SMOKE**: Smoke test passes (`make smoke`)
-
----
-
-## Blocked/Skipped
-
-| Spec | Status | Reason |
-|------|--------|--------|
-| SPEC-018 | Complete | DevX Makefile already implemented |
-| SPEC-019 | Deferred | PDF conversion (Marker, v2.0+) |
+- [ ] **DEBT-021**: Missing Abstractions - Add Repository/Service patterns
+  - Spec: `docs/debt/debt-021-missing-abstractions.md`
+  - Acceptance: Service layer exists, Repository pattern implemented
 
 ---
 
 ## Guidelines
 
-- **SPEC-* tasks require a follow-up review iteration** with `[REVIEWED]` marker
-- **TDD is mandatory** - write failing tests BEFORE implementation
+- **DEBT-* tasks follow TDD** - write tests for new behavior BEFORE refactoring
+- **Pure refactors** should not change behavior - existing tests must pass
 - **One task per iteration** - do not batch tasks
 - **Quality gates must pass** before marking complete
-- **Atomic commits** with proper format
-
----
-
-## Dependency Graph
-
-```
-v1.1 Literature (START HERE)
-├── SPEC-010-A Literature paths
-├── SPEC-010-B arXiv client
-├── SPEC-010-C Crossref client
-├── SPEC-010-D Ingest core logic
-├── SPEC-010-E Ingest command
-└── SPEC-011 Ask Command ← uses the local search index (ingested extracts become usable once indexed)
-
-v1.2 Iteration
-├── SPEC-012-DESIGN Loop Design Decisions ← approved SSOT
-├── SPEC-012 Loop Command ← 012-DESIGN + 011 Ask + 007 Lean
-└── SPEC-013 Logging ← all commands (tracks progress)
-
-v1.3 Enhancement
-├── SPEC-014 Vector Embeddings ← extends 006 Search Index
-└── SPEC-015 Batch Operations ← needs 010 Ingest + 007 Lean
-
-v1.4 Integration
-├── SPEC-016 Formal Conjectures ← needs 007 Lean
-└── SPEC-017 MCP Server ← exposes all CLI commands
-```
+- **Atomic commits** with proper format: `[DEBT-XXX] Type: description`
 
 ---
 
 ## Work Log
 
-- 2026-01-18: Initial setup - created PROGRESS.md, PROMPT.md, protocol.md
-- 2026-01-18: Created SPEC-012-DESIGN with D1-D8 design decisions (vaporware → concrete)
-- 2026-01-19: SPEC-010 attempted but exceeds single-iteration scope (>10 files, ~800-1000 LoC)
-- 2026-01-19: Created DEBT-013 (`docs/_archive/debt/debt-013-spec-010-scope.md`) documenting scope issue and recommending task breakdown
-- 2026-01-19: Updated PROGRESS.md to replace SPEC-010 with atomic subtasks (SPEC-010-A through SPEC-010-E)
-- 2026-01-19: SPEC-010-A completed - created `src/erdos/core/literature_paths.py` with path conventions + `tests/unit/test_literature_paths.py` (10 tests, 100% coverage)
-- 2026-01-19: SPEC-010-A reviewed and verified - all acceptance criteria met, 100% test coverage, all quality gates pass
-- 2026-01-19: SPEC-010-B completed - created `src/erdos/core/arxiv_client.py` with `parse_arxiv_atom()`, `fetch_arxiv_atom()`, `extract_arxiv_text()` + `tests/unit/test_arxiv_client.py` (10 tests) + `tests/unit/test_arxiv_extract.py` (6 tests), added types-requests to dev dependencies, all quality gates pass
-- 2026-01-19: SPEC-010-B reviewed and verified - all acceptance criteria met, 89% coverage for arxiv_client.py, all quality gates pass, no TODO/half-measures
-- 2026-01-19: SPEC-010-C completed - created `src/erdos/core/crossref_client.py` with `parse_crossref_work()`, `fetch_crossref_work()` + `tests/unit/test_crossref_client.py` (9 tests), 88% coverage for crossref_client.py, all quality gates pass
-- 2026-01-19: SPEC-010-C reviewed and verified - all acceptance criteria met, two-layer API (fetch+parse) for network-free testing, proper Crossref polite pool compliance, 88% coverage, all quality gates pass
-- 2026-01-19: SPEC-010-D completed - created `src/erdos/core/ingest.py` with `ingest_problem_references()` orchestrating problem loading, metadata fetching (arXiv/Crossref), manifest creation/updates + `tests/unit/test_ingest_service.py` (5 comprehensive tests covering DOI-only, arXiv-only, merged DOI+arXiv, idempotence, flags), 71% coverage for ingest.py, 84% overall, all quality gates pass
-- 2026-01-19: SPEC-010-D reviewed and verified - all acceptance criteria met, core orchestration logic complete with proper reference merging/deduplication/idempotence, atomic manifest writes, 84% overall coverage (exceeds 80% requirement), all quality gates pass, no TODO/half-measures
-- 2026-01-19: SPEC-010-E completed - created `src/erdos/commands/ingest.py` with full CLI integration (arguments, options, --json support, human output), registered in `src/erdos/cli.py`, added `tests/integration/test_cli_ingest.py` (5 tests), fixed manifest deserialization bug (TypeAdapter with strict=False for enum/datetime conversion), all quality gates pass, 84% overall coverage
-- 2026-01-19: SPEC-010-E reviewed and verified - all acceptance criteria met, CLI properly handles all options (--force, --no-download, --no-network, --timeout, --delay, --mailto), --json flag correctly routes output, integration tests cover all key scenarios (JSON output, --no-download, idempotence, NOT_FOUND error, human output), 84% overall coverage, all quality gates pass, no TODO/half-measures
-- 2026-01-19: SPEC-011 completed - created `src/erdos/core/ask.py` with `build_prompt()`, `perform_retrieval()`, `execute_llm()`, `ask_question()` + `src/erdos/commands/ask.py` CLI integration + registered in `src/erdos/cli.py`, added `tests/unit/test_ask_prompt.py` (9 tests), `tests/unit/test_ask_retrieval.py` (5 tests), `tests/unit/test_ask_llm.py` (7 tests), `tests/integration/test_cli_ask.py` (8 tests), fixed FTS5 query syntax for special characters, 83% overall coverage, all quality gates pass
-- 2026-01-19: SPEC-011 reviewed and verified - all acceptance criteria met, deterministic prompt builder matches spec SSOT template, retrieval uses SearchIndex.search() with problem_id filter, LLM execution with shell=False security, proper exit codes (NOT_FOUND/ERROR/CONFIG_ERROR/USAGE_ERROR), FTS5 query escaping implemented, comprehensive test coverage (21 unit + 8 integration tests), 83% overall coverage, all quality gates pass, no TODO/half-measures
-- 2026-01-19: v1.1 Literature phase complete - all Phase 1 specs (SPEC-010-A through SPEC-011) implemented and reviewed, FINAL-GATES and FINAL-SMOKE verified passing, 83% overall coverage, ready for v1.2 planning
-- 2026-01-19: Post-v1.1 review - discovered two P0 bugs (BUG-007: missing requests dependency, BUG-008: hardcoded exit code 78), documented in docs/bugs/, added to PROGRESS.md as Phase 1.5, also documented two P1 debt items (DEBT-011: SPEC-020 status mismatch, DEBT-012: broad exception handling), archived DEBT-001
-- 2026-01-19: BUG-007 and BUG-008 fixed - added `requests>=2.32.5` to pyproject.toml dependencies (BUG-007), replaced hardcoded exit code 78 with ExitCode.CONFIG_ERROR in ask.py (BUG-008), added `tests/unit/test_dependencies.py` (3 tests verifying requests dependency), added test_ask_command_config_error_exit_code to test_cli_ask.py (verifies exit code 10 not 78), all quality gates pass, 83% coverage
+- 2026-01-19: Created ralph-wiggum-debt branch for technical debt sprint
+- 2026-01-19: Set up PROGRESS.md with 6 active debt items from docs/debt/README.md
 
 ---
 
@@ -142,9 +77,9 @@ v1.4 Integration
 
 The queue is complete when:
 1. All `[ ]` items in Active Queue are `[x]`
-2. All SPEC-* items have `[REVIEWED]` markers
-3. `make ci` passes
-4. `make smoke` passes
+2. `make ci` passes
+3. `make smoke` passes
+4. All debt documents updated with "Fixed" status and commit hashes
 
 The loop operator verifies completion via this file's state (no unchecked items), not by parsing model output.
 
