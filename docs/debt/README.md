@@ -14,7 +14,12 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-*None currently active.*
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| DEBT-022 | [Large core modules (SRP pressure)](debt-022-large-core-modules-srp.md) | P2 | Open |
+| DEBT-023 | [Security lint suppressions (XML + MD5)](debt-023-security-lint-suppressions.md) | P2 | Open |
+| DEBT-024 | [Placeholder metadata (authors / contact email)](debt-024-placeholder-metadata-identifiers.md) | P3 | Open |
+| DEBT-025 | [DRY violation in shell LLM wrappers](debt-025-shell-llm-wrapper-duplication.md) | P4 | Open |
 
 ## Archived Debt
 
@@ -44,7 +49,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-020 | Magic Numbers and Naming | P3 | Fixed | 6d8981c |
 | DEBT-021 | Missing abstractions | P2 | Fixed | 3dd1610 |
 
-**Next Debt ID:** DEBT-022
+**Next Debt ID:** DEBT-026
 
 ### Archived Debt Decks
 

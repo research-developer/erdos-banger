@@ -58,7 +58,9 @@ src/erdos/
 │   ├── presenter.py    # Shared output formatting (exit_with_result, CLIOutput)
 │   └── *.py           # Each command module (list_cmd.py, show.py, etc.)
 └── core/               # Business logic
-    ├── models.py       # Pydantic models (ProblemRecord, ReferenceRecord, CLIOutput, etc.)
+    ├── models/         # Pydantic models (ProblemRecord, ReferenceRecord, CLIOutput, etc.)
+    ├── ports.py        # Protocol “ports” for dependency inversion
+    ├── context.py      # AppContext composition root (wiring concrete deps)
     ├── problem_loader.py  # Loads problems from YAML
     ├── search_index.py    # SQLite FTS5 search
     ├── lean_runner.py     # Lean 4 compilation wrapper
@@ -71,19 +73,26 @@ src/erdos/
 **Data flow:** Commands → Core functions → ProblemLoader/SearchIndex → Storage
 
 **Key patterns:**
-- Commands use `ProblemLoader.from_default()` for data access
+- Commands get dependencies via `erdos.commands.app_context.get_app_context()` (AppContext + Protocol ports)
 - All commands support `--json` for machine-readable output via `CLIOutput`
 - Exit codes defined in `core/exit_codes.py` (ExitCode enum)
 - Tests use `tests/fixtures/sample_problems.yaml` as test data
 
 ## Data Locations
 
-- `data/problems_enriched.yaml` - Enriched problem dataset (titles, statements, references)
+- `data/problems_enriched.yaml` - Local enriched problem dataset (titles, statements, references) (gitignored)
+- `src/erdos/data/problems_enriched.yaml` - Built-in sample dataset shipped with the package
 - `data/erdosproblems/` - Upstream submodule (metadata only, do not modify)
 - `literature/manifests/` - Reference metadata per problem
 - `literature/cache/` - arXiv source tarballs (gitignored)
 - `index/` - SQLite FTS5 index (gitignored)
 - `formal/lean/` - Lean 4 project
+
+## Ralph Wiggum Logs
+
+- `ralph.log` is intentionally tracked in git as a run journal for the Ralph Wiggum loop.
+- Do not delete or rewrite history in `ralph.log`.
+- Never include API keys or other secrets in `ralph.log` (or any tracked file).
 
 ## Test Markers
 
@@ -103,7 +112,7 @@ src/erdos/
 
 ## Technical Debt Status
 
-No active technical debt. All items (DEBT-016 through DEBT-021) resolved and archived in `docs/_archive/debt/`. See `docs/debt/README.md` for the complete history.
+Track active technical debt in `docs/debt/README.md`. Resolved decks are archived under `docs/_archive/debt/`.
 
 ## Key Specs
 

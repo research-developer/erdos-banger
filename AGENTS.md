@@ -10,6 +10,7 @@
 - `docs/`: specs, bug/debt decks, and process docs.
 - `formal/lean/`: Lean 4 project scaffold used by Lean integration.
 - `scripts/`: helper scripts (e.g., `scripts/smoke-test.sh`, LLM wrappers).
+- `ralph.log`: intentionally tracked run journal for the Ralph Wiggum loop (do not delete/rewrite; never log secrets).
 
 ## Build, Test, and Development Commands
 
