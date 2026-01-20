@@ -90,8 +90,8 @@ src/erdos/
 
 ## Ralph Wiggum Logs
 
-- `ralph.log` is intentionally tracked in git as a run journal for the Ralph Wiggum loop.
-- Do not delete or rewrite history in `ralph.log`.
+- `ralph.log` is intentionally tracked in git as a simple marker file for the Ralph Wiggum loop.
+- It may be reset between runs (do not treat it as historical SSOT).
 - Never include API keys or other secrets in `ralph.log` (or any tracked file).
 
 ## Test Markers

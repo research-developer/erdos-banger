@@ -86,7 +86,7 @@ main (protected, production)
 erdos-banger/
 ├── PROMPT.md                    # Loop prompt (root)
 ├── PROGRESS.md                  # State tracker (root)
-├── ralph.log                    # Tracked run journal (do not delete; never log secrets)
+├── ralph.log                    # Tracked marker file (may be reset; never log secrets)
 ├── docs/
 │   ├── _ralphwiggum/
 │   │   └── protocol.md          # This file
