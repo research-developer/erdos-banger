@@ -1,7 +1,7 @@
 # erdos-banger - Ralph Wiggum Progress Tracker
 
-**Last Updated:** 2026-01-19
-**Status:** Active (Technical Debt Sprint)
+**Last Updated:** 2026-01-20
+**Status:** Sprint Complete (Phase 1) - DEBT-017, DEBT-018, DEBT-020, DEBT-016 resolved
 **Branch:** ralph-wiggum-debt
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
@@ -108,13 +108,15 @@ Per `docs/debt/README.md`, these are the active debt items ordered by recommende
     - `output.py` (78 lines): CLIOutput
     - All modules <150 lines, backward-compatible imports via __init__.py
 
-- [ ] **DEBT-019**: Dependency Inversion Violations - Add protocols and context
+- [ ] **DEBT-019**: Dependency Inversion Violations - Add protocols and context (DEFERRED to Phase 2)
   - Spec: `docs/debt/debt-019-dependency-inversion-violations.md`
   - Acceptance: `ProblemRepository` protocol, `AppContext` container, no `from_default()` in business logic
+  - Note: High effort (touches all commands and tests), recommend separate PR
 
-- [ ] **DEBT-021**: Missing Abstractions - Add Repository/Service patterns
+- [ ] **DEBT-021**: Missing Abstractions - Add Repository/Service patterns (DEFERRED to Phase 2)
   - Spec: `docs/debt/debt-021-missing-abstractions.md`
   - Acceptance: Service layer exists, Repository pattern implemented
+  - Note: High effort, depends on DEBT-019, recommend separate PR
 
 ---
 
@@ -144,6 +146,7 @@ Per `docs/debt/README.md`, these are the active debt items ordered by recommende
 - 2026-01-20: [DEBT-017-D5] Fixed ask_question core length - Extracted _load_problem(), _build_response_data(). Reduced from 120 to 65 lines (body: 43 lines, meets <50 target). Added 7 unit tests. All 292 tests pass. Files: src/erdos/core/ask.py, tests/unit/test_ask_helpers.py, PROGRESS.md
 - 2026-01-20: [DEBT-017-D6] Assessed remaining 51-100 line functions. Concluded they're inherently linear (parsing, schema, subprocess) and acceptable for their purpose. <50 line target applies to business logic, not parsing code.
 - 2026-01-20: [DEBT-016] Split models.py into models/ package with 6 focused modules (base, problem, reference, search, lean, output). All modules <150 lines, backward-compatible imports via __init__.py. Files: src/erdos/core/models/ (new package)
+- 2026-01-20: Phase 1 Complete - Resolved DEBT-017 (function length), DEBT-018 (DRY), DEBT-020 (magic numbers), DEBT-016 (SRP). Deferred DEBT-019 (DIP) and DEBT-021 (missing abstractions) to Phase 2 due to high effort.
 
 ---
 
