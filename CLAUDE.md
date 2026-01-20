@@ -1,0 +1,115 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What This Is
+
+CLI toolkit for collaborative research on Erdős problems (1,135 curated math problems). Pipeline: problem data → literature ingestion → FTS5 search → RAG Q&A → Lean 4 formalization.
+
+## Build & Development Commands
+
+```bash
+# Setup (requires uv: https://docs.astral.sh/uv/)
+git submodule update --init --recursive
+uv sync
+
+# Run CLI
+uv run erdos --version
+uv run erdos list --status open --limit 5
+uv run erdos show 6
+
+# Full CI check (run before every commit)
+make ci                    # format-check + lint + typecheck + cov
+
+# Individual checks
+make lint                  # ruff check
+make format                # ruff format
+make typecheck             # mypy src/ tests/
+make test                  # pytest (skip Lean + network)
+make test-all              # pytest (all tests)
+make smoke                 # CLI smoke test
+```
+
+## Running Tests
+
+```bash
+# Fast tests (default, excludes Lean and network)
+uv run pytest -m "not requires_lean and not requires_network"
+
+# Single test file
+uv run pytest tests/unit/test_models.py
+
+# Single test function
+uv run pytest tests/unit/test_models.py::test_specific_function -v
+
+# With coverage
+uv run pytest --cov=erdos --cov-fail-under=80 -m "not requires_lean and not requires_network"
+
+# Run Lean-dependent tests (requires elan installed)
+uv run pytest -m "requires_lean"
+```
+
+## Architecture
+
+```
+src/erdos/
+├── cli.py              # Typer entry point, global flags (--json, --log-level)
+├── commands/           # CLI subcommands (list, show, refs, search, lean, ingest, ask)
+│   ├── presenter.py    # Shared output formatting (exit_with_result, CLIOutput)
+│   └── *.py           # Each command module (list_cmd.py, show.py, etc.)
+└── core/               # Business logic
+    ├── models.py       # Pydantic models (ProblemRecord, ReferenceRecord, CLIOutput, etc.)
+    ├── problem_loader.py  # Loads problems from YAML
+    ├── search_index.py    # SQLite FTS5 search
+    ├── lean_runner.py     # Lean 4 compilation wrapper
+    ├── ingest.py          # Reference ingestion orchestration
+    ├── ask.py             # RAG Q&A logic
+    ├── crossref_client.py # Crossref API client
+    └── arxiv_client.py    # arXiv API client
+```
+
+**Data flow:** Commands → Core functions → ProblemLoader/SearchIndex → Storage
+
+**Key patterns:**
+- Commands use `ProblemLoader.from_default()` for data access
+- All commands support `--json` for machine-readable output via `CLIOutput`
+- Exit codes defined in `core/exit_codes.py` (ExitCode enum)
+- Tests use `tests/fixtures/sample_problems.yaml` as test data
+
+## Data Locations
+
+- `data/problems_enriched.yaml` - Enriched problem dataset (titles, statements, references)
+- `data/erdosproblems/` - Upstream submodule (metadata only, do not modify)
+- `literature/manifests/` - Reference metadata per problem
+- `literature/cache/` - arXiv source tarballs (gitignored)
+- `index/` - SQLite FTS5 index (gitignored)
+- `formal/lean/` - Lean 4 project
+
+## Test Markers
+
+```python
+@pytest.mark.requires_lean    # Needs elan/Lean installed
+@pytest.mark.requires_network # Needs network access
+@pytest.mark.slow            # Long-running tests
+@pytest.mark.e2e             # End-to-end tests
+```
+
+## Code Style
+
+- Python 3.11+, strict mypy typing
+- ruff for linting/formatting (configured in pyproject.toml)
+- 80% minimum test coverage enforced
+- All CLI output through Rich console or `exit_with_result()`
+
+## Known Technical Debt
+
+Active debt tracked in `docs/debt/README.md`. Priority items:
+- DEBT-018 (P1): DRY violations - loader error handling duplicated across 8 commands
+- DEBT-017 (P1): Function length - some functions exceed 100 lines
+- DEBT-019 (P2): DIP violations - commands create dependencies inline
+
+## Key Specs
+
+- `docs/specs/master-vision.md` - Full architecture and roadmap
+- `docs/specs/spec-010-ingest-command.md` - Ingest command (arXiv + Crossref)
+- `docs/specs/spec-011-ask-command.md` - Ask command (RAG + LLM)

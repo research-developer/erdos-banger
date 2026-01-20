@@ -7,12 +7,14 @@
 
 ## Summary
 
-`src/erdos/core/models.py` contains 12+ unrelated domain models in a single 474-line file. This violates the Single Responsibility Principle - the file has multiple reasons to change and low cohesion.
+`src/erdos/core/models.py` contains 12+ unrelated domain models in a single ~473-line file. This violates the Single Responsibility Principle - the file has multiple reasons to change and low cohesion.
 
 ## Current State
 
 ```
-src/erdos/core/models.py (474 lines)
+src/erdos/core/models.py (473 lines)
+├── utc_now()
+├── ErdosBaseModel (base config)
 ├── ProblemStatus (enum)
 ├── ReferenceEntry (embedded reference)
 ├── ProblemRecord (main domain object)
@@ -31,9 +33,9 @@ src/erdos/core/models.py (474 lines)
 
 1. **Low Cohesion**: `LeanError` and `ProblemRecord` have nothing in common
 2. **Multiple Reasons to Change**: Changes to search indexing shouldn't touch problem models
-3. **Import Bloat**: Importing one model imports all 474 lines
+3. **Import Bloat**: Importing one model imports all ~473 lines
 4. **Cognitive Load**: Developers must scroll through unrelated code
-5. **Testing**: Can't test Lean models without loading Problem models
+5. **Testing**: Lean-related tests must import the same module as problem models (module-level import loads everything)
 
 ## Proposed Fix
 
