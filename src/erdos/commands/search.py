@@ -9,6 +9,7 @@ import typer
 from rich.console import Console
 
 from erdos.commands.presenter import exit_with_result
+from erdos.core.constants import PREVIEW_LENGTH
 from erdos.core.exit_codes import ExitCode
 from erdos.core.index_builder import build_index as do_build_index
 from erdos.core.models import CLIOutput, ProblemRecord
@@ -140,7 +141,7 @@ def search_problems_basic(
                 command="erdos search",
                 error_type="UsageError",
                 message="Query must not be empty",
-                code=2,
+                code=ExitCode.USAGE_ERROR,
             )
 
         matches: list[ProblemRecord] = []
@@ -154,8 +155,8 @@ def search_problems_basic(
             {
                 "problem_id": p.id,
                 "title": p.title,
-                "snippet": p.statement[:200] + "..."
-                if len(p.statement) > 200
+                "snippet": p.statement[:PREVIEW_LENGTH] + "..."
+                if len(p.statement) > PREVIEW_LENGTH
                 else p.statement,
                 "score": None,
                 "source_type": "problem_statement",

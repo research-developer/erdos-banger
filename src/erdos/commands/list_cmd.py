@@ -66,7 +66,7 @@ def list_problems(
                     command="erdos list",
                     error_type="UsageError",
                     message=f"Invalid status '{status}'. Valid values: {valid_list}",
-                    code=2,
+                    code=ExitCode.USAGE_ERROR,
                 )
             status_enum = ProblemStatus.from_string(status)
         else:

@@ -51,7 +51,7 @@ def get_refs(problem_id: int, loader: ProblemLoader) -> CLIOutput:
                 command="erdos refs",
                 error_type="NotFound",
                 message=f"Problem {problem_id} not found",
-                code=3,
+                code=ExitCode.NOT_FOUND,
             )
 
         refs = [r.model_dump(mode="json") for r in problem.references]

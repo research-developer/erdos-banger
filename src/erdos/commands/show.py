@@ -66,7 +66,7 @@ def get_problem(problem_id: int, loader: ProblemLoader) -> CLIOutput:
                 command="erdos show",
                 error_type="NotFound",
                 message=f"Problem {problem_id} not found",
-                code=3,
+                code=ExitCode.NOT_FOUND,
             )
         return CLIOutput.ok(
             command="erdos show",

@@ -68,6 +68,10 @@ def ingest_problem_references(  # noqa: PLR0911, PLR0912, PLR0915
     """
     command = "erdos ingest"
 
+    # Convert negative flags to positive internal variables for readability
+    allow_download = not no_download
+    allow_network = not no_network
+
     # Load problem
     try:
         loader = ProblemLoader.from_default()
@@ -147,8 +151,8 @@ def ingest_problem_references(  # noqa: PLR0911, PLR0912, PLR0915
             entry = _fetch_reference_entry(
                 ref=ref,
                 repo_root=repo_root,
-                no_download=no_download,
-                no_network=no_network,
+                allow_download=allow_download,
+                allow_network=allow_network,
                 timeout=timeout,
                 mailto=mailto,
             )
@@ -354,13 +358,13 @@ def _fetch_reference_entry(  # noqa: PLR0915
     ref: ReferenceEntry,
     *,
     repo_root: Path,
-    no_download: bool,
-    no_network: bool,
+    allow_download: bool,
+    allow_network: bool,
     timeout: float,
     mailto: str,
 ) -> ManifestEntry:
     """Fetch metadata and optionally download content for a reference."""
-    if no_network:
+    if not allow_network:
         raise RuntimeError("Network access disabled but required for fetching")
 
     # Case 1: Both DOI and arXiv ID (merged entry)
@@ -377,7 +381,7 @@ def _fetch_reference_entry(  # noqa: PLR0915
         extracted = False
         error = None
 
-        if not no_download:
+        if allow_download:
             try:
                 arxiv_cache_path = repo_root / get_arxiv_cache_path(ref.arxiv_id)
                 arxiv_extract_path = repo_root / get_arxiv_extract_path(ref.arxiv_id)
@@ -442,7 +446,7 @@ def _fetch_reference_entry(  # noqa: PLR0915
         extracted = False
         error = None
 
-        if not no_download:
+        if allow_download:
             try:
                 arxiv_cache_path = repo_root / get_arxiv_cache_path(ref.arxiv_id)
                 arxiv_extract_path = repo_root / get_arxiv_extract_path(ref.arxiv_id)

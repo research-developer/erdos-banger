@@ -30,7 +30,7 @@
 
 Per `docs/debt/README.md`, these are the active debt items ordered by recommended resolution:
 
-- [ ] **DEBT-020**: Magic Numbers and Naming - Define constants, use ExitCode enum
+- [x] **DEBT-020**: Magic Numbers and Naming - Define constants, use ExitCode enum
   - Spec: `docs/debt/debt-020-magic-numbers-and-naming.md`
   - Acceptance: `constants.py` created, all `[:200]` → `PREVIEW_LENGTH`, all `code=3` → `ExitCode.NOT_FOUND`, all `code=2` → `ExitCode.USAGE_ERROR`
 
@@ -70,6 +70,7 @@ Per `docs/debt/README.md`, these are the active debt items ordered by recommende
 
 - 2026-01-19: Created ralph-wiggum-debt branch for technical debt sprint
 - 2026-01-19: Set up PROGRESS.md with 6 active debt items from docs/debt/README.md
+- 2026-01-19: [DEBT-020] Fixed magic numbers and naming - Created constants.py, replaced all [:200] with PREVIEW_LENGTH, replaced code=3 with ExitCode.NOT_FOUND, replaced code=2 with ExitCode.USAGE_ERROR, refactored internal boolean variables to use positive names (no_llm→enable_llm, no_download→allow_download, no_network→allow_network). Files: src/erdos/core/constants.py (new), tests/unit/test_constants.py (new), src/erdos/core/models.py, src/erdos/core/search_index.py, src/erdos/core/ask.py, src/erdos/commands/search.py, src/erdos/commands/show.py, src/erdos/commands/refs.py, src/erdos/commands/lean.py, src/erdos/commands/list_cmd.py, src/erdos/core/ingest.py
 
 ---
 

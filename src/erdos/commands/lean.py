@@ -110,7 +110,7 @@ def check_lean_file(file_path: Path, project_path: Path) -> CLIOutput:
             command="erdos lean check",
             error_type="NotFound",
             message=f"File not found: {file_path}",
-            code=3,
+            code=ExitCode.NOT_FOUND,
         )
     except Exception as e:
         return CLIOutput.err(
@@ -139,7 +139,7 @@ def formalize_problem(problem_id: int, project_path: Path, *, force: bool) -> CL
             command="erdos lean formalize",
             error_type="NotFound",
             message=f"Problem {problem_id} not found",
-            code=3,
+            code=ExitCode.NOT_FOUND,
         )
 
     try:

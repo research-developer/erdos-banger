@@ -8,6 +8,8 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from erdos.core.constants import PREVIEW_LENGTH
+
 
 def utc_now() -> datetime:
     """Timezone-aware UTC timestamp."""
@@ -350,8 +352,8 @@ class TextChunk(ErdosBaseModel):
             text=problem.statement,
             source=ChunkSource.PROBLEM_STATEMENT,
             problem_id=problem.id,
-            preview=problem.statement[:200]
-            if len(problem.statement) > 200
+            preview=problem.statement[:PREVIEW_LENGTH]
+            if len(problem.statement) > PREVIEW_LENGTH
             else problem.statement,
         )
 

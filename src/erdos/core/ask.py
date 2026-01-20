@@ -5,6 +5,7 @@ import re
 import shlex
 import subprocess
 
+from erdos.core.constants import PREVIEW_LENGTH
 from erdos.core.exit_codes import ExitCode
 from erdos.core.index_builder import build_index
 from erdos.core.models import ChunkSource, CLIOutput, ProblemRecord
@@ -140,7 +141,9 @@ def _fallback_sources(problem: ProblemRecord, *, limit: int) -> list[SearchResul
         SearchResult(
             chunk_id=f"problem_{problem.id}_statement",
             text=statement,
-            snippet=statement[:200] + "..." if len(statement) > 200 else statement,
+            snippet=statement[:PREVIEW_LENGTH] + "..."
+            if len(statement) > PREVIEW_LENGTH
+            else statement,
             score=1.0,
             source_type=ChunkSource.PROBLEM_STATEMENT,
             problem_id=problem.id,
@@ -155,7 +158,9 @@ def _fallback_sources(problem: ProblemRecord, *, limit: int) -> list[SearchResul
             SearchResult(
                 chunk_id=f"problem_{problem.id}_notes",
                 text=notes,
-                snippet=notes[:200] + "..." if len(notes) > 200 else notes,
+                snippet=notes[:PREVIEW_LENGTH] + "..."
+                if len(notes) > PREVIEW_LENGTH
+                else notes,
                 score=0.5,
                 source_type=ChunkSource.PROBLEM_NOTES,
                 problem_id=problem.id,
@@ -302,9 +307,9 @@ def ask_question(  # noqa: PLR0911, PLR0912
     # Build prompt
     prompt = build_prompt(problem=problem, sources=sources, question=question)
 
-    # Determine if LLM should run
-    run_llm = not no_llm
-    if run_llm and llm_command is None:
+    # Determine if LLM should run (convert negative flag to positive internal variable)
+    enable_llm = not no_llm
+    if enable_llm and llm_command is None:
         llm_command = os.environ.get("ERDOS_LLM_COMMAND", "")
 
     # Execute LLM if requested and command is available
@@ -312,7 +317,7 @@ def ask_question(  # noqa: PLR0911, PLR0912
     llm_exit_code = None
     llm_enabled = False
 
-    if run_llm and llm_command:
+    if enable_llm and llm_command:
         llm_enabled = True
         try:
             answer, llm_exit_code = execute_llm(llm_command=llm_command, prompt=prompt)
