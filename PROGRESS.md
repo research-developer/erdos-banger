@@ -96,9 +96,17 @@ Per `docs/debt/README.md`, these are the active debt items ordered by recommende
     - `build_prompt` (69): string building
     - These are acceptable complexity for their purpose; <50 target is for business logic
 
-- [ ] **DEBT-016**: SRP Violation in models.py - Split into focused modules
+- [x] **DEBT-016**: SRP Violation in models.py - Split into focused modules
   - Spec: `docs/debt/debt-016-srp-models-violation.md`
   - Acceptance: `models/` package with focused modules, backward-compatible imports, each module <150 lines
+  - Result: Split 473-line models.py into 6 focused modules:
+    - `base.py` (32 lines): ErdosBaseModel, utc_now
+    - `problem.py` (136 lines): ProblemStatus, ReferenceEntry, ProblemRecord
+    - `reference.py` (148 lines): OpenAccessStatus, ReferenceRecord, ManifestEntry, ProblemManifest
+    - `search.py` (77 lines): ChunkSource, TextChunk
+    - `lean.py` (56 lines): LeanError, LeanCheckResult
+    - `output.py` (78 lines): CLIOutput
+    - All modules <150 lines, backward-compatible imports via __init__.py
 
 - [ ] **DEBT-019**: Dependency Inversion Violations - Add protocols and context
   - Spec: `docs/debt/debt-019-dependency-inversion-violations.md`
@@ -135,6 +143,7 @@ Per `docs/debt/README.md`, these are the active debt items ordered by recommende
 - 2026-01-20: [DEBT-017-D4] Fixed search command length - Extracted SearchOptions dataclass, _build_index_if_requested(), _search_with_fallback(). Reduced search() callback logic to ~15 lines (Typer annotations inflate total to 61). Added 11 unit tests. All tests pass. Files: src/erdos/commands/search.py, tests/unit/test_search_command_helpers.py (new), PROGRESS.md
 - 2026-01-20: [DEBT-017-D5] Fixed ask_question core length - Extracted _load_problem(), _build_response_data(). Reduced from 120 to 65 lines (body: 43 lines, meets <50 target). Added 7 unit tests. All 292 tests pass. Files: src/erdos/core/ask.py, tests/unit/test_ask_helpers.py, PROGRESS.md
 - 2026-01-20: [DEBT-017-D6] Assessed remaining 51-100 line functions. Concluded they're inherently linear (parsing, schema, subprocess) and acceptable for their purpose. <50 line target applies to business logic, not parsing code.
+- 2026-01-20: [DEBT-016] Split models.py into models/ package with 6 focused modules (base, problem, reference, search, lean, output). All modules <150 lines, backward-compatible imports via __init__.py. Files: src/erdos/core/models/ (new package)
 
 ---
 
