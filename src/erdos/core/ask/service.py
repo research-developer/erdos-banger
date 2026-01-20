@@ -10,7 +10,6 @@ from erdos.core.exit_codes import ExitCode
 from erdos.core.index_builder import build_index
 from erdos.core.models import CLIOutput, ProblemRecord
 from erdos.core.ports import ProblemRepository, SearchIndexProtocol
-from erdos.core.problem_loader import ProblemLoaderError
 from erdos.core.search_index import SearchResult
 
 
@@ -25,6 +24,7 @@ def _ensure_index_ready(
 
     Args:
         loader: Problem loader for building index
+        index: Search index to use (built/rebuilt if requested)
         build_index_flag: Whether to rebuild the index
 
     Returns:
@@ -55,13 +55,6 @@ def _load_problem(
     """
     try:
         problem = repo.get_by_id(problem_id)
-    except ProblemLoaderError as e:
-        return CLIOutput.err(
-            command="erdos ask",
-            error_type="LoaderError",
-            message=str(e),
-            code=ExitCode.ERROR,
-        )
     except Exception as e:
         return CLIOutput.err(
             command="erdos ask",
@@ -166,7 +159,7 @@ def ask_question(
         return index_or_error
 
     # Retrieve sources
-    sources, used_fts = retrieve_sources(
+    sources, used_fts, query = retrieve_sources(
         index=index_or_error, problem=problem, question=question, limit=limit
     )
 
@@ -192,7 +185,7 @@ def ask_question(
         question=question,
         prompt=prompt,
         sources=sources,
-        query=f"Problem {problem.id}: {problem.title}. Question: {question}",
+        query=query or "",
         limit=limit,
         used_fts=used_fts,
         llm_result=llm_result,

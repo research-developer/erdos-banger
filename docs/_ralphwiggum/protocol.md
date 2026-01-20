@@ -50,7 +50,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 1. **State file** (`PROGRESS.md`) - Tracks what's done/pending
 2. **Prompt file** (`PROMPT.md`) - Instructions for each iteration
-3. **Specs docs** (`docs/specs/`) - Detailed requirements for each task
+3. **Debt/Bug docs** (`docs/debt/`, `docs/bugs/`) - SSOT for sprint work
+   - Specs (`docs/specs/`) only when approved for new feature work
 4. **Git repo** - For atomic commits and history
 
 ---

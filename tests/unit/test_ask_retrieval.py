@@ -31,7 +31,7 @@ def test_retrieval_calls_search_index():
         )
     ]
 
-    results = perform_retrieval(
+    results, _query = perform_retrieval(
         index=mock_index,
         problem=problem,
         question=question,
@@ -60,7 +60,7 @@ def test_retrieval_constructs_query_from_problem_and_question():
     mock_index = MagicMock(spec=SearchIndex)
     mock_index.search.return_value = []
 
-    perform_retrieval(
+    _results, query = perform_retrieval(
         index=mock_index,
         problem=problem,
         question=question,
@@ -69,7 +69,7 @@ def test_retrieval_constructs_query_from_problem_and_question():
 
     # Verify query was constructed and search was called with problem_id filter
     call_args = mock_index.search.call_args
-    query = call_args.args[0]
+    assert query is not None
     # Query should include tokens from both the problem title and the question.
     assert '"small"' in query
     assert '"partial"' in query
@@ -90,7 +90,7 @@ def test_retrieval_returns_empty_when_no_results():
     mock_index = MagicMock(spec=SearchIndex)
     mock_index.search.return_value = []
 
-    results = perform_retrieval(
+    results, _query = perform_retrieval(
         index=mock_index,
         problem=problem,
         question=question,
@@ -113,7 +113,7 @@ def test_retrieval_respects_limit():
     mock_index = MagicMock(spec=SearchIndex)
     mock_index.search.return_value = []
 
-    perform_retrieval(
+    _results, _query = perform_retrieval(
         index=mock_index,
         problem=problem,
         question=question,
@@ -137,7 +137,7 @@ def test_retrieval_filters_by_problem_id():
     mock_index = MagicMock(spec=SearchIndex)
     mock_index.search.return_value = []
 
-    perform_retrieval(
+    _results, _query = perform_retrieval(
         index=mock_index,
         problem=problem,
         question=question,
@@ -160,7 +160,7 @@ def testretrieve_sources_empty_index():
     mock_index = MagicMock(spec=SearchIndex)
     mock_index.chunk_count.return_value = 0
 
-    sources, used_fts = retrieve_sources(
+    sources, used_fts, query = retrieve_sources(
         index=mock_index,
         problem=problem,
         question="Test?",
@@ -171,6 +171,7 @@ def testretrieve_sources_empty_index():
     assert len(sources) >= 1
     assert sources[0].chunk_id == f"problem_{problem.id}_statement"
     assert not used_fts
+    assert query is None
 
 
 def testretrieve_sources_with_index_data():
@@ -196,7 +197,7 @@ def testretrieve_sources_with_index_data():
         )
     ]
 
-    sources, used_fts = retrieve_sources(
+    sources, used_fts, query = retrieve_sources(
         index=mock_index,
         problem=problem,
         question="Test?",
@@ -209,6 +210,7 @@ def testretrieve_sources_with_index_data():
     assert f"problem_{problem.id}_statement" in chunk_ids
     assert "retrieved_1" in chunk_ids
     assert used_fts
+    assert query is not None
 
 
 def testretrieve_sources_deduplicates():
@@ -235,7 +237,7 @@ def testretrieve_sources_deduplicates():
         )
     ]
 
-    sources, _used_fts = retrieve_sources(
+    sources, _used_fts, _query = retrieve_sources(
         index=mock_index,
         problem=problem,
         question="Test?",

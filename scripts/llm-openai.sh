@@ -12,9 +12,10 @@ source "${SCRIPT_DIR}/lib/load-env.sh"
 load_env_file "${REPO_ROOT}/.env"
 
 : "${OPENAI_API_KEY:?OPENAI_API_KEY not set}"
-: "${OPENAI_MODEL:=gpt-5.2}"
-: "${OPENAI_REASONING_EFFORT:=xhigh}"
-: "${OPENAI_BASE_URL:=https://api.openai.com}"
+# Export defaults so subprocesses (python) can read them from the environment.
+export OPENAI_MODEL="${OPENAI_MODEL:-gpt-5.2}"
+export OPENAI_REASONING_EFFORT="${OPENAI_REASONING_EFFORT:-xhigh}"
+export OPENAI_BASE_URL="${OPENAI_BASE_URL:-https://api.openai.com}"
 
 BUILD_PAYLOAD_PY=$(cat <<'PY'
 import json

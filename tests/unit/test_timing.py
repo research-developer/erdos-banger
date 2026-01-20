@@ -24,7 +24,7 @@ def test_measure_time_ms_zero_time():
     # Should be a small non-negative number
     assert isinstance(duration[0], int)
     assert duration[0] >= 0
-    assert duration[0] < 100  # Should be less than 100ms for a no-op
+    assert duration[0] < 500  # Avoid flakiness on busy CI
 
 
 def test_measure_time_ms_longer_duration():

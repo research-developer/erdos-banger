@@ -136,6 +136,40 @@ class TestLoadEnvFile:
             {"QUOTED": "hello world"},
         )
 
+    def test_quoted_value_with_hash(self) -> None:
+        """Quoted values should preserve # characters (no inline comment stripping)."""
+        run_load_env_test(
+            'TOKEN="a#b#c"',
+            {"TOKEN": "a#b#c"},
+        )
+
+    def test_invalid_key_skipped(self) -> None:
+        """Invalid keys should be skipped (avoid export failures)."""
+        script = dedent(f'''
+            #!/usr/bin/env bash
+            set -euo pipefail
+
+            TEMP_ENV=$(mktemp)
+            cat > "$TEMP_ENV" << 'ENVEOF'
+BAD KEY=value
+ENVEOF
+
+            source "{LOAD_ENV_SCRIPT}"
+            load_env_file "$TEMP_ENV"
+
+            rm -f "$TEMP_ENV"
+        ''')
+
+        result = subprocess.run(  # noqa: S603
+            [BASH_PATH, "-c", script],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+
+        assert result.returncode == 0
+
     def test_whitespace_trimmed(self) -> None:
         """Whitespace around key and value is trimmed."""
         run_load_env_test(

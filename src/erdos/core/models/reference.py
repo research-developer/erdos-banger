@@ -71,11 +71,6 @@ class ReferenceRecord(ErdosBaseModel):
         str | None, Field(default=None, description="API that provided this data")
     ] = None
 
-    @property
-    def has_identifier(self) -> bool:
-        """Check if reference has at least one identifier."""
-        return bool(self.doi or self.arxiv_id or self.semantic_scholar_id)
-
     @model_validator(mode="after")
     def _require_identifier(self) -> ReferenceRecord:
         """Enforce that at least one identifier is present."""
@@ -114,7 +109,7 @@ class ManifestEntry(ErdosBaseModel):
     cached: Annotated[bool, Field(default=False)] = False
     cache_path: Annotated[Path | None, Field(default=None)] = None
     cache_hash: Annotated[
-        str | None, Field(default=None, description="MD5 of cached content")
+        str | None, Field(default=None, description="SHA256 of cached content")
     ] = None
 
     # Extraction state
@@ -135,7 +130,7 @@ class ProblemManifest(ErdosBaseModel):
     Stored at literature/manifests/<problem_id>.yaml
     """
 
-    schema_version: Annotated[int, Field(default=1)] = 1
+    schema_version: Annotated[int, Field(default=1, ge=1)] = 1
     problem_id: Annotated[int, Field(ge=1)]
     entries: Annotated[list[ManifestEntry], Field(default_factory=list)] = Field(
         default_factory=list

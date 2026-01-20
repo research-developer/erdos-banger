@@ -37,14 +37,32 @@ load_env_file() {
     key="${key#"${key%%[![:space:]]*}"}"
     key="${key%"${key##*[![:space:]]}"}"
 
-    # Strip inline comments and trim whitespace from value
-    value="${value%%#*}"
+    # Strip optional leading "export " from key
+    if [[ "$key" =~ ^export[[:space:]]+ ]]; then
+      key="${key#export}"
+      key="${key#"${key%%[![:space:]]*}"}"
+      key="${key%"${key##*[![:space:]]}"}"
+    fi
+
+    # Validate key to avoid `export` failures under set -e
+    if [[ -z "$key" ]] || ! [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+      continue
+    fi
+
+    # Trim whitespace from value
     value="${value#"${value%%[![:space:]]*}"}"
     value="${value%"${value##*[![:space:]]}"}"
 
-    # Remove surrounding quotes if present (bash 3.2 compatible)
+    # Remove surrounding quotes if present (bash 3.2 compatible).
+    # Only strip inline comments for unquoted values so quoted strings like
+    # FOO="a#b" round-trip correctly.
     if [[ "$value" =~ ^\".*\"$ ]] || [[ "$value" =~ ^\'.*\'$ ]]; then
       value="${value:1:${#value}-2}"
+    else
+      # Strip inline comments for unquoted values and trim again.
+      value="${value%%#*}"
+      value="${value#"${value%%[![:space:]]*}"}"
+      value="${value%"${value##*[![:space:]]}"}"
     fi
 
     export "${key}=${value}"

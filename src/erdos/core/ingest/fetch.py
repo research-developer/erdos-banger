@@ -3,10 +3,10 @@
 import hashlib
 import tarfile
 import time
-import xml.etree.ElementTree as ET
 from datetime import UTC, datetime
 from pathlib import Path
 
+import defusedxml.ElementTree as ET
 import requests
 
 from erdos.core.arxiv_client import (

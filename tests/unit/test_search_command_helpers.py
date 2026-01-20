@@ -68,7 +68,7 @@ class TestBuildIndexIfRequested:
         assert result is None
         mock_build.assert_called_once_with(loader=repo, index=index, rebuild=True)
         assert console.print.call_count == 2
-        assert "Building search index" in str(console.print.call_args_list[0])
+        console.print.assert_any_call("Building search index...")
 
     @mock.patch("erdos.commands.search.do_build_index")
     def test_loader_error(self, mock_build: mock.Mock) -> None:
@@ -168,17 +168,8 @@ class TestSearchWithFallback:
         mock_basic.assert_called_once_with("prime", repo, 10, None)
 
     @mock.patch("erdos.commands.search.search_problems_basic")
-    @mock.patch("erdos.commands.search.search_problems_fts")
-    def test_index_unavailable_uses_basic(
-        self, mock_fts: mock.Mock, mock_basic: mock.Mock
-    ) -> None:
+    def test_index_unavailable_uses_basic(self, mock_basic: mock.Mock) -> None:
         """Should use basic search when index is unavailable."""
-        mock_fts.return_value = CLIOutput.err(
-            command="erdos search",
-            error_type="IndexEmpty",
-            message="Index is empty",
-            code=0,
-        )
         repo = mock.Mock()
 
         options = SearchOptions(

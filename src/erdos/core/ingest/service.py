@@ -17,7 +17,6 @@ from erdos.core.models import (
     ProblemRecord,
 )
 from erdos.core.ports import ProblemRepository
-from erdos.core.problem_loader import ProblemLoaderError
 
 
 def _load_problem(
@@ -31,16 +30,6 @@ def _load_problem(
     """
     try:
         problem = repo.get_by_id(problem_id)
-    except ProblemLoaderError as e:
-        return (
-            None,
-            CLIOutput.err(
-                command=command,
-                error_type="LoaderError",
-                message=str(e),
-                code=ExitCode.ERROR,
-            ),
-        )
     except Exception as e:
         return (
             None,

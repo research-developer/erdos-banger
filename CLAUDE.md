@@ -51,7 +51,7 @@ uv run pytest -m "requires_lean"
 
 ## Architecture
 
-```
+```text
 src/erdos/
 ├── cli.py              # Typer entry point, global flags (--json, --log-level)
 ├── commands/           # CLI subcommands (list, show, refs, search, lean, ingest, ask)
@@ -59,13 +59,18 @@ src/erdos/
 │   └── *.py           # Each command module (list_cmd.py, show.py, etc.)
 └── core/               # Business logic
     ├── models/         # Pydantic models (ProblemRecord, ReferenceRecord, CLIOutput, etc.)
+    ├── ask/            # RAG Q&A logic (retrieval, prompt, llm, service)
+    ├── ingest/         # Reference ingestion (fetch, manifest models, service)
     ├── ports.py        # Protocol “ports” for dependency inversion
     ├── context.py      # AppContext composition root (wiring concrete deps)
+    ├── exit_codes.py   # ExitCode enum
+    ├── constants.py    # Shared constants (timeouts, preview lengths, limits)
+    ├── timing.py       # measure_time_ms() context manager
     ├── problem_loader.py  # Loads problems from YAML
     ├── search_index.py    # SQLite FTS5 search
+    ├── index_builder.py   # Index build orchestration
     ├── lean_runner.py     # Lean 4 compilation wrapper
-    ├── ingest.py          # Reference ingestion orchestration
-    ├── ask.py             # RAG Q&A logic
+    ├── literature_paths.py # Literature cache/manifests paths
     ├── crossref_client.py # Crossref API client
     └── arxiv_client.py    # arXiv API client
 ```

@@ -13,7 +13,7 @@ def perform_retrieval(
     problem: ProblemRecord,
     question: str,
     limit: int,
-) -> list[SearchResult]:
+) -> tuple[list[SearchResult], str | None]:
     """
     Retrieve relevant text chunks for a question about a problem.
 
@@ -46,7 +46,7 @@ def perform_retrieval(
 
     # Guard against empty query (no alphanumeric tokens)
     if not terms:
-        return []
+        return ([], None)
 
     query = " OR ".join(terms[:25])
 
@@ -57,7 +57,7 @@ def perform_retrieval(
         problem_id=problem.id,
     )
 
-    return results
+    return (results, query)
 
 
 def fallback_sources(problem: ProblemRecord, *, limit: int) -> list[SearchResult]:
@@ -106,7 +106,7 @@ def retrieve_sources(
     problem: ProblemRecord,
     question: str,
     limit: int,
-) -> tuple[list[SearchResult], bool]:
+) -> tuple[list[SearchResult], bool, str | None]:
     """
     Retrieve sources for a question, with fallback.
 
@@ -117,21 +117,23 @@ def retrieve_sources(
         limit: Maximum sources to retrieve
 
     Returns:
-        Tuple of (sources, used_fts) where used_fts indicates if FTS was used
+        Tuple of (sources, used_fts, query) where used_fts indicates if FTS was used
+        and query is the exact FTS query string (or None if not used).
     """
     # If index is empty, use fallback sources
     if index.chunk_count() == 0:
         sources = fallback_sources(problem, limit=limit)
-        return sources, False
+        return sources, False, None
 
     # Otherwise, combine fallback (statement/notes) with retrieved chunks
     baseline = fallback_sources(problem, limit=limit)
-    retrieved = perform_retrieval(
+    retrieved, query = perform_retrieval(
         index=index,
         problem=problem,
         question=question,
         limit=limit,
     )
+    used_fts = query is not None
 
     # Deduplicate by chunk_id, preferring baseline order first
     combined: list[SearchResult] = []
@@ -144,4 +146,4 @@ def retrieve_sources(
         if len(combined) >= limit:
             break
 
-    return combined, True
+    return combined, used_fts, query
