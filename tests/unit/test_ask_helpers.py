@@ -1,5 +1,6 @@
 """Unit tests for ask_question helper functions."""
 
+import subprocess
 from unittest.mock import MagicMock, patch
 
 from erdos.core.ask import (
@@ -190,6 +191,26 @@ def testexecute_llm_if_enabled_generic_exception():
         assert not result.success
         assert result.error is not None
         assert "failed" in result.error["message"].lower()
+
+
+def testexecute_llm_if_enabled_timeout():
+    """execute_llm_if_enabled returns error on timeout."""
+    with patch("erdos.core.ask.llm.execute_llm") as mock_execute_llm:
+        mock_execute_llm.side_effect = subprocess.TimeoutExpired(
+            cmd="slow-llm", timeout=300
+        )
+
+        result = execute_llm_if_enabled(
+            prompt="Test prompt",
+            enable_llm=True,
+            llm_command="slow-llm",
+        )
+
+        assert isinstance(result, CLIOutput)
+        assert not result.success
+        assert result.error is not None
+        assert "timed out" in result.error["message"].lower()
+        assert result.error["type"] == "TIMEOUT"
 
 
 # Tests for _load_problem

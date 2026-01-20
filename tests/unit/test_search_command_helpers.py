@@ -8,6 +8,7 @@ from erdos.commands.search import (
     SearchOptions,
     _build_index_if_requested,
     _search_with_fallback,
+    search_problems_fts,
 )
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
@@ -238,3 +239,28 @@ class TestSearchWithFallback:
             limit=5,
             problem_id=42,
         )
+
+
+class TestSearchProblemsFts:
+    """Tests for search_problems_fts function."""
+
+    def test_empty_query_returns_usage_error(self) -> None:
+        """Should return UsageError for empty query."""
+        index = mock.Mock()
+        result = search_problems_fts("", index=index)
+
+        assert result.success is False
+        assert result.error is not None
+        assert result.error["type"] == "UsageError"
+        assert "empty" in result.error["message"].lower()
+        assert result.error["code"] == ExitCode.USAGE_ERROR
+
+    def test_whitespace_query_returns_usage_error(self) -> None:
+        """Should return UsageError for whitespace-only query."""
+        index = mock.Mock()
+        result = search_problems_fts("   ", index=index)
+
+        assert result.success is False
+        assert result.error is not None
+        assert result.error["type"] == "UsageError"
+        assert result.error["code"] == ExitCode.USAGE_ERROR

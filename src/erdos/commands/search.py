@@ -89,6 +89,15 @@ def search_problems_fts(
 ) -> CLIOutput:
     """Search using FTS5 index (preferred)."""
     try:
+        # Guard against empty query (consistent with basic search)
+        if not query.strip():
+            return CLIOutput.err(
+                command="erdos search",
+                error_type="UsageError",
+                message="Query must not be empty",
+                code=ExitCode.USAGE_ERROR,
+            )
+
         # Check if index has data
         if index.problem_count() == 0:
             return CLIOutput.err(

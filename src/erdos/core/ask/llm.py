@@ -3,23 +3,28 @@
 import shlex
 import subprocess
 
+from erdos.core.constants import LLM_COMMAND_TIMEOUT
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
 
 
-def execute_llm(llm_command: str, prompt: str) -> tuple[str, int]:
+def execute_llm(
+    llm_command: str, prompt: str, *, timeout: int | None = LLM_COMMAND_TIMEOUT
+) -> tuple[str, int]:
     """
     Execute an external LLM command with the prompt.
 
     Args:
         llm_command: Shell command to execute (will be parsed with shlex.split)
         prompt: The prompt to pass via stdin
+        timeout: Maximum seconds to wait (default: LLM_COMMAND_TIMEOUT, None for no timeout)
 
     Returns:
         Tuple of (answer, exit_code)
 
     Raises:
         OSError: If the command executable doesn't exist or can't be invoked
+        subprocess.TimeoutExpired: If the command times out
     """
     # Parse command with shlex.split for shell-free execution
     cmd_args = shlex.split(llm_command)
@@ -31,12 +36,13 @@ def execute_llm(llm_command: str, prompt: str) -> tuple[str, int]:
         capture_output=True,
         text=True,
         check=False,  # We handle exit codes manually
+        timeout=timeout,
     )
 
     return result.stdout, result.returncode
 
 
-def execute_llm_if_enabled(
+def execute_llm_if_enabled(  # noqa: PLR0911
     *,
     prompt: str,
     enable_llm: bool,
@@ -77,6 +83,13 @@ def execute_llm_if_enabled(
             error_type="CONFIG_ERROR",
             message=f"LLM command not found: {llm_command}",
             code=ExitCode.CONFIG_ERROR,
+        )
+    except subprocess.TimeoutExpired:
+        return CLIOutput.err(
+            command="erdos ask",
+            error_type="TIMEOUT",
+            message=f"LLM command timed out after {LLM_COMMAND_TIMEOUT}s: {llm_command}",
+            code=ExitCode.ERROR,
         )
     except OSError as e:
         return CLIOutput.err(

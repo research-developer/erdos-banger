@@ -25,6 +25,9 @@ LEAN_COMPILE_TIMEOUT = 120
 LAKE_UPDATE_TIMEOUT = 600
 """Timeout for lake update operations."""
 
+LLM_COMMAND_TIMEOUT = 300
+"""Timeout for external LLM command execution (5 minutes)."""
+
 # --- Rate limiting ---
 
 API_RATE_LIMIT_DELAY = 3.0
