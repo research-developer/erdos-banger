@@ -140,7 +140,10 @@ def search_problems_fts(
 
 
 def search_problems_basic(
-    query: str, repo: ProblemRepository, limit: int = 10
+    query: str,
+    repo: ProblemRepository,
+    limit: int = 10,
+    problem_id: int | None = None,
 ) -> CLIOutput:
     """Fallback: basic substring search (no ranking)."""
     try:
@@ -153,8 +156,22 @@ def search_problems_basic(
                 code=ExitCode.USAGE_ERROR,
             )
 
+        # If problem_id specified, search only that problem
+        if problem_id is not None:
+            problem = repo.get_by_id(problem_id)
+            if problem is None:
+                return CLIOutput.err(
+                    command="erdos search",
+                    error_type="NotFound",
+                    message=f"Problem {problem_id} not found",
+                    code=ExitCode.NOT_FOUND,
+                )
+            candidates = [problem]
+        else:
+            candidates = repo.load_all()
+
         matches: list[ProblemRecord] = []
-        for problem in repo.load_all():
+        for problem in candidates:
             if q in problem.title.lower() or q in problem.statement.lower():
                 matches.append(problem)
 
@@ -234,7 +251,9 @@ def _search_with_fallback(
 ) -> CLIOutput:
     """Execute FTS search with fallback to basic substring search."""
     if index is None:
-        return search_problems_basic(options.query, repo, options.limit)
+        return search_problems_basic(
+            options.query, repo, options.limit, options.problem_id
+        )
 
     result = search_problems_fts(
         options.query,
@@ -246,7 +265,9 @@ def _search_with_fallback(
 
     # If index is empty, fall back to basic search
     if not result.success and result.error and result.error.get("type") == "IndexEmpty":
-        result = search_problems_basic(options.query, repo, options.limit)
+        result = search_problems_basic(
+            options.query, repo, options.limit, options.problem_id
+        )
 
     return result
 

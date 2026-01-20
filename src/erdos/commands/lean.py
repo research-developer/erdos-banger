@@ -248,7 +248,7 @@ def check(
         and isinstance(result.data, dict)
         and not result.data.get("success", True)
     ):
-        raise typer.Exit(code=5)
+        raise typer.Exit(code=ExitCode.LEAN_ERROR)
 
 
 @app.command()

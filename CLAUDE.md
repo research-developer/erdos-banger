@@ -101,12 +101,9 @@ src/erdos/
 - 80% minimum test coverage enforced
 - All CLI output through Rich console or `exit_with_result()`
 
-## Known Technical Debt
+## Technical Debt Status
 
-Active debt tracked in `docs/debt/README.md`. Priority items:
-- DEBT-018 (P1): DRY violations - loader error handling duplicated across 8 commands
-- DEBT-017 (P1): Function length - some functions exceed 100 lines
-- DEBT-019 (P2): DIP violations - commands create dependencies inline
+No active technical debt. All items (DEBT-016 through DEBT-021) resolved and archived in `docs/_archive/debt/`. See `docs/debt/README.md` for the complete history.
 
 ## Key Specs
 

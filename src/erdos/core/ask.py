@@ -121,6 +121,11 @@ def perform_retrieval(
 
     # Quote terms to avoid operators like OR/AND/NOT being interpreted.
     terms = [f'"{t}"' for t in unique if t]
+
+    # Guard against empty query (no alphanumeric tokens)
+    if not terms:
+        return []
+
     query = " OR ".join(terms[:25])
 
     # Search with problem_id filter to bias towards this problem

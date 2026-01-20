@@ -164,7 +164,7 @@ class TestSearchWithFallback:
         result = _search_with_fallback(options, index=index, repo=repo)
 
         assert result.success is True
-        mock_basic.assert_called_once_with("prime", repo, 10)
+        mock_basic.assert_called_once_with("prime", repo, 10, None)
 
     @mock.patch("erdos.commands.search.search_problems_basic")
     @mock.patch("erdos.commands.search.search_problems_fts")
@@ -187,7 +187,7 @@ class TestSearchWithFallback:
             build_index=False,
         )
         _search_with_fallback(options, index=None, repo=repo)
-        mock_basic.assert_called_once_with("prime", repo, 10)
+        mock_basic.assert_called_once_with("prime", repo, 10, None)
 
     @mock.patch("erdos.commands.search.search_problems_fts")
     def test_non_empty_index_error_not_fallback(self, mock_fts: mock.Mock) -> None:

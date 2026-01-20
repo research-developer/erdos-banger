@@ -205,12 +205,12 @@ def ingest(
 
 ## Acceptance Criteria
 
-- [ ] `constants.py` module created with all magic numbers
-- [ ] All `[:200]` replaced with `PREVIEW_LENGTH`
-- [ ] All `code=3` replaced with `ExitCode.NOT_FOUND`
-- [ ] Internal boolean variables use positive names
-- [ ] (Optional) CLI flags migrated to positive names with deprecation
-- [ ] All tests pass
+- [x] `constants.py` module created with all magic numbers
+- [x] All `[:200]` replaced with `PREVIEW_LENGTH`
+- [x] All `code=3` replaced with `ExitCode.NOT_FOUND`
+- [x] Internal boolean variables use positive names
+- [x] (Optional) CLI flags migrated to positive names with deprecation
+- [x] All tests pass
 
 ## Effort Estimate
 

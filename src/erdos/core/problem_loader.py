@@ -31,22 +31,26 @@ class ProblemLoader:
         problem = loader.get_by_id(6)
     """
 
-    def __init__(self, yaml_path: Path) -> None:
+    def __init__(self, yaml_path: Path, *, _content: str | None = None) -> None:
         """
         Initialize loader with path to problems.yaml.
 
         Args:
             yaml_path: Path to the problems.yaml file
+            _content: Pre-loaded YAML content (internal use for package resources)
 
         Raises:
-            ProblemLoaderError: If file doesn't exist
+            ProblemLoaderError: If file doesn't exist (when _content not provided)
         """
-        if not yaml_path.exists():
-            raise ProblemLoaderError(f"Problems file not found: {yaml_path}")
-        if not yaml_path.is_file():
-            raise ProblemLoaderError(f"Not a file: {yaml_path}")
+        # If content is pre-loaded (from package resources), skip file checks
+        if _content is None:
+            if not yaml_path.exists():
+                raise ProblemLoaderError(f"Problems file not found: {yaml_path}")
+            if not yaml_path.is_file():
+                raise ProblemLoaderError(f"Not a file: {yaml_path}")
 
         self._yaml_path = yaml_path
+        self._content = _content  # Pre-loaded content (avoids as_file cleanup issue)
         self._cache: dict[int, ProblemRecord] | None = None
 
     @classmethod
@@ -87,7 +91,9 @@ class ProblemLoader:
             pkg_data = pkg_files.joinpath("data", "problems_enriched.yaml")
             with as_file(pkg_data) as real_path:
                 if real_path.exists():
-                    return cls(real_path)
+                    # Read content within context to avoid temp file cleanup issue
+                    content = real_path.read_text(encoding="utf-8")
+                    return cls(real_path, _content=content)
         except (ImportError, TypeError, AttributeError, FileNotFoundError):
             pass
 
@@ -107,8 +113,12 @@ class ProblemLoader:
     def _load_raw(self) -> list[dict[str, Any]]:
         """Load raw YAML data."""
         try:
-            with self._yaml_path.open(encoding="utf-8") as f:
-                data = yaml.safe_load(f)
+            # Use pre-loaded content if available (from package resources)
+            if self._content is not None:
+                data = yaml.safe_load(self._content)
+            else:
+                with self._yaml_path.open(encoding="utf-8") as f:
+                    data = yaml.safe_load(f)
         except yaml.YAMLError as e:
             raise ProblemLoaderError(f"Failed to parse YAML: {e}") from e
 

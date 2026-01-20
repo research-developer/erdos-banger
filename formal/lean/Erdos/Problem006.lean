@@ -1,7 +1,7 @@
 /-
 Problem 6: Small primes in arithmetic progressions
 
-Status: proved
+Status: open
 Prize: $100
 Tags: number theory, primes, arithmetic progressions
 
@@ -37,7 +37,7 @@ may need refinement to accurately capture the problem.
 def problem : ErdosProblem := {
   id := 6
   title := "Small primes in arithmetic progressions"
-  status := "proved"
+  status := "open"
 }
 
 -- Main theorem statement
