@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-20
 **Status:** Fixed
-**Fixed In:** (commit pending)
+**Fixed In:** 764c597
 **Priority:** P2 (Defense-in-depth)
 **Impact:** Harder-to-audit security posture; reviewers must reason about exceptions instead of policy
 

@@ -47,7 +47,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-020 | Magic Numbers and Naming | P3 | Fixed | 6d8981c |
 | DEBT-021 | Missing abstractions | P2 | Fixed | 3dd1610 |
 | DEBT-024 | Placeholder metadata (authors / contact email) | P3 | Fixed | 647c86d |
-| DEBT-023 | Security lint suppressions (XML + MD5) | P2 | Fixed | (pending) |
+| DEBT-023 | Security lint suppressions (XML + MD5) | P2 | Fixed | 764c597 |
 
 **Next Debt ID:** DEBT-026
 
