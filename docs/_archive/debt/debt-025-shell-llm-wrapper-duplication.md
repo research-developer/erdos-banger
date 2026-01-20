@@ -8,7 +8,7 @@
 
 ## Summary
 
-The bash LLM wrapper scripts duplicate the same `.env` parsing routine (`load_env_file`). This is acceptable for v1, but it’s easy to drift over time (e.g., bugfix applied to one script but not the others).
+The bash LLM wrapper scripts duplicate the same `.env` parsing routine (`load_env_file`). This is acceptable for v1, but it's easy to drift over time (e.g., bug fix applied to one script but not the others).
 
 ## Evidence
 

@@ -315,49 +315,51 @@ def search(
     json_mode = bool((ctx.obj or {}).get("json"))
     progress_console = err_console if json_mode else console
 
+    # Store result to assign duration after context manager exits
+    result: CLIOutput | None = None
+
     with measure_time_ms() as duration:
         app_ctx, app_error = get_app_context(ctx, command="erdos search")
         if app_error is not None or app_ctx is None:
-            app_error.duration_ms = duration[0]  # type: ignore[union-attr]
-            exit_with_result(ctx, app_error)  # type: ignore[arg-type]
-            return
+            result = app_error
+        else:
+            # Best-effort index: if it can't be opened, fall back to basic search.
+            index: SearchIndexProtocol | None
+            try:
+                index = app_ctx.ensure_index()
+            except SearchIndexError:
+                index = None
 
-        # Best-effort index: if it can't be opened, fall back to basic search.
-        index: SearchIndexProtocol | None
-        try:
-            index = app_ctx.ensure_index()
-        except SearchIndexError:
-            index = None
+            if build_index:
+                if index is None:
+                    result = CLIOutput.err(
+                        command="erdos search",
+                        error_type="IndexError",
+                        message="Search index is unavailable in this environment",
+                        code=ExitCode.ERROR,
+                    )
+                elif build_error := _build_index_if_requested(
+                    build_index,
+                    progress_console,
+                    repo=app_ctx.problems,
+                    index=index,
+                ):
+                    result = build_error
 
-        if build_index:
-            if index is None:
-                result = CLIOutput.err(
-                    command="erdos search",
-                    error_type="IndexError",
-                    message="Search index is unavailable in this environment",
-                    code=ExitCode.ERROR,
+            # If no error yet, perform the search
+            if result is None:
+                options = SearchOptions(
+                    query=query,
+                    limit=limit,
+                    problem_id=problem_filter,
+                    build_index=build_index,
                 )
-                result.duration_ms = duration[0]
-                exit_with_result(ctx, result)
-                return
+                result = _search_with_fallback(
+                    options, index=index, repo=app_ctx.problems
+                )
 
-            if build_error := _build_index_if_requested(
-                build_index,
-                progress_console,
-                repo=app_ctx.problems,
-                index=index,
-            ):
-                build_error.duration_ms = duration[0]
-                exit_with_result(ctx, build_error)
-                return
-
-        options = SearchOptions(
-            query=query,
-            limit=limit,
-            problem_id=problem_filter,
-            build_index=build_index,
-        )
-        result = _search_with_fallback(options, index=index, repo=app_ctx.problems)
-
-    result.duration_ms = duration[0]
-    exit_with_result(ctx, result, print_human=_print_human)
+    # Duration is now set correctly after context manager exits.
+    # Result is guaranteed to be set by one of the branches above.
+    if result is not None:
+        result.duration_ms = duration[0]
+        exit_with_result(ctx, result, print_human=_print_human)

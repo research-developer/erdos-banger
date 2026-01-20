@@ -27,7 +27,7 @@ The CLI should run out of the box and list problems using a valid dataset (at mi
 
 ## Actual Behavior
 
-```
+```text
 Error: Failed to parse 1135 problems:
 Problem at index 0: Unsupported upstream teorth/erdosproblems format
 (metadata-only). v1 requires enriched problems with id/title/statement.

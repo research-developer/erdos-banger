@@ -38,6 +38,7 @@ The ask command should return relevant sources (problem statements, notes, inges
 ```
 
 Meanwhile, a direct search for "primes" works fine:
+
 ```bash
 uv run erdos search primes  # Returns results
 ```

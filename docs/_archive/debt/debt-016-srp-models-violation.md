@@ -16,7 +16,7 @@ Split the monolith into focused modules under `src/erdos/core/models/` and re-ex
 
 Current structure:
 
-```
+```text
 src/erdos/core/models/
 ├── __init__.py          # re-exports (backward compatible)
 ├── base.py              # ErdosBaseModel, utc_now()
