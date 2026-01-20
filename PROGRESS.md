@@ -51,7 +51,7 @@ Per `docs/debt/README.md`, these are the active debt items ordered by recommende
   - Acceptance: Extract `_fetch_doi_metadata()` and `_fetch_arxiv_metadata()`, reduce function to <100 lines
   - Note: Already met - function is 96 lines after DEBT-018-A refactoring
 
-- [ ] **DEBT-017-B**: Function Length - Extract helpers from `ingest_problem_references()` (290 lines)
+- [x] **DEBT-017-B**: Function Length - Extract helpers from `ingest_problem_references()` (290 lines)
   - Spec: `docs/debt/debt-017-function-length-violations.md` (Phase 2)
   - Acceptance: Extract `_load_existing_manifest()`, `_process_single_reference()`, `_write_manifest_atomic()`, reduce to <100 lines
 
@@ -96,6 +96,7 @@ Per `docs/debt/README.md`, these are the active debt items ordered by recommende
 - 2026-01-19: [DEBT-018-B] Fixed stable key duplication - Created generic get_stable_key() function with HasIdentifiers protocol, removed _get_stable_key() and _get_stable_key_from_record() duplicates, added 5 comprehensive test cases. Files: src/erdos/core/ingest.py, tests/unit/test_ingest_service.py
 - 2026-01-19: [DEBT-018-C] Fixed time measurement duplication - Created measure_time_ms() context manager in src/erdos/core/timing.py, replaced all 9 occurrences of manual time.perf_counter() timing across commands (list, show, refs, search, ask, ingest, lean init/check/formalize). Files: src/erdos/core/timing.py (new), tests/unit/test_timing.py (new), src/erdos/commands/list_cmd.py, src/erdos/commands/show.py, src/erdos/commands/refs.py, src/erdos/commands/search.py, src/erdos/commands/ask.py, src/erdos/commands/ingest.py, src/erdos/commands/lean.py
 - 2026-01-19: [DEBT-017-A] Verified function length - _fetch_reference_entry() already meets acceptance criteria (96 lines < 100 target) after DEBT-018-A refactoring. No additional changes needed. Files: PROGRESS.md
+- 2026-01-19: [DEBT-017-B] Fixed ingest function length - Extracted 8 helper functions (_load_problem, _load_existing_manifest, _process_single_reference, _process_all_references, _check_duplicate_keys, _create_manifest, _write_manifest_atomic, _build_ingest_result) from ingest_problem_references(). Reduced from 294 lines to 90 lines. Removed noqa suppressions. All tests pass, coverage maintained at 80%+. Files: src/erdos/core/ingest.py, docs/debt/debt-017-function-length-violations.md, PROGRESS.md
 
 ---
 

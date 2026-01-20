@@ -1,7 +1,7 @@
 # Technical Debt 017: Function Length Violations
 
 **Date:** 2026-01-19
-**Status:** Open
+**Status:** Partially Fixed (Phase B complete)
 **Priority:** P1 (Blocks planned work or causes frequent breakage)
 **Impact:** Maintainability, testability, readability, bug surface area
 
@@ -17,9 +17,9 @@ Function sizes below are measured as `end_lineno - lineno + 1` from the Python A
 
 | Function | File | Span | Lines | Notes |
 |----------|------|------|-------|-------|
-| `ingest_problem_references()` | `src/erdos/core/ingest.py` | 43-332 | 290 | `# noqa: PLR0911,PLR0912,PLR0915` |
+| ~~`ingest_problem_references()`~~ | `src/erdos/core/ingest.py` | ~~43-332~~ 536-625 | ~~290~~ **90** | ~~`# noqa: PLR0911,PLR0912,PLR0915`~~ **FIXED** |
 | `ask_question()` | `src/erdos/core/ask.py` | 198-380 | 183 | `# noqa: PLR0911,PLR0912` |
-| `_fetch_reference_entry()` | `src/erdos/core/ingest.py` | 353-489 | 137 | `# noqa: PLR0915` |
+| ~~`_fetch_reference_entry()`~~ | `src/erdos/core/ingest.py` | ~~353-489~~ 470-565 | ~~137~~ **96** | ~~`# noqa: PLR0915`~~ **FIXED (DEBT-018-A)** |
 | `ingest()` | `src/erdos/commands/ingest.py` | 80-191 | 112 | CLI callback (options + orchestration) |
 | `ask()` | `src/erdos/commands/ask.py` | 72-183 | 112 | CLI callback (stdin handling + orchestration) |
 | `list_()` | `src/erdos/commands/list_cmd.py` | 96-197 | 102 | CLI callback (options + orchestration) |
@@ -172,7 +172,10 @@ def _retrieve_with_fallback(
 ### Progress by Phase
 
 - [x] **Phase A**: `_fetch_reference_entry()` reduced to <100 lines (96 lines, met via DEBT-018-A)
-- [ ] **Phase B**: `ingest_problem_references()` reduced to <100 lines (currently 294 lines)
+- [x] **Phase B**: `ingest_problem_references()` reduced to <100 lines (90 lines after extracting helpers)
+  - Fixed in commit: Will be added after commit
+  - Extracted helpers: `_load_problem()`, `_load_existing_manifest()`, `_process_single_reference()`, `_process_all_references()`, `_check_duplicate_keys()`, `_create_manifest()`, `_write_manifest_atomic()`, `_build_ingest_result()`
+  - Removed `# noqa: PLR0911, PLR0912, PLR0915` suppressions
 - [ ] **Phase C**: `ask_question()` reduced to <100 lines (currently 183 lines)
 - [ ] **Phase D**: All remaining functions <50 lines, remove noqa suppressions
 
