@@ -11,6 +11,7 @@ import hashlib
 import tarfile
 import time
 import xml.etree.ElementTree as ET
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -354,7 +355,90 @@ def _get_stable_key_from_record(record: ReferenceRecord) -> str:
     return ""
 
 
-def _fetch_reference_entry(  # noqa: PLR0915
+@dataclass
+class ArxivDownloadResult:
+    """Result of downloading and extracting an arXiv paper.
+
+    Attributes:
+        cache_path: Relative path to cached tarball (None if failed).
+        cache_hash: MD5 hash of cached tarball (None if failed).
+        extract_path: Relative path to extracted text (None if not extracted).
+        extracted: True if text extraction succeeded.
+        error: Error message if download or extraction failed.
+    """
+
+    cache_path: Path | None
+    cache_hash: str | None
+    extract_path: Path | None
+    extracted: bool
+    error: str | None
+
+
+def _download_and_extract_arxiv(
+    arxiv_id: str,
+    repo_root: Path,
+    timeout: float,
+) -> ArxivDownloadResult:
+    """Download arXiv source tarball and extract text.
+
+    This is the single implementation used by both DOI+arXiv and arXiv-only paths.
+
+    Args:
+        arxiv_id: arXiv identifier (e.g., "2203.00001").
+        repo_root: Repository root directory.
+        timeout: HTTP timeout in seconds.
+
+    Returns:
+        ArxivDownloadResult with cache/extract paths or error.
+    """
+    cache_path = None
+    cache_hash = None
+    extract_path = None
+    extracted = False
+    error = None
+
+    try:
+        arxiv_cache_path = repo_root / get_arxiv_cache_path(arxiv_id)
+        arxiv_extract_path = repo_root / get_arxiv_extract_path(arxiv_id)
+
+        # Download source
+        source_url = f"https://arxiv.org/e-print/{arxiv_id}"
+        response = requests.get(source_url, timeout=timeout)
+        response.raise_for_status()
+        tarball_bytes = response.content
+
+        # Write cache
+        arxiv_cache_path.parent.mkdir(parents=True, exist_ok=True)
+        arxiv_cache_path.write_bytes(tarball_bytes)
+
+        # Compute hash
+        cache_hash = hashlib.md5(tarball_bytes).hexdigest()  # noqa: S324
+        cache_path = get_arxiv_cache_path(arxiv_id)
+
+        # Extract text
+        try:
+            text_bytes = extract_arxiv_text(tarball_bytes)
+            text = text_bytes.decode("utf-8", errors="replace")
+            arxiv_extract_path.parent.mkdir(parents=True, exist_ok=True)
+            arxiv_extract_path.write_text(text, encoding="utf-8")
+            extract_path = get_arxiv_extract_path(arxiv_id)
+            extracted = True
+        except (OSError, ValueError, tarfile.TarError) as e:
+            error = f"Extraction failed: {e}"
+            extracted = False
+    except (OSError, requests.RequestException) as e:
+        error = f"Download failed: {e}"
+
+    return ArxivDownloadResult(
+        cache_path=cache_path,
+        cache_hash=cache_hash,
+        extract_path=extract_path,
+        extracted=extracted,
+        error=error,
+    )
+
+
+def _fetch_reference_entry(
     ref: ReferenceEntry,
     *,
     repo_root: Path,
@@ -375,44 +459,23 @@ def _fetch_reference_entry(  # noqa: PLR0915
         reference.arxiv_id = ref.arxiv_id
 
         # Download arXiv source if enabled
-        cache_path = None
-        cache_hash = None
-        extract_path = None
-        extracted = False
-        error = None
-
         if allow_download:
-            try:
-                arxiv_cache_path = repo_root / get_arxiv_cache_path(ref.arxiv_id)
-                arxiv_extract_path = repo_root / get_arxiv_extract_path(ref.arxiv_id)
-
-                # Download source
-                source_url = f"https://arxiv.org/e-print/{ref.arxiv_id}"
-                response = requests.get(source_url, timeout=timeout)
-                response.raise_for_status()
-                tarball_bytes = response.content
-
-                # Write cache
-                arxiv_cache_path.parent.mkdir(parents=True, exist_ok=True)
-                arxiv_cache_path.write_bytes(tarball_bytes)
-
-                # Compute hash
-                cache_hash = hashlib.md5(tarball_bytes).hexdigest()  # noqa: S324
-                cache_path = get_arxiv_cache_path(ref.arxiv_id)
-
-                # Extract text
-                try:
-                    text_bytes = extract_arxiv_text(tarball_bytes)
-                    text = text_bytes.decode("utf-8", errors="replace")
-                    arxiv_extract_path.parent.mkdir(parents=True, exist_ok=True)
-                    arxiv_extract_path.write_text(text, encoding="utf-8")
-                    extract_path = get_arxiv_extract_path(ref.arxiv_id)
-                    extracted = True
-                except (OSError, ValueError, tarfile.TarError) as e:
-                    error = f"Extraction failed: {e}"
-                    extracted = False
-            except (OSError, requests.RequestException) as e:
-                error = f"Download failed: {e}"
+            download_result = _download_and_extract_arxiv(
+                arxiv_id=ref.arxiv_id,
+                repo_root=repo_root,
+                timeout=timeout,
+            )
+            cache_path = download_result.cache_path
+            cache_hash = download_result.cache_hash
+            extract_path = download_result.extract_path
+            extracted = download_result.extracted
+            error = download_result.error
+        else:
+            cache_path = None
+            cache_hash = None
+            extract_path = None
+            extracted = False
+            error = None
 
         return ManifestEntry(
             reference=reference,
@@ -440,44 +503,24 @@ def _fetch_reference_entry(  # noqa: PLR0915
         arxiv_atom = fetch_arxiv_atom(ref.arxiv_id, timeout=timeout)
         reference = parse_arxiv_atom(arxiv_atom)
 
-        cache_path = None
-        cache_hash = None
-        extract_path = None
-        extracted = False
-        error = None
-
+        # Download arXiv source if enabled
         if allow_download:
-            try:
-                arxiv_cache_path = repo_root / get_arxiv_cache_path(ref.arxiv_id)
-                arxiv_extract_path = repo_root / get_arxiv_extract_path(ref.arxiv_id)
-
-                # Download source
-                source_url = f"https://arxiv.org/e-print/{ref.arxiv_id}"
-                response = requests.get(source_url, timeout=timeout)
-                response.raise_for_status()
-                tarball_bytes = response.content
-
-                # Write cache
-                arxiv_cache_path.parent.mkdir(parents=True, exist_ok=True)
-                arxiv_cache_path.write_bytes(tarball_bytes)
-
-                # Compute hash
-                cache_hash = hashlib.md5(tarball_bytes).hexdigest()  # noqa: S324
-                cache_path = get_arxiv_cache_path(ref.arxiv_id)
-
-                # Extract text
-                try:
-                    text_bytes = extract_arxiv_text(tarball_bytes)
-                    text = text_bytes.decode("utf-8", errors="replace")
-                    arxiv_extract_path.parent.mkdir(parents=True, exist_ok=True)
-                    arxiv_extract_path.write_text(text, encoding="utf-8")
-                    extract_path = get_arxiv_extract_path(ref.arxiv_id)
-                    extracted = True
-                except (OSError, ValueError, tarfile.TarError) as e:
-                    error = f"Extraction failed: {e}"
-                    extracted = False
-            except (OSError, requests.RequestException) as e:
-                error = f"Download failed: {e}"
+            download_result = _download_and_extract_arxiv(
+                arxiv_id=ref.arxiv_id,
+                repo_root=repo_root,
+                timeout=timeout,
+            )
+            cache_path = download_result.cache_path
+            cache_hash = download_result.cache_hash
+            extract_path = download_result.extract_path
+            extracted = download_result.extracted
+            error = download_result.error
+        else:
+            cache_path = None
+            cache_hash = None
+            extract_path = None
+            extracted = False
+            error = None
 
         return ManifestEntry(
             reference=reference,

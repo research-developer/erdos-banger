@@ -17,7 +17,11 @@ import responses
 import yaml
 
 import erdos.core.ingest as ingest_module
-from erdos.core.ingest import ingest_problem_references
+from erdos.core.ingest import (
+    ArxivDownloadResult,
+    _download_and_extract_arxiv,
+    ingest_problem_references,
+)
 from erdos.core.models import CLIOutput, ManifestEntry, ReferenceRecord
 
 
@@ -387,3 +391,102 @@ def test_ingest_internal_error_does_not_truncate_manifest(
     manifest = yaml.safe_load(manifest_path.read_text())
     assert isinstance(manifest, dict)
     assert len(manifest.get("entries", [])) == 2
+
+
+@responses.activate
+def test_download_and_extract_arxiv_success(temp_repo_root: Path) -> None:
+    """Test _download_and_extract_arxiv successfully downloads and extracts."""
+    arxiv_id = "2203.00001"
+
+    # Mock arXiv tarball download
+    tar_buffer = io.BytesIO()
+    with tarfile.open(fileobj=tar_buffer, mode="w:gz") as tar:
+        tex_content = b"\\documentclass{article}\n\\begin{document}\nTest content\n\\end{document}"
+        tex_info = tarfile.TarInfo(name="main.tex")
+        tex_info.size = len(tex_content)
+        tar.addfile(tex_info, io.BytesIO(tex_content))
+
+    responses.add(
+        responses.GET,
+        f"https://arxiv.org/e-print/{arxiv_id}",
+        body=tar_buffer.getvalue(),
+        status=200,
+    )
+
+    result = _download_and_extract_arxiv(
+        arxiv_id=arxiv_id,
+        repo_root=temp_repo_root,
+        timeout=30.0,
+    )
+
+    # Check result structure
+    assert isinstance(result, ArxivDownloadResult)
+    assert result.cache_path is not None
+    assert result.cache_hash is not None
+    assert result.extract_path is not None
+    assert result.extracted is True
+    assert result.error is None
+
+    # Verify files were created
+    cache_file = temp_repo_root / result.cache_path
+    extract_file = temp_repo_root / result.extract_path
+    assert cache_file.exists()
+    assert extract_file.exists()
+    assert "Test content" in extract_file.read_text()
+
+
+@responses.activate
+def test_download_and_extract_arxiv_download_error(temp_repo_root: Path) -> None:
+    """Test _download_and_extract_arxiv handles download failures."""
+    arxiv_id = "2203.00002"
+
+    # Mock a failed download
+    responses.add(
+        responses.GET,
+        f"https://arxiv.org/e-print/{arxiv_id}",
+        status=404,
+    )
+
+    result = _download_and_extract_arxiv(
+        arxiv_id=arxiv_id,
+        repo_root=temp_repo_root,
+        timeout=30.0,
+    )
+
+    # Should return error result
+    assert isinstance(result, ArxivDownloadResult)
+    assert result.cache_path is None
+    assert result.cache_hash is None
+    assert result.extract_path is None
+    assert result.extracted is False
+    assert result.error is not None
+    assert "Download failed" in result.error
+
+
+@responses.activate
+def test_download_and_extract_arxiv_extraction_error(temp_repo_root: Path) -> None:
+    """Test _download_and_extract_arxiv handles extraction failures."""
+    arxiv_id = "2203.00003"
+
+    # Mock a corrupted tarball (not valid tar.gz)
+    responses.add(
+        responses.GET,
+        f"https://arxiv.org/e-print/{arxiv_id}",
+        body=b"not a valid tarball",
+        status=200,
+    )
+
+    result = _download_and_extract_arxiv(
+        arxiv_id=arxiv_id,
+        repo_root=temp_repo_root,
+        timeout=30.0,
+    )
+
+    # Should have cache but failed extraction
+    assert isinstance(result, ArxivDownloadResult)
+    assert result.cache_path is not None
+    assert result.cache_hash is not None
+    assert result.extract_path is None
+    assert result.extracted is False
+    assert result.error is not None
+    assert "Extraction failed" in result.error
