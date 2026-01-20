@@ -62,3 +62,10 @@ def exit_with_result(
     if not result.success:
         _, code = _error_details(result)
         raise typer.Exit(code=code)
+
+
+def set_json_mode(ctx: typer.Context, enabled: bool) -> None:
+    """Enable JSON output mode on the Typer context."""
+    ctx.ensure_object(dict)
+    if enabled and isinstance(ctx.obj, dict):
+        ctx.obj["json"] = True

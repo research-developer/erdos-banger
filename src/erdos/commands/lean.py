@@ -9,7 +9,7 @@ import typer
 from rich.console import Console
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import exit_with_result, set_json_mode
 from erdos.core.exit_codes import ExitCode
 from erdos.core.formalizer import FormalizerError, generate_skeleton
 from erdos.core.lean_runner import LeanRunner, LeanRunnerError
@@ -191,9 +191,7 @@ def init(
 
     Creates lakefile.lean, lean-toolchain, and directory structure.
     """
-    ctx.ensure_object(dict)
-    if json_output:
-        ctx.obj["json"] = True
+    set_json_mode(ctx, json_output)
 
     with measure_time_ms() as duration:
         path = project_path or Path("formal/lean")
@@ -236,9 +234,7 @@ def check(
 
     Example: erdos lean check Erdos/Problem006.lean
     """
-    ctx.ensure_object(dict)
-    if json_output:
-        ctx.obj["json"] = True
+    set_json_mode(ctx, json_output)
 
     with measure_time_ms() as duration:
         path = project_path or Path("formal/lean")
@@ -290,9 +286,7 @@ def formalize(
 
     Creates Erdos/Problem<ID>.lean with theorem stub.
     """
-    ctx.ensure_object(dict)
-    if json_output:
-        ctx.obj["json"] = True
+    set_json_mode(ctx, json_output)
 
     with measure_time_ms() as duration:
         app_ctx, app_error = get_app_context(ctx, command="erdos lean formalize")

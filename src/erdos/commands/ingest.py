@@ -12,7 +12,7 @@ from rich.console import Console
 from rich.table import Table
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import exit_with_result, set_json_mode
 from erdos.core.ingest import ingest_problem_references
 from erdos.core.timing import measure_time_ms
 
@@ -162,9 +162,7 @@ def ingest(
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
     """Ingest literature metadata and cache for a problem."""
-    ctx.ensure_object(dict)
-    if json_output:
-        ctx.obj["json"] = True
+    set_json_mode(ctx, json_output)
 
     # Prepare and execute
     options = IngestOptions(

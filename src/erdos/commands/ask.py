@@ -12,7 +12,7 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import exit_with_result, set_json_mode
 from erdos.core.ask import ask_question
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
@@ -164,9 +164,7 @@ def ask(
 
         echo "What is the status?" | erdos ask 6 - --json
     """
-    ctx.ensure_object(dict)
-    if json_output:
-        ctx.obj["json"] = True
+    set_json_mode(ctx, json_output)
 
     # Get and validate question
     question = _read_question_from_stdin() if question_arg == "-" else question_arg

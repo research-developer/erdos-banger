@@ -9,7 +9,7 @@ import typer
 from rich.console import Console
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import exit_with_result, set_json_mode
 from erdos.core.constants import PREVIEW_LENGTH
 from erdos.core.exit_codes import ExitCode
 from erdos.core.index_builder import build_index as do_build_index
@@ -289,9 +289,7 @@ def search(
     Example: erdos search "prime"
     Example: erdos search "arithmetic progression" --limit 5
     """
-    ctx.ensure_object(dict)
-    if json_output:
-        ctx.obj["json"] = True
+    set_json_mode(ctx, json_output)
 
     json_mode = bool((ctx.obj or {}).get("json"))
     progress_console = err_console if json_mode else console

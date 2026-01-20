@@ -9,7 +9,7 @@ from rich.console import Console
 from rich.table import Table
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import exit_with_result, set_json_mode
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
 from erdos.core.timing import measure_time_ms
@@ -95,9 +95,7 @@ def refs(
 
     Example: erdos refs 6
     """
-    ctx.ensure_object(dict)
-    if json_output:
-        ctx.obj["json"] = True
+    set_json_mode(ctx, json_output)
 
     with measure_time_ms() as duration:
         app_ctx, app_error = get_app_context(ctx, command="erdos refs")
