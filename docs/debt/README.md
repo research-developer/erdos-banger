@@ -47,7 +47,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-021 | Missing abstractions | P2 | Fixed | 3dd1610 |
 | DEBT-024 | Placeholder metadata (authors / contact email) | P3 | Fixed | 647c86d |
 | DEBT-023 | Security lint suppressions (XML + MD5) | P2 | Fixed | 764c597 |
-| DEBT-025 | DRY violation in shell LLM wrappers | P4 | Fixed | (pending) |
+| DEBT-025 | DRY violation in shell LLM wrappers | P4 | Fixed | c05d7a7 |
 
 **Next Debt ID:** DEBT-026
 

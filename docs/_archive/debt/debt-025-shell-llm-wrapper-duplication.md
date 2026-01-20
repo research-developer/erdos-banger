@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-20
 **Status:** Fixed
-**Fixed In:** (pending commit)
+**Fixed In:** c05d7a7
 **Priority:** P4 (Nice-to-have)
 **Impact:** Small maintenance risk; changes must be duplicated across scripts
 
