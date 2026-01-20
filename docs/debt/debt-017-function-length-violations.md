@@ -173,7 +173,7 @@ def _retrieve_with_fallback(
 
 - [x] **Phase A**: `_fetch_reference_entry()` reduced to <100 lines (96 lines, met via DEBT-018-A)
 - [x] **Phase B**: `ingest_problem_references()` reduced to <100 lines (90 lines after extracting helpers)
-  - Fixed in commit: Will be added after commit
+  - Fixed in commit: 693fe24
   - Extracted helpers: `_load_problem()`, `_load_existing_manifest()`, `_process_single_reference()`, `_process_all_references()`, `_check_duplicate_keys()`, `_create_manifest()`, `_write_manifest_atomic()`, `_build_ingest_result()`
   - Removed `# noqa: PLR0911, PLR0912, PLR0915` suppressions
 - [ ] **Phase C**: `ask_question()` reduced to <100 lines (currently 183 lines)
