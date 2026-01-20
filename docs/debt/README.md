@@ -14,7 +14,11 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-*No active debt items.*
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| DEBT-026 | [Long functions remain (≥ 80 LOC)](debt-026-long-functions-remain.md) | P2 | Open |
+| DEBT-027 | [Broad `except Exception` catches](debt-027-broad-exception-catches.md) | P3 | Open |
+| DEBT-028 | [Ingest manifest churn (non-idempotent writes)](debt-028-ingest-manifest-churn.md) | P2 | Open |
 
 ## Archived Debt
 
@@ -48,7 +52,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-024 | Placeholder metadata (authors / contact email) | P3 | Fixed | 647c86d |
 | DEBT-025 | DRY violation in shell LLM wrappers | P4 | Fixed | c05d7a7 |
 
-**Next Debt ID:** DEBT-026
+**Next Debt ID:** DEBT-029
 
 ### Archived Debt Decks
 
