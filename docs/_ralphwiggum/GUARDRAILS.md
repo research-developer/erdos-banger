@@ -27,6 +27,18 @@ This document is a **living record** of guardrails, failure patterns, and “got
 - Symptom: the loop stalls on an iteration (e.g., tool invocation never returns).
 - Mitigation: enforce per-iteration timeouts and capture logs under `logs/ralph/` for post-mortem.
 
+### FP-003: SSOT path drift (specs moved, checklists stale)
+
+- Symptom: protocol/checklist references files that no longer exist (e.g., `docs/specs/spec-010-*.md` after specs are archived).
+- Common cause: reorganizing docs without updating `docs/_ralphwiggum/**`.
+- Mitigation: treat `docs/_ralphwiggum/**` as “operational SSOT” and update it in the same PR whenever docs move.
+
+### FP-004: Secrets accidentally end up in tracked logs
+
+- Symptom: API keys (or other secrets) are copied into tracked files during debugging or loop summaries.
+- Common cause: pasting raw `.env` content or command output into `ralph.log` or docs.
+- Mitigation: never paste secrets; keep `.env` gitignored; scan tracked logs (`rg -n "sk-" ralph.log`) before pushing.
+
 ---
 
 ## Guardrail Changes (Protocol/Prompt/CI)

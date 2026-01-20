@@ -28,7 +28,9 @@ git branch --show-current
 - [ ] Working tree is clean (no uncommitted changes)
 - [ ] You are **not** on `main` or `dev`
 - [ ] `PROMPT.md` and `PROGRESS.md` exist
-- [ ] Specs exist: `docs/specs/spec-010-ingest-command.md` and `docs/specs/spec-011-ask-command.md`
+- [ ] SSOT docs exist for the run:
+  - Debt sprint: `docs/debt/README.md` and the referenced `docs/debt/debt-*.md` decks
+  - Spec work (when approved): `docs/specs/` (active) and/or `docs/_archive/specs/` (implemented SSOT)
 
 Sync and sanity:
 

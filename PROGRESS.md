@@ -1,7 +1,7 @@
 # erdos-banger - Ralph Wiggum Progress Tracker
 
 **Last Updated:** 2026-01-20
-**Status:** Sprint Complete - All debt resolved (DEBT-016 through DEBT-021)
+**Status:** Ready - Debt/Bug Sprint Queue Active (DEBT-022+)
 **Branch:** ralph-wiggum-debt
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
@@ -26,9 +26,29 @@
 
 ## Active Queue
 
-### Technical Debt Sprint (Recommended Order)
+### Debt/Bug Sprint (Recommended Order)
 
-Per `docs/debt/README.md`, these are the active debt items ordered by recommended resolution:
+This queue is the SSOT for the next Ralph run. Fix debt/bugs first; do not start new specs until the queue is empty.
+
+- [ ] **DEBT-024**: Placeholder metadata (authors / contact email)
+  - Deck: `docs/debt/debt-024-placeholder-metadata-identifiers.md`
+  - Acceptance: Remove placeholder `Your Name` / `you@example.com` and replace with real project contact info (or remove placeholders).
+
+- [ ] **DEBT-023**: Security lint suppressions (XML + MD5)
+  - Deck: `docs/debt/debt-023-security-lint-suppressions.md`
+  - Acceptance: Either remove `# noqa: S314` / `# noqa: S324` via safer primitives, or document the threat model explicitly; `make ci` stays green.
+
+- [ ] **DEBT-025**: DRY violation in shell LLM wrappers (`load_env_file`)
+  - Deck: `docs/debt/debt-025-shell-llm-wrapper-duplication.md`
+  - Acceptance: `.env` loading logic defined once (shared helper or explicitly documented constraints) and validated by tests that run offline.
+
+- [ ] **DEBT-022**: Large core modules (SRP pressure)
+  - Deck: `docs/debt/debt-022-large-core-modules-srp.md`
+  - Acceptance: Split `src/erdos/core/ask.py` and/or `src/erdos/core/ingest.py` by responsibility without CLI behavior changes; tests become more narrowly targetable.
+
+### Completed Queue (Archived)
+
+Historical record of completed sprint items (kept for auditability):
 
 - [x] **DEBT-020**: Magic Numbers and Naming - Define constants, use ExitCode enum
   - Spec: `docs/debt/debt-020-magic-numbers-and-naming.md`

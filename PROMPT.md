@@ -1,6 +1,6 @@
-# erdos-banger - Ralph Wiggum Loop Prompt (Technical Debt Sprint)
+# erdos-banger - Ralph Wiggum Loop Prompt (Debt/Bug Sprint)
 
-You are fixing technical debt for the erdos-banger CLI toolkit using **Ironclad TDD**.
+You are fixing technical debt and bugs for the erdos-banger CLI toolkit using **Ironclad TDD**.
 This prompt runs headless via the Ralph Wiggum loop.
 
 If `PROGRESS.md` has no unchecked items, exit cleanly without making changes.
@@ -14,9 +14,12 @@ If `PROGRESS.md` has no unchecked items, exit cleanly without making changes.
 ```bash
 cat PROGRESS.md
 cat docs/debt/README.md
+cat docs/bugs/README.md
 ```
 
 Then read the specific debt document for your current task.
+
+**Note:** `ralph.log` is intentionally tracked as a run journal. Do not delete or rewrite it, and never include secrets. Unless a task explicitly requires updating it, leave it unchanged.
 
 ---
 
