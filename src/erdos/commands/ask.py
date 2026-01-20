@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from dataclasses import dataclass
 from typing import Annotated, Any
 
 import typer
@@ -23,6 +24,63 @@ app = typer.Typer(
 )
 console = Console()
 err_console = Console(stderr=True)
+
+
+@dataclass
+class AskOptions:
+    """Options for the ask command."""
+
+    problem_id: int
+    question: str
+    limit: int
+    build_index: bool
+    no_llm: bool
+    llm_cmd: str | None
+
+
+def _read_question_from_stdin() -> str:
+    """Read question text from stdin, trimming single trailing newline."""
+    question = sys.stdin.read()
+    if question.endswith("\n"):
+        question = question[:-1]
+    return question
+
+
+def _validate_question_input(question: str) -> CLIOutput | None:
+    """
+    Validate question is non-empty.
+
+    Returns None if valid, CLIOutput error if invalid.
+    """
+    if not question.strip():
+        return CLIOutput.err(
+            command="erdos ask",
+            error_type="UsageError",
+            message="Question cannot be empty",
+            code=ExitCode.USAGE_ERROR,
+        )
+    return None
+
+
+def _show_progress_message(problem_id: int, json_output: bool) -> None:
+    """Show progress message (only in human mode)."""
+    if not json_output:
+        err_console.print(f"[dim]Retrieving sources for Problem {problem_id}...[/dim]")
+
+
+def _execute_ask_query(options: AskOptions) -> CLIOutput:
+    """Execute the ask query and return result with timing."""
+    with measure_time_ms() as duration:
+        result = ask_question(
+            problem_id=options.problem_id,
+            question=options.question,
+            limit=options.limit,
+            build_index_flag=options.build_index,
+            no_llm=options.no_llm,
+            llm_command=options.llm_cmd,
+        )
+    result.duration_ms = duration[0]
+    return result
 
 
 def _print_human(result_data: dict[str, Any]) -> None:
@@ -71,55 +129,13 @@ def _print_human(result_data: dict[str, Any]) -> None:
 @app.callback(invoke_without_command=True)
 def ask(
     ctx: typer.Context,
-    problem_id: Annotated[
-        int,
-        typer.Argument(
-            help="Erdős problem ID to ask about.",
-            min=1,
-        ),
-    ],
-    question_arg: Annotated[
-        str,
-        typer.Argument(
-            help="Question to ask. Use '-' to read from stdin.",
-        ),
-    ],
-    limit: Annotated[
-        int,
-        typer.Option(
-            "--limit",
-            "-n",
-            help="Maximum number of chunks to retrieve.",
-        ),
-    ] = 5,
-    build_index: Annotated[
-        bool,
-        typer.Option(
-            "--build-index",
-            help="Build/rebuild the search index before retrieval.",
-        ),
-    ] = False,
-    no_llm: Annotated[
-        bool,
-        typer.Option(
-            "--no-llm",
-            help="Skip LLM execution (prompt-only mode).",
-        ),
-    ] = False,
-    llm_cmd: Annotated[
-        str,
-        typer.Option(
-            "--llm-cmd",
-            help="Override LLM command (default: ERDOS_LLM_COMMAND env).",
-        ),
-    ] = "",
-    json_output: Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Output as JSON for machine consumption.",
-        ),
-    ] = False,
+    problem_id: Annotated[int, typer.Argument(help="Problem ID", min=1)],
+    question_arg: Annotated[str, typer.Argument(help="Question or '-' for stdin")],
+    limit: Annotated[int, typer.Option("--limit", "-n")] = 5,
+    build_index: Annotated[bool, typer.Option("--build-index")] = False,
+    no_llm: Annotated[bool, typer.Option("--no-llm")] = False,
+    llm_cmd: Annotated[str, typer.Option("--llm-cmd")] = "",
+    json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
     """
     Ask a question about an Erdős problem using RAG.
@@ -140,41 +156,21 @@ def ask(
     if json_output:
         ctx.obj["json"] = True
 
-    # Handle stdin question
-    if question_arg == "-":
-        question = sys.stdin.read()
-        # Trim single trailing newline
-        if question.endswith("\n"):
-            question = question[:-1]
-        # Validate non-empty
-        if not question.strip():
-            result = CLIOutput.err(
-                command="erdos ask",
-                error_type="UsageError",
-                message="Question cannot be empty",
-                code=ExitCode.USAGE_ERROR,
-            )
-            exit_with_result(ctx, result)
-            return
-    else:
-        question = question_arg
+    # Get and validate question
+    question = _read_question_from_stdin() if question_arg == "-" else question_arg
+    if validation_error := _validate_question_input(question):
+        exit_with_result(ctx, validation_error)
+        return
 
-    # Show progress (only in human mode)
-    if not json_output:
-        err_console.print(f"[dim]Retrieving sources for Problem {problem_id}...[/dim]")
-
-    with measure_time_ms() as duration:
-        # Call core ask logic
-        result = ask_question(
-            problem_id=problem_id,
-            question=question,
-            limit=limit,
-            build_index_flag=build_index,
-            no_llm=no_llm,
-            llm_command=llm_cmd if llm_cmd else None,
-        )
-
-    result.duration_ms = duration[0]
-
-    # Exit with result
+    # Execute query
+    _show_progress_message(problem_id, json_output)
+    options = AskOptions(
+        problem_id=problem_id,
+        question=question,
+        limit=limit,
+        build_index=build_index,
+        no_llm=no_llm,
+        llm_cmd=llm_cmd if llm_cmd else None,
+    )
+    result = _execute_ask_query(options)
     exit_with_result(ctx, result, print_human=_print_human)
