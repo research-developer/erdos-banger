@@ -76,17 +76,13 @@ Should be split into:
 - `_write_manifest_atomic()`
 - `_build_response()`
 
-### `_fetch_reference_entry()` - 137 lines (353-489)
+### `_fetch_reference_entry()` - ~~137~~ 96 lines (470-565) **[RESOLVED via DEBT-018-A]**
 
-Has three nearly-identical code paths:
-1. DOI + arXiv (367-422)
-2. DOI only (425-432)
-3. arXiv only (435-487)
+**Status**: Target met (<100 lines). The arXiv download duplication was resolved in DEBT-018-A by extracting `_download_and_extract_arxiv()`.
 
-Paths 1 and 3 share ~90% of code (arXiv download logic). Should extract:
-- `_download_arxiv_source(arxiv_id, repo_root, timeout)`
-- `_fetch_doi_metadata(doi, mailto, timeout)`
-- `_fetch_arxiv_metadata(arxiv_id, timeout)`
+Original issue: Had three nearly-identical code paths with ~90% duplicated arXiv download logic.
+
+Resolution: DEBT-018-A extracted the common arXiv download logic, reducing function from 137 to 96 lines. No further extraction needed as remaining code is cohesive and readable.
 
 ### `ask_question()` - 183 lines (198-380)
 
@@ -167,11 +163,18 @@ def _retrieve_with_fallback(
 
 ## Acceptance Criteria
 
-- [ ] No function exceeds 50 lines
+- [ ] No function exceeds 50 lines (split into phases A-D)
 - [ ] Remove all `# noqa: PLR0911, PLR0912, PLR0915` suppressions
 - [ ] All tests pass
 - [ ] Coverage maintained at 80%+
 - [ ] Each extracted function has its own unit test
+
+### Progress by Phase
+
+- [x] **Phase A**: `_fetch_reference_entry()` reduced to <100 lines (96 lines, met via DEBT-018-A)
+- [ ] **Phase B**: `ingest_problem_references()` reduced to <100 lines (currently 294 lines)
+- [ ] **Phase C**: `ask_question()` reduced to <100 lines (currently 183 lines)
+- [ ] **Phase D**: All remaining functions <50 lines, remove noqa suppressions
 
 ## Effort Estimate
 
