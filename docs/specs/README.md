@@ -48,8 +48,6 @@ Completed specs that are fully implemented.
 
 | ID | Title | Location |
 |----|-------|----------|
-| 010 | Ingest Command | [spec](spec-010-ingest-command.md) (Complete) |
-| 011 | Ask Command | [spec](spec-011-ask-command.md) (Complete) |
 | 001 | Dev Environment & Tooling | [archive](../_archive/specs/spec-001-dev-environment-tooling.md) |
 | 002 | Testing Strategy | [archive](../_archive/specs/spec-002-testing-strategy.md) |
 | 003 | Domain Models | [archive](../_archive/specs/spec-003-domain-models.md) |
@@ -59,7 +57,9 @@ Completed specs that are fully implemented.
 | 007 | Lean Integration | [archive](../_archive/specs/spec-007-lean-integration.md) |
 | 008 | Test Fixtures | [archive](../_archive/specs/spec-008-test-fixtures.md) |
 | 009 | Architecture Cleanup | [archive](../_archive/specs/spec-009-architecture-cleanup.md) |
-| 018 | DevX Makefile | [spec](spec-018-devx-makefile.md) (Complete) |
+| 010 | Ingest Command | [archive](../_archive/specs/spec-010-ingest-command.md) |
+| 011 | Ask Command | [archive](../_archive/specs/spec-011-ask-command.md) |
+| 018 | DevX Makefile | [archive](../_archive/specs/spec-018-devx-makefile.md) |
 
 **Next Spec ID:** SPEC-021
 

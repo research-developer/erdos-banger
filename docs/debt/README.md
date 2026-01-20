@@ -14,9 +14,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-| ID | Title | Priority | Status |
-|----|-------|----------|--------|
-| DEBT-015 | [Minor Style Debt](debt-015-minor-style-debt.md) | P4 | Open (opportunistic) |
+*No active debt items.*
 
 ## Archived Debt
 
@@ -38,8 +36,19 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-011 | SPEC-020 status clarification | P2 | Resolved | c526e10 |
 | DEBT-012 | Broad exception handling in ingest.py | P1 | Fixed | 2cb6fac |
 | DEBT-014 | Roadmap/tracking docs drift after v1.1 | P2 | Fixed | c526e10 |
+| DEBT-015 | Minor Style Debt (code=1 vs ExitCode.ERROR) | P4 | Fixed | 9df84ca |
+| DEBT-016 | SRP violation in domain models | P2 | Fixed | 3f63fab |
+| DEBT-017 | Function length violations | P1 | Fixed | 94c3788,9e5de0a,b8d5395,64d3293,fb85afe,aa0b92e |
+| DEBT-018 | DRY violations (duplication) | P1 | Fixed | b069060,786cd42,ff4e412,3dd1610,fbdd5a0 |
+| DEBT-019 | Dependency inversion violations | P2 | Fixed | 3dd1610 |
+| DEBT-020 | Magic Numbers and Naming | P3 | Fixed | 6d8981c |
+| DEBT-021 | Missing abstractions | P2 | Fixed | 3dd1610 |
+| DEBT-022 | Large core modules (SRP pressure) | P2 | Fixed | 8d75c8a |
+| DEBT-023 | Security lint suppressions (XML + MD5) | P2 | Fixed | 764c597 |
+| DEBT-024 | Placeholder metadata (authors / contact email) | P3 | Fixed | 647c86d |
+| DEBT-025 | DRY violation in shell LLM wrappers | P4 | Fixed | c05d7a7 |
 
-**Next Debt ID:** DEBT-016
+**Next Debt ID:** DEBT-026
 
 ### Archived Debt Decks
 
@@ -57,3 +66,14 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-008-unused-golden-fixtures.md`
 - `docs/_archive/debt/debt-009-upstream-data-not-integrated.md`
 - `docs/_archive/debt/debt-010-no-smoke-test.md`
+- `docs/_archive/debt/debt-015-minor-style-debt.md`
+- `docs/_archive/debt/debt-016-srp-models-violation.md`
+- `docs/_archive/debt/debt-017-function-length-violations.md`
+- `docs/_archive/debt/debt-018-dry-violations.md`
+- `docs/_archive/debt/debt-019-dependency-inversion-violations.md`
+- `docs/_archive/debt/debt-020-magic-numbers-and-naming.md`
+- `docs/_archive/debt/debt-021-missing-abstractions.md`
+- `docs/_archive/debt/debt-024-placeholder-metadata-identifiers.md`
+- `docs/_archive/debt/debt-023-security-lint-suppressions.md`
+- `docs/_archive/debt/debt-025-shell-llm-wrapper-duplication.md`
+- `docs/_archive/debt/debt-022-large-core-modules-srp.md`

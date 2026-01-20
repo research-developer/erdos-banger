@@ -2,18 +2,23 @@
 
 from __future__ import annotations
 
-import time
 from pathlib import Path
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 from rich.console import Console
 
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.app_context import get_app_context
+from erdos.commands.presenter import exit_with_result, set_json_mode
+from erdos.core.exit_codes import ExitCode
 from erdos.core.formalizer import FormalizerError, generate_skeleton
 from erdos.core.lean_runner import LeanRunner, LeanRunnerError
 from erdos.core.models import CLIOutput, LeanCheckResult
-from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
+from erdos.core.timing import measure_time_ms
+
+
+if TYPE_CHECKING:
+    from erdos.core.ports import ProblemRepository
 
 
 app = typer.Typer(help="Lean 4 theorem prover commands.")
@@ -77,14 +82,14 @@ def init_lean_project(project_path: Path, *, fetch_mathlib: bool = True) -> CLIO
             command="erdos lean init",
             error_type="InitError",
             message=str(e),
-            code=1,
+            code=ExitCode.ERROR,
         )
     except Exception as e:
         return CLIOutput.err(
             command="erdos lean init",
             error_type="InitError",
             message=str(e),
-            code=1,
+            code=ExitCode.ERROR,
         )
 
 
@@ -102,43 +107,39 @@ def check_lean_file(file_path: Path, project_path: Path) -> CLIOutput:
             command="erdos lean check",
             error_type="LeanRunnerError",
             message=str(e),
-            code=1,
+            code=ExitCode.ERROR,
         )
     except FileNotFoundError:
         return CLIOutput.err(
             command="erdos lean check",
             error_type="NotFound",
             message=f"File not found: {file_path}",
-            code=3,
+            code=ExitCode.NOT_FOUND,
         )
     except Exception as e:
         return CLIOutput.err(
             command="erdos lean check",
             error_type="Error",
             message=str(e),
-            code=1,
+            code=ExitCode.ERROR,
         )
 
 
-def formalize_problem(problem_id: int, project_path: Path, *, force: bool) -> CLIOutput:
+def formalize_problem(
+    problem_id: int,
+    project_path: Path,
+    *,
+    repo: ProblemRepository,
+    force: bool,
+) -> CLIOutput:
     """Generate a Lean skeleton for a problem."""
-    try:
-        loader = ProblemLoader.from_default()
-    except ProblemLoaderError as e:
-        return CLIOutput.err(
-            command="erdos lean formalize",
-            error_type="LoaderError",
-            message=str(e),
-            code=1,
-        )
-
-    problem = loader.get_by_id(problem_id)
+    problem = repo.get_by_id(problem_id)
     if problem is None:
         return CLIOutput.err(
             command="erdos lean formalize",
             error_type="NotFound",
             message=f"Problem {problem_id} not found",
-            code=3,
+            code=ExitCode.NOT_FOUND,
         )
 
     try:
@@ -148,7 +149,7 @@ def formalize_problem(problem_id: int, project_path: Path, *, force: bool) -> CL
             command="erdos lean formalize",
             error_type="FormalizerError",
             message=str(e),
-            code=1,
+            code=ExitCode.ERROR,
         )
 
     return CLIOutput.ok(
@@ -190,18 +191,14 @@ def init(
 
     Creates lakefile.lean, lean-toolchain, and directory structure.
     """
-    ctx.ensure_object(dict)
-    if json_output:
-        ctx.obj["json"] = True
+    set_json_mode(ctx, json_output)
 
-    start_time = time.perf_counter()
-    path = project_path or Path("formal/lean")
-    path.mkdir(parents=True, exist_ok=True)
-    result = init_lean_project(path, fetch_mathlib=not no_mathlib)
-    duration_ms = int((time.perf_counter() - start_time) * 1000)
+    with measure_time_ms() as duration:
+        path = project_path or Path("formal/lean")
+        path.mkdir(parents=True, exist_ok=True)
+        result = init_lean_project(path, fetch_mathlib=not no_mathlib)
 
-    # Add duration to result
-    result.duration_ms = duration_ms
+    result.duration_ms = duration[0]
     exit_with_result(ctx, result, print_human=_print_human)
 
 
@@ -237,17 +234,13 @@ def check(
 
     Example: erdos lean check Erdos/Problem006.lean
     """
-    ctx.ensure_object(dict)
-    if json_output:
-        ctx.obj["json"] = True
+    set_json_mode(ctx, json_output)
 
-    start_time = time.perf_counter()
-    path = project_path or Path("formal/lean")
-    result = check_lean_file(file, path)
-    duration_ms = int((time.perf_counter() - start_time) * 1000)
+    with measure_time_ms() as duration:
+        path = project_path or Path("formal/lean")
+        result = check_lean_file(file, path)
 
-    # Add duration to result
-    result.duration_ms = duration_ms
+    result.duration_ms = duration[0]
     exit_with_result(ctx, result, print_human=_print_human)
 
     if (
@@ -255,7 +248,7 @@ def check(
         and isinstance(result.data, dict)
         and not result.data.get("success", True)
     ):
-        raise typer.Exit(code=5)
+        raise typer.Exit(code=ExitCode.LEAN_ERROR)
 
 
 @app.command()
@@ -293,13 +286,16 @@ def formalize(
 
     Creates Erdos/Problem<ID>.lean with theorem stub.
     """
-    ctx.ensure_object(dict)
-    if json_output:
-        ctx.obj["json"] = True
+    set_json_mode(ctx, json_output)
 
-    start_time = time.perf_counter()
-    path = project_path or Path("formal/lean")
-    result = formalize_problem(problem_id, path, force=force)
-    duration_ms = int((time.perf_counter() - start_time) * 1000)
-    result.duration_ms = duration_ms
+    with measure_time_ms() as duration:
+        app_ctx, app_error = get_app_context(ctx, command="erdos lean formalize")
+        if app_error is not None or app_ctx is None:
+            exit_with_result(ctx, app_error)  # type: ignore[arg-type]
+            return
+
+        path = project_path or Path("formal/lean")
+        result = formalize_problem(problem_id, path, repo=app_ctx.problems, force=force)
+
+    result.duration_ms = duration[0]
     exit_with_result(ctx, result, print_human=_print_human)

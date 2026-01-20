@@ -1,0 +1,103 @@
+# src/erdos/data/problems_enriched.yaml
+# Built-in sample dataset for local development and onboarding.
+# Uses the enriched v1 schema (see Spec 005).
+
+- id: 1
+  title: "Sum of reciprocals of primes"
+  statement: |
+    Prove that the sum of the reciprocals of the primes diverges:
+    $$\sum_{p \text{ prime}} \frac{1}{p} = \infty$$
+  status: proved
+  prize: 0
+  tags:
+    - number theory
+    - primes
+  references:
+    - key: Euler1737
+      citation: "L. Euler, Variae observationes circa series infinitas, 1737"
+  notes: "Classic result by Euler."
+  oeis_ids:
+    - A000040
+  formalized: false
+
+- id: 6
+  title: "Small primes in arithmetic progressions"
+  statement: |
+    Let $p_1 < p_2 < \ldots$ be the sequence of primes.
+    For every positive integer $k$, prove there exist infinitely many
+    arithmetic progressions of length $k$ consisting entirely of primes.
+  status: proved
+  prize: 100
+  tags:
+    - number theory
+    - primes
+    - arithmetic progressions
+  references:
+    - key: GreenTao2008
+      citation: "B. Green, T. Tao, The primes contain arbitrarily long arithmetic progressions, Ann. of Math. 167 (2008), 481–547"
+      doi: "10.4007/annals.2008.167.481"
+      arxiv_id: "math/0404188"
+  notes: "Solved by Green and Tao in 2004, published 2008."
+  oeis_ids: []
+  formalized: true
+
+- id: 42
+  title: "A test open problem"
+  statement: |
+    This is a test problem statement for an open problem.
+    It contains some mathematical notation: $n^2 + 1$.
+  status: open
+  prize: 500
+  tags:
+    - number theory
+    - test
+  references: []
+  notes: null
+  oeis_ids: []
+  formalized: false
+
+- id: 100
+  title: "Graph coloring conjecture"
+  statement: |
+    Every planar graph with girth at least 5 is 3-colorable.
+  status: open
+  prize: 0
+  tags:
+    - graph theory
+    - coloring
+  references:
+    - key: Erdos1959
+      citation: "P. Erdős, Graph theory and probability, 1959"
+  notes: null
+  oeis_ids: []
+  formalized: false
+
+- id: 316
+  title: "Covering systems counterexample"
+  statement: |
+    Does there exist a covering system with all moduli distinct and greater than 10?
+  status: disproved
+  prize: 0
+  tags:
+    - combinatorics
+    - covering systems
+  references:
+    - key: Hough2015
+      citation: "B. Hough, Solution of the minimum modulus problem for covering systems, Ann. of Math. 181 (2015), 361–382"
+      doi: "10.4007/annals.2015.181.1.6"
+  notes: "Disproved by Hough in 2015."
+  oeis_ids: []
+  formalized: false
+
+- id: 999
+  title: "Partially solved problem"
+  statement: |
+    A problem that has been partially resolved.
+  status: partially_solved
+  prize: 250
+  tags:
+    - number theory
+  references: []
+  notes: "Partial progress made in several papers."
+  oeis_ids: []
+  formalized: false

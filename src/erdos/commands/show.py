@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
-import time
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 from rich.console import Console
 from rich.panel import Panel
 
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.app_context import get_app_context
+from erdos.commands.presenter import exit_with_result, set_json_mode
+from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord
-from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
+from erdos.core.timing import measure_time_ms
+
+
+if TYPE_CHECKING:
+    from erdos.core.ports import ProblemRepository
 
 
 app = typer.Typer(
@@ -50,22 +55,20 @@ def _print_human(problem_data: dict[str, Any]) -> None:
 # ============================================================================
 # Core Logic (testable independently)
 # ============================================================================
-
-
-def get_problem(problem_id: int, loader: ProblemLoader) -> CLIOutput:
+def get_problem(problem_id: int, repo: ProblemRepository) -> CLIOutput:
     """
     Get a problem by ID.
 
     This is the core logic, separated from CLI concerns for testing.
     """
     try:
-        problem = loader.get_by_id(problem_id)
+        problem = repo.get_by_id(problem_id)
         if problem is None:
             return CLIOutput.err(
                 command="erdos show",
                 error_type="NotFound",
                 message=f"Problem {problem_id} not found",
-                code=3,
+                code=ExitCode.NOT_FOUND,
             )
         return CLIOutput.ok(
             command="erdos show",
@@ -76,7 +79,7 @@ def get_problem(problem_id: int, loader: ProblemLoader) -> CLIOutput:
             command="erdos show",
             error_type="Error",
             message=str(e),
-            code=1,
+            code=ExitCode.ERROR,
         )
 
 
@@ -108,26 +111,15 @@ def show(
 
     Example: erdos show 6
     """
-    ctx.ensure_object(dict)
-    if json_output:
-        ctx.obj["json"] = True
+    set_json_mode(ctx, json_output)
 
-    start_time = time.perf_counter()
-    try:
-        loader = ProblemLoader.from_default()  # Uses configured data path
-    except ProblemLoaderError as e:
-        result = CLIOutput.err(
-            command="erdos show",
-            error_type="LoaderError",
-            message=str(e),
-            code=1,
-        )
-        exit_with_result(ctx, result)
-        return
+    with measure_time_ms() as duration:
+        app_ctx, app_error = get_app_context(ctx, command="erdos show")
+        if app_error is not None or app_ctx is None:
+            exit_with_result(ctx, app_error)  # type: ignore[arg-type]
+            return
 
-    result = get_problem(problem_id, loader)
-    duration_ms = int((time.perf_counter() - start_time) * 1000)
+        result = get_problem(problem_id, app_ctx.problems)
 
-    # Add duration to result
-    result.duration_ms = duration_ms
+    result.duration_ms = duration[0]
     exit_with_result(ctx, result, print_human=_print_human)

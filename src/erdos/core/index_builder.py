@@ -1,31 +1,25 @@
 """Build search index from problem data."""
 
-from erdos.core.problem_loader import ProblemLoader
-from erdos.core.search_index import SearchIndex
+from erdos.core.ports import ProblemRepository, SearchIndexProtocol
 
 
 def build_index(
-    loader: ProblemLoader | None = None,
-    index: SearchIndex | None = None,
     *,
+    loader: ProblemRepository,
+    index: SearchIndexProtocol,
     rebuild: bool = False,
 ) -> dict[str, object]:
     """
     Build or update the search index.
 
     Args:
-        loader: ProblemLoader instance (default: from_default())
-        index: SearchIndex instance (default: from_default())
+        loader: Problem repository
+        index: Search index
         rebuild: If True, clear existing index first
 
     Returns:
         Statistics about the indexing operation
     """
-    if loader is None:
-        loader = ProblemLoader.from_default()
-    if index is None:
-        index = SearchIndex.from_default()
-
     if rebuild:
         index.clear()
 

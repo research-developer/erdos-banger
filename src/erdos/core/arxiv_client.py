@@ -9,9 +9,9 @@ API Reference: https://info.arxiv.org/help/api/user-manual.html
 import io
 import re
 import tarfile
-import xml.etree.ElementTree as ET
 from datetime import datetime
 
+import defusedxml.ElementTree as ET
 import requests
 
 from erdos.core.models import OpenAccessStatus, ReferenceRecord
@@ -38,8 +38,7 @@ def parse_arxiv_atom(xml_text: str) -> ReferenceRecord:
         ValueError: If XML contains no entry (not found) or missing required fields.
         xml.etree.ElementTree.ParseError: If XML is malformed.
     """
-    # S314: arXiv API responses are trusted; no external entity injection risk
-    root = ET.fromstring(xml_text)  # noqa: S314
+    root = ET.fromstring(xml_text)
 
     # Find the entry element
     entry = root.find("atom:entry", ATOM_NS)

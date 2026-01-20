@@ -89,6 +89,7 @@ def test_ask_command_json_output_no_llm(
     assert result_data["answer"] is None  # --no-llm
     assert "prompt" in result_data
     assert isinstance(result_data["sources"], list)
+    assert len(result_data["sources"]) > 0
     assert "retrieval" in result_data
     assert result_data["retrieval"]["limit"] == 5
     assert result_data["llm"]["enabled"] is False

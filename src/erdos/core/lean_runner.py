@@ -184,15 +184,22 @@ class LeanRunner:
 
         start_time = datetime.now(UTC)
 
-        try:
-            try:
-                relative = full_path.relative_to(self._project_path)
-            except ValueError as exc:
-                raise LeanRunnerError(
-                    f"Lean file must be under project path: {self._project_path}"
-                ) from exc
-            module_name = ".".join(relative.with_suffix("").parts)
+        # Resolve paths to handle symlinks and ensure consistent behavior
+        # across different environments (local vs CI, macOS /tmp vs /private/tmp)
+        resolved_full = full_path.resolve()
+        resolved_project = self._project_path.resolve()
 
+        # Compute relative path (before try block so it's always bound)
+        try:
+            relative = resolved_full.relative_to(resolved_project)
+        except ValueError as exc:
+            raise LeanRunnerError(
+                f"Lean file must be under project path: {self._project_path}"
+            ) from exc
+
+        module_name = ".".join(relative.with_suffix("").parts)
+
+        try:
             result = subprocess.run(  # noqa: S603
                 [lake_path, "build", module_name],
                 cwd=self._project_path,
@@ -238,11 +245,11 @@ class LeanRunner:
 
         except subprocess.TimeoutExpired:
             return LeanCheckResult(
-                file=str(file_path),
+                file=str(relative),
                 success=False,
                 errors=[
                     LeanError(
-                        file=str(file_path),
+                        file=str(relative),
                         line=1,
                         column=1,
                         message=f"Compilation timed out after {timeout} seconds",

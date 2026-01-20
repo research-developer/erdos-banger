@@ -50,7 +50,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 1. **State file** (`PROGRESS.md`) - Tracks what's done/pending
 2. **Prompt file** (`PROMPT.md`) - Instructions for each iteration
-3. **Specs docs** (`docs/specs/`) - Detailed requirements for each task
+3. **Debt/Bug docs** (`docs/debt/`, `docs/bugs/`) - SSOT for sprint work
+   - Specs (`docs/specs/`) only when approved for new feature work
 4. **Git repo** - For atomic commits and history
 
 ---
@@ -86,13 +87,14 @@ main (protected, production)
 erdos-banger/
 ├── PROMPT.md                    # Loop prompt (root)
 ├── PROGRESS.md                  # State tracker (root)
+├── ralph.log                    # Tracked marker file (may be reset; never log secrets)
 ├── docs/
 │   ├── _ralphwiggum/
 │   │   └── protocol.md          # This file
-│   └── specs/                   # SSOT specs
-│       ├── spec-010-ingest-command.md
-│       ├── spec-011-ask-command.md
-│       └── ...
+│   ├── debt/                    # Active debt decks (SSOT for debt sprints)
+│   ├── bugs/                    # Active bug decks (SSOT for bug sprints)
+│   ├── specs/                   # Active specs (v1.2+)
+│   └── _archive/specs/          # Archived specs (implemented SSOT)
 ```
 
 ### Step 3: Start tmux Session
@@ -270,7 +272,7 @@ If pushing is blocked (auth/CI outage), stop the loop and request human interven
 ### Spec → Test → Code Flow
 
 ```
-docs/specs/spec-010-ingest-command.md  # Read the spec
+docs/debt/debt-XXX-*.md                # Read the debt deck (or a spec doc)
     ↓
 tests/unit/test_arxiv_client.py        # Write failing test
     ↓
@@ -520,7 +522,11 @@ git checkout -b ralph-wiggum-v1.1
 ls PROGRESS.md PROMPT.md
 
 # 3. Ensure spec docs exist
-ls docs/specs/spec-010*.md
+# Debt sprint:
+ls docs/debt/README.md docs/debt/debt-0*.md
+#
+# Spec work (when approved):
+ls docs/specs/spec-0*.md docs/_archive/specs/spec-0*.md
 
 # 4. Start tmux
 tmux new -s ralph

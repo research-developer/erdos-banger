@@ -1,0 +1,325 @@
+"""Ingest service: orchestrates reference ingestion for Erdős problems."""
+
+from datetime import UTC, datetime
+from pathlib import Path
+
+import yaml
+from pydantic import TypeAdapter, ValidationError
+
+from erdos.core.exit_codes import ExitCode
+from erdos.core.ingest.fetch import process_all_references
+from erdos.core.ingest.stable_key import get_stable_key
+from erdos.core.literature_paths import get_manifest_path
+from erdos.core.models import (
+    CLIOutput,
+    ManifestEntry,
+    ProblemManifest,
+    ProblemRecord,
+)
+from erdos.core.ports import ProblemRepository
+
+
+def _load_problem(
+    problem_id: int, command: str, *, repo: ProblemRepository
+) -> tuple[ProblemRecord | None, CLIOutput | None]:
+    """Load problem by ID, returning (problem, error).
+
+    Returns:
+        Tuple of (problem, error_output). If successful, problem is set and error_output is None.
+        If failed, problem is None and error_output contains the error to return.
+    """
+    try:
+        problem = repo.get_by_id(problem_id)
+    except Exception as e:
+        return (
+            None,
+            CLIOutput.err(
+                command=command,
+                error_type="LoaderError",
+                message=str(e),
+                code=ExitCode.ERROR,
+            ),
+        )
+
+    if problem is None:
+        return (
+            None,
+            CLIOutput.err(
+                command=command,
+                error_type="NotFoundError",
+                message=f"Problem {problem_id} not found",
+                code=ExitCode.NOT_FOUND,
+            ),
+        )
+
+    return (problem, None)
+
+
+def _load_existing_manifest(manifest_path: Path, force: bool) -> ProblemManifest | None:
+    """Load existing manifest if present and not forcing refresh.
+
+    Args:
+        manifest_path: Path to manifest file.
+        force: If True, ignore existing manifest.
+
+    Returns:
+        Loaded ProblemManifest or None if not present/corrupted/forcing.
+    """
+    if not manifest_path.exists() or force:
+        return None
+
+    try:
+        with manifest_path.open() as f:
+            manifest_data = yaml.safe_load(f)
+        # Use TypeAdapter with strict=False to allow string->enum/datetime conversion
+        adapter = TypeAdapter(ProblemManifest)
+        return adapter.validate_python(manifest_data, strict=False)
+    except (OSError, yaml.YAMLError, ValidationError, TypeError, ValueError):
+        # If manifest is corrupted, return None to proceed with fresh ingestion
+        return None
+
+
+def _write_manifest_atomic(
+    manifest: ProblemManifest, manifest_path: Path
+) -> tuple[bool, str | None]:
+    """Write manifest to disk using atomic rename.
+
+    Args:
+        manifest: Manifest to write.
+        manifest_path: Target path for manifest file.
+
+    Returns:
+        Tuple of (success, error_message). error_message is None on success.
+    """
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = manifest_path.with_suffix(".tmp")
+    try:
+        with temp_path.open("w") as f:
+            yaml.dump(manifest.model_dump(mode="json"), f, default_flow_style=False)
+        temp_path.replace(manifest_path)
+        return (True, None)
+    except (OSError, yaml.YAMLError) as e:
+        if temp_path.exists():
+            temp_path.unlink()
+        return (False, f"Failed to write manifest: {e}")
+
+
+def _check_duplicate_keys(
+    entries: list[ManifestEntry], command: str
+) -> CLIOutput | None:
+    """Check for duplicate stable keys in entries.
+
+    Returns:
+        Error CLIOutput if duplicates found, None otherwise.
+    """
+    seen_keys = set()
+    for entry in entries:
+        key = get_stable_key(entry.reference)
+        if key in seen_keys:
+            return CLIOutput.err(
+                command=command,
+                error_type="ConfigError",
+                message=f"Duplicate reference key detected: {key}",
+                code=ExitCode.CONFIG_ERROR,
+            )
+        seen_keys.add(key)
+    return None
+
+
+def _create_manifest(
+    problem_id: int,
+    entries: list[ManifestEntry],
+    existing_manifest: ProblemManifest | None,
+) -> ProblemManifest:
+    """Create manifest with entries.
+
+    Args:
+        problem_id: Problem ID.
+        entries: Manifest entries.
+        existing_manifest: Existing manifest to preserve created_at timestamp.
+
+    Returns:
+        New ProblemManifest.
+    """
+    return ProblemManifest(
+        problem_id=problem_id,
+        entries=entries,
+        created_at=existing_manifest.created_at
+        if existing_manifest
+        else datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+
+
+def _build_ingest_result(
+    *,
+    command: str,
+    problem_id: int,
+    manifest: ProblemManifest,
+    references_total: int,
+    entries_written: int,
+    skipped: int,
+    failed: int,
+    internal_error: Exception | None,
+    network_failed: bool,
+    non_network_failed: bool,
+) -> CLIOutput:
+    """Build the final CLIOutput result for ingestion.
+
+    Args:
+        command: Command name.
+        problem_id: Problem ID.
+        manifest: Created manifest.
+        references_total: Total number of references.
+        entries_written: Number of entries written.
+        skipped: Number of references skipped.
+        failed: Number of failed references.
+        internal_error: Internal error if any.
+        network_failed: Whether any network errors occurred.
+        non_network_failed: Whether any non-network errors occurred.
+
+    Returns:
+        CLIOutput with success or error status.
+    """
+    data = {
+        "problem_id": problem_id,
+        "manifest_path": str(get_manifest_path(problem_id)),
+        "references_total": references_total,
+        "entries_written": entries_written,
+        "skipped": skipped,
+        "manifest": manifest.model_dump(mode="json"),
+    }
+
+    if failed > 0:
+        if internal_error is not None:
+            result = CLIOutput.err(
+                command=command,
+                error_type="Error",
+                message=f"Unexpected error during ingestion: {type(internal_error).__name__}: {internal_error}",
+                code=ExitCode.ERROR,
+            )
+            if isinstance(result.error, dict):
+                result.error.update(
+                    {
+                        "manifest_path": str(get_manifest_path(problem_id)),
+                        "references_processed": entries_written,
+                        "references_failed": failed,
+                    }
+                )
+            return result
+
+        result = CLIOutput.err(
+            command=command,
+            error_type="NetworkError"
+            if network_failed and not non_network_failed
+            else "IngestError",
+            message=f"{failed} reference(s) failed (see manifest)",
+            code=ExitCode.NETWORK_ERROR
+            if network_failed and not non_network_failed
+            else ExitCode.ERROR,
+        )
+        if isinstance(result.error, dict):
+            result.error.update(
+                {
+                    "manifest_path": str(get_manifest_path(problem_id)),
+                    "references_processed": entries_written,
+                    "references_failed": failed,
+                }
+            )
+        return result
+
+    return CLIOutput.ok(command=command, data=data)
+
+
+def ingest_problem_references(
+    problem_id: int,
+    *,
+    repo: ProblemRepository,
+    repo_root: Path,
+    force: bool = False,
+    no_download: bool = False,
+    no_network: bool = False,
+    timeout: float = 30.0,
+    delay: float = 3.0,
+    mailto: str,
+) -> CLIOutput:
+    """Ingest references for a problem.
+
+    Args:
+        problem_id: Erdős problem ID.
+        repo: Problem repository (injected).
+        repo_root: Repository root directory.
+        force: Re-fetch even if already cached.
+        no_download: Fetch metadata only, no arXiv tarballs.
+        no_network: Fail if network access required.
+        timeout: HTTP timeout in seconds.
+        delay: Delay between API requests in seconds.
+        mailto: Contact email for Crossref polite pool.
+
+    Returns:
+        CLIOutput with ingestion results.
+    """
+    command = "erdos ingest"
+
+    # Convert negative flags to positive internal variables for readability
+    allow_download = not no_download
+    allow_network = not no_network
+
+    # Load problem
+    problem, error = _load_problem(problem_id, command, repo=repo)
+    if error or problem is None:
+        return error or CLIOutput.err(
+            command=command,
+            error_type="LoaderError",
+            message="Failed to load problem",
+            code=ExitCode.ERROR,
+        )
+
+    # Get manifest path
+    manifest_path = repo_root / get_manifest_path(problem_id)
+
+    # Load existing manifest if present
+    existing_manifest = _load_existing_manifest(manifest_path, force)
+
+    # Process all references
+    process_result = process_all_references(
+        problem,
+        existing_manifest=existing_manifest,
+        force=force,
+        repo_root=repo_root,
+        allow_download=allow_download,
+        allow_network=allow_network,
+        timeout=timeout,
+        mailto=mailto,
+        delay=delay,
+    )
+
+    # Check for duplicate stable keys
+    duplicate_error = _check_duplicate_keys(process_result.entries, command)
+    if duplicate_error:
+        return duplicate_error
+
+    # Create and write manifest
+    manifest = _create_manifest(problem_id, process_result.entries, existing_manifest)
+    success, error_msg = _write_manifest_atomic(manifest, manifest_path)
+    if not success:
+        return CLIOutput.err(
+            command=command,
+            error_type="IOError",
+            message=error_msg or "Unknown write error",
+            code=ExitCode.ERROR,
+        )
+
+    # Return result
+    return _build_ingest_result(
+        command=command,
+        problem_id=problem_id,
+        manifest=manifest,
+        references_total=len(problem.references),
+        entries_written=len(process_result.entries),
+        skipped=process_result.skipped,
+        failed=process_result.failed,
+        internal_error=process_result.internal_error,
+        network_failed=process_result.network_failed,
+        non_network_failed=process_result.non_network_failed,
+    )

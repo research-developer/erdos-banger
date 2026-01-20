@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
+from erdos.core.constants import PREVIEW_LENGTH
 from erdos.core.models import ChunkSource, ProblemRecord, TextChunk
 
 
@@ -203,8 +204,8 @@ class SearchIndex:
                     text=problem.notes,
                     source=ChunkSource.PROBLEM_NOTES,
                     problem_id=problem.id,
-                    preview=problem.notes[:200]
-                    if len(problem.notes) > 200
+                    preview=problem.notes[:PREVIEW_LENGTH]
+                    if len(problem.notes) > PREVIEW_LENGTH
                     else problem.notes,
                 )
                 self._insert_chunk(conn, notes_chunk, now)

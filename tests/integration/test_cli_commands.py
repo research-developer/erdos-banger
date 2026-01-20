@@ -213,7 +213,7 @@ def test_cli_search_fts_works_without_dataset_when_index_exists(
     assert payload["success"] is True
     assert payload["data"]["use_fts"] is True
     assert payload["data"]["count"] > 0
-    assert any(r.get("title") is None for r in payload["data"]["results"])
+    assert all(isinstance(r.get("title"), str) for r in payload["data"]["results"])
 
 
 def test_cli_lean_init_no_mathlib_human(tmp_path: Path) -> None:

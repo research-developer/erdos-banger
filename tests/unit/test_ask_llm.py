@@ -1,10 +1,12 @@
 """Unit tests for ask LLM execution."""
 
+import subprocess
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from erdos.core.ask import execute_llm
+from erdos.core.constants import LLM_COMMAND_TIMEOUT
 
 
 def test_execute_llm_with_successful_command():
@@ -122,3 +124,57 @@ def test_execute_llm_raises_on_file_not_found():
 
         with pytest.raises(FileNotFoundError):
             execute_llm(llm_command=llm_command, prompt=prompt)
+
+
+def test_execute_llm_passes_timeout_to_subprocess():
+    """execute_llm must pass timeout parameter to subprocess.run."""
+    llm_command = "echo 'test'"
+    prompt = "Test"
+
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(stdout="test\n", returncode=0)
+
+        execute_llm(llm_command=llm_command, prompt=prompt, timeout=60)
+
+        call_args = mock_run.call_args
+        assert call_args.kwargs["timeout"] == 60
+
+
+def test_execute_llm_uses_default_timeout():
+    """execute_llm must use default timeout from constants."""
+    llm_command = "echo 'test'"
+    prompt = "Test"
+
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(stdout="test\n", returncode=0)
+
+        execute_llm(llm_command=llm_command, prompt=prompt)
+
+        call_args = mock_run.call_args
+        assert call_args.kwargs["timeout"] == LLM_COMMAND_TIMEOUT
+
+
+def test_execute_llm_timeout_can_be_disabled():
+    """execute_llm must allow None timeout for no limit."""
+    llm_command = "echo 'test'"
+    prompt = "Test"
+
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(stdout="test\n", returncode=0)
+
+        execute_llm(llm_command=llm_command, prompt=prompt, timeout=None)
+
+        call_args = mock_run.call_args
+        assert call_args.kwargs["timeout"] is None
+
+
+def test_execute_llm_raises_timeout_expired():
+    """execute_llm must raise TimeoutExpired when command times out."""
+    llm_command = "sleep 999"
+    prompt = "Test"
+
+    with patch("subprocess.run") as mock_run:
+        mock_run.side_effect = subprocess.TimeoutExpired(cmd="sleep 999", timeout=1)
+
+        with pytest.raises(subprocess.TimeoutExpired):
+            execute_llm(llm_command=llm_command, prompt=prompt, timeout=1)

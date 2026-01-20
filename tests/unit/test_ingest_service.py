@@ -17,8 +17,14 @@ import responses
 import yaml
 
 import erdos.core.ingest as ingest_module
-from erdos.core.ingest import ingest_problem_references
-from erdos.core.models import CLIOutput, ManifestEntry, ReferenceRecord
+from erdos.core.ingest import (
+    ArxivDownloadResult,
+    _download_and_extract_arxiv,
+    get_stable_key,
+    ingest_problem_references,
+)
+from erdos.core.models import CLIOutput, ManifestEntry, ReferenceEntry, ReferenceRecord
+from erdos.core.problem_loader import ProblemLoader
 
 
 @pytest.fixture
@@ -51,6 +57,7 @@ def test_ingest_no_references(
 
     result = ingest_problem_references(
         problem_id=999,
+        repo=ProblemLoader(problems_yaml),
         repo_root=temp_repo_root,
         force=False,
         no_download=False,
@@ -122,6 +129,7 @@ def test_ingest_arxiv_reference(
 
     result = ingest_problem_references(
         problem_id=998,
+        repo=ProblemLoader(problems_yaml),
         repo_root=temp_repo_root,
         force=False,
         no_download=False,
@@ -179,6 +187,7 @@ def test_ingest_doi_reference(
 
     result = ingest_problem_references(
         problem_id=997,
+        repo=ProblemLoader(problems_yaml),
         repo_root=temp_repo_root,
         force=False,
         no_download=False,
@@ -252,6 +261,7 @@ def test_ingest_merged_doi_arxiv(
 
     result = ingest_problem_references(
         problem_id=996,
+        repo=ProblemLoader(problems_yaml),
         repo_root=temp_repo_root,
         force=False,
         no_download=False,
@@ -306,6 +316,7 @@ def test_ingest_no_download_flag(
 
     result = ingest_problem_references(
         problem_id=995,
+        repo=ProblemLoader(problems_yaml),
         repo_root=temp_repo_root,
         force=False,
         no_download=True,  # Should skip tarball download
@@ -371,6 +382,7 @@ def test_ingest_internal_error_does_not_truncate_manifest(
 
     result = ingest_problem_references(
         problem_id=994,
+        repo=ProblemLoader(problems_yaml),
         repo_root=temp_repo_root,
         force=False,
         no_download=True,
@@ -387,3 +399,178 @@ def test_ingest_internal_error_does_not_truncate_manifest(
     manifest = yaml.safe_load(manifest_path.read_text())
     assert isinstance(manifest, dict)
     assert len(manifest.get("entries", [])) == 2
+
+
+@responses.activate
+def test_download_and_extract_arxiv_success(temp_repo_root: Path) -> None:
+    """Test _download_and_extract_arxiv successfully downloads and extracts."""
+    arxiv_id = "2203.00001"
+
+    # Mock arXiv tarball download
+    tar_buffer = io.BytesIO()
+    with tarfile.open(fileobj=tar_buffer, mode="w:gz") as tar:
+        tex_content = b"\\documentclass{article}\n\\begin{document}\nTest content\n\\end{document}"
+        tex_info = tarfile.TarInfo(name="main.tex")
+        tex_info.size = len(tex_content)
+        tar.addfile(tex_info, io.BytesIO(tex_content))
+
+    responses.add(
+        responses.GET,
+        f"https://arxiv.org/e-print/{arxiv_id}",
+        body=tar_buffer.getvalue(),
+        status=200,
+    )
+
+    result = _download_and_extract_arxiv(
+        arxiv_id=arxiv_id,
+        repo_root=temp_repo_root,
+        timeout=30.0,
+    )
+
+    # Check result structure
+    assert isinstance(result, ArxivDownloadResult)
+    assert result.cache_path is not None
+    assert result.cache_hash is not None
+    assert result.extract_path is not None
+    assert result.extracted is True
+    assert result.error is None
+
+    # Verify files were created
+    cache_file = temp_repo_root / result.cache_path
+    extract_file = temp_repo_root / result.extract_path
+    assert cache_file.exists()
+    assert extract_file.exists()
+    assert "Test content" in extract_file.read_text()
+
+
+@responses.activate
+def test_download_and_extract_arxiv_download_error(temp_repo_root: Path) -> None:
+    """Test _download_and_extract_arxiv handles download failures."""
+    arxiv_id = "2203.00002"
+
+    # Mock a failed download
+    responses.add(
+        responses.GET,
+        f"https://arxiv.org/e-print/{arxiv_id}",
+        status=404,
+    )
+
+    result = _download_and_extract_arxiv(
+        arxiv_id=arxiv_id,
+        repo_root=temp_repo_root,
+        timeout=30.0,
+    )
+
+    # Should return error result
+    assert isinstance(result, ArxivDownloadResult)
+    assert result.cache_path is None
+    assert result.cache_hash is None
+    assert result.extract_path is None
+    assert result.extracted is False
+    assert result.error is not None
+    assert "Download failed" in result.error
+
+
+@responses.activate
+def test_download_and_extract_arxiv_extraction_error(temp_repo_root: Path) -> None:
+    """Test _download_and_extract_arxiv handles extraction failures."""
+    arxiv_id = "2203.00003"
+
+    # Mock a corrupted tarball (not valid tar.gz)
+    responses.add(
+        responses.GET,
+        f"https://arxiv.org/e-print/{arxiv_id}",
+        body=b"not a valid tarball",
+        status=200,
+    )
+
+    result = _download_and_extract_arxiv(
+        arxiv_id=arxiv_id,
+        repo_root=temp_repo_root,
+        timeout=30.0,
+    )
+
+    # Should have cache but failed extraction
+    assert isinstance(result, ArxivDownloadResult)
+    assert result.cache_path is not None
+    assert result.cache_hash is not None
+    assert result.extract_path is None
+    assert result.extracted is False
+    assert result.error is not None
+    assert "Extraction failed" in result.error
+
+
+def test_get_stable_key_with_doi() -> None:
+    """Test get_stable_key with DOI identifier."""
+    # Test with ReferenceEntry
+    ref_entry = ReferenceEntry(key="Test2023", doi="10.1007/BF01940595")
+    assert get_stable_key(ref_entry) == "doi:10.1007/bf01940595"
+
+    # Test with ReferenceRecord
+    ref_record = ReferenceRecord(
+        doi="10.1007/BF01940595",
+        title="Test Paper",
+        source="crossref",
+    )
+    assert get_stable_key(ref_record) == "doi:10.1007/bf01940595"
+
+
+def test_get_stable_key_with_arxiv() -> None:
+    """Test get_stable_key with arXiv identifier."""
+    # Test with ReferenceEntry
+    ref_entry = ReferenceEntry(key="Test2023", arxiv_id="2203.00001")
+    assert get_stable_key(ref_entry) == "arxiv:2203.00001"
+
+    # Test with ReferenceRecord
+    ref_record = ReferenceRecord(
+        arxiv_id="2203.00001",
+        title="Test Paper",
+        source="arxiv",
+    )
+    assert get_stable_key(ref_record) == "arxiv:2203.00001"
+
+
+def test_get_stable_key_with_both_doi_and_arxiv() -> None:
+    """Test get_stable_key prioritizes DOI when both identifiers present."""
+    # Test with ReferenceEntry
+    ref_entry = ReferenceEntry(
+        key="Test2023",
+        doi="10.1007/BF01940595",
+        arxiv_id="2203.00001",
+    )
+    assert get_stable_key(ref_entry) == "doi:10.1007/bf01940595"
+
+    # Test with ReferenceRecord
+    ref_record = ReferenceRecord(
+        doi="10.1007/BF01940595",
+        arxiv_id="2203.00001",
+        title="Test Paper",
+        source="crossref",
+    )
+    assert get_stable_key(ref_record) == "doi:10.1007/bf01940595"
+
+
+def test_get_stable_key_with_no_identifiers() -> None:
+    """Test get_stable_key with no identifiers returns empty string."""
+    # Test with ReferenceEntry (can have no identifiers)
+    ref_entry = ReferenceEntry(key="Test2023")
+    assert get_stable_key(ref_entry) == ""
+
+    # Test with ReferenceRecord with semantic_scholar_id only (not used by get_stable_key)
+    ref_record = ReferenceRecord(
+        semantic_scholar_id="abcd1234",
+        title="Test Paper",
+        source="manual",
+    )
+    assert get_stable_key(ref_record) == ""
+
+
+def test_get_stable_key_doi_case_normalization() -> None:
+    """Test get_stable_key normalizes DOI to lowercase."""
+    # Mixed case DOI
+    ref_entry = ReferenceEntry(key="Test2023", doi="10.1007/BF01940595")
+    assert get_stable_key(ref_entry) == "doi:10.1007/bf01940595"
+
+    # Already lowercase
+    ref_entry2 = ReferenceEntry(key="Test2024", doi="10.1007/bf01940595")
+    assert get_stable_key(ref_entry2) == "doi:10.1007/bf01940595"
