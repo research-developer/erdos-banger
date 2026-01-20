@@ -20,9 +20,10 @@ import erdos.core.ingest as ingest_module
 from erdos.core.ingest import (
     ArxivDownloadResult,
     _download_and_extract_arxiv,
+    get_stable_key,
     ingest_problem_references,
 )
-from erdos.core.models import CLIOutput, ManifestEntry, ReferenceRecord
+from erdos.core.models import CLIOutput, ManifestEntry, ReferenceEntry, ReferenceRecord
 
 
 @pytest.fixture
@@ -490,3 +491,79 @@ def test_download_and_extract_arxiv_extraction_error(temp_repo_root: Path) -> No
     assert result.extracted is False
     assert result.error is not None
     assert "Extraction failed" in result.error
+
+
+def test_get_stable_key_with_doi() -> None:
+    """Test get_stable_key with DOI identifier."""
+    # Test with ReferenceEntry
+    ref_entry = ReferenceEntry(key="Test2023", doi="10.1007/BF01940595")
+    assert get_stable_key(ref_entry) == "doi:10.1007/bf01940595"
+
+    # Test with ReferenceRecord
+    ref_record = ReferenceRecord(
+        doi="10.1007/BF01940595",
+        title="Test Paper",
+        source="crossref",
+    )
+    assert get_stable_key(ref_record) == "doi:10.1007/bf01940595"
+
+
+def test_get_stable_key_with_arxiv() -> None:
+    """Test get_stable_key with arXiv identifier."""
+    # Test with ReferenceEntry
+    ref_entry = ReferenceEntry(key="Test2023", arxiv_id="2203.00001")
+    assert get_stable_key(ref_entry) == "arxiv:2203.00001"
+
+    # Test with ReferenceRecord
+    ref_record = ReferenceRecord(
+        arxiv_id="2203.00001",
+        title="Test Paper",
+        source="arxiv",
+    )
+    assert get_stable_key(ref_record) == "arxiv:2203.00001"
+
+
+def test_get_stable_key_with_both_doi_and_arxiv() -> None:
+    """Test get_stable_key prioritizes DOI when both identifiers present."""
+    # Test with ReferenceEntry
+    ref_entry = ReferenceEntry(
+        key="Test2023",
+        doi="10.1007/BF01940595",
+        arxiv_id="2203.00001",
+    )
+    assert get_stable_key(ref_entry) == "doi:10.1007/bf01940595"
+
+    # Test with ReferenceRecord
+    ref_record = ReferenceRecord(
+        doi="10.1007/BF01940595",
+        arxiv_id="2203.00001",
+        title="Test Paper",
+        source="crossref",
+    )
+    assert get_stable_key(ref_record) == "doi:10.1007/bf01940595"
+
+
+def test_get_stable_key_with_no_identifiers() -> None:
+    """Test get_stable_key with no identifiers returns empty string."""
+    # Test with ReferenceEntry (can have no identifiers)
+    ref_entry = ReferenceEntry(key="Test2023")
+    assert get_stable_key(ref_entry) == ""
+
+    # Test with ReferenceRecord with semantic_scholar_id only (not used by get_stable_key)
+    ref_record = ReferenceRecord(
+        semantic_scholar_id="abcd1234",
+        title="Test Paper",
+        source="manual",
+    )
+    assert get_stable_key(ref_record) == ""
+
+
+def test_get_stable_key_doi_case_normalization() -> None:
+    """Test get_stable_key normalizes DOI to lowercase."""
+    # Mixed case DOI
+    ref_entry = ReferenceEntry(key="Test2023", doi="10.1007/BF01940595")
+    assert get_stable_key(ref_entry) == "doi:10.1007/bf01940595"
+
+    # Already lowercase
+    ref_entry2 = ReferenceEntry(key="Test2024", doi="10.1007/bf01940595")
+    assert get_stable_key(ref_entry2) == "doi:10.1007/bf01940595"

@@ -14,6 +14,7 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Protocol
 
 import requests
 import yaml
@@ -134,11 +135,11 @@ def ingest_problem_references(  # noqa: PLR0911, PLR0912, PLR0915
             continue
 
         # Check for existing entry if not forcing
-        stable_key = _get_stable_key(ref)
+        stable_key = get_stable_key(ref)
         existing_entry = None
         if existing_manifest and not force:
             for entry in existing_manifest.entries:
-                if _get_stable_key_from_record(entry.reference) == stable_key:
+                if get_stable_key(entry.reference) == stable_key:
                     existing_entry = entry
                     break
 
@@ -248,7 +249,7 @@ def ingest_problem_references(  # noqa: PLR0911, PLR0912, PLR0915
     # Check for duplicate stable keys
     seen_keys = set()
     for entry in entries:
-        key = _get_stable_key_from_record(entry.reference)
+        key = get_stable_key(entry.reference)
         if key in seen_keys:
             return CLIOutput.err(
                 command=command,
@@ -337,21 +338,49 @@ def ingest_problem_references(  # noqa: PLR0911, PLR0912, PLR0915
     return CLIOutput.ok(command=command, data=data)
 
 
-def _get_stable_key(ref: ReferenceEntry) -> str:
-    """Get stable key for a reference (for deduplication)."""
-    if ref.doi:
-        return f"doi:{ref.doi.lower()}"
-    if ref.arxiv_id:
-        return f"arxiv:{ref.arxiv_id}"
-    return ""
+class HasIdentifiers(Protocol):
+    """Protocol for objects with DOI and arXiv identifiers.
+
+    Used by get_stable_key to work with both ReferenceEntry and ReferenceRecord.
+    """
+
+    @property
+    def doi(self) -> str | None:
+        """DOI identifier."""
+        ...
+
+    @property
+    def arxiv_id(self) -> str | None:
+        """arXiv identifier."""
+        ...
 
 
-def _get_stable_key_from_record(record: ReferenceRecord) -> str:
-    """Get stable key from a ReferenceRecord."""
-    if record.doi:
-        return f"doi:{record.doi.lower()}"
-    if record.arxiv_id:
-        return f"arxiv:{record.arxiv_id}"
+def get_stable_key(obj: HasIdentifiers) -> str:
+    """Get stable deduplication key for any object with identifiers.
+
+    This function works with both ReferenceEntry and ReferenceRecord,
+    eliminating the need for separate type-specific functions.
+
+    Args:
+        obj: Any object with doi and arxiv_id attributes
+
+    Returns:
+        Stable key in format "doi:<lowercased-doi>" or "arxiv:<id>",
+        or empty string if no identifiers present.
+
+    Examples:
+        >>> from erdos.core.models import ReferenceEntry, ReferenceRecord
+        >>> ref = ReferenceEntry(key="Test2023", doi="10.1007/BF01940595")
+        >>> get_stable_key(ref)
+        'doi:10.1007/bf01940595'
+        >>> rec = ReferenceRecord(arxiv_id="2203.00001", title="Test", source="arxiv")
+        >>> get_stable_key(rec)
+        'arxiv:2203.00001'
+    """
+    if obj.doi:
+        return f"doi:{obj.doi.lower()}"
+    if obj.arxiv_id:
+        return f"arxiv:{obj.arxiv_id}"
     return ""
 
 
