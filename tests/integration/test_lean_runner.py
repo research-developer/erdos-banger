@@ -39,8 +39,14 @@ class TestLeanRunnerIntegration:
         assert result.file == "Erdos/Test.lean"
         assert result.success, f"Lean compile failed:\n{result}"
 
+    @pytest.mark.slow
     def test_check_formal_project_compiles(self) -> None:
-        """check succeeds on the repo's formal/lean project."""
+        """check succeeds on the repo's formal/lean project.
+
+        Note: Requires mathlib to be built (~15-30 min first run).
+        Run `cd formal/lean && lake build` to pre-build locally.
+        CI has mathlib pre-cached so this passes there.
+        """
         project_root = Path(__file__).resolve().parents[2]
         project_path = project_root / "formal" / "lean"
 

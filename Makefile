@@ -3,7 +3,7 @@
 UV ?= uv
 RUN := $(UV) run
 
-PYTEST_FAST_MARKERS := not requires_lean and not requires_network
+PYTEST_FAST_MARKERS := not requires_lean and not requires_network and not slow
 
 # Directories to clean
 CLEAN_DIRS := .pytest_cache .mypy_cache .ruff_cache .coverage htmlcov dist build *.egg-info __pycache__ .hypothesis
