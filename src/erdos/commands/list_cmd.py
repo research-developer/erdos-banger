@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Annotated, Any
 
 import typer
@@ -17,6 +18,17 @@ from erdos.core.timing import measure_time_ms
 
 # Valid status values for user-facing validation
 _VALID_STATUSES = {"open", "proved", "disproved", "partially_solved"}
+
+
+@dataclass
+class ListOptions:
+    """Options for the list command."""
+
+    status: str | None
+    prize_min: int | None
+    prize_max: int | None
+    tags: list[str] | None
+    limit: int
 
 
 app = typer.Typer(
@@ -46,39 +58,41 @@ def _print_human(problems_data: list[dict[str, Any]]) -> None:
     console.print(table)
 
 
-def list_problems(
-    *,
+def _validate_status(
     status: str | None,
-    prize_min: int | None,
-    prize_max: int | None,
-    tag: list[str] | None,
-    limit: int,
-    loader: ProblemLoader,
-) -> CLIOutput:
-    """Core list logic (testable)."""
-    try:
-        # Validate status if provided
-        if status is not None:
-            status_lower = status.lower()
-            if status_lower not in _VALID_STATUSES:
-                valid_list = ", ".join(sorted(_VALID_STATUSES))
-                return CLIOutput.err(
-                    command="erdos list",
-                    error_type="UsageError",
-                    message=f"Invalid status '{status}'. Valid values: {valid_list}",
-                    code=ExitCode.USAGE_ERROR,
-                )
-            status_enum = ProblemStatus.from_string(status)
-        else:
-            status_enum = None
+) -> tuple[ProblemStatus | None, CLIOutput | None]:
+    """Validate and convert status string to enum.
 
+    Returns (status_enum, error) - error is None if valid.
+    """
+    if status is None:
+        return None, None
+    status_lower = status.lower()
+    if status_lower not in _VALID_STATUSES:
+        valid_list = ", ".join(sorted(_VALID_STATUSES))
+        return None, CLIOutput.err(
+            command="erdos list",
+            error_type="UsageError",
+            message=f"Invalid status '{status}'. Valid values: {valid_list}",
+            code=ExitCode.USAGE_ERROR,
+        )
+    return ProblemStatus.from_string(status), None
+
+
+def _execute_list_query(options: ListOptions, loader: ProblemLoader) -> CLIOutput:
+    """Execute list query and return result."""
+    status_enum, error = _validate_status(options.status)
+    if error:
+        return error
+
+    try:
         problems = loader.filter(
             status=status_enum,
-            prize_min=prize_min,
-            prize_max=prize_max,
-            tags=tag,
+            prize_min=options.prize_min,
+            prize_max=options.prize_max,
+            tags=options.tags,
         )
-        problems = sorted(problems, key=lambda p: p.id)[:limit]
+        problems = sorted(problems, key=lambda p: p.id)[: options.limit]
         return CLIOutput.ok(
             command="erdos list",
             data=[p.model_dump(mode="json") for p in problems],
@@ -87,6 +101,19 @@ def list_problems(
         return CLIOutput.err(
             command="erdos list",
             error_type="Error",
+            message=str(e),
+            code=ExitCode.ERROR,
+        )
+
+
+def _get_loader() -> tuple[ProblemLoader | None, CLIOutput | None]:
+    """Get problem loader, returning error if it fails."""
+    try:
+        return ProblemLoader.from_default(), None
+    except ProblemLoaderError as e:
+        return None, CLIOutput.err(
+            command="erdos list",
+            error_type="LoaderError",
             message=str(e),
             code=ExitCode.ERROR,
         )
@@ -170,26 +197,19 @@ def list_(
         ctx.obj["json"] = True
 
     with measure_time_ms() as duration:
-        try:
-            loader = ProblemLoader.from_default()
-        except ProblemLoaderError as e:
-            result = CLIOutput.err(
-                command="erdos list",
-                error_type="LoaderError",
-                message=str(e),
-                code=ExitCode.ERROR,
-            )
-            exit_with_result(ctx, result)
+        loader, loader_error = _get_loader()
+        if loader_error or loader is None:
+            exit_with_result(ctx, loader_error)  # type: ignore[arg-type]
             return
 
-        result = list_problems(
+        options = ListOptions(
             status=status,
             prize_min=prize_min,
             prize_max=prize_max,
-            tag=tag,
+            tags=tag,
             limit=limit,
-            loader=loader,
         )
+        result = _execute_list_query(options, loader)
 
     result.duration_ms = duration[0]
     exit_with_result(ctx, result, print_human=_print_human)
