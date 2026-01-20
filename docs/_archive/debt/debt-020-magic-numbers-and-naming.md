@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-19
 **Status:** Fixed
-**Fixed In:** (will be added after commit)
+**Fixed In:** 6d8981c
 **Priority:** P3 (Minor; clean up when touching nearby code)
 **Impact:** Readability, maintainability, cognitive load
 
