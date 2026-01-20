@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-20
 **Status:** Fixed
-**Fixed In:** (commit pending)
+**Fixed In:** c31d484
 **Priority:** P2 (Maintainability / future refactors)
 **Impact:** Harder reviews, higher bug risk during future changes, reduced testability
 
