@@ -131,6 +131,39 @@ class _ReferenceProcessResult:
     internal_error: Exception | None
 
 
+def _find_existing_manifest_entry(
+    ref: ReferenceEntry,
+    existing_manifest: ProblemManifest | None,
+    *,
+    force: bool,
+) -> ManifestEntry | None:
+    """Return an existing manifest entry for this reference, if available."""
+    if existing_manifest is None or force:
+        return None
+    stable_key = get_stable_key(ref)
+    for entry in existing_manifest.entries:
+        if get_stable_key(entry.reference) == stable_key:
+            return entry
+    return None
+
+
+def _error_manifest_entry(
+    ref: ReferenceEntry, *, title: str, error: str
+) -> ManifestEntry:
+    """Create a manifest entry representing a failed ingestion attempt."""
+    return ManifestEntry(
+        reference=ReferenceRecord(
+            doi=ref.doi,
+            arxiv_id=ref.arxiv_id,
+            title=title,
+            authors=[],
+            source="error",
+        ),
+        error=error,
+        ingested_at=datetime.now(UTC),
+    )
+
+
 def _process_single_reference(
     ref: ReferenceEntry,
     *,
@@ -142,32 +175,12 @@ def _process_single_reference(
     timeout: float,
     mailto: str,
 ) -> _ReferenceProcessResult:
-    """Process a single reference, checking for existing entry or fetching new.
-
-    Args:
-        ref: Reference to process.
-        existing_manifest: Existing manifest to check for cached entries.
-        force: If True, ignore existing entries and re-fetch.
-        repo_root: Repository root directory.
-        allow_download: Whether to download arXiv tarballs.
-        allow_network: Whether network access is allowed.
-        timeout: HTTP timeout in seconds.
-        mailto: Contact email for Crossref polite pool.
-
-    Returns:
-        _ReferenceProcessResult with entry and failure status.
-    """
-    # Check for existing entry if not forcing
-    stable_key = get_stable_key(ref)
-    existing_entry = None
-    if existing_manifest and not force:
-        for entry in existing_manifest.entries:
-            if get_stable_key(entry.reference) == stable_key:
-                existing_entry = entry
-                break
-
-    if existing_entry:
-        # Reuse existing entry (idempotence)
+    """Process a single reference, reusing a cached manifest entry unless forced."""
+    if existing_entry := _find_existing_manifest_entry(
+        ref,
+        existing_manifest,
+        force=force,
+    ):
         return _ReferenceProcessResult(
             entry=existing_entry,
             failed=False,
@@ -196,36 +209,11 @@ def _process_single_reference(
             network_failed=network_failed,
             internal_error=None,
         )
-    except requests.RequestException as e:
-        error_entry = ManifestEntry(
-            reference=ReferenceRecord(
-                doi=ref.doi,
-                arxiv_id=ref.arxiv_id,
-                title=f"Failed to fetch: {ref.key}",
-                authors=[],
-                source="error",
-            ),
+    except (requests.RequestException, RuntimeError) as e:
+        error_entry = _error_manifest_entry(
+            ref,
+            title=f"Failed to fetch: {ref.key}",
             error=str(e),
-            ingested_at=datetime.now(UTC),
-        )
-        return _ReferenceProcessResult(
-            entry=error_entry,
-            failed=True,
-            network_failed=True,
-            internal_error=None,
-        )
-    except RuntimeError as e:
-        # Network policy errors (e.g., --no-network)
-        error_entry = ManifestEntry(
-            reference=ReferenceRecord(
-                doi=ref.doi,
-                arxiv_id=ref.arxiv_id,
-                title=f"Failed to fetch: {ref.key}",
-                authors=[],
-                source="error",
-            ),
-            error=str(e),
-            ingested_at=datetime.now(UTC),
         )
         return _ReferenceProcessResult(
             entry=error_entry,
@@ -241,17 +229,10 @@ def _process_single_reference(
         TypeError,
         tarfile.TarError,
     ) as e:
-        # Record failure but continue
-        error_entry = ManifestEntry(
-            reference=ReferenceRecord(
-                doi=ref.doi,
-                arxiv_id=ref.arxiv_id,
-                title=f"Failed to fetch: {ref.key}",
-                authors=[],
-                source="error",
-            ),
+        error_entry = _error_manifest_entry(
+            ref,
+            title=f"Failed to fetch: {ref.key}",
             error=str(e),
-            ingested_at=datetime.now(UTC),
         )
         return _ReferenceProcessResult(
             entry=error_entry,
@@ -260,17 +241,10 @@ def _process_single_reference(
             internal_error=None,
         )
     except Exception as e:
-        # Unexpected internal error
-        error_entry = ManifestEntry(
-            reference=ReferenceRecord(
-                doi=ref.doi,
-                arxiv_id=ref.arxiv_id,
-                title=f"Unexpected error: {ref.key}",
-                authors=[],
-                source="error",
-            ),
+        error_entry = _error_manifest_entry(
+            ref,
+            title=f"Unexpected error: {ref.key}",
             error=f"{type(e).__name__}: {e}",
-            ingested_at=datetime.now(UTC),
         )
         return _ReferenceProcessResult(
             entry=error_entry,
