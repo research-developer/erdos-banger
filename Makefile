@@ -26,7 +26,11 @@ CLEAN_DIRS := .pytest_cache .mypy_cache .ruff_cache .coverage htmlcov dist build
 ##@ Getting Started
 
 help: ## Show available targets
-	@awk 'BEGIN {FS = ":.*##"; printf "Usage:\\n  make <target>\\n\\nTargets:\\n"} /^##@/ { printf "\\n%s\\n", substr($$0, 5) } /^[a-zA-Z0-9_.-]+:.*##/ { printf "  %-16s %s\\n", $$1, $$2 }' $(MAKEFILE_LIST)
+	@echo "Usage:"
+	@echo "  make <target>"
+	@echo ""
+	@echo "Targets:"
+	@awk 'BEGIN {FS = ":.*##"} /^##@/ { printf "\n%s\n", substr($$0, 5) } /^[a-zA-Z0-9_.-]+:.*##/ { printf "  %-16s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
 dev: ## 🚀 One-command dev setup (new contributors start here)
 	@echo "Setting up development environment..."
