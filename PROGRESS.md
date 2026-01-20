@@ -34,7 +34,7 @@
   - Deck: `docs/debt/debt-027-broad-exception-catches.md`
   - Acceptance: Core service layers no longer use `except Exception` except where re-raising after cleanup; CLI boundary code returns friendly errors but retains debug signal; `make ci` green.
 
-- [ ] **DEBT-028**: Ingest manifest churn (non-idempotent writes)
+- [x] **DEBT-028**: Ingest manifest churn (non-idempotent writes)
   - Deck: `docs/debt/debt-028-ingest-manifest-churn.md`
   - Acceptance: Running `erdos ingest <id>` twice with `--no-network --no-download` produces no file diffs when no content changes; clear policy on whether `literature/manifests/` is tracked or local-only; `make ci` green.
 
@@ -80,6 +80,16 @@
 - `docs/debt/README.md` - Moved DEBT-027 to Archived
 
 **Note:** `formalizer.py` already uses proper exception translation pattern (`except Exception as exc: raise FormalizerError(...) from exc`).
+
+### 2026-01-20: DEBT-028 Manifest idempotency implemented
+
+**Files modified:**
+- `src/erdos/core/ingest/service.py` - Added `_entries_content_equal()` helper to compare manifest entries excluding operational timestamps; modified `_create_manifest()` to preserve `updated_at` when content unchanged; modified `ingest_problem_references()` to skip writes when content unchanged
+- `tests/unit/test_ingest_service.py` - Added 5 new tests: `test_entries_content_equal_same_content`, `test_entries_content_equal_different_content`, `test_entries_content_equal_different_lengths`, `test_ingest_idempotent_no_file_change_on_repeat`, `test_ingest_updates_manifest_when_content_changes`
+- `docs/debt/debt-028-ingest-manifest-churn.md` - Status updated to Fixed
+- `docs/debt/README.md` - Moved DEBT-028 to Archived
+
+**Policy decision:** Manifests remain tracked in git (Option B from debt doc). Writes are now idempotent - only update `updated_at` and write file when content actually changes.
 
 (entries added by Ralph loop as tasks complete)
 

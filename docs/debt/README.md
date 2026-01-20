@@ -14,9 +14,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-| ID | Title | Priority | Status |
-|----|-------|----------|--------|
-| DEBT-028 | [Ingest manifest churn (non-idempotent writes)](debt-028-ingest-manifest-churn.md) | P2 | Open |
+*No active debt items.*
 
 ## Archived Debt
 
@@ -51,6 +49,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-025 | DRY violation in shell LLM wrappers | P4 | Fixed | c05d7a7 |
 | DEBT-026 | Long functions remain (≥ 80 LOC) | P2 | Fixed | c31d484 |
 | DEBT-027 | Broad `except Exception` catches | P3 | Fixed | e657d7c |
+| DEBT-028 | Ingest manifest churn (non-idempotent writes) | P2 | Fixed | (pending) |
 
 **Next Debt ID:** DEBT-029
 
@@ -83,3 +82,4 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-022-large-core-modules-srp.md`
 - `docs/_archive/debt/debt-026-long-functions-remain.md`
 - `docs/_archive/debt/debt-027-broad-exception-catches.md`
+- `docs/_archive/debt/debt-028-ingest-manifest-churn.md`

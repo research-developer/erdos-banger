@@ -105,6 +105,39 @@ def _write_manifest_atomic(
         return (False, f"Failed to write manifest: {e}")
 
 
+def _entries_content_equal(
+    new_entries: list[ManifestEntry], existing_entries: list[ManifestEntry]
+) -> bool:
+    """Compare manifest entries for content equality (excluding operational timestamps).
+
+    This comparison ignores:
+    - `ingested_at` on each entry (operational metadata, not content)
+    - `fetched_at` on references (operational metadata)
+
+    Returns:
+        True if entries are semantically equal (same content), False otherwise.
+    """
+    if len(new_entries) != len(existing_entries):
+        return False
+
+    for new, existing in zip(new_entries, existing_entries, strict=True):
+        # Compare all fields except operational timestamps
+        # Get dict representation excluding timestamps
+        new_dict = new.model_dump(mode="json", exclude={"ingested_at"})
+        existing_dict = existing.model_dump(mode="json", exclude={"ingested_at"})
+
+        # Also exclude fetched_at from reference comparison
+        if "reference" in new_dict and "fetched_at" in new_dict["reference"]:
+            new_dict["reference"].pop("fetched_at", None)
+        if "reference" in existing_dict and "fetched_at" in existing_dict["reference"]:
+            existing_dict["reference"].pop("fetched_at", None)
+
+        if new_dict != existing_dict:
+            return False
+
+    return True
+
+
 def _check_duplicate_keys(
     entries: list[ManifestEntry], command: str
 ) -> CLIOutput | None:
@@ -131,24 +164,36 @@ def _create_manifest(
     problem_id: int,
     entries: list[ManifestEntry],
     existing_manifest: ProblemManifest | None,
+    *,
+    content_changed: bool,
 ) -> ProblemManifest:
     """Create manifest with entries.
 
     Args:
         problem_id: Problem ID.
         entries: Manifest entries.
-        existing_manifest: Existing manifest to preserve created_at timestamp.
+        existing_manifest: Existing manifest to preserve timestamps.
+        content_changed: If False and existing_manifest exists, preserve updated_at.
 
     Returns:
         New ProblemManifest.
     """
+    now = datetime.now(UTC)
+
+    # Preserve created_at from existing manifest if available
+    created_at = existing_manifest.created_at if existing_manifest else now
+
+    # Only update updated_at if content actually changed (DEBT-028)
+    if existing_manifest and not content_changed:
+        updated_at = existing_manifest.updated_at
+    else:
+        updated_at = now
+
     return ProblemManifest(
         problem_id=problem_id,
         entries=entries,
-        created_at=existing_manifest.created_at
-        if existing_manifest
-        else datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=created_at,
+        updated_at=updated_at,
     )
 
 
@@ -300,16 +345,29 @@ def ingest_problem_references(
     if duplicate_error:
         return duplicate_error
 
-    # Create and write manifest
-    manifest = _create_manifest(problem_id, process_result.entries, existing_manifest)
-    success, error_msg = _write_manifest_atomic(manifest, manifest_path)
-    if not success:
-        return CLIOutput.err(
-            command=command,
-            error_type="IOError",
-            message=error_msg or "Unknown write error",
-            code=ExitCode.ERROR,
-        )
+    # Determine if content changed (DEBT-028: idempotent writes)
+    content_changed = existing_manifest is None or not _entries_content_equal(
+        process_result.entries, existing_manifest.entries
+    )
+
+    # Create manifest (preserves updated_at if content unchanged)
+    manifest = _create_manifest(
+        problem_id,
+        process_result.entries,
+        existing_manifest,
+        content_changed=content_changed,
+    )
+
+    # Only write if content changed to avoid unnecessary file churn (DEBT-028)
+    if content_changed:
+        success, error_msg = _write_manifest_atomic(manifest, manifest_path)
+        if not success:
+            return CLIOutput.err(
+                command=command,
+                error_type="IOError",
+                message=error_msg or "Unknown write error",
+                code=ExitCode.ERROR,
+            )
 
     # Return result
     return _build_ingest_result(

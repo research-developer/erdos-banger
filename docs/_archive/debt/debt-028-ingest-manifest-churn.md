@@ -1,7 +1,8 @@
 # Technical Debt 028: Ingest Manifest Churn (Non-idempotent Writes)
 
 **Date:** 2026-01-20
-**Status:** Open
+**Status:** Fixed
+**Fixed In:** (pending commit)
 **Priority:** P2 (DevX + repo hygiene)
 **Impact:** Running `erdos ingest` repeatedly rewrites manifests even when nothing changes, creating noisy diffs and merge conflicts
 

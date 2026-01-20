@@ -17,12 +17,14 @@ import responses
 import yaml
 
 import erdos.core.ingest as ingest_module
+import erdos.core.ingest.fetch as fetch_module
 from erdos.core.ingest import (
     ArxivDownloadResult,
     _download_and_extract_arxiv,
     get_stable_key,
     ingest_problem_references,
 )
+from erdos.core.ingest.service import _entries_content_equal
 from erdos.core.models import CLIOutput, ManifestEntry, ReferenceEntry, ReferenceRecord
 from erdos.core.problem_loader import ProblemLoader
 
@@ -574,3 +576,230 @@ def test_get_stable_key_doi_case_normalization() -> None:
     # Already lowercase
     ref_entry2 = ReferenceEntry(key="Test2024", doi="10.1007/bf01940595")
     assert get_stable_key(ref_entry2) == "doi:10.1007/bf01940595"
+
+
+def test_entries_content_equal_same_content() -> None:
+    """Test _entries_content_equal returns True for same content."""
+    entry1 = ManifestEntry(
+        reference=ReferenceRecord(
+            doi="10.1000/test",
+            title="Test Paper",
+            authors=["Author A"],
+            source="crossref",
+        ),
+        cached=True,
+        cache_path=Path("literature/cache/test.tar.gz"),
+        ingested_at=datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC),
+    )
+    # Same content, different timestamp
+    entry2 = ManifestEntry(
+        reference=ReferenceRecord(
+            doi="10.1000/test",
+            title="Test Paper",
+            authors=["Author A"],
+            source="crossref",
+        ),
+        cached=True,
+        cache_path=Path("literature/cache/test.tar.gz"),
+        ingested_at=datetime(2026, 1, 2, 12, 0, 0, tzinfo=UTC),  # Different timestamp
+    )
+
+    assert _entries_content_equal([entry1], [entry2]) is True
+
+
+def test_entries_content_equal_different_content() -> None:
+    """Test _entries_content_equal returns False for different content."""
+    entry1 = ManifestEntry(
+        reference=ReferenceRecord(
+            doi="10.1000/test",
+            title="Original Title",
+            authors=["Author A"],
+            source="crossref",
+        ),
+        ingested_at=datetime.now(UTC),
+    )
+    entry2 = ManifestEntry(
+        reference=ReferenceRecord(
+            doi="10.1000/test",
+            title="Different Title",  # Different content
+            authors=["Author A"],
+            source="crossref",
+        ),
+        ingested_at=datetime.now(UTC),
+    )
+
+    assert _entries_content_equal([entry1], [entry2]) is False
+
+
+def test_entries_content_equal_different_lengths() -> None:
+    """Test _entries_content_equal returns False for different list lengths."""
+    entry1 = ManifestEntry(
+        reference=ReferenceRecord(
+            doi="10.1000/test",
+            title="Test Paper",
+            authors=[],
+            source="crossref",
+        ),
+        ingested_at=datetime.now(UTC),
+    )
+
+    assert _entries_content_equal([entry1], []) is False
+    assert _entries_content_equal([], [entry1]) is False
+
+
+def test_ingest_idempotent_no_file_change_on_repeat(
+    temp_repo_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that running ingest twice produces no file diffs when content unchanged.
+
+    DEBT-028: Manifest writes should be idempotent - running `erdos ingest <id>`
+    twice with `--no-network --no-download` should not modify the manifest file
+    if no content has changed.
+    """
+    # Create test problem with no references (simplest case)
+    problems_yaml = temp_repo_root / "data" / "problems_enriched.yaml"
+    problems_yaml.parent.mkdir(parents=True)
+    problems_yaml.write_text("""
+- id: 888
+  title: "Idempotency test problem"
+  statement: "Test problem statement"
+  category: "Graph Theory"
+  references: []
+""")
+
+    monkeypatch.setenv("ERDOS_DATA_PATH", str(temp_repo_root / "data"))
+
+    # First ingest
+    result1 = ingest_problem_references(
+        problem_id=888,
+        repo=ProblemLoader(problems_yaml),
+        repo_root=temp_repo_root,
+        force=False,
+        no_download=True,
+        no_network=True,
+        timeout=30.0,
+        delay=0.0,
+        mailto="test@example.com",
+    )
+    assert result1.success is True
+
+    # Read manifest content after first ingest
+    manifest_path = temp_repo_root / "literature" / "manifests" / "0888.yaml"
+    manifest_content_1 = manifest_path.read_text()
+
+    # Second ingest (no force, should be idempotent)
+    result2 = ingest_problem_references(
+        problem_id=888,
+        repo=ProblemLoader(problems_yaml),
+        repo_root=temp_repo_root,
+        force=False,
+        no_download=True,
+        no_network=True,
+        timeout=30.0,
+        delay=0.0,
+        mailto="test@example.com",
+    )
+    assert result2.success is True
+
+    # Read manifest content after second ingest
+    manifest_content_2 = manifest_path.read_text()
+
+    # File content should be identical (no churn)
+    assert manifest_content_1 == manifest_content_2, (
+        "Manifest file changed on repeat ingest when content unchanged. "
+        "This causes unnecessary git churn (DEBT-028)."
+    )
+
+
+def test_ingest_updates_manifest_when_content_changes(
+    temp_repo_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that manifest is updated when content actually changes.
+
+    Ensures the idempotency fix doesn't prevent legitimate updates.
+    """
+    # Create test problem with one reference
+    problems_yaml = temp_repo_root / "data" / "problems_enriched.yaml"
+    problems_yaml.parent.mkdir(parents=True)
+    problems_yaml.write_text("""
+- id: 887
+  title: "Content change test problem"
+  statement: "Test problem statement"
+  category: "Graph Theory"
+  references:
+    - key: "Test2023"
+      doi: "10.1000/test"
+""")
+
+    monkeypatch.setenv("ERDOS_DATA_PATH", str(temp_repo_root / "data"))
+
+    # Create a stub that returns deterministic data
+    call_count = [0]
+
+    def fake_fetch(
+        ref: ReferenceEntry,
+        *,
+        repo_root: Path,
+        allow_download: bool,
+        allow_network: bool,
+        timeout: float,
+        mailto: str,
+    ) -> ManifestEntry:
+        # Unused params required by signature
+        _ = repo_root, allow_download, allow_network, timeout, mailto
+        call_count[0] += 1
+        # Return different title on second call to simulate content change
+        title = "First Title" if call_count[0] == 1 else "Updated Title"
+        return ManifestEntry(
+            reference=ReferenceRecord(
+                doi=ref.doi,
+                title=title,
+                authors=[],
+                source="stub",
+            ),
+            ingested_at=datetime.now(UTC),
+        )
+
+    # Patch at fetch module level where the call happens
+    monkeypatch.setattr(fetch_module, "fetch_reference_entry", fake_fetch)
+
+    # First ingest - allow network since we're mocking the fetch
+    result1 = ingest_problem_references(
+        problem_id=887,
+        repo=ProblemLoader(problems_yaml),
+        repo_root=temp_repo_root,
+        force=False,
+        no_download=True,
+        no_network=False,  # Allow network (mocked)
+        timeout=30.0,
+        delay=0.0,
+        mailto="test@example.com",
+    )
+    assert result1.success is True
+
+    manifest_path = temp_repo_root / "literature" / "manifests" / "0887.yaml"
+    manifest_data_1 = yaml.safe_load(manifest_path.read_text())
+
+    # Second ingest with force=True to re-fetch
+    result2 = ingest_problem_references(
+        problem_id=887,
+        repo=ProblemLoader(problems_yaml),
+        repo_root=temp_repo_root,
+        force=True,  # Force re-fetch
+        no_download=True,
+        no_network=False,  # Allow network (mocked)
+        timeout=30.0,
+        delay=0.0,
+        mailto="test@example.com",
+    )
+    assert result2.success is True
+
+    manifest_data_2 = yaml.safe_load(manifest_path.read_text())
+
+    # Content changed, so updated_at should be different
+    assert manifest_data_1["updated_at"] != manifest_data_2["updated_at"], (
+        "updated_at should change when content changes"
+    )
+    # Verify the title actually changed
+    assert manifest_data_1["entries"][0]["reference"]["title"] == "First Title"
+    assert manifest_data_2["entries"][0]["reference"]["title"] == "Updated Title"
