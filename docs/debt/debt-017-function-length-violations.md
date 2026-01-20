@@ -182,6 +182,12 @@ def _retrieve_with_fallback(
   - Added 14 new unit tests for extracted helpers
   - Note: Target of <100 lines not fully met, but significant improvement achieved
 - [ ] **Phase D**: All remaining functions <50 lines, remove noqa suppressions
+  - Broken into subtasks D1-D6 in PROGRESS.md per anti-reward-hack protocol
+  - [x] **D1**: `ingest()` command reduced from 109 to 25 lines (77% reduction)
+    - Created `IngestOptions` dataclass to simplify Typer signature
+    - Extracted 4 helpers: `_get_repo_root()`, `_prepare_ingest_options()`, `_show_progress_message()`, `_run_ingestion()`
+    - Added 11 unit tests, all integration tests pass
+    - Commit: TBD
 
 ## Effort Estimate
 

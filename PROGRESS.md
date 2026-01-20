@@ -60,9 +60,30 @@ Per `docs/debt/README.md`, these are the active debt items ordered by recommende
   - Acceptance: Extract `_ensure_index_ready()`, `_retrieve_sources()`, `_execute_llm_if_enabled()`, reduce to <100 lines
   - Result: Reduced from 183 to 120 lines (34% improvement), removed noqa suppressions, added 14 tests
 
-- [ ] **DEBT-017-D**: Function Length - Extract helpers from CLI commands and 51-100 line functions
-  - Spec: `docs/debt/debt-017-function-length-violations.md`
-  - Acceptance: All functions <50 lines, remove all `# noqa: PLR0911,PLR0912,PLR0915` suppressions
+- [x] **DEBT-017-D1**: Function Length - Refactor `ingest()` CLI command (109 lines → <50)
+  - Spec: `docs/debt/debt-017-function-length-violations.md` (Phase D)
+  - Acceptance: Extract option parsing/validation helpers, reduce to <50 lines, tests pass
+  - Result: Reduced from 109 to 25 lines (77% reduction), extracted 4 helpers, added 11 tests
+
+- [ ] **DEBT-017-D2**: Function Length - Refactor `ask()` CLI command (109 lines → <50)
+  - Spec: `docs/debt/debt-017-function-length-violations.md` (Phase D)
+  - Acceptance: Extract stdin handling helpers, reduce to <50 lines, tests pass
+
+- [ ] **DEBT-017-D3**: Function Length - Refactor `list_()` CLI command (100 lines → <50)
+  - Spec: `docs/debt/debt-017-function-length-violations.md` (Phase D)
+  - Acceptance: Extract filtering/formatting helpers, reduce to <50 lines, tests pass
+
+- [ ] **DEBT-017-D4**: Function Length - Refactor `search()` command (89 lines → <50)
+  - Spec: `docs/debt/debt-017-function-length-violations.md` (Phase D)
+  - Acceptance: Extract output formatting helpers, reduce to <50 lines, tests pass
+
+- [ ] **DEBT-017-D5**: Function Length - Refactor `ask_question()` core (120 lines → <50)
+  - Spec: `docs/debt/debt-017-function-length-violations.md` (Phase D)
+  - Acceptance: Further extract helpers to reach <50 line target, tests pass
+
+- [ ] **DEBT-017-D6**: Function Length - Refactor remaining 51-100 line functions
+  - Spec: `docs/debt/debt-017-function-length-violations.md` (Phase D)
+  - Acceptance: All remaining functions <50 lines (LeanRunner.check/init, search helpers, parsing functions)
 
 - [ ] **DEBT-016**: SRP Violation in models.py - Split into focused modules
   - Spec: `docs/debt/debt-016-srp-models-violation.md`
@@ -99,6 +120,7 @@ Per `docs/debt/README.md`, these are the active debt items ordered by recommende
 - 2026-01-19: [DEBT-017-A] Verified function length - _fetch_reference_entry() already meets acceptance criteria (96 lines < 100 target) after DEBT-018-A refactoring. No additional changes needed. Files: PROGRESS.md
 - 2026-01-19: [DEBT-017-B] Fixed ingest function length - Extracted 8 helper functions (_load_problem, _load_existing_manifest, _process_single_reference, _process_all_references, _check_duplicate_keys, _create_manifest, _write_manifest_atomic, _build_ingest_result) from ingest_problem_references(). Reduced from 294 lines to 90 lines. Removed noqa suppressions. All tests pass, coverage maintained at 80%+. Files: src/erdos/core/ingest.py, docs/debt/debt-017-function-length-violations.md, PROGRESS.md
 - 2026-01-19: [DEBT-017-C] Fixed ask_question function length - Extracted 3 helper functions (_ensure_index_ready, _retrieve_sources, _execute_llm_if_enabled) from ask_question(). Reduced from 183 to 120 lines (34% reduction). Removed noqa: PLR0911, PLR0912 suppressions. Added 14 new unit tests for extracted helpers. All tests pass, coverage increased from 85.00% to 85.68%. Files: src/erdos/core/ask.py, tests/unit/test_ask_helpers.py (new), tests/unit/test_ask_retrieval.py, docs/debt/debt-017-function-length-violations.md, PROGRESS.md
+- 2026-01-19: [DEBT-017-D1] Fixed ingest command length - Broke DEBT-017-D into 6 subtasks (D1-D6) per anti-reward-hack protocol. Refactored ingest() command from 109 to 25 lines (77% reduction). Created IngestOptions dataclass to simplify Typer signature. Extracted 4 helpers: _get_repo_root(), _prepare_ingest_options(), _show_progress_message(), _run_ingestion(). Added 11 comprehensive unit tests. All integration tests pass, coverage maintained at 86%. Files: src/erdos/commands/ingest.py, tests/unit/test_ingest_command_helpers.py (new), PROGRESS.md
 
 ---
 

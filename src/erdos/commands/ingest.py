@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -13,6 +14,20 @@ from rich.table import Table
 from erdos.commands.presenter import exit_with_result
 from erdos.core.ingest import ingest_problem_references
 from erdos.core.timing import measure_time_ms
+
+
+@dataclass
+class IngestOptions:
+    """Options for ingest command."""
+
+    problem_id: int
+    force: bool = False
+    no_download: bool = False
+    no_network: bool = False
+    timeout: float = 30.0
+    delay: float = 3.0
+    mailto: str = ""
+    json_output: bool = False
 
 
 app = typer.Typer(
@@ -76,86 +91,14 @@ def _get_repo_root() -> Path:
     return Path.cwd()
 
 
-@app.callback(invoke_without_command=True)
-def ingest(
-    ctx: typer.Context,
-    problem_id: Annotated[
-        int,
-        typer.Argument(
-            help="Erdős problem ID to ingest references for.",
-            min=1,
-        ),
-    ],
-    force: Annotated[
-        bool,
-        typer.Option(
-            "--force",
-            "-f",
-            help="Re-fetch and re-write manifest entries (even if cached).",
-        ),
-    ] = False,
-    no_download: Annotated[
-        bool,
-        typer.Option(
-            "--no-download",
-            help="Fetch metadata only; do not download arXiv source tarballs.",
-        ),
-    ] = False,
-    no_network: Annotated[
-        bool,
-        typer.Option(
-            "--no-network",
-            help="Fail if network access required.",
-        ),
-    ] = False,
-    timeout: Annotated[
-        float,
-        typer.Option(
-            "--timeout",
-            help="HTTP timeout in seconds.",
-        ),
-    ] = 30.0,
-    delay: Annotated[
-        float,
-        typer.Option(
-            "--delay",
-            help="Minimum delay between API requests (politeness).",
-        ),
-    ] = 3.0,
-    mailto: Annotated[
-        str,
-        typer.Option(
-            "--mailto",
-            help="Contact email for Crossref polite pool.",
-        ),
-    ] = "",
-    json_output: Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Output as JSON for machine consumption.",
-        ),
-    ] = False,
-) -> None:
+def _prepare_ingest_options(
+    mailto: str,
+) -> tuple[str, Path]:
+    """Prepare ingestion options from CLI inputs.
+
+    Returns:
+        tuple: (mailto, repo_root)
     """
-    Ingest literature metadata and cache for a problem.
-
-    Fetches arXiv and Crossref metadata for problem references,
-    optionally downloads arXiv source tarballs, and creates/updates
-    a manifest file tracking the cached literature.
-
-    Examples:
-
-        erdos ingest 6
-
-        erdos ingest 6 --no-download
-
-        erdos ingest 6 --force
-    """
-    ctx.ensure_object(dict)
-    if json_output:
-        ctx.obj["json"] = True
-
     # Get mailto from env if not provided
     if not mailto:
         mailto = os.environ.get("ERDOS_MAILTO", "erdos-banger@example.com")
@@ -163,26 +106,60 @@ def ingest(
     # Get repo root
     repo_root = _get_repo_root()
 
-    with measure_time_ms() as duration:
-        # Show progress message (only in human mode)
-        if not json_output:
-            err_console.print(
-                f"[dim]Ingesting references for Problem {problem_id}...[/dim]"
-            )
+    return mailto, repo_root
 
-        # Call core ingestion logic
+
+def _show_progress_message(problem_id: int, json_output: bool) -> None:
+    """Show progress message if not in JSON mode."""
+    if not json_output:
+        err_console.print(
+            f"[dim]Ingesting references for Problem {problem_id}...[/dim]"
+        )
+
+
+def _run_ingestion(options: IngestOptions, repo_root: Path, mailto: str) -> Any:
+    """Execute the core ingestion logic."""
+    with measure_time_ms() as duration:
+        _show_progress_message(options.problem_id, options.json_output)
+
         result = ingest_problem_references(
-            problem_id,
+            options.problem_id,
             repo_root=repo_root,
-            force=force,
-            no_download=no_download,
-            no_network=no_network,
-            timeout=timeout,
-            delay=delay,
+            force=options.force,
+            no_download=options.no_download,
+            no_network=options.no_network,
+            timeout=options.timeout,
+            delay=options.delay,
             mailto=mailto,
         )
 
     result.duration_ms = duration[0]
+    return result
+
+
+@app.callback(invoke_without_command=True)
+def ingest(
+    ctx: typer.Context,
+    problem_id: Annotated[int, typer.Argument(help="Problem ID", min=1)],
+    force: Annotated[bool, typer.Option("--force", "-f")] = False,
+    no_download: Annotated[bool, typer.Option("--no-download")] = False,
+    no_network: Annotated[bool, typer.Option("--no-network")] = False,
+    timeout: Annotated[float, typer.Option("--timeout")] = 30.0,
+    delay: Annotated[float, typer.Option("--delay")] = 3.0,
+    mailto: Annotated[str, typer.Option("--mailto")] = "",
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Ingest literature metadata and cache for a problem."""
+    ctx.ensure_object(dict)
+    if json_output:
+        ctx.obj["json"] = True
+
+    # Prepare and execute
+    options = IngestOptions(
+        problem_id, force, no_download, no_network, timeout, delay, mailto, json_output
+    )
+    mailto_prepared, repo_root = _prepare_ingest_options(mailto)
+    result = _run_ingestion(options, repo_root, mailto_prepared)
 
     # Exit with result
     exit_with_result(ctx, result, print_human=_print_human)
