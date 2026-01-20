@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from typing import Annotated, Any
 
 import typer
@@ -15,6 +14,7 @@ from erdos.core.index_builder import build_index as do_build_index
 from erdos.core.models import CLIOutput, ProblemRecord
 from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 from erdos.core.search_index import SearchIndex, SearchIndexError
+from erdos.core.timing import measure_time_ms
 
 
 app = typer.Typer(
@@ -233,49 +233,48 @@ def search(
     json_mode = bool((ctx.obj or {}).get("json"))
     progress_console = err_console if json_mode else console
 
-    start_time = time.perf_counter()
+    with measure_time_ms() as duration:
+        # Build index if requested
+        if build_index:
+            progress_console.print("Building search index...")
+            try:
+                stats = do_build_index(rebuild=True)
+                progress_console.print(
+                    f"[green]✓[/green] Indexed {stats['problems_indexed']} problems"
+                )
+            except (ProblemLoaderError, SearchIndexError) as e:
+                error_type = (
+                    "LoaderError" if isinstance(e, ProblemLoaderError) else "IndexError"
+                )
+                result = CLIOutput.err(
+                    command="erdos search",
+                    error_type=error_type,
+                    message=str(e),
+                    code=ExitCode.ERROR,
+                )
+                result.duration_ms = duration[0]
+                exit_with_result(ctx, result)
+                return
 
-    # Build index if requested
-    if build_index:
-        progress_console.print("Building search index...")
-        try:
-            stats = do_build_index(rebuild=True)
-            progress_console.print(
-                f"[green]✓[/green] Indexed {stats['problems_indexed']} problems"
-            )
-        except (ProblemLoaderError, SearchIndexError) as e:
-            duration_ms = int((time.perf_counter() - start_time) * 1000)
-            error_type = (
-                "LoaderError" if isinstance(e, ProblemLoaderError) else "IndexError"
-            )
-            result = CLIOutput.err(
-                command="erdos search",
-                error_type=error_type,
-                message=str(e),
-                code=ExitCode.ERROR,
-            )
-            result.duration_ms = duration_ms
-            exit_with_result(ctx, result)
-            return
+        # Try FTS search first, fall back to basic
+        result = search_problems_fts(query, limit=limit, problem_id=problem_filter)
 
-    # Try FTS search first, fall back to basic
-    result = search_problems_fts(query, limit=limit, problem_id=problem_filter)
+        # If index is empty, fall back to basic search
+        if (
+            not result.success
+            and result.error
+            and result.error.get("type") == "IndexEmpty"
+        ):
+            try:
+                loader = ProblemLoader.from_default()
+                result = search_problems_basic(query, loader, limit)
+            except ProblemLoaderError as e:
+                result = CLIOutput.err(
+                    command="erdos search",
+                    error_type="LoaderError",
+                    message=str(e),
+                    code=ExitCode.ERROR,
+                )
 
-    # If index is empty, fall back to basic search
-    if not result.success and result.error and result.error.get("type") == "IndexEmpty":
-        try:
-            loader = ProblemLoader.from_default()
-            result = search_problems_basic(query, loader, limit)
-        except ProblemLoaderError as e:
-            result = CLIOutput.err(
-                command="erdos search",
-                error_type="LoaderError",
-                message=str(e),
-                code=ExitCode.ERROR,
-            )
-
-    duration_ms = int((time.perf_counter() - start_time) * 1000)
-
-    # Add duration to result
-    result.duration_ms = duration_ms
+    result.duration_ms = duration[0]
     exit_with_result(ctx, result, print_human=_print_human)

@@ -42,7 +42,7 @@ Per `docs/debt/README.md`, these are the active debt items ordered by recommende
   - Spec: `docs/debt/debt-018-dry-violations.md` (Section 5)
   - Acceptance: Stable key function exists in ONE place, handles both ReferenceEntry and ReferenceRecord
 
-- [ ] **DEBT-018-C**: DRY - Extract time measurement helper
+- [x] **DEBT-018-C**: DRY - Extract time measurement helper
   - Spec: `docs/debt/debt-018-dry-violations.md` (Section 2)
   - Acceptance: Time measurement helper/context manager, used in all 9 command locations
 
@@ -81,6 +81,7 @@ Per `docs/debt/README.md`, these are the active debt items ordered by recommende
 - 2026-01-19: [DEBT-020] Fixed magic numbers and naming - Created constants.py, replaced all [:200] with PREVIEW_LENGTH, replaced code=3 with ExitCode.NOT_FOUND, replaced code=2 with ExitCode.USAGE_ERROR, refactored internal boolean variables to use positive names (no_llm→enable_llm, no_download→allow_download, no_network→allow_network). Files: src/erdos/core/constants.py (new), tests/unit/test_constants.py (new), src/erdos/core/models.py, src/erdos/core/search_index.py, src/erdos/core/ask.py, src/erdos/commands/search.py, src/erdos/commands/show.py, src/erdos/commands/refs.py, src/erdos/commands/lean.py, src/erdos/commands/list_cmd.py, src/erdos/core/ingest.py
 - 2026-01-19: [DEBT-018-A] Fixed arXiv download duplication - Extracted _download_and_extract_arxiv helper function with ArxivDownloadResult dataclass, replaced both duplication sites (DOI+arXiv and arXiv-only cases). Files: src/erdos/core/ingest.py, tests/unit/test_ingest_service.py
 - 2026-01-19: [DEBT-018-B] Fixed stable key duplication - Created generic get_stable_key() function with HasIdentifiers protocol, removed _get_stable_key() and _get_stable_key_from_record() duplicates, added 5 comprehensive test cases. Files: src/erdos/core/ingest.py, tests/unit/test_ingest_service.py
+- 2026-01-19: [DEBT-018-C] Fixed time measurement duplication - Created measure_time_ms() context manager in src/erdos/core/timing.py, replaced all 9 occurrences of manual time.perf_counter() timing across commands (list, show, refs, search, ask, ingest, lean init/check/formalize). Files: src/erdos/core/timing.py (new), tests/unit/test_timing.py (new), src/erdos/commands/list_cmd.py, src/erdos/commands/show.py, src/erdos/commands/refs.py, src/erdos/commands/search.py, src/erdos/commands/ask.py, src/erdos/commands/ingest.py, src/erdos/commands/lean.py
 
 ---
 

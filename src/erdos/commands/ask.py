@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sys
-import time
 from typing import Annotated, Any
 
 import typer
@@ -15,6 +14,7 @@ from erdos.commands.presenter import exit_with_result
 from erdos.core.ask import ask_question
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
+from erdos.core.timing import measure_time_ms
 
 
 app = typer.Typer(
@@ -163,21 +163,18 @@ def ask(
     if not json_output:
         err_console.print(f"[dim]Retrieving sources for Problem {problem_id}...[/dim]")
 
-    start_time = time.perf_counter()
+    with measure_time_ms() as duration:
+        # Call core ask logic
+        result = ask_question(
+            problem_id=problem_id,
+            question=question,
+            limit=limit,
+            build_index_flag=build_index,
+            no_llm=no_llm,
+            llm_command=llm_cmd if llm_cmd else None,
+        )
 
-    # Call core ask logic
-    result = ask_question(
-        problem_id=problem_id,
-        question=question,
-        limit=limit,
-        build_index_flag=build_index,
-        no_llm=no_llm,
-        llm_command=llm_cmd if llm_cmd else None,
-    )
-
-    # Add duration
-    duration_ms = int((time.perf_counter() - start_time) * 1000)
-    result.duration_ms = duration_ms
+    result.duration_ms = duration[0]
 
     # Exit with result
     exit_with_result(ctx, result, print_human=_print_human)

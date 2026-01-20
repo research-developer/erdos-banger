@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import time
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -13,6 +12,7 @@ from rich.table import Table
 
 from erdos.commands.presenter import exit_with_result
 from erdos.core.ingest import ingest_problem_references
+from erdos.core.timing import measure_time_ms
 
 
 app = typer.Typer(
@@ -163,29 +163,26 @@ def ingest(
     # Get repo root
     repo_root = _get_repo_root()
 
-    start_time = time.perf_counter()
+    with measure_time_ms() as duration:
+        # Show progress message (only in human mode)
+        if not json_output:
+            err_console.print(
+                f"[dim]Ingesting references for Problem {problem_id}...[/dim]"
+            )
 
-    # Show progress message (only in human mode)
-    if not json_output:
-        err_console.print(
-            f"[dim]Ingesting references for Problem {problem_id}...[/dim]"
+        # Call core ingestion logic
+        result = ingest_problem_references(
+            problem_id,
+            repo_root=repo_root,
+            force=force,
+            no_download=no_download,
+            no_network=no_network,
+            timeout=timeout,
+            delay=delay,
+            mailto=mailto,
         )
 
-    # Call core ingestion logic
-    result = ingest_problem_references(
-        problem_id,
-        repo_root=repo_root,
-        force=force,
-        no_download=no_download,
-        no_network=no_network,
-        timeout=timeout,
-        delay=delay,
-        mailto=mailto,
-    )
-
-    # Add duration
-    duration_ms = int((time.perf_counter() - start_time) * 1000)
-    result.duration_ms = duration_ms
+    result.duration_ms = duration[0]
 
     # Exit with result
     exit_with_result(ctx, result, print_human=_print_human)

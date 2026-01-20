@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from typing import Annotated, Any
 
 import typer
@@ -13,6 +12,7 @@ from erdos.commands.presenter import exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord
 from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
+from erdos.core.timing import measure_time_ms
 
 
 app = typer.Typer(
@@ -113,22 +113,20 @@ def show(
     if json_output:
         ctx.obj["json"] = True
 
-    start_time = time.perf_counter()
-    try:
-        loader = ProblemLoader.from_default()  # Uses configured data path
-    except ProblemLoaderError as e:
-        result = CLIOutput.err(
-            command="erdos show",
-            error_type="LoaderError",
-            message=str(e),
-            code=ExitCode.ERROR,
-        )
-        exit_with_result(ctx, result)
-        return
+    with measure_time_ms() as duration:
+        try:
+            loader = ProblemLoader.from_default()  # Uses configured data path
+        except ProblemLoaderError as e:
+            result = CLIOutput.err(
+                command="erdos show",
+                error_type="LoaderError",
+                message=str(e),
+                code=ExitCode.ERROR,
+            )
+            exit_with_result(ctx, result)
+            return
 
-    result = get_problem(problem_id, loader)
-    duration_ms = int((time.perf_counter() - start_time) * 1000)
+        result = get_problem(problem_id, loader)
 
-    # Add duration to result
-    result.duration_ms = duration_ms
+    result.duration_ms = duration[0]
     exit_with_result(ctx, result, print_human=_print_human)

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -15,6 +14,7 @@ from erdos.core.formalizer import FormalizerError, generate_skeleton
 from erdos.core.lean_runner import LeanRunner, LeanRunnerError
 from erdos.core.models import CLIOutput, LeanCheckResult
 from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
+from erdos.core.timing import measure_time_ms
 
 
 app = typer.Typer(help="Lean 4 theorem prover commands.")
@@ -195,14 +195,12 @@ def init(
     if json_output:
         ctx.obj["json"] = True
 
-    start_time = time.perf_counter()
-    path = project_path or Path("formal/lean")
-    path.mkdir(parents=True, exist_ok=True)
-    result = init_lean_project(path, fetch_mathlib=not no_mathlib)
-    duration_ms = int((time.perf_counter() - start_time) * 1000)
+    with measure_time_ms() as duration:
+        path = project_path or Path("formal/lean")
+        path.mkdir(parents=True, exist_ok=True)
+        result = init_lean_project(path, fetch_mathlib=not no_mathlib)
 
-    # Add duration to result
-    result.duration_ms = duration_ms
+    result.duration_ms = duration[0]
     exit_with_result(ctx, result, print_human=_print_human)
 
 
@@ -242,13 +240,11 @@ def check(
     if json_output:
         ctx.obj["json"] = True
 
-    start_time = time.perf_counter()
-    path = project_path or Path("formal/lean")
-    result = check_lean_file(file, path)
-    duration_ms = int((time.perf_counter() - start_time) * 1000)
+    with measure_time_ms() as duration:
+        path = project_path or Path("formal/lean")
+        result = check_lean_file(file, path)
 
-    # Add duration to result
-    result.duration_ms = duration_ms
+    result.duration_ms = duration[0]
     exit_with_result(ctx, result, print_human=_print_human)
 
     if (
@@ -298,9 +294,9 @@ def formalize(
     if json_output:
         ctx.obj["json"] = True
 
-    start_time = time.perf_counter()
-    path = project_path or Path("formal/lean")
-    result = formalize_problem(problem_id, path, force=force)
-    duration_ms = int((time.perf_counter() - start_time) * 1000)
-    result.duration_ms = duration_ms
+    with measure_time_ms() as duration:
+        path = project_path or Path("formal/lean")
+        result = formalize_problem(problem_id, path, force=force)
+
+    result.duration_ms = duration[0]
     exit_with_result(ctx, result, print_human=_print_human)
