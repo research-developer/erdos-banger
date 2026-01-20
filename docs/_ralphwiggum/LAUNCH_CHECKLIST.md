@@ -61,7 +61,7 @@ make smoke
 Start a tmux session:
 
 ```bash
-tmux new-session -s ralph
+tmux new-session -s erdos-ralph
 ```
 
 Run the loop:
@@ -123,7 +123,7 @@ git status
 ## 5) Abort Instructions
 
 - Stop the loop: Ctrl+C (inside the tmux pane running it)
-- If needed, kill tmux session: `tmux kill-session -t ralph`
+- If needed, kill tmux session: `tmux kill-session -t erdos-ralph`
 
 Rollback options:
 

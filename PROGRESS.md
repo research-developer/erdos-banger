@@ -1,7 +1,7 @@
 # erdos-banger - Ralph Wiggum Progress Tracker
 
 **Last Updated:** 2026-01-20
-**Status:** Ready - Debt/Bug Sprint Queue Active (DEBT-022+)
+**Status:** Ready - Debt/Bug Sprint Queue Active (DEBT-026+)
 **Branch:** ralph-wiggum-debt
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
@@ -30,25 +30,37 @@
 
 This queue is the SSOT for the next Ralph run. Fix debt/bugs first; do not start new specs until the queue is empty.
 
-- [x] **DEBT-024**: Placeholder metadata (authors / contact email)
-  - Deck: `docs/debt/debt-024-placeholder-metadata-identifiers.md`
-  - Acceptance: Replace `Your Name` with `The-Obstacle-Is-The-Way` and remove placeholder email (use GitHub handle only).
+- [ ] **DEBT-026**: Long functions remain (≥ 80 LOC)
+  - Deck: `docs/debt/debt-026-long-functions-remain.md`
+  - Acceptance: Each core function ≥80 LOC is reduced below 80 LOC, or explicitly justified with an inline "linear parsing" rationale; new helpers are pure where possible with unit tests; `make ci` green.
 
-- [x] **DEBT-023**: Security lint suppressions (XML + MD5)
-  - Deck: `docs/debt/debt-023-security-lint-suppressions.md`
-  - Acceptance: Either remove `# noqa: S314` / `# noqa: S324` via safer primitives, or document the threat model explicitly; `make ci` stays green.
+- [ ] **DEBT-027**: Broad `except Exception` catches (masking risk)
+  - Deck: `docs/debt/debt-027-broad-exception-catches.md`
+  - Acceptance: Core service layers no longer use `except Exception` except where re-raising after cleanup; CLI boundary code returns friendly errors but retains debug signal; `make ci` green.
 
-- [x] **DEBT-025**: DRY violation in shell LLM wrappers (`load_env_file`)
-  - Deck: `docs/debt/debt-025-shell-llm-wrapper-duplication.md`
-  - Acceptance: `.env` loading logic defined once (shared helper or explicitly documented constraints) and validated by tests that run offline.
-
-- [x] **DEBT-022**: Large core modules (SRP pressure)
-  - Deck: `docs/debt/debt-022-large-core-modules-srp.md`
-  - Acceptance: Split `src/erdos/core/ask.py` and/or `src/erdos/core/ingest.py` by responsibility without CLI behavior changes; tests become more narrowly targetable.
+- [ ] **DEBT-028**: Ingest manifest churn (non-idempotent writes)
+  - Deck: `docs/debt/debt-028-ingest-manifest-churn.md`
+  - Acceptance: Running `erdos ingest <id>` twice with `--no-network --no-download` produces no file diffs when no content changes; clear policy on whether `literature/manifests/` is tracked or local-only; `make ci` green.
 
 ### Completed Queue (Archived)
 
 Historical record of completed sprint items (kept for auditability):
+
+- [x] **DEBT-024**: Placeholder metadata (authors / contact email)
+  - Deck: `docs/debt/debt-024-placeholder-metadata-identifiers.md`
+  - Result: Replaced `Your Name` with `The-Obstacle-Is-The-Way`, removed placeholder email.
+
+- [x] **DEBT-023**: Security lint suppressions (XML + MD5)
+  - Deck: `docs/debt/debt-023-security-lint-suppressions.md`
+  - Result: Replaced ElementTree with defusedxml, MD5 with SHA256.
+
+- [x] **DEBT-025**: DRY violation in shell LLM wrappers (`load_env_file`)
+  - Deck: `docs/debt/debt-025-shell-llm-wrapper-duplication.md`
+  - Result: Extracted shared helper to scripts/lib/load-env.sh, added 15 tests.
+
+- [x] **DEBT-022**: Large core modules (SRP pressure)
+  - Deck: `docs/debt/debt-022-large-core-modules-srp.md`
+  - Result: Split ask.py and ingest.py into ask/ and ingest/ packages with focused modules.
 
 - [x] **DEBT-020**: Magic Numbers and Naming - Define constants, use ExitCode enum
   - Spec: `docs/debt/debt-020-magic-numbers-and-naming.md`
@@ -173,6 +185,7 @@ Historical record of completed sprint items (kept for auditability):
 - 2026-01-20: [DEBT-023] Fixed security lint suppressions - Replaced `xml.etree.ElementTree` with `defusedxml` for safer XML parsing (removes S314 suppression), replaced MD5 with SHA256 for cache hash (removes S324 suppression). Added defusedxml as dependency with type stubs. Files: src/erdos/core/arxiv_client.py, src/erdos/core/ingest.py, pyproject.toml
 - 2026-01-20: [DEBT-025] Fixed DRY violation in shell LLM wrappers - Extracted `load_env_file()` to `scripts/lib/load-env.sh`, updated all 3 wrapper scripts (llm.sh, llm-openai.sh, llm-anthropic.sh) to source shared helper, fixed bash 3.2 compatibility for quote stripping, added 15 unit tests for .env parsing. Files: scripts/lib/load-env.sh (new), scripts/llm.sh, scripts/llm-openai.sh, scripts/llm-anthropic.sh, tests/unit/test_load_env_sh.py (new)
 - 2026-01-20: [DEBT-022] Split large core modules by responsibility - Converted `src/erdos/core/ask.py` (509 lines) to `ask/` package with 4 modules (prompt.py, retrieval.py, llm.py, service.py). Converted `src/erdos/core/ingest.py` (826 lines) to `ingest/` package with 4 modules (stable_key.py, models.py, fetch.py, service.py). All public APIs re-exported via `__init__.py` for backward compatibility. Updated test imports. No CLI behavior changes. Files: src/erdos/core/ask/ (new package), src/erdos/core/ingest/ (new package), tests/unit/test_ask_helpers.py, tests/unit/test_ask_retrieval.py
+- 2026-01-20: Sprint prep - DEBT-022/023/024/025 complete and merged via PR #9. Added DEBT-026, DEBT-027, DEBT-028 to Active Queue for next Ralph run.
 
 ---
 
