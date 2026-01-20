@@ -30,7 +30,7 @@
 
 This queue is the SSOT for the next Ralph run. Fix debt/bugs first; do not start new specs until the queue is empty.
 
-- [ ] **DEBT-024**: Placeholder metadata (authors / contact email)
+- [x] **DEBT-024**: Placeholder metadata (authors / contact email)
   - Deck: `docs/debt/debt-024-placeholder-metadata-identifiers.md`
   - Acceptance: Replace `Your Name` with `The-Obstacle-Is-The-Way` and remove placeholder email (use GitHub handle only).
 
@@ -169,6 +169,7 @@ Historical record of completed sprint items (kept for auditability):
 - 2026-01-20: Phase 1 Complete - Resolved DEBT-017 (function length), DEBT-018 (DRY), DEBT-020 (magic numbers), DEBT-016 (SRP).
 - 2026-01-20: [DEBT-019/021] Implemented dependency injection and service layer - Created ports.py (ProblemRepository, SearchIndexProtocol protocols), context.py (AppContext composition root), app_context.py (CLI integration), repositories.py (InMemoryProblemRepository), services/problem_service.py (ProblemService + ProblemFilter). Commit 3dd1610.
 - 2026-01-20: Sprint Complete - All 6 debt items (DEBT-016 through DEBT-021) resolved. PR #9 opened for CodeRabbit review.
+- 2026-01-20: [DEBT-024] Fixed placeholder metadata - Replaced `Your Name` with `The-Obstacle-Is-The-Way` in pyproject.toml authors field, removed placeholder email (GitHub handle only). Spec-020 examples are legitimate documentation for API usage. Files: pyproject.toml, docs/debt/debt-024-placeholder-metadata-identifiers.md, docs/debt/README.md, PROGRESS.md
 
 ---
 

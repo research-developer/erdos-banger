@@ -6,7 +6,7 @@ readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.11"
 authors = [
-    { name = "Your Name", email = "you@example.com" }
+    { name = "The-Obstacle-Is-The-Way" }
 ]
 keywords = ["erdos", "mathematics", "lean", "theorem-proving", "research"]
 classifiers = [
