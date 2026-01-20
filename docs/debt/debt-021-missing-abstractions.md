@@ -23,15 +23,13 @@ The codebase lacks several standard architectural patterns that would improve or
 - Caching (in-memory)
 - Filtering (query logic)
 
-```python
-class ProblemLoader:
-    def __init__(self, yaml_path: Path): ...
-    def from_default(cls): ...          # Path resolution
-    def _load_raw(self): ...            # File I/O + parsing
-    def _parse_problem(self, raw): ...  # Validation
-    def load_all(self): ...             # Caching
-    def filter(self, **criteria): ...   # Query logic
-```
+Evidence in `src/erdos/core/problem_loader.py`:
+- `ProblemLoader.__init__()` (34-51) - input validation + cache field
+- `ProblemLoader.from_default()` (53-100) - path resolution
+- `ProblemLoader._load_raw()` (107-127) - YAML I/O + type checks
+- `ProblemLoader._parse_problem()` (129-211) - normalization + Pydantic validation
+- `ProblemLoader.load_all()` (213-258) - caching + aggregation of parse errors
+- `ProblemLoader.filter()` (305-350) - filtering/query logic
 
 **Problem:** Testing filtering logic requires file system access. Can't test caching without parsing. Can't swap data source without changing everything.
 
@@ -65,13 +63,7 @@ Commands call core functions directly:
 CLI Command → Core Function → Data Access → Response
 ```
 
-```python
-# commands/refs.py
-def refs(ctx, problem_id, ...):
-    loader = ProblemLoader.from_default()
-    result = get_refs(problem_id, loader)  # Direct call
-    exit_with_result(ctx, result)
-```
+Evidence: `src/erdos/commands/*` command callbacks construct concrete dependencies (e.g., `ProblemLoader.from_default()`) and then call core logic helpers (e.g., `get_refs(problem_id, loader)` in `src/erdos/commands/refs.py`).
 
 **Problem:** Business logic (validation, orchestration) is split between commands and core functions. No central place for cross-cutting concerns.
 
@@ -113,29 +105,11 @@ class ProblemService:
 
 I/O is mixed with business logic throughout:
 
-```python
-# core/ingest.py - I/O and logic interleaved
-def ingest_problem_references(...):
-    # Load problem (I/O)
-    loader = ProblemLoader.from_default()
-    problem = loader.get_by_id(problem_id)
-
-    # Load manifest (I/O)
-    if manifest_path.exists():
-        with manifest_path.open() as f:
-            manifest_data = yaml.safe_load(f)
-
-    # Business logic mixed with I/O
-    for ref in problem.references:
-        if not ref.doi and not ref.arxiv_id:
-            continue
-        # Network I/O
-        crossref_data = fetch_crossref_work(ref.doi, ...)
-        # More business logic
-        reference = parse_crossref_work(crossref_data, ...)
-        # File I/O
-        arxiv_cache_path.write_bytes(tarball_bytes)
-```
+Evidence: `src/erdos/core/ingest.py:43-332` (`ingest_problem_references`) interleaves:
+- problem loading (file I/O via `ProblemLoader`)
+- manifest load/write (YAML I/O)
+- network calls (`fetch_crossref_work`, `fetch_arxiv_atom`, arXiv source download)
+- business rules (dedupe keys, error aggregation, idempotence)
 
 **Problem:** Can't test business logic without mocking file system and network. Can't replace storage mechanism.
 
@@ -178,6 +152,7 @@ class IngestionService:
 Filter criteria passed as kwargs:
 
 ```python
+# src/erdos/core/problem_loader.py
 def filter(
     self,
     *,
@@ -271,14 +246,14 @@ def filter(self, criteria: ProblemFilter) -> list[ProblemRecord]:
 ### Phase 1: Define Protocols
 
 ```python
-# core/ports.py
+# src/erdos/core/ports.py (to create)
 from typing import Protocol
 
 class ProblemRepository(Protocol):
     def get_by_id(self, id: int) -> ProblemRecord | None: ...
     def get_all(self) -> list[ProblemRecord]: ...
 
-class SearchIndex(Protocol):
+class SearchIndexProtocol(Protocol):
     def search(self, query: str, limit: int) -> list[SearchResult]: ...
     def index_problem(self, problem: ProblemRecord) -> None: ...
 
@@ -290,7 +265,7 @@ class MetadataFetcher(Protocol):
 ### Phase 2: Create Services
 
 ```python
-# services/problem_service.py
+# src/erdos/services/problem_service.py (to create)
 class ProblemService:
     def __init__(self, repo: ProblemRepository):
         self.repo = repo
@@ -318,7 +293,7 @@ class ProblemLoader(ProblemRepository):
 ### Phase 4: Wire Dependencies
 
 ```python
-# core/bootstrap.py
+# src/erdos/core/bootstrap.py (to create)
 def create_app_context() -> AppContext:
     repo = ProblemLoader.from_default()
     index = SearchIndex.from_default()

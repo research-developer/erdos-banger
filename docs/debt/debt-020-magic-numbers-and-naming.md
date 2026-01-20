@@ -15,16 +15,16 @@ The codebase contains scattered magic numbers without named constants, negative 
 
 | Value | Usage | Location |
 |-------|-------|----------|
-| `[:200]` | Preview truncation | 6+ locations |
-| `[:500]` | Message truncation | `lean_runner.py:214` |
-| `[:100]` | Text preview | `commands/ask.py:47` |
-| `[:50]` | Title truncation | `commands/ingest.py:56` |
+| `[:200]` | Preview truncation | 5 locations |
+| `[:500]` | Message truncation | `src/erdos/core/lean_runner.py:214` |
+| `[:100]` | Text preview | `src/erdos/commands/ask.py:47` |
+| `[:50]` | Title truncation | `src/erdos/commands/ingest.py:56` |
 
 **Locations of `[:200]`:**
-- `core/models.py:353-354` (TextChunk preview)
-- `core/search_index.py:206-208` (notes preview)
-- `core/ask.py:143,158` (fallback snippets)
-- `core/search.py:157-158` (basic search snippet)
+- `src/erdos/core/models.py:353-355` (TextChunk preview)
+- `src/erdos/core/search_index.py:206-208` (notes preview)
+- `src/erdos/core/ask.py:143,158` (fallback snippets)
+- `src/erdos/commands/search.py:157-159` (basic search snippet)
 
 **Problem:** If we decide previews should be 250 chars, we must find and update all occurrences.
 
@@ -41,23 +41,28 @@ code=3,  # What does 3 mean?
 ```
 
 **Locations of `code=3`:**
-- `commands/lean.py:113` - NotFound (should be `ExitCode.NOT_FOUND`)
-- `commands/lean.py:142` - NotFound
-- `commands/refs.py:54` - NotFound
-- `commands/show.py:69` - NotFound
+- `src/erdos/commands/lean.py:113` - NotFound (should be `ExitCode.NOT_FOUND`)
+- `src/erdos/commands/lean.py:142` - NotFound
+- `src/erdos/commands/refs.py:54` - NotFound (inside `get_refs()`)
+- `src/erdos/commands/show.py:69` - NotFound (inside `get_problem()`)
+
+**Other raw exit codes:**
+- `src/erdos/commands/list_cmd.py:69` - UsageError uses `code=2` (should be `ExitCode.USAGE_ERROR`)
+- `src/erdos/commands/search.py:143` - UsageError uses `code=2` (should be `ExitCode.USAGE_ERROR`)
+- `src/erdos/commands/lean.py:259` - `typer.Exit(code=5)` (should use `ExitCode.LEAN_ERROR`)
 
 ### Timeouts and Limits
 
 | Value | Meaning | Location |
 |-------|---------|----------|
-| `120` | Lean compile timeout | `lean_runner.py:162` |
-| `600` | Lake update timeout | `lean_runner.py:150` |
-| `30.0` | HTTP timeout default | Multiple API clients |
-| `3.0` | Rate limit delay | `ingest.py:51` |
-| `10` | Default search limit | `search.py:248` |
-| `5` | Default RAG limit | `ask.py:202` |
-| `25` | Max query terms | `ask.py:121` |
-| `2 * 1024 * 1024` | Max tex file size | `arxiv_client.py:145` |
+| `120` | Lean compile timeout | `src/erdos/core/lean_runner.py:162` |
+| `600` | Lake update timeout | `src/erdos/core/lean_runner.py:150` |
+| `30.0` | HTTP timeout default | `src/erdos/core/ingest.py:50`, `src/erdos/core/arxiv_client.py:100`, `src/erdos/core/crossref_client.py:86` |
+| `3.0` | Rate limit delay | `src/erdos/core/ingest.py:51`, `src/erdos/commands/ingest.py:124` |
+| `10` | Default search limit | `src/erdos/commands/search.py:200` |
+| `5` | Default RAG limit | `src/erdos/core/ask.py:202`, `src/erdos/commands/ask.py:94` |
+| `25` | Max query terms | `src/erdos/core/ask.py:121` |
+| `2 * 1024 * 1024` | Max tex file size | `src/erdos/core/arxiv_client.py:145` |
 
 ## Negative Boolean Parameters
 
@@ -114,22 +119,14 @@ _load_raw()           # Private loader method
 _error_details()      # Private helper
 ```
 
-This is fine, but some "private" functions are tested directly, suggesting they should be public or moved to separate modules.
-
-### Type Shadowing
-
-```python
-error = {"type": error_type, ...}  # 'type' shadows builtin
-```
-
-Should use `error_kind` or `error_category`.
+This is fine. Tests currently *do not* import private helpers directly, but do sometimes reach into internals (e.g., `loader._cache`) when asserting lazy-loading behavior.
 
 ## Proposed Fix
 
 ### Phase 1: Define Constants Module
 
 ```python
-# core/constants.py
+# src/erdos/core/constants.py (to create)
 """Application-wide constants."""
 
 # Preview/truncation lengths

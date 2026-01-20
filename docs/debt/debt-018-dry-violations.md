@@ -11,17 +11,16 @@ Multiple patterns are copy-pasted across the codebase. When these patterns need 
 
 ## Violations
 
-### 1. Loader Error Handling Pattern (8 occurrences)
+### 1. Loader Bootstrap + Error Translation (7+ occurrences)
 
 **Locations:**
-- `commands/list_cmd.py:173-183`
-- `commands/show.py:117-127`
-- `commands/refs.py:99-109`
-- `commands/search.py:265-274`
-- `commands/lean.py:127-134`
-- `commands/ingest.py` (via core)
-- `commands/ask.py` (via core)
-- `core/ingest.py:72-80`
+- `src/erdos/commands/list_cmd.py:173-183`
+- `src/erdos/commands/show.py:117-127`
+- `src/erdos/commands/refs.py:99-109`
+- `src/erdos/commands/search.py:265-274` (fallback path)
+- `src/erdos/commands/lean.py:126-134` (formalize core helper)
+- `src/erdos/core/ask.py:222-240` (plus a second duplicated `get_by_id()` error block)
+- `src/erdos/core/ingest.py:71-90` (plus a second duplicated `get_by_id()` error block)
 
 **Pattern:**
 ```python
@@ -38,18 +37,20 @@ except ProblemLoaderError as e:
     return
 ```
 
-**Risk:** If error handling logic changes (e.g., add logging, change error type), 8 places need updating.
+**Risk:** If error handling logic changes (e.g., add structured logging, add hints, change error taxonomy), multiple sites need updating and will drift.
 
-### 2. Time Measurement Pattern (7 occurrences)
+### 2. Time Measurement Pattern (9 occurrences)
 
 **Locations:**
-- `commands/list_cmd.py:172,193-196`
-- `commands/show.py:116,130-133`
-- `commands/refs.py:98,112-115`
-- `commands/search.py:235,276-279`
-- `commands/lean.py:198,202-205` (init)
-- `commands/lean.py:245,248-251` (check)
-- `commands/ask.py:166,179-180`
+- `src/erdos/commands/list_cmd.py:172,193-196`
+- `src/erdos/commands/show.py:116,130-133`
+- `src/erdos/commands/refs.py:98,112-115`
+- `src/erdos/commands/search.py:235,276-279` (plus an early-error path at 246-257)
+- `src/erdos/commands/ask.py:166,179-180`
+- `src/erdos/commands/ingest.py:166,187-188`
+- `src/erdos/commands/lean.py:198,202-205` (init)
+- `src/erdos/commands/lean.py:245,248-251` (check)
+- `src/erdos/commands/lean.py:301,304-305` (formalize)
 
 **Pattern:**
 ```python
@@ -59,18 +60,20 @@ duration_ms = int((time.perf_counter() - start_time) * 1000)
 result.duration_ms = duration_ms
 ```
 
-**Risk:** If timing precision changes or we add more metadata, 7 places need updating.
+**Risk:** If timing fields change (precision, naming, monotonic clock choice), multiple sites need updating.
 
-### 3. JSON Output Setup Pattern (7 occurrences)
+### 3. JSON Output Setup Pattern (9 occurrences)
 
 **Locations:**
-- `commands/list_cmd.py:168-170`
-- `commands/show.py:112-114`
-- `commands/refs.py:94-96`
-- `commands/search.py:228-230`
-- `commands/lean.py:194-196` (init)
-- `commands/lean.py:241-243` (check)
-- `commands/ask.py:139-141`
+- `src/erdos/commands/list_cmd.py:168-170`
+- `src/erdos/commands/show.py:112-114`
+- `src/erdos/commands/refs.py:94-96`
+- `src/erdos/commands/search.py:228-230`
+- `src/erdos/commands/ask.py:139-141`
+- `src/erdos/commands/ingest.py:155-157`
+- `src/erdos/commands/lean.py:194-196` (init)
+- `src/erdos/commands/lean.py:241-243` (check)
+- `src/erdos/commands/lean.py:297-299` (formalize)
 
 **Pattern:**
 ```python
@@ -82,8 +85,8 @@ if json_output:
 ### 4. arXiv Download Logic (CRITICAL - 2 near-identical blocks)
 
 **Locations:**
-- `core/ingest.py:380-422` (DOI+arXiv case)
-- `core/ingest.py:445-487` (arXiv-only case)
+- `src/erdos/core/ingest.py:380-422` (DOI+arXiv case)
+- `src/erdos/core/ingest.py:445-487` (arXiv-only case)
 
 **Duplicated code (~40 lines each):**
 ```python
@@ -126,8 +129,8 @@ if not no_download:
 ### 5. Stable Key Functions (2 near-duplicates)
 
 **Locations:**
-- `core/ingest.py:335-341` - `_get_stable_key(ref: ReferenceEntry)`
-- `core/ingest.py:344-350` - `_get_stable_key_from_record(record: ReferenceRecord)`
+- `src/erdos/core/ingest.py:335-341` - `_get_stable_key(ref: ReferenceEntry)`
+- `src/erdos/core/ingest.py:344-350` - `_get_stable_key_from_record(record: ReferenceRecord)`
 
 **Pattern:**
 ```python
@@ -152,10 +155,10 @@ def _get_stable_key_from_record(record: ReferenceRecord) -> str:
 
 ### Fix 1: Command Decorator for Common Patterns
 
-Create a decorator that handles loader, timing, and JSON setup:
+Spec-009 already centralized JSON/human output into `src/erdos/commands/presenter.py`. The remaining duplication is command setup (ctx/json), timing, and loader bootstrap. Create a decorator (or small helper) that handles loader, timing, and JSON setup:
 
 ```python
-# commands/common.py
+# src/erdos/commands/common.py (to create)
 from functools import wraps
 
 def erdos_command(command_name: str):
@@ -193,7 +196,7 @@ def erdos_command(command_name: str):
 ### Fix 2: Extract arXiv Download Helper
 
 ```python
-# core/ingest.py
+# src/erdos/core/ingest.py
 @dataclass
 class ArxivDownloadResult:
     cache_path: Path | None
@@ -217,7 +220,7 @@ def _download_and_extract_arxiv(
 ### Fix 3: Generic Stable Key Function
 
 ```python
-# core/ingest.py
+# src/erdos/core/ingest.py
 from typing import Protocol
 
 class HasIdentifiers(Protocol):

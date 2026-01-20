@@ -21,26 +21,31 @@ High-level modules (CLI commands) depend directly on low-level modules (concrete
 Every command creates its loader inline:
 
 ```python
-# commands/refs.py
-@app.callback(invoke_without_command=True)
-def refs(ctx: typer.Context, problem_id: int, ...):
-    # HIGH-LEVEL (command) creates LOW-LEVEL (loader)
+# src/erdos/commands/refs.py
+    start_time = time.perf_counter()
     try:
-        loader = ProblemLoader.from_default()  # ← Violation
+        loader = ProblemLoader.from_default()
     except ProblemLoaderError as e:
-        ...
+        result = CLIOutput.err(
+            command="erdos refs",
+            error_type="LoaderError",
+            message=str(e),
+            code=ExitCode.ERROR,
+        )
+        exit_with_result(ctx, result)
+        return
 
-    result = get_refs(problem_id, loader)  # ← Good! Core takes dependency
+    result = get_refs(problem_id, loader)
 ```
 
 The **core functions** are correctly designed:
 ```python
 def get_refs(problem_id: int, loader: ProblemLoader) -> CLIOutput:
-    # Takes loader as parameter - testable!
+    """Core refs logic (testable)."""
 ```
 
 But the **CLI layer** hardcodes construction. This means:
-- Tests must mock `ProblemLoader.from_default()` instead of injecting
+- Tests must control global state (env vars / CWD / importlib.resources) instead of injecting dependencies
 - Can't swap implementations without modifying commands
 - Configuration is scattered across `from_default()` methods
 
@@ -49,8 +54,8 @@ But the **CLI layer** hardcodes construction. This means:
 Multiple classes have `from_default()` factory methods with hardcoded logic:
 
 ```python
-# ProblemLoader.from_default() - 48 lines of path resolution
-# SearchIndex.from_default() - 8 lines of path resolution
+# src/erdos/core/problem_loader.py:53-100 - ProblemLoader.from_default() (48 lines)
+# src/erdos/core/search_index.py:59-69 - SearchIndex.from_default() (11 lines)
 ```
 
 This hardcodes:
@@ -63,11 +68,28 @@ This hardcodes:
 There's no central place that wires dependencies together. Each command does its own wiring:
 
 ```python
-# commands/search.py
-def search(...):
-    loader = ProblemLoader.from_default()  # Created here
-    index = SearchIndex.from_default()     # Created here too
-    # No relationship between them
+# src/erdos/commands/search.py
+    try:
+        index = SearchIndex.from_default()
+
+        # Check if index has data
+        if index.problem_count() == 0:
+            return CLIOutput.err(
+                command="erdos search",
+                error_type="IndexEmpty",
+                message="Search index is empty. Run with --build-index to populate it.",
+                code=0,  # Not really an error, just needs index built
+            )
+
+        results = index.search(query, limit=limit, problem_id=problem_id)
+
+        # Enrich results with problem titles (best-effort; index can still be used
+        # even if the source YAML isn't available in this environment).
+        loader: ProblemLoader | None = None
+        try:
+            loader = ProblemLoader.from_default()
+        except ProblemLoaderError:
+            loader = None
 ```
 
 ### Problem 4: Core Functions Also Violate
@@ -75,17 +97,58 @@ def search(...):
 Some core functions create dependencies internally:
 
 ```python
-# core/ask.py
-def ask_question(...) -> CLIOutput:
+# src/erdos/core/ask.py
+    # Load problem
     try:
-        loader = ProblemLoader.from_default()  # ← Should be injected
+        loader = ProblemLoader.from_default()
     except ProblemLoaderError as e:
-        ...
+        return CLIOutput.err(
+            command="erdos ask",
+            error_type="LoaderError",
+            message=str(e),
+            code=ExitCode.ERROR,
+        )
 
     try:
-        index = SearchIndex.from_default()  # ← Should be injected
+        problem = loader.get_by_id(problem_id)
+    except ProblemLoaderError as e:
+        return CLIOutput.err(
+            command="erdos ask",
+            error_type="LoaderError",
+            message=str(e),
+            code=ExitCode.ERROR,
+        )
+
+    if problem is None:
+        return CLIOutput.err(
+            command="erdos ask",
+            error_type="NotFound",
+            message=f"Problem {problem_id} not found",
+            code=ExitCode.NOT_FOUND,
+        )
+
+    # Build/rebuild index if requested
+    if build_index_flag:
+        try:
+            build_index(loader=loader, rebuild=True)
+        except Exception as e:
+            return CLIOutput.err(
+                command="erdos ask",
+                error_type="ERROR",
+                message=f"Failed to build index: {e}",
+                code=ExitCode.ERROR,
+            )
+
+    # Get search index
+    try:
+        index = SearchIndex.from_default()
     except Exception as e:
-        ...
+        return CLIOutput.err(
+            command="erdos ask",
+            error_type="ERROR",
+            message=f"Failed to open search index: {e}",
+            code=ExitCode.ERROR,
+        )
 ```
 
 Compare to the correctly-designed `get_refs()`:
@@ -98,21 +161,22 @@ def get_refs(problem_id: int, loader: ProblemLoader) -> CLIOutput:
 
 | File | Function | Creates |
 |------|----------|---------|
-| `commands/list_cmd.py` | `list_()` | `ProblemLoader.from_default()` |
-| `commands/show.py` | `show()` | `ProblemLoader.from_default()` |
-| `commands/refs.py` | `refs()` | `ProblemLoader.from_default()` |
-| `commands/search.py` | `search()` | `ProblemLoader.from_default()` |
-| `commands/lean.py` | `formalize()` | `ProblemLoader.from_default()` |
-| `core/ingest.py` | `ingest_problem_references()` | `ProblemLoader.from_default()` |
-| `core/ask.py` | `ask_question()` | `ProblemLoader.from_default()`, `SearchIndex.from_default()` |
-| `core/index_builder.py` | `build_index()` | Both (with defaults) |
+| `src/erdos/commands/list_cmd.py` | `list_()` | `ProblemLoader.from_default()` |
+| `src/erdos/commands/show.py` | `show()` | `ProblemLoader.from_default()` |
+| `src/erdos/commands/refs.py` | `refs()` | `ProblemLoader.from_default()` |
+| `src/erdos/commands/search.py` | `search()` | `ProblemLoader.from_default()` (fallback path) |
+| `src/erdos/commands/search.py` | `search_problems_fts()` | `SearchIndex.from_default()`, `ProblemLoader.from_default()` (best-effort enrichment) |
+| `src/erdos/commands/lean.py` | `formalize_problem()` | `ProblemLoader.from_default()` |
+| `src/erdos/core/ingest.py` | `ingest_problem_references()` | `ProblemLoader.from_default()` |
+| `src/erdos/core/ask.py` | `ask_question()` | `ProblemLoader.from_default()`, `SearchIndex.from_default()` |
+| `src/erdos/core/index_builder.py` | `build_index()` | Defaults to both if args are `None` |
 
 ## Proposed Fix
 
 ### Phase 1: Define Protocols (Abstractions)
 
 ```python
-# core/protocols.py
+# src/erdos/core/protocols.py (to create)
 from typing import Protocol
 
 class ProblemRepository(Protocol):
@@ -132,7 +196,7 @@ class SearchIndexProtocol(Protocol):
 ### Phase 2: Create Application Context
 
 ```python
-# core/context.py
+# src/erdos/core/context.py (to create)
 from dataclasses import dataclass
 
 @dataclass
@@ -153,7 +217,7 @@ class AppContext:
 ### Phase 3: Inject Context into Commands
 
 ```python
-# commands/refs.py
+# src/erdos/commands/refs.py
 def refs(ctx: typer.Context, problem_id: int, ...):
     # Get from application context (created once at startup)
     app_ctx = ctx.obj.get("app_context")
@@ -168,7 +232,7 @@ def refs(ctx: typer.Context, problem_id: int, ...):
 ### Phase 4: Update Core Functions
 
 ```python
-# core/ask.py
+# src/erdos/core/ask.py
 def ask_question(
     problem_id: int,
     question: str,

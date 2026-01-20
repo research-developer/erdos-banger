@@ -11,46 +11,64 @@ Multiple functions exceed reasonable length limits (Uncle Bob recommends ~20 lin
 
 ## Violations
 
+Function sizes below are measured as `end_lineno - lineno + 1` from the Python AST (so the numbers are reproducible and include decorators/docstrings).
+
 ### Critical (>100 lines)
 
-| Function | File | Lines | Complexity |
-|----------|------|-------|------------|
-| `ingest_problem_references()` | `core/ingest.py` | 269 | PLR0911, PLR0912, PLR0915 |
-| `ask_question()` | `core/ask.py` | 174 | PLR0911, PLR0912 |
-| `_fetch_reference_entry()` | `core/ingest.py` | 128 | PLR0915 |
+| Function | File | Span | Lines | Notes |
+|----------|------|------|-------|-------|
+| `ingest_problem_references()` | `src/erdos/core/ingest.py` | 43-332 | 290 | `# noqa: PLR0911,PLR0912,PLR0915` |
+| `ask_question()` | `src/erdos/core/ask.py` | 198-380 | 183 | `# noqa: PLR0911,PLR0912` |
+| `_fetch_reference_entry()` | `src/erdos/core/ingest.py` | 353-489 | 137 | `# noqa: PLR0915` |
+| `ingest()` | `src/erdos/commands/ingest.py` | 80-191 | 112 | CLI callback (options + orchestration) |
+| `ask()` | `src/erdos/commands/ask.py` | 72-183 | 112 | CLI callback (stdin handling + orchestration) |
+| `list_()` | `src/erdos/commands/list_cmd.py` | 96-197 | 102 | CLI callback (options + orchestration) |
 
-### Severe (50-100 lines)
+### Severe (51-100 lines)
 
-| Function | File | Lines |
-|----------|------|-------|
-| `_parse_problem()` | `core/problem_loader.py` | 82 |
-| `check()` | `core/lean_runner.py` | 77 |
+| Function | File | Span | Lines |
+|----------|------|------|-------|
+| `LeanRunner.check()` | `src/erdos/core/lean_runner.py` | 162-252 | 91 |
+| `search()` | `src/erdos/commands/search.py` | 191-280 | 90 |
+| `ProblemLoader._parse_problem()` | `src/erdos/core/problem_loader.py` | 129-211 | 83 |
+| `SearchIndex._ensure_schema()` | `src/erdos/core/search_index.py` | 90-163 | 74 |
+| `parse_arxiv_atom()` | `src/erdos/core/arxiv_client.py` | 28-97 | 70 |
+| `build_prompt()` | `src/erdos/core/ask.py` | 15-83 | 69 |
+| `SearchIndex.search()` | `src/erdos/core/search_index.py` | 245-312 | 68 |
+| `parse_crossref_work()` | `src/erdos/core/crossref_client.py` | 16-82 | 67 |
+| `search_problems_fts()` | `src/erdos/commands/search.py` | 64-129 | 66 |
+| `LeanRunner.init()` | `src/erdos/core/lean_runner.py` | 108-160 | 53 |
 
 ### Moderate (30-50 lines)
 
-| Function | File | Lines |
-|----------|------|-------|
-| `load_all()` | `core/problem_loader.py` | 45 |
-| `search()` | `core/search_index.py` | 48 |
-| `from_default()` | `core/problem_loader.py` | 48 |
+There are currently 24 functions in the 30-50 line range (examples):
+
+| Function | File | Span | Lines |
+|----------|------|------|-------|
+| `search_problems_basic()` | `src/erdos/commands/search.py` | 132-181 | 50 |
+| `check()` | `src/erdos/commands/lean.py` | 210-259 | 50 |
+| `ProblemLoader.from_default()` | `src/erdos/core/problem_loader.py` | 53-100 | 48 |
+| `SearchIndex.index_problem()` | `src/erdos/core/search_index.py` | 165-210 | 46 |
+| `ProblemLoader.load_all()` | `src/erdos/core/problem_loader.py` | 213-258 | 46 |
+| `ProblemLoader.filter()` | `src/erdos/core/problem_loader.py` | 305-350 | 46 |
 
 ## Root Cause Analysis
 
-### `ingest_problem_references()` - 269 lines
+### `ingest_problem_references()` - 290 lines (43-332)
 
 This function does everything:
-1. Load problem (lines 72-98)
-2. Load existing manifest (lines 100-114)
-3. Loop over references (lines 125-239)
+1. Load problem (construct loader, fetch problem, validate existence)
+2. Load/parse existing manifest (YAML + Pydantic)
+3. Loop over references
    - Skip invalid refs
    - Check for existing entries
    - Fetch new entries
    - Handle 6 different exception types
    - Rate limiting
-4. Duplicate detection (lines 244-254)
-5. Create manifest (lines 257-264)
-6. Write manifest atomically (lines 267-281)
-7. Build response (lines 284-332)
+4. Duplicate detection
+5. Create manifest
+6. Write manifest atomically
+7. Build response (including partial-failure aggregation)
 
 Should be split into:
 - `_load_or_create_manifest()`
@@ -58,19 +76,19 @@ Should be split into:
 - `_write_manifest_atomic()`
 - `_build_response()`
 
-### `_fetch_reference_entry()` - 128 lines
+### `_fetch_reference_entry()` - 137 lines (353-489)
 
 Has three nearly-identical code paths:
-1. DOI + arXiv (lines 367-422) - 55 lines
-2. DOI only (lines 425-432) - 8 lines
-3. arXiv only (lines 435-487) - 52 lines
+1. DOI + arXiv (367-422)
+2. DOI only (425-432)
+3. arXiv only (435-487)
 
 Paths 1 and 3 share ~90% of code (arXiv download logic). Should extract:
 - `_download_arxiv_source(arxiv_id, repo_root, timeout)`
 - `_fetch_doi_metadata(doi, mailto, timeout)`
 - `_fetch_arxiv_metadata(arxiv_id, timeout)`
 
-### `ask_question()` - 174 lines
+### `ask_question()` - 183 lines (198-380)
 
 Does too much:
 1. Load problem
