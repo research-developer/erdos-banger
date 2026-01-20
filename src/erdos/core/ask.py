@@ -200,7 +200,164 @@ def execute_llm(llm_command: str, prompt: str) -> tuple[str, int]:
     return result.stdout, result.returncode
 
 
-def ask_question(  # noqa: PLR0911, PLR0912
+def _ensure_index_ready(
+    *,
+    loader: ProblemLoader,
+    build_index_flag: bool,
+) -> SearchIndex | CLIOutput:
+    """
+    Ensure search index is ready (build if requested, then open).
+
+    Args:
+        loader: Problem loader for building index
+        build_index_flag: Whether to rebuild the index
+
+    Returns:
+        SearchIndex if successful, or CLIOutput error
+    """
+    # Build/rebuild index if requested
+    if build_index_flag:
+        try:
+            build_index(loader=loader, rebuild=True)
+        except Exception as e:
+            return CLIOutput.err(
+                command="erdos ask",
+                error_type="ERROR",
+                message=f"Failed to build index: {e}",
+                code=ExitCode.ERROR,
+            )
+
+    # Get search index
+    try:
+        return SearchIndex.from_default()
+    except Exception as e:
+        return CLIOutput.err(
+            command="erdos ask",
+            error_type="ERROR",
+            message=f"Failed to open search index: {e}",
+            code=ExitCode.ERROR,
+        )
+
+
+def _retrieve_sources(
+    *,
+    index: SearchIndex,
+    problem: ProblemRecord,
+    question: str,
+    limit: int,
+) -> tuple[list[SearchResult], bool]:
+    """
+    Retrieve sources for a question, with fallback.
+
+    Args:
+        index: Search index
+        problem: Problem record
+        question: User's question
+        limit: Maximum sources to retrieve
+
+    Returns:
+        Tuple of (sources, used_fts) where used_fts indicates if FTS was used
+    """
+    # If index is empty, use fallback sources
+    if index.chunk_count() == 0:
+        sources = _fallback_sources(problem, limit=limit)
+        return sources, False
+
+    # Otherwise, combine fallback (statement/notes) with retrieved chunks
+    baseline = _fallback_sources(problem, limit=limit)
+    retrieved = perform_retrieval(
+        index=index,
+        problem=problem,
+        question=question,
+        limit=limit,
+    )
+
+    # Deduplicate by chunk_id, preferring baseline order first
+    combined: list[SearchResult] = []
+    seen_ids: set[str] = set()
+    for source in [*baseline, *retrieved]:
+        if source.chunk_id in seen_ids:
+            continue
+        seen_ids.add(source.chunk_id)
+        combined.append(source)
+        if len(combined) >= limit:
+            break
+
+    return combined, True
+
+
+def _execute_llm_if_enabled(
+    *,
+    prompt: str,
+    enable_llm: bool,
+    llm_command: str | None,
+) -> dict[str, str | int | bool | None] | CLIOutput:
+    """
+    Execute LLM if enabled and command is available.
+
+    Args:
+        prompt: The prompt to pass to LLM
+        enable_llm: Whether LLM should be executed
+        llm_command: LLM command to execute
+
+    Returns:
+        Dict with llm metadata if successful, or CLIOutput error
+    """
+    # Build result dict
+    result: dict[str, str | int | bool | None] = {
+        "answer": None,
+        "llm_exit_code": None,
+        "llm_enabled": False,
+        "llm_command": None,
+    }
+
+    # Skip if LLM disabled or no command available
+    if not enable_llm or not llm_command:
+        return result
+
+    # Execute LLM
+    result["llm_enabled"] = True
+    result["llm_command"] = llm_command
+
+    try:
+        answer, exit_code = execute_llm(llm_command=llm_command, prompt=prompt)
+    except FileNotFoundError:
+        return CLIOutput.err(
+            command="erdos ask",
+            error_type="CONFIG_ERROR",
+            message=f"LLM command not found: {llm_command}",
+            code=ExitCode.CONFIG_ERROR,
+        )
+    except OSError as e:
+        return CLIOutput.err(
+            command="erdos ask",
+            error_type="CONFIG_ERROR",
+            message=f"LLM command error: {e}",
+            code=ExitCode.CONFIG_ERROR,
+        )
+    except Exception as e:
+        return CLIOutput.err(
+            command="erdos ask",
+            error_type="ERROR",
+            message=f"LLM execution failed: {e}",
+            code=ExitCode.ERROR,
+        )
+
+    # Check exit code
+    if exit_code != 0:
+        return CLIOutput.err(
+            command="erdos ask",
+            error_type="ERROR",
+            message=f"LLM command exited with code {exit_code}",
+            code=ExitCode.ERROR,
+        )
+
+    result["answer"] = answer
+    result["llm_exit_code"] = exit_code
+    return result
+
+
+def ask_question(
     problem_id: int,
     question: str,
     *,
@@ -252,54 +409,22 @@ def ask_question(  # noqa: PLR0911, PLR0912
             code=ExitCode.NOT_FOUND,
         )
 
-    # Build/rebuild index if requested
-    if build_index_flag:
-        try:
-            build_index(loader=loader, rebuild=True)
-        except Exception as e:
-            return CLIOutput.err(
-                command="erdos ask",
-                error_type="ERROR",
-                message=f"Failed to build index: {e}",
-                code=ExitCode.ERROR,
-            )
+    # Ensure index is ready
+    index_or_error = _ensure_index_ready(
+        loader=loader,
+        build_index_flag=build_index_flag,
+    )
+    if isinstance(index_or_error, CLIOutput):
+        return index_or_error
+    index = index_or_error
 
-    # Get search index
-    try:
-        index = SearchIndex.from_default()
-    except Exception as e:
-        return CLIOutput.err(
-            command="erdos ask",
-            error_type="ERROR",
-            message=f"Failed to open search index: {e}",
-            code=ExitCode.ERROR,
-        )
-
-    # Perform retrieval
-    if index.chunk_count() == 0:
-        sources = _fallback_sources(problem, limit=limit)
-        used_fts = False
-    else:
-        baseline = _fallback_sources(problem, limit=limit)
-        retrieved = perform_retrieval(
-            index=index,
-            problem=problem,
-            question=question,
-            limit=limit,
-        )
-        # Always include the problem statement/notes, then add retrieved chunks.
-        combined: list[SearchResult] = []
-        seen_ids: set[str] = set()
-        for source in [*baseline, *retrieved]:
-            if source.chunk_id in seen_ids:
-                continue
-            seen_ids.add(source.chunk_id)
-            combined.append(source)
-            if len(combined) >= limit:
-                break
-
-        sources = combined
-        used_fts = True
+    # Retrieve sources
+    sources, used_fts = _retrieve_sources(
+        index=index,
+        problem=problem,
+        question=question,
+        limit=limit,
+    )
 
     # Build query string for metadata
     query = f"Problem {problem.id}: {problem.title}. Question: {question}"
@@ -307,57 +432,26 @@ def ask_question(  # noqa: PLR0911, PLR0912
     # Build prompt
     prompt = build_prompt(problem=problem, sources=sources, question=question)
 
-    # Determine if LLM should run (convert negative flag to positive internal variable)
+    # Determine if LLM should run
     enable_llm = not no_llm
     if enable_llm and llm_command is None:
         llm_command = os.environ.get("ERDOS_LLM_COMMAND", "")
 
-    # Execute LLM if requested and command is available
-    answer = None
-    llm_exit_code = None
-    llm_enabled = False
-
-    if enable_llm and llm_command:
-        llm_enabled = True
-        try:
-            answer, llm_exit_code = execute_llm(llm_command=llm_command, prompt=prompt)
-        except FileNotFoundError:
-            return CLIOutput.err(
-                command="erdos ask",
-                error_type="CONFIG_ERROR",
-                message=f"LLM command not found: {llm_command}",
-                code=ExitCode.CONFIG_ERROR,
-            )
-        except OSError as e:
-            return CLIOutput.err(
-                command="erdos ask",
-                error_type="CONFIG_ERROR",
-                message=f"LLM command error: {e}",
-                code=ExitCode.CONFIG_ERROR,
-            )
-        except Exception as e:
-            return CLIOutput.err(
-                command="erdos ask",
-                error_type="ERROR",
-                message=f"LLM execution failed: {e}",
-                code=ExitCode.ERROR,
-            )
-
-        # Check exit code
-        if llm_exit_code != 0:
-            return CLIOutput.err(
-                command="erdos ask",
-                error_type="ERROR",
-                message=f"LLM command exited with code {llm_exit_code}",
-                code=ExitCode.ERROR,
-            )
+    # Execute LLM if enabled
+    llm_result = _execute_llm_if_enabled(
+        prompt=prompt,
+        enable_llm=enable_llm,
+        llm_command=llm_command,
+    )
+    if isinstance(llm_result, CLIOutput):
+        return llm_result
 
     # Build response data
     data = {
         "problem_id": problem_id,
         "question": question,
         "prompt": prompt,
-        "answer": answer,
+        "answer": llm_result["answer"],
         "sources": [
             {
                 "chunk_id": source.chunk_id,
@@ -376,9 +470,9 @@ def ask_question(  # noqa: PLR0911, PLR0912
             "used_fts": used_fts,
         },
         "llm": {
-            "enabled": llm_enabled,
-            "command": llm_command if llm_enabled else None,
-            "exit_code": llm_exit_code,
+            "enabled": llm_result["llm_enabled"],
+            "command": llm_result["llm_command"],
+            "exit_code": llm_result["llm_exit_code"],
         },
     }
 

@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from erdos.core.ask import perform_retrieval
+from erdos.core.ask import _retrieve_sources, perform_retrieval
 from erdos.core.models import ChunkSource, ProblemRecord, ProblemStatus
 from erdos.core.search_index import SearchIndex, SearchResult
 
@@ -146,3 +146,102 @@ def test_retrieval_filters_by_problem_id():
 
     call_args = mock_index.search.call_args
     assert call_args.kwargs["problem_id"] == 42
+
+
+def test_retrieve_sources_empty_index():
+    """_retrieve_sources returns fallback sources when index is empty."""
+    problem = ProblemRecord(
+        id=6,
+        title="Test Problem",
+        statement="Test statement",
+        status=ProblemStatus.OPEN,
+    )
+
+    mock_index = MagicMock(spec=SearchIndex)
+    mock_index.chunk_count.return_value = 0
+
+    sources, used_fts = _retrieve_sources(
+        index=mock_index,
+        problem=problem,
+        question="Test?",
+        limit=5,
+    )
+
+    # Should return fallback sources (statement + notes if present)
+    assert len(sources) >= 1
+    assert sources[0].chunk_id == f"problem_{problem.id}_statement"
+    assert not used_fts
+
+
+def test_retrieve_sources_with_index_data():
+    """_retrieve_sources combines fallback and retrieved sources."""
+    problem = ProblemRecord(
+        id=6,
+        title="Test Problem",
+        statement="Test statement",
+        status=ProblemStatus.OPEN,
+    )
+
+    mock_index = MagicMock(spec=SearchIndex)
+    mock_index.chunk_count.return_value = 10
+    mock_index.search.return_value = [
+        SearchResult(
+            chunk_id="retrieved_1",
+            text="retrieved text",
+            snippet="...",
+            score=0.9,
+            source_type=ChunkSource.REFERENCE_ABSTRACT,
+            problem_id=6,
+            reference_doi=None,
+        )
+    ]
+
+    sources, used_fts = _retrieve_sources(
+        index=mock_index,
+        problem=problem,
+        question="Test?",
+        limit=5,
+    )
+
+    # Should have both fallback (statement) and retrieved sources
+    assert len(sources) >= 1
+    chunk_ids = [s.chunk_id for s in sources]
+    assert f"problem_{problem.id}_statement" in chunk_ids
+    assert "retrieved_1" in chunk_ids
+    assert used_fts
+
+
+def test_retrieve_sources_deduplicates():
+    """_retrieve_sources removes duplicate chunk IDs."""
+    problem = ProblemRecord(
+        id=6,
+        title="Test",
+        statement="Test statement",
+        status=ProblemStatus.OPEN,
+    )
+
+    # Mock index returns a duplicate of the problem statement
+    mock_index = MagicMock(spec=SearchIndex)
+    mock_index.chunk_count.return_value = 10
+    mock_index.search.return_value = [
+        SearchResult(
+            chunk_id=f"problem_{problem.id}_statement",
+            text="Test statement",
+            snippet="...",
+            score=1.0,
+            source_type=ChunkSource.PROBLEM_STATEMENT,
+            problem_id=6,
+            reference_doi=None,
+        )
+    ]
+
+    sources, _used_fts = _retrieve_sources(
+        index=mock_index,
+        problem=problem,
+        question="Test?",
+        limit=5,
+    )
+
+    # Should only have one instance of the statement
+    chunk_ids = [s.chunk_id for s in sources]
+    assert chunk_ids.count(f"problem_{problem.id}_statement") == 1
