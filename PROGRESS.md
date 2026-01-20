@@ -1,8 +1,8 @@
 # erdos-banger - Ralph Wiggum Progress Tracker
 
 **Last Updated:** 2026-01-20
-**Status:** Ready - Debt/Bug Sprint Queue Active (DEBT-026+)
-**Branch:** ralph-wiggum-debt
+**Status:** Ready - Debt Sprint (DEBT-026, 027, 028)
+**Branch:** ralph-wiggum
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
 ---
@@ -26,10 +26,6 @@
 
 ## Active Queue
 
-### Debt/Bug Sprint (Recommended Order)
-
-This queue is the SSOT for the next Ralph run. Fix debt/bugs first; do not start new specs until the queue is empty.
-
 - [ ] **DEBT-026**: Long functions remain (≥ 80 LOC)
   - Deck: `docs/debt/debt-026-long-functions-remain.md`
   - Acceptance: Each core function ≥80 LOC is reduced below 80 LOC, or explicitly justified with an inline "linear parsing" rationale; new helpers are pure where possible with unit tests; `make ci` green.
@@ -41,114 +37,6 @@ This queue is the SSOT for the next Ralph run. Fix debt/bugs first; do not start
 - [ ] **DEBT-028**: Ingest manifest churn (non-idempotent writes)
   - Deck: `docs/debt/debt-028-ingest-manifest-churn.md`
   - Acceptance: Running `erdos ingest <id>` twice with `--no-network --no-download` produces no file diffs when no content changes; clear policy on whether `literature/manifests/` is tracked or local-only; `make ci` green.
-
-### Completed Queue (Archived)
-
-Historical record of completed sprint items (kept for auditability):
-
-- [x] **DEBT-024**: Placeholder metadata (authors / contact email)
-  - Deck: `docs/debt/debt-024-placeholder-metadata-identifiers.md`
-  - Result: Replaced `Your Name` with `The-Obstacle-Is-The-Way`, removed placeholder email.
-
-- [x] **DEBT-023**: Security lint suppressions (XML + MD5)
-  - Deck: `docs/debt/debt-023-security-lint-suppressions.md`
-  - Result: Replaced ElementTree with defusedxml, MD5 with SHA256.
-
-- [x] **DEBT-025**: DRY violation in shell LLM wrappers (`load_env_file`)
-  - Deck: `docs/debt/debt-025-shell-llm-wrapper-duplication.md`
-  - Result: Extracted shared helper to scripts/lib/load-env.sh, added 15 tests.
-
-- [x] **DEBT-022**: Large core modules (SRP pressure)
-  - Deck: `docs/debt/debt-022-large-core-modules-srp.md`
-  - Result: Split ask.py and ingest.py into ask/ and ingest/ packages with focused modules.
-
-- [x] **DEBT-020**: Magic Numbers and Naming - Define constants, use ExitCode enum
-  - Spec: `docs/debt/debt-020-magic-numbers-and-naming.md`
-  - Acceptance: `constants.py` created, all `[:200]` → `PREVIEW_LENGTH`, all `code=3` → `ExitCode.NOT_FOUND`, all `code=2` → `ExitCode.USAGE_ERROR`
-
-- [x] **DEBT-018-A**: DRY - Extract arXiv download helper (CRITICAL)
-  - Spec: `docs/debt/debt-018-dry-violations.md` (Section 4)
-  - Acceptance: arXiv download logic exists in exactly ONE place, both call sites use it
-
-- [x] **DEBT-018-B**: DRY - Extract stable key function
-  - Spec: `docs/debt/debt-018-dry-violations.md` (Section 5)
-  - Acceptance: Stable key function exists in ONE place, handles both ReferenceEntry and ReferenceRecord
-
-- [x] **DEBT-018-C**: DRY - Extract time measurement helper
-  - Spec: `docs/debt/debt-018-dry-violations.md` (Section 2)
-  - Acceptance: Time measurement helper/context manager, used in all 9 command locations
-
-- [x] **DEBT-017-A**: Function Length - Extract helpers from `_fetch_reference_entry()` (137 lines)
-  - Spec: `docs/debt/debt-017-function-length-violations.md` (Phase 1)
-  - Acceptance: Extract `_fetch_doi_metadata()` and `_fetch_arxiv_metadata()`, reduce function to <100 lines
-  - Note: Already met - function is 96 lines after DEBT-018-A refactoring
-
-- [x] **DEBT-017-B**: Function Length - Extract helpers from `ingest_problem_references()` (290 lines)
-  - Spec: `docs/debt/debt-017-function-length-violations.md` (Phase 2)
-  - Acceptance: Extract `_load_existing_manifest()`, `_process_single_reference()`, `_write_manifest_atomic()`, reduce to <100 lines
-
-- [x] **DEBT-017-C**: Function Length - Extract helpers from `ask_question()` (183 lines)
-  - Spec: `docs/debt/debt-017-function-length-violations.md` (Phase 3)
-  - Acceptance: Extract `_ensure_index_ready()`, `_retrieve_sources()`, `_execute_llm_if_enabled()`, reduce to <100 lines
-  - Result: Reduced from 183 to 120 lines (34% improvement), removed noqa suppressions, added 14 tests
-
-- [x] **DEBT-017-D1**: Function Length - Refactor `ingest()` CLI command (109 lines → <50)
-  - Spec: `docs/debt/debt-017-function-length-violations.md` (Phase D)
-  - Acceptance: Extract option parsing/validation helpers, reduce to <50 lines, tests pass
-  - Result: Reduced from 109 to 25 lines (77% reduction), extracted 4 helpers, added 11 tests
-
-- [x] **DEBT-017-D2**: Function Length - Refactor `ask()` CLI command (109 lines → <50)
-  - Spec: `docs/debt/debt-017-function-length-violations.md` (Phase D)
-  - Acceptance: Extract stdin handling helpers, reduce to <50 lines, tests pass
-  - Result: Already at 47 lines with helpers extracted, tests added
-
-- [x] **DEBT-017-D3**: Function Length - Refactor `list_()` CLI command (100 lines → <50)
-  - Spec: `docs/debt/debt-017-function-length-violations.md` (Phase D)
-  - Acceptance: Extract filtering/formatting helpers, reduce to <50 lines, tests pass
-  - Result: Extracted `_validate_status()`, `_execute_list_query()`, `_get_loader()`, `ListOptions` dataclass. Logic is ~21 lines (Typer annotations inflate total to 93)
-
-- [x] **DEBT-017-D4**: Function Length - Refactor `search()` command (89 lines → <50)
-  - Spec: `docs/debt/debt-017-function-length-violations.md` (Phase D)
-  - Acceptance: Extract output formatting helpers, reduce to <50 lines, tests pass
-  - Result: Extracted `SearchOptions` dataclass, `_build_index_if_requested()`, `_search_with_fallback()`. Logic reduced to ~15 lines (Typer annotations inflate total to 61)
-
-- [x] **DEBT-017-D5**: Function Length - Refactor `ask_question()` core (120 lines → <50)
-  - Spec: `docs/debt/debt-017-function-length-violations.md` (Phase D)
-  - Acceptance: Further extract helpers to reach <50 line target, tests pass
-  - Result: Extracted `_load_problem()`, `_build_response_data()`. Reduced from 120 to 65 lines (body: 43 lines)
-
-- [x] **DEBT-017-D6**: Function Length - Refactor remaining 51-100 line functions
-  - Spec: `docs/debt/debt-017-function-length-violations.md` (Phase D)
-  - Acceptance: All remaining functions <50 lines (LeanRunner.check/init, search helpers, parsing functions)
-  - Result: Assessed remaining functions - they're inherently linear (parsing, schema, subprocess):
-    - `LeanRunner.check` (91): subprocess + error handling, cohesive
-    - `_parse_problem` (83): field validation + extraction, linear
-    - `_ensure_schema` (74): SQL DDL statements
-    - `parse_arxiv_atom` (70): XML field extraction
-    - `build_prompt` (69): string building
-    - These are acceptable complexity for their purpose; <50 target is for business logic
-
-- [x] **DEBT-016**: SRP Violation in models.py - Split into focused modules
-  - Spec: `docs/debt/debt-016-srp-models-violation.md`
-  - Acceptance: `models/` package with focused modules, backward-compatible imports, each module <150 lines
-  - Result: Split 473-line models.py into 6 focused modules:
-    - `base.py` (32 lines): ErdosBaseModel, utc_now
-    - `problem.py` (136 lines): ProblemStatus, ReferenceEntry, ProblemRecord
-    - `reference.py` (148 lines): OpenAccessStatus, ReferenceRecord, ManifestEntry, ProblemManifest
-    - `search.py` (77 lines): ChunkSource, TextChunk
-    - `lean.py` (56 lines): LeanError, LeanCheckResult
-    - `output.py` (78 lines): CLIOutput
-    - All modules <150 lines, backward-compatible imports via `__init__.py`
-
-- [x] **DEBT-019**: Dependency Inversion Violations - Add protocols and context
-  - Spec: `docs/_archive/debt/debt-019-dependency-inversion-violations.md`
-  - Acceptance: `ProblemRepository` protocol, `AppContext` container, no `from_default()` in business logic
-  - Result: Implemented `ports.py` (protocols), `context.py` (AppContext), `app_context.py` (CLI integration). Commit 3dd1610.
-
-- [x] **DEBT-021**: Missing Abstractions - Add Repository/Service patterns
-  - Spec: `docs/_archive/debt/debt-021-missing-abstractions.md`
-  - Acceptance: Service layer exists, Repository pattern implemented
-  - Result: Implemented `repositories.py` (InMemoryProblemRepository), `services/problem_service.py` (ProblemService + ProblemFilter). Commit 3dd1610.
 
 ---
 
@@ -164,28 +52,7 @@ Historical record of completed sprint items (kept for auditability):
 
 ## Work Log
 
-- 2026-01-19: Created ralph-wiggum-debt branch for technical debt sprint
-- 2026-01-19: Set up PROGRESS.md with 6 active debt items from docs/debt/README.md
-- 2026-01-19: [DEBT-020] Fixed magic numbers and naming - Created constants.py, replaced all [:200] with PREVIEW_LENGTH, replaced code=3 with ExitCode.NOT_FOUND, replaced code=2 with ExitCode.USAGE_ERROR, refactored internal boolean variables to use positive names (no_llm→enable_llm, no_download→allow_download, no_network→allow_network). Files: src/erdos/core/constants.py (new), tests/unit/test_constants.py (new), src/erdos/core/models.py, src/erdos/core/search_index.py, src/erdos/core/ask.py, src/erdos/commands/search.py, src/erdos/commands/show.py, src/erdos/commands/refs.py, src/erdos/commands/lean.py, src/erdos/commands/list_cmd.py, src/erdos/core/ingest.py
-- 2026-01-19: [DEBT-018-A] Fixed arXiv download duplication - Extracted _download_and_extract_arxiv helper function with ArxivDownloadResult dataclass, replaced both duplication sites (DOI+arXiv and arXiv-only cases). Files: src/erdos/core/ingest.py, tests/unit/test_ingest_service.py
-- 2026-01-19: [DEBT-018-B] Fixed stable key duplication - Created generic get_stable_key() function with HasIdentifiers protocol, removed _get_stable_key() and _get_stable_key_from_record() duplicates, added 5 comprehensive test cases. Files: src/erdos/core/ingest.py, tests/unit/test_ingest_service.py
-- 2026-01-19: [DEBT-018-C] Fixed time measurement duplication - Created measure_time_ms() context manager in src/erdos/core/timing.py, replaced all 9 occurrences of manual time.perf_counter() timing across commands (list, show, refs, search, ask, ingest, lean init/check/formalize). Files: src/erdos/core/timing.py (new), tests/unit/test_timing.py (new), src/erdos/commands/list_cmd.py, src/erdos/commands/show.py, src/erdos/commands/refs.py, src/erdos/commands/search.py, src/erdos/commands/ask.py, src/erdos/commands/ingest.py, src/erdos/commands/lean.py
-- 2026-01-19: [DEBT-017-A] Verified function length - _fetch_reference_entry() already meets acceptance criteria (96 lines < 100 target) after DEBT-018-A refactoring. No additional changes needed. Files: PROGRESS.md
-- 2026-01-19: [DEBT-017-B] Fixed ingest function length - Extracted 8 helper functions (_load_problem, _load_existing_manifest, _process_single_reference, _process_all_references, _check_duplicate_keys, _create_manifest, _write_manifest_atomic, _build_ingest_result) from ingest_problem_references(). Reduced from 294 lines to 90 lines. Removed noqa suppressions. All tests pass, coverage maintained at 80%+. Files: src/erdos/core/ingest.py, docs/debt/debt-017-function-length-violations.md, PROGRESS.md
-- 2026-01-19: [DEBT-017-C] Fixed ask_question function length - Extracted 3 helper functions (_ensure_index_ready, _retrieve_sources, _execute_llm_if_enabled) from ask_question(). Reduced from 183 to 120 lines (34% reduction). Removed noqa: PLR0911, PLR0912 suppressions. Added 14 new unit tests for extracted helpers. All tests pass, coverage increased from 85.00% to 85.68%. Files: src/erdos/core/ask.py, tests/unit/test_ask_helpers.py (new), tests/unit/test_ask_retrieval.py, docs/debt/debt-017-function-length-violations.md, PROGRESS.md
-- 2026-01-19: [DEBT-017-D1] Fixed ingest command length - Broke DEBT-017-D into 6 subtasks (D1-D6) per anti-reward-hack protocol. Refactored ingest() command from 109 to 25 lines (77% reduction). Created IngestOptions dataclass to simplify Typer signature. Extracted 4 helpers: _get_repo_root(), _prepare_ingest_options(), _show_progress_message(), _run_ingestion(). Added 11 comprehensive unit tests. All integration tests pass, coverage maintained at 86%. Files: src/erdos/commands/ingest.py, tests/unit/test_ingest_command_helpers.py (new), PROGRESS.md
-- 2026-01-20: [DEBT-017-D4] Fixed search command length - Extracted SearchOptions dataclass, _build_index_if_requested(), _search_with_fallback(). Reduced search() callback logic to ~15 lines (Typer annotations inflate total to 61). Added 11 unit tests. All tests pass. Files: src/erdos/commands/search.py, tests/unit/test_search_command_helpers.py (new), PROGRESS.md
-- 2026-01-20: [DEBT-017-D5] Fixed ask_question core length - Extracted _load_problem(), _build_response_data(). Reduced from 120 to 65 lines (body: 43 lines, meets <50 target). Added 7 unit tests. All 292 tests pass. Files: src/erdos/core/ask.py, tests/unit/test_ask_helpers.py, PROGRESS.md
-- 2026-01-20: [DEBT-017-D6] Assessed remaining 51-100 line functions. Concluded they're inherently linear (parsing, schema, subprocess) and acceptable for their purpose. <50 line target applies to business logic, not parsing code.
-- 2026-01-20: [DEBT-016] Split models.py into models/ package with 6 focused modules (base, problem, reference, search, lean, output). All modules <150 lines, backward-compatible imports via `__init__.py`. Files: src/erdos/core/models/ (new package)
-- 2026-01-20: Phase 1 Complete - Resolved DEBT-017 (function length), DEBT-018 (DRY), DEBT-020 (magic numbers), DEBT-016 (SRP).
-- 2026-01-20: [DEBT-019/021] Implemented dependency injection and service layer - Created ports.py (ProblemRepository, SearchIndexProtocol protocols), context.py (AppContext composition root), app_context.py (CLI integration), repositories.py (InMemoryProblemRepository), services/problem_service.py (ProblemService + ProblemFilter). Commit 3dd1610.
-- 2026-01-20: Sprint Complete - All 6 debt items (DEBT-016 through DEBT-021) resolved. PR #9 opened for CodeRabbit review.
-- 2026-01-20: [DEBT-024] Fixed placeholder metadata - Replaced `Your Name` with `The-Obstacle-Is-The-Way` in pyproject.toml authors field, removed placeholder email (GitHub handle only). Spec-020 examples are legitimate documentation for API usage. Files: pyproject.toml, docs/debt/debt-024-placeholder-metadata-identifiers.md, docs/debt/README.md, PROGRESS.md
-- 2026-01-20: [DEBT-023] Fixed security lint suppressions - Replaced `xml.etree.ElementTree` with `defusedxml` for safer XML parsing (removes S314 suppression), replaced MD5 with SHA256 for cache hash (removes S324 suppression). Added defusedxml as dependency with type stubs. Files: src/erdos/core/arxiv_client.py, src/erdos/core/ingest.py, pyproject.toml
-- 2026-01-20: [DEBT-025] Fixed DRY violation in shell LLM wrappers - Extracted `load_env_file()` to `scripts/lib/load-env.sh`, updated all 3 wrapper scripts (llm.sh, llm-openai.sh, llm-anthropic.sh) to source shared helper, fixed bash 3.2 compatibility for quote stripping, added 15 unit tests for .env parsing. Files: scripts/lib/load-env.sh (new), scripts/llm.sh, scripts/llm-openai.sh, scripts/llm-anthropic.sh, tests/unit/test_load_env_sh.py (new)
-- 2026-01-20: [DEBT-022] Split large core modules by responsibility - Converted `src/erdos/core/ask.py` (509 lines) to `ask/` package with 4 modules (prompt.py, retrieval.py, llm.py, service.py). Converted `src/erdos/core/ingest.py` (826 lines) to `ingest/` package with 4 modules (stable_key.py, models.py, fetch.py, service.py). All public APIs re-exported via `__init__.py` for backward compatibility. Updated test imports. No CLI behavior changes. Files: src/erdos/core/ask/ (new package), src/erdos/core/ingest/ (new package), tests/unit/test_ask_helpers.py, tests/unit/test_ask_retrieval.py
-- 2026-01-20: Sprint prep - DEBT-022/023/024/025 complete and merged via PR #9. Added DEBT-026, DEBT-027, DEBT-028 to Active Queue for next Ralph run.
+(entries added by Ralph loop as tasks complete)
 
 ---
 
@@ -201,7 +68,7 @@ The loop operator verifies completion via this file's state (no unchecked items)
 
 ---
 
-## Rollback / Recovery (If Something Goes Sideways)
+## Rollback / Recovery
 
 - Abort the loop: stop the process / kill the tmux session.
 - Inspect current state: `git status`, `git log -10 --oneline`.
