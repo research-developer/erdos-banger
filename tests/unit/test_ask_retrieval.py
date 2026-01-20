@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from erdos.core.ask import _retrieve_sources, perform_retrieval
+from erdos.core.ask import perform_retrieval, retrieve_sources
 from erdos.core.models import ChunkSource, ProblemRecord, ProblemStatus
 from erdos.core.search_index import SearchIndex, SearchResult
 
@@ -148,8 +148,8 @@ def test_retrieval_filters_by_problem_id():
     assert call_args.kwargs["problem_id"] == 42
 
 
-def test_retrieve_sources_empty_index():
-    """_retrieve_sources returns fallback sources when index is empty."""
+def testretrieve_sources_empty_index():
+    """retrieve_sources returns fallback sources when index is empty."""
     problem = ProblemRecord(
         id=6,
         title="Test Problem",
@@ -160,7 +160,7 @@ def test_retrieve_sources_empty_index():
     mock_index = MagicMock(spec=SearchIndex)
     mock_index.chunk_count.return_value = 0
 
-    sources, used_fts = _retrieve_sources(
+    sources, used_fts = retrieve_sources(
         index=mock_index,
         problem=problem,
         question="Test?",
@@ -173,8 +173,8 @@ def test_retrieve_sources_empty_index():
     assert not used_fts
 
 
-def test_retrieve_sources_with_index_data():
-    """_retrieve_sources combines fallback and retrieved sources."""
+def testretrieve_sources_with_index_data():
+    """retrieve_sources combines fallback and retrieved sources."""
     problem = ProblemRecord(
         id=6,
         title="Test Problem",
@@ -196,7 +196,7 @@ def test_retrieve_sources_with_index_data():
         )
     ]
 
-    sources, used_fts = _retrieve_sources(
+    sources, used_fts = retrieve_sources(
         index=mock_index,
         problem=problem,
         question="Test?",
@@ -211,8 +211,8 @@ def test_retrieve_sources_with_index_data():
     assert used_fts
 
 
-def test_retrieve_sources_deduplicates():
-    """_retrieve_sources removes duplicate chunk IDs."""
+def testretrieve_sources_deduplicates():
+    """retrieve_sources removes duplicate chunk IDs."""
     problem = ProblemRecord(
         id=6,
         title="Test",
@@ -235,7 +235,7 @@ def test_retrieve_sources_deduplicates():
         )
     ]
 
-    sources, _used_fts = _retrieve_sources(
+    sources, _used_fts = retrieve_sources(
         index=mock_index,
         problem=problem,
         question="Test?",

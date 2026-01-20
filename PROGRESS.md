@@ -42,7 +42,7 @@ This queue is the SSOT for the next Ralph run. Fix debt/bugs first; do not start
   - Deck: `docs/debt/debt-025-shell-llm-wrapper-duplication.md`
   - Acceptance: `.env` loading logic defined once (shared helper or explicitly documented constraints) and validated by tests that run offline.
 
-- [ ] **DEBT-022**: Large core modules (SRP pressure)
+- [x] **DEBT-022**: Large core modules (SRP pressure)
   - Deck: `docs/debt/debt-022-large-core-modules-srp.md`
   - Acceptance: Split `src/erdos/core/ask.py` and/or `src/erdos/core/ingest.py` by responsibility without CLI behavior changes; tests become more narrowly targetable.
 
@@ -172,6 +172,7 @@ Historical record of completed sprint items (kept for auditability):
 - 2026-01-20: [DEBT-024] Fixed placeholder metadata - Replaced `Your Name` with `The-Obstacle-Is-The-Way` in pyproject.toml authors field, removed placeholder email (GitHub handle only). Spec-020 examples are legitimate documentation for API usage. Files: pyproject.toml, docs/debt/debt-024-placeholder-metadata-identifiers.md, docs/debt/README.md, PROGRESS.md
 - 2026-01-20: [DEBT-023] Fixed security lint suppressions - Replaced `xml.etree.ElementTree` with `defusedxml` for safer XML parsing (removes S314 suppression), replaced MD5 with SHA256 for cache hash (removes S324 suppression). Added defusedxml as dependency with type stubs. Files: src/erdos/core/arxiv_client.py, src/erdos/core/ingest.py, pyproject.toml
 - 2026-01-20: [DEBT-025] Fixed DRY violation in shell LLM wrappers - Extracted `load_env_file()` to `scripts/lib/load-env.sh`, updated all 3 wrapper scripts (llm.sh, llm-openai.sh, llm-anthropic.sh) to source shared helper, fixed bash 3.2 compatibility for quote stripping, added 15 unit tests for .env parsing. Files: scripts/lib/load-env.sh (new), scripts/llm.sh, scripts/llm-openai.sh, scripts/llm-anthropic.sh, tests/unit/test_load_env_sh.py (new)
+- 2026-01-20: [DEBT-022] Split large core modules by responsibility - Converted `src/erdos/core/ask.py` (509 lines) to `ask/` package with 4 modules (prompt.py, retrieval.py, llm.py, service.py). Converted `src/erdos/core/ingest.py` (826 lines) to `ingest/` package with 4 modules (stable_key.py, models.py, fetch.py, service.py). All public APIs re-exported via `__init__.py` for backward compatibility. Updated test imports. No CLI behavior changes. Files: src/erdos/core/ask/ (new package), src/erdos/core/ingest/ (new package), tests/unit/test_ask_helpers.py, tests/unit/test_ask_retrieval.py
 
 ---
 

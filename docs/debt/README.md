@@ -14,9 +14,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-| ID | Title | Priority | Status |
-|----|-------|----------|--------|
-| DEBT-022 | [Large core modules (SRP pressure)](debt-022-large-core-modules-srp.md) | P2 | Open |
+*No active debt items.*
 
 ## Archived Debt
 
@@ -48,6 +46,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-024 | Placeholder metadata (authors / contact email) | P3 | Fixed | 647c86d |
 | DEBT-023 | Security lint suppressions (XML + MD5) | P2 | Fixed | 764c597 |
 | DEBT-025 | DRY violation in shell LLM wrappers | P4 | Fixed | c05d7a7 |
+| DEBT-022 | Large core modules (SRP pressure) | P2 | Fixed | (pending) |
 
 **Next Debt ID:** DEBT-026
 
@@ -77,3 +76,4 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-024-placeholder-metadata-identifiers.md`
 - `docs/_archive/debt/debt-023-security-lint-suppressions.md`
 - `docs/_archive/debt/debt-025-shell-llm-wrapper-duplication.md`
+- `docs/_archive/debt/debt-022-large-core-modules-srp.md`

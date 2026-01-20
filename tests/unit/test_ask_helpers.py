@@ -5,9 +5,9 @@ from unittest.mock import MagicMock, patch
 from erdos.core.ask import (
     _build_response_data,
     _ensure_index_ready,
-    _execute_llm_if_enabled,
     _load_problem,
 )
+from erdos.core.ask.llm import execute_llm_if_enabled
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import ChunkSource, CLIOutput, ProblemRecord
 from erdos.core.problem_loader import ProblemLoaderError
@@ -20,7 +20,7 @@ def test_ensure_index_ready_no_build():
     mock_repo = MagicMock()
     mock_index = MagicMock()
 
-    with patch("erdos.core.ask.build_index") as mock_build_index:
+    with patch("erdos.core.ask.service.build_index") as mock_build_index:
         result = _ensure_index_ready(
             loader=mock_repo,
             index=mock_index,
@@ -36,7 +36,7 @@ def test_ensure_index_ready_with_build():
     mock_repo = MagicMock()
     mock_index = MagicMock()
 
-    with patch("erdos.core.ask.build_index") as mock_build_index:
+    with patch("erdos.core.ask.service.build_index") as mock_build_index:
         result = _ensure_index_ready(
             loader=mock_repo,
             index=mock_index,
@@ -54,7 +54,7 @@ def test_ensure_index_ready_build_error():
     mock_repo = MagicMock()
     mock_index = MagicMock()
 
-    with patch("erdos.core.ask.build_index") as mock_build_index:
+    with patch("erdos.core.ask.service.build_index") as mock_build_index:
         mock_build_index.side_effect = RuntimeError("Build failed")
 
         result = _ensure_index_ready(
@@ -69,10 +69,10 @@ def test_ensure_index_ready_build_error():
         assert "Build failed" in result.error["message"]
 
 
-def test_execute_llm_if_enabled_disabled():
-    """_execute_llm_if_enabled skips LLM when disabled."""
+def testexecute_llm_if_enabled_disabled():
+    """execute_llm_if_enabled skips LLM when disabled."""
 
-    result = _execute_llm_if_enabled(
+    result = execute_llm_if_enabled(
         prompt="Test prompt",
         enable_llm=False,
         llm_command=None,
@@ -85,10 +85,10 @@ def test_execute_llm_if_enabled_disabled():
     assert result["llm_command"] is None
 
 
-def test_execute_llm_if_enabled_no_command():
-    """_execute_llm_if_enabled skips LLM when no command available."""
+def testexecute_llm_if_enabled_no_command():
+    """execute_llm_if_enabled skips LLM when no command available."""
 
-    result = _execute_llm_if_enabled(
+    result = execute_llm_if_enabled(
         prompt="Test prompt",
         enable_llm=True,
         llm_command=None,
@@ -101,13 +101,13 @@ def test_execute_llm_if_enabled_no_command():
     assert result["llm_command"] is None
 
 
-def test_execute_llm_if_enabled_success():
-    """_execute_llm_if_enabled executes LLM successfully."""
+def testexecute_llm_if_enabled_success():
+    """execute_llm_if_enabled executes LLM successfully."""
 
-    with patch("erdos.core.ask.execute_llm") as mock_execute_llm:
+    with patch("erdos.core.ask.llm.execute_llm") as mock_execute_llm:
         mock_execute_llm.return_value = ("Answer text", 0)
 
-        result = _execute_llm_if_enabled(
+        result = execute_llm_if_enabled(
             prompt="Test prompt",
             enable_llm=True,
             llm_command="echo",
@@ -120,13 +120,13 @@ def test_execute_llm_if_enabled_success():
         assert result["llm_command"] == "echo"
 
 
-def test_execute_llm_if_enabled_nonzero_exit():
-    """_execute_llm_if_enabled returns error on nonzero exit code."""
+def testexecute_llm_if_enabled_nonzero_exit():
+    """execute_llm_if_enabled returns error on nonzero exit code."""
 
-    with patch("erdos.core.ask.execute_llm") as mock_execute_llm:
+    with patch("erdos.core.ask.llm.execute_llm") as mock_execute_llm:
         mock_execute_llm.return_value = ("Error output", 1)
 
-        result = _execute_llm_if_enabled(
+        result = execute_llm_if_enabled(
             prompt="Test prompt",
             enable_llm=True,
             llm_command="echo",
@@ -138,13 +138,13 @@ def test_execute_llm_if_enabled_nonzero_exit():
         assert "exited with code 1" in result.error["message"]
 
 
-def test_execute_llm_if_enabled_command_not_found():
-    """_execute_llm_if_enabled returns error when command not found."""
+def testexecute_llm_if_enabled_command_not_found():
+    """execute_llm_if_enabled returns error when command not found."""
 
-    with patch("erdos.core.ask.execute_llm") as mock_execute_llm:
+    with patch("erdos.core.ask.llm.execute_llm") as mock_execute_llm:
         mock_execute_llm.side_effect = FileNotFoundError()
 
-        result = _execute_llm_if_enabled(
+        result = execute_llm_if_enabled(
             prompt="Test prompt",
             enable_llm=True,
             llm_command="nonexistent",
@@ -156,13 +156,13 @@ def test_execute_llm_if_enabled_command_not_found():
         assert "not found" in result.error["message"]
 
 
-def test_execute_llm_if_enabled_os_error():
-    """_execute_llm_if_enabled returns error on OS error."""
+def testexecute_llm_if_enabled_os_error():
+    """execute_llm_if_enabled returns error on OS error."""
 
-    with patch("erdos.core.ask.execute_llm") as mock_execute_llm:
+    with patch("erdos.core.ask.llm.execute_llm") as mock_execute_llm:
         mock_execute_llm.side_effect = OSError("Permission denied")
 
-        result = _execute_llm_if_enabled(
+        result = execute_llm_if_enabled(
             prompt="Test prompt",
             enable_llm=True,
             llm_command="echo",
@@ -174,13 +174,13 @@ def test_execute_llm_if_enabled_os_error():
         assert "error" in result.error["message"].lower()
 
 
-def test_execute_llm_if_enabled_generic_exception():
-    """_execute_llm_if_enabled returns error on unexpected exception."""
+def testexecute_llm_if_enabled_generic_exception():
+    """execute_llm_if_enabled returns error on unexpected exception."""
 
-    with patch("erdos.core.ask.execute_llm") as mock_execute_llm:
+    with patch("erdos.core.ask.llm.execute_llm") as mock_execute_llm:
         mock_execute_llm.side_effect = RuntimeError("Unexpected error")
 
-        result = _execute_llm_if_enabled(
+        result = execute_llm_if_enabled(
             prompt="Test prompt",
             enable_llm=True,
             llm_command="echo",

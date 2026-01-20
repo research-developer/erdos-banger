@@ -1,7 +1,8 @@
 # Technical Debt 022: Large Core Modules (SRP Pressure)
 
 **Date:** 2026-01-20
-**Status:** Open
+**Status:** Fixed
+**Fixed In:** (pending commit)
 **Priority:** P2 (Maintainability / change risk)
 **Impact:** Harder reviews, higher bug surface area, slower iteration on ingest/ask features
 
