@@ -2,10 +2,16 @@
 
 from unittest.mock import MagicMock, patch
 
-from erdos.core.ask import _ensure_index_ready, _execute_llm_if_enabled
-from erdos.core.models import CLIOutput
-from erdos.core.problem_loader import ProblemLoader
-from erdos.core.search_index import SearchIndex
+from erdos.core.ask import (
+    _build_response_data,
+    _ensure_index_ready,
+    _execute_llm_if_enabled,
+    _load_problem,
+)
+from erdos.core.exit_codes import ExitCode
+from erdos.core.models import ChunkSource, CLIOutput, ProblemRecord
+from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
+from erdos.core.search_index import SearchIndex, SearchResult
 
 
 def test_ensure_index_ready_no_build():
@@ -193,3 +199,194 @@ def test_execute_llm_if_enabled_generic_exception():
         assert not result.success
         assert result.error is not None
         assert "failed" in result.error["message"].lower()
+
+
+# Tests for _load_problem
+
+
+def test_load_problem_success():
+    """_load_problem returns problem and loader when successful."""
+    mock_problem = MagicMock(spec=ProblemRecord)
+    mock_problem.id = 6
+    mock_loader = MagicMock(spec=ProblemLoader)
+    mock_loader.get_by_id.return_value = mock_problem
+
+    with patch("erdos.core.ask.ProblemLoader.from_default") as mock_from_default:
+        mock_from_default.return_value = mock_loader
+
+        result = _load_problem(6)
+
+        assert isinstance(result, tuple)
+        problem, loader = result
+        assert problem == mock_problem
+        assert loader == mock_loader
+        mock_loader.get_by_id.assert_called_once_with(6)
+
+
+def test_load_problem_loader_error():
+    """_load_problem returns error when loader fails."""
+    with patch("erdos.core.ask.ProblemLoader.from_default") as mock_from_default:
+        mock_from_default.side_effect = ProblemLoaderError("Problems not found")
+
+        result = _load_problem(6)
+
+        assert isinstance(result, CLIOutput)
+        assert not result.success
+        assert result.error is not None
+        assert result.error["type"] == "LoaderError"
+        assert "Problems not found" in result.error["message"]
+        assert result.error["code"] == ExitCode.ERROR
+
+
+def test_load_problem_not_found():
+    """_load_problem returns error when problem not found."""
+    mock_loader = MagicMock(spec=ProblemLoader)
+    mock_loader.get_by_id.return_value = None
+
+    with patch("erdos.core.ask.ProblemLoader.from_default") as mock_from_default:
+        mock_from_default.return_value = mock_loader
+
+        result = _load_problem(999)
+
+        assert isinstance(result, CLIOutput)
+        assert not result.success
+        assert result.error is not None
+        assert result.error["type"] == "NotFound"
+        assert "999" in result.error["message"]
+        assert result.error["code"] == ExitCode.NOT_FOUND
+
+
+def test_load_problem_get_by_id_error():
+    """_load_problem returns error when get_by_id raises exception."""
+    mock_loader = MagicMock(spec=ProblemLoader)
+    mock_loader.get_by_id.side_effect = ProblemLoaderError("Database error")
+
+    with patch("erdos.core.ask.ProblemLoader.from_default") as mock_from_default:
+        mock_from_default.return_value = mock_loader
+
+        result = _load_problem(6)
+
+        assert isinstance(result, CLIOutput)
+        assert not result.success
+        assert result.error is not None
+        assert result.error["type"] == "LoaderError"
+        assert "Database error" in result.error["message"]
+
+
+# Tests for _build_response_data
+
+
+def test_build_response_data_basic():
+    """_build_response_data builds correct structure."""
+    sources = [
+        SearchResult(
+            chunk_id="chunk_1",
+            text="Source text",
+            snippet="Source...",
+            score=0.9,
+            source_type=ChunkSource.PROBLEM_STATEMENT,
+            problem_id=6,
+            reference_doi=None,
+        )
+    ]
+    llm_result: dict[str, str | int | bool | None] = {
+        "answer": "Test answer",
+        "llm_exit_code": 0,
+        "llm_enabled": True,
+        "llm_command": "test-llm",
+    }
+
+    data = _build_response_data(
+        problem_id=6,
+        question="What is this?",
+        prompt="Test prompt",
+        sources=sources,
+        query="Problem 6: Test. Question: What is this?",
+        limit=5,
+        used_fts=True,
+        llm_result=llm_result,
+    )
+
+    assert data["problem_id"] == 6
+    assert data["question"] == "What is this?"
+    assert data["prompt"] == "Test prompt"
+    assert data["answer"] == "Test answer"
+    assert len(data["sources"]) == 1
+    assert data["sources"][0]["chunk_id"] == "chunk_1"
+    assert data["sources"][0]["rank"] == 1
+    assert data["sources"][0]["source_type"] == "problem_statement"
+    assert data["retrieval"]["query"] == "Problem 6: Test. Question: What is this?"
+    assert data["retrieval"]["limit"] == 5
+    assert data["retrieval"]["count"] == 1
+    assert data["retrieval"]["used_fts"] is True
+    assert data["llm"]["enabled"] is True
+    assert data["llm"]["command"] == "test-llm"
+    assert data["llm"]["exit_code"] == 0
+
+
+def test_build_response_data_no_llm():
+    """_build_response_data handles disabled LLM."""
+    llm_result: dict[str, str | int | bool | None] = {
+        "answer": None,
+        "llm_exit_code": None,
+        "llm_enabled": False,
+        "llm_command": None,
+    }
+
+    data = _build_response_data(
+        problem_id=6,
+        question="What is this?",
+        prompt="Test prompt",
+        sources=[],
+        query="Query",
+        limit=5,
+        used_fts=False,
+        llm_result=llm_result,
+    )
+
+    assert data["answer"] is None
+    assert data["llm"]["enabled"] is False
+    assert data["llm"]["command"] is None
+    assert data["llm"]["exit_code"] is None
+    assert data["retrieval"]["used_fts"] is False
+
+
+def test_build_response_data_multiple_sources():
+    """_build_response_data assigns correct ranks to multiple sources."""
+    sources = [
+        SearchResult(
+            chunk_id=f"chunk_{i}",
+            text=f"Text {i}",
+            snippet=f"Snippet {i}",
+            score=1.0 - i * 0.1,
+            source_type=ChunkSource.REFERENCE_FULLTEXT,
+            problem_id=6,
+            reference_doi=f"10.1234/{i}" if i > 0 else None,
+        )
+        for i in range(3)
+    ]
+    llm_result: dict[str, str | int | bool | None] = {
+        "answer": None,
+        "llm_exit_code": None,
+        "llm_enabled": False,
+        "llm_command": None,
+    }
+
+    data = _build_response_data(
+        problem_id=6,
+        question="test",
+        prompt="prompt",
+        sources=sources,
+        query="query",
+        limit=10,
+        used_fts=True,
+        llm_result=llm_result,
+    )
+
+    assert len(data["sources"]) == 3
+    assert data["sources"][0]["rank"] == 1
+    assert data["sources"][1]["rank"] == 2
+    assert data["sources"][2]["rank"] == 3
+    assert data["sources"][0]["reference_doi"] is None
+    assert data["sources"][1]["reference_doi"] == "10.1234/1"
+    assert data["retrieval"]["count"] == 3
