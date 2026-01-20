@@ -239,10 +239,10 @@ def get_stable_key(obj: HasIdentifiers) -> str:
 ## Acceptance Criteria
 
 - [ ] Loader error handling consolidated to one location
-- [x] Time measurement consolidated (decorator or context manager)
+- [x] Time measurement consolidated (decorator or context manager) - Fixed in ff4e412
 - [ ] JSON setup consolidated
-- [x] arXiv download logic exists in exactly ONE place
-- [x] Stable key function exists in exactly ONE place
+- [x] arXiv download logic exists in exactly ONE place - Fixed in b069060
+- [x] Stable key function exists in exactly ONE place - Fixed in 786cd42
 - [x] All tests pass
 - [x] No functionality changes (pure refactor)
 
