@@ -187,7 +187,7 @@ def _retrieve_with_fallback(
     - Created `IngestOptions` dataclass to simplify Typer signature
     - Extracted 4 helpers: `_get_repo_root()`, `_prepare_ingest_options()`, `_show_progress_message()`, `_run_ingestion()`
     - Added 11 unit tests, all integration tests pass
-    - Commit: TBD
+    - Commit: 94c3788
 
 ## Effort Estimate
 
