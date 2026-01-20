@@ -111,5 +111,5 @@ Active debt tracked in `docs/debt/README.md`. Priority items:
 ## Key Specs
 
 - `docs/specs/master-vision.md` - Full architecture and roadmap
-- `docs/specs/spec-010-ingest-command.md` - Ingest command (arXiv + Crossref)
-- `docs/specs/spec-011-ask-command.md` - Ask command (RAG + LLM)
+- `docs/_archive/specs/spec-010-ingest-command.md` - Ingest command (arXiv + Crossref)
+- `docs/_archive/specs/spec-011-ask-command.md` - Ask command (RAG + LLM)
