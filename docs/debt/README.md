@@ -47,7 +47,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-019 | Dependency inversion violations | P2 | Fixed | 3dd1610 |
 | DEBT-020 | Magic Numbers and Naming | P3 | Fixed | 6d8981c |
 | DEBT-021 | Missing abstractions | P2 | Fixed | 3dd1610 |
-| DEBT-024 | Placeholder metadata (authors / contact email) | P3 | Fixed | (pending) |
+| DEBT-024 | Placeholder metadata (authors / contact email) | P3 | Fixed | 647c86d |
 
 **Next Debt ID:** DEBT-026
 

@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-20
 **Status:** Fixed
-**Fixed In:** (pending commit)
+**Fixed In:** 647c86d
 **Priority:** P3 (Polish / OSS hygiene)
 **Impact:** Unprofessional packaging metadata; unclear contact identity for polite API usage
 
