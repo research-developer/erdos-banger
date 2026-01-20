@@ -14,27 +14,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-| ID | Title | Priority | Status | Impact |
-|----|-------|----------|--------|--------|
-| DEBT-016 | [SRP Violation in models.py](debt-016-srp-models-violation.md) | P2 | Open | Maintainability |
-| DEBT-017 | [Function Length Violations](debt-017-function-length-violations.md) | P1 | Open | Maintainability, testability |
-| DEBT-018 | [DRY Violations (Duplication)](debt-018-dry-violations.md) | P1 | Open | Maintainability, consistency |
-| DEBT-019 | [Dependency Inversion Violations](debt-019-dependency-inversion-violations.md) | P2 | Open | Testability, flexibility |
-| DEBT-021 | [Missing Abstractions](debt-021-missing-abstractions.md) | P2 | Open | Extensibility |
-
-### Debt Summary
-
-**Total Active Debt:** 5 items
-- **P1 (High):** 2 items - DEBT-017, DEBT-018
-- **P2 (Medium):** 3 items - DEBT-016, DEBT-019, DEBT-021
-
-### Recommended Resolution Order
-
-1. **DEBT-018** (DRY) - Low effort, high impact. Fixes code duplication.
-2. **DEBT-017** (Function Length) - Medium effort, high impact. Extract helpers.
-3. **DEBT-016** (SRP) - Medium effort. Split models.py.
-4. **DEBT-019** (DI) - High effort. Add dependency injection.
-5. **DEBT-021** (Abstractions) - High effort. Add service layer.
+*None currently active.*
 
 ## Archived Debt
 
@@ -57,7 +37,12 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-012 | Broad exception handling in ingest.py | P1 | Fixed | 2cb6fac |
 | DEBT-014 | Roadmap/tracking docs drift after v1.1 | P2 | Fixed | c526e10 |
 | DEBT-015 | Minor Style Debt (code=1 vs ExitCode.ERROR) | P4 | Fixed | 9df84ca |
+| DEBT-016 | SRP violation in domain models | P2 | Fixed | 3f63fab |
+| DEBT-017 | Function length violations | P1 | Fixed | 94c3788,9e5de0a,b8d5395,64d3293,fb85afe,aa0b92e |
+| DEBT-018 | DRY violations (duplication) | P1 | Fixed | b069060,786cd42,ff4e412,3dd1610,fbdd5a0 |
+| DEBT-019 | Dependency inversion violations | P2 | Fixed | 3dd1610 |
 | DEBT-020 | Magic Numbers and Naming | P3 | Fixed | 6d8981c |
+| DEBT-021 | Missing abstractions | P2 | Fixed | 3dd1610 |
 
 **Next Debt ID:** DEBT-022
 
@@ -78,4 +63,9 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-009-upstream-data-not-integrated.md`
 - `docs/_archive/debt/debt-010-no-smoke-test.md`
 - `docs/_archive/debt/debt-015-minor-style-debt.md`
+- `docs/_archive/debt/debt-016-srp-models-violation.md`
+- `docs/_archive/debt/debt-017-function-length-violations.md`
+- `docs/_archive/debt/debt-018-dry-violations.md`
+- `docs/_archive/debt/debt-019-dependency-inversion-violations.md`
 - `docs/_archive/debt/debt-020-magic-numbers-and-naming.md`
+- `docs/_archive/debt/debt-021-missing-abstractions.md`
