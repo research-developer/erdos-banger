@@ -701,8 +701,8 @@ def _download_and_extract_arxiv(
         arxiv_cache_path.parent.mkdir(parents=True, exist_ok=True)
         arxiv_cache_path.write_bytes(tarball_bytes)
 
-        # Compute hash
-        cache_hash = hashlib.md5(tarball_bytes).hexdigest()  # noqa: S324
+        # Compute hash (SHA256 for cache integrity, not crypto)
+        cache_hash = hashlib.sha256(tarball_bytes).hexdigest()
         cache_path = get_arxiv_cache_path(arxiv_id)
 
         # Extract text

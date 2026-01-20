@@ -34,7 +34,7 @@ This queue is the SSOT for the next Ralph run. Fix debt/bugs first; do not start
   - Deck: `docs/debt/debt-024-placeholder-metadata-identifiers.md`
   - Acceptance: Replace `Your Name` with `The-Obstacle-Is-The-Way` and remove placeholder email (use GitHub handle only).
 
-- [ ] **DEBT-023**: Security lint suppressions (XML + MD5)
+- [x] **DEBT-023**: Security lint suppressions (XML + MD5)
   - Deck: `docs/debt/debt-023-security-lint-suppressions.md`
   - Acceptance: Either remove `# noqa: S314` / `# noqa: S324` via safer primitives, or document the threat model explicitly; `make ci` stays green.
 
@@ -170,6 +170,7 @@ Historical record of completed sprint items (kept for auditability):
 - 2026-01-20: [DEBT-019/021] Implemented dependency injection and service layer - Created ports.py (ProblemRepository, SearchIndexProtocol protocols), context.py (AppContext composition root), app_context.py (CLI integration), repositories.py (InMemoryProblemRepository), services/problem_service.py (ProblemService + ProblemFilter). Commit 3dd1610.
 - 2026-01-20: Sprint Complete - All 6 debt items (DEBT-016 through DEBT-021) resolved. PR #9 opened for CodeRabbit review.
 - 2026-01-20: [DEBT-024] Fixed placeholder metadata - Replaced `Your Name` with `The-Obstacle-Is-The-Way` in pyproject.toml authors field, removed placeholder email (GitHub handle only). Spec-020 examples are legitimate documentation for API usage. Files: pyproject.toml, docs/debt/debt-024-placeholder-metadata-identifiers.md, docs/debt/README.md, PROGRESS.md
+- 2026-01-20: [DEBT-023] Fixed security lint suppressions - Replaced `xml.etree.ElementTree` with `defusedxml` for safer XML parsing (removes S314 suppression), replaced MD5 with SHA256 for cache hash (removes S324 suppression). Added defusedxml as dependency with type stubs. Files: src/erdos/core/arxiv_client.py, src/erdos/core/ingest.py, pyproject.toml
 
 ---
 
