@@ -32,7 +32,7 @@ This queue is the SSOT for the next Ralph run. Fix debt/bugs first; do not start
 
 - [ ] **DEBT-024**: Placeholder metadata (authors / contact email)
   - Deck: `docs/debt/debt-024-placeholder-metadata-identifiers.md`
-  - Acceptance: Remove placeholder `Your Name` / `you@example.com` and replace with real project contact info (or remove placeholders).
+  - Acceptance: Replace `Your Name` with `The-Obstacle-Is-The-Way` and remove placeholder email (use GitHub handle only).
 
 - [ ] **DEBT-023**: Security lint suppressions (XML + MD5)
   - Deck: `docs/debt/debt-023-security-lint-suppressions.md`
