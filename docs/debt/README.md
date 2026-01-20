@@ -50,7 +50,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-024 | Placeholder metadata (authors / contact email) | P3 | Fixed | 647c86d |
 | DEBT-025 | DRY violation in shell LLM wrappers | P4 | Fixed | c05d7a7 |
 | DEBT-026 | Long functions remain (≥ 80 LOC) | P2 | Fixed | c31d484 |
-| DEBT-027 | Broad `except Exception` catches | P3 | Fixed | 30782f8 |
+| DEBT-027 | Broad `except Exception` catches | P3 | Fixed | e657d7c |
 
 **Next Debt ID:** DEBT-029
 

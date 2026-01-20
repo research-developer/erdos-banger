@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-20
 **Status:** Fixed
-**Fixed In:** 30782f8
+**Fixed In:** e657d7c
 **Priority:** P3 (Quality / diagnosability)
 **Impact:** Programmer errors can be misclassified as user errors; stack traces can be lost unless reproduced under a debugger
 
