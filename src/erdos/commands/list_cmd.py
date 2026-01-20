@@ -3,17 +3,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
+from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord, ProblemStatus
-from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 from erdos.core.timing import measure_time_ms
+from erdos.services.problem_service import ProblemFilter, ProblemService
+
+
+if TYPE_CHECKING:
+    from erdos.core.ports import ProblemRepository
 
 
 # Valid status values for user-facing validation
@@ -79,20 +84,21 @@ def _validate_status(
     return ProblemStatus.from_string(status), None
 
 
-def _execute_list_query(options: ListOptions, loader: ProblemLoader) -> CLIOutput:
+def _execute_list_query(options: ListOptions, repo: ProblemRepository) -> CLIOutput:
     """Execute list query and return result."""
     status_enum, error = _validate_status(options.status)
     if error:
         return error
 
     try:
-        problems = loader.filter(
+        service = ProblemService(repo)
+        criteria = ProblemFilter(
             status=status_enum,
             prize_min=options.prize_min,
             prize_max=options.prize_max,
             tags=options.tags,
         )
-        problems = sorted(problems, key=lambda p: p.id)[: options.limit]
+        problems = service.list(criteria=criteria, limit=options.limit)
         return CLIOutput.ok(
             command="erdos list",
             data=[p.model_dump(mode="json") for p in problems],
@@ -101,19 +107,6 @@ def _execute_list_query(options: ListOptions, loader: ProblemLoader) -> CLIOutpu
         return CLIOutput.err(
             command="erdos list",
             error_type="Error",
-            message=str(e),
-            code=ExitCode.ERROR,
-        )
-
-
-def _get_loader() -> tuple[ProblemLoader | None, CLIOutput | None]:
-    """Get problem loader, returning error if it fails."""
-    try:
-        return ProblemLoader.from_default(), None
-    except ProblemLoaderError as e:
-        return None, CLIOutput.err(
-            command="erdos list",
-            error_type="LoaderError",
             message=str(e),
             code=ExitCode.ERROR,
         )
@@ -197,9 +190,9 @@ def list_(
         ctx.obj["json"] = True
 
     with measure_time_ms() as duration:
-        loader, loader_error = _get_loader()
-        if loader_error or loader is None:
-            exit_with_result(ctx, loader_error)  # type: ignore[arg-type]
+        app_ctx, app_error = get_app_context(ctx, command="erdos list")
+        if app_error is not None or app_ctx is None:
+            exit_with_result(ctx, app_error)  # type: ignore[arg-type]
             return
 
         options = ListOptions(
@@ -209,7 +202,7 @@ def list_(
             tags=tag,
             limit=limit,
         )
-        result = _execute_list_query(options, loader)
+        result = _execute_list_query(options, app_ctx.problems)
 
     result.duration_ms = duration[0]
     exit_with_result(ctx, result, print_human=_print_human)

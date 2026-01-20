@@ -3,18 +3,22 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 from rich.console import Console
 
+from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.formalizer import FormalizerError, generate_skeleton
 from erdos.core.lean_runner import LeanRunner, LeanRunnerError
 from erdos.core.models import CLIOutput, LeanCheckResult
-from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 from erdos.core.timing import measure_time_ms
+
+
+if TYPE_CHECKING:
+    from erdos.core.ports import ProblemRepository
 
 
 app = typer.Typer(help="Lean 4 theorem prover commands.")
@@ -121,19 +125,15 @@ def check_lean_file(file_path: Path, project_path: Path) -> CLIOutput:
         )
 
 
-def formalize_problem(problem_id: int, project_path: Path, *, force: bool) -> CLIOutput:
+def formalize_problem(
+    problem_id: int,
+    project_path: Path,
+    *,
+    repo: ProblemRepository,
+    force: bool,
+) -> CLIOutput:
     """Generate a Lean skeleton for a problem."""
-    try:
-        loader = ProblemLoader.from_default()
-    except ProblemLoaderError as e:
-        return CLIOutput.err(
-            command="erdos lean formalize",
-            error_type="LoaderError",
-            message=str(e),
-            code=ExitCode.ERROR,
-        )
-
-    problem = loader.get_by_id(problem_id)
+    problem = repo.get_by_id(problem_id)
     if problem is None:
         return CLIOutput.err(
             command="erdos lean formalize",
@@ -295,8 +295,13 @@ def formalize(
         ctx.obj["json"] = True
 
     with measure_time_ms() as duration:
+        app_ctx, app_error = get_app_context(ctx, command="erdos lean formalize")
+        if app_error is not None or app_ctx is None:
+            exit_with_result(ctx, app_error)  # type: ignore[arg-type]
+            return
+
         path = project_path or Path("formal/lean")
-        result = formalize_problem(problem_id, path, force=force)
+        result = formalize_problem(problem_id, path, repo=app_ctx.problems, force=force)
 
     result.duration_ms = duration[0]
     exit_with_result(ctx, result, print_human=_print_human)

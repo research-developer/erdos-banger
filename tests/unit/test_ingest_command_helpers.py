@@ -157,7 +157,8 @@ def test_run_ingestion_calls_core_logic(
     mock_ingest.return_value = mock_result
 
     # Execute
-    result = _run_ingestion(options, tmp_path, "test@example.com")
+    repo = MagicMock()
+    result = _run_ingestion(options, tmp_path, "test@example.com", repo=repo)
 
     # Verify progress message was called
     _mock_progress.assert_called_once_with(6, False)
@@ -165,6 +166,7 @@ def test_run_ingestion_calls_core_logic(
     # Verify core logic was called
     mock_ingest.assert_called_once_with(
         6,
+        repo=repo,
         repo_root=tmp_path,
         force=True,
         no_download=True,
@@ -191,7 +193,7 @@ def test_run_ingestion_sets_duration(
     mock_result.duration_ms = None
     mock_ingest.return_value = mock_result
 
-    result = _run_ingestion(options, tmp_path, "test@example.com")
+    result = _run_ingestion(options, tmp_path, "test@example.com", repo=MagicMock())
 
     assert hasattr(result, "duration_ms")
     assert result.duration_ms is not None

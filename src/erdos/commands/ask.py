@@ -4,18 +4,23 @@ from __future__ import annotations
 
 import sys
 from dataclasses import dataclass
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
 
+from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
 from erdos.core.ask import ask_question
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
 from erdos.core.timing import measure_time_ms
+
+
+if TYPE_CHECKING:
+    from erdos.core.ports import ProblemRepository, SearchIndexProtocol
 
 
 app = typer.Typer(
@@ -68,12 +73,19 @@ def _show_progress_message(problem_id: int, json_output: bool) -> None:
         err_console.print(f"[dim]Retrieving sources for Problem {problem_id}...[/dim]")
 
 
-def _execute_ask_query(options: AskOptions) -> CLIOutput:
+def _execute_ask_query(
+    options: AskOptions,
+    *,
+    repo: ProblemRepository,
+    index: SearchIndexProtocol,
+) -> CLIOutput:
     """Execute the ask query and return result with timing."""
     with measure_time_ms() as duration:
         result = ask_question(
             problem_id=options.problem_id,
             question=options.question,
+            repo=repo,
+            index=index,
             limit=options.limit,
             build_index_flag=options.build_index,
             no_llm=options.no_llm,
@@ -172,5 +184,12 @@ def ask(
         no_llm=no_llm,
         llm_cmd=llm_cmd if llm_cmd else None,
     )
-    result = _execute_ask_query(options)
+    app_ctx, app_error = get_app_context(ctx, command="erdos ask", require_index=True)
+    if app_error is not None or app_ctx is None:
+        exit_with_result(ctx, app_error)  # type: ignore[arg-type]
+        return
+
+    result = _execute_ask_query(
+        options, repo=app_ctx.problems, index=app_ctx.ensure_index()
+    )
     exit_with_result(ctx, result, print_human=_print_human)

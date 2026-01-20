@@ -5,15 +5,20 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
+from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
 from erdos.core.ingest import ingest_problem_references
 from erdos.core.timing import measure_time_ms
+
+
+if TYPE_CHECKING:
+    from erdos.core.ports import ProblemRepository
 
 
 @dataclass
@@ -117,13 +122,20 @@ def _show_progress_message(problem_id: int, json_output: bool) -> None:
         )
 
 
-def _run_ingestion(options: IngestOptions, repo_root: Path, mailto: str) -> Any:
+def _run_ingestion(
+    options: IngestOptions,
+    repo_root: Path,
+    mailto: str,
+    *,
+    repo: ProblemRepository,
+) -> Any:
     """Execute the core ingestion logic."""
     with measure_time_ms() as duration:
         _show_progress_message(options.problem_id, options.json_output)
 
         result = ingest_problem_references(
             options.problem_id,
+            repo=repo,
             repo_root=repo_root,
             force=options.force,
             no_download=options.no_download,
@@ -159,7 +171,12 @@ def ingest(
         problem_id, force, no_download, no_network, timeout, delay, mailto, json_output
     )
     mailto_prepared, repo_root = _prepare_ingest_options(mailto)
-    result = _run_ingestion(options, repo_root, mailto_prepared)
+    app_ctx, app_error = get_app_context(ctx, command="erdos ingest")
+    if app_error is not None or app_ctx is None:
+        exit_with_result(ctx, app_error)  # type: ignore[arg-type]
+        return
+
+    result = _run_ingestion(options, repo_root, mailto_prepared, repo=app_ctx.problems)
 
     # Exit with result
     exit_with_result(ctx, result, print_human=_print_human)

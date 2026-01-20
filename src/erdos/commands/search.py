@@ -3,19 +3,25 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 from rich.console import Console
 
+from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
 from erdos.core.constants import PREVIEW_LENGTH
 from erdos.core.exit_codes import ExitCode
 from erdos.core.index_builder import build_index as do_build_index
 from erdos.core.models import CLIOutput, ProblemRecord
-from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
-from erdos.core.search_index import SearchIndex, SearchIndexError
+from erdos.core.problem_loader import ProblemLoaderError
+from erdos.core.search_index import SearchIndexError
 from erdos.core.timing import measure_time_ms
+
+
+if TYPE_CHECKING:
+    from erdos.core.ports import ProblemRepository, SearchIndexProtocol
+    from erdos.core.problem_loader import ProblemLoader
 
 
 @dataclass
@@ -76,13 +82,13 @@ def _print_human(result_data: dict[str, Any]) -> None:
 def search_problems_fts(
     query: str,
     *,
+    index: SearchIndexProtocol,
+    repo: ProblemRepository | None = None,
     limit: int = 10,
     problem_id: int | None = None,
 ) -> CLIOutput:
     """Search using FTS5 index (preferred)."""
     try:
-        index = SearchIndex.from_default()
-
         # Check if index has data
         if index.problem_count() == 0:
             return CLIOutput.err(
@@ -94,21 +100,13 @@ def search_problems_fts(
 
         results = index.search(query, limit=limit, problem_id=problem_id)
 
-        # Enrich results with problem titles (best-effort; index can still be used
-        # even if the source YAML isn't available in this environment).
-        loader: ProblemLoader | None = None
-        try:
-            loader = ProblemLoader.from_default()
-        except ProblemLoaderError:
-            loader = None
-
         enriched_results = []
         for r in results:
             problem = None
-            if loader is not None and r.problem_id is not None:
+            if repo is not None and r.problem_id is not None:
                 try:
-                    problem = loader.get_by_id(r.problem_id)
-                except ProblemLoaderError:
+                    problem = repo.get_by_id(r.problem_id)
+                except Exception:
                     problem = None
             enriched_results.append(
                 {
@@ -142,7 +140,7 @@ def search_problems_fts(
 
 
 def search_problems_basic(
-    query: str, loader: ProblemLoader, limit: int = 10
+    query: str, repo: ProblemRepository, limit: int = 10
 ) -> CLIOutput:
     """Fallback: basic substring search (no ranking)."""
     try:
@@ -156,7 +154,7 @@ def search_problems_basic(
             )
 
         matches: list[ProblemRecord] = []
-        for problem in loader.load_all():
+        for problem in repo.load_all():
             if q in problem.title.lower() or q in problem.statement.lower():
                 matches.append(problem)
 
@@ -200,14 +198,18 @@ def search_problems(query: str, loader: ProblemLoader) -> CLIOutput:
 
 
 def _build_index_if_requested(
-    build_index: bool, progress_console: Console
+    build_index: bool,
+    progress_console: Console,
+    *,
+    repo: ProblemRepository,
+    index: SearchIndexProtocol,
 ) -> CLIOutput | None:
     """Build index if requested, returning error or None on success."""
     if not build_index:
         return None
     progress_console.print("Building search index...")
     try:
-        stats = do_build_index(rebuild=True)
+        stats = do_build_index(loader=repo, index=index, rebuild=True)
         progress_console.print(
             f"[green]✓[/green] Indexed {stats['problems_indexed']} problems"
         )
@@ -224,24 +226,27 @@ def _build_index_if_requested(
         )
 
 
-def _search_with_fallback(options: SearchOptions) -> CLIOutput:
+def _search_with_fallback(
+    options: SearchOptions,
+    *,
+    index: SearchIndexProtocol | None,
+    repo: ProblemRepository,
+) -> CLIOutput:
     """Execute FTS search with fallback to basic substring search."""
+    if index is None:
+        return search_problems_basic(options.query, repo, options.limit)
+
     result = search_problems_fts(
-        options.query, limit=options.limit, problem_id=options.problem_id
+        options.query,
+        index=index,
+        repo=repo,
+        limit=options.limit,
+        problem_id=options.problem_id,
     )
 
     # If index is empty, fall back to basic search
     if not result.success and result.error and result.error.get("type") == "IndexEmpty":
-        try:
-            loader = ProblemLoader.from_default()
-            result = search_problems_basic(options.query, loader, options.limit)
-        except ProblemLoaderError as e:
-            result = CLIOutput.err(
-                command="erdos search",
-                error_type="LoaderError",
-                message=str(e),
-                code=ExitCode.ERROR,
-            )
+        result = search_problems_basic(options.query, repo, options.limit)
 
     return result
 
@@ -292,10 +297,40 @@ def search(
     progress_console = err_console if json_mode else console
 
     with measure_time_ms() as duration:
-        if build_error := _build_index_if_requested(build_index, progress_console):
-            build_error.duration_ms = duration[0]
-            exit_with_result(ctx, build_error)
+        app_ctx, app_error = get_app_context(ctx, command="erdos search")
+        if app_error is not None or app_ctx is None:
+            app_error.duration_ms = duration[0]  # type: ignore[union-attr]
+            exit_with_result(ctx, app_error)  # type: ignore[arg-type]
             return
+
+        # Best-effort index: if it can't be opened, fall back to basic search.
+        index: SearchIndexProtocol | None
+        try:
+            index = app_ctx.ensure_index()
+        except SearchIndexError:
+            index = None
+
+        if build_index:
+            if index is None:
+                result = CLIOutput.err(
+                    command="erdos search",
+                    error_type="IndexError",
+                    message="Search index is unavailable in this environment",
+                    code=ExitCode.ERROR,
+                )
+                result.duration_ms = duration[0]
+                exit_with_result(ctx, result)
+                return
+
+            if build_error := _build_index_if_requested(
+                build_index,
+                progress_console,
+                repo=app_ctx.problems,
+                index=index,
+            ):
+                build_error.duration_ms = duration[0]
+                exit_with_result(ctx, build_error)
+                return
 
         options = SearchOptions(
             query=query,
@@ -303,7 +338,7 @@ def search(
             problem_id=problem_filter,
             build_index=build_index,
         )
-        result = _search_with_fallback(options)
+        result = _search_with_fallback(options, index=index, repo=app_ctx.problems)
 
     result.duration_ms = duration[0]
     exit_with_result(ctx, result, print_human=_print_human)

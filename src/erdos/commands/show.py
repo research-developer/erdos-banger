@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 from rich.console import Console
 from rich.panel import Panel
 
+from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord
-from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 from erdos.core.timing import measure_time_ms
+
+
+if TYPE_CHECKING:
+    from erdos.core.ports import ProblemRepository
 
 
 app = typer.Typer(
@@ -51,16 +55,14 @@ def _print_human(problem_data: dict[str, Any]) -> None:
 # ============================================================================
 # Core Logic (testable independently)
 # ============================================================================
-
-
-def get_problem(problem_id: int, loader: ProblemLoader) -> CLIOutput:
+def get_problem(problem_id: int, repo: ProblemRepository) -> CLIOutput:
     """
     Get a problem by ID.
 
     This is the core logic, separated from CLI concerns for testing.
     """
     try:
-        problem = loader.get_by_id(problem_id)
+        problem = repo.get_by_id(problem_id)
         if problem is None:
             return CLIOutput.err(
                 command="erdos show",
@@ -114,19 +116,12 @@ def show(
         ctx.obj["json"] = True
 
     with measure_time_ms() as duration:
-        try:
-            loader = ProblemLoader.from_default()  # Uses configured data path
-        except ProblemLoaderError as e:
-            result = CLIOutput.err(
-                command="erdos show",
-                error_type="LoaderError",
-                message=str(e),
-                code=ExitCode.ERROR,
-            )
-            exit_with_result(ctx, result)
+        app_ctx, app_error = get_app_context(ctx, command="erdos show")
+        if app_error is not None or app_ctx is None:
+            exit_with_result(ctx, app_error)  # type: ignore[arg-type]
             return
 
-        result = get_problem(problem_id, loader)
+        result = get_problem(problem_id, app_ctx.problems)
 
     result.duration_ms = duration[0]
     exit_with_result(ctx, result, print_human=_print_human)

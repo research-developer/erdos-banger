@@ -40,11 +40,12 @@ from erdos.core.models import (
     ReferenceEntry,
     ReferenceRecord,
 )
-from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
+from erdos.core.ports import ProblemRepository
+from erdos.core.problem_loader import ProblemLoaderError
 
 
 def _load_problem(
-    problem_id: int, command: str
+    problem_id: int, command: str, *, repo: ProblemRepository
 ) -> tuple[ProblemRecord | None, CLIOutput | None]:
     """Load problem by ID, returning (problem, error).
 
@@ -53,7 +54,7 @@ def _load_problem(
         If failed, problem is None and error_output contains the error to return.
     """
     try:
-        loader = ProblemLoader.from_default()
+        problem = repo.get_by_id(problem_id)
     except ProblemLoaderError as e:
         return (
             None,
@@ -64,10 +65,7 @@ def _load_problem(
                 code=ExitCode.ERROR,
             ),
         )
-
-    try:
-        problem = loader.get_by_id(problem_id)
-    except ProblemLoaderError as e:
+    except Exception as e:
         return (
             None,
             CLIOutput.err(
@@ -536,6 +534,7 @@ def _build_ingest_result(
 def ingest_problem_references(
     problem_id: int,
     *,
+    repo: ProblemRepository,
     repo_root: Path,
     force: bool = False,
     no_download: bool = False,
@@ -548,6 +547,7 @@ def ingest_problem_references(
 
     Args:
         problem_id: Erdős problem ID.
+        repo: Problem repository (injected).
         repo_root: Repository root directory.
         force: Re-fetch even if already cached.
         no_download: Fetch metadata only, no arXiv tarballs.
@@ -566,7 +566,7 @@ def ingest_problem_references(
     allow_network = not no_network
 
     # Load problem
-    problem, error = _load_problem(problem_id, command)
+    problem, error = _load_problem(problem_id, command, repo=repo)
     if error or problem is None:
         return error or CLIOutput.err(
             command=command,

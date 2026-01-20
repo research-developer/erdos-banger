@@ -10,72 +10,63 @@ from erdos.core.ask import (
 )
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import ChunkSource, CLIOutput, ProblemRecord
-from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
-from erdos.core.search_index import SearchIndex, SearchResult
+from erdos.core.problem_loader import ProblemLoaderError
+from erdos.core.search_index import SearchResult
 
 
 def test_ensure_index_ready_no_build():
-    """_ensure_index_ready returns index when no build requested."""
+    """_ensure_index_ready returns provided index when no build requested."""
 
-    mock_loader = MagicMock(spec=ProblemLoader)
+    mock_repo = MagicMock()
+    mock_index = MagicMock()
 
-    with patch("erdos.core.ask.SearchIndex.from_default") as mock_from_default:
-        mock_index = MagicMock(spec=SearchIndex)
-        mock_from_default.return_value = mock_index
+    with patch("erdos.core.ask.build_index") as mock_build_index:
+        result = _ensure_index_ready(
+            loader=mock_repo,
+            index=mock_index,
+            build_index_flag=False,
+        )
 
-        result = _ensure_index_ready(loader=mock_loader, build_index_flag=False)
-
-        assert isinstance(result, SearchIndex)
         assert result == mock_index
-        mock_from_default.assert_called_once()
+        mock_build_index.assert_not_called()
 
 
 def test_ensure_index_ready_with_build():
     """_ensure_index_ready builds index when requested."""
-    mock_loader = MagicMock(spec=ProblemLoader)
+    mock_repo = MagicMock()
+    mock_index = MagicMock()
 
-    with (
-        patch("erdos.core.ask.build_index") as mock_build_index,
-        patch("erdos.core.ask.SearchIndex.from_default") as mock_from_default,
-    ):
-        mock_index = MagicMock(spec=SearchIndex)
-        mock_from_default.return_value = mock_index
+    with patch("erdos.core.ask.build_index") as mock_build_index:
+        result = _ensure_index_ready(
+            loader=mock_repo,
+            index=mock_index,
+            build_index_flag=True,
+        )
 
-        result = _ensure_index_ready(loader=mock_loader, build_index_flag=True)
-
-        assert isinstance(result, SearchIndex)
-        mock_build_index.assert_called_once_with(loader=mock_loader, rebuild=True)
-        mock_from_default.assert_called_once()
+        assert result == mock_index
+        mock_build_index.assert_called_once_with(
+            loader=mock_repo, index=mock_index, rebuild=True
+        )
 
 
 def test_ensure_index_ready_build_error():
     """_ensure_index_ready returns CLIOutput error if build fails."""
-    mock_loader = MagicMock(spec=ProblemLoader)
+    mock_repo = MagicMock()
+    mock_index = MagicMock()
 
     with patch("erdos.core.ask.build_index") as mock_build_index:
         mock_build_index.side_effect = RuntimeError("Build failed")
 
-        result = _ensure_index_ready(loader=mock_loader, build_index_flag=True)
+        result = _ensure_index_ready(
+            loader=mock_repo,
+            index=mock_index,
+            build_index_flag=True,
+        )
 
         assert isinstance(result, CLIOutput)
         assert not result.success
         assert result.error is not None
         assert "Build failed" in result.error["message"]
-
-
-def test_ensure_index_ready_index_open_error():
-    """_ensure_index_ready returns CLIOutput error if index open fails."""
-    mock_loader = MagicMock(spec=ProblemLoader)
-
-    with patch("erdos.core.ask.SearchIndex.from_default") as mock_from_default:
-        mock_from_default.side_effect = RuntimeError("Index error")
-
-        result = _ensure_index_ready(loader=mock_loader, build_index_flag=False)
-
-        assert isinstance(result, CLIOutput)
-        assert not result.success
-        assert result.error is not None
-        assert "Index error" in result.error["message"]
 
 
 def test_execute_llm_if_enabled_disabled():
@@ -205,72 +196,60 @@ def test_execute_llm_if_enabled_generic_exception():
 
 
 def test_load_problem_success():
-    """_load_problem returns problem and loader when successful."""
+    """_load_problem returns problem when successful."""
     mock_problem = MagicMock(spec=ProblemRecord)
     mock_problem.id = 6
-    mock_loader = MagicMock(spec=ProblemLoader)
-    mock_loader.get_by_id.return_value = mock_problem
+    mock_repo = MagicMock()
+    mock_repo.get_by_id.return_value = mock_problem
 
-    with patch("erdos.core.ask.ProblemLoader.from_default") as mock_from_default:
-        mock_from_default.return_value = mock_loader
+    result = _load_problem(6, repo=mock_repo)
 
-        result = _load_problem(6)
-
-        assert isinstance(result, tuple)
-        problem, loader = result
-        assert problem == mock_problem
-        assert loader == mock_loader
-        mock_loader.get_by_id.assert_called_once_with(6)
+    assert result == mock_problem
+    mock_repo.get_by_id.assert_called_once_with(6)
 
 
 def test_load_problem_loader_error():
     """_load_problem returns error when loader fails."""
-    with patch("erdos.core.ask.ProblemLoader.from_default") as mock_from_default:
-        mock_from_default.side_effect = ProblemLoaderError("Problems not found")
+    mock_repo = MagicMock()
+    mock_repo.get_by_id.side_effect = ProblemLoaderError("Problems not found")
 
-        result = _load_problem(6)
+    result = _load_problem(6, repo=mock_repo)
 
-        assert isinstance(result, CLIOutput)
-        assert not result.success
-        assert result.error is not None
-        assert result.error["type"] == "LoaderError"
-        assert "Problems not found" in result.error["message"]
-        assert result.error["code"] == ExitCode.ERROR
+    assert isinstance(result, CLIOutput)
+    assert not result.success
+    assert result.error is not None
+    assert result.error["type"] == "LoaderError"
+    assert "Problems not found" in result.error["message"]
+    assert result.error["code"] == ExitCode.ERROR
 
 
 def test_load_problem_not_found():
     """_load_problem returns error when problem not found."""
-    mock_loader = MagicMock(spec=ProblemLoader)
-    mock_loader.get_by_id.return_value = None
+    mock_repo = MagicMock()
+    mock_repo.get_by_id.return_value = None
 
-    with patch("erdos.core.ask.ProblemLoader.from_default") as mock_from_default:
-        mock_from_default.return_value = mock_loader
+    result = _load_problem(999, repo=mock_repo)
 
-        result = _load_problem(999)
-
-        assert isinstance(result, CLIOutput)
-        assert not result.success
-        assert result.error is not None
-        assert result.error["type"] == "NotFound"
-        assert "999" in result.error["message"]
-        assert result.error["code"] == ExitCode.NOT_FOUND
+    assert isinstance(result, CLIOutput)
+    assert not result.success
+    assert result.error is not None
+    assert result.error["type"] == "NotFound"
+    assert "999" in result.error["message"]
+    assert result.error["code"] == ExitCode.NOT_FOUND
 
 
 def test_load_problem_get_by_id_error():
     """_load_problem returns error when get_by_id raises exception."""
-    mock_loader = MagicMock(spec=ProblemLoader)
-    mock_loader.get_by_id.side_effect = ProblemLoaderError("Database error")
+    mock_repo = MagicMock()
+    mock_repo.get_by_id.side_effect = ProblemLoaderError("Database error")
 
-    with patch("erdos.core.ask.ProblemLoader.from_default") as mock_from_default:
-        mock_from_default.return_value = mock_loader
+    result = _load_problem(6, repo=mock_repo)
 
-        result = _load_problem(6)
-
-        assert isinstance(result, CLIOutput)
-        assert not result.success
-        assert result.error is not None
-        assert result.error["type"] == "LoaderError"
-        assert "Database error" in result.error["message"]
+    assert isinstance(result, CLIOutput)
+    assert not result.success
+    assert result.error is not None
+    assert result.error["type"] == "LoaderError"
+    assert "Database error" in result.error["message"]
 
 
 # Tests for _build_response_data

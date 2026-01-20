@@ -142,11 +142,15 @@ class TestExecuteAskQuery:
             no_llm=False,
             llm_cmd="test-llm",
         )
-        result = _execute_ask_query(options)
+        repo = mock.Mock()
+        index = mock.Mock()
+        result = _execute_ask_query(options, repo=repo, index=index)
 
         mock_ask.assert_called_once_with(
             problem_id=6,
             question="What is the status?",
+            repo=repo,
+            index=index,
             limit=10,
             build_index_flag=True,
             no_llm=False,
@@ -168,7 +172,7 @@ class TestExecuteAskQuery:
             no_llm=True,
             llm_cmd=None,
         )
-        result = _execute_ask_query(options)
+        result = _execute_ask_query(options, repo=mock.Mock(), index=mock.Mock())
 
         assert result.duration_ms is not None
         assert result.duration_ms >= 0
@@ -187,7 +191,7 @@ class TestExecuteAskQuery:
             no_llm=True,
             llm_cmd=None,
         )
-        _execute_ask_query(options)
+        _execute_ask_query(options, repo=mock.Mock(), index=mock.Mock())
 
         mock_ask.assert_called_once()
         assert mock_ask.call_args[1]["llm_command"] is None

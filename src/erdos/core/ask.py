@@ -10,8 +10,9 @@ from erdos.core.constants import PREVIEW_LENGTH
 from erdos.core.exit_codes import ExitCode
 from erdos.core.index_builder import build_index
 from erdos.core.models import ChunkSource, CLIOutput, ProblemRecord
-from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
-from erdos.core.search_index import SearchIndex, SearchResult
+from erdos.core.ports import ProblemRepository, SearchIndexProtocol
+from erdos.core.problem_loader import ProblemLoaderError
+from erdos.core.search_index import SearchResult
 
 
 def build_prompt(
@@ -86,7 +87,7 @@ def build_prompt(
 
 
 def perform_retrieval(
-    index: SearchIndex,
+    index: SearchIndexProtocol,
     problem: ProblemRecord,
     question: str,
     limit: int,
@@ -203,9 +204,10 @@ def execute_llm(llm_command: str, prompt: str) -> tuple[str, int]:
 
 def _ensure_index_ready(
     *,
-    loader: ProblemLoader,
+    loader: ProblemRepository,
+    index: SearchIndexProtocol,
     build_index_flag: bool,
-) -> SearchIndex | CLIOutput:
+) -> SearchIndexProtocol | CLIOutput:
     """
     Ensure search index is ready (build if requested, then open).
 
@@ -214,12 +216,12 @@ def _ensure_index_ready(
         build_index_flag: Whether to rebuild the index
 
     Returns:
-        SearchIndex if successful, or CLIOutput error
+        SearchIndexProtocol if successful, or CLIOutput error
     """
     # Build/rebuild index if requested
     if build_index_flag:
         try:
-            build_index(loader=loader, rebuild=True)
+            build_index(loader=loader, index=index, rebuild=True)
         except Exception as e:
             return CLIOutput.err(
                 command="erdos ask",
@@ -227,22 +229,12 @@ def _ensure_index_ready(
                 message=f"Failed to build index: {e}",
                 code=ExitCode.ERROR,
             )
-
-    # Get search index
-    try:
-        return SearchIndex.from_default()
-    except Exception as e:
-        return CLIOutput.err(
-            command="erdos ask",
-            error_type="ERROR",
-            message=f"Failed to open search index: {e}",
-            code=ExitCode.ERROR,
-        )
+    return index
 
 
 def _retrieve_sources(
     *,
-    index: SearchIndex,
+    index: SearchIndexProtocol,
     problem: ProblemRecord,
     question: str,
     limit: int,
@@ -287,15 +279,17 @@ def _retrieve_sources(
     return combined, True
 
 
-def _load_problem(problem_id: int) -> tuple[ProblemRecord, ProblemLoader] | CLIOutput:
+def _load_problem(
+    problem_id: int, *, repo: ProblemRepository
+) -> ProblemRecord | CLIOutput:
     """
-    Load problem and loader, handling errors.
+    Load problem, handling errors.
 
     Returns:
-        Tuple of (problem, loader) if successful, or CLIOutput error
+        ProblemRecord if successful, or CLIOutput error
     """
     try:
-        loader = ProblemLoader.from_default()
+        problem = repo.get_by_id(problem_id)
     except ProblemLoaderError as e:
         return CLIOutput.err(
             command="erdos ask",
@@ -303,10 +297,7 @@ def _load_problem(problem_id: int) -> tuple[ProblemRecord, ProblemLoader] | CLIO
             message=str(e),
             code=ExitCode.ERROR,
         )
-
-    try:
-        problem = loader.get_by_id(problem_id)
-    except ProblemLoaderError as e:
+    except Exception as e:
         return CLIOutput.err(
             command="erdos ask",
             error_type="LoaderError",
@@ -322,7 +313,7 @@ def _load_problem(problem_id: int) -> tuple[ProblemRecord, ProblemLoader] | CLIO
             code=ExitCode.NOT_FOUND,
         )
 
-    return problem, loader
+    return problem
 
 
 def _execute_llm_if_enabled(
@@ -442,6 +433,8 @@ def ask_question(
     problem_id: int,
     question: str,
     *,
+    repo: ProblemRepository,
+    index: SearchIndexProtocol,
     limit: int = 5,
     build_index_flag: bool = False,
     no_llm: bool = False,
@@ -462,14 +455,16 @@ def ask_question(
         CLIOutput with ask results
     """
     # Load problem
-    result = _load_problem(problem_id)
-    if isinstance(result, CLIOutput):
-        return result
-    problem, loader = result
+    problem_or_error = _load_problem(problem_id, repo=repo)
+    if isinstance(problem_or_error, CLIOutput):
+        return problem_or_error
+    problem = problem_or_error
 
     # Ensure index is ready
     index_or_error = _ensure_index_ready(
-        loader=loader, build_index_flag=build_index_flag
+        loader=repo,
+        index=index,
+        build_index_flag=build_index_flag,
     )
     if isinstance(index_or_error, CLIOutput):
         return index_or_error

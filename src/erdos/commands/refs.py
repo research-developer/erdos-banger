@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any, cast
+from typing import TYPE_CHECKING, Annotated, Any, cast
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
+from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
-from erdos.core.problem_loader import ProblemLoader, ProblemLoaderError
 from erdos.core.timing import measure_time_ms
+
+
+if TYPE_CHECKING:
+    from erdos.core.ports import ProblemRepository
 
 
 app = typer.Typer(
@@ -42,10 +46,10 @@ def _print_human(refs_data: dict[str, Any]) -> None:
     console.print(table)
 
 
-def get_refs(problem_id: int, loader: ProblemLoader) -> CLIOutput:
+def get_refs(problem_id: int, repo: ProblemRepository) -> CLIOutput:
     """Core refs logic (testable)."""
     try:
-        problem = loader.get_by_id(problem_id)
+        problem = repo.get_by_id(problem_id)
         if problem is None:
             return CLIOutput.err(
                 command="erdos refs",
@@ -96,19 +100,12 @@ def refs(
         ctx.obj["json"] = True
 
     with measure_time_ms() as duration:
-        try:
-            loader = ProblemLoader.from_default()
-        except ProblemLoaderError as e:
-            result = CLIOutput.err(
-                command="erdos refs",
-                error_type="LoaderError",
-                message=str(e),
-                code=ExitCode.ERROR,
-            )
-            exit_with_result(ctx, result)
+        app_ctx, app_error = get_app_context(ctx, command="erdos refs")
+        if app_error is not None or app_ctx is None:
+            exit_with_result(ctx, app_error)  # type: ignore[arg-type]
             return
 
-        result = get_refs(problem_id, loader)
+        result = get_refs(problem_id, app_ctx.problems)
 
     result.duration_ms = duration[0]
     exit_with_result(ctx, result, print_human=_print_human)

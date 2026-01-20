@@ -24,6 +24,7 @@ from erdos.core.ingest import (
     ingest_problem_references,
 )
 from erdos.core.models import CLIOutput, ManifestEntry, ReferenceEntry, ReferenceRecord
+from erdos.core.problem_loader import ProblemLoader
 
 
 @pytest.fixture
@@ -56,6 +57,7 @@ def test_ingest_no_references(
 
     result = ingest_problem_references(
         problem_id=999,
+        repo=ProblemLoader(problems_yaml),
         repo_root=temp_repo_root,
         force=False,
         no_download=False,
@@ -127,6 +129,7 @@ def test_ingest_arxiv_reference(
 
     result = ingest_problem_references(
         problem_id=998,
+        repo=ProblemLoader(problems_yaml),
         repo_root=temp_repo_root,
         force=False,
         no_download=False,
@@ -184,6 +187,7 @@ def test_ingest_doi_reference(
 
     result = ingest_problem_references(
         problem_id=997,
+        repo=ProblemLoader(problems_yaml),
         repo_root=temp_repo_root,
         force=False,
         no_download=False,
@@ -257,6 +261,7 @@ def test_ingest_merged_doi_arxiv(
 
     result = ingest_problem_references(
         problem_id=996,
+        repo=ProblemLoader(problems_yaml),
         repo_root=temp_repo_root,
         force=False,
         no_download=False,
@@ -311,6 +316,7 @@ def test_ingest_no_download_flag(
 
     result = ingest_problem_references(
         problem_id=995,
+        repo=ProblemLoader(problems_yaml),
         repo_root=temp_repo_root,
         force=False,
         no_download=True,  # Should skip tarball download
@@ -376,6 +382,7 @@ def test_ingest_internal_error_does_not_truncate_manifest(
 
     result = ingest_problem_references(
         problem_id=994,
+        repo=ProblemLoader(problems_yaml),
         repo_root=temp_repo_root,
         force=False,
         no_download=True,

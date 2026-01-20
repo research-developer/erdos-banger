@@ -48,7 +48,9 @@ class TestBuildIndexIfRequested:
     def test_no_build_returns_none(self) -> None:
         """Should return None when build_index is False."""
         console = mock.Mock()
-        result = _build_index_if_requested(False, console)
+        repo = mock.Mock()
+        index = mock.Mock()
+        result = _build_index_if_requested(False, console, repo=repo, index=index)
         assert result is None
         console.print.assert_not_called()
 
@@ -58,10 +60,12 @@ class TestBuildIndexIfRequested:
         mock_build.return_value = {"problems_indexed": 100}
         console = mock.Mock()
 
-        result = _build_index_if_requested(True, console)
+        repo = mock.Mock()
+        index = mock.Mock()
+        result = _build_index_if_requested(True, console, repo=repo, index=index)
 
         assert result is None
-        mock_build.assert_called_once_with(rebuild=True)
+        mock_build.assert_called_once_with(loader=repo, index=index, rebuild=True)
         assert console.print.call_count == 2
         assert "Building search index" in str(console.print.call_args_list[0])
 
@@ -71,7 +75,9 @@ class TestBuildIndexIfRequested:
         mock_build.side_effect = ProblemLoaderError("Problems not found")
         console = mock.Mock()
 
-        result = _build_index_if_requested(True, console)
+        repo = mock.Mock()
+        index = mock.Mock()
+        result = _build_index_if_requested(True, console, repo=repo, index=index)
 
         assert result is not None
         assert result.success is False
@@ -86,7 +92,9 @@ class TestBuildIndexIfRequested:
         mock_build.side_effect = SearchIndexError("Index corrupted")
         console = mock.Mock()
 
-        result = _build_index_if_requested(True, console)
+        repo = mock.Mock()
+        index = mock.Mock()
+        result = _build_index_if_requested(True, console, repo=repo, index=index)
 
         assert result is not None
         assert result.success is False
@@ -114,16 +122,23 @@ class TestSearchWithFallback:
             problem_id=None,
             build_index=False,
         )
-        result = _search_with_fallback(options)
+        repo = mock.Mock()
+        index = mock.Mock()
+        result = _search_with_fallback(options, index=index, repo=repo)
 
         assert result.success is True
-        mock_fts.assert_called_once_with("prime", limit=10, problem_id=None)
+        mock_fts.assert_called_once_with(
+            "prime",
+            index=index,
+            repo=repo,
+            limit=10,
+            problem_id=None,
+        )
 
     @mock.patch("erdos.commands.search.search_problems_basic")
-    @mock.patch("erdos.commands.search.ProblemLoader")
     @mock.patch("erdos.commands.search.search_problems_fts")
     def test_fallback_to_basic_on_empty_index(
-        self, mock_fts: mock.Mock, mock_loader_cls: mock.Mock, mock_basic: mock.Mock
+        self, mock_fts: mock.Mock, mock_basic: mock.Mock
     ) -> None:
         """Should fall back to basic search when index is empty."""
         mock_fts.return_value = CLIOutput.err(
@@ -132,8 +147,8 @@ class TestSearchWithFallback:
             message="Index is empty",
             code=0,
         )
-        mock_loader = mock.Mock()
-        mock_loader_cls.from_default.return_value = mock_loader
+        repo = mock.Mock()
+        index = mock.Mock()
         expected_result = CLIOutput.ok(
             "erdos search",
             {"query": "prime", "count": 0, "results": [], "use_fts": False},
@@ -146,24 +161,24 @@ class TestSearchWithFallback:
             problem_id=None,
             build_index=False,
         )
-        result = _search_with_fallback(options)
+        result = _search_with_fallback(options, index=index, repo=repo)
 
         assert result.success is True
-        mock_basic.assert_called_once_with("prime", mock_loader, 10)
+        mock_basic.assert_called_once_with("prime", repo, 10)
 
-    @mock.patch("erdos.commands.search.ProblemLoader")
+    @mock.patch("erdos.commands.search.search_problems_basic")
     @mock.patch("erdos.commands.search.search_problems_fts")
-    def test_fallback_loader_error(
-        self, mock_fts: mock.Mock, mock_loader_cls: mock.Mock
+    def test_index_unavailable_uses_basic(
+        self, mock_fts: mock.Mock, mock_basic: mock.Mock
     ) -> None:
-        """Should return error when fallback loader fails."""
+        """Should use basic search when index is unavailable."""
         mock_fts.return_value = CLIOutput.err(
             command="erdos search",
             error_type="IndexEmpty",
             message="Index is empty",
             code=0,
         )
-        mock_loader_cls.from_default.side_effect = ProblemLoaderError("Not found")
+        repo = mock.Mock()
 
         options = SearchOptions(
             query="prime",
@@ -171,11 +186,8 @@ class TestSearchWithFallback:
             problem_id=None,
             build_index=False,
         )
-        result = _search_with_fallback(options)
-
-        assert result.success is False
-        assert result.error is not None
-        assert result.error["type"] == "LoaderError"
+        _search_with_fallback(options, index=None, repo=repo)
+        mock_basic.assert_called_once_with("prime", repo, 10)
 
     @mock.patch("erdos.commands.search.search_problems_fts")
     def test_non_empty_index_error_not_fallback(self, mock_fts: mock.Mock) -> None:
@@ -186,6 +198,8 @@ class TestSearchWithFallback:
             message="Some other error",
             code=ExitCode.ERROR,
         )
+        repo = mock.Mock()
+        index = mock.Mock()
 
         options = SearchOptions(
             query="prime",
@@ -193,7 +207,7 @@ class TestSearchWithFallback:
             problem_id=None,
             build_index=False,
         )
-        result = _search_with_fallback(options)
+        result = _search_with_fallback(options, index=index, repo=repo)
 
         assert result.success is False
         assert result.error is not None
@@ -206,6 +220,8 @@ class TestSearchWithFallback:
             "erdos search",
             {"query": "test", "count": 0, "results": [], "use_fts": True},
         )
+        repo = mock.Mock()
+        index = mock.Mock()
 
         options = SearchOptions(
             query="test",
@@ -213,6 +229,12 @@ class TestSearchWithFallback:
             problem_id=42,
             build_index=False,
         )
-        _search_with_fallback(options)
+        _search_with_fallback(options, index=index, repo=repo)
 
-        mock_fts.assert_called_once_with("test", limit=5, problem_id=42)
+        mock_fts.assert_called_once_with(
+            "test",
+            index=index,
+            repo=repo,
+            limit=5,
+            problem_id=42,
+        )
