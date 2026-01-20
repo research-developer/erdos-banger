@@ -21,6 +21,65 @@ class ProblemLoaderError(Exception):
     """Raised when problem loading fails."""
 
 
+def _validate_list_field(raw: dict[str, Any], field: str, problem_id: Any) -> list[Any]:
+    """Validate and extract a list field from raw data.
+
+    Args:
+        raw: Raw problem dict
+        field: Field name to extract
+        problem_id: Problem ID for error messages
+
+    Returns:
+        List value (empty list if None/missing)
+
+    Raises:
+        ProblemLoaderError: If field is not a list
+    """
+    value = raw.get(field, []) or []
+    if isinstance(value, str):
+        raise ProblemLoaderError(
+            f"Problem {problem_id}: '{field}' must be a list, got string: {value!r}"
+        )
+    if not isinstance(value, list):
+        raise ProblemLoaderError(
+            f"Problem {problem_id}: '{field}' must be a list, got {type(value).__name__}"
+        )
+    return value
+
+
+def _parse_references(raw_refs: Any) -> list[ReferenceEntry]:
+    """Parse references from raw YAML data.
+
+    Args:
+        raw_refs: Raw references value from YAML
+
+    Returns:
+        List of ReferenceEntry objects
+
+    Raises:
+        ProblemLoaderError: If references format is invalid
+    """
+    if raw_refs is None:
+        return []
+    if not isinstance(raw_refs, list):
+        raise ProblemLoaderError("Field 'references' must be a list")
+
+    references: list[ReferenceEntry] = []
+    for ref in raw_refs:
+        if not isinstance(ref, dict):
+            raise ProblemLoaderError("Each reference must be a mapping")
+        references.append(
+            ReferenceEntry(
+                key=str(ref.get("key", "unknown")),
+                citation=ref.get("citation"),
+                doi=ref.get("doi"),
+                arxiv_id=ref.get("arxiv_id"),
+                url=ref.get("url"),
+            )
+        )
+    return references
+
+
 class ProblemLoader:
     """
     Loads problems from the erdosproblems YAML file.
@@ -136,11 +195,11 @@ class ProblemLoader:
             raw.append(item)
         return raw
 
-    def _parse_problem(self, raw: dict[str, Any]) -> ProblemRecord:
-        """
-        Parse a single problem from raw YAML dict.
+    def _validate_required_fields(self, raw: dict[str, Any]) -> None:
+        """Validate that required fields are present.
 
-        Handles field name normalization and validation.
+        Raises:
+            ProblemLoaderError: If required fields are missing
         """
         if "id" not in raw:
             if "number" in raw:
@@ -156,68 +215,33 @@ class ProblemLoader:
                 "Create data/problems_enriched.yaml (Spec 005) or point ERDOS_DATA_PATH at an enriched problems_enriched.yaml (or problems.yaml)."
             )
 
-        status = ProblemStatus.from_string(str(raw.get("status", "open")))
+    def _parse_problem(self, raw: dict[str, Any]) -> ProblemRecord:
+        """Parse a single problem from raw YAML dict."""
+        self._validate_required_fields(raw)
 
-        raw_refs = raw.get("references", [])
-        references: list[ReferenceEntry] = []
-        if raw_refs is None:
-            raw_refs = []
-        if not isinstance(raw_refs, list):
-            raise ProblemLoaderError("Field 'references' must be a list")
-        for ref in raw_refs:
-            if not isinstance(ref, dict):
-                raise ProblemLoaderError("Each reference must be a mapping")
-            references.append(
-                ReferenceEntry(
-                    key=str(ref.get("key", "unknown")),
-                    citation=ref.get("citation"),
-                    doi=ref.get("doi"),
-                    arxiv_id=ref.get("arxiv_id"),
-                    url=ref.get("url"),
-                )
-            )
-
-        # Validate tags field type (avoid string-to-chars bug)
-        raw_tags = raw.get("tags", []) or []
-        if isinstance(raw_tags, str):
-            raise ProblemLoaderError(
-                f"Problem {raw.get('id')}: 'tags' must be a list, got string: {raw_tags!r}"
-            )
-        if not isinstance(raw_tags, list):
-            raise ProblemLoaderError(
-                f"Problem {raw.get('id')}: 'tags' must be a list, got {type(raw_tags).__name__}"
-            )
-
-        # Validate oeis_ids field type
-        raw_oeis = raw.get("oeis_ids", []) or []
-        if isinstance(raw_oeis, str):
-            raise ProblemLoaderError(
-                f"Problem {raw.get('id')}: 'oeis_ids' must be a list, got string: {raw_oeis!r}"
-            )
-        if not isinstance(raw_oeis, list):
-            raise ProblemLoaderError(
-                f"Problem {raw.get('id')}: 'oeis_ids' must be a list, got {type(raw_oeis).__name__}"
-            )
+        problem_id = raw.get("id")
+        raw_tags = _validate_list_field(raw, "tags", problem_id)
+        raw_oeis = _validate_list_field(raw, "oeis_ids", problem_id)
+        references = _parse_references(raw.get("references"))
 
         # Validate formalized field type (bool("false") == True is a bug)
         raw_formalized = raw.get("formalized")
         if raw_formalized is not None and not isinstance(raw_formalized, bool):
             raise ProblemLoaderError(
-                f"Problem {raw.get('id')}: 'formalized' must be a bool, got {type(raw_formalized).__name__}"
+                f"Problem {problem_id}: 'formalized' must be a bool, got {type(raw_formalized).__name__}"
             )
-        formalized = raw_formalized if isinstance(raw_formalized, bool) else False
 
         return ProblemRecord(
             id=int(raw["id"]),
             title=str(raw["title"]),
             statement=str(raw["statement"]),
-            status=status,
+            status=ProblemStatus.from_string(str(raw.get("status", "open"))),
             prize=int(raw.get("prize", 0) or 0),
             tags=[str(t) for t in raw_tags],
             references=references,
             oeis_ids=[str(o) for o in raw_oeis],
             notes=raw.get("notes"),
-            formalized=formalized,
+            formalized=raw_formalized if isinstance(raw_formalized, bool) else False,
         )
 
     def load_all(self, *, use_cache: bool = True) -> list[ProblemRecord]:

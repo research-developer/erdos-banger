@@ -26,7 +26,7 @@
 
 ## Active Queue
 
-- [ ] **DEBT-026**: Long functions remain (≥ 80 LOC)
+- [x] **DEBT-026**: Long functions remain (≥ 80 LOC)
   - Deck: `docs/debt/debt-026-long-functions-remain.md`
   - Acceptance: Each core function ≥80 LOC is reduced below 80 LOC, or explicitly justified with an inline "linear parsing" rationale; new helpers are pure where possible with unit tests; `make ci` green.
 
@@ -51,6 +51,17 @@
 ---
 
 ## Work Log
+
+### 2026-01-20: DEBT-026 Long functions refactored
+
+**Files modified:**
+- `src/erdos/core/lean_runner.py` - Extracted `_resolve_lean_path`, `_build_check_result`, `_timeout_result` from `check()` (98→30 LOC)
+- `src/erdos/core/ingest/fetch.py` - Extracted `_build_manifest_entry_with_arxiv`, `_fetch_doi_with_arxiv`, `_fetch_doi_only`, `_fetch_arxiv_only` from `fetch_reference_entry()` (96→29 LOC); extracted `_error_result`, `_success_result` from `process_single_reference()` (88→33 LOC)
+- `src/erdos/core/problem_loader.py` - Extracted `_validate_list_field`, `_parse_references`, `_validate_required_fields` from `_parse_problem()` (83→28 LOC)
+- `docs/debt/debt-026-long-functions-remain.md` - Status updated to Fixed
+- `docs/debt/README.md` - Moved DEBT-026 to Archived
+
+**Note:** `list_`, `search` CLI commands already well-factored (LOC includes Typer option declarations). `ingest_problem_references` already has helpers; actual logic is 64 LOC.
 
 (entries added by Ralph loop as tasks complete)
 

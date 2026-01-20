@@ -1,7 +1,8 @@
 # Technical Debt 026: Long Functions Remain (≥ 80 LOC)
 
 **Date:** 2026-01-20
-**Status:** Open
+**Status:** Fixed
+**Fixed In:** (commit pending)
 **Priority:** P2 (Maintainability / future refactors)
 **Impact:** Harder reviews, higher bug risk during future changes, reduced testability
 

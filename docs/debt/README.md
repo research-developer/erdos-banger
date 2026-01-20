@@ -16,7 +16,6 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| DEBT-026 | [Long functions remain (≥ 80 LOC)](debt-026-long-functions-remain.md) | P2 | Open |
 | DEBT-027 | [Broad `except Exception` catches](debt-027-broad-exception-catches.md) | P3 | Open |
 | DEBT-028 | [Ingest manifest churn (non-idempotent writes)](debt-028-ingest-manifest-churn.md) | P2 | Open |
 
@@ -51,6 +50,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-023 | Security lint suppressions (XML + MD5) | P2 | Fixed | 764c597 |
 | DEBT-024 | Placeholder metadata (authors / contact email) | P3 | Fixed | 647c86d |
 | DEBT-025 | DRY violation in shell LLM wrappers | P4 | Fixed | c05d7a7 |
+| DEBT-026 | Long functions remain (≥ 80 LOC) | P2 | Fixed | (pending) |
 
 **Next Debt ID:** DEBT-029
 
@@ -81,3 +81,4 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-023-security-lint-suppressions.md`
 - `docs/_archive/debt/debt-025-shell-llm-wrapper-duplication.md`
 - `docs/_archive/debt/debt-022-large-core-modules-srp.md`
+- `docs/_archive/debt/debt-026-long-functions-remain.md`

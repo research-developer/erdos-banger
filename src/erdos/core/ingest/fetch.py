@@ -131,6 +131,94 @@ def _error_manifest_entry(
     )
 
 
+def _build_manifest_entry_with_arxiv(
+    reference: ReferenceRecord,
+    arxiv_id: str,
+    *,
+    repo_root: Path,
+    allow_download: bool,
+    timeout: float,
+) -> ManifestEntry:
+    """Build a ManifestEntry with optional arXiv download.
+
+    Args:
+        reference: Reference metadata (already fetched)
+        arxiv_id: arXiv identifier for downloading
+        repo_root: Repository root directory
+        allow_download: Whether to download arXiv source
+        timeout: HTTP timeout in seconds
+
+    Returns:
+        ManifestEntry with cache/extract info if downloaded
+    """
+    if not allow_download:
+        return ManifestEntry(reference=reference, ingested_at=datetime.now(UTC))
+
+    download_result = download_and_extract_arxiv(
+        arxiv_id=arxiv_id,
+        repo_root=repo_root,
+        timeout=timeout,
+    )
+    return ManifestEntry(
+        reference=reference,
+        cached=download_result.cache_path is not None,
+        cache_path=download_result.cache_path,
+        cache_hash=download_result.cache_hash,
+        extracted=download_result.extracted,
+        extract_path=download_result.extract_path,
+        ingested_at=datetime.now(UTC),
+        error=download_result.error,
+    )
+
+
+def _fetch_doi_with_arxiv(
+    doi: str,
+    arxiv_id: str,
+    *,
+    mailto: str,
+    timeout: float,
+    repo_root: Path,
+    allow_download: bool,
+) -> ManifestEntry:
+    """Fetch DOI metadata and optionally download arXiv source."""
+    crossref_data = fetch_crossref_work(doi, mailto=mailto, timeout=timeout)
+    reference = parse_crossref_work(crossref_data, doi=doi)
+    reference.arxiv_id = arxiv_id
+    return _build_manifest_entry_with_arxiv(
+        reference,
+        arxiv_id,
+        repo_root=repo_root,
+        allow_download=allow_download,
+        timeout=timeout,
+    )
+
+
+def _fetch_doi_only(doi: str, *, mailto: str, timeout: float) -> ManifestEntry:
+    """Fetch DOI metadata without arXiv download."""
+    crossref_data = fetch_crossref_work(doi, mailto=mailto, timeout=timeout)
+    reference = parse_crossref_work(crossref_data, doi=doi)
+    return ManifestEntry(reference=reference, ingested_at=datetime.now(UTC))
+
+
+def _fetch_arxiv_only(
+    arxiv_id: str,
+    *,
+    timeout: float,
+    repo_root: Path,
+    allow_download: bool,
+) -> ManifestEntry:
+    """Fetch arXiv metadata and optionally download source."""
+    arxiv_atom = fetch_arxiv_atom(arxiv_id, timeout=timeout)
+    reference = parse_arxiv_atom(arxiv_atom)
+    return _build_manifest_entry_with_arxiv(
+        reference,
+        arxiv_id,
+        repo_root=repo_root,
+        allow_download=allow_download,
+        timeout=timeout,
+    )
+
+
 def fetch_reference_entry(
     ref: ReferenceEntry,
     *,
@@ -144,89 +232,61 @@ def fetch_reference_entry(
     if not allow_network:
         raise RuntimeError("Network access disabled but required for fetching")
 
-    # Case 1: Both DOI and arXiv ID (merged entry)
     if ref.doi and ref.arxiv_id:
-        # Fetch metadata via Crossref (DOI is authoritative)
-        crossref_data = fetch_crossref_work(ref.doi, mailto=mailto, timeout=timeout)
-        reference = parse_crossref_work(crossref_data, doi=ref.doi)
-        reference.arxiv_id = ref.arxiv_id
-
-        # Download arXiv source if enabled
-        if allow_download:
-            download_result = download_and_extract_arxiv(
-                arxiv_id=ref.arxiv_id,
-                repo_root=repo_root,
-                timeout=timeout,
-            )
-            cache_path = download_result.cache_path
-            cache_hash = download_result.cache_hash
-            extract_path = download_result.extract_path
-            extracted = download_result.extracted
-            error = download_result.error
-        else:
-            cache_path = None
-            cache_hash = None
-            extract_path = None
-            extracted = False
-            error = None
-
-        return ManifestEntry(
-            reference=reference,
-            cached=cache_path is not None,
-            cache_path=cache_path,
-            cache_hash=cache_hash,
-            extracted=extracted,
-            extract_path=extract_path,
-            ingested_at=datetime.now(UTC),
-            error=error,
+        return _fetch_doi_with_arxiv(
+            ref.doi,
+            ref.arxiv_id,
+            mailto=mailto,
+            timeout=timeout,
+            repo_root=repo_root,
+            allow_download=allow_download,
         )
 
-    # Case 2: DOI only
     if ref.doi:
-        crossref_data = fetch_crossref_work(ref.doi, mailto=mailto, timeout=timeout)
-        reference = parse_crossref_work(crossref_data, doi=ref.doi)
+        return _fetch_doi_only(ref.doi, mailto=mailto, timeout=timeout)
 
-        return ManifestEntry(
-            reference=reference,
-            ingested_at=datetime.now(UTC),
-        )
-
-    # Case 3: arXiv only
     if ref.arxiv_id:
-        arxiv_atom = fetch_arxiv_atom(ref.arxiv_id, timeout=timeout)
-        reference = parse_arxiv_atom(arxiv_atom)
-
-        # Download arXiv source if enabled
-        if allow_download:
-            download_result = download_and_extract_arxiv(
-                arxiv_id=ref.arxiv_id,
-                repo_root=repo_root,
-                timeout=timeout,
-            )
-            cache_path = download_result.cache_path
-            cache_hash = download_result.cache_hash
-            extract_path = download_result.extract_path
-            extracted = download_result.extracted
-            error = download_result.error
-        else:
-            cache_path = None
-            cache_hash = None
-            extract_path = None
-            extracted = False
-            error = None
-
-        return ManifestEntry(
-            reference=reference,
-            cached=cache_path is not None,
-            cache_path=cache_path,
-            cache_hash=cache_hash,
-            extracted=extracted,
-            extract_path=extract_path,
-            ingested_at=datetime.now(UTC),
-            error=error,
+        return _fetch_arxiv_only(
+            ref.arxiv_id,
+            timeout=timeout,
+            repo_root=repo_root,
+            allow_download=allow_download,
         )
 
     raise ValueError("Reference has no DOI or arXiv ID")
+
+
+def _error_result(
+    ref: ReferenceEntry,
+    error: Exception,
+    *,
+    network_failed: bool,
+    internal_error: Exception | None = None,
+) -> ReferenceProcessResult:
+    """Create a ReferenceProcessResult for an error case."""
+    title = "Unexpected error" if internal_error else "Failed to fetch"
+    error_msg = f"{type(error).__name__}: {error}" if internal_error else str(error)
+    entry = _error_manifest_entry(ref, title=f"{title}: {ref.key}", error=error_msg)
+    return ReferenceProcessResult(
+        entry=entry,
+        failed=True,
+        network_failed=network_failed,
+        internal_error=internal_error,
+    )
+
+
+def _success_result(entry: ManifestEntry) -> ReferenceProcessResult:
+    """Create a ReferenceProcessResult from a successful fetch."""
+    failed = entry.error is not None
+    network_failed = (
+        entry.error.startswith("Download failed:") if entry.error else False
+    )
+    return ReferenceProcessResult(
+        entry=entry,
+        failed=failed,
+        network_failed=network_failed,
+        internal_error=None,
+    )
 
 
 def process_single_reference(
@@ -242,9 +302,7 @@ def process_single_reference(
 ) -> ReferenceProcessResult:
     """Process a single reference, reusing a cached manifest entry unless forced."""
     if existing_entry := _find_existing_manifest_entry(
-        ref,
-        existing_manifest,
-        force=force,
+        ref, existing_manifest, force=force
     ):
         return ReferenceProcessResult(
             entry=existing_entry,
@@ -253,7 +311,6 @@ def process_single_reference(
             internal_error=None,
         )
 
-    # Fetch new entry
     try:
         entry = fetch_reference_entry(
             ref=ref,
@@ -263,29 +320,9 @@ def process_single_reference(
             timeout=timeout,
             mailto=mailto,
         )
-        # Check if entry has error from download/extraction
-        failed = entry.error is not None
-        network_failed = (
-            entry.error.startswith("Download failed:") if entry.error else False
-        )
-        return ReferenceProcessResult(
-            entry=entry,
-            failed=failed,
-            network_failed=network_failed,
-            internal_error=None,
-        )
+        return _success_result(entry)
     except (requests.RequestException, RuntimeError) as e:
-        error_entry = _error_manifest_entry(
-            ref,
-            title=f"Failed to fetch: {ref.key}",
-            error=str(e),
-        )
-        return ReferenceProcessResult(
-            entry=error_entry,
-            failed=True,
-            network_failed=True,
-            internal_error=None,
-        )
+        return _error_result(ref, e, network_failed=True)
     except (
         ET.ParseError,
         OSError,
@@ -294,29 +331,9 @@ def process_single_reference(
         TypeError,
         tarfile.TarError,
     ) as e:
-        error_entry = _error_manifest_entry(
-            ref,
-            title=f"Failed to fetch: {ref.key}",
-            error=str(e),
-        )
-        return ReferenceProcessResult(
-            entry=error_entry,
-            failed=True,
-            network_failed=False,
-            internal_error=None,
-        )
+        return _error_result(ref, e, network_failed=False)
     except Exception as e:
-        error_entry = _error_manifest_entry(
-            ref,
-            title=f"Unexpected error: {ref.key}",
-            error=f"{type(e).__name__}: {e}",
-        )
-        return ReferenceProcessResult(
-            entry=error_entry,
-            failed=True,
-            network_failed=False,
-            internal_error=e,
-        )
+        return _error_result(ref, e, network_failed=False, internal_error=e)
 
 
 def process_all_references(
