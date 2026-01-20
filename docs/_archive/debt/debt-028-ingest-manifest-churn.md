@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-20
 **Status:** Fixed
-**Fixed In:** (pending commit)
+**Fixed In:** 154866b
 **Priority:** P2 (DevX + repo hygiene)
 **Impact:** Running `erdos ingest` repeatedly rewrites manifests even when nothing changes, creating noisy diffs and merge conflicts
 

@@ -49,7 +49,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-025 | DRY violation in shell LLM wrappers | P4 | Fixed | c05d7a7 |
 | DEBT-026 | Long functions remain (≥ 80 LOC) | P2 | Fixed | c31d484 |
 | DEBT-027 | Broad `except Exception` catches | P3 | Fixed | e657d7c |
-| DEBT-028 | Ingest manifest churn (non-idempotent writes) | P2 | Fixed | (pending) |
+| DEBT-028 | Ingest manifest churn (non-idempotent writes) | P2 | Fixed | 154866b |
 
 **Next Debt ID:** DEBT-029
 
