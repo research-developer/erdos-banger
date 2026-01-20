@@ -1,7 +1,8 @@
 # Technical Debt 027: Broad `except Exception` Catches (Masking Risk)
 
 **Date:** 2026-01-20
-**Status:** Open
+**Status:** Fixed
+**Fixed In:** 30782f8
 **Priority:** P3 (Quality / diagnosability)
 **Impact:** Programmer errors can be misclassified as user errors; stack traces can be lost unless reproduced under a debugger
 

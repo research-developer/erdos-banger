@@ -10,7 +10,8 @@ from erdos.core.exit_codes import ExitCode
 from erdos.core.index_builder import build_index
 from erdos.core.models import CLIOutput, ProblemRecord
 from erdos.core.ports import ProblemRepository, SearchIndexProtocol
-from erdos.core.search_index import SearchResult
+from erdos.core.problem_loader import ProblemLoaderError
+from erdos.core.search_index import SearchIndexError, SearchResult
 
 
 def _ensure_index_ready(
@@ -34,7 +35,7 @@ def _ensure_index_ready(
     if build_index_flag:
         try:
             build_index(loader=loader, index=index, rebuild=True)
-        except Exception as e:
+        except (SearchIndexError, ProblemLoaderError) as e:
             return CLIOutput.err(
                 command="erdos ask",
                 error_type="ERROR",
@@ -55,7 +56,7 @@ def _load_problem(
     """
     try:
         problem = repo.get_by_id(problem_id)
-    except Exception as e:
+    except ProblemLoaderError as e:
         return CLIOutput.err(
             command="erdos ask",
             error_type="LoaderError",

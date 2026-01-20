@@ -1,6 +1,7 @@
 """Reference fetching and download logic."""
 
 import hashlib
+import logging
 import tarfile
 import time
 from datetime import UTC, datetime
@@ -32,6 +33,9 @@ from erdos.core.models import (
     ReferenceEntry,
     ReferenceRecord,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 def download_and_extract_arxiv(
@@ -333,6 +337,8 @@ def process_single_reference(
     ) as e:
         return _error_result(ref, e, network_failed=False)
     except Exception as e:
+        # Log unexpected errors with full traceback for debugging
+        logger.exception("Unexpected error processing reference %s", ref.key)
         return _error_result(ref, e, network_failed=False, internal_error=e)
 
 

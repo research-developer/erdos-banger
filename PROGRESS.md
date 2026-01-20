@@ -30,7 +30,7 @@
   - Deck: `docs/debt/debt-026-long-functions-remain.md`
   - Acceptance: Each core function ≥80 LOC is reduced below 80 LOC, or explicitly justified with an inline "linear parsing" rationale; new helpers are pure where possible with unit tests; `make ci` green.
 
-- [ ] **DEBT-027**: Broad `except Exception` catches (masking risk)
+- [x] **DEBT-027**: Broad `except Exception` catches (masking risk)
   - Deck: `docs/debt/debt-027-broad-exception-catches.md`
   - Acceptance: Core service layers no longer use `except Exception` except where re-raising after cleanup; CLI boundary code returns friendly errors but retains debug signal; `make ci` green.
 
@@ -62,6 +62,24 @@
 - `docs/debt/README.md` - Moved DEBT-026 to Archived
 
 **Note:** `list_`, `search` CLI commands already well-factored (LOC includes Typer option declarations). `ingest_problem_references` already has helpers; actual logic is 64 LOC.
+
+### 2026-01-20: DEBT-027 Broad exception catches refactored
+
+**Files modified:**
+- `src/erdos/core/ingest/service.py` - Changed `except Exception` to `except ProblemLoaderError` in `_load_problem()`
+- `src/erdos/core/ask/service.py` - Changed `except Exception` to specific `SearchIndexError | ProblemLoaderError` catches
+- `src/erdos/core/ask/llm.py` - Replaced generic exception with `ValueError` handler for shlex errors
+- `src/erdos/core/ingest/fetch.py` - Added `logger.exception()` to preserve traceback in last-resort catch
+- `src/erdos/commands/list_cmd.py` - Added logging import and `logger.exception()` for debug signal
+- `src/erdos/commands/show.py` - Added logging import and `logger.exception()` for debug signal
+- `src/erdos/commands/refs.py` - Added logging import and `logger.exception()` for debug signal
+- `src/erdos/commands/search.py` - Added logging import and `logger.exception()` for debug signal
+- `src/erdos/commands/lean.py` - Added logging import and `logger.exception()` for debug signal
+- `tests/unit/test_ask_helpers.py` - Updated tests to use specific exception types
+- `docs/debt/debt-027-broad-exception-catches.md` - Status updated to Fixed
+- `docs/debt/README.md` - Moved DEBT-027 to Archived
+
+**Note:** `formalizer.py` already uses proper exception translation pattern (`except Exception as exc: raise FormalizerError(...) from exc`).
 
 (entries added by Ralph loop as tasks complete)
 

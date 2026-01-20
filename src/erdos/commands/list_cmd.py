@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Annotated, Any
 
@@ -15,6 +16,9 @@ from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord, ProblemStatus
 from erdos.core.timing import measure_time_ms
 from erdos.services.problem_service import ProblemFilter, ProblemService
+
+
+logger = logging.getLogger(__name__)
 
 
 if TYPE_CHECKING:
@@ -104,6 +108,7 @@ def _execute_list_query(options: ListOptions, repo: ProblemRepository) -> CLIOut
             data=[p.model_dump(mode="json") for p in problems],
         )
     except Exception as e:
+        logger.exception("Unexpected error in list command")
         return CLIOutput.err(
             command="erdos list",
             error_type="Error",

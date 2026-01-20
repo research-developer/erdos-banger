@@ -1,11 +1,15 @@
 """LLM execution for RAG Q&A."""
 
+import logging
 import shlex
 import subprocess
 
 from erdos.core.constants import LLM_COMMAND_TIMEOUT
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
+
+
+logger = logging.getLogger(__name__)
 
 
 def execute_llm(
@@ -98,12 +102,13 @@ def execute_llm_if_enabled(  # noqa: PLR0911
             message=f"LLM command error: {e}",
             code=ExitCode.CONFIG_ERROR,
         )
-    except Exception as e:
+    except ValueError as e:
+        # shlex.split can raise ValueError for malformed command strings
         return CLIOutput.err(
             command="erdos ask",
-            error_type="ERROR",
-            message=f"LLM execution failed: {e}",
-            code=ExitCode.ERROR,
+            error_type="CONFIG_ERROR",
+            message=f"Invalid LLM command syntax: {e}",
+            code=ExitCode.CONFIG_ERROR,
         )
 
     # Check exit code

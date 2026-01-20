@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any
 
@@ -15,6 +16,9 @@ from erdos.core.formalizer import FormalizerError, generate_skeleton
 from erdos.core.lean_runner import LeanRunner, LeanRunnerError
 from erdos.core.models import CLIOutput, LeanCheckResult
 from erdos.core.timing import measure_time_ms
+
+
+logger = logging.getLogger(__name__)
 
 
 if TYPE_CHECKING:
@@ -85,6 +89,7 @@ def init_lean_project(project_path: Path, *, fetch_mathlib: bool = True) -> CLIO
             code=ExitCode.ERROR,
         )
     except Exception as e:
+        logger.exception("Unexpected error in lean init command")
         return CLIOutput.err(
             command="erdos lean init",
             error_type="InitError",
@@ -117,6 +122,7 @@ def check_lean_file(file_path: Path, project_path: Path) -> CLIOutput:
             code=ExitCode.NOT_FOUND,
         )
     except Exception as e:
+        logger.exception("Unexpected error in lean check command")
         return CLIOutput.err(
             command="erdos lean check",
             error_type="Error",

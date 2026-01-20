@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Annotated, Any
 
@@ -17,6 +18,9 @@ from erdos.core.models import CLIOutput, ProblemRecord
 from erdos.core.problem_loader import ProblemLoaderError
 from erdos.core.search_index import SearchIndexError
 from erdos.core.timing import measure_time_ms
+
+
+logger = logging.getLogger(__name__)
 
 
 if TYPE_CHECKING:
@@ -209,6 +213,7 @@ def search_problems_basic(
             },
         )
     except Exception as e:
+        logger.exception("Unexpected error in search command")
         return CLIOutput.err(
             command="erdos search",
             error_type="Error",
