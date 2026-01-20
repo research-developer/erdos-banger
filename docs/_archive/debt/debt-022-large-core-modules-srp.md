@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-20
 **Status:** Fixed
-**Fixed In:** (pending commit)
+**Fixed In:** 8d75c8a
 **Priority:** P2 (Maintainability / change risk)
 **Impact:** Harder reviews, higher bug surface area, slower iteration on ingest/ask features
 
