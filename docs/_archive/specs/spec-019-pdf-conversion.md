@@ -4,7 +4,7 @@
 
 **Status:** Complete
 **Target:** v2.0+
-**Implemented In:** 2ecd11b
+**Implemented In:** b32a91d
 **Prerequisites (SSOT):**
 - Ingest command: `docs/_archive/specs/spec-010-ingest-command.md`
 - Search index: `docs/_archive/specs/spec-006-search-index.md`
