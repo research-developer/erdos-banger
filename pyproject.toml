@@ -33,6 +33,10 @@ dependencies = [
 pdf = [
     "marker-pdf>=1.0.0",  # GPL - see SPEC-019 for license rationale
 ]
+embeddings = [
+    "sentence-transformers>=5.2.0",
+    "numpy>=2.4.1",
+]
 
 [project.scripts]
 erdos = "erdos.cli:app"
@@ -60,6 +64,7 @@ dev = [
     "types-PyYAML>=6.0.12.20250915",
     "types-requests>=2.32.0",
     "types-defusedxml>=0.7.0.20240218",
+    "numpy>=2.4.1",  # Type checking for embeddings module
 ]
 
 [tool.ruff]
@@ -99,6 +104,8 @@ ignore = [
     "PLR2004", # Magic values OK in tests
     "TC003",  # TYPE_CHECKING imports fine in tests
     "PTH109", # os.getcwd() fine in tests for chdir context managers
+    "PLC0415", # Imports inside functions OK in tests (for conditional imports)
+    "F841",   # Unused variables OK in tests (for capturing side effects)
 ]
 
 [tool.ruff.lint.isort]
@@ -136,6 +143,10 @@ disallow_incomplete_defs = false  # Fixtures often omit arg annotations
 
 [[tool.mypy.overrides]]
 module = "yaml.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "sentence_transformers.*"
 ignore_missing_imports = true
 
 [tool.pydantic-mypy]

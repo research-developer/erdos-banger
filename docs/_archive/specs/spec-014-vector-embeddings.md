@@ -2,8 +2,9 @@
 
 > Adds semantic search via vector embeddings to complement the existing BM25 index.
 
-**Status:** Deferred
+**Status:** Complete
 **Target:** v1.3
+**Commit:** 3b6e6e8
 **Prerequisites (SSOT):**
 - Search index: `docs/_archive/specs/spec-006-search-index.md`
 - Domain models: `docs/_archive/specs/spec-003-domain-models.md`

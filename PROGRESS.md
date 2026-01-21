@@ -84,8 +84,8 @@
   - Target: v1.4
   - Acceptance: All spec acceptance criteria met; `make ci` green.
 
-- [ ] **SPEC-014**: Vector Embeddings
-  - Spec: `docs/specs/spec-014-vector-embeddings.md`
+- [x] **SPEC-014**: Vector Embeddings
+  - Spec: `docs/_archive/specs/spec-014-vector-embeddings.md`
   - Target: v1.3
   - Acceptance: All spec acceptance criteria met; `make ci` green.
   - Note: Requires `sentence-transformers` optional dep.
@@ -393,6 +393,31 @@
 - Cache stored in `formal/lean/.upstream_cache/` for offline use
 - Sorry/admit detection for local files
 - Exit codes: SUCCESS, NOT_FOUND, NETWORK_ERROR, LEAN_ERROR, CONFIG_ERROR
+
+### 2026-01-21: SPEC-014 Vector Embeddings implemented
+
+**Files created:**
+- `src/erdos/core/embeddings.py` - Embedding model wrapper with EmbeddingConfig, EmbeddingModel, cosine_similarity(), embedding_to_blob(), embedding_from_blob(), get_embedding_model()
+- `tests/unit/test_embeddings.py` - 18 unit tests for EmbeddingConfig, EmbeddingModel mocking, cosine similarity, and blob serialization
+- `tests/unit/test_search_index_embeddings.py` - 21 unit tests for embedding schema, build_embeddings, has_embeddings, search_semantic, search_hybrid
+- `tests/integration/test_search_semantic.py` - Integration tests for CLI help, mode validation, BM25-only mode, embedding dependency handling, JSON output
+
+**Files modified:**
+- `pyproject.toml` - Added `embeddings` optional dependency (sentence-transformers, numpy); added mypy override for sentence_transformers
+- `src/erdos/core/search_index.py` - Added EmbeddingModelProtocol, SemanticSearchResult dataclass, chunk_embeddings table, set_embedding_metadata(), get_embedding_metadata(), has_embeddings(), build_embeddings(), search_semantic(), search_hybrid()
+- `src/erdos/core/ports.py` - Extended SearchIndexProtocol with embedding methods (has_embeddings, get_embedding_metadata, set_embedding_metadata, build_embeddings, search_semantic, search_hybrid)
+- `src/erdos/commands/search.py` - Added SearchMode enum (BM25, SEMANTIC, HYBRID), extended SearchOptions with embedding fields, added CLI flags (--semantic, --hybrid, --bm25-only, --alpha, --build-embeddings, --embedding-model), added helpers for embedding operations and result formatting
+
+**Features:**
+- `erdos search --semantic` for pure vector similarity search
+- `erdos search --hybrid` for combined BM25 + semantic ranking with --alpha weight
+- `erdos search --bm25-only` for explicit BM25-only mode
+- `erdos search --build-embeddings` generates embeddings for all indexed chunks
+- `erdos search --embedding-model MODEL` selects embedding model (default: all-MiniLM-L6-v2)
+- Embeddings stored in SQLite chunk_embeddings table with model/dimension metadata
+- Model mismatch detection prevents searching with incompatible embeddings
+- Cosine similarity normalized to 0..1 range for score mixing
+- Graceful degradation when sentence-transformers not installed (BM25 works without extra deps)
 
 (entries added by Ralph loop as tasks complete)
 

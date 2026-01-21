@@ -1,20 +1,46 @@
 """SQLite FTS5 search index for erdos-banger."""
 
+from __future__ import annotations
+
 import json
 import logging
 import os
 import sqlite3
-from collections.abc import Iterator
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING, Any, Protocol
 
 from erdos.core.constants import PREVIEW_LENGTH
 from erdos.core.models import ChunkSource, ProblemRecord, TextChunk
 
 
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from numpy.typing import NDArray
+
+
 logger = logging.getLogger(__name__)
+
+
+class EmbeddingModelProtocol(Protocol):
+    """Protocol for embedding models."""
+
+    @property
+    def model_name(self) -> str: ...
+
+    @property
+    def dimension(self) -> int: ...
+
+    def encode(self, text: str) -> NDArray[Any]: ...
+
+    def encode_batch(self, texts: list[str]) -> list[NDArray[Any]]: ...
+
+    def to_blob(self, embedding: NDArray[Any]) -> bytes: ...
+
+    def from_blob(self, blob: bytes) -> NDArray[Any]: ...
 
 
 @dataclass
@@ -28,6 +54,22 @@ class SearchResult:
     source_type: ChunkSource
     problem_id: int | None
     reference_doi: str | None
+
+
+@dataclass
+class SemanticSearchResult:
+    """A search result with semantic and/or hybrid scores."""
+
+    chunk_id: str
+    text: str
+    snippet: str
+    source_type: ChunkSource
+    problem_id: int | None
+    reference_doi: str | None
+    # Scores
+    bm25_score: float = 0.0
+    semantic_score: float = 0.0
+    hybrid_score: float = field(default=0.0)
 
 
 class SearchIndexError(Exception):
@@ -62,7 +104,7 @@ class SearchIndex:
         self._ensure_schema()
 
     @classmethod
-    def from_default(cls) -> "SearchIndex":
+    def from_default(cls) -> SearchIndex:
         """Create index using default path (index/erdos.sqlite)."""
         # Check environment variable
         env_path = os.environ.get("ERDOS_INDEX_PATH")
@@ -152,6 +194,15 @@ class SearchIndex:
             value TEXT NOT NULL
         );
         INSERT OR REPLACE INTO schema_meta (key, value) VALUES ('version', '1');
+
+        -- Chunk embeddings (SPEC-014: Vector Embeddings)
+        CREATE TABLE IF NOT EXISTS chunk_embeddings (
+            chunk_id TEXT PRIMARY KEY REFERENCES chunks(id),
+            embedding BLOB NOT NULL,
+            dimension INTEGER NOT NULL,
+            model TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        );
         """
 
         with self._connect() as conn:
@@ -335,8 +386,13 @@ class SearchIndex:
         """Delete all indexed content."""
         logger.info("Clearing search index")
         with self._connect() as conn:
+            conn.execute("DELETE FROM chunk_embeddings")
             conn.execute("DELETE FROM chunks")
             conn.execute("DELETE FROM problems")
+            # Clear embedding metadata
+            conn.execute(
+                "DELETE FROM schema_meta WHERE key IN ('embedding_model', 'embedding_dimension')"
+            )
             # Rebuild FTS index
             conn.execute("INSERT INTO chunks_fts(chunks_fts) VALUES('rebuild')")
         logger.debug("Search index cleared")
@@ -360,6 +416,12 @@ class SearchIndex:
             for row in cursor:
                 by_source[row[0]] = row[1]
 
+            # Embedding stats
+            embedding_count = conn.execute(
+                "SELECT COUNT(*) FROM chunk_embeddings"
+            ).fetchone()[0]
+            model, dim = self.get_embedding_metadata()
+
             return {
                 "problems": problems,
                 "chunks": chunks,
@@ -368,4 +430,284 @@ class SearchIndex:
                 "db_size_bytes": self._db_path.stat().st_size
                 if self._db_path.exists()
                 else 0,
+                "embeddings": embedding_count,
+                "embedding_model": model,
+                "embedding_dimension": dim,
             }
+
+    # =========================================================================
+    # Embedding Methods (SPEC-014)
+    # =========================================================================
+
+    def set_embedding_metadata(self, model_name: str, dimension: int) -> None:
+        """Store embedding model metadata in schema_meta table."""
+        with self._connect() as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO schema_meta (key, value) VALUES (?, ?)",
+                ("embedding_model", model_name),
+            )
+            conn.execute(
+                "INSERT OR REPLACE INTO schema_meta (key, value) VALUES (?, ?)",
+                ("embedding_dimension", str(dimension)),
+            )
+        logger.debug("Set embedding metadata: model=%s, dim=%d", model_name, dimension)
+
+    def get_embedding_metadata(self) -> tuple[str | None, int | None]:
+        """Get stored embedding model metadata.
+
+        Returns:
+            Tuple of (model_name, dimension), or (None, None) if not set.
+        """
+        with self._connect() as conn:
+            model_row = conn.execute(
+                "SELECT value FROM schema_meta WHERE key = 'embedding_model'"
+            ).fetchone()
+            dim_row = conn.execute(
+                "SELECT value FROM schema_meta WHERE key = 'embedding_dimension'"
+            ).fetchone()
+
+            model = model_row[0] if model_row else None
+            dim = int(dim_row[0]) if dim_row else None
+            return model, dim
+
+    def has_embeddings(self) -> bool:
+        """Check if embeddings have been built."""
+        with self._connect() as conn:
+            cursor = conn.execute("SELECT COUNT(*) FROM chunk_embeddings")
+            count = cursor.fetchone()[0]
+            return bool(count > 0)
+
+    def build_embeddings(self, embedder: EmbeddingModelProtocol) -> int:
+        """Build embeddings for all indexed chunks.
+
+        Args:
+            embedder: Embedding model instance.
+
+        Returns:
+            Number of chunks embedded.
+        """
+        logger.info("Building embeddings with model: %s", embedder.model_name)
+        now = datetime.now(UTC).isoformat()
+
+        with self._connect() as conn:
+            # Clear existing embeddings
+            conn.execute("DELETE FROM chunk_embeddings")
+
+            # Get all chunks
+            chunks = conn.execute("SELECT id, text FROM chunks").fetchall()
+            if not chunks:
+                logger.info("No chunks to embed")
+                return 0
+
+            # Generate embeddings in batches
+            batch_size = 32
+            count = 0
+            for i in range(0, len(chunks), batch_size):
+                batch = chunks[i : i + batch_size]
+                texts = [c[1] for c in batch]
+                embeddings = embedder.encode_batch(texts)
+
+                for (chunk_id, _), emb in zip(batch, embeddings, strict=True):
+                    blob = embedder.to_blob(emb)
+                    conn.execute(
+                        """
+                        INSERT INTO chunk_embeddings
+                        (chunk_id, embedding, dimension, model, created_at)
+                        VALUES (?, ?, ?, ?, ?)
+                        """,
+                        (chunk_id, blob, embedder.dimension, embedder.model_name, now),
+                    )
+                    count += 1
+
+                if count % 100 == 0:
+                    logger.debug("Embedded %d/%d chunks", count, len(chunks))
+
+        # Store metadata
+        self.set_embedding_metadata(embedder.model_name, embedder.dimension)
+        logger.info("Embedded %d chunks", count)
+        return count
+
+    def _validate_embedder(self, embedder: EmbeddingModelProtocol) -> None:
+        """Validate embedder matches stored metadata."""
+        if not self.has_embeddings():
+            raise SearchIndexError(
+                "No embeddings found. Run 'erdos search --build-embeddings' first."
+            )
+
+        stored_model, stored_dim = self.get_embedding_metadata()
+
+        if stored_model != embedder.model_name:
+            raise SearchIndexError(
+                f"Model mismatch: index has '{stored_model}', "
+                f"but embedder uses '{embedder.model_name}'. "
+                "Rebuild embeddings with 'erdos search --build-embeddings'."
+            )
+
+        if stored_dim != embedder.dimension:
+            raise SearchIndexError(
+                f"Embedding dimension mismatch: index has {stored_dim}, "
+                f"but embedder produces {embedder.dimension}. "
+                "Rebuild embeddings with 'erdos search --build-embeddings'."
+            )
+
+    def search_semantic(
+        self,
+        query: str,
+        embedder: EmbeddingModelProtocol,
+        *,
+        limit: int = 10,
+        problem_id: int | None = None,
+    ) -> list[SemanticSearchResult]:
+        """Search using semantic similarity.
+
+        Args:
+            query: Search query text.
+            embedder: Embedding model to use.
+            limit: Maximum results to return.
+            problem_id: Optionally filter to specific problem.
+
+        Returns:
+            List of SemanticSearchResult sorted by semantic similarity.
+
+        Raises:
+            SearchIndexError: If embeddings haven't been built or model mismatch.
+        """
+        # Import cosine_similarity lazily to avoid import errors when
+        # embeddings deps are not installed
+        from erdos.core.embeddings import cosine_similarity  # noqa: PLC0415
+
+        self._validate_embedder(embedder)
+
+        # Encode query
+        query_embedding = embedder.encode(query)
+
+        # Get all embeddings and compute similarity
+        results: list[tuple[float, SemanticSearchResult]] = []
+        with self._connect() as conn:
+            sql = """
+                SELECT
+                    e.chunk_id,
+                    e.embedding,
+                    c.text,
+                    c.source_type,
+                    c.problem_id,
+                    c.reference_doi
+                FROM chunk_embeddings e
+                JOIN chunks c ON e.chunk_id = c.id
+            """
+            params: list[int] = []
+
+            if problem_id is not None:
+                sql += " WHERE c.problem_id = ?"
+                params.append(problem_id)
+
+            for row in conn.execute(sql, params):
+                chunk_emb = embedder.from_blob(row["embedding"])
+                raw_similarity = cosine_similarity(query_embedding, chunk_emb)
+                # Normalize to 0..1 range
+                semantic_score = (raw_similarity + 1) / 2
+
+                # Create snippet (first 150 chars)
+                text = row["text"]
+                snippet = text[:150] + "..." if len(text) > 150 else text
+
+                result = SemanticSearchResult(
+                    chunk_id=row["chunk_id"],
+                    text=text,
+                    snippet=snippet,
+                    source_type=ChunkSource(row["source_type"]),
+                    problem_id=row["problem_id"],
+                    reference_doi=row["reference_doi"],
+                    semantic_score=semantic_score,
+                    hybrid_score=semantic_score,  # For pure semantic, hybrid = semantic
+                )
+                results.append((semantic_score, result))
+
+        # Sort by semantic score descending
+        results.sort(key=lambda x: x[0], reverse=True)
+        return [r for _, r in results[:limit]]
+
+    def search_hybrid(
+        self,
+        query: str,
+        embedder: EmbeddingModelProtocol,
+        *,
+        limit: int = 10,
+        alpha: float = 0.5,
+        problem_id: int | None = None,
+    ) -> list[SemanticSearchResult]:
+        """Search using hybrid BM25 + semantic scoring.
+
+        Args:
+            query: Search query text.
+            embedder: Embedding model to use.
+            limit: Maximum results to return.
+            alpha: Weight for semantic vs BM25 (0=BM25 only, 1=semantic only).
+            problem_id: Optionally filter to specific problem.
+
+        Returns:
+            List of SemanticSearchResult sorted by hybrid score.
+
+        Raises:
+            SearchIndexError: If embeddings haven't been built or model mismatch.
+        """
+        from erdos.core.embeddings import cosine_similarity  # noqa: PLC0415
+
+        self._validate_embedder(embedder)
+
+        # Get BM25 candidates (expanded set for re-ranking)
+        bm25_results = self.search(query, limit=limit * 2, problem_id=problem_id)
+
+        if not bm25_results:
+            return []
+
+        # Normalize BM25 scores to 0..1
+        max_bm25 = max(r.score for r in bm25_results)
+        min_bm25 = min(r.score for r in bm25_results)
+        bm25_range = max_bm25 - min_bm25
+        if bm25_range == 0:
+            bm25_range = 1.0  # Avoid division by zero
+
+        # Encode query
+        query_embedding = embedder.encode(query)
+
+        # Compute hybrid scores
+        results: list[tuple[float, SemanticSearchResult]] = []
+        with self._connect() as conn:
+            for bm25_result in bm25_results:
+                # Get embedding for this chunk
+                row = conn.execute(
+                    "SELECT embedding FROM chunk_embeddings WHERE chunk_id = ?",
+                    (bm25_result.chunk_id,),
+                ).fetchone()
+
+                if row is None:
+                    # No embedding for this chunk, skip
+                    continue
+
+                chunk_emb = embedder.from_blob(row["embedding"])
+                raw_similarity = cosine_similarity(query_embedding, chunk_emb)
+                semantic_score = (raw_similarity + 1) / 2
+
+                # Normalize BM25 score
+                bm25_normalized = (bm25_result.score - min_bm25) / bm25_range
+
+                # Compute hybrid score
+                hybrid_score = (1 - alpha) * bm25_normalized + alpha * semantic_score
+
+                result = SemanticSearchResult(
+                    chunk_id=bm25_result.chunk_id,
+                    text=bm25_result.text,
+                    snippet=bm25_result.snippet,
+                    source_type=bm25_result.source_type,
+                    problem_id=bm25_result.problem_id,
+                    reference_doi=bm25_result.reference_doi,
+                    bm25_score=bm25_result.score,
+                    semantic_score=semantic_score,
+                    hybrid_score=hybrid_score,
+                )
+                results.append((hybrid_score, result))
+
+        # Sort by hybrid score descending
+        results.sort(key=lambda x: x[0], reverse=True)
+        return [r for _, r in results[:limit]]
