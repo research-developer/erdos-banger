@@ -14,7 +14,9 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-*No active debt.*
+| ID | Title | Priority | Status | Deck |
+|----|-------|----------|--------|------|
+| DEBT-036 | Marker MPS not configured | P3 | Open | [debt-036-marker-mps-not-configured.md](debt-036-marker-mps-not-configured.md) |
 
 ## Archived Debt
 
@@ -58,7 +60,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-034 | Hardcoded MAX_SIZE constant | P3 | Fixed | 878aa7b |
 | DEBT-035 | type: ignore in all exit paths | P2 | Fixed | 86d3856 |
 
-**Next Debt ID:** DEBT-036
+**Next Debt ID:** DEBT-037
 
 ### Archived Debt Decks
 
