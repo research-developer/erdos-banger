@@ -6,11 +6,16 @@ REST API.
 API Reference: https://www.crossref.org/documentation/retrieve-metadata/rest-api/
 """
 
+import logging
+import time
 from urllib.parse import quote
 
 import requests
 
 from erdos.core.models import ReferenceRecord
+
+
+logger = logging.getLogger(__name__)
 
 
 def parse_crossref_work(payload: dict[str, object], *, doi: str) -> ReferenceRecord:
@@ -106,7 +111,17 @@ def fetch_crossref_work(
         "User-Agent": f"erdos-banger/1.0 (https://github.com/The-Obstacle-Is-The-Way/erdos-banger; mailto:{mailto})"
     }
 
+    logger.debug("Fetching Crossref metadata for DOI: %s", doi)
+    start_time = time.monotonic()
+
     response = requests.get(url, params=params, headers=headers, timeout=timeout)
+    elapsed = time.monotonic() - start_time
+    logger.debug(
+        "Crossref response: %d bytes in %.2fs (status %d)",
+        len(response.content),
+        elapsed,
+        response.status_code,
+    )
     response.raise_for_status()
 
     return response.json()  # type: ignore[no-any-return]

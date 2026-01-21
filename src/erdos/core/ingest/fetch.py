@@ -67,13 +67,23 @@ def download_and_extract_arxiv(
 
         # Download source
         source_url = f"https://arxiv.org/e-print/{arxiv_id}"
+        logger.debug("Downloading arXiv source: %s", source_url)
+        start_time = time.monotonic()
         response = requests.get(source_url, timeout=timeout)
+        elapsed = time.monotonic() - start_time
+        logger.debug(
+            "arXiv download: %d bytes in %.2fs (status %d)",
+            len(response.content),
+            elapsed,
+            response.status_code,
+        )
         response.raise_for_status()
         tarball_bytes = response.content
 
         # Write cache
         arxiv_cache_path.parent.mkdir(parents=True, exist_ok=True)
         arxiv_cache_path.write_bytes(tarball_bytes)
+        logger.debug("Cached arXiv source: %s", arxiv_cache_path)
 
         # Compute hash (SHA256 for cache integrity, not crypto)
         cache_hash = hashlib.sha256(tarball_bytes).hexdigest()
@@ -87,10 +97,15 @@ def download_and_extract_arxiv(
             arxiv_extract_path.write_text(text, encoding="utf-8")
             extract_path = get_arxiv_extract_path(arxiv_id)
             extracted = True
+            logger.debug(
+                "Extracted arXiv text: %s (%d chars)", arxiv_extract_path, len(text)
+            )
         except (OSError, ValueError, tarfile.TarError) as e:
+            logger.warning("arXiv extraction failed for %s: %s", arxiv_id, e)
             error = f"Extraction failed: {e}"
             extracted = False
     except (OSError, requests.RequestException) as e:
+        logger.warning("arXiv download failed for %s: %s", arxiv_id, e)
         error = f"Download failed: {e}"
 
     return ArxivDownloadResult(

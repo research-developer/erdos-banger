@@ -26,7 +26,7 @@
 
 ## Active Queue
 
-- [ ] **DEBT-029**: Logging coverage gaps
+- [x] **DEBT-029**: Logging coverage gaps
   - Deck: `docs/debt/debt-029-no-logging-usage.md`
   - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
 
@@ -159,6 +159,20 @@
 - `docs/debt/README.md` - Moved DEBT-028 to Archived
 
 **Policy decision:** Manifests remain tracked in git (Option B from debt doc). Writes are now idempotent - only update `updated_at` and write file when content actually changes.
+
+### 2026-01-20: DEBT-029 Logging coverage gaps fixed
+
+**Files modified:**
+- `src/erdos/core/crossref_client.py` - Added logger, DEBUG logs for request timing/response size
+- `src/erdos/core/arxiv_client.py` - Added DEBUG logs for request timing/response size
+- `src/erdos/core/index_builder.py` - Added logger, INFO logs for build start/finish, DEBUG progress
+- `src/erdos/core/search_index.py` - Added logger, DEBUG for init, INFO for clear operations
+- `src/erdos/core/ingest/fetch.py` - Enhanced DEBUG logs for arXiv downloads/extracts, WARNING on failures
+- `src/erdos/core/ask/llm.py` - Added DEBUG logs for LLM execution timing and response size
+- `docs/debt/debt-029-no-logging-usage.md` - Status updated to Fixed
+- `docs/debt/README.md` - Moved DEBT-029 to Archived
+
+**Verified:** `--log-level DEBUG` now produces useful timing/progress output for API calls and batch operations.
 
 (entries added by Ralph loop as tasks complete)
 

@@ -3,6 +3,7 @@
 import logging
 import shlex
 import subprocess
+import time
 
 from erdos.core.constants import LLM_COMMAND_TIMEOUT
 from erdos.core.exit_codes import ExitCode
@@ -33,6 +34,10 @@ def execute_llm(
     # Parse command with shlex.split for shell-free execution
     cmd_args = shlex.split(llm_command)
 
+    logger.debug("Executing LLM command: %s", llm_command)
+    logger.debug("LLM prompt length: %d chars", len(prompt))
+    start_time = time.monotonic()
+
     # Execute with shell=False for security
     result = subprocess.run(  # noqa: S603
         cmd_args,
@@ -41,6 +46,14 @@ def execute_llm(
         text=True,
         check=False,  # We handle exit codes manually
         timeout=timeout,
+    )
+
+    elapsed = time.monotonic() - start_time
+    logger.debug(
+        "LLM response: %d chars in %.2fs (exit code %d)",
+        len(result.stdout),
+        elapsed,
+        result.returncode,
     )
 
     return result.stdout, result.returncode

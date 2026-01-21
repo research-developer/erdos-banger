@@ -10,6 +10,7 @@ import io
 import logging
 import re
 import tarfile
+import time
 from datetime import datetime
 
 import defusedxml.ElementTree as ET
@@ -126,7 +127,17 @@ def fetch_arxiv_atom(arxiv_id: str, *, timeout: float = 30.0) -> str:
     params = {"id_list": arxiv_id_clean}
     headers = {"User-Agent": ARXIV_USER_AGENT}
 
+    logger.debug("Fetching arXiv metadata for ID: %s", arxiv_id)
+    start_time = time.monotonic()
+
     response = requests.get(url, params=params, headers=headers, timeout=timeout)
+    elapsed = time.monotonic() - start_time
+    logger.debug(
+        "arXiv response: %d bytes in %.2fs (status %d)",
+        len(response.content),
+        elapsed,
+        response.status_code,
+    )
     response.raise_for_status()
 
     return response.text

@@ -1,6 +1,7 @@
 """SQLite FTS5 search index for erdos-banger."""
 
 import json
+import logging
 import os
 import sqlite3
 from collections.abc import Iterator
@@ -11,6 +12,9 @@ from pathlib import Path
 
 from erdos.core.constants import PREVIEW_LENGTH
 from erdos.core.models import ChunkSource, ProblemRecord, TextChunk
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -54,6 +58,7 @@ class SearchIndex:
         self._db_path = db_path
         # Ensure parent directory exists
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
+        logger.debug("Initializing search index at %s", db_path)
         self._ensure_schema()
 
     @classmethod
@@ -328,11 +333,13 @@ class SearchIndex:
 
     def clear(self) -> None:
         """Delete all indexed content."""
+        logger.info("Clearing search index")
         with self._connect() as conn:
             conn.execute("DELETE FROM chunks")
             conn.execute("DELETE FROM problems")
             # Rebuild FTS index
             conn.execute("INSERT INTO chunks_fts(chunks_fts) VALUES('rebuild')")
+        logger.debug("Search index cleared")
 
     def rebuild_fts(self) -> None:
         """Rebuild the FTS index (use after direct SQL modifications)."""

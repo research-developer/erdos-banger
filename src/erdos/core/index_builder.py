@@ -1,6 +1,11 @@
 """Build search index from problem data."""
 
+import logging
+
 from erdos.core.ports import ProblemRepository, SearchIndexProtocol
+
+
+logger = logging.getLogger(__name__)
 
 
 def build_index(
@@ -20,13 +25,24 @@ def build_index(
     Returns:
         Statistics about the indexing operation
     """
+    logger.info("Starting index build (rebuild=%s)", rebuild)
+
     if rebuild:
+        logger.info("Clearing existing index")
         index.clear()
 
     problems_indexed = 0
     for problem in loader.iter_problems():
         index.index_problem(problem)
         problems_indexed += 1
+        if problems_indexed % 100 == 0:
+            logger.debug("Indexed %d problems", problems_indexed)
+
+    logger.info(
+        "Index build complete: %d problems indexed, %d total chunks",
+        problems_indexed,
+        index.chunk_count(),
+    )
 
     return {
         "problems_indexed": problems_indexed,

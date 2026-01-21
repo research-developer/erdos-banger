@@ -16,7 +16,6 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| DEBT-029 | Logging coverage gaps | P2 | Open |
 | DEBT-030 | Redundant dual --json flag | P3 | Open |
 | DEBT-031 | Rate limiting constant unused | P3 | Open |
 | DEBT-032 | HTTP responses not closed properly | P2 | Open |
@@ -58,6 +57,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-026 | Long functions remain (≥ 80 LOC) | P2 | Fixed | c31d484 |
 | DEBT-027 | Broad `except Exception` catches | P3 | Fixed | e657d7c |
 | DEBT-028 | Ingest manifest churn (non-idempotent writes) | P2 | Fixed | 154866b |
+| DEBT-029 | Logging coverage gaps | P2 | Fixed | f806edc |
 
 **Next Debt ID:** DEBT-036
 
@@ -91,3 +91,4 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-026-long-functions-remain.md`
 - `docs/_archive/debt/debt-027-broad-exception-catches.md`
 - `docs/_archive/debt/debt-028-ingest-manifest-churn.md`
+- `docs/_archive/debt/debt-029-no-logging-usage.md`
