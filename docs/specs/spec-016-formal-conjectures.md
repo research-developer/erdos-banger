@@ -301,7 +301,7 @@ Add subcommands:
 Modify `formalize`:
 - Check upstream before generating skeleton
 
-### 5.3 Extend: `src/erdos/core/models.py`
+### 5.3 Extend: `src/erdos/core/models/`
 
 **Do not change** `ProblemRecord` for v1.4.
 

@@ -5,7 +5,7 @@
 **Status:** Ready (v2.0+)
 **Target:** v2.0+
 **Prerequisites (SSOT):**
-- Ingest command: `docs/specs/spec-010-ingest-command.md`
+- Ingest command: `docs/_archive/specs/spec-010-ingest-command.md`
 - Search index: `docs/_archive/specs/spec-006-search-index.md`
 
 **License Decision (2026-01-19):** GPL accepted for optional `[pdf]` extra.
@@ -270,14 +270,16 @@ Responsibilities:
 4. Handle math notation
 5. Abstract over converter differences
 
-### 5.2 Extend: `src/erdos/core/ingest.py`
+### 5.2 Extend: `src/erdos/core/ingest/fetch.py`
 
-Add PDF conversion step after download:
+**Context (SSOT):** In v1.1, ingestion orchestration lives in `src/erdos/core/ingest/service.py`, and per-reference fetching/download is implemented in `src/erdos/core/ingest/fetch.py`.
+
+Add PDF conversion as an additional “content acquisition” path in the reference fetch pipeline (after a PDF is downloaded and validated):
 
 ```python
-if reference.has_pdf and pdf_conversion_enabled:
+if reference_has_open_access_pdf and pdf_conversion_enabled:
     text = pdf_converter.convert(pdf_path, use_llm=use_llm)
-    create_extract(reference, text)
+    write_pdf_extract(reference_id, text)
 ```
 
 **Cache/extract layout (SSOT, v2.0):**

@@ -19,7 +19,7 @@ cat docs/bugs/README.md
 
 Then read the specific debt document for your current task.
 
-**Note:** `ralph.log` is intentionally tracked as a run journal. Do not delete or rewrite it, and never include secrets. Unless a task explicitly requires updating it, leave it unchanged.
+**Note:** The loop writes per-iteration logs under `logs/ralph/` (gitignored). Never paste secrets into tracked files; `.env` is gitignored by design.
 
 ---
 

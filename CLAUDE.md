@@ -95,9 +95,8 @@ src/erdos/
 
 ## Ralph Wiggum Logs
 
-- `ralph.log` is intentionally tracked in git as a simple marker file for the Ralph Wiggum loop.
-- It may be reset between runs (do not treat it as historical SSOT).
-- Never include API keys or other secrets in `ralph.log` (or any tracked file).
+- Per-iteration logs are written under `logs/ralph/` (gitignored; safe to delete between runs).
+- Never include API keys or other secrets in tracked files (docs, specs, prompts, etc.). `.env` is gitignored by design.
 
 ## Test Markers
 

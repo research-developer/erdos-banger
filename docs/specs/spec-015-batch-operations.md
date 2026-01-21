@@ -5,7 +5,7 @@
 **Status:** Deferred
 **Target:** v1.3
 **Prerequisites (SSOT):**
-- Ingest command: `docs/specs/spec-010-ingest-command.md`
+- Ingest command: `docs/_archive/specs/spec-010-ingest-command.md`
 - Lean integration: `docs/_archive/specs/spec-007-lean-integration.md`
 - Logging: `docs/specs/spec-013-logging-evaluation.md`
 

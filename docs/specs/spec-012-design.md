@@ -479,7 +479,7 @@ Before implementing SPEC-012, verify:
 - [ ] `src/erdos/core/loop_config.py` created with `LoopConfig`
 - [ ] `src/erdos/core/patch_validator.py` created with validation pipeline
 - [ ] `src/erdos/core/loop_verifier.py` created with sorry tracking
-- [ ] Prompt template stored in `src/erdos/templates/loop_prompt.jinja2`
+- [ ] Prompt template stored in `src/erdos/templates/loop_prompt.j2`
 - [ ] Unit tests for patch validation (100% coverage on rejection cases)
 - [ ] Integration test with mock LLM returning valid/invalid patches
 

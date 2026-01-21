@@ -7,7 +7,7 @@
 - Loop design decisions (SSOT): `docs/specs/spec-012-design.md`
 - Lean integration: `docs/_archive/specs/spec-007-lean-integration.md`
 - Search index: `docs/_archive/specs/spec-006-search-index.md`
-- Ask command (prompt + optional LLM): `docs/specs/spec-011-ask-command.md`
+- Ask command (prompt + optional LLM): `docs/_archive/specs/spec-011-ask-command.md`
 
 Note: Completed prerequisites are archived under `docs/_archive/specs/`, while pending specs live under `docs/specs/`.
 
@@ -210,7 +210,7 @@ Responsibilities:
 - `src/erdos/core/loop_config.py` (`LoopConfig`)
 - `src/erdos/core/patch_validator.py` (SEARCH/REPLACE parsing + validation)
 - `src/erdos/core/loop_verifier.py` (sorry/admit counting + regression checks)
-- `src/erdos/templates/loop_prompt.jinja2` (deterministic prompt template)
+- `src/erdos/templates/loop_prompt.j2` (deterministic prompt template)
 
 ### 5.3 `src/erdos/commands/loop.py`
 
