@@ -3,7 +3,7 @@
 > Integrate Harmonic's Aristotle as an optional Lean theorem-proving backend for `erdos-banger`.
 
 **Status:** Complete
-**Implemented In:** (commit hash pending)
+**Implemented In:** 8874c75
 **Prerequisites (SSOT):**
 - Lean integration: `docs/_archive/specs/spec-007-lean-integration.md`
 - Loop design decisions: `docs/specs/spec-012-design.md`
