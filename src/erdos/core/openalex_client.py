@@ -31,6 +31,7 @@ class OpenAlexConfig:
     """OpenAlex client configuration."""
 
     email: str | None = None
+    api_key: str | None = None
     timeout: float = 30.0
     max_retries: int = 3
 
@@ -38,10 +39,12 @@ class OpenAlexConfig:
     def from_env(cls) -> OpenAlexConfig:
         """Create config from environment variables.
 
-        Checks ERDOS_MAILTO first, then OPENALEX_EMAIL.
+        Checks ERDOS_MAILTO first, then OPENALEX_EMAIL for email.
+        Checks OPENALEX_API_KEY for API key authentication.
         """
         return cls(
             email=os.getenv("ERDOS_MAILTO") or os.getenv("OPENALEX_EMAIL"),
+            api_key=os.getenv("OPENALEX_API_KEY"),
         )
 
 
@@ -262,10 +265,12 @@ class OpenAlexClient:
         self.config = config or OpenAlexConfig.from_env()
 
     def _params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request parameters with optional mailto."""
+        """Build request parameters with optional mailto and api_key."""
         params = dict(kwargs)
         if self.config.email:
             params["mailto"] = self.config.email
+        if self.config.api_key:
+            params["api_key"] = self.config.api_key
         return params
 
     def _fetch(self, url: str, params: dict[str, Any] | None = None) -> dict[str, Any]:

@@ -27,11 +27,20 @@ The master draft describes many capabilities. Here's what we're **actually build
 | Component | Scope | Notes |
 |-----------|-------|-------|
 | `erdos ingest` | arXiv source + Crossref metadata | arXiv source tarball + extract; Crossref metadata for DOI; no PDF conversion |
-| Reference enrichment | Crossref + arXiv API | Skip OpenAlex, Semantic Scholar, CORE for now |
+| Reference enrichment | Crossref + arXiv API | Crossref for DOI metadata, arXiv for source content |
 | Full-text indexing | Deferred | v1 index/search uses problem statements/notes only; ingested extracts are stored for a future indexing spec |
 | `erdos ask` | Basic RAG | Retrieval + LLM prompt, no reranking |
 
-### V1.2+ (Deferred)
+### V1.2+ (OpenAlex Integration - Current)
+
+| Component | Scope | Notes |
+|-----------|-------|-------|
+| OpenAlex as primary | Metadata for all DOI/arXiv lookups | Replaces Crossref as primary; includes citations/topics |
+| Crossref as fallback | Edge cases only | When OpenAlex returns nothing |
+| arXiv for content | Source tarballs only | No longer used for metadata (OpenAlex has it) |
+| `MetadataProvider` protocol | Abstraction layer | Enables pluggable sources (see DEBT-038) |
+
+### V1.3+ (Deferred)
 
 | Component | Why Deferred |
 |-----------|--------------|
@@ -41,7 +50,9 @@ The master draft describes many capabilities. Here's what we're **actually build
 | `erdos loop` automation | Need manual workflow validated first |
 | Postgres/pgvector | SQLite handles our scale |
 | Qdrant | Same as above |
-| Multiple API fallbacks | One source working > many sources half-working |
+| Semantic Scholar integration | "Good redundancy" - adds citation context not in OpenAlex |
+| Exa Research API | Agentic literature synthesis - future enhancement |
+| zbMATH integration | Math-specific metadata - low priority |
 
 **Decision:** We ship when `erdos show 6 && erdos lean init && erdos lean formalize 6 && erdos lean check` works end-to-end. That's the real v1.0 milestone.
 
@@ -125,11 +136,89 @@ If a paper isn't on arXiv and isn't open access, we record metadata and move on.
 
 **Install path:** `uv sync --extra pdf` will install Marker when Spec 019 is implemented.
 
-See `docs/specs/spec-019-pdf-conversion.md` for full details.
+See `docs/_archive/specs/spec-019-pdf-conversion.md` for full details.
 
 ---
 
-## 5) Lean Formalization Strategy (Expanded)
+## 5) API Orchestration Strategy (Rob C. Martin Principles)
+
+### Single Responsibility Principle (SRP)
+
+Each data source has ONE job:
+
+| API | Responsibility | NOT Responsible For |
+|-----|----------------|---------------------|
+| **OpenAlex** | Metadata (title, authors, abstract, citations, topics) | Content extraction |
+| **arXiv** | Source content (LaTeX/TeX tarballs, HTML) | Metadata (OpenAlex has it) |
+| **Crossref** | DOI fallback (edge cases only) | Primary lookups |
+
+### Dependency Inversion Principle (DIP)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    High-Level Policy                         │
+│                  (IngestService, AskService)                 │
+└───────────────────────────┬─────────────────────────────────┘
+                            │ depends on abstraction
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│               MetadataProvider (Protocol/Port)              │
+│  get_by_doi(doi) -> ReferenceRecord                         │
+│  get_by_arxiv(arxiv_id) -> ReferenceRecord                  │
+│  search(query) -> List[ReferenceRecord]                     │
+└───────────────────────────┬─────────────────────────────────┘
+                            │ implemented by
+        ┌───────────────────┼───────────────────┐
+        ▼                   ▼                   ▼
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│ OpenAlexProv │   │ CrossrefProv │   │  FutureProv  │
+│  (Primary)   │   │  (Fallback)  │   │ (Pluggable)  │
+└──────────────┘   └──────────────┘   └──────────────┘
+```
+
+### Open/Closed Principle (OCP)
+
+Adding new sources (Semantic Scholar, Exa, zbMATH) = new provider implementation.
+**No changes to existing code.**
+
+### Why Crossref is Demoted to Fallback
+
+1. **OpenAlex already includes Crossref data** - calling both is redundant
+2. **OpenAlex has built-in deduplication** - matches preprint ↔ published version
+3. **OpenAlex adds value** - citations, topics, institutions, concepts
+4. **Better rate limits** - 100k/day vs Crossref's polite pool
+
+### Deduplication Strategy
+
+**We do NOT need our own deduplication logic.**
+
+OpenAlex handles it internally via fingerprinting:
+- arXiv preprint ↔ journal version matching
+- Multiple DOIs for same work
+- Cross-repository deduplication
+
+### "Good Redundancy" vs "Bad Redundancy"
+
+**Bad redundancy (calling multiple APIs for the same data):**
+- ❌ Crossref for DOI metadata + OpenAlex for DOI metadata
+
+**Good redundancy (calling APIs for DIFFERENT data):**
+- ✅ Semantic Scholar: Citation context (who cites what and WHY)
+- ✅ Exa Research: Natural language synthesis (agentic queries)
+- ✅ zbMATH: Math-specific metadata not in general databases
+
+### Migration Path
+
+| Version | State |
+|---------|-------|
+| v1.1 | Crossref + arXiv (current) |
+| v1.2 | OpenAlex primary + arXiv content + Crossref fallback |
+| v1.3+ | Add "good redundancy" sources (Semantic Scholar, etc.) |
+| v2.0 | Consider removing Crossref entirely (OpenAlex includes it) |
+
+---
+
+## 6) Lean Formalization Strategy (Expanded)
 
 The master draft is light on formalization details. This is the hardest part.
 
@@ -171,7 +260,7 @@ Only after templates work:
 
 ---
 
-## 6) GitHub Issues Breakdown
+## 7) GitHub Issues Breakdown
 
 The master draft's 15 issues are too coarse. Here's a finer breakdown:
 
@@ -218,7 +307,7 @@ The master draft's 15 issues are too coarse. Here's a finer breakdown:
 
 ---
 
-## 7) What Makes This Agent-Ready
+## 8) What Makes This Agent-Ready
 
 Before handing to a coding agent, ensure:
 
@@ -288,7 +377,7 @@ At minimum, v1 depends on:
 
 ---
 
-## 8) Timeline Implications
+## 9) Timeline Implications
 
 Given scope reduction:
 
@@ -306,7 +395,7 @@ Given scope reduction:
 
 ---
 
-## 9) Open Questions to Resolve
+## 10) Open Questions to Resolve
 
 Before coding starts:
 
@@ -318,7 +407,7 @@ Before coding starts:
 
 ---
 
-## 10) Summary: What Changed
+## 11) Summary: What Changed
 
 | Master Draft Says | Qualification Says |
 |-------------------|-------------------|
@@ -329,5 +418,8 @@ Before coding starts:
 | 15 GitHub issues | 23+ finer-grained issues |
 | MCP optional but described in detail | MCP cut from v1 entirely |
 | `erdos loop` as v1 feature | Deferred to v1.2+ after manual validation |
+| Crossref + arXiv as primary sources | OpenAlex as primary (v1.2+), Crossref as fallback |
+| No API orchestration strategy | MetadataProvider protocol for pluggable sources |
+| No deduplication discussion | OpenAlex handles deduplication internally |
 
 **The master draft is the vision. This document is the machete that clears the path to v1.**

@@ -67,15 +67,22 @@ params = {"mailto": "erdos-banger@example.com"}
 ```bash
 # .env file - OpenAlex configuration
 
-# Optional: Email for polite pool (faster responses)
-# No API key needed!
+# Email for polite pool (faster responses)
 ERDOS_MAILTO=your-email@example.com
 
+# API key for authenticated access (optional but recommended)
+# Get your key at: https://openalex.org/users/me
+OPENALEX_API_KEY=your-api-key-here
+
 # Optional: Use PyAlex library settings
-OPENALEX_EMAIL=your-email@example.com
+# OPENALEX_EMAIL=your-email@example.com
 ```
 
-**Note:** OpenAlex is completely free. No API key. No registration. Just be polite (add email).
+**Authentication options:**
+1. **API Key** (recommended) - Pass via `?api_key=<key>` query parameter
+2. **Email only** - Uses "polite pool" for priority access
+
+**Note:** OpenAlex is completely free. API key registration is optional but gives better rate limits.
 
 ---
 

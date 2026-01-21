@@ -18,6 +18,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 |----|-------|----------|--------|------|
 | DEBT-036 | Marker device selection not exposed | P3 | Open | [debt-036-marker-mps-not-configured.md](debt-036-marker-mps-not-configured.md) |
 | DEBT-037 | Placeholder semantic search tests | P2 | Open | [debt-037-semantic-search-placeholder-tests.md](debt-037-semantic-search-placeholder-tests.md) |
+| DEBT-038 | MetadataProvider abstraction missing | P2 | Open | [debt-038-metadata-provider-abstraction.md](debt-038-metadata-provider-abstraction.md) |
 
 ## Archived Debt
 
@@ -61,7 +62,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-034 | Hardcoded MAX_SIZE constant | P3 | Fixed | 878aa7b |
 | DEBT-035 | type: ignore in all exit paths | P2 | Fixed | 86d3856 |
 
-**Next Debt ID:** DEBT-038
+**Next Debt ID:** DEBT-039
 
 ### Archived Debt Decks
 

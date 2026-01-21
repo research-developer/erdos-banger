@@ -254,7 +254,62 @@ This suggests a multi-model approach may be optimal.
 
 ---
 
-## Research APIs
+## Research APIs: Good Redundancy Strategy
+
+### Principles: Good vs Bad Redundancy
+
+**Bad redundancy (avoid):**
+- Calling multiple APIs for the SAME data
+- Example: Crossref + OpenAlex for DOI metadata → redundant, OpenAlex includes Crossref
+
+**Good redundancy (pursue):**
+- Calling APIs for DIFFERENT, complementary data
+- Each source adds NEW information not available elsewhere
+
+### API Orchestration Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    erdos ingest <id>                         │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│               MetadataProvider (Protocol/Port)              │
+│  get_by_doi(doi) -> ReferenceRecord                         │
+│  get_by_arxiv(arxiv_id) -> ReferenceRecord                  │
+│  search(query) -> List[ReferenceRecord]                     │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+        ┌───────────────────┼───────────────────┐
+        │                   │                   │
+        ▼                   ▼                   ▼
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│  OpenAlex    │   │   arXiv      │   │  Crossref    │
+│  (PRIMARY)   │   │  (SOURCE)    │   │  (FALLBACK)  │
+│              │   │              │   │              │
+│ • metadata   │   │ • LaTeX/TeX  │   │ • If OA fails│
+│ • citations  │   │ • HTML       │   │ • Direct DOI │
+│ • topics     │   │ • Abstract   │   │   lookup     │
+│ • deduped    │   │              │   │              │
+└──────────────┘   └──────────────┘   └──────────────┘
+        │
+        │ Future: "Good Redundancy" Sources
+        │ (each adds NEW information)
+        │
+        ├──► Semantic Scholar: Citation context (who cites what and WHY)
+        ├──► Exa Research: Natural language synthesis, agentic queries
+        └──► zbMATH Open: Math-specific metadata not in general databases
+```
+
+### Good Redundancy Sources (Future v1.3+)
+
+| Source | Unique Value | Not Available Elsewhere |
+|--------|--------------|------------------------|
+| **Semantic Scholar** | Citation context extraction | "This paper cites X to refute claim Y" |
+| **Exa Research** | Agentic research synthesis | Natural language queries with structured output |
+| **zbMATH Open** | Math-specific classification | MSC codes, math reviews, equation search |
+| **CORE** | Institutional repositories | Grey literature, theses, working papers |
 
 ### Exa Research API
 
@@ -298,14 +353,51 @@ response = exa.research(
 **Use OpenAlex for:** Bulk ingestion, citation graphs, author disambiguation
 **Use Exa for:** Targeted research queries, synthesis, structured extraction
 
-### Semantic Scholar API
+### Semantic Scholar API (Good Redundancy)
 
 [Semantic Scholar](https://www.semanticscholar.org/product/api) offers:
-- Citation context extraction
+- **Citation context extraction** - WHY a paper cites another (unique value)
 - Paper recommendations
 - Author impact metrics
 
-**Complementary to OpenAlex** - use both for comprehensive coverage.
+**Unique value not in OpenAlex:**
+```python
+# Semantic Scholar provides citation intent
+{
+    "citingPaper": {"title": "New Approaches to Sum-Free Sets"},
+    "citedPaper": {"title": "Erdős 1965 Conjecture"},
+    "intents": ["background", "methodology"],
+    "contexts": [
+        "Building on the foundational work of [Erdős 1965], we propose..."
+    ]
+}
+```
+
+**Use case:** Finding which papers BUILD ON vs REFUTE an Erdős-related result.
+
+### zbMATH Open API (Good Redundancy)
+
+[zbMATH Open](https://zbmath.org/) is the Zentralblatt MATH database - the gold standard for pure mathematics:
+
+- **MSC codes** (Mathematics Subject Classification) - precise topic hierarchy
+- **Math reviews** - expert summaries not available elsewhere
+- **Equation search** - find papers by mathematical formula
+- **100+ years of coverage** - historical math literature
+
+**API:** `https://api.zbmath.org/`
+
+**Unique value not in OpenAlex:**
+```python
+# zbMATH provides math-specific classification
+{
+    "de": "1234567",  # zbMATH identifier
+    "msc": ["11B05", "05D10"],  # MSC codes
+    "review": "The author proves a variant of Szemerédi's theorem...",
+    "keywords": ["arithmetic progressions", "density", "combinatorics"]
+}
+```
+
+**Use case:** Finding ALL papers in a specific mathematical subfield (e.g., "additive combinatorics" = MSC 11B30).
 
 ### References
 

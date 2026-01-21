@@ -1,6 +1,6 @@
 # OpenAlex (Vendor Notes)
 
-OpenAlex is an open catalog of scholarly metadata. `erdos-banger` uses it as a **metadata enrichment** source (titles/authors/venue/abstract, plus citations/concepts).
+OpenAlex is an open catalog of scholarly metadata. `erdos-banger` uses it as the **PRIMARY metadata source** (titles/authors/venue/abstract, plus citations/concepts).
 
 ## API Surface Used
 
@@ -13,12 +13,42 @@ Reference docs:
 - Filters for works: https://docs.openalex.org/api-entities/works/filter-works
 - Work object schema: https://docs.openalex.org/api-entities/works/work-object
 
-## Polite Pool (`mailto`)
+## Authentication
 
-OpenAlex recommends including a `mailto` query parameter with a valid email for better service and clearer attribution:
+### API Key (Recommended)
+
+OpenAlex provides optional API keys for authenticated access:
+- Get your key at: https://openalex.org/users/me (sign in required)
+- Pass via query parameter: `?api_key=<your-key>`
+
+**Configuration (`.env`):**
+```bash
+OPENALEX_API_KEY=your-api-key-here
+```
+
+**Benefits of API key:**
+- Higher rate limits
+- Priority access during high load
+- Better analytics/tracking on OpenAlex side
+
+### Polite Pool (`mailto`)
+
+OpenAlex also recommends including a `mailto` query parameter:
 - `GET /works?...&mailto=<you@example.com>`
 
+**Configuration (`.env`):**
+```bash
+ERDOS_MAILTO=your-email@example.com
+```
+
 Docs: https://docs.openalex.org/how-to-use-the-api/rate-limits-and-authentication
+
+## Status
+
+**Configured:** 2026-01-21
+- API key: ✅ Active (`OPENALEX_API_KEY` in `.env`)
+- Email: ✅ Active (`ERDOS_MAILTO` in `.env`)
+- Client: `src/erdos/core/openalex_client.py`
 
 ## arXiv IDs in OpenAlex
 
