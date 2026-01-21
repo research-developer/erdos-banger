@@ -73,6 +73,40 @@
   - Target: v1.2
   - Acceptance: All spec acceptance criteria met; `make ci` green.
 
+- [ ] **SPEC-012**: Loop Command
+  - Spec: `docs/specs/spec-012-loop-command.md`
+  - Design: `docs/specs/spec-012-design.md` (Approved)
+  - Target: v1.2
+  - Acceptance: All spec acceptance criteria met; `make ci` green.
+
+- [ ] **SPEC-016**: Formal Conjectures Integration
+  - Spec: `docs/specs/spec-016-formal-conjectures.md`
+  - Target: v1.4
+  - Acceptance: All spec acceptance criteria met; `make ci` green.
+
+- [ ] **SPEC-014**: Vector Embeddings
+  - Spec: `docs/specs/spec-014-vector-embeddings.md`
+  - Target: v1.3
+  - Acceptance: All spec acceptance criteria met; `make ci` green.
+  - Note: Requires `sentence-transformers` optional dep.
+
+- [ ] **SPEC-015**: Batch Operations
+  - Spec: `docs/specs/spec-015-batch-operations.md`
+  - Target: v1.3
+  - Acceptance: All spec acceptance criteria met; `make ci` green.
+
+- [ ] **SPEC-017**: MCP Server
+  - Spec: `docs/specs/spec-017-mcp-server.md`
+  - Target: v1.4
+  - Acceptance: All spec acceptance criteria met; `make ci` green.
+  - Note: Requires `mcp[cli]` optional dep.
+
+- [ ] **SPEC-019**: PDF Conversion
+  - Spec: `docs/specs/spec-019-pdf-conversion.md`
+  - Target: v2.0
+  - Acceptance: All spec acceptance criteria met; `make ci` green.
+  - Note: Requires `marker` external dep; most complex spec.
+
 ---
 
 ## Guidelines
@@ -133,10 +167,11 @@
 ## Completion Criteria
 
 The queue is complete when:
-1. All `[ ]` items in Active Queue are `[x]`
+1. All `[ ]` items in Active Queue AND Spec Queue are `[x]`
 2. `make ci` passes
 3. `make smoke` passes
 4. All debt documents updated with "Fixed" status and commit hashes
+5. All spec documents updated with "Complete" status and commit hashes
 
 The loop operator verifies completion via this file's state (no unchecked items), not by parsing model output.
 
