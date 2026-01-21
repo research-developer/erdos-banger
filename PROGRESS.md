@@ -50,8 +50,8 @@
   - Deck: `docs/_archive/debt/debt-034-hardcoded-max-size.md`
   - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
 
-- [ ] **DEBT-035**: `type: ignore` in exit paths
-  - Deck: `docs/debt/debt-035-type-ignore-exit-paths.md`
+- [x] **DEBT-035**: `type: ignore` in exit paths
+  - Deck: `docs/_archive/debt/debt-035-type-ignore-exit-paths.md`
   - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
 
 ---
@@ -244,6 +244,21 @@
 - `docs/debt/README.md` - Moved DEBT-034 to Archived
 
 **Note:** Pure DRY refactoring - no behavior change. The constant `MAX_TEX_FILE_SIZE` (2 MiB) was already defined in constants.py but not used in arxiv_client.py.
+
+### 2026-01-21: DEBT-035 type: ignore suppressions removed from exit paths
+
+**Files modified:**
+- `src/erdos/commands/app_context.py` - Changed return type from `tuple[AppContext | None, CLIOutput | None]` to `tuple[AppContext, None] | tuple[None, CLIOutput]` to express invariant that exactly one of context/error is non-None
+- `src/erdos/commands/show.py` - Refactored guard pattern: separate checks for `app_error is not None` and `app_ctx is None` to enable mypy type narrowing
+- `src/erdos/commands/ingest.py` - Same guard pattern refactor
+- `src/erdos/commands/ask.py` - Same guard pattern refactor
+- `src/erdos/commands/refs.py` - Same guard pattern refactor
+- `src/erdos/commands/lean.py` - Same guard pattern refactor
+- `src/erdos/commands/list_cmd.py` - Same guard pattern refactor
+- `docs/debt/debt-035-type-ignore-exit-paths.md` - Status updated to Fixed
+- `docs/debt/README.md` - Moved DEBT-035 to Archived
+
+**Solution:** Changed combined guard `if app_error is not None or app_ctx is None:` to two sequential checks. First check exits on error, second check (unreachable by invariant) allows mypy to narrow `app_ctx` to non-None.
 
 (entries added by Ralph loop as tasks complete)
 

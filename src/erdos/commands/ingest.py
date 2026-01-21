@@ -168,9 +168,11 @@ def ingest(
     )
     mailto_prepared, repo_root = _prepare_ingest_options(mailto)
     app_ctx, app_error = get_app_context(ctx, command="erdos ingest")
-    if app_error is not None or app_ctx is None:
-        exit_with_result(ctx, app_error)  # type: ignore[arg-type]
+    if app_error is not None:
+        exit_with_result(ctx, app_error)
         return
+    if app_ctx is None:
+        return  # Unreachable: get_app_context guarantees (ctx, None) or (None, error)
 
     result = _run_ingestion(options, repo_root, mailto_prepared, repo=app_ctx.problems)
 

@@ -20,11 +20,20 @@ def get_app_context(
     *,
     command: str,
     require_index: bool = False,
-) -> tuple[AppContext | None, CLIOutput | None]:
+) -> tuple[AppContext, None] | tuple[None, CLIOutput]:
     """Get (and cache) the AppContext on ctx.obj.
 
     Returns:
-        (context, error). If error is not None, context is None.
+        (context, None) on success.
+        (None, error) on failure.
+
+    Usage::
+
+        app_ctx, app_error = get_app_context(ctx, command="erdos show")
+        if app_error is not None:
+            exit_with_result(ctx, app_error)
+            return
+        # At this point, app_ctx is guaranteed to be non-None
     """
     ctx.ensure_object(dict)
     obj: dict[str, Any]

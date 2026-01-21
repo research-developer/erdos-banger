@@ -182,9 +182,11 @@ def ask(
         llm_cmd=llm_cmd if llm_cmd else None,
     )
     app_ctx, app_error = get_app_context(ctx, command="erdos ask", require_index=True)
-    if app_error is not None or app_ctx is None:
-        exit_with_result(ctx, app_error)  # type: ignore[arg-type]
+    if app_error is not None:
+        exit_with_result(ctx, app_error)
         return
+    if app_ctx is None:
+        return  # Unreachable: get_app_context guarantees (ctx, None) or (None, error)
 
     result = _execute_ask_query(
         options, repo=app_ctx.problems, index=app_ctx.ensure_index()

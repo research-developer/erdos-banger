@@ -277,9 +277,11 @@ def formalize(
     """
     with measure_time_ms() as duration:
         app_ctx, app_error = get_app_context(ctx, command="erdos lean formalize")
-        if app_error is not None or app_ctx is None:
-            exit_with_result(ctx, app_error)  # type: ignore[arg-type]
+        if app_error is not None:
+            exit_with_result(ctx, app_error)
             return
+        if app_ctx is None:
+            return  # Unreachable: get_app_context guarantees (ctx, None) or (None, error)
 
         path = project_path or Path("formal/lean")
         result = formalize_problem(problem_id, path, repo=app_ctx.problems, force=force)

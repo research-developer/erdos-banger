@@ -14,9 +14,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-| ID | Title | Priority | Status |
-|----|-------|----------|--------|
-| DEBT-035 | type: ignore in all exit paths | P2 | Open |
+*No active debt.*
 
 ## Archived Debt
 
@@ -58,6 +56,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-032 | HTTP responses not closed properly | P2 | Fixed | 5fd4a57 |
 | DEBT-033 | No retry logic for network failures | P2 | Fixed | 11a3519 |
 | DEBT-034 | Hardcoded MAX_SIZE constant | P3 | Fixed | 878aa7b |
+| DEBT-035 | type: ignore in all exit paths | P2 | Fixed | 86d3856 |
 
 **Next Debt ID:** DEBT-036
 
@@ -97,3 +96,4 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-032-http-response-not-closed.md`
 - `docs/_archive/debt/debt-033-no-retry-logic.md`
 - `docs/_archive/debt/debt-034-hardcoded-max-size.md`
+- `docs/_archive/debt/debt-035-type-ignore-exit-paths.md`
