@@ -379,7 +379,11 @@ def ingest_problem_references(
         # matches on-disk state (timestamps and all). The existing_manifest is
         # guaranteed non-None here since content_changed being False implies
         # existing_manifest exists (see content_changed condition above).
-        manifest = existing_manifest  # type: ignore[assignment]
+        if existing_manifest is None:
+            raise RuntimeError(
+                "Invariant violation: existing_manifest is None when content unchanged"
+            )
+        manifest = existing_manifest
 
     # Return result
     return _build_ingest_result(

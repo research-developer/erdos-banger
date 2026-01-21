@@ -71,9 +71,12 @@ def _parse_references(raw_refs: Any) -> list[ReferenceEntry]:
     for ref in raw_refs:
         if not isinstance(ref, dict):
             raise ProblemLoaderError("Each reference must be a mapping")
+        key = ref.get("key")
+        if not isinstance(key, str) or not key.strip():
+            raise ProblemLoaderError("Each reference must include a non-empty 'key'")
         references.append(
             ReferenceEntry(
-                key=str(ref.get("key", "unknown")),
+                key=key.strip(),
                 citation=ref.get("citation"),
                 doi=ref.get("doi"),
                 arxiv_id=ref.get("arxiv_id"),

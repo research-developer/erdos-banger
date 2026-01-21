@@ -69,6 +69,13 @@ class LeanRunner:
         self._project_path = project_path
         self._lakefile = project_path / "lakefile.lean"
         self._toolchain = project_path / "lean-toolchain"
+        self._cached_lean_version: str | None = None
+
+    def _get_lean_version(self) -> str:
+        """Return the Lean version, caching subprocess calls per runner instance."""
+        if self._cached_lean_version is None:
+            self._cached_lean_version = self.check_environment().lean_version
+        return self._cached_lean_version
 
     @property
     def project_path(self) -> Path:
@@ -238,13 +245,12 @@ class LeanRunner:
                 )
             ]
 
-        env = self.check_environment()
         return LeanCheckResult(
             file=str(relative_path),
             success=result.returncode == 0 and len(errors) == 0,
             errors=errors,
             warnings=warnings,
-            lean_version=env.lean_version,
+            lean_version=self._get_lean_version(),
             duration_ms=duration_ms,
         )
 
@@ -281,6 +287,10 @@ class LeanRunner:
 
         Returns:
             LeanCheckResult with success status and any errors
+
+        Raises:
+            FileNotFoundError: If the file doesn't exist
+            LeanRunnerError: If the file is outside project path or `lake` is not found
         """
         resolved = self._resolve_lean_path(file_path)
 

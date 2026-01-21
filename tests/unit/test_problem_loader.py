@@ -120,6 +120,55 @@ class TestProblemLoaderLoadAll:
         ):
             loader.load_all(use_cache=False)
 
+    def test_rejects_reference_entry_missing_key(self, tmp_path: Path) -> None:
+        """Loader rejects references entries missing required key."""
+        yaml_file = tmp_path / "problems.yaml"
+        yaml_file.write_text(
+            "\n".join(
+                [
+                    "- id: 1",
+                    "  title: Test",
+                    "  statement: X",
+                    "  status: open",
+                    "  references:",
+                    "    - citation: Example",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        loader = ProblemLoader(yaml_file)
+        with pytest.raises(
+            ProblemLoaderError, match=r"non-empty 'key'|include a non-empty 'key'"
+        ):
+            loader.load_all(use_cache=False)
+
+    def test_rejects_reference_entry_blank_key(self, tmp_path: Path) -> None:
+        """Loader rejects references entries with blank key."""
+        yaml_file = tmp_path / "problems.yaml"
+        yaml_file.write_text(
+            "\n".join(
+                [
+                    "- id: 1",
+                    "  title: Test",
+                    "  statement: X",
+                    "  status: open",
+                    "  references:",
+                    '    - key: "   "',
+                    "      citation: Example",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        loader = ProblemLoader(yaml_file)
+        with pytest.raises(
+            ProblemLoaderError, match=r"non-empty 'key'|include a non-empty 'key'"
+        ):
+            loader.load_all(use_cache=False)
+
 
 class TestProblemLoaderGetById:
     def test_returns_problem_when_found(self, sample_problems_yaml: Path) -> None:
