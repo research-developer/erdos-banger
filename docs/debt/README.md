@@ -57,7 +57,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-030 | Redundant dual --json flag | P3 | Fixed | ed2c2c8 |
 | DEBT-031 | Rate limiting constant unused | P3 | Fixed | c50766c |
 | DEBT-032 | HTTP responses not closed properly | P2 | Fixed | 5fd4a57 |
-| DEBT-033 | No retry logic for network failures | P2 | Fixed | (pending) |
+| DEBT-033 | No retry logic for network failures | P2 | Fixed | 11a3519 |
 
 **Next Debt ID:** DEBT-036
 

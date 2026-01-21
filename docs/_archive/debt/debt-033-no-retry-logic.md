@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-21
 **Status:** Fixed
-**Fixed In:** (commit pending)
+**Fixed In:** 11a3519
 **Priority:** P2 (Brittleness in batch operations)
 **Impact:** Single transient failures cause entire operations to fail
 
