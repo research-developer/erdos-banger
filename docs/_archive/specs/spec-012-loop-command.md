@@ -1,8 +1,9 @@
-# Spec 012: Loop Command (Deferred to v1.2+)
+# Spec 012: Loop Command
 
-> Defines `erdos loop` for an iterative “propose → apply → check” cycle to assist Lean formalization.
+> Defines `erdos loop` for an iterative "propose → apply → check" cycle to assist Lean formalization.
 
-**Status:** Deferred (v1.2+)
+**Status:** Complete
+**Implemented In:** b1f4bdbb
 **Prerequisites (SSOT):**
 - Loop design decisions (SSOT): `docs/specs/spec-012-design.md`
 - Lean integration: `docs/_archive/specs/spec-007-lean-integration.md`

@@ -2,7 +2,8 @@
 
 > Resolves all open design decisions for `erdos loop` before implementation.
 
-**Status:** Approved (SSOT for SPEC-012)
+**Status:** Complete (SSOT for SPEC-012)
+**Implemented In:** b1f4bdbb
 **Author:** Claude + Ray
 **Created:** 2026-01-18
 **Prerequisite for:** spec-012-loop-command.md

@@ -73,9 +73,9 @@
   - Target: v1.2
   - Acceptance: All spec acceptance criteria met; `make ci` green.
 
-- [ ] **SPEC-012**: Loop Command
-  - Spec: `docs/specs/spec-012-loop-command.md`
-  - Design: `docs/specs/spec-012-design.md` (Approved)
+- [x] **SPEC-012**: Loop Command
+  - Spec: `docs/_archive/specs/spec-012-loop-command.md`
+  - Design: `docs/_archive/specs/spec-012-design.md` (Complete)
   - Target: v1.2
   - Acceptance: All spec acceptance criteria met; `make ci` green.
 
@@ -335,6 +335,38 @@
 - Human-readable table output and JSON output via global --json flag
 - Logs command itself excluded from logging to avoid recursion
 - Run log stored in `logs/runs.jsonl` (gitignored)
+
+### 2026-01-21: SPEC-012 Loop Command implemented
+
+**Files created:**
+- `src/erdos/core/loop_config.py` - LoopConfig frozen dataclass with CLI options (max_iterations, max_patch_lines/bytes, stall_threshold, lean_timeout, etc.)
+- `src/erdos/core/patch_validator.py` - SEARCH/REPLACE block parsing, match finding, keyword counting, bracket balance checking, PatchResult/PatchStatus/MatchStatus enums
+- `src/erdos/core/loop_verifier.py` - LoopVerification dataclass, LoopExitCondition enum, sorry/admit counting with word boundaries
+- `src/erdos/templates/loop_prompt.j2` - Jinja2 template for LLM prompts with file content, errors, problem context, and output format constraints
+- `src/erdos/core/loop.py` - Main orchestration: LoopResult/LoopStatus, IterationRecord, LoopLogger (JSONL logging), run_loop() function with safety guardrails
+- `src/erdos/commands/loop.py` - CLI command `erdos loop run` with --max-iter, --no-apply, --timeout, --allow-sorry-increase, --max-patch-lines/bytes, --rag-limit, --llm-cmd options
+- `tests/unit/test_loop_config.py` - Tests for LoopConfig defaults, custom values, from_cli(), immutability
+- `tests/unit/test_patch_validator.py` - Tests for SEARCH/REPLACE parsing, match finding, keyword counting, bracket balance, patch validation
+- `tests/unit/test_loop_verifier.py` - Tests for sorry/admit counting, LoopVerification properties, exit conditions
+- `tests/unit/test_loop.py` - Tests for budget_context, build_loop_prompt, apply_patch, run_loop with mocked LLM
+- `tests/integration/test_cli_loop.py` - Integration tests for CLI help, options, JSON output
+
+**Files modified:**
+- `src/erdos/cli.py` - Registered loop command
+- `docs/_archive/specs/spec-012-loop-command.md` - Status updated to Complete (archived)
+- `docs/_archive/specs/spec-012-design.md` - Status updated to Complete (archived)
+- `docs/specs/README.md` - Updated v1.2 to DONE; moved SPEC-012 and 012-DESIGN to Archived
+
+**Features:**
+- Iterative "propose → apply → check" cycle for Lean formalization
+- SEARCH/REPLACE block parsing with strict validation (exact match only)
+- Sorry/admit injection prevention (rejects patches adding placeholders)
+- Bracket balance checking for syntax sanity
+- File shrinkage detection (rejects >20% file size reduction)
+- Stall detection with configurable threshold
+- JSONL logging per run with schema versioning
+- External LLM execution via ERDOS_LLM_COMMAND or --llm-cmd
+- Safety: only modifies files under formal/lean/Erdos/
 
 (entries added by Ralph loop as tasks complete)
 

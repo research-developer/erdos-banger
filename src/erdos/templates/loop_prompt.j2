@@ -1,0 +1,70 @@
+{# src/erdos/templates/loop_prompt.j2 #}
+You are assisting with formalizing an Erdős problem in Lean 4.
+
+## Current State
+
+File: {{ file_path }}
+```lean
+{{ file_content }}
+```
+
+## Compilation Result
+
+{% if compilation_success %}
+Compilation succeeded.
+{% else %}
+Compilation failed with {{ error_count }} error(s).
+{% endif %}
+
+{% if errors %}
+## Errors
+
+{{ error_count }} error(s) found:
+
+{% for error in errors %}
+### Error {{ loop.index }} at line {{ error.line }}
+```
+{{ error.message }}
+```
+
+{% endfor %}
+{% endif %}
+
+## Problem Context
+
+- ID: {{ problem.id }}
+- Title: {{ problem.title }}
+{% if problem.statement %}
+- Statement: {{ problem.statement }}
+{% endif %}
+
+{% if rag_chunks %}
+## Retrieved Context (cite as [n])
+
+{% for chunk in rag_chunks %}
+[{{ loop.index }}] ({{ chunk.source_type }}) {{ chunk.chunk_id }}
+{{ chunk.text }}
+
+{% endfor %}
+{% endif %}
+
+## Your Task
+
+Fix the Lean file so it compiles without errors.
+
+## Constraints (CRITICAL)
+
+1. Output ONLY a single SEARCH/REPLACE block
+2. Do NOT add `sorry` or `admit` — these are placeholders, not proofs
+3. Do NOT delete theorems or lemmas — fix them
+4. Keep changes minimal and focused on the reported error
+
+## Output Format
+
+<<<<<<< SEARCH
+[exact lines to find]
+=======
+[replacement lines]
+>>>>>>> REPLACE
+
+If no fix is possible, respond with exactly: NO_FIX_POSSIBLE

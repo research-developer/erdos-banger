@@ -7,7 +7,7 @@ Design specifications for the erdos-banger CLI toolkit.
 ```text
 v1.0 (DONE)     Foundation: CLI, data loading, search, Lean integration
 v1.1 (DONE)     Literature: Ingest + RAG Q&A
-v1.2 (DEFERRED) Iteration: Loop + logging + OpenAlex metadata
+v1.2 (DONE)     Iteration: Loop + logging + OpenAlex metadata
 v1.3 (FUTURE)   Enhancement: Vectors + batch ops
 v1.4 (FUTURE)   Integration: Formal conjectures + MCP
 v2.0 (READY)    Expansion: PDF conversion (Marker + LLM)
@@ -25,7 +25,7 @@ Research-backed design decisions for complex specs.
 
 | ID | Title | Status | Prerequisite For |
 |----|-------|--------|------------------|
-| 012-DESIGN | [Loop Command Design](spec-012-design.md) | Approved | SPEC-012 |
+| (none) | | | |
 
 ## Deferred Specs
 
@@ -33,7 +33,6 @@ Specs designed for future versions.
 
 | ID | Title | Status | Target | Description |
 |----|-------|--------|--------|-------------|
-| 012 | [Loop Command](spec-012-loop-command.md) | Deferred (blocked by 012-DESIGN) | v1.2 | Iterative LLM-assisted Lean proof attempts |
 | 014 | [Vector Embeddings](spec-014-vector-embeddings.md) | Deferred | v1.3 | Semantic search via embeddings |
 | 015 | [Batch Operations](spec-015-batch-operations.md) | Deferred | v1.3 | Batch ingest/formalize with rate limiting |
 | 016 | [Formal Conjectures](spec-016-formal-conjectures.md) | Deferred | v1.4 | Import existing formalizations |
@@ -61,6 +60,8 @@ Completed specs that are fully implemented.
 | 013 | Logging & Evaluation | [archive](../_archive/specs/spec-013-logging-evaluation.md) |
 | 020 | OpenAlex Integration | [archive](../_archive/specs/spec-020-openalex-integration.md) |
 | 021 | Aristotle Integration | [archive](../_archive/specs/spec-021-aristotle-integration.md) |
+| 012 | Loop Command | [archive](../_archive/specs/spec-012-loop-command.md) |
+| 012-DESIGN | Loop Command Design | [archive](../_archive/specs/spec-012-design.md) |
 
 **Next Spec ID:** SPEC-022
 
@@ -82,7 +83,7 @@ v1.1 Literature (DONE)
 ├── 010 Ingest Command ────────────┐
 └── 011 Ask Command ←──────────────┘ (uses the local search index; ingested extracts become usable once indexed)
 
-v1.2 Iteration & Metadata (DEFERRED)
+v1.2 Iteration & Metadata (DONE)
 ├── 012-DESIGN Loop Design ←── research (approved SSOT)
 ├── 012 Loop Command ←── 012-DESIGN + 011 Ask + 007 Lean
 ├── 013 Logging ←── all commands (tracks progress)
