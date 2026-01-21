@@ -79,8 +79,8 @@
   - Target: v1.2
   - Acceptance: All spec acceptance criteria met; `make ci` green.
 
-- [ ] **SPEC-016**: Formal Conjectures Integration
-  - Spec: `docs/specs/spec-016-formal-conjectures.md`
+- [x] **SPEC-016**: Formal Conjectures Integration
+  - Spec: `docs/_archive/specs/spec-016-formal-conjectures.md`
   - Target: v1.4
   - Acceptance: All spec acceptance criteria met; `make ci` green.
 
@@ -367,6 +367,32 @@
 - JSONL logging per run with schema versioning
 - External LLM execution via ERDOS_LLM_COMMAND or --llm-cmd
 - Safety: only modifies files under formal/lean/Erdos/
+
+### 2026-01-21: SPEC-016 Formal Conjectures Integration implemented
+
+**Files created:**
+- `src/erdos/core/formal_conjectures.py` - Module for upstream formalization detection, fetching, caching, and provenance tracking
+- `tests/unit/test_formal_conjectures.py` - 37 unit tests for metadata parsing, URL building, sorry detection, SHA-256 hashing, provenance, and fetch with cache
+- `tests/integration/test_lean_import.py` - 16 integration tests for erdos lean status, erdos lean import, --import-upstream flag, and provenance tracking
+
+**Files modified:**
+- `src/erdos/commands/lean.py` - Added `status` and `import` subcommands; added `--import-upstream` and `--no-network` options to `formalize`; added helper functions for status checking, import operations, and human output formatting
+- `docs/specs/spec-016-formal-conjectures.md` - Status updated to Complete
+- `docs/specs/README.md` - Moved SPEC-016 from Deferred to Archived; updated v1.4 to PARTIAL
+- `pyproject.toml` - Added TC003 and PTH109 to test file ignores
+
+**Features:**
+- `erdos lean status [PROBLEM_ID]` shows formalization status (upstream metadata + local file)
+- `erdos lean import PROBLEM_ID` fetches and imports upstream formalization from google-deepmind/formal-conjectures
+- `--no-network` flag uses cached upstream files only (errors if not cached)
+- `--dry-run` shows what would be imported without writing
+- `--force` overwrites existing local file with different content
+- `--skip-lean-validation` skips Lean type checking on imported files
+- `erdos lean formalize --import-upstream` imports upstream instead of generating skeleton
+- Provenance tracking in `formal/lean/Erdos/.provenance.yaml` (SHA-256, timestamps, source URLs)
+- Cache stored in `formal/lean/.upstream_cache/` for offline use
+- Sorry/admit detection for local files
+- Exit codes: SUCCESS, NOT_FOUND, NETWORK_ERROR, LEAN_ERROR, CONFIG_ERROR
 
 (entries added by Ralph loop as tasks complete)
 

@@ -2,7 +2,8 @@
 
 > Imports and tracks existing formalizations from the Lean community to avoid duplicating work.
 
-**Status:** Deferred
+**Status:** Complete
+**Implemented In:** 85f4ddb
 **Target:** v1.4
 **Prerequisites (SSOT):**
 - Lean integration: `docs/_archive/specs/spec-007-lean-integration.md`

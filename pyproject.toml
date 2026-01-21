@@ -97,6 +97,8 @@ ignore = [
     "ARG",    # Unused arguments OK in tests (fixtures)
     "S101",   # assert OK in tests
     "PLR2004", # Magic values OK in tests
+    "TC003",  # TYPE_CHECKING imports fine in tests
+    "PTH109", # os.getcwd() fine in tests for chdir context managers
 ]
 
 [tool.ruff.lint.isort]

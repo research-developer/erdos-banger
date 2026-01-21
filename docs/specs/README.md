@@ -35,7 +35,6 @@ Specs designed for future versions.
 |----|-------|--------|--------|-------------|
 | 014 | [Vector Embeddings](spec-014-vector-embeddings.md) | Deferred | v1.3 | Semantic search via embeddings |
 | 015 | [Batch Operations](spec-015-batch-operations.md) | Deferred | v1.3 | Batch ingest/formalize with rate limiting |
-| 016 | [Formal Conjectures](spec-016-formal-conjectures.md) | Deferred | v1.4 | Import existing formalizations |
 | 017 | [MCP Server](spec-017-mcp-server.md) | Deferred | v1.4 | Model Context Protocol for AI integration |
 | 019 | [PDF Conversion](spec-019-pdf-conversion.md) | Ready | v2.0 | PDF to text with math preservation (Marker + LLM) |
 
@@ -62,6 +61,7 @@ Completed specs that are fully implemented.
 | 021 | Aristotle Integration | [archive](../_archive/specs/spec-021-aristotle-integration.md) |
 | 012 | Loop Command | [archive](../_archive/specs/spec-012-loop-command.md) |
 | 012-DESIGN | Loop Command Design | [archive](../_archive/specs/spec-012-design.md) |
+| 016 | Formal Conjectures | [archive](../_archive/specs/spec-016-formal-conjectures.md) |
 
 **Next Spec ID:** SPEC-022
 
@@ -96,8 +96,8 @@ v1.3 Enhancement (FUTURE)
 ├── 014 Vector Embeddings ←── 006 Search Index
 └── 015 Batch Operations ←── 010 Ingest + 007 Lean
 
-v1.4 Integration (FUTURE)
-├── 016 Formal Conjectures ←── 007 Lean
+v1.4 Integration (PARTIAL)
+├── 016 Formal Conjectures ←── 007 Lean (DONE)
 └── 017 MCP Server ←── all CLI commands
 
 v2.0 Expansion (READY)
