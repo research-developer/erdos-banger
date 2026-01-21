@@ -3,23 +3,24 @@
 from __future__ import annotations
 
 import os
-import re
-import sqlite3
+
 
 # IMPORTANT: Unset PY_COLORS BEFORE importing Rich/Typer.
-# When PY_COLORS is set, Typer's Rich-based help rendering can emit ANSI codes
-# and truncate help panels under Click's CliRunner, breaking tests that assert on
-# `--help` output.
+# pytest --color=yes sets PY_COLORS=1, which causes Typer's rich_utils.py to set
+# FORCE_TERMINAL=True at import time. This makes Rich emit ANSI codes and truncate
+# help panels, breaking tests that assert on --help output.
 # See: https://github.com/pallets/click/issues/1997
+if "PY_COLORS" in os.environ:
+    del os.environ["PY_COLORS"]
+
+import re
+import sqlite3
 from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
 
-
-if "PY_COLORS" in os.environ:
-    del os.environ["PY_COLORS"]
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
