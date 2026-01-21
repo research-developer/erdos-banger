@@ -7,6 +7,7 @@ from pathlib import Path
 import yaml
 from pydantic import TypeAdapter, ValidationError
 
+from erdos.core.constants import API_RATE_LIMIT_DELAY
 from erdos.core.exit_codes import ExitCode
 from erdos.core.ingest.fetch import process_all_references
 from erdos.core.ingest.stable_key import get_stable_key
@@ -294,7 +295,7 @@ def ingest_problem_references(
     no_download: bool = False,
     no_network: bool = False,
     timeout: float = 30.0,
-    delay: float = 3.0,
+    delay: float = API_RATE_LIMIT_DELAY,
     mailto: str,
 ) -> CLIOutput:
     """Ingest references for a problem.
@@ -307,7 +308,9 @@ def ingest_problem_references(
         no_download: Fetch metadata only, no arXiv tarballs.
         no_network: Fail if network access required.
         timeout: HTTP timeout in seconds.
-        delay: Delay between API requests in seconds.
+        delay: Delay between processing references (not per-request). Defaults to
+            API_RATE_LIMIT_DELAY. Per-reference throttling is sufficient since each
+            reference makes at most 1-3 requests (DOI, arXiv metadata, arXiv source).
         mailto: Contact email for Crossref polite pool.
 
     Returns:

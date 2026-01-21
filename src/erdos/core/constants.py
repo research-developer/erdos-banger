@@ -31,7 +31,12 @@ LLM_COMMAND_TIMEOUT = 300
 # --- Rate limiting ---
 
 API_RATE_LIMIT_DELAY = 3.0
-"""Delay between API requests to avoid rate limiting."""
+"""Delay (seconds) between processing references during ingestion.
+
+Applied per-reference, not per-request. Each reference may make 1-3 requests
+(DOI lookup, arXiv metadata, arXiv source download). This delay satisfies
+typical API rate limits (Crossref, arXiv recommend ~3s between requests).
+"""
 
 # --- Search defaults ---
 

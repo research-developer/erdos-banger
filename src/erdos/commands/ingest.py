@@ -13,6 +13,7 @@ from rich.table import Table
 
 from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
+from erdos.core.constants import API_RATE_LIMIT_DELAY
 from erdos.core.ingest import ingest_problem_references
 from erdos.core.timing import measure_time_ms
 
@@ -30,7 +31,7 @@ class IngestOptions:
     no_download: bool = False
     no_network: bool = False
     timeout: float = 30.0
-    delay: float = 3.0
+    delay: float = API_RATE_LIMIT_DELAY
     mailto: str = ""
 
 
@@ -154,7 +155,7 @@ def ingest(
     no_download: Annotated[bool, typer.Option("--no-download")] = False,
     no_network: Annotated[bool, typer.Option("--no-network")] = False,
     timeout: Annotated[float, typer.Option("--timeout")] = 30.0,
-    delay: Annotated[float, typer.Option("--delay")] = 3.0,
+    delay: Annotated[float, typer.Option("--delay")] = API_RATE_LIMIT_DELAY,
     mailto: Annotated[str, typer.Option("--mailto")] = "",
 ) -> None:
     """Ingest literature metadata and cache for a problem."""

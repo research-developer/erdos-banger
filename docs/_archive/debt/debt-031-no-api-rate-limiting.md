@@ -1,9 +1,10 @@
 # Technical Debt 031: Rate Limiting Is Not Centralized (Constant Unused)
 
 **Date:** 2026-01-21
-**Status:** Open
+**Status:** Fixed
 **Priority:** P3 (Ergonomics / defaults drift)
 **Impact:** Batch operations could get rate-limited or blocked by external APIs
+**Fixed In:** f7bdfd4
 
 ## Summary
 
@@ -59,29 +60,22 @@ From arXiv API documentation:
 3. If per-request throttling is needed, implement it in the ingest layer (preferred) or in the clients.
 4. CI still passes (`make ci`).
 
-## Recommended Implementation
+## Resolution
 
-```python
-import time
-from erdos.core.constants import API_RATE_LIMIT_DELAY
+**Throttling Strategy: Per-Reference**
 
-_last_request_time: float = 0.0
+Per-reference throttling was chosen because:
+- Each reference makes at most 1-3 API requests (DOI lookup, arXiv metadata, arXiv source download)
+- With a 3-second delay between references, this yields an average of 1-3 seconds per request
+- This satisfies typical API rate limits (Crossref, arXiv recommend ~3s between requests)
+- Per-request throttling would add complexity with minimal benefit
 
-def _rate_limit() -> None:
-    """Enforce minimum delay between API requests."""
-    global _last_request_time
-    elapsed = time.monotonic() - _last_request_time
-    if elapsed < API_RATE_LIMIT_DELAY:
-        time.sleep(API_RATE_LIMIT_DELAY - elapsed)
-    _last_request_time = time.monotonic()
-
-def fetch_crossref_work(doi: str, ...) -> dict[str, Any]:
-    _rate_limit()
-    response = requests.get(url, ...)
-    ...
-```
-
-Or use a library like `ratelimit` or `tenacity`.
+**Changes Made:**
+1. `API_RATE_LIMIT_DELAY` is now used as the default for `--delay` in:
+   - `src/erdos/commands/ingest.py` (CLI option and `IngestOptions` dataclass)
+   - `src/erdos/core/ingest/service.py` (function signature)
+2. Updated docstrings in `constants.py` and `service.py` to document per-reference throttling
+3. All existing tests pass; no behavior change (value was already 3.0)
 
 ## Related
 

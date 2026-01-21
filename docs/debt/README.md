@@ -16,7 +16,6 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| DEBT-031 | Rate limiting constant unused | P3 | Open |
 | DEBT-032 | HTTP responses not closed properly | P2 | Open |
 | DEBT-033 | No retry logic for network failures | P2 | Open |
 | DEBT-034 | Hardcoded MAX_SIZE constant | P3 | Open |
@@ -58,6 +57,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-028 | Ingest manifest churn (non-idempotent writes) | P2 | Fixed | 154866b |
 | DEBT-029 | Logging coverage gaps | P2 | Fixed | f806edc |
 | DEBT-030 | Redundant dual --json flag | P3 | Fixed | ed2c2c8 |
+| DEBT-031 | Rate limiting constant unused | P3 | Fixed | f7bdfd4 |
 
 **Next Debt ID:** DEBT-036
 
@@ -93,3 +93,4 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-028-ingest-manifest-churn.md`
 - `docs/_archive/debt/debt-029-no-logging-usage.md`
 - `docs/_archive/debt/debt-030-redundant-json-flag.md`
+- `docs/_archive/debt/debt-031-no-api-rate-limiting.md`

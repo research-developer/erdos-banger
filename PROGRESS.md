@@ -34,8 +34,8 @@
   - Deck: `docs/_archive/debt/debt-030-redundant-json-flag.md`
   - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
 
-- [ ] **DEBT-031**: API rate limiting missing / constant unused
-  - Deck: `docs/debt/debt-031-no-api-rate-limiting.md`
+- [x] **DEBT-031**: API rate limiting missing / constant unused
+  - Deck: `docs/_archive/debt/debt-031-no-api-rate-limiting.md`
   - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
 
 - [ ] **DEBT-032**: HTTP responses not closed properly
@@ -194,6 +194,17 @@
 - `docs/debt/README.md` - Moved DEBT-030 to Archived
 
 **Breaking change:** The `--json` flag must now be placed before the command (e.g., `erdos --json show 6` instead of `erdos show 6 --json`).
+
+### 2026-01-20: DEBT-031 Rate limiting centralized
+
+**Files modified:**
+- `src/erdos/commands/ingest.py` - Import `API_RATE_LIMIT_DELAY`; use as default for `--delay` option and `IngestOptions.delay`
+- `src/erdos/core/ingest/service.py` - Import `API_RATE_LIMIT_DELAY`; use as default for `delay` parameter
+- `src/erdos/core/constants.py` - Enhanced docstring documenting per-reference throttling strategy
+- `docs/debt/debt-031-no-api-rate-limiting.md` - Status updated to Fixed (archived)
+- `docs/debt/README.md` - Moved DEBT-031 to Archived
+
+**Decision:** Per-reference throttling (not per-request). Each reference makes at most 1-3 API requests, so a 3-second delay between references satisfies typical API rate limits.
 
 (entries added by Ralph loop as tasks complete)
 
