@@ -2,6 +2,16 @@
 
 from __future__ import annotations
 
+# IMPORTANT: Unset PY_COLORS BEFORE importing Rich/Typer.
+# pytest --color=yes sets PY_COLORS=1, which causes Rich to output ANSI codes
+# and truncate help text in panels. This breaks tests that check for CLI options.
+# See: https://github.com/pallets/click/issues/1997
+import os
+
+
+if "PY_COLORS" in os.environ:
+    del os.environ["PY_COLORS"]
+
 import sqlite3
 from pathlib import Path
 from typing import TYPE_CHECKING
