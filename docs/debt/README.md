@@ -14,7 +14,15 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-*No active debt items.*
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| DEBT-029 | No logging framework usage | P1 | Open |
+| DEBT-030 | Redundant dual --json flag | P3 | Open |
+| DEBT-031 | No rate limiting in API clients | P2 | Open |
+| DEBT-032 | HTTP responses not closed properly | P2 | Open |
+| DEBT-033 | No retry logic for network failures | P2 | Open |
+| DEBT-034 | Hardcoded MAX_SIZE constant | P3 | Open |
+| DEBT-035 | type: ignore in all exit paths | P2 | Open |
 
 ## Archived Debt
 
@@ -51,7 +59,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-027 | Broad `except Exception` catches | P3 | Fixed | e657d7c |
 | DEBT-028 | Ingest manifest churn (non-idempotent writes) | P2 | Fixed | 154866b |
 
-**Next Debt ID:** DEBT-029
+**Next Debt ID:** DEBT-036
 
 ### Archived Debt Decks
 

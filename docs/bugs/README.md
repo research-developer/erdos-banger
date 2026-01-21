@@ -6,11 +6,18 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 | Date | Type | Summary | Status |
 |------|------|---------|--------|
+| 2026-01-21 | Adversarial Review | Full codebase audit for bugs, debt, anti-patterns | Active |
 | 2026-01-17 | Adversarial Review | Full codebase audit covering specs 003-006 | Archived |
 
 ## Active Bugs
 
-*None currently active.*
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| BUG-013 | `--log-level` flag is dead code | P2 | Open |
+| BUG-014 | Silent exception swallowing masks errors | P1 | Open |
+| BUG-015 | Array index without bounds checking | P2 | Open |
+| BUG-016 | Manifest corruption silently returns None | P2 | Open |
+| BUG-017 | stderr/stdout both None causes crash | P2 | Open |
 
 ## Archived Bugs
 
@@ -31,7 +38,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-011 | No enriched problem data for production use | P1 | Fixed | 54e2dfb |
 | BUG-012 | Ask retrieval uses exact phrase match | P2 | Fixed | 89a66c2 |
 
-**Next Bug ID:** BUG-013
+**Next Bug ID:** BUG-018
 
 ### Archived Bug Decks
 
@@ -61,6 +68,10 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 
 ## Quick Links
 
+- [Adversarial Review 2026-01-21](./adversarial-review-2026-01-21.md)
+  - 5 bugs (1 P1, 4 P2)
+  - 7 technical debt items (1 P1, 4 P2, 2 P3)
+  - Focus: silent failures, dead code, validation gaps, API robustness
 - [Adversarial Review 2026-01-17](./adversarial-review-2026-01-17.md)
   - 3 spec drift issues
   - 9 missing test scenarios
