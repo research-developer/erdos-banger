@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+import re
 from enum import Enum
 from pathlib import Path
 from typing import Annotated, Any
@@ -39,15 +41,40 @@ err_console = Console(stderr=True)
 
 def _print_human(result_data: dict[str, Any]) -> None:
     """Pretty-print conversion results."""
-    if result_data.get("text"):
-        console.print(result_data["text"])
+    text = result_data.get("text") or ""
+    if result_data.get("format") == OutputFormat.JSON.value:
+        typer.echo(text)
+    elif text:
+        console.print(text)
     else:
         console.print("[yellow]No text extracted[/yellow]")
 
     # Show metadata
     converter = result_data.get("converter", "unknown")
-    char_count = len(result_data.get("text", "") or "")
+    char_count = int(
+        result_data.get("char_count") or len(result_data.get("text", "") or "")
+    )
     err_console.print(f"\n[dim]Converter: {converter}, Characters: {char_count}[/dim]")
+
+
+def _markdown_to_text(markdown: str) -> str:
+    """Convert markdown to a best-effort plain text representation."""
+    if not markdown:
+        return ""
+
+    # Remove fenced code markers but keep the code content.
+    text = re.sub(r"^```[^\n]*\n", "", markdown, flags=re.MULTILINE)
+    text = text.replace("```", "")
+
+    # Replace markdown links with their visible text.
+    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+
+    # Remove inline code backticks.
+    text = text.replace("`", "")
+
+    # Strip heading markers.
+    lines = [re.sub(r"^#{1,6}\s+", "", line) for line in text.splitlines()]
+    return "\n".join(lines)
 
 
 def _validate_pdf_path(pdf_path: Path) -> CLIOutput | None:
@@ -102,16 +129,26 @@ def _convert_and_output(
             code=ExitCode.ERROR,
         )
 
-    # Format output based on requested format
-    output_text = result.text or ""
+    extracted_text = result.text or ""
+    extracted_char_count = len(extracted_text)
 
+    # Format output based on requested format
     if output_format == OutputFormat.TEXT:
-        # Strip markdown syntax for plain text
-        # Simple approach: just return as-is (markdown is readable as text)
-        pass
+        output_text = _markdown_to_text(extracted_text)
+        output_char_count = len(output_text)
     elif output_format == OutputFormat.JSON:
-        # JSON format includes metadata
-        pass
+        payload = {
+            "pdf_path": str(pdf_path),
+            "converter": result.converter,
+            "text": extracted_text,
+            "char_count": extracted_char_count,
+            "metadata": result.metadata,
+        }
+        output_text = json.dumps(payload, ensure_ascii=False)
+        output_char_count = extracted_char_count
+    else:
+        output_text = extracted_text
+        output_char_count = extracted_char_count
 
     # Write to file if output path specified
     if output_path:
@@ -124,7 +161,7 @@ def _convert_and_output(
             "pdf_path": str(pdf_path),
             "converter": result.converter,
             "text": output_text,
-            "char_count": len(output_text),
+            "char_count": output_char_count,
             "output_path": str(output_path) if output_path else None,
             "format": output_format.value,
             "metadata": result.metadata,

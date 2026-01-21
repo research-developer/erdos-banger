@@ -11,3 +11,9 @@ Guidelines:
 ## Vendors
 
 - `harmonic-aristotle/` — Harmonic Aristotle (Lean theorem proving service + `aristotlelib` / `aristotle` CLI)
+- `openalex/` — OpenAlex (open scholarly metadata API)
+- `crossref/` — Crossref REST API (DOI metadata)
+- `arxiv/` — arXiv API + e-print tarball download
+- `marker/` — Marker PDF → Markdown conversion
+- `openai/` — OpenAI Responses API (used by local LLM wrapper scripts)
+- `anthropic/` — Anthropic Messages API (used by local LLM wrapper scripts)

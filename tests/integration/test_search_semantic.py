@@ -252,7 +252,6 @@ class TestEmbeddingDependency:
         self, temp_data_dir: Path, temp_index_path: Path
     ) -> None:
         """Test error message when embeddings deps not installed."""
-        # Mock EMBEDDING_AVAILABLE as False
         with patch("erdos.core.embeddings.EMBEDDING_AVAILABLE", False):
             result = runner.invoke(
                 app,
@@ -262,8 +261,10 @@ class TestEmbeddingDependency:
                     "ERDOS_INDEX_PATH": str(temp_index_path),
                 },
             )
-            # Should fail with clear message about missing deps
-            # (exact behavior depends on implementation)
+            assert result.exit_code == 10
+            assert "embeddings" in result.output.lower()
+            normalized = " ".join(result.output.lower().split())
+            assert "uv sync --extra embeddings" in normalized
 
     def test_build_embeddings_without_deps_shows_error(
         self, temp_data_dir: Path, temp_index_path: Path
@@ -278,7 +279,10 @@ class TestEmbeddingDependency:
                     "ERDOS_INDEX_PATH": str(temp_index_path),
                 },
             )
-            # Should fail with clear message about missing deps
+            assert result.exit_code == 10
+            assert "embeddings" in result.output.lower()
+            normalized = " ".join(result.output.lower().split())
+            assert "uv sync --extra embeddings" in normalized
 
 
 # =============================================================================
@@ -326,14 +330,70 @@ class TestJsonOutput:
         self, temp_data_dir: Path, temp_index_path: Path, fake_embedder: MagicMock
     ) -> None:
         """Test that semantic search JSON includes semantic_score field."""
-        # This test would need embeddings to be built first
-        # For now, just verify the JSON structure is correct
-        pass
+        import json
+
+        with patch(
+            "erdos.commands.search._get_embedding_model",
+            return_value=(fake_embedder, None),
+        ):
+            result = runner.invoke(
+                app,
+                [
+                    "--json",
+                    "search",
+                    "prime",
+                    "--semantic",
+                    "--build-index",
+                    "--build-embeddings",
+                ],
+                env={
+                    "ERDOS_DATA_PATH": str(temp_data_dir),
+                    "ERDOS_INDEX_PATH": str(temp_index_path),
+                },
+                catch_exceptions=False,
+            )
+        assert result.exit_code == 0
+        output = json.loads(result.stdout)
+        assert output["success"] is True
+        assert output["data"]["mode"] == "semantic"
+        assert output["data"]["results"]
+        assert "semantic_score" in output["data"]["results"][0]
 
     @pytest.mark.skipif(not NUMPY_AVAILABLE, reason="numpy not installed")
     def test_hybrid_json_includes_all_scores(
         self, temp_data_dir: Path, temp_index_path: Path, fake_embedder: MagicMock
     ) -> None:
         """Test that hybrid search JSON includes all score fields."""
-        # This test would need embeddings to be built first
-        pass
+        import json
+
+        with patch(
+            "erdos.commands.search._get_embedding_model",
+            return_value=(fake_embedder, None),
+        ):
+            result = runner.invoke(
+                app,
+                [
+                    "--json",
+                    "search",
+                    "prime",
+                    "--hybrid",
+                    "--alpha",
+                    "0.6",
+                    "--build-index",
+                    "--build-embeddings",
+                ],
+                env={
+                    "ERDOS_DATA_PATH": str(temp_data_dir),
+                    "ERDOS_INDEX_PATH": str(temp_index_path),
+                },
+                catch_exceptions=False,
+            )
+        assert result.exit_code == 0
+        output = json.loads(result.stdout)
+        assert output["success"] is True
+        assert output["data"]["mode"] == "hybrid"
+        assert output["data"]["results"]
+        first = output["data"]["results"][0]
+        assert "score" in first
+        assert "semantic_score" in first
+        assert "hybrid_score" in first

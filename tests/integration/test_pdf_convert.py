@@ -80,6 +80,65 @@ class TestConvertCommandOutput:
                 assert "success" in data
                 assert "data" in data or "error" in data
 
+    def test_convert_format_text_strips_basic_markdown(self, tmp_path: Path) -> None:
+        """Convert --format text removes basic markdown markers."""
+        pdf_file = tmp_path / "test.pdf"
+        pdf_file.write_bytes(b"%PDF-1.4 test content")
+
+        with (
+            patch(
+                "erdos.commands.convert.get_available_converters",
+                return_value=["marker"],
+            ),
+            patch("erdos.commands.convert.convert_pdf") as mock_convert,
+        ):
+            from erdos.core.pdf_converter import PDFConversionResult
+
+            mock_convert.return_value = PDFConversionResult(
+                success=True,
+                text="# Title\n\nSome `code` and a [link](https://example.com).\n```py\nx = 1\n```",
+                converter="marker",
+            )
+
+            result = runner.invoke(app, ["convert", str(pdf_file), "--format", "text"])
+            assert result.exit_code == 0
+            assert "# " not in result.stdout
+            assert "`" not in result.stdout
+            assert "(" not in result.stdout  # link URL stripped
+            assert "Title" in result.stdout
+            assert "Some code and a link." in result.stdout
+
+    def test_convert_format_json_writes_json_to_stdout(self, tmp_path: Path) -> None:
+        """Convert --format json prints a JSON object to stdout (not CLIOutput envelope)."""
+        import json
+
+        pdf_file = tmp_path / "test.pdf"
+        pdf_file.write_bytes(b"%PDF-1.4 test content")
+
+        with (
+            patch(
+                "erdos.commands.convert.get_available_converters",
+                return_value=["marker"],
+            ),
+            patch("erdos.commands.convert.convert_pdf") as mock_convert,
+        ):
+            from erdos.core.pdf_converter import PDFConversionResult
+
+            mock_convert.return_value = PDFConversionResult(
+                success=True,
+                text="# Converted\n\nTest content",
+                converter="marker",
+                metadata={"pages": "1"},
+            )
+
+            result = runner.invoke(app, ["convert", str(pdf_file), "--format", "json"])
+            assert result.exit_code == 0
+            payload = json.loads(result.stdout)
+            assert payload["converter"] == "marker"
+            assert payload["metadata"]["pages"] == "1"
+            assert "text" in payload
+            assert "char_count" in payload
+
 
 class TestConvertCommandOptions:
     """Tests for convert command options."""

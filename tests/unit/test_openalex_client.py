@@ -48,7 +48,6 @@ SAMPLE_OPENALEX_WORK = {
     "ids": {
         "openalex": "https://openalex.org/W2741809807",
         "doi": "https://doi.org/10.1038/nature12373",
-        "arxiv": "https://arxiv.org/abs/1234.5678",
     },
     "open_access": {"is_oa": True, "oa_status": "green"},
     "cited_by_count": 150,
@@ -57,6 +56,23 @@ SAMPLE_OPENALEX_WORK = {
         {"display_name": "Astronomy", "id": "C456"},
         {"display_name": "General Relativity", "id": "C789"},
     ],
+}
+
+SAMPLE_OPENALEX_ARXIV_WORK = {
+    "id": "https://openalex.org/W9999999999",
+    "doi": "https://doi.org/10.48550/arxiv.1234.5678",
+    "title": "Example arXiv Paper",
+    "publication_year": 2023,
+    "primary_location": {
+        "landing_page_url": "http://arxiv.org/abs/1234.5678",
+        "source": {"display_name": "arXiv"},
+    },
+    "ids": {
+        "openalex": "https://openalex.org/W9999999999",
+        "doi": "https://doi.org/10.48550/arxiv.1234.5678",
+    },
+    "open_access": {"is_oa": True, "oa_status": "green"},
+    "cited_by_count": 42,
 }
 
 SAMPLE_OPENALEX_SEARCH_RESPONSE = {
@@ -140,22 +156,21 @@ class TestExtractArxivId:
     """Tests for arXiv ID extraction from OpenAlex IDs."""
 
     def test_extract_modern_arxiv_id(self) -> None:
-        """Extracts post-2007 arXiv ID."""
+        """Extracts post-2007 arXiv ID from arXiv DataCite DOI."""
 
-        ids = {"arxiv": "https://arxiv.org/abs/2301.00001"}
+        ids = {"doi": "https://doi.org/10.48550/arxiv.2301.00001"}
         assert extract_arxiv_id(ids) == "2301.00001"
 
-    def test_extract_versioned_arxiv_id(self) -> None:
-        """Extracts arXiv ID with version suffix."""
+    def test_extract_legacy_arxiv_id(self) -> None:
+        """Extracts pre-2007 arXiv ID from arXiv DataCite DOI."""
 
+        ids = {"doi": "https://doi.org/10.48550/arxiv.math/0703001"}
+        assert extract_arxiv_id(ids) == "math/0703001"
+
+    def test_extract_from_explicit_arxiv_url(self) -> None:
+        """Defensive support: extract arXiv ID from explicit ids['arxiv'] URL."""
         ids = {"arxiv": "https://arxiv.org/abs/2301.00001v2"}
         assert extract_arxiv_id(ids) == "2301.00001v2"
-
-    def test_extract_legacy_arxiv_id(self) -> None:
-        """Extracts pre-2007 arXiv ID."""
-
-        ids = {"arxiv": "https://arxiv.org/abs/math/0703001"}
-        assert extract_arxiv_id(ids) == "math/0703001"
 
     def test_extract_no_arxiv(self) -> None:
         """Returns None when no arXiv ID present."""
@@ -213,7 +228,7 @@ class TestOpenAlexToReference:
         ref = openalex_to_reference(SAMPLE_OPENALEX_WORK)
 
         assert ref.doi == "10.1038/nature12373"
-        assert ref.arxiv_id == "1234.5678"
+        assert ref.arxiv_id is None
         assert ref.title == "Gravitational wave background detection"
         assert ref.authors == ["John Doe", "Jane Smith"]
         assert ref.year == 2013
@@ -257,6 +272,12 @@ class TestOpenAlexToReference:
         assert ref.doi is None
         assert ref.arxiv_id == "2301.00001"
 
+    def test_converts_arxiv_work_sets_arxiv_id(self) -> None:
+        """Converts an arXiv work to ReferenceRecord with arxiv_id populated."""
+        ref = openalex_to_reference(SAMPLE_OPENALEX_ARXIV_WORK)
+        assert ref.doi == "10.48550/arxiv.1234.5678"
+        assert ref.arxiv_id == "1234.5678"
+
 
 class TestOpenAlexClient:
     """Tests for OpenAlex API client."""
@@ -289,8 +310,8 @@ class TestOpenAlexClient:
 
         responses.add(
             responses.GET,
-            "https://api.openalex.org/works",
-            json=SAMPLE_OPENALEX_SEARCH_RESPONSE,
+            "https://api.openalex.org/works/https://doi.org/10.48550/arxiv.1234.5678",
+            json=SAMPLE_OPENALEX_ARXIV_WORK,
             status=200,
         )
 
@@ -302,7 +323,7 @@ class TestOpenAlexClient:
         assert len(responses.calls) == 1
         url = responses.calls[0].request.url
         assert url is not None
-        assert "filter=ids.arxiv%3A1234.5678" in url
+        assert "works/https://doi.org/10.48550/arxiv.1234.5678" in url
 
     @responses.activate
     def test_get_by_arxiv_not_found(self) -> None:
@@ -310,9 +331,8 @@ class TestOpenAlexClient:
 
         responses.add(
             responses.GET,
-            "https://api.openalex.org/works",
-            json={"meta": {"count": 0}, "results": []},
-            status=200,
+            "https://api.openalex.org/works/https://doi.org/10.48550/arxiv.9999.99999",
+            status=404,
         )
 
         config = OpenAlexConfig()

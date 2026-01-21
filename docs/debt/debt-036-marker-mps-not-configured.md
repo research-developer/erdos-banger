@@ -1,7 +1,7 @@
-# DEBT-036: Marker PDF Converter Not Configured for MPS
+# DEBT-036: Marker PDF Converter Device Selection Not Exposed
 
 **Status:** Open
-**Severity:** Low (performance optimization)
+**Severity:** P3 (performance/DevX; not a correctness bug)
 **Found:** 2026-01-21
 **Found By:** Post-Ralph adversarial audit
 
@@ -9,17 +9,17 @@
 
 ## Summary
 
-The SPEC-019 PDF conversion implementation uses Marker but does not configure it to use Apple Silicon MPS (Metal Performance Shaders) GPU acceleration. On Mac M1/M2/M3/M4 machines, Marker defaults to CPU, leaving significant performance on the table.
+The SPEC-019 PDF conversion implementation uses Marker but does not provide a first-class way to select the underlying torch device (CPU/CUDA/MPS). This is primarily a **performance/DevX** issue for contributors on Apple Silicon or GPU machines.
 
 ## Current State
 
-`src/erdos/core/pdf_converter.py` does not set `TORCH_DEVICE=mps` or configure Marker's GPU settings.
+`src/erdos/core/pdf_converter.py` does not set `TORCH_DEVICE` and the CLI does not expose a `--torch-device` (or equivalent) knob. Users must discover/remember the environment-variable override themselves.
 
 ## Evidence
 
-From [marker-pdf PyPI documentation](https://pypi.org/project/marker-pdf/):
+From Marker’s upstream docs (repo README):
 
-> On ARM Macs (M1+), you need to set the `TORCH_DEVICE` setting to `mps` for a speedup.
+> The torch device will be automatically detected, but you can override this by setting the `TORCH_DEVICE` environment variable.
 
 From [PyTorch MPS documentation](https://developer.apple.com/metal/pytorch/):
 
@@ -27,12 +27,12 @@ From [PyTorch MPS documentation](https://developer.apple.com/metal/pytorch/):
 
 ## Fix Required
 
-### Option A: Environment Variable (Recommended)
+### Option A: Documentation-only (Lowest effort)
 
 Document that users should set:
 ```bash
-export TORCH_DEVICE=mps  # For Apple Silicon
-export INFERENCE_RAM=16  # Adjust to your unified memory
+export TORCH_DEVICE=mps  # Apple Silicon (if supported by your PyTorch build)
+export TORCH_DEVICE=cuda # NVIDIA
 ```
 
 ### Option B: Runtime Detection
@@ -54,7 +54,7 @@ def _get_torch_device() -> str:
     return "cpu"
 ```
 
-### Option C: CLI Flag
+### Option C: CLI Flag (Best DX)
 
 Add `--device` option to `erdos convert`:
 ```bash
@@ -71,8 +71,8 @@ Per [PyTorch MPS documentation](https://pytorch.org/blog/introducing-accelerated
 
 ## Acceptance Criteria
 
-1. [ ] Document MPS configuration in CLAUDE.md or README
-2. [ ] Add `--device` option to `erdos convert` command
+1. [ ] Document `TORCH_DEVICE` configuration in README (or vendor docs link)
+2. [ ] (Optional) Add `--device` option to `erdos convert` (maps to `TORCH_DEVICE`)
 3. [ ] Test on Apple Silicon machine with `TORCH_DEVICE=mps`
 4. [ ] Handle graceful fallback if MPS fails
 
@@ -88,6 +88,6 @@ TORCH_DEVICE=mps uv run erdos convert test.pdf -o test.md
 
 ## References
 
-- [marker-pdf PyPI](https://pypi.org/project/marker-pdf/)
+- [Marker docs](https://github.com/datalab-to/marker)
 - [PyTorch MPS Backend](https://developer.apple.com/metal/pytorch/)
 - [Accelerated PyTorch on Mac](https://pytorch.org/blog/introducing-accelerated-pytorch-training-on-mac/)

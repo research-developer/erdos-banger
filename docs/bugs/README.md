@@ -14,6 +14,7 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 | ID | Title | Priority | Status | Deck |
 |----|-------|----------|--------|------|
 | BUG-018 | OpenAlex client `get_by_arxiv()` broken + wrong test DOIs | P1 | Open | [bug-018-openalex-client-broken.md](bug-018-openalex-client-broken.md) |
+| BUG-019 | `erdos convert --format` is a no-op | P2 | Open | [bug-019-convert-format-no-op.md](bug-019-convert-format-no-op.md) |
 
 *Note: BUG-013 was invalidated as a false positive. BUG-015 and BUG-017 were review findings that were invalidated before standalone bug decks were created.*
 
@@ -39,7 +40,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-014 | Silent exception swallowing masks errors | P1 | Fixed | 1d5bd51 |
 | BUG-016 | Manifest corruption silently returns None | P2 | Fixed | 1d5bd51 |
 
-**Next Bug ID:** BUG-019
+**Next Bug ID:** BUG-020
 
 ### Archived Bug Decks
 

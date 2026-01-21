@@ -1,7 +1,7 @@
-# BUG-018: OpenAlex Client Implementation Bugs
+# BUG-018: OpenAlex Client Bugs (arXiv lookup + arXiv ID extraction)
 
 **Status:** Open
-**Severity:** HIGH (broken implementation + 5 failing tests)
+**Priority:** P1
 **Found:** 2026-01-21
 **Found By:** Post-Ralph adversarial audit
 
@@ -9,94 +9,110 @@
 
 ## Summary
 
-The OpenAlex client has TWO critical bugs:
+The OpenAlex integration is currently unreliable for arXiv references because:
 
-1. **`get_by_arxiv()` uses invalid API filter** - `ids.arxiv` is not a valid OpenAlex filter parameter
-2. **Integration tests use wrong DOI format** - arXiv-minted DOIs (10.48550) are not recognized
+1. `OpenAlexClient.get_by_arxiv()` uses a **non-existent OpenAlex filter** (`ids.arxiv`).
+2. `openalex_to_reference()` attempts to read `ids["arxiv"]`, but real OpenAlex payloads expose arXiv via
+   `primary_location.landing_page_url` and (sometimes) via an arXiv DataCite DOI (`10.48550/...`) — **not** an `ids.arxiv` field.
 
-## Bug 1: `get_by_arxiv()` Implementation Broken
+This breaks:
+- `--source openalex` ingestion for arXiv-only references
+- Any downstream logic/tests that expect `ReferenceRecord.arxiv_id` to be populated from OpenAlex
+
+---
+
+## Bug 1: Invalid `ids.arxiv` Filter
 
 **Location:** `src/erdos/core/openalex_client.py:289`
 
+**Current code (broken):**
 ```python
-params = self._params(filter=f"ids.arxiv:{arxiv_id}")  # INVALID FILTER
+params = self._params(filter=f"ids.arxiv:{arxiv_id}")
 ```
 
-**Evidence:**
+**Evidence (OpenAlex docs):** The “Filter works” documentation lists supported identifier filters (`doi`, `ids.openalex`, `ids.pmid`, `ids.pmcid`, `ids.mag`) and does **not** include `ids.arxiv`.
+Reference: https://docs.openalex.org/api-entities/works/filter-works
+
+---
+
+## Bug 2: arXiv ID Extraction Assumes Non-existent `ids["arxiv"]`
+
+**Location:** `src/erdos/core/openalex_client.py:71-91` and `src/erdos/core/openalex_client.py:156-159`
+
+**Why this fails:** OpenAlex “work object” `ids` contains fields like `doi`, `openalex`, `mag`, `pmid`, `pmcid` — not `arxiv`.
+Reference: https://docs.openalex.org/api-entities/works/work-object#ids
+
+**Live payload example (known arXiv paper):**
+
+- DOI filter works:
 ```bash
-curl -s "https://api.openalex.org/works?filter=ids.arxiv:1706.03762"
-# Returns: {"error":"Invalid query parameters error.","message":"ids.arxiv is not a valid field..."}
+curl -sS 'https://api.openalex.org/works?filter=doi:10.48550%2Farxiv.math%2F0404188&per-page=1' \
+  | jq '.results[0].ids'
+# => {"openalex": "...", "doi": "https://doi.org/10.48550/arxiv.math/0404188", "mag": "..."}
 ```
 
-**Valid OpenAlex ID filters per [documentation](https://docs.openalex.org/api-entities/works/filter-works):**
-- `ids.pmcid` - PubMed Central
-- `ids.pmid` - PubMed
-- `ids.openalex` - OpenAlex ID
-- `ids.mag` - Microsoft Academic Graph
-- `doi` - DOI
-
-**There is NO `ids.arxiv` filter.**
-
-### Fix Options
-
-**Option A: Search fallback (safest)**
-```python
-def get_by_arxiv(self, arxiv_id: str) -> ReferenceRecord:
-    # Search by arXiv URL in title/abstract
-    results = self.search(f"arxiv.org/abs/{arxiv_id}", limit=5)
-    for ref in results:
-        if ref.arxiv_id == arxiv_id:
-            return ref
-    raise ValueError(f"No work found for arXiv:{arxiv_id}")
-```
-
-**Option B: Direct OpenAlex ID lookup (if known)**
-```python
-# OpenAlex works have predictable IDs for some arXiv papers
-# But requires maintaining a mapping or scraping
-```
-
-## Bug 2: Integration Tests Use Wrong DOI
-
-**Failing Tests:**
-```
-tests/integration/test_openalex_integration.py::TestOpenAlexClientLive::test_get_by_doi_real_paper
-tests/integration/test_openalex_integration.py::TestOpenAlexClientLive::test_get_by_arxiv_real_paper
-tests/integration/test_openalex_integration.py::TestOpenAlexClientLive::test_get_citations_for_famous_paper
-tests/integration/test_openalex_integration.py::TestOpenAlexClientLive::test_reference_record_fields_populated
-tests/integration/test_openalex_integration.py::TestOpenAlexClientLive::test_abstract_reconstruction
-```
-
-**Root Cause:** Tests use DOI `10.48550/arXiv.1706.03762` (arXiv-minted) which OpenAlex returns 404 for.
-
+- The arXiv link is in `primary_location.landing_page_url`:
 ```bash
-curl -s "https://api.openalex.org/works/doi:10.48550/arXiv.1706.03762"
-# Returns: 404 Not Found
+curl -sS 'https://api.openalex.org/works?filter=doi:10.48550%2Farxiv.math%2F0404188&per-page=1' \
+  | jq '.results[0].primary_location.landing_page_url'
+# => "http://arxiv.org/abs/math/0404188"
 ```
 
-### Fix Required
+---
 
-Use a paper with a known, working OpenAlex entry. Test with:
-```bash
-curl -s "https://api.openalex.org/works?search=attention%20is%20all%20you%20need&per_page=1"
-# Returns the paper with DOI: https://doi.org/10.65215/2q58a426
-```
+## Fix Options (3)
+
+### Option A (Recommended): arXiv ID → DataCite DOI → `get_by_doi()`
+
+arXiv assigns DataCite DOIs in the form:
+- Modern: `10.48550/arxiv.<YYMM.NNNNN>`
+- Legacy: `10.48550/arxiv.<archive>/<YYMMNNN>`
+
+So for an arXiv ID `math/0404188`:
+`doi = "10.48550/arxiv.math/0404188"`
+
+Implementation outline:
+1. Strip version suffix (`vN`) from the arXiv ID.
+2. Build DOI `10.48550/arxiv.{arxiv_id_clean}`.
+3. Call `get_by_doi(doi)` (documented OpenAlex DOI lookup path).
+4. Set `ref.arxiv_id = arxiv_id_clean` explicitly (don’t rely on OpenAlex payload shape).
+
+This is deterministic and uses supported OpenAlex capabilities.
+
+### Option B: Search fallback (only if Option A fails)
+
+Use OpenAlex `search=` (fuzzy) to search for the arXiv URL, then select a candidate where
+`primary_location.landing_page_url` matches the arXiv ID. This is less reliable because OpenAlex’s `search`
+is not guaranteed to index URLs.
+
+### Option C: Bypass OpenAlex for arXiv
+
+If OpenAlex cannot reliably resolve arXiv, ingest can treat `arxiv_id` as an arXiv-first reference:
+use `arXiv export API + e-print tarball` for metadata + text extraction, and reserve OpenAlex for DOI-only references.
+
+---
+
+## Test Fixes Required
+
+1. Update unit tests to reflect real OpenAlex payload shape (no `ids["arxiv"]`).
+2. Update `tests/integration/test_openalex_integration.py` to use a DOI/arXiv pair that OpenAlex demonstrably supports.
+   Recommended stable choice: `math/0404188` (already used in this repo’s sample problems).
+3. Keep the live integration tests under `@pytest.mark.requires_network` (not in CI), but ensure they pass when run:
+   `uv run pytest tests/integration/test_openalex_integration.py -m requires_network`.
+
+---
 
 ## Acceptance Criteria
 
-1. [ ] Fix `get_by_arxiv()` to use valid lookup method
-2. [ ] Update integration tests with working DOIs
-3. [ ] All 8 integration tests pass: `uv run pytest tests/integration/test_openalex_integration.py -m requires_network`
-4. [ ] Add unit tests that mock the API response to prevent future breakage
-
-## Lesson Learned
-
-**Ralph Wiggum shipped code that was never tested against the real API.** The unit tests mocked the responses, and the integration tests used invalid identifiers. This is a reward hack - tests passed but implementation is broken.
+1. [ ] `get_by_arxiv()` no longer uses `filter=ids.arxiv:...`.
+2. [ ] `ReferenceRecord.arxiv_id` is populated for OpenAlex-derived references when appropriate.
+3. [ ] Unit tests cover DOI mapping + arXiv extraction logic (offline, deterministic).
+4. [ ] Network integration tests pass when invoked explicitly.
 
 ---
 
 ## References
 
-- [OpenAlex Filter Works](https://docs.openalex.org/api-entities/works/filter-works)
-- [OpenAlex Work Object IDs](https://docs.openalex.org/api-entities/works/work-object#ids)
-- [arXiv DOI policy](https://info.arxiv.org/help/doi.html)
+- OpenAlex filters: https://docs.openalex.org/api-entities/works/filter-works
+- OpenAlex work IDs schema: https://docs.openalex.org/api-entities/works/work-object#ids
+- arXiv DOI policy: https://info.arxiv.org/help/doi.html

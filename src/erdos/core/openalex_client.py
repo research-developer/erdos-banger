@@ -11,10 +11,13 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import time
 from dataclasses import dataclass
 from typing import Any
 from urllib.parse import quote
+
+import requests
 
 from erdos.core.models import OpenAccessStatus, ReferenceRecord
 from erdos.core.retry import fetch_with_retry
@@ -68,8 +71,12 @@ def reconstruct_abstract(inverted_index: dict[str, list[int]] | None) -> str | N
     return " ".join(word for _, word in words)
 
 
+_ARXIV_ABS_PREFIX = "https://arxiv.org/abs/"
+_ARXIV_DOI_PREFIX = "https://doi.org/10.48550/arxiv."
+
+
 def extract_arxiv_id(ids: dict[str, Any]) -> str | None:
-    """Extract arXiv ID from OpenAlex IDs object.
+    """Extract arXiv ID from an OpenAlex work `ids` object.
 
     Args:
         ids: OpenAlex IDs object containing various identifiers.
@@ -77,17 +84,56 @@ def extract_arxiv_id(ids: dict[str, Any]) -> str | None:
     Returns:
         arXiv ID (e.g., "2301.00001" or "math/0703001") or None if not present.
     """
-    arxiv_url: str | None = ids.get("arxiv")
-    if arxiv_url:
-        # Format: https://arxiv.org/abs/2301.00001 or https://arxiv.org/abs/math/0703001
-        # Remove the base URL prefix to get the ID
-        prefix = "https://arxiv.org/abs/"
-        if arxiv_url.startswith(prefix):
-            return arxiv_url[len(prefix) :]
-        # Fallback: take everything after the last "abs/"
+    # Some OpenAlex payloads may include an explicit arXiv URL (defensive support).
+    arxiv_url = ids.get("arxiv")
+    if isinstance(arxiv_url, str) and arxiv_url:
+        if arxiv_url.startswith(_ARXIV_ABS_PREFIX):
+            return arxiv_url[len(_ARXIV_ABS_PREFIX) :]
         if "/abs/" in arxiv_url:
             return arxiv_url.split("/abs/")[-1]
-        return arxiv_url.split("/")[-1]
+        return arxiv_url.rsplit("/", 1)[-1]
+
+    # OpenAlex commonly exposes arXiv via the arXiv DataCite DOI in ids.doi:
+    #   https://doi.org/10.48550/arxiv.<arxiv_id>
+    doi_url = ids.get("doi")
+    if (
+        isinstance(doi_url, str)
+        and doi_url
+        and doi_url.lower().startswith(_ARXIV_DOI_PREFIX)
+    ):
+        return doi_url[len(_ARXIV_DOI_PREFIX) :]
+
+    return None
+
+
+def _extract_arxiv_id_from_landing_page_url(url: str | None) -> str | None:
+    """Extract arXiv ID from an OpenAlex landing_page_url."""
+    if not url or not isinstance(url, str):
+        return None
+    match = re.search(r"arxiv\\.org/abs/([^\\s?#]+)", url)
+    if not match:
+        return None
+    return match.group(1)
+
+
+def extract_arxiv_id_from_work(work: dict[str, Any]) -> str | None:
+    """Extract arXiv ID from a full OpenAlex work object.
+
+    OpenAlex does not provide an `ids.arxiv` field. The arXiv identifier is usually
+    discoverable via either:
+    - ids.doi (arXiv DataCite DOI: 10.48550/arxiv.<id>)
+    - primary_location.landing_page_url (arxiv.org/abs/<id>)
+    """
+    ids = work.get("ids")
+    if isinstance(ids, dict) and (arxiv_id := extract_arxiv_id(ids)):
+        return arxiv_id
+
+    primary_loc = work.get("primary_location")
+    if isinstance(primary_loc, dict):
+        landing = primary_loc.get("landing_page_url")
+        if isinstance(landing, str):
+            return _extract_arxiv_id_from_landing_page_url(landing)
+
     return None
 
 
@@ -149,13 +195,15 @@ def openalex_to_reference(work: dict[str, Any]) -> ReferenceRecord:
     Returns:
         ReferenceRecord with OpenAlex metadata.
     """
-    # Extract DOI (remove https://doi.org/ prefix)
+    # Extract DOI (remove https://doi.org/ prefix). Prefer work.doi, fall back to ids.doi.
     doi_raw = work.get("doi") or ""
+    if not doi_raw:
+        ids = work.get("ids")
+        if isinstance(ids, dict):
+            doi_raw = ids.get("doi") or ""
     doi = doi_raw.replace("https://doi.org/", "") if doi_raw else None
 
-    # Extract arXiv ID from IDs object
-    ids = work.get("ids", {})
-    arxiv_id = extract_arxiv_id(ids)
+    arxiv_id = extract_arxiv_id_from_work(work)
 
     # Extract authors from authorships
     authors: list[str] = []
@@ -285,16 +333,23 @@ class OpenAlexClient:
         Raises:
             ValueError: If no work found for the arXiv ID.
         """
-        url = f"{self.BASE_URL}/works"
-        params = self._params(filter=f"ids.arxiv:{arxiv_id}")
+        # OpenAlex does not support an ids.arxiv filter. arXiv e-prints are
+        # deterministically addressable via their DataCite DOIs:
+        #   10.48550/arxiv.<arxiv_id_without_version>
+        arxiv_id_clean = re.sub(r"v\d+$", "", arxiv_id)
+        doi = f"10.48550/arxiv.{arxiv_id_clean}"
 
-        response = self._fetch(url, params)
-        results = response.get("results", [])
+        try:
+            ref = self.get_by_doi(doi)
+        except requests.HTTPError as e:
+            response = getattr(e, "response", None)
+            if response is not None and response.status_code == 404:
+                raise ValueError(f"No work found for arXiv:{arxiv_id_clean}") from e
+            raise
 
-        if not results:
-            raise ValueError(f"No work found for arXiv:{arxiv_id}")
-
-        return openalex_to_reference(results[0])
+        # Ensure the arXiv ID is populated consistently.
+        ref.arxiv_id = arxiv_id_clean
+        return ref
 
     def search(self, query: str, *, limit: int = 25) -> list[ReferenceRecord]:
         """Search works by title/abstract.

@@ -21,16 +21,16 @@ class TestOpenAlexClientLive:
         config = OpenAlexConfig.from_env()
         client = OpenAlexClient(config)
 
-        # Known paper: "Attention Is All You Need" (Transformer paper)
-        ref = client.get_by_doi("10.48550/arXiv.1706.03762")
+        # Known arXiv paper (Green-Tao theorem preprint)
+        ref = client.get_by_doi("10.48550/arxiv.math/0404188")
 
-        assert ref.doi == "10.48550/arXiv.1706.03762"
+        assert ref.doi == "10.48550/arxiv.math/0404188"
         assert ref.title is not None
-        assert "attention" in ref.title.lower()
+        assert "primes" in ref.title.lower()
         assert ref.openalex_id is not None
         assert ref.openalex_id.startswith("https://openalex.org/W")
         assert ref.cited_by_count is not None
-        assert ref.cited_by_count > 1000  # This is a highly cited paper
+        assert ref.cited_by_count > 0
         assert ref.source == "openalex"
 
     def test_get_by_arxiv_real_paper(self) -> None:
@@ -38,12 +38,12 @@ class TestOpenAlexClientLive:
         config = OpenAlexConfig.from_env()
         client = OpenAlexClient(config)
 
-        # Known arXiv paper (Transformer paper again)
-        ref = client.get_by_arxiv("1706.03762")
+        # Known arXiv paper (Green-Tao theorem preprint)
+        ref = client.get_by_arxiv("math/0404188")
 
         assert ref.arxiv_id is not None
         assert ref.title is not None
-        assert "attention" in ref.title.lower()
+        assert "primes" in ref.title.lower()
         assert ref.openalex_id is not None
 
     def test_search_returns_results(self) -> None:
@@ -78,7 +78,7 @@ class TestOpenAlexClientLive:
         client = OpenAlexClient(config)
 
         # First get a known paper's OpenAlex ID
-        paper = client.get_by_doi("10.48550/arXiv.1706.03762")
+        paper = client.get_by_doi("10.48550/arxiv.math/0404188")
         assert paper.openalex_id is not None
 
         # Then get its citations
@@ -96,7 +96,7 @@ class TestOpenAlexClientLive:
         client = OpenAlexClient(config)
 
         # Use a paper we know has good metadata
-        ref = client.get_by_doi("10.48550/arXiv.1706.03762")
+        ref = client.get_by_doi("10.48550/arxiv.math/0404188")
 
         # Check all OpenAlex-specific fields
         assert ref.openalex_id is not None
@@ -118,14 +118,14 @@ class TestOpenAlexClientLive:
         config = OpenAlexConfig.from_env()
         client = OpenAlexClient(config)
 
-        ref = client.get_by_doi("10.48550/arXiv.1706.03762")
+        ref = client.get_by_doi("10.48550/arxiv.math/0404188")
 
-        # The Transformer paper should have an abstract
+        # The Green-Tao arXiv record should have an abstract
         assert ref.abstract is not None
         assert len(ref.abstract) > 50  # Should be a meaningful abstract
         # Should contain recognizable words
         assert any(
-            word in ref.abstract.lower() for word in ["model", "attention", "sequence"]
+            word in ref.abstract.lower() for word in ["prime", "primes", "progression"]
         )
 
     def test_config_from_env_polite_pool(self) -> None:
