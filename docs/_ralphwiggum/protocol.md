@@ -382,10 +382,10 @@ make smoke
 
 ```bash
 # See all commits from Ralph
-git log dev..ralph-wiggum-v1.1 --oneline
+git log dev..ralph-wiggum-v1.2 --oneline
 
 # See full diff
-git diff dev..ralph-wiggum-v1.1 --stat
+git diff dev..ralph-wiggum-v1.2 --stat
 
 # Review specific commit
 git show <commit-hash>
@@ -409,10 +409,10 @@ make test-all
 ```bash
 # Option 1: Direct merge
 git checkout dev
-git merge ralph-wiggum-v1.1
+git merge ralph-wiggum-v1.2
 
 # Option 2: PR for review
-gh pr create --base dev --head ralph-wiggum-v1.1 \
+gh pr create --base dev --head ralph-wiggum-v1.2 \
   --title "Ralph Wiggum v1.1: Implement specs 010-017" \
   --body "Automated implementation via Ralph Wiggum loop"
 ```
@@ -422,7 +422,7 @@ gh pr create --base dev --head ralph-wiggum-v1.1 \
 ```bash
 # Nuclear option - delete branch entirely
 git checkout dev
-git branch -D ralph-wiggum-v1.1
+git branch -D ralph-wiggum-v1.2
 
 # Or revert specific commits
 git revert <bad-commit-hash>
@@ -517,7 +517,7 @@ For a step-by-step pre-flight, see `docs/_ralphwiggum/LAUNCH_CHECKLIST.md`.
 ```bash
 # 1. Create sandbox branch
 git checkout dev && git pull
-git checkout -b ralph-wiggum-v1.1
+git checkout -b ralph-wiggum-v1.2
 
 # 2. Ensure PROGRESS.md and PROMPT.md exist in root
 ls PROGRESS.md PROMPT.md
@@ -549,6 +549,7 @@ if [[ -z "$TIMEOUT_CMD" ]]; then
   fi
 fi
 
+rm -rf logs/ralph 2>/dev/null || true
 mkdir -p logs/ralph
 
 "$TIMEOUT_CMD" "$TIMEOUT" bash -c '
@@ -569,10 +570,10 @@ mkdir -p logs/ralph
 watch -n 5 'git log --oneline -10'
 
 # 7. Audit when done
-git log dev..ralph-wiggum-v1.1 --oneline
-git diff dev..ralph-wiggum-v1.1 --stat
+git log dev..ralph-wiggum-v1.2 --oneline
+git diff dev..ralph-wiggum-v1.2 --stat
 make ci
 
 # 8. Merge if good
-git checkout dev && git merge ralph-wiggum-v1.1
+git checkout dev && git merge ralph-wiggum-v1.2
 ```
