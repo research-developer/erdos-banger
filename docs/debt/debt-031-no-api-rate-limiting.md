@@ -49,8 +49,8 @@ From Crossref API etiquette:
 ## arXiv Guidelines
 
 From arXiv API documentation:
-- Requests should not exceed 1 per 3 seconds
-- Bulk requests should use rate limiting
+- Requests should include a `User-Agent` header (implemented via `ARXIV_USER_AGENT`)
+- Bulk requests should be rate limited (a commonly cited guideline is ~1 request per ~3 seconds)
 
 ## Acceptance Criteria
 

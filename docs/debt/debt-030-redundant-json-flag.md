@@ -11,8 +11,7 @@ The `--json` flag is defined both globally in `cli.py` AND locally in every comm
 
 1. Violates DRY principle
 2. Confuses users about which form is "correct"
-3. Has subtle override behavior (command-level wins if both specified)
-4. Requires updating multiple files if flag behavior changes
+3. Requires updating multiple files if flag behavior changes
 
 ## Evidence
 
@@ -23,7 +22,7 @@ json_output: Annotated[
     bool,
     typer.Option(
         "--json",
-        help="Output results in JSON format.",
+        help="Output as JSON for machine consumption.",
     ),
 ] = False,
 ```
@@ -32,17 +31,17 @@ json_output: Annotated[
 
 | File | Lines |
 |------|-------|
-| `list_cmd.py` | 160-166 |
-| `show.py` | 101-107 |
-| `refs.py` | 85-91 |
-| `search.py` | 305-308 |
-| `ask.py` | 150 |
-| `ingest.py` | 162 |
-| `lean.py` | 181-187, 224-230, 276-282 |
+| `src/erdos/commands/list_cmd.py` | 165-171 |
+| `src/erdos/commands/show.py` | 106-112 |
+| `src/erdos/commands/refs.py` | 90-96 |
+| `src/erdos/commands/search.py` | 323-326 |
+| `src/erdos/commands/ask.py` | 150 |
+| `src/erdos/commands/ingest.py` | 162 |
+| `src/erdos/commands/lean.py` | 194-200, 237-243, 289-295 |
 
 Each command calls `set_json_mode(ctx, json_output)`, which sets `ctx.obj["json"] = True` when `--json` is passed.
 
-## Override Behavior
+## Behavior Notes
 
 ```bash
 erdos --json show 6         # Works (global sets it)

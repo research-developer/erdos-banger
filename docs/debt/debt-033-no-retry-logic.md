@@ -14,7 +14,7 @@ Network calls in the API clients and ingest module have no retry logic. A single
 ### No Retry on Timeout
 
 ```python
-# crossref_client.py:109 - Single attempt, no retry
+# src/erdos/core/crossref_client.py:109 - Single attempt, no retry
 response = requests.get(url, params=params, headers=headers, timeout=timeout)
 response.raise_for_status()
 ```
@@ -22,7 +22,7 @@ response.raise_for_status()
 ### No Retry on Connection Error
 
 ```python
-# arxiv_client.py:120 - Single attempt, no retry
+# src/erdos/core/arxiv_client.py:129 - Single attempt, no retry
 response = requests.get(url, params=params, headers=headers, timeout=timeout)
 response.raise_for_status()
 ```
@@ -30,9 +30,9 @@ response.raise_for_status()
 ### No Categorization of Errors
 
 ```python
-# ingest/fetch.py:89 - All errors treated the same
+# src/erdos/core/ingest/fetch.py:93 - Errors treated the same (generic message)
 except (OSError, requests.RequestException) as e:
-    return (None, f"Download failed: {e}")
+    error = f"Download failed: {e}"
 ```
 
 The error message "Download failed" doesn't distinguish between:
@@ -63,7 +63,7 @@ The error message "Download failed" doesn't distinguish between:
 
 ## Recommended Implementation
 
-Using the `tenacity` library (already a common pattern):
+If adding a dependency is acceptable, `tenacity` is a good fit:
 
 ```python
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -81,7 +81,7 @@ def fetch_crossref_work(doi: str, ...) -> dict[str, Any]:
         return response.json()
 ```
 
-Or simpler manual implementation:
+Or, avoid new dependencies with a simple manual implementation:
 
 ```python
 def _fetch_with_retry(url: str, max_attempts: int = 3, **kwargs) -> requests.Response:

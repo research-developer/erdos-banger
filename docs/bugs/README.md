@@ -13,7 +13,7 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 *None currently active.*
 
-*Note: BUG-013, BUG-015 and BUG-017 were invalidated during validation (false positives).*
+*Note: BUG-013 was invalidated as a false positive. BUG-015 and BUG-017 were review findings that were invalidated before standalone bug decks were created.*
 
 ## Archived Bugs
 
@@ -72,9 +72,9 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 ## Quick Links
 
 - [Adversarial Review 2026-01-21](../_archive/bugs/adversarial-review-2026-01-21.md)
-  - 3 confirmed bugs (1 P1, 2 P2) - 2 false positives invalidated
-  - 7 technical debt items (1 P1, 4 P2, 2 P3)
-  - Focus: silent failures, dead code, API robustness
+  - 2 confirmed bugs (1 P1, 1 P2) - 3 false positives invalidated
+  - 7 technical debt items (4 P2, 3 P3)
+  - Focus: silent failures, observability gaps, API robustness
 - [Adversarial Review 2026-01-17](../_archive/bugs/adversarial-review-2026-01-17.md)
   - 3 spec drift issues
   - 9 missing test scenarios

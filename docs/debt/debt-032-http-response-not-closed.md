@@ -11,7 +11,7 @@ HTTP responses from `requests.get()` are not being closed explicitly or used wit
 
 ## Evidence
 
-### crossref_client.py:109
+### src/erdos/core/crossref_client.py:109
 
 ```python
 response = requests.get(url, params=params, headers=headers, timeout=timeout)
@@ -19,7 +19,7 @@ response.raise_for_status()
 return response.json()  # Response not explicitly closed
 ```
 
-### arxiv_client.py:120
+### src/erdos/core/arxiv_client.py:129
 
 ```python
 response = requests.get(url, params=params, headers=headers, timeout=timeout)
@@ -27,7 +27,7 @@ response.raise_for_status()
 return response.text  # Response not explicitly closed
 ```
 
-### ingest/fetch.py:66
+### src/erdos/core/ingest/fetch.py:70
 
 ```python
 response = requests.get(source_url, timeout=timeout)

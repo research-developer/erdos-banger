@@ -15,17 +15,17 @@ All command modules have `# type: ignore[arg-type]` suppressions on their early-
 
 | File | Line | Code |
 |------|------|------|
-| `commands/ingest.py` | 174 | `exit_with_result(ctx, app_error)  # type: ignore[arg-type]` |
-| `commands/show.py` | 119 | `exit_with_result(ctx, app_error)  # type: ignore[arg-type]` |
-| `commands/ask.py` | 187 | `exit_with_result(ctx, app_error)  # type: ignore[arg-type]` |
-| `commands/refs.py` | 103 | `exit_with_result(ctx, app_error)  # type: ignore[arg-type]` |
-| `commands/lean.py` | 294 | `exit_with_result(ctx, app_error)  # type: ignore[arg-type]` |
-| `commands/list_cmd.py` | 193 | `exit_with_result(ctx, app_error)  # type: ignore[arg-type]` |
+| `src/erdos/commands/ingest.py` | 174 | `exit_with_result(ctx, app_error)  # type: ignore[arg-type]` |
+| `src/erdos/commands/show.py` | 124 | `exit_with_result(ctx, app_error)  # type: ignore[arg-type]` |
+| `src/erdos/commands/ask.py` | 187 | `exit_with_result(ctx, app_error)  # type: ignore[arg-type]` |
+| `src/erdos/commands/refs.py` | 108 | `exit_with_result(ctx, app_error)  # type: ignore[arg-type]` |
+| `src/erdos/commands/lean.py` | 307 | `exit_with_result(ctx, app_error)  # type: ignore[arg-type]` |
+| `src/erdos/commands/list_cmd.py` | 198 | `exit_with_result(ctx, app_error)  # type: ignore[arg-type]` |
 
 ### Related Suppressions
 
 ```python
-# crossref_client.py:112
+# src/erdos/core/crossref_client.py:112
 return response.json()  # type: ignore[no-any-return]
 ```
 

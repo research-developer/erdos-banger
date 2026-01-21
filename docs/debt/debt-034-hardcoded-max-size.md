@@ -11,7 +11,7 @@ The maximum TeX file size is defined in two places with the same value, violatin
 
 ## Evidence
 
-### Local Definition (arxiv_client.py:144)
+### Local Definition (src/erdos/core/arxiv_client.py:153)
 
 ```python
 def extract_arxiv_text(tarball_bytes: bytes) -> bytes:
@@ -19,10 +19,10 @@ def extract_arxiv_text(tarball_bytes: bytes) -> bytes:
     ...
 ```
 
-### Constant Definition (constants.py:49)
+### Constant Definition (src/erdos/core/constants.py:49)
 
 ```python
-MAX_TEX_FILE_SIZE = 2 * 1024 * 1024  # 2 MB limit for TeX file extraction
+MAX_TEX_FILE_SIZE = 2 * 1024 * 1024  # Maximum LaTeX file size to process (2 MiB).
 ```
 
 The constant exists but is not used in `arxiv_client.py`.
@@ -36,15 +36,15 @@ The constant exists but is not used in `arxiv_client.py`.
 ## Fix
 
 ```python
-# Before (arxiv_client.py)
+# Before (src/erdos/core/arxiv_client.py)
 def extract_arxiv_text(tarball_bytes: bytes) -> bytes:
     MAX_SIZE = 2 * 1024 * 1024
     ...
 
-# After
+# After (src/erdos/core/arxiv_client.py)
 from erdos.core.constants import MAX_TEX_FILE_SIZE
 
-def extract_arxiv_text(tarball_bytes: bytes) -> str | None:
+def extract_arxiv_text(tarball_bytes: bytes) -> bytes:
     # Use MAX_TEX_FILE_SIZE instead of local MAX_SIZE
     ...
 ```

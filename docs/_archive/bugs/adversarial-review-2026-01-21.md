@@ -13,39 +13,39 @@
 
 ## Executive Summary
 
-This review identified **3 confirmed bugs** (1 P1, 2 P2) and **7 technical debt items** (1 P1, 4 P2, 2 P3) across the codebase. The main areas of concern are:
+This review identified **2 confirmed bugs** (1 P1, 1 P2) and **7 technical debt items** (4 P2, 3 P3) across the codebase. One initially suspected bug (BUG-013) plus two other candidates (BUG-015, BUG-017) were later **invalidated** as false positives.
 
 1. **Silent failures** - Multiple exception handlers swallow errors without logging
-2. **Dead code** - `--log-level` flag is defined but never used (no logging calls anywhere)
+2. **Observability gaps** - logging exists but is inconsistent across modules/operations
 3. **Resource management** - HTTP responses not properly closed with context managers
 4. **API client robustness** - No retry logic or rate limiting implementation
 
-**Note on false positives:** Initial analysis identified 2 additional bugs that were invalidated:
+**Note on false positives:** Initial analysis identified additional issues that were invalidated:
 - ~~BUG-015 (array bounds)~~: Code is safe - empty list checks (`not title_list`) correctly catch `[]`
 - ~~BUG-017 (None output)~~: `subprocess.run(capture_output=True, text=True)` returns empty strings, not None
 
 ---
 
-## Confirmed Bugs
+## Bug Findings
 
-### BUG-013: `--log-level` flag is defined but never used (Dead Code)
+### BUG-013: `--log-level` dead code (Invalidated)
 
 **Priority:** P2
-**Status:** Confirmed
-**Location:** `src/erdos/cli.py:69-75`, `src/erdos/cli.py:90`
+**Status:** Invalidated
+**Location:** `src/erdos/cli.py` (global flag + logging setup)
 
-The global `--log-level` flag is defined and stored in `ctx.obj["log_level"]`, but no command ever reads this value after the initial `_configure_logging()` call at startup. More critically, there are **zero logging calls** anywhere in the codebase.
+This was filed as “dead code” because commands don’t read `ctx.obj["log_level"]` after startup.
+
+However, `src/erdos/cli.py` does call `_configure_logging(log_level)` during app startup, and multiple modules emit logs via `logging.getLogger(__name__)` (e.g., `logger.debug`, `logger.exception`). The stored context value is redundant but harmless.
 
 **Evidence:**
-- Flag defined at line 69-75
-- Stored at line 90: `ctx.obj["log_level"] = log_level`
-- `_configure_logging()` sets up Python logging at line 83
-- Grep for `logger.` in src/erdos/: **0 matches**
-- Grep for `logging.(debug|info|warning|error)` in src/erdos/: **0 matches**
+- `src/erdos/cli.py` defines `--log-level` and calls `_configure_logging(log_level)` in the Typer callback.
+- Logging usage exists, for example:
+  - `src/erdos/commands/search.py` (`logger.debug`, `logger.exception`)
+  - `src/erdos/core/ingest/service.py` (`logger.warning` on corrupted manifests)
+  - `src/erdos/core/lean_runner.py` (`logger.debug` on version probe failure)
 
-**Impact:** User confusion; the flag appears functional but does nothing because no code emits logs.
-
-**Fix:** Either (a) add actual logging calls to key operations, or (b) remove the dead flag.
+**Resolution:** Treat any remaining logging inconsistencies as technical debt (see DEBT-029).
 
 ---
 
@@ -110,13 +110,12 @@ except (...) as e:
 
 ### DEBT-029: Logging coverage gaps
 
-**Priority:** P1
-**Impact:** No observability, no audit trail, makes debugging production issues impossible
+**Priority:** P2
+**Impact:** Observability gaps make it harder to diagnose batch runs and best-effort fallbacks
 
 **Evidence:**
-- Grep for `logger.debug`, `logger.info`, `logger.warning`, `logger.error`: **0 matches** in src/
-- `_configure_logging()` in cli.py sets up logging but nothing uses it
-- Errors are either raised or silently swallowed; no middle ground
+- Logging exists (e.g., `src/erdos/commands/search.py`), but coverage is inconsistent.
+- Many core operations (HTTP requests, long-running steps) do not emit INFO/DEBUG logs that help operators understand what happened.
 
 **Fix:** Add `logger = logging.getLogger(__name__)` to key modules and use it for:
 - API calls (DEBUG level)
@@ -140,7 +139,7 @@ Every command defines its own `--json` flag in addition to the global flag. Both
 
 ### DEBT-031: Rate limiting constant unused
 
-**Priority:** P2
+**Priority:** P3
 **Location:** `src/erdos/core/crossref_client.py`, `src/erdos/core/arxiv_client.py`
 
 **Evidence:**
@@ -215,9 +214,16 @@ exit_with_result(ctx, app_error)  # type: ignore[arg-type]
 
 | ID | Title | Priority | Location |
 |----|-------|----------|----------|
-| BUG-013 | `--log-level` flag is dead code | P2 | `cli.py:69-75` |
 | BUG-014 | Silent exception swallowing masks errors | P1 | Multiple files |
 | BUG-016 | Manifest corruption silently returns None | P2 | `ingest/service.py:77-79` |
+
+### Invalidated Findings
+
+| ID | Title | Priority | Notes |
+|----|-------|----------|-------|
+| BUG-013 | `--log-level` dead code | P2 | Logging is configured and used; only `ctx.obj["log_level"]` is redundant |
+| BUG-015 | Array bounds | P3 | Safe: empty list checks handle `[]` correctly |
+| BUG-017 | Subprocess None output | P3 | `subprocess.run(..., text=True)` returns empty strings, not None |
 
 ### Technical Debt
 
@@ -235,12 +241,11 @@ exit_with_result(ctx, app_error)  # type: ignore[arg-type]
 
 ## Recommended Fix Order
 
-1. **BUG-014 + DEBT-029** (P1) - Add logging framework and use it for silent exception handlers
+1. **BUG-014 + DEBT-029** (P1/P2) - Add logging where silent fallbacks occur; improve observability
 2. **BUG-016** (P2) - Add logging for manifest corruption
-3. **BUG-013** (P2) - Either wire --log-level properly or remove dead flag
-4. **DEBT-031/032/033** (P2) - API client robustness cluster
-5. **DEBT-035** (P2) - Fix type annotations
-6. **DEBT-030/034** (P3) - DRY cleanup
+3. **DEBT-031/032/033** (P2/P3) - API client robustness cluster
+4. **DEBT-035** (P2) - Fix type annotations
+5. **DEBT-030/034** (P3) - DRY cleanup
 
 ---
 
