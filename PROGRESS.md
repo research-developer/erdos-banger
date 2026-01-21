@@ -1,7 +1,7 @@
 # erdos-banger - Ralph Wiggum Progress Tracker
 
 **Last Updated:** 2026-01-21
-**Status:** Ready - Debt Sprint (DEBT-029..DEBT-035)
+**Status:** Ready - Debt Sprint + Spec Implementation
 **Branch:** ralph-wiggum-v1.2
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
@@ -53,6 +53,25 @@
 - [ ] **DEBT-035**: `type: ignore` in exit paths
   - Deck: `docs/debt/debt-035-type-ignore-exit-paths.md`
   - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
+
+---
+
+## Spec Queue (After Debt Complete)
+
+- [ ] **SPEC-020**: OpenAlex Integration
+  - Spec: `docs/specs/spec-020-openalex-integration.md`
+  - Target: v1.2
+  - Acceptance: All spec acceptance criteria met; `make ci` green.
+
+- [ ] **SPEC-021**: Aristotle Integration
+  - Spec: `docs/specs/spec-021-aristotle-integration.md`
+  - Target: v1.2+
+  - Acceptance: All spec acceptance criteria met; `make ci` green.
+
+- [ ] **SPEC-013**: Logging & Evaluation
+  - Spec: `docs/specs/spec-013-logging-evaluation.md`
+  - Target: v1.2
+  - Acceptance: All spec acceptance criteria met; `make ci` green.
 
 ---
 

@@ -1,6 +1,6 @@
-# erdos-banger - Ralph Wiggum Loop Prompt (Debt/Bug Sprint)
+# erdos-banger - Ralph Wiggum Loop Prompt (Debt + Specs Sprint)
 
-You are fixing technical debt and bugs for the erdos-banger CLI toolkit using **Ironclad TDD**.
+You are fixing technical debt AND implementing specs for the erdos-banger CLI toolkit using **Ironclad TDD**.
 This prompt runs headless via the Ralph Wiggum loop.
 
 If `PROGRESS.md` has no unchecked items, exit cleanly without making changes.
@@ -14,10 +14,10 @@ If `PROGRESS.md` has no unchecked items, exit cleanly without making changes.
 ```bash
 cat PROGRESS.md
 cat docs/debt/README.md
-cat docs/bugs/README.md
+cat docs/specs/README.md
 ```
 
-Then read the specific debt document for your current task.
+Then read the specific debt or spec document for your current task.
 
 **Note:** The loop writes per-iteration logs under `logs/ralph/` (gitignored). Never paste secrets into tracked files; `.env` is gitignored by design.
 
@@ -27,13 +27,15 @@ Then read the specific debt document for your current task.
 
 1. Find the **FIRST** unchecked `[ ]` item in PROGRESS.md
    - If there are no unchecked items, exit cleanly (do not invent new tasks)
-2. Read the corresponding debt doc: `docs/debt/debt-XXX-*.md`
-3. **READ THE ACCEPTANCE CRITERIA** in the debt doc - you MUST complete ALL of them
-4. Apply the **Critical Review Prompt** (below) to validate the debt claims
-5. **FOLLOW TDD** (see below) - write tests for new behavior BEFORE refactoring
+2. Determine task type:
+   - **DEBT-XXX**: Read `docs/debt/debt-XXX-*.md`
+   - **SPEC-XXX**: Read `docs/specs/spec-XXX-*.md`
+3. **READ THE ACCEPTANCE CRITERIA** - you MUST complete ALL of them
+4. Apply the **Critical Review Prompt** (below) to validate claims
+5. **FOLLOW TDD** (see below) - write tests BEFORE implementation
 6. Complete that ONE item fully (all acceptance criteria met, tests pass, quality gates pass)
-7. **Update the debt doc**: Change status to "Fixed", add commit hash
-8. **Update docs/debt/README.md**: Move item from Active to Archived section
+7. **Update the doc**: Change status to "Fixed" (debt) or "Complete" (spec), add commit hash
+8. **Update README.md**: Move item from Active to Archived section
 9. Check off the item in PROGRESS.md: `[ ]` → `[x]`
 10. Append a short entry to PROGRESS.md "Work Log" (what changed + files modified)
 11. **ATOMIC COMMIT** (see format below)
@@ -46,10 +48,11 @@ Then read the specific debt document for your current task.
 
 If you hit any of the following, STOP and request human input:
 
-1. A debt doc is inaccurate or contradicts the actual code.
-2. Fixing the debt would require >10 files or >500 LoC changes.
+1. A debt/spec doc is inaccurate or contradicts the actual code.
+2. The task would require >10 files or >500 LoC changes (unless the spec explicitly expects this).
 3. Quality gates fail after 3 fix attempts for the same root cause.
-4. The refactor would change behavior (not just structure).
+4. The spec has unresolved design questions or missing dependencies.
+5. External dependencies are missing (e.g., `aristotlelib` not installed for SPEC-021).
 
 In these cases:
 - Write a short bug doc in `docs/bugs/bug-XXX-*.md`
@@ -58,8 +61,8 @@ In these cases:
 
 ### ANTI-REWARD-HACK: "Too Big" Handling
 
-**CRITICAL:** If a debt task would touch >10 files or exceed ~500 LoC:
-1. Break it into subtasks in PROGRESS.md (e.g., DEBT-017-A, DEBT-017-B, etc.)
+**CRITICAL:** If a task would touch >10 files or exceed ~500 LoC:
+1. Break it into subtasks in PROGRESS.md (e.g., SPEC-020-A, SPEC-020-B, etc.)
 2. **IMMEDIATELY start the first subtask in the SAME iteration**
 3. Do NOT just document and exit - that is a reward hack
 
@@ -67,7 +70,7 @@ In these cases:
 
 ## Critical Review Prompt (MANDATORY)
 
-Before changing code based on the debt doc:
+Before changing code based on the debt/spec doc:
 
 ```text
 Review the claim or feedback (it may be from an internal or external agent).
@@ -79,13 +82,13 @@ with good intentions for constructive criticism. Ship the exact end-to-end
 implementation we need.
 ```
 
-**VERIFY the debt doc claims against actual code before changing anything.**
+**VERIFY the doc claims against actual code before changing anything.**
 
 ---
 
-## TDD Workflow for Refactoring
+## TDD Workflow
 
-### The TDD Cycle for Debt
+### For Debt (Refactoring)
 
 1. **Verify existing tests pass** - Run `make ci` first
 2. **Add tests for new structure** (if creating new functions/modules)
@@ -93,12 +96,20 @@ implementation we need.
 4. **Verify all tests still pass** - No behavior change
 5. **Remove noqa suppressions** (if applicable)
 
+### For Specs (New Features)
+
+1. **Verify existing tests pass** - Run `make ci` first
+2. **Write failing tests FIRST** - Tests that exercise the new behavior
+3. **Implement the feature** - Make tests pass
+4. **Add integration tests** - Test the CLI/command if applicable
+5. **Verify all tests pass** - `make ci`
+
 ### Rules
 
-1. **Pure refactors don't change behavior** - Existing tests must pass
-2. **New structure gets new tests** - If you extract a function, test it
-3. **Keep tests green** - Never commit with failing tests
-4. **Coverage must not drop** - 80% minimum maintained
+1. **Tests first** - Never implement without tests
+2. **Keep tests green** - Never commit with failing tests
+3. **Coverage must not drop** - 80% minimum maintained
+4. **Follow the spec exactly** - Don't add features not in the spec
 
 ---
 
@@ -118,6 +129,8 @@ If ANY check fails, fix it before proceeding.
 
 ## Atomic Commit Format
 
+### For Debt:
+
 ```bash
 git add -A && git commit -m "$(cat <<'EOF'
 [DEBT-XXX] Type: Brief description
@@ -130,22 +143,32 @@ EOF
 git push
 ```
 
+### For Specs:
+
+```bash
+git add -A && git commit -m "$(cat <<'EOF'
+[SPEC-XXX] Feat: Brief description
+
+- What was implemented
+- Tests added
+- Quality gates passed
+EOF
+)"
+git push
+```
+
 **Type prefixes:**
-- `Fix:` - Resolving the debt item
+- `Fix:` - Resolving a debt item
 - `Refactor:` - Structural change (no behavior change)
+- `Feat:` - New feature (spec implementation)
 - `Add:` - Adding new module/helper
 - `Test:` - Test improvements
-
-**Examples:**
-- `[DEBT-020] Fix: Replace magic numbers with constants`
-- `[DEBT-018] Refactor: Extract arXiv download helper`
-- `[DEBT-017] Refactor: Extract ingest helper functions`
 
 ---
 
 ## Archive Protocol
 
-After completing a debt item:
+### After completing a DEBT item:
 
 1. **Update the debt doc header:**
    ```markdown
@@ -157,11 +180,27 @@ After completing a debt item:
    - Remove from "Active Debt" table
    - Add to "Archived Debt" table with commit hash
    - Add file path to "Archived Debt Decks" list
-   - Update "Total Active Debt" count
 
 3. **Move the file:**
    ```bash
    git mv docs/debt/debt-XXX-*.md docs/_archive/debt/
+   ```
+
+### After completing a SPEC item:
+
+1. **Update the spec doc header:**
+   ```markdown
+   **Status:** Complete
+   **Implemented In:** <commit-hash>
+   ```
+
+2. **Update docs/specs/README.md:**
+   - Move from "Deferred Specs" to "Archived Specs" table
+   - Add location link
+
+3. **Move the file:**
+   ```bash
+   git mv docs/specs/spec-XXX-*.md docs/_archive/specs/
    ```
 
 ---
@@ -179,7 +218,7 @@ git add -A
 git status  # Should show all staged or clean
 
 # 4. Commit with proper message
-git commit -m "[DEBT-XXX] Type: description"
+git commit -m "[DEBT-XXX] Type: description"  # or [SPEC-XXX]
 
 # 5. Push to remote
 git push
@@ -197,9 +236,11 @@ git push
 ## File Locations (SSOT)
 
 - Debt docs: `docs/debt/debt-*.md`
+- Spec docs: `docs/specs/spec-*.md`
 - Archived debt: `docs/_archive/debt/`
+- Archived specs: `docs/_archive/specs/`
 - Source: `src/erdos/`
-- Tests: `tests/unit/`, `tests/integration/`
+- Tests: `tests/unit/`, `tests/integration/`, `tests/e2e/`
 
 ---
 
