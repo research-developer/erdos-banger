@@ -111,6 +111,12 @@ ignore = [
     "PLC0415", # Imports inside functions OK in tests (for conditional imports)
     "F841",   # Unused variables OK in tests (for capturing side effects)
 ]
+"src/erdos/commands/convert.py" = [
+    "TC003",  # Path used at runtime for typer CLI argument types
+]
+"src/erdos/core/pdf_converter.py" = [
+    "TC003",  # Path used at runtime in function signatures
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["erdos"]
@@ -155,6 +161,21 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "mcp.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "marker",
+    "marker.*",
+    "marker.converters",
+    "marker.converters.*",
+    "marker.config",
+    "marker.config.*",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["pdfplumber", "pdfplumber.*"]
 ignore_missing_imports = true
 
 [tool.pydantic-mypy]

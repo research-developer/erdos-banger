@@ -101,8 +101,8 @@
   - Acceptance: All spec acceptance criteria met; `make ci` green.
   - Note: Requires `mcp[cli]` optional dep.
 
-- [ ] **SPEC-019**: PDF Conversion
-  - Spec: `docs/specs/spec-019-pdf-conversion.md`
+- [x] **SPEC-019**: PDF Conversion
+  - Spec: `docs/_archive/specs/spec-019-pdf-conversion.md`
   - Target: v2.0
   - Acceptance: All spec acceptance criteria met; `make ci` green.
   - Note: Requires `marker` external dep; most complex spec.
@@ -470,6 +470,32 @@
 - Path traversal protection in lean_check (rejects `../` patterns)
 - Tools reuse existing core logic (no shell subprocess calls)
 - Tests guarded with `pytest.importorskip("mcp")` for optional dependency
+
+### 2026-01-21: SPEC-019 PDF Conversion implemented
+
+**Files created:**
+- `src/erdos/core/pdf_converter.py` - PDF converter abstraction with PDFConverter enum, LLMService enum, PDFConversionConfig, PDFConversionResult, is_marker_available(), is_pdfplumber_available(), get_available_converters(), select_converter(), convert_with_pdfplumber(), convert_with_marker(), convert_pdf()
+- `src/erdos/commands/convert.py` - Standalone `erdos convert` command with --output, --format, --converter, --use-llm, --llm-service, --force-ocr options
+- `tests/unit/test_pdf_converter.py` - 21 unit tests for converter detection, enums, config, results, and conversion functions
+- `tests/integration/test_pdf_convert.py` - 10 integration tests for CLI command help, validation, output formats, and options
+- `tests/integration/test_pdf_ingest.py` - 6 integration tests for ingest command PDF options (--pdf, --no-pdf, --pdf-converter, --use-llm)
+
+**Files modified:**
+- `src/erdos/cli.py` - Registered convert command
+- `src/erdos/commands/ingest.py` - Added PDF options to IngestOptions dataclass (pdf, pdf_converter, use_llm); added CLI options (--pdf, --no-pdf, --pdf-converter, --use-llm)
+- `src/erdos/core/literature_paths.py` - Added get_pdf_cache_path(), get_pdf_extract_path(), sanitize_reference_id() for PDF storage paths
+- `pyproject.toml` - Added per-file ignores for TC003 (Path runtime usage); added mypy overrides for marker and pdfplumber optional dependencies
+- `docs/specs/spec-019-pdf-conversion.md` - Status updated to Complete
+- `docs/specs/README.md` - Moved SPEC-019 from Deferred to Archived; updated v2.0 to DONE
+
+**Features:**
+- `erdos convert paper.pdf` for standalone PDF conversion
+- Marker (GPL) as primary converter for high-quality math extraction
+- pdfplumber (MIT) as fallback for basic text extraction
+- LLM-enhanced extraction via --use-llm and --llm-service options
+- PDF options on ingest command (--pdf, --no-pdf, --pdf-converter, --use-llm)
+- Output formats: markdown (default), text, json
+- Automatic converter detection and fallback
 
 (entries added by Ralph loop as tasks complete)
 

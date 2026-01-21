@@ -54,6 +54,10 @@ class IngestOptions:
     resume: bool = False
     dry_run: bool = False
     max_concurrent: int = 1
+    # PDF options (SPEC-019)
+    pdf: bool = False
+    pdf_converter: str = "marker"
+    use_llm: bool = False
 
 
 app = typer.Typer(
@@ -440,6 +444,25 @@ def ingest(
         int,
         typer.Option("--max-concurrent", help="Max parallel operations (ingest: 1)"),
     ] = 1,
+    # PDF options (SPEC-019)
+    pdf: Annotated[
+        bool,
+        typer.Option("--pdf", help="Enable PDF conversion for non-arXiv references"),
+    ] = False,
+    no_pdf: Annotated[
+        bool,
+        typer.Option("--no-pdf", help="Skip PDFs entirely (metadata only)"),
+    ] = False,
+    pdf_converter: Annotated[
+        str,
+        typer.Option(
+            "--pdf-converter", help="PDF converter: marker (default), pdfplumber"
+        ),
+    ] = "marker",
+    use_llm: Annotated[
+        bool,
+        typer.Option("--use-llm", help="Enable LLM-enhanced PDF extraction"),
+    ] = False,
 ) -> None:
     """Ingest literature metadata and cache for problems.
 
@@ -472,6 +495,10 @@ def ingest(
 
     # Prepare and execute
     _show_progress_message(problem_id if not batch_mode else None, json_mode)
+    # Resolve PDF mode
+    # --no-pdf takes precedence over --pdf
+    pdf_enabled = pdf and not no_pdf
+
     options = IngestOptions(
         problem_id=problem_id,
         force=force,
@@ -491,6 +518,9 @@ def ingest(
         resume=resume,
         dry_run=dry_run,
         max_concurrent=max_concurrent,
+        pdf=pdf_enabled,
+        pdf_converter=pdf_converter,
+        use_llm=use_llm,
     )
     mailto_prepared, repo_root = _prepare_ingest_options(mailto)
     app_ctx, app_error = get_app_context(ctx, command="erdos ingest")

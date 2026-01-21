@@ -10,7 +10,7 @@ v1.1 (DONE)     Literature: Ingest + RAG Q&A
 v1.2 (DONE)     Iteration: Loop + logging + OpenAlex metadata
 v1.3 (DONE)     Enhancement: Vectors + batch ops
 v1.4 (DONE)     Integration: Formal conjectures + MCP
-v2.0 (READY)    Expansion: PDF conversion (Marker + LLM)
+v2.0 (DONE)     Expansion: PDF conversion (Marker + LLM)
 ```
 
 ## Active Specs
@@ -33,7 +33,7 @@ Specs designed for future versions.
 
 | ID | Title | Status | Target | Description |
 |----|-------|--------|--------|-------------|
-| 019 | [PDF Conversion](spec-019-pdf-conversion.md) | Ready | v2.0 | PDF to text with math preservation (Marker + LLM) |
+| (none) | | | | |
 
 ## Archived Specs
 
@@ -62,6 +62,7 @@ Completed specs that are fully implemented.
 | 014 | Vector Embeddings | [archive](../_archive/specs/spec-014-vector-embeddings.md) |
 | 015 | Batch Operations | [archive](../_archive/specs/spec-015-batch-operations.md) |
 | 017 | MCP Server | [archive](../_archive/specs/spec-017-mcp-server.md) |
+| 019 | PDF Conversion | [archive](../_archive/specs/spec-019-pdf-conversion.md) |
 
 **Next Spec ID:** SPEC-022
 
@@ -100,7 +101,7 @@ v1.4 Integration (DONE)
 ├── 016 Formal Conjectures ←── 007 Lean (DONE)
 └── 017 MCP Server ←── all CLI commands (DONE)
 
-v2.0 Expansion (READY)
+v2.0 Expansion (DONE)
 └── 019 PDF Conversion ←── 010 Ingest (Marker + LLM enhancement)
 ```
 
