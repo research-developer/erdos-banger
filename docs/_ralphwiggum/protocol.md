@@ -68,17 +68,17 @@ git checkout dev
 git pull origin dev
 
 # Create Ralph branch
-git checkout -b ralph-wiggum-v1.2
+git checkout -b ralph-wiggum-<sprint>
 
 # Push to remote for backup
-git push -u origin ralph-wiggum-v1.2
+git push -u origin ralph-wiggum-<sprint>
 ```
 
 **Branch hierarchy:**
 ```
 main (protected, production)
   └── dev (integration, manual merges)
-        └── ralph-wiggum-v1.2 (autonomous work)
+        └── ralph-wiggum-<sprint> (autonomous work)
 ```
 
 ### Step 2: File Structure
@@ -115,7 +115,7 @@ tmux attach -t erdos-ralph
 ```bash
 # Navigate to project
 cd /path/to/erdos-banger
-git checkout ralph-wiggum-v1.2
+git checkout ralph-wiggum-<sprint>
 
 # THE RALPH LOOP (bounded by iteration + wall-clock timeouts)
 #
@@ -382,10 +382,10 @@ make smoke
 
 ```bash
 # See all commits from Ralph
-git log dev..ralph-wiggum-v1.2 --oneline
+git log dev..ralph-wiggum-<sprint> --oneline
 
 # See full diff
-git diff dev..ralph-wiggum-v1.2 --stat
+git diff dev..ralph-wiggum-<sprint> --stat
 
 # Review specific commit
 git show <commit-hash>
@@ -409,10 +409,10 @@ make test-all
 ```bash
 # Option 1: Direct merge
 git checkout dev
-git merge ralph-wiggum-v1.2
+git merge ralph-wiggum-<sprint>
 
 # Option 2: PR for review
-gh pr create --base dev --head ralph-wiggum-v1.2 \
+gh pr create --base dev --head ralph-wiggum-<sprint> \
   --title "Ralph Wiggum v1.1: Implement specs 010-017" \
   --body "Automated implementation via Ralph Wiggum loop"
 ```
@@ -422,7 +422,7 @@ gh pr create --base dev --head ralph-wiggum-v1.2 \
 ```bash
 # Nuclear option - delete branch entirely
 git checkout dev
-git branch -D ralph-wiggum-v1.2
+git branch -D ralph-wiggum-<sprint>
 
 # Or revert specific commits
 git revert <bad-commit-hash>
@@ -517,7 +517,7 @@ For a step-by-step pre-flight, see `docs/_ralphwiggum/LAUNCH_CHECKLIST.md`.
 ```bash
 # 1. Create sandbox branch
 git checkout dev && git pull
-git checkout -b ralph-wiggum-v1.2
+git checkout -b ralph-wiggum-<sprint>
 
 # 2. Ensure PROGRESS.md and PROMPT.md exist in root
 ls PROGRESS.md PROMPT.md
@@ -570,10 +570,10 @@ mkdir -p logs/ralph
 watch -n 5 'git log --oneline -10'
 
 # 7. Audit when done
-git log dev..ralph-wiggum-v1.2 --oneline
-git diff dev..ralph-wiggum-v1.2 --stat
+git log dev..ralph-wiggum-<sprint> --oneline
+git diff dev..ralph-wiggum-<sprint> --stat
 make ci
 
 # 8. Merge if good
-git checkout dev && git merge ralph-wiggum-v1.2
+git checkout dev && git merge ralph-wiggum-<sprint>
 ```

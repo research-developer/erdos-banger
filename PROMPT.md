@@ -36,7 +36,10 @@ Then read the specific debt or spec document for your current task.
 5. **FOLLOW TDD** (see below) - write tests BEFORE implementation
 6. Complete that ONE item fully (all acceptance criteria met, tests pass, quality gates pass)
 7. **Update the doc**: Change status to "Fixed" (debt) or "Complete" (spec), add commit hash
-8. **Update README.md**: Move item from Active to Archived section
+8. **Update the correct index**:
+   - Debt: `docs/debt/README.md` (Active → Archived) and archive the deck file
+   - Specs: `docs/specs/README.md` (Active → Archived) and archive only if the project convention requires it
+   - Do **not** edit root `README.md` unless the task explicitly requires it
 9. Check off the item in PROGRESS.md: `[ ]` → `[x]`
 10. Append a short entry to PROGRESS.md "Work Log" (what changed + files modified)
 11. **ATOMIC COMMIT** (see format below)

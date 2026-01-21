@@ -58,11 +58,20 @@ Two viable placements:
 
 - Move the same types into `src/erdos/core/models/search.py` (if you want “contract types live with models”).
 
+### Chosen Approach (This Deck)
+
+Implement **Option A** and preserve import stability by re-exporting:
+- `erdos.core.search_index.SearchResult`, `SemanticSearchResult`, `EmbeddingModelProtocol` remain importable (re-exported from the new module).
+
+Rationale:
+- Keeps “search contract types” in a search-focused module, not buried in an implementation file.
+- Minimizes churn while still removing the DIP pressure in `ports.py`.
+
 ---
 
 ## Acceptance Criteria
 
-1. `src/erdos/core/ports.py` has **no imports** from `src/erdos/core/search_index.py`.
-2. Contract types live in a shared module (e.g., `erdos.core.search.types`) and are imported by both ports + implementation.
+1. `src/erdos/core/ports.py` has **no imports** from `src/erdos/core/search_index.py` (including under `TYPE_CHECKING`).
+2. Contract types live in `src/erdos/core/search/types.py` and are imported by both `ports.py` and `search_index.py`.
 3. `make ci` passes (ruff, mypy strict, pytest, coverage).
-4. Existing import paths remain stable (either via re-export or a deliberate, documented breaking change).
+4. Back-compat: `from erdos.core.search_index import SearchResult` (and related) continues to work via re-export.

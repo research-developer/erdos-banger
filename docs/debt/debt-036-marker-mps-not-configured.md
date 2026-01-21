@@ -61,23 +61,37 @@ Add `--device` option to `erdos convert`:
 erdos convert paper.pdf --device mps
 ```
 
+### Chosen Approach (This Deck)
+
+Implement **Option C (CLI flag)** and keep the environment-variable override documented.
+
+Rationale:
+- Deterministic and CI-testable (no Apple hardware required).
+- Marker already supports `TORCH_DEVICE`; we just expose a stable knob.
+- Avoids platform-specific autodetection heuristics that drift over time.
+
 ## Caveats
 
 MPS support depends on your local PyTorch build and workload. Some operations may be unsupported or slower than CPU for specific models. If you see runtime errors with `TORCH_DEVICE=mps`, fall back to `TORCH_DEVICE=cpu`.
 
 ## Acceptance Criteria
 
-1. [ ] Document `TORCH_DEVICE` configuration in README (or vendor docs link)
-2. [ ] (Optional) Add `--device` option to `erdos convert` (maps to `TORCH_DEVICE`)
-3. [ ] Test on Apple Silicon machine with `TORCH_DEVICE=mps`
-4. [ ] Handle graceful fallback if MPS fails
+1. [ ] `erdos convert --help` documents a new `--device` option (examples included).
+2. [ ] `erdos convert --device <cpu|cuda|mps>` sets `TORCH_DEVICE=<...>` for Marker conversions.
+3. [ ] `PDFConversionConfig` carries the selected device (e.g., `torch_device: str | None`) and `convert_pdf()` honors it when using Marker.
+4. [ ] Tests:
+   - [ ] `tests/integration/test_pdf_convert.py` asserts `--device` appears in help output (via `strip_ansi`).
+   - [ ] `tests/unit/test_pdf_converter.py` verifies the env-var wiring via `monkeypatch` (no Marker install required).
+5. [ ] `make ci` passes.
 
 ## Testing
 
 ```bash
-# On Apple Silicon Mac
+# CI-safe sanity (does not require Marker installed)
+uv run erdos convert --help | rg -- '--device'
+
+# Manual (only if you have Marker + torch configured)
 TORCH_DEVICE=mps uv run erdos convert test.pdf -o test.md
-# Should complete faster than CPU
 ```
 
 ---

@@ -66,13 +66,24 @@ src/erdos/core/
 
 Maintain backward compatibility during migration by re-exporting (or by keeping stable import paths until a major release).
 
+### Chosen Approach (This Deck)
+
+Implement **Option A (documentation-only)** in this sprint.
+
+Rationale:
+- Option B is a large mechanical move (import churn across many modules) and will likely exceed the “10 files / ~500 LOC per iteration” Ralph guardrail unless split into a dedicated migration plan.
+- A crisp “where does new code go?” rule prevents *future* sprawl immediately and is cheap to enforce in review.
+
 ---
 
 ## Acceptance Criteria
 
-1. [ ] New code lands in a domain subpackage, not as a new “misc core” module.
-2. [ ] Any package extraction is paired with an import map update in `CLAUDE.md`.
-3. [ ] `make ci` passes; no circular imports introduced.
+1. [ ] `CLAUDE.md` has a short “Core package boundaries” section:
+   - [ ] Lists the current bounded contexts (`ask/`, `ingest/`, `models/`) plus key top-level modules that are exceptions.
+   - [ ] Defines the rule: **no new modules at `src/erdos/core/*.py`** without either (a) placing code into an existing subpackage or (b) creating a new subpackage for a new bounded context.
+   - [ ] States where infra adapters belong (e.g., `core/clients/` or `core/adapters/`) for future work.
+2. [ ] This debt deck is updated to reflect completion of Option A and archived per protocol.
+3. [ ] `make ci` passes (no behavior changes expected).
 
 ---
 

@@ -2,7 +2,7 @@
 
 **Last Updated:** 2026-01-21
 **Status:** Ready - v2.1 Architecture Sprint
-**Branch:** ralph-wiggum-consolidated
+**Branch:** ralph-wiggum-v2.1
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
 ---
@@ -32,7 +32,7 @@ Fix architectural debt first, then implement new features.
 
 ---
 
-### Debt Items (P2 first, then P3)
+### Debt Items (Ordered to unblock SPEC-022)
 
 - [ ] **DEBT-041**: `ports.py` leaks concrete `search_index` types (P3)
   - Deck: `docs/debt/debt-041-ports-leak-search-index-types.md`
