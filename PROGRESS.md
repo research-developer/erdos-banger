@@ -63,8 +63,8 @@
   - Target: v1.2
   - Acceptance: All spec acceptance criteria met; `make ci` green.
 
-- [ ] **SPEC-021**: Aristotle Integration
-  - Spec: `docs/specs/spec-021-aristotle-integration.md`
+- [x] **SPEC-021**: Aristotle Integration
+  - Spec: `docs/_archive/specs/spec-021-aristotle-integration.md`
   - Target: v1.2+
   - Acceptance: All spec acceptance criteria met; `make ci` green.
 
@@ -287,6 +287,28 @@
 - Citation count and concept tags from OpenAlex
 - Retry logic with exponential backoff for transient failures
 - --source flag allows selecting metadata backend (openalex, arxiv, crossref)
+
+### 2026-01-21: SPEC-021 Aristotle Integration implemented
+
+**Files created:**
+- `src/erdos/core/aristotle.py` - Aristotle subprocess wrapper with AristotleError, AristotleConfig, AristotleResult, validate_aristotle_config(), build_aristotle_command(), run_aristotle_prove_from_file()
+- `tests/unit/test_aristotle.py` - 26 unit tests covering config, validation, command building, execution, and error handling
+- `tests/integration/test_cli_lean_prove.py` - 13 integration tests for CLI command validation, config, execution, options, and JSON output
+
+**Files modified:**
+- `src/erdos/commands/lean.py` - Added `prove_with_aristotle()` core logic function; added `prove` subcommand with --output, --timeout, --informal, --formal-input-context options; added `_print_human_prove_result()` handler
+- `docs/specs/spec-021-aristotle-integration.md` - Status updated to Complete (archived)
+- `docs/specs/README.md` - Moved SPEC-021 from Deferred to Archived
+
+**Features:**
+- `erdos lean prove` command runs Aristotle theorem prover via subprocess
+- Requires ARISTOTLE_API_KEY environment variable (ConfigError if missing)
+- Optional ERDOS_ARISTOTLE_COMMAND to specify custom aristotle executable
+- Output file required and must differ from input (UsageError protection)
+- --timeout for subprocess timeout (default 600s)
+- --informal and --formal-input-context flags passed to Aristotle
+- JSON output with CLIOutput envelope and aristotle execution details
+- Exit codes: SUCCESS, USAGE_ERROR, NOT_FOUND, CONFIG_ERROR, ERROR
 
 (entries added by Ralph loop as tasks complete)
 

@@ -1,0 +1,263 @@
+"""Harmonic Aristotle integration for Lean theorem proving.
+
+This module provides a subprocess wrapper for the Aristotle CLI,
+following the erdos-banger pattern of subprocess boundaries for
+external tool integration.
+
+Usage:
+    result = run_aristotle_prove_from_file(
+        input_file=Path("formal/lean/Erdos/Problem006.lean"),
+        output_file=Path("formal/lean/Erdos/Problem006.aristotle.lean"),
+    )
+    if result.success:
+        print(f"Proof generated at {result.output_file}")
+
+Configuration:
+    - ARISTOTLE_API_KEY: Required by the vendor CLI (must be set in environment)
+    - ERDOS_ARISTOTLE_COMMAND: Optional path to aristotle executable (default: "aristotle")
+"""
+
+from __future__ import annotations
+
+import logging
+import os
+import shutil
+import subprocess
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+
+logger = logging.getLogger(__name__)
+
+
+class AristotleError(Exception):
+    """Raised when Aristotle operations fail."""
+
+    def __init__(self, message: str, error_type: str = "Error") -> None:
+        """Initialize AristotleError.
+
+        Args:
+            message: Error description
+            error_type: Type of error (ConfigError, NotFound, UsageError, Timeout, Error)
+        """
+        super().__init__(message)
+        self.error_type = error_type
+
+
+@dataclass
+class AristotleConfig:
+    """Configuration for Aristotle CLI invocation."""
+
+    command: str = "aristotle"
+    timeout: int = 600
+    informal: bool = False
+    formal_input_context: bool = False
+
+
+@dataclass
+class AristotleResult:
+    """Result of an Aristotle prove operation."""
+
+    success: bool
+    input_file: Path
+    output_file: Path
+    command: str
+    exit_code: int
+    stdout: str
+    stderr: str
+    timeout: int
+    informal: bool
+    formal_input_context: bool
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary for JSON serialization.
+
+        Returns:
+            Dictionary matching the JSON output schema from SPEC-021.
+        """
+        return {
+            "input_file": str(self.input_file),
+            "output_file": str(self.output_file),
+            "aristotle": {
+                "command": self.command,
+                "informal": self.informal,
+                "formal_input_context": self.formal_input_context,
+                "timeout_s": self.timeout,
+                "exit_code": self.exit_code,
+            },
+        }
+
+
+def validate_aristotle_config() -> AristotleConfig:
+    """Validate Aristotle configuration from environment.
+
+    Checks that:
+    - ARISTOTLE_API_KEY is set and non-empty
+    - The aristotle command can be found (via ERDOS_ARISTOTLE_COMMAND or PATH)
+
+    Returns:
+        AristotleConfig with validated command path
+
+    Raises:
+        AristotleError: If configuration is invalid (error_type="ConfigError")
+    """
+    # Check for API key
+    api_key = os.environ.get("ARISTOTLE_API_KEY", "").strip()
+    if not api_key:
+        raise AristotleError(
+            "ARISTOTLE_API_KEY environment variable is not set or empty. "
+            "Please set it in your .env file.",
+            error_type="ConfigError",
+        )
+
+    # Get command from environment or use default
+    command = os.environ.get("ERDOS_ARISTOTLE_COMMAND", "aristotle").strip()
+
+    # Resolve command path
+    resolved_command = _resolve_command(command)
+    if resolved_command is None:
+        raise AristotleError(
+            f"Aristotle command not found: {command}. "
+            "Ensure aristotlelib is installed (pip install aristotlelib) "
+            "or set ERDOS_ARISTOTLE_COMMAND to the correct path.",
+            error_type="ConfigError",
+        )
+
+    return AristotleConfig(command=resolved_command)
+
+
+def _resolve_command(command: str) -> str | None:
+    """Resolve a command to an absolute path.
+
+    Args:
+        command: Command name or path
+
+    Returns:
+        Absolute path to the command, or None if not found
+    """
+    cmd_path = Path(command)
+    # If it's an absolute path, check if it exists and is executable
+    if cmd_path.is_absolute():
+        if cmd_path.is_file() and os.access(command, os.X_OK):
+            return command
+        return None
+
+    # Otherwise, look it up via PATH
+    return shutil.which(command)
+
+
+def build_aristotle_command(
+    config: AristotleConfig,
+    input_file: Path,
+    output_file: Path,
+) -> list[str]:
+    """Build the command list for subprocess execution.
+
+    Args:
+        config: Aristotle configuration
+        input_file: Path to input Lean file
+        output_file: Path to output Lean file
+
+    Returns:
+        Command list suitable for subprocess.run
+    """
+    cmd = [
+        config.command,
+        "prove-from-file",
+        str(input_file),
+        "--output-file",
+        str(output_file),
+    ]
+
+    if config.informal:
+        cmd.append("--informal")
+
+    if config.formal_input_context:
+        cmd.append("--formal-input-context")
+
+    return cmd
+
+
+def run_aristotle_prove_from_file(
+    input_file: Path,
+    output_file: Path,
+    *,
+    timeout: int = 600,
+    informal: bool = False,
+    formal_input_context: bool = False,
+) -> AristotleResult:
+    """Run Aristotle prove-from-file command.
+
+    Args:
+        input_file: Path to the input Lean file
+        output_file: Path for the output Lean file (must differ from input)
+        timeout: Maximum seconds to wait for completion (default: 600)
+        informal: Pass --informal flag to Aristotle
+        formal_input_context: Pass --formal-input-context flag to Aristotle
+
+    Returns:
+        AristotleResult with execution details
+
+    Raises:
+        AristotleError: On configuration, validation, or timeout errors
+    """
+    # Validate configuration first
+    config = validate_aristotle_config()
+    config.timeout = timeout
+    config.informal = informal
+    config.formal_input_context = formal_input_context
+
+    # Validate input file exists
+    if not input_file.exists():
+        raise AristotleError(
+            f"Input file not found: {input_file}",
+            error_type="NotFound",
+        )
+
+    # Validate output file is different from input
+    resolved_input = input_file.resolve()
+    resolved_output = output_file.resolve()
+    if resolved_input == resolved_output:
+        raise AristotleError(
+            f"Output file cannot be the same as input file: {input_file}",
+            error_type="UsageError",
+        )
+
+    # Build and execute command
+    cmd = build_aristotle_command(config, input_file, output_file)
+    logger.debug("Running Aristotle: %s (timeout=%ds)", " ".join(cmd), config.timeout)
+
+    try:
+        result = subprocess.run(  # noqa: S603
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=config.timeout,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise AristotleError(
+            f"Aristotle timed out after {config.timeout} seconds",
+            error_type="Timeout",
+        ) from exc
+
+    success = result.returncode == 0
+    logger.debug(
+        "Aristotle completed: exit_code=%d, success=%s",
+        result.returncode,
+        success,
+    )
+
+    return AristotleResult(
+        success=success,
+        input_file=input_file,
+        output_file=output_file,
+        command=config.command,
+        exit_code=result.returncode,
+        stdout=result.stdout,
+        stderr=result.stderr,
+        timeout=config.timeout,
+        informal=config.informal,
+        formal_input_context=config.formal_input_context,
+    )

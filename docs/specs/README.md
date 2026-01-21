@@ -40,7 +40,6 @@ Specs designed for future versions.
 | 016 | [Formal Conjectures](spec-016-formal-conjectures.md) | Deferred | v1.4 | Import existing formalizations |
 | 017 | [MCP Server](spec-017-mcp-server.md) | Deferred | v1.4 | Model Context Protocol for AI integration |
 | 019 | [PDF Conversion](spec-019-pdf-conversion.md) | Ready | v2.0 | PDF to text with math preservation (Marker + LLM) |
-| 021 | [Aristotle Integration](spec-021-aristotle-integration.md) | Ready | v1.2+ | Optional Lean proving backend via Harmonic Aristotle |
 
 ## Archived Specs
 
@@ -61,6 +60,7 @@ Completed specs that are fully implemented.
 | 011 | Ask Command | [archive](../_archive/specs/spec-011-ask-command.md) |
 | 018 | DevX Makefile | [archive](../_archive/specs/spec-018-devx-makefile.md) |
 | 020 | OpenAlex Integration | [archive](../_archive/specs/spec-020-openalex-integration.md) |
+| 021 | Aristotle Integration | [archive](../_archive/specs/spec-021-aristotle-integration.md) |
 
 **Next Spec ID:** SPEC-022
 
@@ -88,8 +88,8 @@ v1.2 Iteration & Metadata (DEFERRED)
 ├── 013 Logging ←── all commands (tracks progress)
 └── 020 OpenAlex Integration ←── augments 010 Ingest
 
-v1.2+ Optional Proving Backend (READY)
-└── 021 Aristotle Integration ←── 012 Loop + 007 Lean
+v1.2+ Optional Proving Backend (DONE)
+└── 021 Aristotle Integration ←── 007 Lean
 
 v1.3 Enhancement (FUTURE)
 ├── 014 Vector Embeddings ←── 006 Search Index

@@ -1,9 +1,9 @@
-# Spec 021: Harmonic Aristotle Integration (Deferred to v1.2+)
+# Spec 021: Harmonic Aristotle Integration
 
-> Integrate Harmonic’s Aristotle as an optional Lean theorem-proving backend for `erdos-banger`.
+> Integrate Harmonic's Aristotle as an optional Lean theorem-proving backend for `erdos-banger`.
 
-**Status:** Ready (Deferred)
-**Target:** v1.2+
+**Status:** Complete
+**Implemented In:** (commit hash pending)
 **Prerequisites (SSOT):**
 - Lean integration: `docs/_archive/specs/spec-007-lean-integration.md`
 - Loop design decisions: `docs/specs/spec-012-design.md`
