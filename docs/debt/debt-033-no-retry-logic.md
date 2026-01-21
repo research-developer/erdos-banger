@@ -1,4 +1,4 @@
-# Technical Debt 030: No Retry Logic for Transient Network Failures
+# Technical Debt 033: No Retry Logic for Transient Network Failures
 
 **Date:** 2026-01-21
 **Status:** Open

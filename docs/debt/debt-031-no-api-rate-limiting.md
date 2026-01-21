@@ -1,4 +1,4 @@
-# Technical Debt 028: No Rate Limiting in API Clients
+# Technical Debt 031: No Rate Limiting in API Clients
 
 **Date:** 2026-01-21
 **Status:** Open

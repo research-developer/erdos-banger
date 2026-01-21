@@ -1,4 +1,4 @@
-# Technical Debt 032: type: ignore Suppressions in All Command Exit Paths
+# Technical Debt 035: type: ignore Suppressions in All Command Exit Paths
 
 **Date:** 2026-01-21
 **Status:** Open

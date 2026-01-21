@@ -1,4 +1,4 @@
-# Technical Debt 026: No Logging Framework Usage
+# Technical Debt 029: No Logging Framework Usage
 
 **Date:** 2026-01-21
 **Status:** Open

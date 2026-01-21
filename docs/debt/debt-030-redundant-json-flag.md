@@ -1,4 +1,4 @@
-# Technical Debt 027: Redundant Dual --json Flag Definition
+# Technical Debt 030: Redundant Dual --json Flag Definition
 
 **Date:** 2026-01-21
 **Status:** Open

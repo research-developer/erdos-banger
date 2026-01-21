@@ -1,4 +1,4 @@
-# Technical Debt 029: HTTP Responses Not Closed with Context Managers
+# Technical Debt 032: HTTP Responses Not Closed with Context Managers
 
 **Date:** 2026-01-21
 **Status:** Open
