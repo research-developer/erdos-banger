@@ -38,8 +38,8 @@ This document is a **living record** of guardrails, failure patterns, and “got
 - Symptom: API keys (or other secrets) are copied into tracked files during debugging or loop summaries.
 - Common cause: pasting raw `.env` content or command output into tracked files (docs, specs, prompts).
 - Mitigation: never paste secrets; keep `.env` gitignored; scan tracked files and staged diffs before pushing:
-  - `git diff --cached | rg -n "sk-"` (what you're about to push)
-  - `git ls-files -z | xargs -0 rg -n "sk-"` (full tracked tree)
+  - `git diff --cached | rg -in "(sk-|sk-ant-|ghp_|AIza|arstl_|xoxb-|hf_)"` (what you're about to push)
+  - `git ls-files -z | xargs -0 rg -in "(sk-|sk-ant-|ghp_|AIza|arstl_|xoxb-|hf_)"` (full tracked tree)
 
 ---
 

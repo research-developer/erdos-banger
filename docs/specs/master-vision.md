@@ -189,7 +189,7 @@ erdos-banger/
 │   └── _ralphwiggum/
 ├── data/                         # local + upstream datasets
 │   └── erdosproblems/            # teorth/erdosproblems submodule (metadata-only; committed via git submodule)
-├── data/problems_enriched.yaml   # local enriched dataset (gitignored; user-provided)
+├── data/problems_enriched.yaml   # local enriched dataset (gitignored; priority 2 - see note below)
 ├── literature/manifests/         # reference manifests (committed)
 ├── literature/cache/             # downloads (gitignored)
 ├── literature/extracts/          # extracted text (gitignored)
@@ -222,6 +222,15 @@ erdos-banger/
 - These are either generated or user-specific. We provide ways to regenerate from source metadata when possible. For example, a collaborator can run `erdos ingest 1` to fetch and parse references for problem 1 if they have network access, rather than storing those bulky files in git.
 
 **Data submodule strategy:** Include `teorth/erdosproblems` via a git submodule pinned to a specific commit (reproducible metadata). Treat `data/erdosproblems/` as external upstream data.
+
+**Dataset priority order (SSOT: `src/erdos/core/problem_loader.py`):** The CLI resolves `problems_enriched.yaml` in this order:
+
+1. `ERDOS_DATA_PATH` environment variable (explicit override; file or directory)
+2. `./data/problems_enriched.yaml` (user-provided, gitignored; priority for local development)
+3. Built-in package data `src/erdos/data/problems_enriched.yaml` (committed sample dataset)
+4. Upstream submodule `data/erdosproblems/data/problems.yaml` (metadata-only fallback)
+
+For most users: create `data/problems_enriched.yaml` locally (gitignored); CI and packaged installs use the built-in sample.
 
 ### Schema & Model Files
 
@@ -448,6 +457,7 @@ Global flags implemented in v1.1 (SSOT: `src/erdos/cli.py`): `--json`, `--log-le
 ### Error Model and JSON Failure Outputs
 
 Structured error JSON for `--json` mode:
+
 ```json
 {
   "schema_version": 1,

@@ -43,13 +43,24 @@ This is **not** a replacement for the existing subprocess-based LLM architecture
 
 ## 2) Configuration
 
+### Vendor CLI installation
+
+The Aristotle CLI is provided via the `aristotlelib` Python package:
+
+```bash
+pip install aristotlelib
+# Or: uv pip install aristotlelib
+```
+
+This installs the `aristotle` executable on PATH.
+
 ### Required environment variable (vendor)
 
 - `ARISTOTLE_API_KEY` — required by the vendor CLI. Must be set in local `.env` (gitignored).
 
 ### Optional configuration (erdos-banger)
 
-- `ERDOS_ARISTOTLE_COMMAND` — the command to execute (default: `aristotle` on PATH).
+- `ERDOS_ARISTOTLE_COMMAND` — the command to execute (default: `aristotle` on PATH). May be an absolute path or a command name resolved via PATH.
 
 `.env.example` must include placeholders for these variables (no real keys).
 
@@ -79,7 +90,7 @@ erdos lean prove [OPTIONS] INPUT_FILE
 
 1. Validate:
    - `ARISTOTLE_API_KEY` is set (else `ExitCode.CONFIG_ERROR`).
-   - `ERDOS_ARISTOTLE_COMMAND` exists on PATH (else `ExitCode.CONFIG_ERROR`).
+   - `ERDOS_ARISTOTLE_COMMAND` resolves to an executable (via PATH lookup or absolute path; else `ExitCode.CONFIG_ERROR`).
    - `INPUT_FILE` exists (else `ExitCode.NOT_FOUND`).
    - `--output` is provided and is not the same path as `INPUT_FILE` (else `ExitCode.USAGE_ERROR`).
 2. Execute the vendor CLI via subprocess:
