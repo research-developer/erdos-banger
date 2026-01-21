@@ -12,7 +12,7 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.presenter import exit_with_result, set_json_mode
+from erdos.commands.presenter import exit_with_result
 from erdos.core.ask import ask_question
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
@@ -147,7 +147,6 @@ def ask(
     build_index: Annotated[bool, typer.Option("--build-index")] = False,
     no_llm: Annotated[bool, typer.Option("--no-llm")] = False,
     llm_cmd: Annotated[str, typer.Option("--llm-cmd")] = "",
-    json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
     """
     Ask a question about an Erdős problem using RAG.
@@ -162,9 +161,9 @@ def ask(
 
         ERDOS_LLM_COMMAND="./scripts/llm.sh" erdos ask 6 "Summarize known results"
 
-        echo "What is the status?" | erdos ask 6 - --json
+        echo "What is the status?" | erdos --json ask 6 -
     """
-    set_json_mode(ctx, json_output)
+    json_mode = bool((ctx.obj or {}).get("json"))
 
     # Get and validate question
     question = _read_question_from_stdin() if question_arg == "-" else question_arg
@@ -173,7 +172,7 @@ def ask(
         return
 
     # Execute query
-    _show_progress_message(problem_id, json_output)
+    _show_progress_message(problem_id, json_mode)
     options = AskOptions(
         problem_id=problem_id,
         question=question,
@@ -183,9 +182,11 @@ def ask(
         llm_cmd=llm_cmd if llm_cmd else None,
     )
     app_ctx, app_error = get_app_context(ctx, command="erdos ask", require_index=True)
-    if app_error is not None or app_ctx is None:
-        exit_with_result(ctx, app_error)  # type: ignore[arg-type]
+    if app_error is not None:
+        exit_with_result(ctx, app_error)
         return
+    if app_ctx is None:
+        return  # Unreachable: get_app_context guarantees (ctx, None) or (None, error)
 
     result = _execute_ask_query(
         options, repo=app_ctx.problems, index=app_ctx.ensure_index()

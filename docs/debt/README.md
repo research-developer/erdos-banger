@@ -14,15 +14,12 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-| ID | Title | Priority | Status |
-|----|-------|----------|--------|
-| DEBT-029 | Logging coverage gaps | P2 | Open |
-| DEBT-030 | Redundant dual --json flag | P3 | Open |
-| DEBT-031 | Rate limiting constant unused | P3 | Open |
-| DEBT-032 | HTTP responses not closed properly | P2 | Open |
-| DEBT-033 | No retry logic for network failures | P2 | Open |
-| DEBT-034 | Hardcoded MAX_SIZE constant | P3 | Open |
-| DEBT-035 | type: ignore in all exit paths | P2 | Open |
+| ID | Title | Priority | Status | Deck |
+|----|-------|----------|--------|------|
+| DEBT-036 | Marker device selection not exposed | P3 | Open | [debt-036-marker-mps-not-configured.md](debt-036-marker-mps-not-configured.md) |
+| DEBT-038 | MetadataProvider abstraction missing | P2 | Open | [debt-038-metadata-provider-abstraction.md](debt-038-metadata-provider-abstraction.md) |
+| DEBT-039 | `erdos lean` command module is a god file | P2 | Open | [debt-039-lean-command-god-module.md](debt-039-lean-command-god-module.md) |
+| DEBT-040 | `src/erdos/core/` module sprawl | P3 | Open | [debt-040-core-package-module-sprawl.md](debt-040-core-package-module-sprawl.md) |
 
 ## Archived Debt
 
@@ -58,8 +55,16 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-026 | Long functions remain (≥ 80 LOC) | P2 | Fixed | c31d484 |
 | DEBT-027 | Broad `except Exception` catches | P3 | Fixed | e657d7c |
 | DEBT-028 | Ingest manifest churn (non-idempotent writes) | P2 | Fixed | 154866b |
+| DEBT-029 | Logging coverage gaps | P2 | Fixed | f806edc |
+| DEBT-030 | Redundant dual --json flag | P3 | Fixed | ed2c2c8 |
+| DEBT-031 | Rate limiting constant unused | P3 | Fixed | c50766c |
+| DEBT-032 | HTTP responses not closed properly | P2 | Fixed | 5fd4a57 |
+| DEBT-033 | No retry logic for network failures | P2 | Fixed | 11a3519 |
+| DEBT-034 | Hardcoded MAX_SIZE constant | P3 | Fixed | 878aa7b |
+| DEBT-035 | type: ignore in all exit paths | P2 | Fixed | 86d3856 |
+| DEBT-037 | Placeholder semantic search tests | P2 | Fixed | b2dcdfe |
 
-**Next Debt ID:** DEBT-036
+**Next Debt ID:** DEBT-041
 
 ### Archived Debt Decks
 
@@ -91,3 +96,11 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-026-long-functions-remain.md`
 - `docs/_archive/debt/debt-027-broad-exception-catches.md`
 - `docs/_archive/debt/debt-028-ingest-manifest-churn.md`
+- `docs/_archive/debt/debt-029-no-logging-usage.md`
+- `docs/_archive/debt/debt-030-redundant-json-flag.md`
+- `docs/_archive/debt/debt-031-no-api-rate-limiting.md`
+- `docs/_archive/debt/debt-032-http-response-not-closed.md`
+- `docs/_archive/debt/debt-033-no-retry-logic.md`
+- `docs/_archive/debt/debt-034-hardcoded-max-size.md`
+- `docs/_archive/debt/debt-035-type-ignore-exit-paths.md`
+- `docs/_archive/debt/debt-037-semantic-search-placeholder-tests.md`

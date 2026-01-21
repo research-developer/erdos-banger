@@ -28,6 +28,7 @@ Use `make` (preferred) or `uv` directly:
 - Formatting/linting: Ruff (`make format`, `make lint`).
 - Type checking: mypy strict (`make typecheck`).
 - Prefer small, testable “core logic” helpers and thin Typer callbacks.
+- Clean Code expectation: avoid “god files” and mixed responsibilities; if a refactor is too risky for the current PR, write a debt deck in `docs/debt/` instead of piling on.
 - Follow existing naming patterns (e.g., `list_()` for the reserved keyword).
 
 ## Testing Guidelines

@@ -10,12 +10,14 @@ import io
 import logging
 import re
 import tarfile
+import time
 from datetime import datetime
 
 import defusedxml.ElementTree as ET
-import requests
 
+from erdos.core.constants import MAX_TEX_FILE_SIZE
 from erdos.core.models import OpenAccessStatus, ReferenceRecord
+from erdos.core.retry import fetch_with_retry
 
 
 logger = logging.getLogger(__name__)
@@ -117,7 +119,8 @@ def fetch_arxiv_atom(arxiv_id: str, *, timeout: float = 30.0) -> str:
 
     Raises:
         requests.HTTPError: If HTTP request fails.
-        requests.Timeout: If request times out.
+        requests.Timeout: If request times out after all retries.
+        requests.ConnectionError: If connection fails after all retries.
     """
     # Strip version suffix for API query (2203.00001v1 -> 2203.00001)
     arxiv_id_clean = re.sub(r"v\d+$", "", arxiv_id)
@@ -126,8 +129,17 @@ def fetch_arxiv_atom(arxiv_id: str, *, timeout: float = 30.0) -> str:
     params = {"id_list": arxiv_id_clean}
     headers = {"User-Agent": ARXIV_USER_AGENT}
 
-    response = requests.get(url, params=params, headers=headers, timeout=timeout)
-    response.raise_for_status()
+    logger.debug("Fetching arXiv metadata for ID: %s", arxiv_id)
+    start_time = time.monotonic()
+
+    response = fetch_with_retry(url, timeout=timeout, params=params, headers=headers)
+    elapsed = time.monotonic() - start_time
+    logger.debug(
+        "arXiv response: %d bytes in %.2fs (status %d)",
+        len(response.content),
+        elapsed,
+        response.status_code,
+    )
 
     return response.text
 
@@ -150,8 +162,6 @@ def extract_arxiv_text(tarball_bytes: bytes) -> bytes:
         ValueError: If no .tex files found in tarball.
         tarfile.TarError: If tarball is malformed.
     """
-    MAX_SIZE = 2 * 1024 * 1024  # 2 MiB
-
     tar_buffer = io.BytesIO(tarball_bytes)
     tex_files = []
 
@@ -174,7 +184,7 @@ def extract_arxiv_text(tarball_bytes: bytes) -> bytes:
         if file_obj is None:
             raise ValueError(f"Could not extract {largest_name}")
 
-        # Read up to MAX_SIZE bytes
-        content = file_obj.read(MAX_SIZE)
+        # Read up to MAX_TEX_FILE_SIZE bytes
+        content = file_obj.read(MAX_TEX_FILE_SIZE)
 
     return content

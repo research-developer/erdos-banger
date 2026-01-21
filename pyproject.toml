@@ -33,9 +33,17 @@ dependencies = [
 pdf = [
     "marker-pdf>=1.0.0",  # GPL - see SPEC-019 for license rationale
 ]
+embeddings = [
+    "sentence-transformers>=5.2.0",
+    "numpy>=2.4.1",
+]
+mcp = [
+    "mcp[cli]>=1.25.0,<2",
+]
 
 [project.scripts]
 erdos = "erdos.cli:app"
+erdos-mcp = "erdos.mcp.server:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -60,6 +68,7 @@ dev = [
     "types-PyYAML>=6.0.12.20250915",
     "types-requests>=2.32.0",
     "types-defusedxml>=0.7.0.20240218",
+    "numpy>=2.4.1",  # Type checking for embeddings module
 ]
 
 [tool.ruff]
@@ -97,6 +106,16 @@ ignore = [
     "ARG",    # Unused arguments OK in tests (fixtures)
     "S101",   # assert OK in tests
     "PLR2004", # Magic values OK in tests
+    "TC003",  # TYPE_CHECKING imports fine in tests
+    "PTH109", # os.getcwd() fine in tests for chdir context managers
+    "PLC0415", # Imports inside functions OK in tests (for conditional imports)
+    "F841",   # Unused variables OK in tests (for capturing side effects)
+]
+"src/erdos/commands/convert.py" = [
+    "TC003",  # Path used at runtime for typer CLI argument types
+]
+"src/erdos/core/pdf_converter.py" = [
+    "TC003",  # Path used at runtime in function signatures
 ]
 
 [tool.ruff.lint.isort]
@@ -136,6 +155,33 @@ disallow_incomplete_defs = false  # Fixtures often omit arg annotations
 module = "yaml.*"
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "sentence_transformers.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "mcp.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "erdos.mcp.*"
+disallow_untyped_decorators = false  # FastMCP decorators lack type annotations
+
+[[tool.mypy.overrides]]
+module = [
+    "marker",
+    "marker.*",
+    "marker.converters",
+    "marker.converters.*",
+    "marker.config",
+    "marker.config.*",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["pdfplumber", "pdfplumber.*"]
+ignore_missing_imports = true
+
 [tool.pydantic-mypy]
 init_forbid_extra = true
 init_typed = true
@@ -150,7 +196,9 @@ addopts = [
     "--strict-markers",         # Error on unknown markers
     "--strict-config",          # Error on config issues
     "--import-mode=importlib",  # Modern import mode for src layout
-    "--color=yes",              # Force color output
+    # Note: don't force pytest color. In some CI environments, forcing color can
+    # interact poorly with Typer/Rich help rendering under CliRunner (truncated
+    # panels / missing option text). Let pytest auto-detect color support.
 ]
 testpaths = ["tests"]
 markers = [
@@ -168,6 +216,9 @@ filterwarnings = [
 source = ["src"]
 branch = true
 parallel = true
+omit = [
+    "src/erdos/mcp/*",  # Optional dependency, tested separately
+]
 
 [tool.coverage.report]
 exclude_lines = [

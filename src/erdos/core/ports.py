@@ -13,7 +13,11 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
     from erdos.core.models import ChunkSource, ProblemRecord
-    from erdos.core.search_index import SearchResult
+    from erdos.core.search_index import (
+        EmbeddingModelProtocol,
+        SearchResult,
+        SemanticSearchResult,
+    )
 
 
 class ProblemRepository(Protocol):
@@ -47,3 +51,31 @@ class SearchIndexProtocol(Protocol):
     def clear(self) -> None: ...
 
     def get_stats(self) -> dict[str, object]: ...
+
+    # SPEC-014: Embedding methods
+    def has_embeddings(self) -> bool: ...
+
+    def get_embedding_metadata(self) -> tuple[str | None, int | None]: ...
+
+    def set_embedding_metadata(self, model_name: str, dimension: int) -> None: ...
+
+    def build_embeddings(self, embedder: EmbeddingModelProtocol) -> int: ...
+
+    def search_semantic(
+        self,
+        query: str,
+        embedder: EmbeddingModelProtocol,
+        *,
+        limit: int = 10,
+        problem_id: int | None = None,
+    ) -> list[SemanticSearchResult]: ...
+
+    def search_hybrid(
+        self,
+        query: str,
+        embedder: EmbeddingModelProtocol,
+        *,
+        limit: int = 10,
+        alpha: float = 0.5,
+        problem_id: int | None = None,
+    ) -> list[SemanticSearchResult]: ...

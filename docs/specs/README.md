@@ -7,10 +7,10 @@ Design specifications for the erdos-banger CLI toolkit.
 ```text
 v1.0 (DONE)     Foundation: CLI, data loading, search, Lean integration
 v1.1 (DONE)     Literature: Ingest + RAG Q&A
-v1.2 (DEFERRED) Iteration: Loop + logging + OpenAlex metadata
-v1.3 (FUTURE)   Enhancement: Vectors + batch ops
-v1.4 (FUTURE)   Integration: Formal conjectures + MCP
-v2.0 (READY)    Expansion: PDF conversion (Marker + LLM)
+v1.2 (DONE)     Iteration: Loop + logging + OpenAlex metadata
+v1.3 (DONE)     Enhancement: Vectors + batch ops
+v1.4 (DONE)     Integration: Formal conjectures + MCP
+v2.0 (DONE)     Expansion: PDF conversion (Marker + LLM)
 ```
 
 ## Active Specs
@@ -25,7 +25,7 @@ Research-backed design decisions for complex specs.
 
 | ID | Title | Status | Prerequisite For |
 |----|-------|--------|------------------|
-| 012-DESIGN | [Loop Command Design](spec-012-design.md) | Approved | SPEC-012 |
+| (none) | | | |
 
 ## Deferred Specs
 
@@ -33,15 +33,7 @@ Specs designed for future versions.
 
 | ID | Title | Status | Target | Description |
 |----|-------|--------|--------|-------------|
-| 012 | [Loop Command](spec-012-loop-command.md) | Deferred (blocked by 012-DESIGN) | v1.2 | Iterative LLM-assisted Lean proof attempts |
-| 013 | [Logging & Evaluation](spec-013-logging-evaluation.md) | Deferred | v1.2 | Structured run logs + progress tracking |
-| 014 | [Vector Embeddings](spec-014-vector-embeddings.md) | Deferred | v1.3 | Semantic search via embeddings |
-| 015 | [Batch Operations](spec-015-batch-operations.md) | Deferred | v1.3 | Batch ingest/formalize with rate limiting |
-| 016 | [Formal Conjectures](spec-016-formal-conjectures.md) | Deferred | v1.4 | Import existing formalizations |
-| 017 | [MCP Server](spec-017-mcp-server.md) | Deferred | v1.4 | Model Context Protocol for AI integration |
-| 019 | [PDF Conversion](spec-019-pdf-conversion.md) | Ready | v2.0 | PDF to text with math preservation (Marker + LLM) |
-| 020 | [OpenAlex Integration](spec-020-openalex-integration.md) | Ready | v1.2 | Primary academic metadata source (271M+ works) |
-| 021 | [Aristotle Integration](spec-021-aristotle-integration.md) | Ready | v1.2+ | Optional Lean proving backend via Harmonic Aristotle |
+| (none) | | | | |
 
 ## Archived Specs
 
@@ -61,6 +53,16 @@ Completed specs that are fully implemented.
 | 010 | Ingest Command | [archive](../_archive/specs/spec-010-ingest-command.md) |
 | 011 | Ask Command | [archive](../_archive/specs/spec-011-ask-command.md) |
 | 018 | DevX Makefile | [archive](../_archive/specs/spec-018-devx-makefile.md) |
+| 013 | Logging & Evaluation | [archive](../_archive/specs/spec-013-logging-evaluation.md) |
+| 020 | OpenAlex Integration | [archive](../_archive/specs/spec-020-openalex-integration.md) |
+| 021 | Aristotle Integration | [archive](../_archive/specs/spec-021-aristotle-integration.md) |
+| 012 | Loop Command | [archive](../_archive/specs/spec-012-loop-command.md) |
+| 012-DESIGN | Loop Command Design | [archive](../_archive/specs/spec-012-design.md) |
+| 016 | Formal Conjectures | [archive](../_archive/specs/spec-016-formal-conjectures.md) |
+| 014 | Vector Embeddings | [archive](../_archive/specs/spec-014-vector-embeddings.md) |
+| 015 | Batch Operations | [archive](../_archive/specs/spec-015-batch-operations.md) |
+| 017 | MCP Server | [archive](../_archive/specs/spec-017-mcp-server.md) |
+| 019 | PDF Conversion | [archive](../_archive/specs/spec-019-pdf-conversion.md) |
 
 **Next Spec ID:** SPEC-022
 
@@ -82,24 +84,24 @@ v1.1 Literature (DONE)
 ├── 010 Ingest Command ────────────┐
 └── 011 Ask Command ←──────────────┘ (uses the local search index; ingested extracts become usable once indexed)
 
-v1.2 Iteration & Metadata (DEFERRED)
+v1.2 Iteration & Metadata (DONE)
 ├── 012-DESIGN Loop Design ←── research (approved SSOT)
 ├── 012 Loop Command ←── 012-DESIGN + 011 Ask + 007 Lean
 ├── 013 Logging ←── all commands (tracks progress)
 └── 020 OpenAlex Integration ←── augments 010 Ingest
 
-v1.2+ Optional Proving Backend (READY)
-└── 021 Aristotle Integration ←── 012 Loop + 007 Lean
+v1.2+ Optional Proving Backend (DONE)
+└── 021 Aristotle Integration ←── 007 Lean
 
-v1.3 Enhancement (FUTURE)
-├── 014 Vector Embeddings ←── 006 Search Index
-└── 015 Batch Operations ←── 010 Ingest + 007 Lean
+v1.3 Enhancement (DONE)
+├── 014 Vector Embeddings ←── 006 Search Index (DONE)
+└── 015 Batch Operations ←── 010 Ingest + 007 Lean (DONE)
 
-v1.4 Integration (FUTURE)
-├── 016 Formal Conjectures ←── 007 Lean
-└── 017 MCP Server ←── all CLI commands
+v1.4 Integration (DONE)
+├── 016 Formal Conjectures ←── 007 Lean (DONE)
+└── 017 MCP Server ←── all CLI commands (DONE)
 
-v2.0 Expansion (READY)
+v2.0 Expansion (DONE)
 └── 019 PDF Conversion ←── 010 Ingest (Marker + LLM enhancement)
 ```
 

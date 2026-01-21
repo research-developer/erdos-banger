@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.table import Table
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.presenter import exit_with_result, set_json_mode
+from erdos.commands.presenter import exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
 from erdos.core.timing import measure_time_ms
@@ -87,26 +87,20 @@ def refs(
             min=1,
         ),
     ],
-    json_output: Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Output as JSON for machine consumption.",
-        ),
-    ] = False,
 ) -> None:
     """
     List references for a problem.
 
     Example: erdos refs 6
     """
-    set_json_mode(ctx, json_output)
 
     with measure_time_ms() as duration:
         app_ctx, app_error = get_app_context(ctx, command="erdos refs")
-        if app_error is not None or app_ctx is None:
-            exit_with_result(ctx, app_error)  # type: ignore[arg-type]
+        if app_error is not None:
+            exit_with_result(ctx, app_error)
             return
+        if app_ctx is None:
+            return  # Unreachable: get_app_context guarantees (ctx, None) or (None, error)
 
         result = get_refs(problem_id, app_ctx.problems)
 

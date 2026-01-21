@@ -47,7 +47,34 @@ Leverages Terence Tao's `teorth/erdosproblems` repository as a git submodule or 
 
 ### Literature Ingestion & Manifests
 
-Handles reference material for a given problem. For each problem or reference, the harness can fetch metadata (Crossref, OpenAlex, etc.) and open-access content (via arXiv, Unpaywall, CORE, etc.) if legally available. Instead of storing PDFs, it records manifests: JSON or YAML listing each source with metadata, URL, and cache status. Full texts are only stored in a private cache if permitted (e.g. arXiv HTML or source) and are not checked into git.
+Handles reference material for a given problem. For each problem or reference, the harness can fetch metadata (OpenAlex as primary, Crossref as fallback) and open-access content (via arXiv source tarballs) if legally available. Instead of storing PDFs, it records manifests: JSON or YAML listing each source with metadata, URL, and cache status. Full texts are only stored in a private cache if permitted (e.g. arXiv HTML or source) and are not checked into git.
+
+**Deduplication Strategy:**
+
+OpenAlex handles deduplication internally via fingerprinting algorithms that match:
+- arXiv preprint ↔ published journal version
+- Multiple DOIs for the same work
+- Different repository copies
+
+**We avoid heavy custom deduplication logic** if we use OpenAlex as the primary metadata source. OpenAlex often aggregates and deduplicates metadata across sources (Crossref/arXiv/PubMed/etc.). We still enforce stable keys and duplicate guards within our own manifests/datasets to avoid accidental overwrites or churn.
+
+**Ingest Flow (v1.2+):**
+```
+erdos ingest <id>
+    │
+    ├─► For each reference:
+    │   │
+    │   ├─► Query OpenAlex (unified, deduped metadata)
+    │   │   └─► If found: use OpenAlex record
+    │   │   └─► If not found: fallback to Crossref (DOI) or skip
+    │   │
+    │   ├─► If arXiv source needed:
+    │   │   └─► arXiv e-print API (content only, not metadata)
+    │   │
+    │   └─► Write manifest entry
+    │
+    └─► Return CLIOutput with manifest
+```
 
 ### Storage Layer (Metadata + Cache)
 
@@ -660,19 +687,62 @@ Use Typer (built on Click) with Rich for formatting.
 
 ### Metadata Sources
 
-**Primary (v1.2+):** OpenAlex - 271M+ works, 100k requests/day, no auth required
-- Aggregates: Crossref + MAG + arXiv + PubMed + institutional repos
-- See Spec 020 for integration details
+**Architecture: Single Responsibility + Dependency Inversion**
 
-**Secondary:**
+**Implementation status (v1.2):** metadata fetching is implemented, but the `MetadataProvider` protocol is not yet fully extracted; `src/erdos/core/ingest/fetch.py` still constructs concrete clients. Track: `docs/debt/debt-038-metadata-provider-abstraction.md`.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    erdos ingest <id>                         │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│               MetadataProvider (Protocol/Port)              │
+│  get_by_doi(doi) -> ReferenceRecord                         │
+│  get_by_arxiv(arxiv_id) -> ReferenceRecord                  │
+│  search(query) -> List[ReferenceRecord]                     │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+        ┌───────────────────┼───────────────────┐
+        │                   │                   │
+        ▼                   ▼                   ▼
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│  OpenAlex    │   │   arXiv      │   │  Crossref    │
+│  (PRIMARY)   │   │  (SOURCE)    │   │  (FALLBACK)  │
+│              │   │              │   │              │
+│ • metadata   │   │ • LaTeX/TeX  │   │ • If OpenAlex│
+│ • citations  │   │ • HTML       │   │ • Direct DOI │
+│ • topics     │   │ • Abstract   │   │   lookup     │
+│ • deduped    │   │              │   │              │
+└──────────────┘   └──────────────┘   └──────────────┘
+```
+
+**Role Assignments (Rob C. Martin SRP):**
+
+| API | Role | When to Call |
+|-----|------|--------------|
+| **OpenAlex** | **Primary metadata source** | Always first for DOI/title/author/abstract/citations |
+| **arXiv** | **Source content provider** | When we need LaTeX/TeX for extraction (content, not metadata) |
+| **Crossref** | **Fallback only** | If OpenAlex returns nothing (rare edge cases) |
+
+**Why OpenAlex as Primary:**
+1. **Already aggregates Crossref** - calling both is redundant
+2. **Built-in deduplication** - matches arXiv preprint ↔ journal version
+3. **Richer metadata** - citations, topics, concepts, institutions
+4. **More generous anonymous quota** than Crossref’s polite pool
+5. **100% open** - CC0 license, no auth required
+
+**Secondary (Source Content):**
 - arXiv API (for LaTeX source, HTML) - 1 req/3s rate limit
-- Crossref REST API (fallback for DOI metadata)
+- Used for content acquisition, NOT metadata lookup
 
-**Future/Optional:**
-- Unpaywall (100k/day with email) - open access PDF locations
-- Semantic Scholar - citation context
+**Future/Optional (Good Redundancy - adds NEW information):**
+- Semantic Scholar - citation context extraction (who cites what and why)
+- Exa Research API - natural language research synthesis, agentic queries
+- zbMATH Open - math-specific metadata not in general databases
 - CORE - institutional repositories
-- zbMATH - math-specific metadata
+- Unpaywall (100k/day with email) - open access PDF locations
 
 ### Lean Tools
 

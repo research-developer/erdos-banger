@@ -46,8 +46,10 @@ literature/cache/
 literature/extracts/
 index/*.sqlite
 logs/ralph/
+logs/loop/
 logs/*.yaml
 logs/*.json
+logs/*.jsonl
 formal/lean/build/
 formal/lean/.lake/
 formal/lean/lake-packages/

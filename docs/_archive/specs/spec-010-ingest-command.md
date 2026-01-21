@@ -25,6 +25,12 @@
    - Fetch metadata via Crossref REST API
    - **No full-text download** (content is often paywalled; ingestion is metadata-only)
 
+### Note (v1.2+)
+
+- OpenAlex became the default metadata source via `--source openalex` (see archived Spec 020).
+- The arXiv/Crossref behavior described in this spec remains available as **legacy mode** via `--source arxiv` / `--source crossref`.
+- Batch mode (`--all`, `--resume`, `--limit`, filters, etc.) is specified in archived Spec 015.
+
 ### Explicitly out of scope (v1.1)
 
 - Unpaywall / OA detection for DOI content (defer to a future spec)
@@ -54,6 +60,7 @@ erdos ingest PROBLEM_ID [OPTIONS]
 - `--timeout SECONDS`: HTTP timeout (default: `30`).
 - `--delay SECONDS`: Minimum delay between API requests for politeness (default: `3`).
 - `--mailto EMAIL`: Contact email for Crossref polite pool (default: from `ERDOS_MAILTO`, else a documented placeholder).
+- `--source [openalex|arxiv|crossref]`: Metadata source selection (default: `openalex`). See archived Spec 020.
 
 **Global flags**
 
@@ -190,7 +197,7 @@ To keep HTTP behavior testable and consistent, v1.1 ingestion uses:
 
 Rationale: unit/integration tests must be able to run with **zero network** and still exercise HTTP error paths deterministically.
 
-### 5.1 `src/erdos/core/ingest.py`
+### 5.1 `src/erdos/core/ingest/service.py`
 
 Responsibilities:
 
@@ -198,7 +205,7 @@ Responsibilities:
 - Iterate `problem.references`
 - For each reference:
   - If `doi` → fetch Crossref metadata. If `arxiv_id` is also present and downloads are enabled, download/extract the arXiv source tarball and attach it to the same manifest entry.
-  - Else if `arxiv_id` → fetch arXiv metadata + optionally download source tarball + compute MD5 (`ManifestEntry.cache_hash`) + write extract
+  - Else if `arxiv_id` → fetch arXiv metadata + optionally download source tarball + compute SHA256 (`ManifestEntry.cache_hash`) + write extract
   - Else → record “skipped (no identifier)” in CLI output (no manifest entry in v1.1)
 - **Reference identity and merging (non-negotiable):**
   - Each `ReferenceEntry` maps to **at most one** `ManifestEntry`.

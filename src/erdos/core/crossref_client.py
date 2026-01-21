@@ -6,11 +6,15 @@ REST API.
 API Reference: https://www.crossref.org/documentation/retrieve-metadata/rest-api/
 """
 
+import logging
+import time
 from urllib.parse import quote
 
-import requests
-
 from erdos.core.models import ReferenceRecord
+from erdos.core.retry import fetch_with_retry
+
+
+logger = logging.getLogger(__name__)
 
 
 def parse_crossref_work(payload: dict[str, object], *, doi: str) -> ReferenceRecord:
@@ -97,7 +101,8 @@ def fetch_crossref_work(
 
     Raises:
         requests.HTTPError: If HTTP request fails (e.g., 404 for not found).
-        requests.Timeout: If request times out.
+        requests.Timeout: If request times out after all retries.
+        requests.ConnectionError: If connection fails after all retries.
     """
     encoded_doi = quote(doi, safe="/")
     url = f"https://api.crossref.org/works/{encoded_doi}"
@@ -106,7 +111,16 @@ def fetch_crossref_work(
         "User-Agent": f"erdos-banger/1.0 (https://github.com/The-Obstacle-Is-The-Way/erdos-banger; mailto:{mailto})"
     }
 
-    response = requests.get(url, params=params, headers=headers, timeout=timeout)
-    response.raise_for_status()
+    logger.debug("Fetching Crossref metadata for DOI: %s", doi)
+    start_time = time.monotonic()
+
+    response = fetch_with_retry(url, timeout=timeout, params=params, headers=headers)
+    elapsed = time.monotonic() - start_time
+    logger.debug(
+        "Crossref response: %d bytes in %.2fs (status %d)",
+        len(response.content),
+        elapsed,
+        response.status_code,
+    )
 
     return response.json()  # type: ignore[no-any-return]

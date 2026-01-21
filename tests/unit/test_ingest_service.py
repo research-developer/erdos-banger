@@ -20,6 +20,7 @@ import erdos.core.ingest as ingest_module
 import erdos.core.ingest.fetch as fetch_module
 from erdos.core.ingest import (
     ArxivDownloadResult,
+    MetadataSource,
     _download_and_extract_arxiv,
     get_stable_key,
     ingest_problem_references,
@@ -139,6 +140,7 @@ def test_ingest_arxiv_reference(
         timeout=30.0,
         delay=0.0,
         mailto="test@example.com",
+        source=MetadataSource.ARXIV,  # Use legacy arXiv source for this test
     )
 
     # Should succeed with one entry
@@ -197,6 +199,7 @@ def test_ingest_doi_reference(
         timeout=30.0,
         delay=0.0,
         mailto="test@example.com",
+        source=MetadataSource.CROSSREF,  # Use legacy Crossref source for this test
     )
 
     # Should succeed with one entry
@@ -271,6 +274,7 @@ def test_ingest_merged_doi_arxiv(
         timeout=30.0,
         delay=0.0,
         mailto="test@example.com",
+        source=MetadataSource.CROSSREF,  # Use legacy Crossref source for this test
     )
 
     # Should create ONE merged entry
@@ -326,6 +330,7 @@ def test_ingest_no_download_flag(
         timeout=30.0,
         delay=0.0,
         mailto="test@example.com",
+        source=MetadataSource.ARXIV,  # Use legacy arXiv source for this test
     )
 
     # Should succeed but no cache/extract
@@ -360,11 +365,14 @@ def test_ingest_internal_error_does_not_truncate_manifest(
         ref: object,
         *,
         repo_root: Path,
-        no_download: bool,
-        no_network: bool,
+        allow_download: bool,
+        allow_network: bool,
         timeout: float,
         mailto: str,
+        source: MetadataSource = MetadataSource.OPENALEX,
     ) -> ManifestEntry:
+        # Unused params required by signature
+        _ = repo_root, allow_download, allow_network, timeout, mailto, source
         if getattr(ref, "key", "") == "Boom2026":
             raise Exception("boom")
         return ManifestEntry(
@@ -744,9 +752,10 @@ def test_ingest_updates_manifest_when_content_changes(
         allow_network: bool,
         timeout: float,
         mailto: str,
+        source: MetadataSource = MetadataSource.OPENALEX,
     ) -> ManifestEntry:
         # Unused params required by signature
-        _ = repo_root, allow_download, allow_network, timeout, mailto
+        _ = repo_root, allow_download, allow_network, timeout, mailto, source
         call_count[0] += 1
         # Return different title on second call to simulate content change
         title = "First Title" if call_count[0] == 1 else "Updated Title"

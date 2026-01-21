@@ -5,6 +5,7 @@ import logging
 import tarfile
 import time
 from datetime import UTC, datetime
+from enum import Enum
 from pathlib import Path
 
 import defusedxml.ElementTree as ET
@@ -33,9 +34,19 @@ from erdos.core.models import (
     ReferenceEntry,
     ReferenceRecord,
 )
+from erdos.core.openalex_client import OpenAlexClient, OpenAlexConfig
+from erdos.core.retry import fetch_with_retry
 
 
 logger = logging.getLogger(__name__)
+
+
+class MetadataSource(str, Enum):
+    """Metadata source for reference ingestion."""
+
+    OPENALEX = "openalex"
+    ARXIV = "arxiv"
+    CROSSREF = "crossref"
 
 
 def download_and_extract_arxiv(
@@ -65,15 +76,24 @@ def download_and_extract_arxiv(
         arxiv_cache_path = repo_root / get_arxiv_cache_path(arxiv_id)
         arxiv_extract_path = repo_root / get_arxiv_extract_path(arxiv_id)
 
-        # Download source
+        # Download source with retry for transient failures
         source_url = f"https://arxiv.org/e-print/{arxiv_id}"
-        response = requests.get(source_url, timeout=timeout)
-        response.raise_for_status()
+        logger.debug("Downloading arXiv source: %s", source_url)
+        start_time = time.monotonic()
+        response = fetch_with_retry(source_url, timeout=timeout)
+        elapsed = time.monotonic() - start_time
+        logger.debug(
+            "arXiv download: %d bytes in %.2fs (status %d)",
+            len(response.content),
+            elapsed,
+            response.status_code,
+        )
         tarball_bytes = response.content
 
         # Write cache
         arxiv_cache_path.parent.mkdir(parents=True, exist_ok=True)
         arxiv_cache_path.write_bytes(tarball_bytes)
+        logger.debug("Cached arXiv source: %s", arxiv_cache_path)
 
         # Compute hash (SHA256 for cache integrity, not crypto)
         cache_hash = hashlib.sha256(tarball_bytes).hexdigest()
@@ -87,10 +107,15 @@ def download_and_extract_arxiv(
             arxiv_extract_path.write_text(text, encoding="utf-8")
             extract_path = get_arxiv_extract_path(arxiv_id)
             extracted = True
+            logger.debug(
+                "Extracted arXiv text: %s (%d chars)", arxiv_extract_path, len(text)
+            )
         except (OSError, ValueError, tarfile.TarError) as e:
+            logger.warning("arXiv extraction failed for %s: %s", arxiv_id, e)
             error = f"Extraction failed: {e}"
             extracted = False
     except (OSError, requests.RequestException) as e:
+        logger.warning("arXiv download failed for %s: %s", arxiv_id, e)
         error = f"Download failed: {e}"
 
     return ArxivDownloadResult(
@@ -223,6 +248,62 @@ def _fetch_arxiv_only(
     )
 
 
+def _fetch_openalex_by_doi(
+    doi: str,
+    arxiv_id: str | None,
+    *,
+    mailto: str,
+    timeout: float,
+    repo_root: Path,
+    allow_download: bool,
+) -> ManifestEntry:
+    """Fetch metadata via OpenAlex for a DOI, optionally download arXiv source."""
+    config = OpenAlexConfig(email=mailto, timeout=timeout)
+    client = OpenAlexClient(config)
+    reference = client.get_by_doi(doi)
+
+    # If we have an arXiv ID, download the source
+    if arxiv_id:
+        # Ensure arXiv ID is set on reference (OpenAlex may have found it too)
+        if not reference.arxiv_id:
+            reference.arxiv_id = arxiv_id
+        return _build_manifest_entry_with_arxiv(
+            reference,
+            arxiv_id,
+            repo_root=repo_root,
+            allow_download=allow_download,
+            timeout=timeout,
+        )
+
+    return ManifestEntry(reference=reference, ingested_at=datetime.now(UTC))
+
+
+def _fetch_openalex_by_arxiv(
+    arxiv_id: str,
+    *,
+    mailto: str,
+    timeout: float,
+    repo_root: Path,
+    allow_download: bool,
+) -> ManifestEntry:
+    """Fetch metadata via OpenAlex for an arXiv ID, optionally download source."""
+    config = OpenAlexConfig(email=mailto, timeout=timeout)
+    client = OpenAlexClient(config)
+    reference = client.get_by_arxiv(arxiv_id)
+
+    # Ensure arXiv ID is set on reference
+    if not reference.arxiv_id:
+        reference.arxiv_id = arxiv_id
+
+    return _build_manifest_entry_with_arxiv(
+        reference,
+        arxiv_id,
+        repo_root=repo_root,
+        allow_download=allow_download,
+        timeout=timeout,
+    )
+
+
 def fetch_reference_entry(
     ref: ReferenceEntry,
     *,
@@ -231,11 +312,51 @@ def fetch_reference_entry(
     allow_network: bool,
     timeout: float,
     mailto: str,
+    source: MetadataSource = MetadataSource.OPENALEX,
 ) -> ManifestEntry:
-    """Fetch metadata and optionally download content for a reference."""
+    """Fetch metadata and optionally download content for a reference.
+
+    Args:
+        ref: Reference entry with DOI and/or arXiv ID.
+        repo_root: Repository root directory.
+        allow_download: Whether to download arXiv source tarballs.
+        allow_network: Whether network access is allowed.
+        timeout: HTTP timeout in seconds.
+        mailto: Contact email for API polite pools.
+        source: Metadata source to use (default: OpenAlex).
+
+    Returns:
+        ManifestEntry with metadata and optional cache info.
+
+    Raises:
+        RuntimeError: If network access is required but disabled.
+        ValueError: If reference has no identifiers.
+    """
     if not allow_network:
         raise RuntimeError("Network access disabled but required for fetching")
 
+    # Use OpenAlex as primary source (SPEC-020)
+    if source == MetadataSource.OPENALEX:
+        if ref.doi:
+            return _fetch_openalex_by_doi(
+                ref.doi,
+                ref.arxiv_id,
+                mailto=mailto,
+                timeout=timeout,
+                repo_root=repo_root,
+                allow_download=allow_download,
+            )
+        if ref.arxiv_id:
+            return _fetch_openalex_by_arxiv(
+                ref.arxiv_id,
+                mailto=mailto,
+                timeout=timeout,
+                repo_root=repo_root,
+                allow_download=allow_download,
+            )
+        raise ValueError("Reference has no DOI or arXiv ID")
+
+    # Legacy behavior: use arXiv/Crossref directly
     if ref.doi and ref.arxiv_id:
         return _fetch_doi_with_arxiv(
             ref.doi,
@@ -303,6 +424,7 @@ def process_single_reference(
     allow_network: bool,
     timeout: float,
     mailto: str,
+    source: MetadataSource = MetadataSource.OPENALEX,
 ) -> ReferenceProcessResult:
     """Process a single reference, reusing a cached manifest entry unless forced."""
     if existing_entry := _find_existing_manifest_entry(
@@ -323,6 +445,7 @@ def process_single_reference(
             allow_network=allow_network,
             timeout=timeout,
             mailto=mailto,
+            source=source,
         )
         return _success_result(entry)
     except (requests.RequestException, RuntimeError) as e:
@@ -353,6 +476,7 @@ def process_all_references(
     timeout: float,
     mailto: str,
     delay: float,
+    source: MetadataSource = MetadataSource.OPENALEX,
 ) -> ProcessAllReferencesResult:
     """Process all references for a problem.
 
@@ -364,8 +488,9 @@ def process_all_references(
         allow_download: Whether to download arXiv tarballs.
         allow_network: Whether network access is allowed.
         timeout: HTTP timeout in seconds.
-        mailto: Contact email for Crossref polite pool.
+        mailto: Contact email for API polite pools.
         delay: Rate limiting delay between requests.
+        source: Metadata source to use (default: OpenAlex).
 
     Returns:
         ProcessAllReferencesResult with all entries and status.
@@ -393,6 +518,7 @@ def process_all_references(
             allow_network=allow_network,
             timeout=timeout,
             mailto=mailto,
+            source=source,
         )
 
         entries.append(result.entry)

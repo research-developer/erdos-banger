@@ -41,7 +41,7 @@ def test_cli_show_human(tmp_path: Path, sample_problems_yaml: Path) -> None:
 def test_cli_show_json(tmp_path: Path, sample_problems_yaml: Path) -> None:
     data_dir = _data_dir(tmp_path, sample_problems_yaml)
     result = runner.invoke(
-        app, ["show", "6", "--json"], env={"ERDOS_DATA_PATH": str(data_dir)}
+        app, ["--json", "show", "6"], env={"ERDOS_DATA_PATH": str(data_dir)}
     )
 
     assert result.exit_code == 0
@@ -53,7 +53,7 @@ def test_cli_show_json(tmp_path: Path, sample_problems_yaml: Path) -> None:
 def test_cli_list_json(tmp_path: Path, sample_problems_yaml: Path) -> None:
     data_dir = _data_dir(tmp_path, sample_problems_yaml)
     result = runner.invoke(
-        app, ["list", "--limit", "2", "--json"], env={"ERDOS_DATA_PATH": str(data_dir)}
+        app, ["--json", "list", "--limit", "2"], env={"ERDOS_DATA_PATH": str(data_dir)}
     )
 
     assert result.exit_code == 0
@@ -86,7 +86,7 @@ def test_cli_list_error_human(tmp_path: Path) -> None:
 def test_cli_refs_json(tmp_path: Path, sample_problems_yaml: Path) -> None:
     data_dir = _data_dir(tmp_path, sample_problems_yaml)
     result = runner.invoke(
-        app, ["refs", "6", "--json"], env={"ERDOS_DATA_PATH": str(data_dir)}
+        app, ["--json", "refs", "6"], env={"ERDOS_DATA_PATH": str(data_dir)}
     )
 
     assert result.exit_code == 0
@@ -118,7 +118,7 @@ def test_cli_search_json(tmp_path: Path, sample_problems_yaml: Path) -> None:
     index_path = tmp_path / "index" / "test.sqlite"
     result = runner.invoke(
         app,
-        ["search", "prime", "--json"],
+        ["--json", "search", "prime"],
         env={"ERDOS_DATA_PATH": str(data_dir), "ERDOS_INDEX_PATH": str(index_path)},
     )
 
@@ -168,7 +168,7 @@ def test_cli_search_build_index_json_output_is_clean(
     index_path = tmp_path / "index" / "test.sqlite"
     result = runner.invoke(
         app,
-        ["search", "prime", "--build-index", "--json"],
+        ["--json", "search", "prime", "--build-index"],
         env={"ERDOS_DATA_PATH": str(data_dir), "ERDOS_INDEX_PATH": str(index_path)},
     )
 
@@ -203,7 +203,7 @@ def test_cli_search_fts_works_without_dataset_when_index_exists(
 
     result = runner.invoke(
         app,
-        ["search", "prime", "--json"],
+        ["--json", "search", "prime"],
         env={"ERDOS_INDEX_PATH": str(index_path)},
     )
 
@@ -236,7 +236,7 @@ def test_cli_lean_init_no_mathlib_json(tmp_path: Path) -> None:
 
     result = runner.invoke(
         app,
-        ["lean", "init", "--no-mathlib", "--path", str(project_path), "--json"],
+        ["--json", "lean", "init", "--no-mathlib", "--path", str(project_path)],
         env={},
     )
 
@@ -263,7 +263,7 @@ def test_cli_lean_formalize_success_json(
 
     result = runner.invoke(
         app,
-        ["lean", "formalize", "6", "--path", str(project_path), "--json"],
+        ["--json", "lean", "formalize", "6", "--path", str(project_path)],
         env={"ERDOS_DATA_PATH": str(data_dir)},
     )
 
@@ -328,7 +328,7 @@ def test_cli_lean_check_json_success(monkeypatch, tmp_path: Path) -> None:
 
     monkeypatch.setattr(LeanRunner, "check", fake_check_ok)
 
-    result = runner.invoke(app, ["lean", "check", str(file_path), "--json"], env={})
+    result = runner.invoke(app, ["--json", "lean", "check", str(file_path)], env={})
 
     assert result.exit_code == 0
     payload = json.loads(result.stdout)

@@ -36,8 +36,10 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-013 | `--log-level` dead code (invalidated) | P2 | Invalidated | 1d5bd51 |
 | BUG-014 | Silent exception swallowing masks errors | P1 | Fixed | 1d5bd51 |
 | BUG-016 | Manifest corruption silently returns None | P2 | Fixed | 1d5bd51 |
+| BUG-018 | OpenAlex client `get_by_arxiv()` broken + wrong test DOIs | P1 | Fixed | b2dcdfe |
+| BUG-019 | `erdos convert --format` is a no-op | P2 | Fixed | b2dcdfe |
 
-**Next Bug ID:** BUG-018
+**Next Bug ID:** BUG-020
 
 ### Archived Bug Decks
 
@@ -58,6 +60,8 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/bug-004-iter-problems-duplicate-ids.md`
 - `docs/_archive/bugs/bug-005-dead-global-flags.md`
 - `docs/_archive/bugs/bug-006-ruff-lints-submodule.md`
+- `docs/_archive/bugs/bug-018-openalex-client-broken.md`
+- `docs/_archive/bugs/bug-019-convert-format-no-op.md`
 
 ## Bug Priority Definitions
 

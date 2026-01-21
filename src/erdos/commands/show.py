@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.panel import Panel
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.presenter import exit_with_result, set_json_mode
+from erdos.commands.presenter import exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord
 from erdos.core.timing import measure_time_ms
@@ -103,26 +103,20 @@ def show(
             min=1,
         ),
     ],
-    json_output: Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Output as JSON for machine consumption.",
-        ),
-    ] = False,
 ) -> None:
     """
     Show detailed information about an Erdős problem.
 
     Example: erdos show 6
     """
-    set_json_mode(ctx, json_output)
 
     with measure_time_ms() as duration:
         app_ctx, app_error = get_app_context(ctx, command="erdos show")
-        if app_error is not None or app_ctx is None:
-            exit_with_result(ctx, app_error)  # type: ignore[arg-type]
+        if app_error is not None:
+            exit_with_result(ctx, app_error)
             return
+        if app_ctx is None:
+            return  # Unreachable: get_app_context guarantees (ctx, None) or (None, error)
 
         result = get_problem(problem_id, app_ctx.problems)
 

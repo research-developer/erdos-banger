@@ -113,6 +113,7 @@ src/erdos/
 - ruff for linting/formatting (configured in pyproject.toml)
 - 80% minimum test coverage enforced
 - All CLI output through Rich console or `exit_with_result()`
+- Clean Code / SOLID: keep Typer callbacks thin, move orchestration into `src/erdos/core/`, and avoid growing new “god modules”. If a necessary refactor is too large for the current change, create a debt deck in `docs/debt/` with evidence + acceptance criteria.
 
 ## Technical Debt Status
 
