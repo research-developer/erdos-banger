@@ -120,6 +120,11 @@ def search_problems_fts(
                 try:
                     problem = repo.get_by_id(r.problem_id)
                 except Exception:
+                    logger.debug(
+                        "Failed to enrich result for problem %s",
+                        r.problem_id,
+                        exc_info=True,
+                    )
                     problem = None
             enriched_results.append(
                 {
@@ -147,6 +152,14 @@ def search_problems_fts(
         return CLIOutput.err(
             command="erdos search",
             error_type="IndexError",
+            message=str(e),
+            code=ExitCode.ERROR,
+        )
+    except Exception as e:
+        logger.exception("Unexpected error in FTS search")
+        return CLIOutput.err(
+            command="erdos search",
+            error_type="Error",
             message=str(e),
             code=ExitCode.ERROR,
         )

@@ -139,17 +139,21 @@ def formalize_problem(
     force: bool,
 ) -> CLIOutput:
     """Generate a Lean skeleton for a problem."""
-    problem = repo.get_by_id(problem_id)
-    if problem is None:
-        return CLIOutput.err(
-            command="erdos lean formalize",
-            error_type="NotFound",
-            message=f"Problem {problem_id} not found",
-            code=ExitCode.NOT_FOUND,
-        )
-
     try:
+        problem = repo.get_by_id(problem_id)
+        if problem is None:
+            return CLIOutput.err(
+                command="erdos lean formalize",
+                error_type="NotFound",
+                message=f"Problem {problem_id} not found",
+                code=ExitCode.NOT_FOUND,
+            )
+
         output_file = generate_skeleton(problem, project_path, overwrite=force)
+        return CLIOutput.ok(
+            command="erdos lean formalize",
+            data={"problem_id": problem_id, "file": str(output_file)},
+        )
     except FormalizerError as e:
         return CLIOutput.err(
             command="erdos lean formalize",
@@ -157,11 +161,14 @@ def formalize_problem(
             message=str(e),
             code=ExitCode.ERROR,
         )
-
-    return CLIOutput.ok(
-        command="erdos lean formalize",
-        data={"problem_id": problem_id, "file": str(output_file)},
-    )
+    except Exception as e:
+        logger.exception("Unexpected error in lean formalize command")
+        return CLIOutput.err(
+            command="erdos lean formalize",
+            error_type="Error",
+            message=str(e),
+            code=ExitCode.ERROR,
+        )
 
 
 # ============================================================================

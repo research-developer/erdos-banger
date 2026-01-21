@@ -201,7 +201,7 @@ class LeanRunner:
             ) from exc
 
         module_name = ".".join(relative.with_suffix("").parts)
-        return ResolvedLeanPath(full_path, relative, module_name)
+        return ResolvedLeanPath(resolved_full, relative, module_name)
 
     def _build_check_result(
         self,

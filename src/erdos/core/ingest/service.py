@@ -357,16 +357,15 @@ def ingest_problem_references(
         process_result.entries, existing_manifest.entries
     )
 
-    # Create manifest (preserves updated_at if content unchanged)
-    manifest = _create_manifest(
-        problem_id,
-        process_result.entries,
-        existing_manifest,
-        content_changed=content_changed,
-    )
-
     # Only write if content changed to avoid unnecessary file churn (DEBT-028)
     if content_changed:
+        # Create new manifest with fresh timestamps
+        manifest = _create_manifest(
+            problem_id,
+            process_result.entries,
+            existing_manifest,
+            content_changed=True,
+        )
         success, error_msg = _write_manifest_atomic(manifest, manifest_path)
         if not success:
             return CLIOutput.err(
@@ -375,6 +374,12 @@ def ingest_problem_references(
                 message=error_msg or "Unknown write error",
                 code=ExitCode.ERROR,
             )
+    else:
+        # Content unchanged - use existing manifest to ensure returned manifest
+        # matches on-disk state (timestamps and all). The existing_manifest is
+        # guaranteed non-None here since content_changed being False implies
+        # existing_manifest exists (see content_changed condition above).
+        manifest = existing_manifest  # type: ignore[assignment]
 
     # Return result
     return _build_ingest_result(

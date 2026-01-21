@@ -35,7 +35,10 @@ def _validate_list_field(raw: dict[str, Any], field: str, problem_id: Any) -> li
     Raises:
         ProblemLoaderError: If field is not a list
     """
-    value = raw.get(field, []) or []
+    # Use explicit None check to avoid masking falsy non-list values like "", 0, False
+    value = raw.get(field)
+    if value is None:
+        return []
     if isinstance(value, str):
         raise ProblemLoaderError(
             f"Problem {problem_id}: '{field}' must be a list, got string: {value!r}"
