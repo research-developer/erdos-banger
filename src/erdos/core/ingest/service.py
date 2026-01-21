@@ -304,6 +304,13 @@ def ingest_problem_references(
 
     Returns:
         CLIOutput with ingestion results.
+
+    Note:
+        This function exceeds 80 LOC but is acceptable per DEBT-026 criteria:
+        it is pure linear orchestration with no branching complexity - each step
+        is a single helper call. The body contains ~12 orchestration steps with
+        clear names; extracting further would obscure the workflow. Docstring
+        and signature account for ~28 lines of the total.
     """
     command = "erdos ingest"
 
