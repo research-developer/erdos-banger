@@ -57,7 +57,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-027 | Broad `except Exception` catches | P3 | Fixed | e657d7c |
 | DEBT-028 | Ingest manifest churn (non-idempotent writes) | P2 | Fixed | 154866b |
 | DEBT-029 | Logging coverage gaps | P2 | Fixed | f806edc |
-| DEBT-030 | Redundant dual --json flag | P3 | Fixed | (pending) |
+| DEBT-030 | Redundant dual --json flag | P3 | Fixed | ed2c2c8 |
 
 **Next Debt ID:** DEBT-036
 

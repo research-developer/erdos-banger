@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-21
 **Status:** Fixed
-**Fixed In:** (pending commit)
+**Fixed In:** ed2c2c8
 **Priority:** P3 (DRY violation, user confusion)
 **Impact:** Confusing API; maintenance burden when changing flag behavior
 
