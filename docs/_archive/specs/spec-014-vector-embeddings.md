@@ -4,7 +4,7 @@
 
 **Status:** Complete
 **Target:** v1.3
-**Commit:** 3b6e6e8
+**Commit:** d933875
 **Prerequisites (SSOT):**
 - Search index: `docs/_archive/specs/spec-006-search-index.md`
 - Domain models: `docs/_archive/specs/spec-003-domain-models.md`
