@@ -15,6 +15,7 @@ from datetime import datetime
 
 import defusedxml.ElementTree as ET
 
+from erdos.core.constants import MAX_TEX_FILE_SIZE
 from erdos.core.models import OpenAccessStatus, ReferenceRecord
 from erdos.core.retry import fetch_with_retry
 
@@ -161,8 +162,6 @@ def extract_arxiv_text(tarball_bytes: bytes) -> bytes:
         ValueError: If no .tex files found in tarball.
         tarfile.TarError: If tarball is malformed.
     """
-    MAX_SIZE = 2 * 1024 * 1024  # 2 MiB
-
     tar_buffer = io.BytesIO(tarball_bytes)
     tex_files = []
 
@@ -185,7 +184,7 @@ def extract_arxiv_text(tarball_bytes: bytes) -> bytes:
         if file_obj is None:
             raise ValueError(f"Could not extract {largest_name}")
 
-        # Read up to MAX_SIZE bytes
-        content = file_obj.read(MAX_SIZE)
+        # Read up to MAX_TEX_FILE_SIZE bytes
+        content = file_obj.read(MAX_TEX_FILE_SIZE)
 
     return content

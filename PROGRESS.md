@@ -46,8 +46,8 @@
   - Deck: `docs/_archive/debt/debt-033-no-retry-logic.md`
   - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
 
-- [ ] **DEBT-034**: Hardcoded `MAX_SIZE` constant
-  - Deck: `docs/debt/debt-034-hardcoded-max-size.md`
+- [x] **DEBT-034**: Hardcoded `MAX_SIZE` constant
+  - Deck: `docs/_archive/debt/debt-034-hardcoded-max-size.md`
   - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
 
 - [ ] **DEBT-035**: `type: ignore` in exit paths
@@ -235,6 +235,15 @@
 - No retry on: HTTP 4xx (except 429)
 - Respects Retry-After header on 429 responses
 - DEBUG logging for retry attempts
+
+### 2026-01-20: DEBT-034 Hardcoded MAX_SIZE constant removed
+
+**Files modified:**
+- `src/erdos/core/arxiv_client.py` - Imported `MAX_TEX_FILE_SIZE` from constants; replaced local `MAX_SIZE` variable with the constant
+- `docs/debt/debt-034-hardcoded-max-size.md` - Status updated to Fixed (archived)
+- `docs/debt/README.md` - Moved DEBT-034 to Archived
+
+**Note:** Pure DRY refactoring - no behavior change. The constant `MAX_TEX_FILE_SIZE` (2 MiB) was already defined in constants.py but not used in arxiv_client.py.
 
 (entries added by Ralph loop as tasks complete)
 
