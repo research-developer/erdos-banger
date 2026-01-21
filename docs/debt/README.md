@@ -57,7 +57,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-028 | Ingest manifest churn (non-idempotent writes) | P2 | Fixed | 154866b |
 | DEBT-029 | Logging coverage gaps | P2 | Fixed | f806edc |
 | DEBT-030 | Redundant dual --json flag | P3 | Fixed | ed2c2c8 |
-| DEBT-031 | Rate limiting constant unused | P3 | Fixed | f7bdfd4 |
+| DEBT-031 | Rate limiting constant unused | P3 | Fixed | c50766c |
 
 **Next Debt ID:** DEBT-036
 

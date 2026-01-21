@@ -4,7 +4,7 @@
 **Status:** Fixed
 **Priority:** P3 (Ergonomics / defaults drift)
 **Impact:** Batch operations could get rate-limited or blocked by external APIs
-**Fixed In:** f7bdfd4
+**Fixed In:** c50766c
 
 ## Summary
 
