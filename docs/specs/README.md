@@ -9,7 +9,7 @@ v1.0 (DONE)     Foundation: CLI, data loading, search, Lean integration
 v1.1 (DONE)     Literature: Ingest + RAG Q&A
 v1.2 (DONE)     Iteration: Loop + logging + OpenAlex metadata
 v1.3 (DONE)     Enhancement: Vectors + batch ops
-v1.4 (FUTURE)   Integration: Formal conjectures + MCP
+v1.4 (DONE)     Integration: Formal conjectures + MCP
 v2.0 (READY)    Expansion: PDF conversion (Marker + LLM)
 ```
 
@@ -33,7 +33,6 @@ Specs designed for future versions.
 
 | ID | Title | Status | Target | Description |
 |----|-------|--------|--------|-------------|
-| 017 | [MCP Server](spec-017-mcp-server.md) | Deferred | v1.4 | Model Context Protocol for AI integration |
 | 019 | [PDF Conversion](spec-019-pdf-conversion.md) | Ready | v2.0 | PDF to text with math preservation (Marker + LLM) |
 
 ## Archived Specs
@@ -62,6 +61,7 @@ Completed specs that are fully implemented.
 | 016 | Formal Conjectures | [archive](../_archive/specs/spec-016-formal-conjectures.md) |
 | 014 | Vector Embeddings | [archive](../_archive/specs/spec-014-vector-embeddings.md) |
 | 015 | Batch Operations | [archive](../_archive/specs/spec-015-batch-operations.md) |
+| 017 | MCP Server | [archive](../_archive/specs/spec-017-mcp-server.md) |
 
 **Next Spec ID:** SPEC-022
 
@@ -96,9 +96,9 @@ v1.3 Enhancement (DONE)
 ├── 014 Vector Embeddings ←── 006 Search Index (DONE)
 └── 015 Batch Operations ←── 010 Ingest + 007 Lean (DONE)
 
-v1.4 Integration (PARTIAL)
+v1.4 Integration (DONE)
 ├── 016 Formal Conjectures ←── 007 Lean (DONE)
-└── 017 MCP Server ←── all CLI commands
+└── 017 MCP Server ←── all CLI commands (DONE)
 
 v2.0 Expansion (READY)
 └── 019 PDF Conversion ←── 010 Ingest (Marker + LLM enhancement)

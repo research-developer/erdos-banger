@@ -2,7 +2,8 @@
 
 > Exposes erdos-banger functionality via Model Context Protocol for AI assistant integration.
 
-**Status:** Deferred
+**Status:** Complete
+**Implemented In:** c995379
 **Target:** v1.4
 **Prerequisites (SSOT):**
 - CLI patterns: `docs/_archive/specs/spec-004-cli-architecture.md`

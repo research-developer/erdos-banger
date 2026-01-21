@@ -95,8 +95,8 @@
   - Target: v1.3
   - Acceptance: All spec acceptance criteria met; `make ci` green.
 
-- [ ] **SPEC-017**: MCP Server
-  - Spec: `docs/specs/spec-017-mcp-server.md`
+- [x] **SPEC-017**: MCP Server
+  - Spec: `docs/_archive/specs/spec-017-mcp-server.md`
   - Target: v1.4
   - Acceptance: All spec acceptance criteria met; `make ci` green.
   - Note: Requires `mcp[cli]` optional dep.
@@ -448,6 +448,28 @@
 - `erdos lean batch-formalize` processes multiple problems with parallel execution
 - `--max-concurrent` controls parallelism (default 4 for formalize)
 - Progress callbacks for UI updates during batch operations
+
+### 2026-01-21: SPEC-017 MCP Server implemented
+
+**Files created:**
+- `src/erdos/mcp/__init__.py` - MCP package for erdos-banger
+- `src/erdos/mcp/server.py` - MCP server with FastMCP tools (get_problem, list_problems, get_references, search_index, lean_check, lean_formalize, ask_question, get_logs)
+- `tests/unit/test_mcp_tools.py` - 22 unit tests for MCP tool functions with fixture data
+- `tests/integration/test_mcp_server.py` - 10 integration tests for server module and tool return formats
+
+**Files modified:**
+- `pyproject.toml` - Added `mcp` optional dependency (`mcp[cli]>=1.25.0,<2`); added `erdos-mcp` entry point; added mypy override for mcp module
+- `docs/specs/spec-017-mcp-server.md` - Status updated to Complete
+- `docs/specs/README.md` - Moved SPEC-017 from Deferred to Archived; updated v1.4 to DONE
+
+**Features:**
+- `erdos-mcp` entry point to start MCP server via stdio transport
+- Core tools: get_problem, list_problems, get_references, search_index, lean_check, lean_formalize
+- Optional tools: ask_question (RAG with no_llm=True default), get_logs (run log queries)
+- All tools return CLIOutput-compatible JSON strings with schema_version
+- Path traversal protection in lean_check (rejects `../` patterns)
+- Tools reuse existing core logic (no shell subprocess calls)
+- Tests guarded with `pytest.importorskip("mcp")` for optional dependency
 
 (entries added by Ralph loop as tasks complete)
 

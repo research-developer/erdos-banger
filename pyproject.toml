@@ -37,9 +37,13 @@ embeddings = [
     "sentence-transformers>=5.2.0",
     "numpy>=2.4.1",
 ]
+mcp = [
+    "mcp[cli]>=1.25.0,<2",
+]
 
 [project.scripts]
 erdos = "erdos.cli:app"
+erdos-mcp = "erdos.mcp.server:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -147,6 +151,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "sentence_transformers.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "mcp.*"
 ignore_missing_imports = true
 
 [tool.pydantic-mypy]
