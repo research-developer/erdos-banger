@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 import shutil
 import subprocess
@@ -15,6 +16,9 @@ from erdos.core.models import LeanCheckResult, LeanError
 if TYPE_CHECKING:
     from pathlib import Path
     from typing import Literal
+
+
+logger = logging.getLogger(__name__)
 
 
 class LeanRunnerError(Exception):
@@ -107,6 +111,7 @@ class LeanRunner:
                 if result.returncode == 0:
                     lean_version = result.stdout.strip().split("\n")[0]
             except (subprocess.TimeoutExpired, FileNotFoundError):
+                logger.debug("Failed to determine Lean version", exc_info=True)
                 pass
 
         mathlib = (self._project_path / "lake-packages" / "mathlib").exists() or (

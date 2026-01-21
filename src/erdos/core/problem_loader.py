@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from importlib.resources import as_file, files
 from pathlib import Path
@@ -15,6 +16,9 @@ from erdos.core.models import ProblemRecord, ProblemStatus, ReferenceEntry
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
+
+
+logger = logging.getLogger(__name__)
 
 
 class ProblemLoaderError(Exception):
@@ -160,6 +164,7 @@ class ProblemLoader:
                     content = real_path.read_text(encoding="utf-8")
                     return cls(real_path, _content=content)
         except (ImportError, TypeError, AttributeError, FileNotFoundError):
+            logger.debug("Package data loading skipped", exc_info=True)
             pass
 
         relative_path = Path("data/erdosproblems/data/problems.yaml")

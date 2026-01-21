@@ -1,5 +1,6 @@
 """Ingest service: orchestrates reference ingestion for Erdős problems."""
 
+import logging
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -18,6 +19,9 @@ from erdos.core.models import (
 )
 from erdos.core.ports import ProblemRepository
 from erdos.core.problem_loader import ProblemLoaderError
+
+
+logger = logging.getLogger(__name__)
 
 
 def _load_problem(
@@ -75,8 +79,12 @@ def _load_existing_manifest(manifest_path: Path, force: bool) -> ProblemManifest
         # Use TypeAdapter with strict=False to allow string->enum/datetime conversion
         adapter = TypeAdapter(ProblemManifest)
         return adapter.validate_python(manifest_data, strict=False)
-    except (OSError, yaml.YAMLError, ValidationError, TypeError, ValueError):
-        # If manifest is corrupted, return None to proceed with fresh ingestion
+    except (OSError, yaml.YAMLError, ValidationError, TypeError, ValueError) as e:
+        logger.warning(
+            "Manifest corrupted at %s; proceeding with fresh ingestion: %s",
+            manifest_path,
+            e,
+        )
         return None
 
 

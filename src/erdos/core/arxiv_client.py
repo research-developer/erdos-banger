@@ -7,6 +7,7 @@ API Reference: https://info.arxiv.org/help/api/user-manual.html
 """
 
 import io
+import logging
 import re
 import tarfile
 from datetime import datetime
@@ -15,6 +16,9 @@ import defusedxml.ElementTree as ET
 import requests
 
 from erdos.core.models import OpenAccessStatus, ReferenceRecord
+
+
+logger = logging.getLogger(__name__)
 
 
 # Atom namespace
@@ -80,6 +84,11 @@ def parse_arxiv_atom(xml_text: str) -> ReferenceRecord:
             )
             year = dt.year
         except (ValueError, AttributeError):
+            logger.debug(
+                "Failed to parse arXiv published date: %s",
+                published_elem.text,
+                exc_info=True,
+            )
             pass  # Year is optional, continue without it
 
     # Construct OA URL (use https)
