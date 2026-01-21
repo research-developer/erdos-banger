@@ -1,4 +1,4 @@
-# erdos-banger - Ralph Wiggum Loop Prompt (Debt + Specs Sprint)
+# erdos-banger - Ralph Wiggum Loop Prompt (v2.1 Architecture Sprint)
 
 You are fixing technical debt AND implementing specs for the erdos-banger CLI toolkit using **Ironclad TDD**.
 This prompt runs headless via the Ralph Wiggum loop.
@@ -15,6 +15,7 @@ If `PROGRESS.md` has no unchecked items, exit cleanly without making changes.
 cat PROGRESS.md
 cat docs/debt/README.md
 cat docs/specs/README.md
+cat docs/adr/README.md
 ```
 
 Then read the specific debt or spec document for your current task.
@@ -29,7 +30,7 @@ Then read the specific debt or spec document for your current task.
    - If there are no unchecked items, exit cleanly (do not invent new tasks)
 2. Determine task type:
    - **DEBT-XXX**: Read `docs/debt/debt-XXX-*.md`
-   - **SPEC-XXX**: Read `docs/specs/spec-XXX-*.md`
+   - **SPEC-XXX**: Read `docs/specs/spec-XXX-*.md` AND the related ADR if any
 3. **READ THE ACCEPTANCE CRITERIA** - you MUST complete ALL of them
 4. Apply the **Critical Review Prompt** (below) to validate claims
 5. **FOLLOW TDD** (see below) - write tests BEFORE implementation
@@ -62,7 +63,7 @@ In these cases:
 ### ANTI-REWARD-HACK: "Too Big" Handling
 
 **CRITICAL:** If a task would touch >10 files or exceed ~500 LoC:
-1. Break it into subtasks in PROGRESS.md (e.g., SPEC-020-A, SPEC-020-B, etc.)
+1. Break it into subtasks in PROGRESS.md (e.g., SPEC-022-A, SPEC-022-B, etc.)
 2. **IMMEDIATELY start the first subtask in the SAME iteration**
 3. Do NOT just document and exit - that is a reward hack
 
@@ -195,7 +196,7 @@ git push
    ```
 
 2. **Update docs/specs/README.md:**
-   - Move from "Deferred Specs" to "Archived Specs" table
+   - Move from "Active Specs" to "Archived Specs" table
    - Add location link
 
 3. **Move the file:**
@@ -237,10 +238,28 @@ git push
 
 - Debt docs: `docs/debt/debt-*.md`
 - Spec docs: `docs/specs/spec-*.md`
+- ADR docs: `docs/adr/adr-*.md`
 - Archived debt: `docs/_archive/debt/`
 - Archived specs: `docs/_archive/specs/`
 - Source: `src/erdos/`
 - Tests: `tests/unit/`, `tests/integration/`, `tests/e2e/`
+
+---
+
+## v2.1 Sprint Context
+
+This sprint focuses on **architecture orchestration**:
+
+1. **DEBT items first** - Clean up existing issues before adding new abstractions
+2. **SPEC-022** - The main deliverable: MetadataProvider abstraction
+3. **ADR-001** - Documents the architectural decision (Ports + Adapters approach)
+
+Key files to understand:
+- `src/erdos/core/ports.py` - Where MetadataProvider protocol will live
+- `src/erdos/core/context.py` - Where provider composition happens
+- `src/erdos/core/ingest/fetch.py` - Where direct client construction currently lives (the problem)
+- `src/erdos/core/openalex_client.py` - Existing client to wrap
+- `src/erdos/core/crossref_client.py` - Existing client to wrap
 
 ---
 

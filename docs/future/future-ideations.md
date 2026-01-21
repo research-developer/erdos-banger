@@ -2,7 +2,7 @@
 
 > **Document Status:** Living document for tracking future enhancements, tool integrations, and architectural decisions.
 >
-> **Last Updated:** 2026-01-19
+> **Last Updated:** 2026-01-21
 
 ---
 
@@ -519,37 +519,58 @@ lean_copilot:
 
 ## Implementation Priority
 
-### Phase 1: Foundation (Current - v1.1)
+### Phase 1: Foundation (v1.0-v1.1) ✅ DONE
 
 | Task | Spec | Status | Notes |
 |------|------|--------|-------|
-| Literature ingestion | 010 | Pending | Use OpenAlex first, add Exa later |
-| Ask command | 011 | Pending | Start with simple prompt, evolve |
-| API key management | - | Pending | Add .env support |
+| Literature ingestion | 010 | ✅ Done | arXiv + Crossref + OpenAlex |
+| Ask command | 011 | ✅ Done | RAG-based Q&A with citations |
+| API key management | - | ✅ Done | `.env` + env vars (shell wrappers source `.env`) |
 
-### Phase 2: Lean Integration (v1.2)
-
-| Task | Spec | Status | Notes |
-|------|------|--------|-------|
-| Lean Copilot setup | - | Not started | Add to lakefile.lean |
-| External API server | - | Not started | Wrap GPT-5.2 for Lean Copilot |
-| Loop command | 012 | Designed | Automated iteration |
-
-### Phase 3: Advanced Research (v1.3)
+### Phase 2: Lean Integration & Iteration (v1.2) ✅ DONE
 
 | Task | Spec | Status | Notes |
 |------|------|--------|-------|
-| Exa Research integration | - | Not started | Replace/augment ingest |
-| Multi-model routing | - | Not started | GPT for math, Claude for code |
-| Vector embeddings | 014 | Deferred | Only if FTS5 insufficient |
+| Lean Copilot setup | - | Deferred | Future enhancement (requires local setup) |
+| External API server | - | Deferred | Future enhancement |
+| Loop command | 012 | ✅ Done | Automated iteration with LLM |
+| Run logging | 013 | ✅ Done | JSONL structured logs |
+| OpenAlex integration | 020 | ✅ Done | Primary metadata source |
+| Aristotle integration | 021 | ✅ Done | External theorem prover support |
 
-### Phase 4: Scale & Polish (v1.4+)
+### Phase 3: Enhancement (v1.3) ✅ DONE
 
 | Task | Spec | Status | Notes |
 |------|------|--------|-------|
-| MCP Server | 017 | Designed | Enable external agent access |
-| Batch operations | 015 | Designed | Process multiple problems |
-| Progress dashboard | - | Not started | Visualize attempt logs |
+| Exa Research integration | - | Future | v1.3+ (good redundancy source) |
+| Multi-model routing | - | Future | v1.3+ (GPT for math, Claude for code) |
+| Vector embeddings | 014 | ✅ Done | Hybrid BM25 + semantic search |
+| Batch operations | 015 | ✅ Done | Multi-problem processing |
+
+### Phase 4: Integration (v1.4) ✅ DONE
+
+| Task | Spec | Status | Notes |
+|------|------|--------|-------|
+| MCP Server | 017 | ✅ Done | External agent access via MCP |
+| Formal Conjectures | 016 | ✅ Done | Import from google-deepmind repo |
+| Progress dashboard | - | Future | Visualize attempt logs |
+
+### Phase 5: Expansion (v2.0) ✅ DONE
+
+| Task | Spec | Status | Notes |
+|------|------|--------|-------|
+| PDF Conversion | 019 | ✅ Done | Marker + LLM enhancement |
+
+### Future Phases (v2.1+)
+
+| Task | Spec | Status | Notes |
+|------|------|--------|-------|
+| Lean Copilot | - | Future | External API mode for LLM-assisted tactics |
+| Exa Research API | - | Future | Agentic literature synthesis |
+| Semantic Scholar | - | Future | Citation context extraction |
+| zbMATH Open | - | Future | Math-specific metadata |
+| Multi-model routing | - | Future | Task-appropriate model selection |
+| Progress dashboard | - | Future | Visualize proof attempts |
 
 ---
 

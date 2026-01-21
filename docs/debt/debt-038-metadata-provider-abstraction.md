@@ -1,9 +1,10 @@
 # DEBT-038: MetadataProvider Abstraction Missing
 
-**Status:** Open
+**Status:** Spec'd → [ADR-001](../adr/adr-001-metadata-provider-orchestration.md) → [SPEC-022](../specs/spec-022-metadata-provider-orchestration.md)
 **Priority:** P2
 **Found:** 2026-01-21
 **Found By:** API orchestration architecture review
+**Resolution:** SPEC-022 defines the implementation plan
 
 ---
 
@@ -69,12 +70,17 @@ from erdos.core.models import ReferenceRecord
 class MetadataProvider(Protocol):
     """Port for academic metadata sources (DIP)."""
 
-    def get_by_doi(self, doi: str) -> ReferenceRecord:
-        """Fetch work by DOI."""
+    @property
+    def provider_name(self) -> str:
+        """Human-readable provider name (for logs/debugging)."""
         ...
 
-    def get_by_arxiv(self, arxiv_id: str) -> ReferenceRecord:
-        """Fetch work by arXiv ID."""
+    def get_by_doi(self, doi: str) -> ReferenceRecord | None:
+        """Fetch work by DOI (return None if not found)."""
+        ...
+
+    def get_by_arxiv(self, arxiv_id: str) -> ReferenceRecord | None:
+        """Fetch work by arXiv ID (return None if not found)."""
         ...
 
     def search(self, query: str, *, limit: int = 25) -> list[ReferenceRecord]:
@@ -93,8 +99,8 @@ class MetadataProvider(Protocol):
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
 │               MetadataProvider (Protocol/Port)              │
-│  get_by_doi(doi) -> ReferenceRecord                         │
-│  get_by_arxiv(arxiv_id) -> ReferenceRecord                  │
+│  get_by_doi(doi) -> ReferenceRecord | None                  │
+│  get_by_arxiv(arxiv_id) -> ReferenceRecord | None           │
 │  search(query) -> List[ReferenceRecord]                     │
 └───────────────────────────┬─────────────────────────────────┘
                             │ implemented by
@@ -124,23 +130,18 @@ def fetch_reference_metadata(
         raise ValueError(f"Unknown reference format: {ref_id}")
 ```
 
-### Composition in AppContext
+### Composition at the Entrypoint (Recommended)
 
 ```python
 # src/erdos/core/context.py
-from erdos.core.openalex_client import OpenAlexClient
-from erdos.core.crossref_client import CrossrefProvider
+from erdos.core.openalex_client import OpenAlexConfig
+from erdos.core.providers import CrossrefProvider, FallbackProvider, OpenAlexProvider
 
-@dataclass
-class AppContext:
-    metadata_provider: MetadataProvider
-
-    @classmethod
-    def from_env(cls) -> AppContext:
-        # OpenAlex as primary
-        primary = OpenAlexClient.from_env()
-        # Could add fallback chain: FallbackProvider(primary, CrossrefProvider())
-        return cls(metadata_provider=primary)
+def build_metadata_provider(*, mailto: str, timeout: float) -> MetadataProvider:
+    """OpenAlex (primary) → Crossref (fallback)."""
+    primary = OpenAlexProvider.from_config(OpenAlexConfig(email=mailto, timeout=timeout))
+    fallback = CrossrefProvider(mailto=mailto, timeout=timeout)
+    return FallbackProvider(primary, fallback)
 ```
 
 ---
@@ -157,9 +158,9 @@ class AppContext:
 ## Implementation Steps
 
 1. [ ] Create `MetadataProvider` protocol in `src/erdos/core/ports.py`
-2. [ ] Update `OpenAlexClient` to implement `MetadataProvider`
-3. [ ] Create `CrossrefProvider` wrapper that implements `MetadataProvider`
-4. [ ] Update `AppContext` to compose/inject the provider
+2. [ ] Create `OpenAlexProvider` wrapper (adapts `OpenAlexClient` to the protocol)
+3. [ ] Create `CrossrefProvider` wrapper (adapts `crossref_client` functions to the protocol)
+4. [ ] Add `build_metadata_provider(mailto, timeout)` (composition helper) in `src/erdos/core/context.py`
 5. [ ] Refactor `ingest/fetch.py` to accept `MetadataProvider` instead of string source
 6. [ ] Add `FallbackProvider` that chains providers (OpenAlex → Crossref)
 7. [ ] Update tests to inject mock providers

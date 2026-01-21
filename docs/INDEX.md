@@ -4,9 +4,10 @@
 
 | Category | Index | Next ID |
 |----------|-------|---------|
-| [Specs](./specs/README.md) | Design specifications | SPEC-022 |
-| [Bugs](./bugs/README.md) | Bug reports & reviews | BUG-018 |
-| [Debt](./debt/README.md) | Technical debt tracking | DEBT-036 |
+| [Specs](./specs/README.md) | Design specifications | SPEC-023 |
+| [ADRs](./adr/README.md) | Architecture decision records | ADR-002 |
+| [Bugs](./bugs/README.md) | Bug reports & reviews | BUG-020 |
+| [Debt](./debt/README.md) | Technical debt tracking | DEBT-042 |
 | [Archive](./_archive/) | Completed specs, bugs & debt | — |
 
 ## Master Documents

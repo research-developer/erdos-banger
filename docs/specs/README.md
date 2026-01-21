@@ -17,7 +17,11 @@ v2.0 (DONE)     Expansion: PDF conversion (Marker + LLM)
 
 Specs currently in progress or awaiting implementation.
 
-*None currently active.*
+| ID | Title | Status | Target | Resolves |
+|----|-------|--------|--------|----------|
+| 022 | MetadataProvider Orchestration | Pending | v2.1 | DEBT-038 |
+
+- [SPEC-022: MetadataProvider Orchestration](./spec-022-metadata-provider-orchestration.md)
 
 ## Design Documents
 
@@ -64,7 +68,7 @@ Completed specs that are fully implemented.
 | 017 | MCP Server | [archive](../_archive/specs/spec-017-mcp-server.md) |
 | 019 | PDF Conversion | [archive](../_archive/specs/spec-019-pdf-conversion.md) |
 
-**Next Spec ID:** SPEC-022
+**Next Spec ID:** SPEC-023
 
 ## Dependency Graph
 
@@ -103,6 +107,9 @@ v1.4 Integration (DONE)
 
 v2.0 Expansion (DONE)
 └── 019 PDF Conversion ←── 010 Ingest (Marker + LLM enhancement)
+
+v2.1 Architecture (PENDING)
+└── 022 MetadataProvider Orchestration ←── Resolves DEBT-038, enables pluggable sources
 ```
 
 ## Master Documents
