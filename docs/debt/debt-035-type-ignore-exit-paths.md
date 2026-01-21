@@ -7,7 +7,7 @@
 
 ## Summary
 
-All command modules have `# type: ignore[arg-type]` suppressions on their error exit paths when calling `exit_with_result()`. This suggests a systematic type mismatch between `CLIOutput` construction and the `exit_with_result` function signature.
+All command modules have `# type: ignore[arg-type]` suppressions on their early-exit error paths when calling `exit_with_result()`.
 
 ## Evidence
 
@@ -31,16 +31,16 @@ return response.json()  # type: ignore[no-any-return]
 
 ## Root Cause Analysis
 
-The `exit_with_result` function likely has a signature expecting a specific type, but error paths construct `CLIOutput` in a way that doesn't match. Possible causes:
+The type mismatch is `Optional`-related:
 
-1. `CLIOutput.err()` returns a different type than `CLIOutput.ok()`
-2. Union type narrowing not working correctly
-3. Generic type parameters not properly constrained
+- `get_app_context()` returns `(AppContext | None, CLIOutput | None)`.
+- Commands use a combined guard like `if app_error is not None or app_ctx is None: ...`.
+- mypy cannot prove `app_error` is non-None under that condition, so `exit_with_result(ctx, app_error)` is flagged.
 
 ## Acceptance Criteria
 
 1. Investigate the actual type mismatch
-2. Fix the function signatures or type annotations to eliminate the suppressions
+2. Refactor the guard/flow so the error path passes a concrete `CLIOutput` (no `Optional`)
 3. All 6 `# type: ignore[arg-type]` removed
 4. mypy passes with no errors
 5. CI still passes (`make ci`)

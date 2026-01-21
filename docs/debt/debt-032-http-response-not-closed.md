@@ -77,5 +77,5 @@ def fetch_crossref_work(doi: str, ...) -> dict[str, Any]:
 
 ## Related
 
-- DEBT-028: No rate limiting in API clients
-- DEBT-030: No retry logic for transient network failures
+- DEBT-031: Rate limiting is not centralized (constant unused)
+- DEBT-033: No retry logic for transient network failures

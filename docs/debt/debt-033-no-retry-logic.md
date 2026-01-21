@@ -38,7 +38,7 @@ except (OSError, requests.RequestException) as e:
 The error message "Download failed" doesn't distinguish between:
 - Timeout (temporary, should retry)
 - 404 (permanent, won't retry)
-- 429 (rate limited, should backoff and retry)
+- 429 (rate limited, should back off and retry)
 - DNS failure (could retry)
 - 500 (server error, could retry)
 
@@ -48,7 +48,7 @@ The error message "Download failed" doesn't distinguish between:
 |------------|--------|----------|
 | Timeout | Yes | Same delay, max 3 attempts |
 | Connection error | Yes | Exponential backoff |
-| 429 (rate limit) | Yes | Respect Retry-After header or backoff |
+| 429 (rate limit) | Yes | Respect Retry-After header or back off |
 | 5xx (server error) | Yes | Exponential backoff |
 | 4xx (client error) | No | Permanent failure |
 | DNS failure | Maybe | Single retry after delay |
@@ -102,5 +102,5 @@ def _fetch_with_retry(url: str, max_attempts: int = 3, **kwargs) -> requests.Res
 
 ## Related
 
-- DEBT-028: No rate limiting in API clients
-- DEBT-029: HTTP responses not closed with context managers
+- DEBT-031: Rate limiting is not centralized (constant unused)
+- DEBT-032: HTTP responses not closed with context managers

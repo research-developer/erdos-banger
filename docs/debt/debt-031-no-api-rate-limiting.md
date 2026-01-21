@@ -1,17 +1,17 @@
-# Technical Debt 031: No Rate Limiting in API Clients
+# Technical Debt 031: Rate Limiting Is Not Centralized (Constant Unused)
 
 **Date:** 2026-01-21
 **Status:** Open
-**Priority:** P2 (API terms violation risk)
+**Priority:** P3 (Ergonomics / defaults drift)
 **Impact:** Batch operations could get rate-limited or blocked by external APIs
 
 ## Summary
 
-Neither the arXiv nor Crossref API clients implement rate limiting, despite:
+Batch ingestion does include a configurable delay between references, but rate limiting is not centralized:
 
-1. `constants.py:33` defining `API_RATE_LIMIT_DELAY = 3.0` (unused)
-2. Crossref API documentation explicitly requesting rate limiting
-3. arXiv API requesting polite pool behavior
+1. `API_RATE_LIMIT_DELAY` exists in `src/erdos/core/constants.py` but is not used as the default.
+2. The delay is applied between references (not per API request), so a DOI+arXiv lookup for a single reference can still make back-to-back requests.
+3. The low-level API client functions (`fetch_crossref_work`, `fetch_arxiv_atom`) do not enforce throttling if called directly.
 
 ## Evidence
 
@@ -24,19 +24,16 @@ API_RATE_LIMIT_DELAY = 3.0  # seconds between API requests
 
 This constant is defined but never imported or used.
 
-### No Delay Between Requests
+### Ingestion Delay Exists (but is not centralized)
+
+`src/erdos/core/ingest/fetch.py` sleeps between processing references:
 
 ```python
-# crossref_client.py - no delay
-def fetch_crossref_work(doi: str, ...) -> dict[str, Any]:
-    response = requests.get(url, ...)  # Immediate request
-    return response.json()
-
-# arxiv_client.py - no delay
-def fetch_arxiv_atom(arxiv_ids: list[str], ...) -> str:
-    response = requests.get(url, ...)  # Immediate request
-    return response.text
+if delay > 0:
+    time.sleep(delay)
 ```
+
+The ingest CLI exposes `--delay` (default `3.0`) to control this behavior.
 
 ### Batch Ingestion Impact
 
@@ -57,10 +54,10 @@ From arXiv API documentation:
 
 ## Acceptance Criteria
 
-1. Implement rate limiting using `API_RATE_LIMIT_DELAY`
-2. Add backoff on 429 responses
-3. Consider using a session-level rate limiter for batch operations
-4. CI still passes (`make ci`)
+1. Use `API_RATE_LIMIT_DELAY` as the default for `--delay` (single source of truth).
+2. Decide whether throttling should be per reference or per request (document the choice).
+3. If per-request throttling is needed, implement it in the ingest layer (preferred) or in the clients.
+4. CI still passes (`make ci`).
 
 ## Recommended Implementation
 
@@ -88,5 +85,5 @@ Or use a library like `ratelimit` or `tenacity`.
 
 ## Related
 
-- DEBT-029: HTTP responses not closed with context managers
-- DEBT-030: No retry logic for transient network failures
+- DEBT-032: HTTP responses not closed with context managers
+- DEBT-033: No retry logic for transient network failures

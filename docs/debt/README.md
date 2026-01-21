@@ -16,9 +16,9 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| DEBT-029 | No logging framework usage | P1 | Open |
+| DEBT-029 | Logging coverage gaps | P2 | Open |
 | DEBT-030 | Redundant dual --json flag | P3 | Open |
-| DEBT-031 | No rate limiting in API clients | P2 | Open |
+| DEBT-031 | Rate limiting constant unused | P3 | Open |
 | DEBT-032 | HTTP responses not closed properly | P2 | Open |
 | DEBT-033 | No retry logic for network failures | P2 | Open |
 | DEBT-034 | Hardcoded MAX_SIZE constant | P3 | Open |

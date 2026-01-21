@@ -16,7 +16,7 @@ The `--json` flag is defined both globally in `cli.py` AND locally in every comm
 
 ## Evidence
 
-### Global Definition (cli.py:62-68)
+### Global Definition (`src/erdos/cli.py`)
 
 ```python
 json_output: Annotated[
@@ -40,30 +40,31 @@ json_output: Annotated[
 | `ingest.py` | 162 |
 | `lean.py` | 181-187, 224-230, 276-282 |
 
-Each command calls `set_json_mode(ctx, json_output)` which overwrites `ctx.obj["json"]`.
+Each command calls `set_json_mode(ctx, json_output)`, which sets `ctx.obj["json"] = True` when `--json` is passed.
 
 ## Override Behavior
 
 ```bash
 erdos --json show 6         # Works (global sets it)
 erdos show 6 --json         # Works (command sets it)
-erdos --json show 6 --json  # Works (command wins, same value)
-erdos --json show 6 --no-json  # Command wins, JSON disabled!
+erdos --json show 6 --json  # Works (redundant, same output)
 ```
 
-The last case is particularly confusing.
+Note: `set_json_mode()` is additive (it only sets JSON mode when `--json` is passed). There is no `--no-json` flag in the current CLI.
 
 ## Acceptance Criteria
 
 Choose one approach:
 
 ### Option A: Global Only (Recommended)
+
 1. Remove `--json` parameter from all command functions
 2. Commands read from `ctx.obj["json"]` directly (already do via presenter)
 3. Remove `set_json_mode()` calls
 4. Update help text to clarify global flag usage
 
 ### Option B: Command Only
+
 1. Remove global `--json` parameter from `cli.py`
 2. Keep command-level parameters
 3. More typing for users but clearer semantics

@@ -14,8 +14,8 @@ The maximum TeX file size is defined in two places with the same value, violatin
 ### Local Definition (arxiv_client.py:144)
 
 ```python
-def extract_arxiv_text(tarball_bytes: bytes) -> str | None:
-    MAX_SIZE = 2 * 1024 * 1024  # 2 MB - hardcoded locally
+def extract_arxiv_text(tarball_bytes: bytes) -> bytes:
+    MAX_SIZE = 2 * 1024 * 1024  # 2 MiB - hardcoded locally
     ...
 ```
 
@@ -37,7 +37,7 @@ The constant exists but is not used in `arxiv_client.py`.
 
 ```python
 # Before (arxiv_client.py)
-def extract_arxiv_text(tarball_bytes: bytes) -> str | None:
+def extract_arxiv_text(tarball_bytes: bytes) -> bytes:
     MAX_SIZE = 2 * 1024 * 1024
     ...
 

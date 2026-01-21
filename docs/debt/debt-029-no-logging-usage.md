@@ -1,37 +1,30 @@
-# Technical Debt 029: No Logging Framework Usage
+# Technical Debt 029: Logging Coverage Gaps
 
 **Date:** 2026-01-21
 **Status:** Open
-**Priority:** P1 (No observability in production)
-**Impact:** Debugging production issues is impossible; no audit trail for operations
+**Priority:** P2 (Observability gaps)
+**Impact:** Some operational failures are difficult to diagnose without an audit trail
 
 ## Summary
 
-Despite having a `--log-level` flag and `_configure_logging()` function in `cli.py`, no code in the codebase actually emits log messages. This means:
-
-1. The `--log-level` flag is dead code (see BUG-013)
-2. Errors are either raised or silently swallowed (see BUG-014)
-3. There's no middle ground for informational or debug output
-4. Operators have no visibility into what the CLI is doing
+The codebase uses Python stdlib logging and supports `erdos --log-level …`. Multiple modules emit logs (debug/warning/exception) for best-effort fallbacks and unexpected errors.
 
 ## Evidence
 
-Search for logging usage in src/erdos/:
+Logging is configured centrally:
 
-```bash
-grep -r "logger\." src/erdos/  # 0 matches
-grep -r "logging\." src/erdos/ # Only import in cli.py
-```
+- `src/erdos/cli.py` calls `_configure_logging(log_level)` in the Typer callback.
 
-The only logging-related code is:
+Logging usage exists (not exhaustive):
 
-```python
-# cli.py:83
-def _configure_logging(level: str) -> None:
-    logging.basicConfig(level=getattr(logging, level.upper(), logging.INFO))
-```
+- `src/erdos/commands/search.py` (`logger.debug`, `logger.exception`)
+- `src/erdos/core/ingest/service.py` (`logger.warning` on manifest corruption)
+- `src/erdos/core/lean_runner.py` (`logger.debug` on version probe failure)
 
-This configures the root logger but nothing ever logs to it.
+Remaining gaps:
+
+- Core HTTP clients don’t log request timing/URLs (e.g., `src/erdos/core/crossref_client.py`).
+- Long-running operations don’t emit consistent INFO-level “start/finish” logs (useful for batch runs).
 
 ## Operations That Should Log
 
@@ -49,7 +42,7 @@ This configures the root logger but nothing ever logs to it.
 1. Add `logger = logging.getLogger(__name__)` to key modules
 2. Add DEBUG logs for external calls and timing
 3. Add INFO logs for significant operations
-4. Add WARNING logs for handled exceptions (currently `pass` statements)
+4. Add WARNING logs for handled exceptions when an operator should act
 5. Verify `--log-level DEBUG` produces useful output
 6. CI still passes (`make ci`)
 
@@ -75,6 +68,6 @@ def fetch_crossref_work(doi: str, ...) -> dict[str, Any]:
 
 ## Related
 
-- BUG-013: `--log-level` flag is dead code
-- BUG-014: Silent exception swallowing masks errors
-- BUG-016: Manifest corruption silently returns None
+- DEBT-031: Rate limiting ergonomics / defaults
+- DEBT-032: HTTP responses not closed with context managers
+- DEBT-033: No retry logic for transient network failures
