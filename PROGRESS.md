@@ -68,8 +68,8 @@
   - Target: v1.2+
   - Acceptance: All spec acceptance criteria met; `make ci` green.
 
-- [ ] **SPEC-013**: Logging & Evaluation
-  - Spec: `docs/specs/spec-013-logging-evaluation.md`
+- [x] **SPEC-013**: Logging & Evaluation
+  - Spec: `docs/_archive/specs/spec-013-logging-evaluation.md`
   - Target: v1.2
   - Acceptance: All spec acceptance criteria met; `make ci` green.
 
@@ -309,6 +309,32 @@
 - --informal and --formal-input-context flags passed to Aristotle
 - JSON output with CLIOutput envelope and aristotle execution details
 - Exit codes: SUCCESS, USAGE_ERROR, NOT_FOUND, CONFIG_ERROR, ERROR
+
+### 2026-01-21: SPEC-013 Logging & Evaluation implemented
+
+**Files created:**
+- `src/erdos/core/run_logger.py` - Run logging module with RunLogEntry, RunLogger, generate_run_id(), parse_since(), get_run_logger()
+- `src/erdos/commands/logs.py` - CLI command for querying/summarizing logs with filters (--problem-id, --command, --since, --status, --limit, --summary)
+- `tests/unit/test_run_logger.py` - 31 unit tests for log entry creation, sanitization, querying, filtering, and summaries
+- `tests/integration/test_cli_logs.py` - 13 integration tests for logs command and integration with other commands
+- `logs/.gitkeep` - Ensure logs directory exists
+
+**Files modified:**
+- `src/erdos/commands/presenter.py` - Added run logging in `exit_with_result()` to automatically log all CLI command invocations
+- `src/erdos/cli.py` - Registered logs command
+- `.gitignore` - Added `logs/*.jsonl` pattern for run logs
+
+**Features:**
+- Automatic structured logging for every CLI command invocation
+- JSON Lines format (`.jsonl`) for machine parsing
+- Each log entry captures: command, args (sanitized), timestamp, duration_ms, success/failure, problem_id, result summary
+- Args sanitization redacts keys containing "key", "token", "secret", "password", "credential"
+- `erdos logs` command with filters: --problem-id, --command, --since, --status, --limit
+- `erdos logs --summary` for aggregated statistics (by command, by problem, metrics)
+- Support for relative time (7d, 2h, 30m) and ISO 8601 in --since
+- Human-readable table output and JSON output via global --json flag
+- Logs command itself excluded from logging to avoid recursion
+- Run log stored in `logs/runs.jsonl` (gitignored)
 
 (entries added by Ralph loop as tasks complete)
 

@@ -2,7 +2,8 @@
 
 > Adds structured logging for all CLI commands and a run log query interface for evaluating progress.
 
-**Status:** Deferred
+**Status:** Complete
+**Implemented In:** af414d8
 **Target:** v1.2
 **Prerequisites (SSOT):**
 - CLI architecture: `docs/_archive/specs/spec-004-cli-architecture.md`

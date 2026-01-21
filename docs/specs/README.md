@@ -34,7 +34,6 @@ Specs designed for future versions.
 | ID | Title | Status | Target | Description |
 |----|-------|--------|--------|-------------|
 | 012 | [Loop Command](spec-012-loop-command.md) | Deferred (blocked by 012-DESIGN) | v1.2 | Iterative LLM-assisted Lean proof attempts |
-| 013 | [Logging & Evaluation](spec-013-logging-evaluation.md) | Deferred | v1.2 | Structured run logs + progress tracking |
 | 014 | [Vector Embeddings](spec-014-vector-embeddings.md) | Deferred | v1.3 | Semantic search via embeddings |
 | 015 | [Batch Operations](spec-015-batch-operations.md) | Deferred | v1.3 | Batch ingest/formalize with rate limiting |
 | 016 | [Formal Conjectures](spec-016-formal-conjectures.md) | Deferred | v1.4 | Import existing formalizations |
@@ -59,6 +58,7 @@ Completed specs that are fully implemented.
 | 010 | Ingest Command | [archive](../_archive/specs/spec-010-ingest-command.md) |
 | 011 | Ask Command | [archive](../_archive/specs/spec-011-ask-command.md) |
 | 018 | DevX Makefile | [archive](../_archive/specs/spec-018-devx-makefile.md) |
+| 013 | Logging & Evaluation | [archive](../_archive/specs/spec-013-logging-evaluation.md) |
 | 020 | OpenAlex Integration | [archive](../_archive/specs/spec-020-openalex-integration.md) |
 | 021 | Aristotle Integration | [archive](../_archive/specs/spec-021-aristotle-integration.md) |
 

@@ -48,6 +48,7 @@ index/*.sqlite
 logs/ralph/
 logs/*.yaml
 logs/*.json
+logs/*.jsonl
 formal/lean/build/
 formal/lean/.lake/
 formal/lean/lake-packages/

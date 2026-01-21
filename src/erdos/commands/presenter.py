@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable
 from typing import Any
 
@@ -5,12 +6,18 @@ import typer
 from rich.console import Console
 
 from erdos.core.models import CLIOutput
+from erdos.core.run_logger import get_run_logger
 
+
+logger = logging.getLogger(__name__)
 
 console = Console()
 err_console = Console(stderr=True)
 
 HumanPrinter = Callable[[Any], None]
+
+# Commands that should not be logged (to avoid infinite recursion or noise)
+EXCLUDED_COMMANDS = frozenset({"erdos logs"})
 
 
 def _error_details(result: CLIOutput) -> tuple[str, int]:
@@ -50,13 +57,40 @@ def output_result(
     err_console.print(f"[red]Error:[/red] {message}")
 
 
+def _get_command_args(ctx: typer.Context) -> dict[str, Any]:
+    """Extract command arguments from typer context."""
+    args: dict[str, Any] = {}
+
+    # Get params from the current context and any parent invocation contexts
+    current: Any = ctx
+    while current is not None:
+        if hasattr(current, "params") and current.params:
+            # Don't overwrite already collected args
+            for key, value in current.params.items():
+                if key not in args:
+                    args[key] = value
+        current = getattr(current, "parent", None)
+
+    return args
+
+
 def exit_with_result(
     ctx: typer.Context,
     result: CLIOutput,
     *,
     print_human: HumanPrinter | None = None,
 ) -> None:
-    """Render output and exit non-zero on failure."""
+    """Render output, log the command, and exit non-zero on failure."""
+    # Log the command (unless excluded)
+    if result.command not in EXCLUDED_COMMANDS:
+        try:
+            run_logger = get_run_logger()
+            args = _get_command_args(ctx)
+            run_logger.log(result, args)
+        except Exception as e:
+            # Don't fail the command if logging fails
+            logger.debug("Failed to log command: %s", e)
+
     output_result(ctx, result, print_human=print_human)
 
     if not result.success:
