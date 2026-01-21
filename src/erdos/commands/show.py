@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
@@ -13,6 +14,9 @@ from erdos.commands.presenter import exit_with_result, set_json_mode
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord
 from erdos.core.timing import measure_time_ms
+
+
+logger = logging.getLogger(__name__)
 
 
 if TYPE_CHECKING:
@@ -75,6 +79,7 @@ def get_problem(problem_id: int, repo: ProblemRepository) -> CLIOutput:
             data=problem.model_dump(mode="json"),
         )
     except Exception as e:
+        logger.exception("Unexpected error in show command")
         return CLIOutput.err(
             command="erdos show",
             error_type="Error",

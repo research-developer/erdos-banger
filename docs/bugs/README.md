@@ -6,11 +6,14 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 | Date | Type | Summary | Status |
 |------|------|---------|--------|
+| 2026-01-21 | Adversarial Review | Full codebase audit for bugs, debt, anti-patterns | Archived |
 | 2026-01-17 | Adversarial Review | Full codebase audit covering specs 003-006 | Archived |
 
 ## Active Bugs
 
 *None currently active.*
+
+*Note: BUG-013, BUG-015 and BUG-017 were invalidated during validation (false positives).*
 
 ## Archived Bugs
 
@@ -30,8 +33,11 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-010 | `erdos ingest --no-network` wrong exit code on first run | P2 | Fixed | 49ba46f |
 | BUG-011 | No enriched problem data for production use | P1 | Fixed | 54e2dfb |
 | BUG-012 | Ask retrieval uses exact phrase match | P2 | Fixed | 89a66c2 |
+| BUG-013 | `--log-level` dead code (invalidated) | P2 | Invalidated | 1d5bd51 |
+| BUG-014 | Silent exception swallowing masks errors | P1 | Fixed | 1d5bd51 |
+| BUG-016 | Manifest corruption silently returns None | P2 | Fixed | 1d5bd51 |
 
-**Next Bug ID:** BUG-013
+**Next Bug ID:** BUG-018
 
 ### Archived Bug Decks
 
@@ -42,7 +48,11 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/bug-010-ingest-no-network-exit-code.md`
 - `docs/_archive/bugs/bug-011-missing-enriched-data.md`
 - `docs/_archive/bugs/bug-012-ask-retrieval-exact-match.md`
+- `docs/_archive/bugs/bug-013-log-level-dead-code.md`
+- `docs/_archive/bugs/bug-014-silent-exception-swallowing.md`
+- `docs/_archive/bugs/bug-016-manifest-corruption-silent.md`
 - `docs/_archive/bugs/adversarial-review-2026-01-17.md`
+- `docs/_archive/bugs/adversarial-review-2026-01-21.md`
 - `docs/_archive/bugs/bug-002-search-build-index-json-stdout.md`
 - `docs/_archive/bugs/bug-003-search-fts-loader-missing.md`
 - `docs/_archive/bugs/bug-004-iter-problems-duplicate-ids.md`
@@ -61,7 +71,11 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 
 ## Quick Links
 
-- [Adversarial Review 2026-01-17](./adversarial-review-2026-01-17.md)
+- [Adversarial Review 2026-01-21](../_archive/bugs/adversarial-review-2026-01-21.md)
+  - 3 confirmed bugs (1 P1, 2 P2) - 2 false positives invalidated
+  - 7 technical debt items (1 P1, 4 P2, 2 P3)
+  - Focus: silent failures, dead code, API robustness
+- [Adversarial Review 2026-01-17](../_archive/bugs/adversarial-review-2026-01-17.md)
   - 3 spec drift issues
   - 9 missing test scenarios
   - 2 inappropriate mock patterns

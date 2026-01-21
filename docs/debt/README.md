@@ -14,7 +14,15 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-*No active debt items.*
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| DEBT-029 | Logging coverage gaps | P2 | Open |
+| DEBT-030 | Redundant dual --json flag | P3 | Open |
+| DEBT-031 | Rate limiting constant unused | P3 | Open |
+| DEBT-032 | HTTP responses not closed properly | P2 | Open |
+| DEBT-033 | No retry logic for network failures | P2 | Open |
+| DEBT-034 | Hardcoded MAX_SIZE constant | P3 | Open |
+| DEBT-035 | type: ignore in all exit paths | P2 | Open |
 
 ## Archived Debt
 
@@ -47,8 +55,11 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-023 | Security lint suppressions (XML + MD5) | P2 | Fixed | 764c597 |
 | DEBT-024 | Placeholder metadata (authors / contact email) | P3 | Fixed | 647c86d |
 | DEBT-025 | DRY violation in shell LLM wrappers | P4 | Fixed | c05d7a7 |
+| DEBT-026 | Long functions remain (≥ 80 LOC) | P2 | Fixed | c31d484 |
+| DEBT-027 | Broad `except Exception` catches | P3 | Fixed | e657d7c |
+| DEBT-028 | Ingest manifest churn (non-idempotent writes) | P2 | Fixed | 154866b |
 
-**Next Debt ID:** DEBT-026
+**Next Debt ID:** DEBT-036
 
 ### Archived Debt Decks
 
@@ -77,3 +88,6 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-023-security-lint-suppressions.md`
 - `docs/_archive/debt/debt-025-shell-llm-wrapper-duplication.md`
 - `docs/_archive/debt/debt-022-large-core-modules-srp.md`
+- `docs/_archive/debt/debt-026-long-functions-remain.md`
+- `docs/_archive/debt/debt-027-broad-exception-catches.md`
+- `docs/_archive/debt/debt-028-ingest-manifest-churn.md`

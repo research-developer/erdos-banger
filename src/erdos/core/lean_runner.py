@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 import shutil
 import subprocess
@@ -17,8 +18,20 @@ if TYPE_CHECKING:
     from typing import Literal
 
 
+logger = logging.getLogger(__name__)
+
+
 class LeanRunnerError(Exception):
     """Raised when Lean operations fail."""
+
+
+@dataclass
+class ResolvedLeanPath:
+    """Result of resolving a Lean file path to a module name."""
+
+    full_path: Path
+    relative_path: Path
+    module_name: str
 
 
 @dataclass
@@ -60,6 +73,13 @@ class LeanRunner:
         self._project_path = project_path
         self._lakefile = project_path / "lakefile.lean"
         self._toolchain = project_path / "lean-toolchain"
+        self._cached_lean_version: str | None = None
+
+    def _get_lean_version(self) -> str:
+        """Return the Lean version, caching subprocess calls per runner instance."""
+        if self._cached_lean_version is None:
+            self._cached_lean_version = self.check_environment().lean_version
+        return self._cached_lean_version
 
     @property
     def project_path(self) -> Path:
@@ -91,6 +111,7 @@ class LeanRunner:
                 if result.returncode == 0:
                     lean_version = result.stdout.strip().split("\n")[0]
             except (subprocess.TimeoutExpired, FileNotFoundError):
+                logger.debug("Failed to determine Lean version", exc_info=True)
                 pass
 
         mathlib = (self._project_path / "lake-packages" / "mathlib").exists() or (
@@ -159,16 +180,18 @@ class LeanRunner:
                     f"lake update failed:\n{result.stderr}\n{result.stdout}"
                 )
 
-    def check(self, file_path: Path, *, timeout: int = 120) -> LeanCheckResult:
-        """
-        Check a Lean file for errors.
+    def _resolve_lean_path(self, file_path: Path) -> ResolvedLeanPath:
+        """Resolve file path to absolute path, relative path, and module name.
 
         Args:
             file_path: Path to .lean file (relative to project or absolute)
-            timeout: Maximum seconds to wait for compilation
 
         Returns:
-            LeanCheckResult with success status and any errors
+            ResolvedLeanPath with full_path, relative_path, and module_name
+
+        Raises:
+            FileNotFoundError: If the file doesn't exist
+            LeanRunnerError: If the file is not under the project path
         """
         if not file_path.is_absolute():
             full_path = self._project_path / file_path
@@ -178,18 +201,10 @@ class LeanRunner:
         if not full_path.exists():
             raise FileNotFoundError(f"Lean file not found: {full_path}")
 
-        lake_path = shutil.which("lake")
-        if lake_path is None:
-            raise LeanRunnerError("`lake` executable not found on PATH")
-
-        start_time = datetime.now(UTC)
-
-        # Resolve paths to handle symlinks and ensure consistent behavior
-        # across different environments (local vs CI, macOS /tmp vs /private/tmp)
+        # Resolve symlinks for consistent behavior across environments
         resolved_full = full_path.resolve()
         resolved_project = self._project_path.resolve()
 
-        # Compute relative path (before try block so it's always bound)
         try:
             relative = resolved_full.relative_to(resolved_project)
         except ValueError as exc:
@@ -198,65 +213,110 @@ class LeanRunner:
             ) from exc
 
         module_name = ".".join(relative.with_suffix("").parts)
+        return ResolvedLeanPath(resolved_full, relative, module_name)
 
+    def _build_check_result(
+        self,
+        result: subprocess.CompletedProcess[str],
+        relative_path: Path,
+        duration_ms: int,
+    ) -> LeanCheckResult:
+        """Build LeanCheckResult from subprocess output.
+
+        Args:
+            result: Completed subprocess result
+            relative_path: Relative path to the Lean file
+            duration_ms: Duration of the build in milliseconds
+
+        Returns:
+            LeanCheckResult with parsed errors and warnings
+        """
+        parsed = self._parse_errors(result.stderr)
+        warnings = [e for e in parsed if e.severity == "warning"]
+        errors = [e for e in parsed if e.severity == "error"]
+
+        if result.returncode != 0 and not errors:
+            raw = (result.stderr or result.stdout).strip()
+            message = (
+                raw[:500] if raw else f"lake build failed (exit {result.returncode})"
+            )
+            errors = [
+                LeanError(
+                    file=str(relative_path),
+                    line=1,
+                    column=1,
+                    message=message,
+                    severity="error",
+                )
+            ]
+
+        return LeanCheckResult(
+            file=str(relative_path),
+            success=result.returncode == 0 and len(errors) == 0,
+            errors=errors,
+            warnings=warnings,
+            lean_version=self._get_lean_version(),
+            duration_ms=duration_ms,
+        )
+
+    def _timeout_result(self, relative_path: Path, timeout: int) -> LeanCheckResult:
+        """Create a timeout error result.
+
+        Args:
+            relative_path: Relative path to the Lean file
+            timeout: Timeout value in seconds
+
+        Returns:
+            LeanCheckResult indicating timeout failure
+        """
+        return LeanCheckResult(
+            file=str(relative_path),
+            success=False,
+            errors=[
+                LeanError(
+                    file=str(relative_path),
+                    line=1,
+                    column=1,
+                    message=f"Compilation timed out after {timeout} seconds",
+                    severity="error",
+                )
+            ],
+        )
+
+    def check(self, file_path: Path, *, timeout: int = 120) -> LeanCheckResult:
+        """Check a Lean file for errors.
+
+        Args:
+            file_path: Path to .lean file (relative to project or absolute)
+            timeout: Maximum seconds to wait for compilation
+
+        Returns:
+            LeanCheckResult with success status and any errors
+
+        Raises:
+            FileNotFoundError: If the file doesn't exist
+            LeanRunnerError: If the file is outside project path or `lake` is not found
+        """
+        resolved = self._resolve_lean_path(file_path)
+
+        lake_path = shutil.which("lake")
+        if lake_path is None:
+            raise LeanRunnerError("`lake` executable not found on PATH")
+
+        start_time = datetime.now(UTC)
         try:
             result = subprocess.run(  # noqa: S603
-                [lake_path, "build", module_name],
+                [lake_path, "build", resolved.module_name],
                 cwd=self._project_path,
                 capture_output=True,
                 text=True,
                 timeout=timeout,
                 check=False,
             )
-
             duration_ms = int((datetime.now(UTC) - start_time).total_seconds() * 1000)
-
-            parsed = self._parse_errors(result.stderr)
-            warnings = [e for e in parsed if e.severity == "warning"]
-            errors = [e for e in parsed if e.severity == "error"]
-
-            if result.returncode != 0 and not errors:
-                raw = (result.stderr or result.stdout).strip()
-                message = (
-                    raw[:500]
-                    if raw
-                    else f"lake build failed (exit {result.returncode})"
-                )
-                errors = [
-                    LeanError(
-                        file=str(relative),
-                        line=1,
-                        column=1,
-                        message=message,
-                        severity="error",
-                    )
-                ]
-
-            env = self.check_environment()
-
-            return LeanCheckResult(
-                file=str(relative),
-                success=result.returncode == 0 and len(errors) == 0,
-                errors=errors,
-                warnings=warnings,
-                lean_version=env.lean_version,
-                duration_ms=duration_ms,
-            )
-
+            return self._build_check_result(result, resolved.relative_path, duration_ms)
         except subprocess.TimeoutExpired:
-            return LeanCheckResult(
-                file=str(relative),
-                success=False,
-                errors=[
-                    LeanError(
-                        file=str(relative),
-                        line=1,
-                        column=1,
-                        message=f"Compilation timed out after {timeout} seconds",
-                        severity="error",
-                    )
-                ],
-            )
+            return self._timeout_result(resolved.relative_path, timeout)
 
     def _parse_errors(self, stderr: str) -> list[LeanError]:
         """

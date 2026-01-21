@@ -12,7 +12,7 @@ from erdos.core.ask.llm import execute_llm_if_enabled
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import ChunkSource, CLIOutput, ProblemRecord
 from erdos.core.problem_loader import ProblemLoaderError
-from erdos.core.search_index import SearchResult
+from erdos.core.search_index import SearchIndexError, SearchResult
 
 
 def test_ensure_index_ready_no_build():
@@ -51,12 +51,12 @@ def test_ensure_index_ready_with_build():
 
 
 def test_ensure_index_ready_build_error():
-    """_ensure_index_ready returns CLIOutput error if build fails."""
+    """_ensure_index_ready returns CLIOutput error if build fails with SearchIndexError."""
     mock_repo = MagicMock()
     mock_index = MagicMock()
 
     with patch("erdos.core.ask.service.build_index") as mock_build_index:
-        mock_build_index.side_effect = RuntimeError("Build failed")
+        mock_build_index.side_effect = SearchIndexError("Index build failed")
 
         result = _ensure_index_ready(
             loader=mock_repo,
@@ -67,7 +67,27 @@ def test_ensure_index_ready_build_error():
         assert isinstance(result, CLIOutput)
         assert not result.success
         assert result.error is not None
-        assert "Build failed" in result.error["message"]
+        assert "Index build failed" in result.error["message"]
+
+
+def test_ensure_index_ready_loader_error():
+    """_ensure_index_ready returns CLIOutput error if build fails with ProblemLoaderError."""
+    mock_repo = MagicMock()
+    mock_index = MagicMock()
+
+    with patch("erdos.core.ask.service.build_index") as mock_build_index:
+        mock_build_index.side_effect = ProblemLoaderError("Problems not found")
+
+        result = _ensure_index_ready(
+            loader=mock_repo,
+            index=mock_index,
+            build_index_flag=True,
+        )
+
+        assert isinstance(result, CLIOutput)
+        assert not result.success
+        assert result.error is not None
+        assert "Problems not found" in result.error["message"]
 
 
 def testexecute_llm_if_enabled_disabled():
@@ -175,22 +195,22 @@ def testexecute_llm_if_enabled_os_error():
         assert "error" in result.error["message"].lower()
 
 
-def testexecute_llm_if_enabled_generic_exception():
-    """execute_llm_if_enabled returns error on unexpected exception."""
+def testexecute_llm_if_enabled_value_error():
+    """execute_llm_if_enabled returns error on ValueError (e.g., invalid command syntax)."""
 
     with patch("erdos.core.ask.llm.execute_llm") as mock_execute_llm:
-        mock_execute_llm.side_effect = RuntimeError("Unexpected error")
+        mock_execute_llm.side_effect = ValueError("No closing quotation")
 
         result = execute_llm_if_enabled(
             prompt="Test prompt",
             enable_llm=True,
-            llm_command="echo",
+            llm_command="echo 'unclosed",
         )
 
         assert isinstance(result, CLIOutput)
         assert not result.success
         assert result.error is not None
-        assert "failed" in result.error["message"].lower()
+        assert "syntax" in result.error["message"].lower()
 
 
 def testexecute_llm_if_enabled_timeout():

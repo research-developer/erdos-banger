@@ -101,13 +101,13 @@ erdos-banger/
 
 ```bash
 # Create named session
-tmux new-session -s ralph
+tmux new-session -s erdos-ralph
 
 # Or attach to existing
-tmux attach -t ralph
+tmux attach -t erdos-ralph
 
 # Detach without killing: Ctrl+B, then D
-# Kill session: tmux kill-session -t ralph
+# Kill session: tmux kill-session -t erdos-ralph
 ```
 
 ### Step 4: Run the Loop
@@ -483,7 +483,7 @@ ps aux | grep claude
 tmux list-sessions
 
 # Restart loop in tmux
-tmux attach -t ralph
+tmux attach -t erdos-ralph
 ```
 
 ### Quality Gates Failing
@@ -529,7 +529,7 @@ ls docs/debt/README.md docs/debt/debt-0*.md
 ls docs/specs/spec-0*.md docs/_archive/specs/spec-0*.md
 
 # 4. Start tmux
-tmux new -s ralph
+tmux new -s erdos-ralph
 
 # 5. Run the loop (bounded by timeouts; logs captured)
 MAX=50

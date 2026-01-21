@@ -49,8 +49,8 @@ dev = [
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
     "pytest-xdist>=3.8.0",
-    "pytest-mock>=3.15.1",
     "pytest-watch>=4.2.0",
+    "pytest-sugar>=1.0.0",
     "hypothesis>=6.150.2",
     "ruff>=0.14.13",
     "mypy>=1.19.1",
@@ -144,11 +144,13 @@ warn_required_dynamic_aliases = true
 [tool.pytest.ini_options]
 minversion = "8.0"
 addopts = [
+    "-v",                       # Verbose: show test names
     "-ra",                      # Show extra summary for all except passed
-    "-q",                       # Quieter output
+    "--tb=short",               # Shorter tracebacks
     "--strict-markers",         # Error on unknown markers
     "--strict-config",          # Error on config issues
     "--import-mode=importlib",  # Modern import mode for src layout
+    "--color=yes",              # Force color output
 ]
 testpaths = ["tests"]
 markers = [
