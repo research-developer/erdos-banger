@@ -564,6 +564,8 @@ result = exa.research(
 - [Harmonic News](https://harmonic.fun/news)
 - [Aristotle IMO Paper](https://arxiv.org/abs/2510.01346)
 - [Erdős Problem #124 Discussion](https://www.erdosproblems.com/forum/thread/124)
+- [SPEC-021: Aristotle Integration](../specs/spec-021-aristotle-integration.md)
+- [Vendor Notes: Harmonic Aristotle](../_vendor-docs/harmonic-aristotle/README.md)
 
 ### Research APIs
 - [Exa Research API](https://exa.ai/blog/introducing-exa-research)
