@@ -41,6 +41,7 @@ Specs designed for future versions.
 | 017 | [MCP Server](spec-017-mcp-server.md) | Deferred | v1.4 | Model Context Protocol for AI integration |
 | 019 | [PDF Conversion](spec-019-pdf-conversion.md) | Ready | v2.0 | PDF to text with math preservation (Marker + LLM) |
 | 020 | [OpenAlex Integration](spec-020-openalex-integration.md) | Ready | v1.2 | Primary academic metadata source (271M+ works) |
+| 021 | [Aristotle Integration](spec-021-aristotle-integration.md) | Ready | v1.2+ | Optional Lean proving backend via Harmonic Aristotle |
 
 ## Archived Specs
 
@@ -61,7 +62,7 @@ Completed specs that are fully implemented.
 | 011 | Ask Command | [archive](../_archive/specs/spec-011-ask-command.md) |
 | 018 | DevX Makefile | [archive](../_archive/specs/spec-018-devx-makefile.md) |
 
-**Next Spec ID:** SPEC-021
+**Next Spec ID:** SPEC-022
 
 ## Dependency Graph
 
@@ -86,6 +87,9 @@ v1.2 Iteration & Metadata (DEFERRED)
 ├── 012 Loop Command ←── 012-DESIGN + 011 Ask + 007 Lean
 ├── 013 Logging ←── all commands (tracks progress)
 └── 020 OpenAlex Integration ←── augments 010 Ingest
+
+v1.2+ Optional Proving Backend (READY)
+└── 021 Aristotle Integration ←── 012 Loop + 007 Lean
 
 v1.3 Enhancement (FUTURE)
 ├── 014 Vector Embeddings ←── 006 Search Index
