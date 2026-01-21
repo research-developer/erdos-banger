@@ -14,7 +14,7 @@ from rich.table import Table
 from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
 from erdos.core.constants import API_RATE_LIMIT_DELAY
-from erdos.core.ingest import ingest_problem_references
+from erdos.core.ingest import MetadataSource, ingest_problem_references
 from erdos.core.timing import measure_time_ms
 
 
@@ -33,6 +33,7 @@ class IngestOptions:
     timeout: float = 30.0
     delay: float = API_RATE_LIMIT_DELAY
     mailto: str = ""
+    source: MetadataSource = MetadataSource.OPENALEX
 
 
 app = typer.Typer(
@@ -141,6 +142,7 @@ def _run_ingestion(
             timeout=options.timeout,
             delay=options.delay,
             mailto=mailto,
+            source=options.source,
         )
 
     result.duration_ms = duration[0]
@@ -157,14 +159,27 @@ def ingest(
     timeout: Annotated[float, typer.Option("--timeout")] = 30.0,
     delay: Annotated[float, typer.Option("--delay")] = API_RATE_LIMIT_DELAY,
     mailto: Annotated[str, typer.Option("--mailto")] = "",
+    source: Annotated[
+        MetadataSource,
+        typer.Option(
+            "--source",
+            help="Metadata source: openalex (default), arxiv, or crossref",
+            case_sensitive=False,
+        ),
+    ] = MetadataSource.OPENALEX,
 ) -> None:
-    """Ingest literature metadata and cache for a problem."""
+    """Ingest literature metadata and cache for a problem.
+
+    Uses OpenAlex as the primary metadata source (271M+ works). Falls back to
+    arXiv/Crossref when --source is specified. ArXiv source downloads are
+    independent of metadata source selection.
+    """
     json_mode = bool((ctx.obj or {}).get("json"))
 
     # Prepare and execute
     _show_progress_message(problem_id, json_mode)
     options = IngestOptions(
-        problem_id, force, no_download, no_network, timeout, delay, mailto
+        problem_id, force, no_download, no_network, timeout, delay, mailto, source
     )
     mailto_prepared, repo_root = _prepare_ingest_options(mailto)
     app_ctx, app_error = get_app_context(ctx, command="erdos ingest")

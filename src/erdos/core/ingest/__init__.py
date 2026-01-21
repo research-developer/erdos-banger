@@ -11,6 +11,7 @@ All public APIs are re-exported for backward compatibility.
 
 # Re-export public APIs for backward compatibility
 from erdos.core.ingest.fetch import (
+    MetadataSource,
     download_and_extract_arxiv,
     fetch_reference_entry,
     process_all_references,
@@ -37,6 +38,7 @@ __all__ = [
     # Models
     "ArxivDownloadResult",
     "HasIdentifiers",
+    "MetadataSource",
     "ProcessAllReferencesResult",
     "ReferenceProcessResult",
     "_ProcessAllReferencesResult",

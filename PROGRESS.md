@@ -58,8 +58,8 @@
 
 ## Spec Queue (After Debt Complete)
 
-- [ ] **SPEC-020**: OpenAlex Integration
-  - Spec: `docs/specs/spec-020-openalex-integration.md`
+- [x] **SPEC-020**: OpenAlex Integration
+  - Spec: `docs/_archive/specs/spec-020-openalex-integration.md`
   - Target: v1.2
   - Acceptance: All spec acceptance criteria met; `make ci` green.
 
@@ -259,6 +259,34 @@
 - `docs/debt/README.md` - Moved DEBT-035 to Archived
 
 **Solution:** Changed combined guard `if app_error is not None or app_ctx is None:` to two sequential checks. First check exits on error, second check (unreachable by invariant) allows mypy to narrow `app_ctx` to non-None.
+
+### 2026-01-21: SPEC-020 OpenAlex Integration implemented
+
+**Files created:**
+- `src/erdos/core/openalex_client.py` - OpenAlex API client with OpenAlexConfig, OpenAlexClient, and helper functions (reconstruct_abstract, extract_arxiv_id, find_pdf_url, openalex_to_reference, _map_oa_status)
+- `tests/unit/test_openalex_client.py` - 36 unit tests covering config, helpers, client methods, and OA status mapping
+- `tests/integration/test_openalex_integration.py` - Integration tests for live OpenAlex API (marked requires_network)
+
+**Files modified:**
+- `src/erdos/core/models/reference.py` - Added new fields: pdf_url, openalex_id, cited_by_count, concepts (list), oa_status (OpenAccessStatus enum)
+- `src/erdos/core/models/__init__.py` - Exported OpenAccessStatus enum
+- `src/erdos/core/ingest/fetch.py` - Added MetadataSource enum (OPENALEX, ARXIV, CROSSREF); added _fetch_openalex_by_doi(), _fetch_openalex_by_arxiv(); updated fetch_reference_entry() to accept source parameter (default: OPENALEX)
+- `src/erdos/core/ingest/__init__.py` - Re-exported MetadataSource enum
+- `src/erdos/core/ingest/service.py` - Added source parameter to ingest_problem_references()
+- `src/erdos/commands/ingest.py` - Added --source flag (openalex|arxiv|crossref); updated IngestOptions dataclass
+- `tests/unit/test_ingest_service.py` - Updated tests to specify source=MetadataSource.ARXIV or CROSSREF for backward compatibility
+- `tests/integration/test_cli_ingest.py` - Added --source crossref to tests using Crossref mocks
+- `tests/unit/test_ingest_command_helpers.py` - Added source field to IngestOptions tests and mock assertions
+
+**Features:**
+- OpenAlex as primary metadata source (271M+ works)
+- Unified API for DOI and arXiv lookups
+- Abstract reconstruction from OpenAlex inverted index format
+- Open access status mapping (gold, green, bronze, hybrid, closed)
+- PDF URL extraction from primary and alternate locations
+- Citation count and concept tags from OpenAlex
+- Retry logic with exponential backoff for transient failures
+- --source flag allows selecting metadata backend (openalex, arxiv, crossref)
 
 (entries added by Ralph loop as tasks complete)
 

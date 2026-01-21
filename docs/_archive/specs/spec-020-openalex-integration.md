@@ -2,8 +2,9 @@
 
 > Integrates OpenAlex as primary academic metadata source, replacing/augmenting arXiv + Crossref.
 
-**Status:** Ready
+**Status:** Complete
 **Target:** v1.2+
+**Commit:** (pending)
 **Prerequisites (SSOT):**
 - Ingest command: `docs/_archive/specs/spec-010-ingest-command.md`
 - Literature paths: `src/erdos/core/literature_paths.py`

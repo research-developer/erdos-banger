@@ -64,6 +64,22 @@ class ReferenceRecord(ErdosBaseModel):
     license: Annotated[
         str | None, Field(default=None, description="Content license (e.g., CC-BY)")
     ] = None
+    pdf_url: Annotated[
+        str | None, Field(default=None, description="Direct PDF download URL")
+    ] = None
+
+    # OpenAlex-specific metadata
+    openalex_id: Annotated[
+        str | None, Field(default=None, description="OpenAlex work ID")
+    ] = None
+    cited_by_count: Annotated[
+        int | None,
+        Field(default=None, ge=0, description="Citation count from OpenAlex"),
+    ] = None
+    concepts: Annotated[
+        list[str],
+        Field(default_factory=list, description="Topic concepts from OpenAlex"),
+    ] = Field(default_factory=list)
 
     # Local state (not from upstream)
     fetched_at: Annotated[datetime | None, Field(default=None)] = None
@@ -74,9 +90,11 @@ class ReferenceRecord(ErdosBaseModel):
     @model_validator(mode="after")
     def _require_identifier(self) -> ReferenceRecord:
         """Enforce that at least one identifier is present."""
-        if not (self.doi or self.arxiv_id or self.semantic_scholar_id):
+        if not (
+            self.doi or self.arxiv_id or self.semantic_scholar_id or self.openalex_id
+        ):
             raise ValueError(
-                "ReferenceRecord requires at least one identifier: doi, arxiv_id, or semantic_scholar_id"
+                "ReferenceRecord requires at least one identifier: doi, arxiv_id, semantic_scholar_id, or openalex_id"
             )
         return self
 

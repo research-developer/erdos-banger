@@ -48,10 +48,10 @@ def test_ingest_command_json_output(
     data_dir = _data_dir(tmp_path, sample_problems_yaml)
     repo_root = tmp_path
 
-    # Run command with --json --no-download
+    # Run command with --json --no-download --source crossref (legacy source)
     result = runner.invoke(
         app,
-        ["--json", "ingest", "6", "--no-download"],
+        ["--json", "ingest", "6", "--no-download", "--source", "crossref"],
         env={"ERDOS_DATA_PATH": str(data_dir), "ERDOS_REPO_ROOT": str(repo_root)},
     )
 
@@ -94,10 +94,10 @@ def test_ingest_command_no_download(
     data_dir = _data_dir(tmp_path, sample_problems_yaml)
     repo_root = tmp_path
 
-    # Run command with --no-download
+    # Run command with --no-download --source crossref (legacy source)
     result = runner.invoke(
         app,
-        ["--json", "ingest", "6", "--no-download"],
+        ["--json", "ingest", "6", "--no-download", "--source", "crossref"],
         env={"ERDOS_DATA_PATH": str(data_dir), "ERDOS_REPO_ROOT": str(repo_root)},
     )
 
@@ -128,10 +128,10 @@ def test_ingest_command_idempotent(
     data_dir = _data_dir(tmp_path, sample_problems_yaml)
     repo_root = tmp_path
 
-    # First run
+    # First run with --source crossref (legacy source)
     result1 = runner.invoke(
         app,
-        ["--json", "ingest", "6", "--no-download"],
+        ["--json", "ingest", "6", "--no-download", "--source", "crossref"],
         env={"ERDOS_DATA_PATH": str(data_dir), "ERDOS_REPO_ROOT": str(repo_root)},
     )
     assert result1.exit_code == 0

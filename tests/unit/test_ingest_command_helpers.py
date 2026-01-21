@@ -17,6 +17,7 @@ from erdos.commands.ingest import (
     _run_ingestion,
     _show_progress_message,
 )
+from erdos.core.ingest import MetadataSource
 
 
 def test_get_repo_root_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -107,6 +108,7 @@ def test_ingest_options_dataclass() -> None:
     assert options.timeout == 30.0
     assert options.delay == 3.0
     assert options.mailto == ""
+    assert options.source == MetadataSource.OPENALEX
 
 
 def test_ingest_options_with_all_values() -> None:
@@ -119,6 +121,7 @@ def test_ingest_options_with_all_values() -> None:
         timeout=60.0,
         delay=5.0,
         mailto="test@example.com",
+        source=MetadataSource.ARXIV,
     )
 
     assert options.problem_id == 42
@@ -128,6 +131,7 @@ def test_ingest_options_with_all_values() -> None:
     assert options.timeout == 60.0
     assert options.delay == 5.0
     assert options.mailto == "test@example.com"
+    assert options.source == MetadataSource.ARXIV
 
 
 @patch("erdos.commands.ingest.ingest_problem_references")
@@ -165,6 +169,7 @@ def test_run_ingestion_calls_core_logic(
         timeout=30.0,
         delay=3.0,
         mailto="test@example.com",
+        source=options.source,
     )
     assert result is mock_result
     assert result.duration_ms is not None
