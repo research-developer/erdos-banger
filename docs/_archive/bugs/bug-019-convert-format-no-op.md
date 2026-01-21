@@ -1,14 +1,16 @@
 # BUG-019: `erdos convert --format` Is a No-op (text/json)
 
 **Priority:** P2
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-21
+**Fixed:** 2026-01-21
+**Commit:** b2dcdfe
 
 ---
 
 ## Description
 
-`erdos convert` advertises `--format [markdown|text|json]`, but the implementation does not actually change the output for `text` or `json`. This is user-visible and violates the archived SPEC-019 CLI contract.
+`erdos convert` advertises `--format [markdown|text|json]`, but the implementation previously did not actually change the output for `text` or `json`. This was user-visible and violated the archived SPEC-019 CLI contract.
 
 ## Steps to Reproduce
 
@@ -24,18 +26,16 @@ uv run erdos convert some.pdf --format json
 
 ## Actual Behavior
 
-The command returns the same `output_text` regardless of `--format`.
+The command returned the same `output_text` regardless of `--format`.
 
 ## Root Cause
 
-In `src/erdos/commands/convert.py`, the `OutputFormat.TEXT` and `OutputFormat.JSON` branches contain `pass`, so no formatting/serialization occurs:
+In `src/erdos/commands/convert.py`, the `OutputFormat.TEXT` and `OutputFormat.JSON` branches were effectively unimplemented, so no formatting/serialization occurred.
 
-```python
-if output_format == OutputFormat.TEXT:
-    pass
-elif output_format == OutputFormat.JSON:
-    pass
-```
+## Fix Implemented
+
+- `--format text`: best-effort Markdown → plain text transformation (deterministic stripping for basic constructs).
+- `--format json`: writes a plain JSON payload to stdout (distinct from the global `--json` CLIOutput envelope).
 
 ## Fix Options (3)
 
@@ -55,10 +55,9 @@ Always print human output to terminal, but if `--output` is provided, write the 
 
 ## Acceptance Criteria
 
-1. [ ] `uv run erdos convert <pdf> --format text` produces text output meaningfully different from markdown (or explicitly documented behavior).
-2. [ ] `uv run erdos convert <pdf> --format json` produces valid JSON on stdout (no extra progress text in stdout).
-3. [ ] Add/adjust tests in `tests/integration/test_pdf_convert.py` to cover `--format text` and `--format json`.
-4. [ ] Update any docs/spec references if semantics change.
+1. [x] `uv run erdos convert <pdf> --format text` produces text output meaningfully different from markdown.
+2. [x] `uv run erdos convert <pdf> --format json` produces valid JSON on stdout (no extra progress text in stdout).
+3. [x] Integration tests cover `--format text` and `--format json`.
 
 ## References
 

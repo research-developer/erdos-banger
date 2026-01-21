@@ -1,21 +1,23 @@
 # BUG-018: OpenAlex Client Bugs (arXiv lookup + arXiv ID extraction)
 
-**Status:** Open
+**Status:** Fixed
 **Priority:** P1
 **Found:** 2026-01-21
 **Found By:** Post-Ralph adversarial audit
+**Fixed:** 2026-01-21
+**Commit:** b2dcdfe
 
 ---
 
 ## Summary
 
-The OpenAlex integration is currently unreliable for arXiv references because:
+The OpenAlex integration was unreliable for arXiv references because:
 
 1. `OpenAlexClient.get_by_arxiv()` uses a **non-existent OpenAlex filter** (`ids.arxiv`).
 2. `openalex_to_reference()` attempts to read `ids["arxiv"]`, but real OpenAlex payloads expose arXiv via
    `primary_location.landing_page_url` and (sometimes) via an arXiv DataCite DOI (`10.48550/...`) — **not** an `ids.arxiv` field.
 
-This breaks:
+This broke:
 - `--source openalex` ingestion for arXiv-only references
 - Any downstream logic/tests that expect `ReferenceRecord.arxiv_id` to be populated from OpenAlex
 
@@ -23,9 +25,9 @@ This breaks:
 
 ## Bug 1: Invalid `ids.arxiv` Filter
 
-**Location:** `src/erdos/core/openalex_client.py:289`
+**Location (pre-fix):** `src/erdos/core/openalex_client.py` (pre-`b2dcdfe`)
 
-**Current code (broken):**
+**Broken code (pre-fix):**
 ```python
 params = self._params(filter=f"ids.arxiv:{arxiv_id}")
 ```
@@ -37,7 +39,7 @@ Reference: https://docs.openalex.org/api-entities/works/filter-works
 
 ## Bug 2: arXiv ID Extraction Assumes Non-existent `ids["arxiv"]`
 
-**Location:** `src/erdos/core/openalex_client.py:71-91` and `src/erdos/core/openalex_client.py:156-159`
+**Location (pre-fix):** `src/erdos/core/openalex_client.py` (pre-`b2dcdfe`)
 
 **Why this fails:** OpenAlex “work object” `ids` contains fields like `doi`, `openalex`, `mag`, `pmid`, `pmcid` — not `arxiv`.
 Reference: https://docs.openalex.org/api-entities/works/work-object#ids
@@ -60,7 +62,7 @@ curl -sS 'https://api.openalex.org/works?filter=doi:10.48550%2Farxiv.math%2F0404
 
 ---
 
-## Fix Options (3)
+## Fix Implemented
 
 ### Option A (Recommended): arXiv ID → DataCite DOI → `get_by_doi()`
 
@@ -92,7 +94,7 @@ use `arXiv export API + e-print tarball` for metadata + text extraction, and res
 
 ---
 
-## Test Fixes Required
+## Test Fixes Implemented
 
 1. Update unit tests to reflect real OpenAlex payload shape (no `ids["arxiv"]`).
 2. Update `tests/integration/test_openalex_integration.py` to use a DOI/arXiv pair that OpenAlex demonstrably supports.
@@ -104,10 +106,10 @@ use `arXiv export API + e-print tarball` for metadata + text extraction, and res
 
 ## Acceptance Criteria
 
-1. [ ] `get_by_arxiv()` no longer uses `filter=ids.arxiv:...`.
-2. [ ] `ReferenceRecord.arxiv_id` is populated for OpenAlex-derived references when appropriate.
-3. [ ] Unit tests cover DOI mapping + arXiv extraction logic (offline, deterministic).
-4. [ ] Network integration tests pass when invoked explicitly.
+1. [x] `get_by_arxiv()` no longer uses `filter=ids.arxiv:...`.
+2. [x] `ReferenceRecord.arxiv_id` is populated for OpenAlex-derived references when appropriate.
+3. [x] Unit tests cover DOI mapping + arXiv extraction logic (offline, deterministic).
+4. [x] Network integration tests pass when invoked explicitly.
 
 ---
 

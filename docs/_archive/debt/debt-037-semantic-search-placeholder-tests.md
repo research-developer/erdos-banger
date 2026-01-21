@@ -1,8 +1,10 @@
 # DEBT-037: Placeholder Semantic Search Tests (Always Pass)
 
-**Status:** Open
+**Status:** Fixed
 **Priority:** P2
 **Found:** 2026-01-21
+**Fixed:** 2026-01-21
+**Commit:** b2dcdfe
 
 ---
 
@@ -53,5 +55,11 @@ Remove the tests and re-add only once the feature is fully testable.
 
 ## Acceptance Criteria
 
-1. [ ] No tests in `tests/` contain bare `pass` without an explicit `xfail`/skip rationale.
-2. [ ] Semantic/hybrid search JSON contract is asserted deterministically in CI (no network).
+1. [x] No tests in `tests/` contain bare `pass` without an explicit `xfail`/skip rationale.
+2. [x] Semantic/hybrid search JSON contract is asserted deterministically in CI (no network).
+
+---
+
+## Resolution
+
+These placeholder tests were replaced with deterministic assertions using the fake embedder boundary (no network required).

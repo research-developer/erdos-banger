@@ -10,7 +10,9 @@ Guidelines:
 
 ---
 
-## API Source Hierarchy (SSOT)
+## API Source Hierarchy (Target Design)
+
+This diagram describes the intended “ports + adapters” shape. **Current state:** metadata fetching is still wired via concrete clients in `src/erdos/core/ingest/fetch.py` and is tracked as `docs/debt/debt-038-metadata-provider-abstraction.md`.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -27,7 +29,7 @@ Guidelines:
 │  OpenAlex    │   │   arXiv      │   │  Crossref    │
 │  (PRIMARY)   │   │  (SOURCE)    │   │  (FALLBACK)  │
 │              │   │              │   │              │
-│ • metadata   │   │ • LaTeX/TeX  │   │ • If OA fails│
+│ • metadata   │   │ • LaTeX/TeX  │   │ • If OpenAlex│
 │ • citations  │   │ • HTML       │   │ • Direct DOI │
 │ • topics     │   │ • Abstract   │   │   lookup     │
 │ • deduped    │   │              │   │              │
@@ -47,8 +49,8 @@ Guidelines:
 1. **Already aggregates Crossref** - calling both is redundant
 2. **Built-in deduplication** - matches arXiv preprint ↔ journal version
 3. **Richer metadata** - citations, topics, concepts, institutions
-4. **Better rate limits** - 100k/day vs Crossref's polite pool
-5. **100% open** - CC0 license, no auth required
+4. **More generous anonymous quota** than Crossref’s polite pool
+5. **Open data** - CC0 license, no auth required
 
 ### Future: "Good Redundancy" Sources
 

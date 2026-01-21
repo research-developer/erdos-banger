@@ -37,7 +37,7 @@ The master draft describes many capabilities. Here's what we're **actually build
 |-----------|-------|-------|
 | OpenAlex as primary | Metadata for all DOI/arXiv lookups | Replaces Crossref as primary; includes citations/topics |
 | Crossref as fallback | Edge cases only | When OpenAlex returns nothing |
-| arXiv for content | Source tarballs only | No longer used for metadata (OpenAlex has it) |
+| arXiv for content | Source tarballs only | Default uses OpenAlex for metadata; legacy `--source arxiv` may still call the export API |
 | `MetadataProvider` protocol | Abstraction layer | Enables pluggable sources (see DEBT-038) |
 
 ### V1.3+ (Deferred)
@@ -154,6 +154,8 @@ Each data source has ONE job:
 
 ### Dependency Inversion Principle (DIP)
 
+**Implementation status:** Target architecture. The `MetadataProvider` port is tracked as `docs/debt/debt-038-metadata-provider-abstraction.md`.
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    High-Level Policy                         │
@@ -186,13 +188,13 @@ Adding new sources (Semantic Scholar, Exa, zbMATH) = new provider implementation
 1. **OpenAlex already includes Crossref data** - calling both is redundant
 2. **OpenAlex has built-in deduplication** - matches preprint ↔ published version
 3. **OpenAlex adds value** - citations, topics, institutions, concepts
-4. **Better rate limits** - 100k/day vs Crossref's polite pool
+4. **More generous anonymous quota** than Crossref’s polite pool
 
 ### Deduplication Strategy
 
-**We do NOT need our own deduplication logic.**
+**We avoid heavy custom deduplication logic.**
 
-OpenAlex handles it internally via fingerprinting:
+OpenAlex often resolves cross-source duplicates internally (preprint ↔ journal, multiple DOIs, etc.). We still enforce **stable keys** and **duplicate guards** within our own manifests/datasets to avoid accidental overwrites or churn.
 - arXiv preprint ↔ journal version matching
 - Multiple DOIs for same work
 - Cross-repository deduplication

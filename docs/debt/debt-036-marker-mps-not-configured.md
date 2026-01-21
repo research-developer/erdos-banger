@@ -63,11 +63,7 @@ erdos convert paper.pdf --device mps
 
 ## Caveats
 
-Per [PyTorch MPS documentation](https://pytorch.org/blog/introducing-accelerated-pytorch-training-on-mac/):
-
-1. **FP16 not supported** - MPS does not support 16-bit floating-point; Marker may need `fp16=False`
-2. **Experimental** - Not all PyTorch ops are MPS-optimized
-3. **Memory requirements** - 16GB+ unified memory recommended, 32GB+ preferred
+MPS support depends on your local PyTorch build and workload. Some operations may be unsupported or slower than CPU for specific models. If you see runtime errors with `TORCH_DEVICE=mps`, fall back to `TORCH_DEVICE=cpu`.
 
 ## Acceptance Criteria
 

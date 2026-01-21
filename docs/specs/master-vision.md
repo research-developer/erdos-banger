@@ -56,7 +56,7 @@ OpenAlex handles deduplication internally via fingerprinting algorithms that mat
 - Multiple DOIs for the same work
 - Different repository copies
 
-**We do NOT need our own deduplication logic** if we use OpenAlex correctly as the primary metadata source. OpenAlex already aggregates and deduplicates data from Crossref, arXiv, PubMed, MAG, and institutional repositories.
+**We avoid heavy custom deduplication logic** if we use OpenAlex as the primary metadata source. OpenAlex often aggregates and deduplicates metadata across sources (Crossref/arXiv/PubMed/etc.). We still enforce stable keys and duplicate guards within our own manifests/datasets to avoid accidental overwrites or churn.
 
 **Ingest Flow (v1.2+):**
 ```
@@ -689,6 +689,8 @@ Use Typer (built on Click) with Rich for formatting.
 
 **Architecture: Single Responsibility + Dependency Inversion**
 
+**Implementation status (v1.2):** metadata fetching is implemented, but the `MetadataProvider` protocol is not yet fully extracted; `src/erdos/core/ingest/fetch.py` still constructs concrete clients. Track: `docs/debt/debt-038-metadata-provider-abstraction.md`.
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    erdos ingest <id>                         │
@@ -709,7 +711,7 @@ Use Typer (built on Click) with Rich for formatting.
 │  OpenAlex    │   │   arXiv      │   │  Crossref    │
 │  (PRIMARY)   │   │  (SOURCE)    │   │  (FALLBACK)  │
 │              │   │              │   │              │
-│ • metadata   │   │ • LaTeX/TeX  │   │ • If OA fails│
+│ • metadata   │   │ • LaTeX/TeX  │   │ • If OpenAlex│
 │ • citations  │   │ • HTML       │   │ • Direct DOI │
 │ • topics     │   │ • Abstract   │   │   lookup     │
 │ • deduped    │   │              │   │              │
@@ -728,7 +730,7 @@ Use Typer (built on Click) with Rich for formatting.
 1. **Already aggregates Crossref** - calling both is redundant
 2. **Built-in deduplication** - matches arXiv preprint ↔ journal version
 3. **Richer metadata** - citations, topics, concepts, institutions
-4. **Better rate limits** - 100k/day vs Crossref's polite pool
+4. **More generous anonymous quota** than Crossref’s polite pool
 5. **100% open** - CC0 license, no auth required
 
 **Secondary (Source Content):**

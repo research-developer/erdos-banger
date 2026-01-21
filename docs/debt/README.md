@@ -17,8 +17,8 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 | ID | Title | Priority | Status | Deck |
 |----|-------|----------|--------|------|
 | DEBT-036 | Marker device selection not exposed | P3 | Open | [debt-036-marker-mps-not-configured.md](debt-036-marker-mps-not-configured.md) |
-| DEBT-037 | Placeholder semantic search tests | P2 | Open | [debt-037-semantic-search-placeholder-tests.md](debt-037-semantic-search-placeholder-tests.md) |
 | DEBT-038 | MetadataProvider abstraction missing | P2 | Open | [debt-038-metadata-provider-abstraction.md](debt-038-metadata-provider-abstraction.md) |
+| DEBT-039 | `erdos lean` command module is a god file | P2 | Open | [debt-039-lean-command-god-module.md](debt-039-lean-command-god-module.md) |
 
 ## Archived Debt
 
@@ -61,8 +61,9 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-033 | No retry logic for network failures | P2 | Fixed | 11a3519 |
 | DEBT-034 | Hardcoded MAX_SIZE constant | P3 | Fixed | 878aa7b |
 | DEBT-035 | type: ignore in all exit paths | P2 | Fixed | 86d3856 |
+| DEBT-037 | Placeholder semantic search tests | P2 | Fixed | b2dcdfe |
 
-**Next Debt ID:** DEBT-039
+**Next Debt ID:** DEBT-040
 
 ### Archived Debt Decks
 
@@ -101,3 +102,4 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-033-no-retry-logic.md`
 - `docs/_archive/debt/debt-034-hardcoded-max-size.md`
 - `docs/_archive/debt/debt-035-type-ignore-exit-paths.md`
+- `docs/_archive/debt/debt-037-semantic-search-placeholder-tests.md`

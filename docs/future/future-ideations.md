@@ -268,6 +268,8 @@ This suggests a multi-model approach may be optimal.
 
 ### API Orchestration Architecture
 
+**Status:** Target architecture. Current metadata fetching is still wired via concrete clients in `src/erdos/core/ingest/fetch.py` and tracked as `docs/debt/debt-038-metadata-provider-abstraction.md`.
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    erdos ingest <id>                         │
@@ -288,7 +290,7 @@ This suggests a multi-model approach may be optimal.
 │  OpenAlex    │   │   arXiv      │   │  Crossref    │
 │  (PRIMARY)   │   │  (SOURCE)    │   │  (FALLBACK)  │
 │              │   │              │   │              │
-│ • metadata   │   │ • LaTeX/TeX  │   │ • If OA fails│
+│ • metadata   │   │ • LaTeX/TeX  │   │ • If OpenAlex│
 │ • citations  │   │ • HTML       │   │ • Direct DOI │
 │ • topics     │   │ • Abstract   │   │   lookup     │
 │ • deduped    │   │              │   │              │

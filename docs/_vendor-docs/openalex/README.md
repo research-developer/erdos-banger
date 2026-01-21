@@ -43,12 +43,13 @@ ERDOS_MAILTO=your-email@example.com
 
 Docs: https://docs.openalex.org/how-to-use-the-api/rate-limits-and-authentication
 
-## Status
+## Configuration in `erdos-banger`
 
-**Configured:** 2026-01-21
-- API key: ✅ Active (`OPENALEX_API_KEY` in `.env`)
-- Email: ✅ Active (`ERDOS_MAILTO` in `.env`)
 - Client: `src/erdos/core/openalex_client.py`
+- Supported env vars (do not commit secrets):
+  - `ERDOS_MAILTO` (recommended)
+  - `OPENALEX_EMAIL` (optional alias for email)
+  - `OPENALEX_API_KEY` (optional)
 
 ## arXiv IDs in OpenAlex
 

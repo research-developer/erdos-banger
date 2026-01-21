@@ -4,7 +4,7 @@
 
 **Status:** Complete
 **Target:** v1.2+
-**Commit:** a09bf57
+**Commit:** a09bf57, b2dcdfe
 **Prerequisites (SSOT):**
 - Ingest command: `docs/_archive/specs/spec-010-ingest-command.md`
 - Literature paths: `src/erdos/core/literature_paths.py`
@@ -88,50 +88,15 @@ OPENALEX_API_KEY=your-api-key-here
 
 ## 3) Python Client Options
 
-### Option A: PyAlex (Optional convenience layer)
+### Option A: PyAlex (Not used in `erdos-banger`)
 
-[PyAlex](https://github.com/J535D165/pyalex) is a lightweight Python wrapper for OpenAlex.
-
-```bash
-uv add pyalex
-```
-
-```python
-from pyalex import Works, Authors, config
-
-# Configure email for polite pool
-config.email = "erdos-banger@example.com"
-
-# Retry configuration
-config.max_retries = 3
-config.retry_backoff_factor = 0.5
-config.retry_http_codes = [429, 500, 503]
-
-# Search by DOI
-work = Works()["https://doi.org/10.1038/nature12373"]
-print(work["title"])
-print(work["abstract_inverted_index"])  # PyAlex converts to text
-
-# Search by arXiv ID
-arxiv_works = Works().filter(ids={"openalex": "https://arxiv.org/abs/2301.00001"}).get()
-
-# Search by title (fuzzy)
-works = Works().search("Erdős conjecture sum-free sets").get()
-
-# Filter by multiple criteria
-recent_math = (
-    Works()
-    .filter(concepts={"id": "C33923547"})  # Mathematics concept
-    .filter(publication_year=">2020")
-    .sort(cited_by_count="desc")
-    .get()
-)
-```
+`erdos-banger` intentionally uses direct HTTP (`requests` + `responses`) for deterministic tests and minimal dependencies. PyAlex is not a runtime dependency of this repository.
 
 ### Option B: Direct HTTP (SSOT; requests + responses for tests)
 
 ```python
 import requests
+import re
 from typing import Any
 
 class OpenAlexClient:
@@ -159,14 +124,12 @@ class OpenAlexClient:
 
     def get_work_by_arxiv(self, arxiv_id: str) -> dict[str, Any]:
         """Fetch work by arXiv ID."""
-        url = f"{self.BASE_URL}/works"
-        params = self._params(filter=f"ids.arxiv:{arxiv_id}")
-        response = self.session.get(url, params=params, timeout=self.timeout)
-        response.raise_for_status()
-        results = response.json().get("results", [])
-        if not results:
-            raise ValueError(f"No work found for arXiv:{arxiv_id}")
-        return results[0]
+        # OpenAlex does not support an ids.arxiv filter.
+        # arXiv e-prints are deterministically addressable via their DataCite DOIs:
+        #   10.48550/arxiv.<arxiv_id_without_version>
+        arxiv_id_clean = re.sub(r"v\d+$", "", arxiv_id)
+        doi = f"10.48550/arxiv.{arxiv_id_clean}"
+        return self.get_work_by_doi(doi)
 
     def search_works(
         self,
@@ -190,41 +153,103 @@ class OpenAlexClient:
 ### OpenAlex Work → Our ReferenceRecord
 
 ```python
-from erdos.core.models import ReferenceRecord
+from typing import Any
 
-def openalex_to_reference(work: dict) -> ReferenceRecord:
-    """Convert OpenAlex work to our ReferenceRecord model."""
+from erdos.core.models import OpenAccessStatus, ReferenceRecord
+
+
+def _map_oa_status(oa: dict[str, Any] | None) -> OpenAccessStatus:
+    """Map OpenAlex OA status to our enum."""
+    if not oa:
+        return OpenAccessStatus.UNKNOWN
+
+    status = (oa.get("oa_status") or "").lower()
+    mapping = {
+        "gold": OpenAccessStatus.GOLD,
+        "green": OpenAccessStatus.GREEN,
+        "bronze": OpenAccessStatus.BRONZE,
+        "hybrid": OpenAccessStatus.HYBRID,
+        "closed": OpenAccessStatus.CLOSED,
+    }
+    return mapping.get(status, OpenAccessStatus.UNKNOWN)
+
+
+def openalex_to_reference(work: dict[str, Any]) -> ReferenceRecord:
+    """Convert OpenAlex work to ReferenceRecord."""
+    # Extract DOI (remove https://doi.org/ prefix). Prefer work.doi, fall back to ids.doi.
+    doi_raw = work.get("doi") or ""
+    if not doi_raw:
+        ids = work.get("ids")
+        if isinstance(ids, dict):
+            doi_raw = ids.get("doi") or ""
+    doi = doi_raw.replace("https://doi.org/", "") if doi_raw else None
+
+    arxiv_id = extract_arxiv_id_from_work(work)
+
+    # Extract authors from authorships
+    authors: list[str] = []
+    for authorship in work.get("authorships", []):
+        author = authorship.get("author", {})
+        if author.get("display_name"):
+            authors.append(author["display_name"])
+
+    # Extract venue from primary location
+    primary_loc = work.get("primary_location", {}) or {}
+    source = primary_loc.get("source", {}) or {}
+    venue = source.get("display_name")
+
+    # Extract concepts (top 5)
+    concepts: list[str] = []
+    for concept in work.get("concepts", [])[:5]:
+        if concept.get("display_name"):
+            concepts.append(concept["display_name"])
+
+    # Map OA status
+    oa_status = _map_oa_status(work.get("open_access", {}))
+
     return ReferenceRecord(
         # Identifiers
-        doi=work.get("doi", "").replace("https://doi.org/", "") if work.get("doi") else None,
-        arxiv_id=extract_arxiv_id(work.get("ids", {})),
+        doi=doi or None,
+        arxiv_id=arxiv_id,
 
         # Metadata
         title=work.get("title", ""),
-        authors=[a["author"]["display_name"] for a in work.get("authorships", [])],
+        authors=authors,
         year=work.get("publication_year"),
-        journal=work.get("primary_location", {}).get("source", {}).get("display_name"),
+        venue=venue,
 
         # Abstract (OpenAlex stores as inverted index)
         abstract=reconstruct_abstract(work.get("abstract_inverted_index")),
 
         # OpenAlex-specific
         openalex_id=work.get("id"),
-        cited_by_count=work.get("cited_by_count", 0),
-        concepts=[c["display_name"] for c in work.get("concepts", [])[:5]],
+        cited_by_count=work.get("cited_by_count"),
+        concepts=concepts,
 
         # URLs
         pdf_url=find_pdf_url(work),
-        open_access=work.get("open_access", {}).get("is_oa", False),
+        oa_status=oa_status,
+        source="openalex",
     )
 
 
-def extract_arxiv_id(ids: dict) -> str | None:
-    """Extract arXiv ID from OpenAlex IDs."""
-    arxiv_url = ids.get("arxiv")
-    if arxiv_url:
-        # Format: https://arxiv.org/abs/2301.00001
-        return arxiv_url.split("/")[-1]
+def extract_arxiv_id_from_work(work: dict) -> str | None:
+    """Extract arXiv ID from an OpenAlex work object.
+
+    OpenAlex does not guarantee a dedicated `ids.arxiv`. In practice, arXiv IDs are often
+    discoverable via:
+    - `ids.doi` when it is an arXiv DataCite DOI (10.48550/arxiv.<id>)
+    - `primary_location.landing_page_url` when it points at `https://arxiv.org/abs/<id>`
+    """
+    ids = work.get("ids") or {}
+    doi_url = ids.get("doi") or ""
+    if isinstance(doi_url, str) and doi_url.lower().startswith("https://doi.org/10.48550/arxiv."):
+        return doi_url.split("https://doi.org/10.48550/arxiv.", 1)[-1]
+
+    landing = (work.get("primary_location") or {}).get("landing_page_url") or ""
+    if isinstance(landing, str) and "arxiv.org/abs/" in landing:
+        return landing.split("arxiv.org/abs/", 1)[-1].split("?", 1)[0].split("#", 1)[0]
+
     return None
 
 

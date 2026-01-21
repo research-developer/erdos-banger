@@ -21,24 +21,37 @@ The codebase has separate clients for each metadata source (`arxiv_client.py`, `
 ```
 src/erdos/core/
 ├── arxiv_client.py      # ArxivClient class
-├── crossref_client.py   # Functions: fetch_crossref_work(), parse_crossref_work()
+├── crossref_client.py   # fetch_crossref_work(), parse_crossref_work()
 ├── openalex_client.py   # OpenAlexClient class
 └── ingest/
-    └── fetch.py         # Hardcoded if/elif for each source
+    └── fetch.py         # Hardcoded source selection + concrete client construction
 ```
 
-The ingest pipeline in `fetch.py` has hardcoded source selection:
+The ingest pipeline in `src/erdos/core/ingest/fetch.py` currently:
+
+1. Selects a metadata source via the `MetadataSource` enum / `source` parameter.
+2. Constructs concrete clients inside the fetch layer (e.g., `OpenAlexClient(config)`).
+3. Uses branching logic inside `fetch_reference_entry()` to decide which concrete code path to run.
 
 ```python
-# Current (DEBT-038)
-if source == "openalex":
-    client = OpenAlexClient()
-    return client.get_by_doi(ref_id)
-elif source == "arxiv":
-    return parse_arxiv_atom(fetch_arxiv_atom(ref_id))
-elif source == "crossref":
-    payload = fetch_crossref_work(ref_id, mailto=mailto, timeout=timeout)
-    return parse_crossref_work(payload, doi=ref_id)
+# Current (as of HEAD, simplified)
+def fetch_reference_entry(..., source: MetadataSource = MetadataSource.OPENALEX) -> ManifestEntry:
+    ...
+    if source == MetadataSource.OPENALEX:
+        if ref.doi:
+            return _fetch_openalex_by_doi(...)
+        if ref.arxiv_id:
+            return _fetch_openalex_by_arxiv(...)
+        raise ValueError(...)
+
+    # Legacy behavior: Crossref/arXiv directly
+    if ref.doi and ref.arxiv_id:
+        return _fetch_doi_with_arxiv(...)
+    if ref.doi:
+        return _fetch_doi_only(...)
+    if ref.arxiv_id:
+        return _fetch_arxiv_only(...)
+    raise ValueError(...)
 ```
 
 ---
@@ -165,7 +178,7 @@ class AppContext:
 
 ## Related
 
-- `BUG-018`: OpenAlex `get_by_arxiv()` is broken (must fix before this refactor)
+- `BUG-018`: OpenAlex `get_by_arxiv()` bug (fixed; see archived bug deck)
 - `SPEC-020`: OpenAlex integration spec
 - `docs/specs/master-qualifications.md`: Section 5 (API Orchestration Strategy)
 
