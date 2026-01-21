@@ -196,7 +196,9 @@ addopts = [
     "--strict-markers",         # Error on unknown markers
     "--strict-config",          # Error on config issues
     "--import-mode=importlib",  # Modern import mode for src layout
-    "--color=yes",              # Force color output
+    # Note: don't force pytest color. In some CI environments, forcing color can
+    # interact poorly with Typer/Rich help rendering under CliRunner (truncated
+    # panels / missing option text). Let pytest auto-detect color support.
 ]
 testpaths = ["tests"]
 markers = [
