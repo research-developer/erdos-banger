@@ -16,7 +16,6 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| DEBT-033 | No retry logic for network failures | P2 | Open |
 | DEBT-034 | Hardcoded MAX_SIZE constant | P3 | Open |
 | DEBT-035 | type: ignore in all exit paths | P2 | Open |
 
@@ -58,6 +57,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-030 | Redundant dual --json flag | P3 | Fixed | ed2c2c8 |
 | DEBT-031 | Rate limiting constant unused | P3 | Fixed | c50766c |
 | DEBT-032 | HTTP responses not closed properly | P2 | Fixed | 5fd4a57 |
+| DEBT-033 | No retry logic for network failures | P2 | Fixed | (pending) |
 
 **Next Debt ID:** DEBT-036
 
@@ -95,3 +95,4 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-030-redundant-json-flag.md`
 - `docs/_archive/debt/debt-031-no-api-rate-limiting.md`
 - `docs/_archive/debt/debt-032-http-response-not-closed.md`
+- `docs/_archive/debt/debt-033-no-retry-logic.md`

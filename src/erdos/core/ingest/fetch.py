@@ -33,6 +33,7 @@ from erdos.core.models import (
     ReferenceEntry,
     ReferenceRecord,
 )
+from erdos.core.retry import fetch_with_retry
 
 
 logger = logging.getLogger(__name__)
@@ -65,20 +66,19 @@ def download_and_extract_arxiv(
         arxiv_cache_path = repo_root / get_arxiv_cache_path(arxiv_id)
         arxiv_extract_path = repo_root / get_arxiv_extract_path(arxiv_id)
 
-        # Download source
+        # Download source with retry for transient failures
         source_url = f"https://arxiv.org/e-print/{arxiv_id}"
         logger.debug("Downloading arXiv source: %s", source_url)
         start_time = time.monotonic()
-        with requests.get(source_url, timeout=timeout) as response:
-            elapsed = time.monotonic() - start_time
-            logger.debug(
-                "arXiv download: %d bytes in %.2fs (status %d)",
-                len(response.content),
-                elapsed,
-                response.status_code,
-            )
-            response.raise_for_status()
-            tarball_bytes = response.content
+        response = fetch_with_retry(source_url, timeout=timeout)
+        elapsed = time.monotonic() - start_time
+        logger.debug(
+            "arXiv download: %d bytes in %.2fs (status %d)",
+            len(response.content),
+            elapsed,
+            response.status_code,
+        )
+        tarball_bytes = response.content
 
         # Write cache
         arxiv_cache_path.parent.mkdir(parents=True, exist_ok=True)

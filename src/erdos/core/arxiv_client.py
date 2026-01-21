@@ -14,9 +14,9 @@ import time
 from datetime import datetime
 
 import defusedxml.ElementTree as ET
-import requests
 
 from erdos.core.models import OpenAccessStatus, ReferenceRecord
+from erdos.core.retry import fetch_with_retry
 
 
 logger = logging.getLogger(__name__)
@@ -118,7 +118,8 @@ def fetch_arxiv_atom(arxiv_id: str, *, timeout: float = 30.0) -> str:
 
     Raises:
         requests.HTTPError: If HTTP request fails.
-        requests.Timeout: If request times out.
+        requests.Timeout: If request times out after all retries.
+        requests.ConnectionError: If connection fails after all retries.
     """
     # Strip version suffix for API query (2203.00001v1 -> 2203.00001)
     arxiv_id_clean = re.sub(r"v\d+$", "", arxiv_id)
@@ -130,17 +131,16 @@ def fetch_arxiv_atom(arxiv_id: str, *, timeout: float = 30.0) -> str:
     logger.debug("Fetching arXiv metadata for ID: %s", arxiv_id)
     start_time = time.monotonic()
 
-    with requests.get(url, params=params, headers=headers, timeout=timeout) as response:
-        elapsed = time.monotonic() - start_time
-        logger.debug(
-            "arXiv response: %d bytes in %.2fs (status %d)",
-            len(response.content),
-            elapsed,
-            response.status_code,
-        )
-        response.raise_for_status()
+    response = fetch_with_retry(url, timeout=timeout, params=params, headers=headers)
+    elapsed = time.monotonic() - start_time
+    logger.debug(
+        "arXiv response: %d bytes in %.2fs (status %d)",
+        len(response.content),
+        elapsed,
+        response.status_code,
+    )
 
-        return response.text
+    return response.text
 
 
 def extract_arxiv_text(tarball_bytes: bytes) -> bytes:

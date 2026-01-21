@@ -10,9 +10,8 @@ import logging
 import time
 from urllib.parse import quote
 
-import requests
-
 from erdos.core.models import ReferenceRecord
+from erdos.core.retry import fetch_with_retry
 
 
 logger = logging.getLogger(__name__)
@@ -102,7 +101,8 @@ def fetch_crossref_work(
 
     Raises:
         requests.HTTPError: If HTTP request fails (e.g., 404 for not found).
-        requests.Timeout: If request times out.
+        requests.Timeout: If request times out after all retries.
+        requests.ConnectionError: If connection fails after all retries.
     """
     encoded_doi = quote(doi, safe="/")
     url = f"https://api.crossref.org/works/{encoded_doi}"
@@ -114,14 +114,13 @@ def fetch_crossref_work(
     logger.debug("Fetching Crossref metadata for DOI: %s", doi)
     start_time = time.monotonic()
 
-    with requests.get(url, params=params, headers=headers, timeout=timeout) as response:
-        elapsed = time.monotonic() - start_time
-        logger.debug(
-            "Crossref response: %d bytes in %.2fs (status %d)",
-            len(response.content),
-            elapsed,
-            response.status_code,
-        )
-        response.raise_for_status()
+    response = fetch_with_retry(url, timeout=timeout, params=params, headers=headers)
+    elapsed = time.monotonic() - start_time
+    logger.debug(
+        "Crossref response: %d bytes in %.2fs (status %d)",
+        len(response.content),
+        elapsed,
+        response.status_code,
+    )
 
-        return response.json()  # type: ignore[no-any-return]
+    return response.json()  # type: ignore[no-any-return]

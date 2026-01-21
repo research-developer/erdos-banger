@@ -42,8 +42,8 @@
   - Deck: `docs/_archive/debt/debt-032-http-response-not-closed.md`
   - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
 
-- [ ] **DEBT-033**: No retry logic for network failures
-  - Deck: `docs/debt/debt-033-no-retry-logic.md`
+- [x] **DEBT-033**: No retry logic for network failures
+  - Deck: `docs/_archive/debt/debt-033-no-retry-logic.md`
   - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
 
 - [ ] **DEBT-034**: Hardcoded `MAX_SIZE` constant
@@ -216,6 +216,25 @@
 - `docs/debt/README.md` - Moved DEBT-032 to Archived
 
 **Note:** Pure refactoring - no behavior change. Context managers ensure HTTP connections are released promptly, avoiding potential resource leaks in high-volume scenarios.
+
+### 2026-01-20: DEBT-033 Retry logic for transient network failures
+
+**Files modified:**
+- `src/erdos/core/constants.py` - Added retry constants: `RETRY_MAX_ATTEMPTS`, `RETRY_BASE_DELAY`, `RETRY_MAX_DELAY`, `RETRYABLE_STATUS_CODES`
+- `src/erdos/core/retry.py` - New module with `fetch_with_retry()`, `is_retryable_error()`, `is_retryable_status_code()` functions
+- `src/erdos/core/crossref_client.py` - Updated `fetch_crossref_work()` to use `fetch_with_retry()`
+- `src/erdos/core/arxiv_client.py` - Updated `fetch_arxiv_atom()` to use `fetch_with_retry()`
+- `src/erdos/core/ingest/fetch.py` - Updated `download_and_extract_arxiv()` to use `fetch_with_retry()`
+- `tests/unit/test_retry.py` - Added 28 new tests for retry logic
+- `docs/_archive/debt/debt-033-no-retry-logic.md` - Status updated to Fixed
+- `docs/debt/README.md` - Moved DEBT-033 to Archived
+
+**Implementation:**
+- Exponential backoff with base delay of 2s, max delay of 30s
+- Retries on: Timeout, ConnectionError, HTTP 429/500/502/503/504
+- No retry on: HTTP 4xx (except 429)
+- Respects Retry-After header on 429 responses
+- DEBUG logging for retry attempts
 
 (entries added by Ralph loop as tasks complete)
 
