@@ -57,9 +57,10 @@ jobs:
         run: uv run --frozen mypy src/ tests/
 
       - name: Tests (no Lean, no network)
-        run: uv run --frozen pytest --cov=erdos --cov-report=xml --cov-fail-under=80 -m "not requires_lean and not requires_network"
+        run: uv run --frozen pytest --cov=erdos --cov-report=xml --cov-fail-under=80 -m "not requires_lean and not requires_network" --color=no
         env:
-          COLUMNS: "200"  # Prevent Rich from truncating help output
+          COLUMNS: "200"
+          NO_COLOR: "1"  # Prevent Rich from truncating help panel content
 
       - name: Smoke test
         run: make smoke
@@ -125,7 +126,7 @@ jobs:
       - name: Run Lean-dependent tests
         run: |
           set +e
-          uv run --frozen pytest -m "requires_lean"
+          uv run --frozen pytest -m "requires_lean" --color=no
           status=$?
           if [ $status -eq 5 ]; then
             echo "No tests collected for marker 'requires_lean'; skipping."
@@ -133,4 +134,5 @@ jobs:
           fi
           exit $status
         env:
-          COLUMNS: "200"  # Prevent Rich from truncating help output
+          COLUMNS: "200"
+          NO_COLOR: "1"  # Prevent Rich from truncating help panel content
