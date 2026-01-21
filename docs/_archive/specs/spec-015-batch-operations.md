@@ -2,8 +2,8 @@
 
 > Adds batch processing for ingest and formalize commands to scale across multiple problems.
 
-**Status:** Deferred
-**Target:** v1.3
+**Status:** Complete
+**Implemented In:** <!-- COMMIT_HASH_PLACEHOLDER -->
 **Prerequisites (SSOT):**
 - Ingest command: `docs/_archive/specs/spec-010-ingest-command.md`
 - Lean integration: `docs/_archive/specs/spec-007-lean-integration.md`

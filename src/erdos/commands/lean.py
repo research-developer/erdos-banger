@@ -1,8 +1,9 @@
-"""erdos lean - Lean 4 integration commands."""
+"""erdos lean - Lean 4 integration commands (SPEC-007, SPEC-015)."""
 
 from __future__ import annotations
 
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any
@@ -13,6 +14,13 @@ from rich.console import Console
 from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
 from erdos.core.aristotle import AristotleError, run_aristotle_prove_from_file
+from erdos.core.batch import (
+    BatchFilters,
+    BatchProgress,
+    BatchResult,
+    filter_problem_ids,
+    generate_batch_id,
+)
 from erdos.core.exit_codes import ExitCode
 from erdos.core.formal_conjectures import (
     FORMAL_CONJECTURES_REPO,
@@ -717,6 +725,205 @@ def prove_with_aristotle(
 
 
 # ============================================================================
+# Batch Formalize (SPEC-015)
+# ============================================================================
+
+err_console = Console(stderr=True)
+
+
+def _formalize_single_problem(
+    problem_id: int,
+    project_path: Path,
+    *,
+    repo: ProblemRepository,
+    force: bool,
+    skip_existing: bool,
+) -> tuple[int, bool, str]:
+    """Formalize a single problem (for batch mode).
+
+    Returns:
+        Tuple of (problem_id, success, message)
+    """
+    # Check if file exists
+    local_path = get_local_file_path(project_path, problem_id)
+    if skip_existing and local_path.exists():
+        return (problem_id, True, "skipped (exists)")
+
+    result = formalize_problem(problem_id, project_path, repo=repo, force=force)
+    if result.success:
+        return (problem_id, True, "OK")
+    else:
+        msg = (
+            result.error.get("message", "unknown")
+            if isinstance(result.error, dict)
+            else "failed"
+        )
+        return (problem_id, False, msg)
+
+
+def batch_formalize(
+    problem_ids: list[int],
+    project_path: Path,
+    *,
+    repo: ProblemRepository,
+    force: bool = False,
+    skip_existing: bool = False,
+    max_concurrent: int = 4,
+    on_progress: Any | None = None,
+) -> BatchResult:
+    """Batch formalize multiple problems with optional parallelism.
+
+    Args:
+        problem_ids: List of problem IDs to formalize
+        project_path: Path to Lean project
+        repo: Problem repository
+        force: Overwrite existing files
+        skip_existing: Skip problems that already have Lean files
+        max_concurrent: Max parallel Lean compilations (default: 4)
+        on_progress: Callback for progress updates
+
+    Returns:
+        BatchResult with outcome details
+    """
+    batch_id = generate_batch_id()
+    completed: list[int] = []
+    failed: list[int] = []
+    total = len(problem_ids)
+
+    with measure_time_ms() as duration:
+        if max_concurrent == 1:
+            # Sequential execution
+            for i, problem_id in enumerate(problem_ids):
+                pid, success, message = _formalize_single_problem(
+                    problem_id,
+                    project_path,
+                    repo=repo,
+                    force=force,
+                    skip_existing=skip_existing,
+                )
+                if success:
+                    completed.append(pid)
+                else:
+                    failed.append(pid)
+
+                if on_progress:
+                    on_progress(
+                        BatchProgress(
+                            problem_id=pid,
+                            index=i,
+                            total=total,
+                            success=success,
+                            message=message,
+                        )
+                    )
+        else:
+            # Parallel execution using ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=max_concurrent) as executor:
+                futures = {
+                    executor.submit(
+                        _formalize_single_problem,
+                        pid,
+                        project_path,
+                        repo=repo,
+                        force=force,
+                        skip_existing=skip_existing,
+                    ): pid
+                    for pid in problem_ids
+                }
+
+                for i, future in enumerate(as_completed(futures)):
+                    pid, success, message = future.result()
+                    if success:
+                        completed.append(pid)
+                    else:
+                        failed.append(pid)
+
+                    if on_progress:
+                        on_progress(
+                            BatchProgress(
+                                problem_id=pid,
+                                index=i,
+                                total=total,
+                                success=success,
+                                message=message,
+                            )
+                        )
+
+    return BatchResult(
+        batch_id=batch_id,
+        total=total,
+        completed_count=len(completed),
+        failed_count=len(failed),
+        failed_ids=failed,
+        duration_ms=duration[0],
+    )
+
+
+def _print_human_batch_formalize(result_data: dict[str, Any]) -> None:
+    """Pretty-print batch formalize results."""
+    batch_id = result_data.get("batch_id", "?")
+    total = result_data.get("total", 0)
+    completed = result_data.get("completed", 0)
+    failed = result_data.get("failed", 0)
+    failed_ids = result_data.get("failed_ids", [])
+    dry_run = result_data.get("dry_run", False)
+
+    if dry_run:
+        console.print(f"\n[yellow]Dry run[/yellow]: Would formalize {total} problems")
+        problem_ids = result_data.get("problem_ids", [])
+        if problem_ids:
+            console.print(f"  Problem IDs: {problem_ids[:20]}")
+            if len(problem_ids) > 20:
+                console.print(f"  ... and {len(problem_ids) - 20} more")
+        return
+
+    if failed == 0:
+        console.print(
+            f"\n[bold green]✓[/bold green] Batch {batch_id} completed: "
+            f"{completed}/{total} succeeded"
+        )
+    else:
+        console.print(
+            f"\n[bold yellow]![/bold yellow] Batch {batch_id} completed: "
+            f"{completed}/{total} succeeded, {failed} failed"
+        )
+        console.print(f"  Failed IDs: {failed_ids}")
+
+
+def _batch_result_to_cli_output_formalize(
+    result: BatchResult, problem_ids: list[int], dry_run: bool
+) -> CLIOutput:
+    """Convert BatchResult to CLIOutput for formalize command."""
+    if result.exit_code != ExitCode.SUCCESS:
+        return CLIOutput.err(
+            command="erdos lean formalize",
+            error_type="BatchError",
+            message=result.error_message,
+            code=result.exit_code,
+        )
+
+    data = {
+        "batch_id": result.batch_id,
+        "mode": "batch",
+        "total": result.total,
+        "completed": result.completed_count,
+        "failed": result.failed_count,
+        "failed_ids": result.failed_ids,
+        "dry_run": dry_run,
+    }
+
+    if dry_run:
+        data["problem_ids"] = problem_ids
+
+    if result.failed_count > 0:
+        output = CLIOutput.ok(command="erdos lean formalize", data=data)
+        output.success = False
+        return output
+
+    return CLIOutput.ok(command="erdos lean formalize", data=data)
+
+
+# ============================================================================
 # CLI Commands
 # ============================================================================
 
@@ -792,16 +999,77 @@ def check(
         raise typer.Exit(code=ExitCode.LEAN_ERROR)
 
 
+def _is_batch_formalize_mode(
+    problem_id: int | None,
+    all_problems: bool,
+    status: str | None,
+    tag: list[str] | None,
+) -> bool:
+    """Determine if batch mode should be activated for formalize."""
+    if all_problems:
+        return True
+    if problem_id is None:
+        return bool(status is not None or tag)
+    return False
+
+
+def _run_batch_formalize(
+    problem_ids: list[int],
+    project_path: Path,
+    *,
+    repo: ProblemRepository,
+    force: bool,
+    skip_existing: bool,
+    max_concurrent: int,
+    dry_run: bool,
+    json_mode: bool,
+) -> CLIOutput:
+    """Execute batch formalize logic."""
+    if dry_run:
+        # Just show what would be processed
+        data = {
+            "batch_id": "",
+            "mode": "batch",
+            "total": len(problem_ids),
+            "completed": 0,
+            "failed": 0,
+            "failed_ids": [],
+            "dry_run": True,
+            "problem_ids": problem_ids,
+        }
+        return CLIOutput.ok(command="erdos lean formalize", data=data)
+
+    # Progress callback for human output
+    def on_progress(progress: BatchProgress) -> None:
+        status_icon = "[green]✓[/green]" if progress.success else "[red]✗[/red]"
+        err_console.print(
+            f"[{progress.index + 1}/{progress.total}] Problem {progress.problem_id}... "
+            f"{status_icon} ({progress.message})"
+        )
+
+    result = batch_formalize(
+        problem_ids,
+        project_path,
+        repo=repo,
+        force=force,
+        skip_existing=skip_existing,
+        max_concurrent=max_concurrent,
+        on_progress=None if json_mode else on_progress,
+    )
+
+    return _batch_result_to_cli_output_formalize(result, problem_ids, dry_run)
+
+
 @app.command()
 def formalize(
     ctx: typer.Context,
     problem_id: Annotated[
-        int,
+        int | None,
         typer.Argument(
-            help="Problem ID to formalize.",
+            help="Problem ID to formalize (omit for batch mode).",
             min=1,
         ),
-    ],
+    ] = None,
     project_path: Annotated[
         Path | None,
         typer.Option(
@@ -828,13 +1096,67 @@ def formalize(
             help="Use cached upstream file only (requires --import-upstream)",
         ),
     ] = False,
+    # Batch options (SPEC-015)
+    all_problems: Annotated[
+        bool,
+        typer.Option("--all", help="Process all problems (batch mode)"),
+    ] = False,
+    status: Annotated[
+        str | None,
+        typer.Option(
+            "--status",
+            help="Filter by status: open, proved, disproved, partially_solved, unknown",
+        ),
+    ] = None,
+    tag: Annotated[
+        list[str] | None,
+        typer.Option("--tag", help="Filter by tag (can be repeated)"),
+    ] = None,
+    limit: Annotated[
+        int | None,
+        typer.Option("--limit", help="Max problems to process"),
+    ] = None,
+    skip_existing: Annotated[
+        bool,
+        typer.Option("--skip-existing", help="Skip problems with existing Lean files"),
+    ] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Show what would be processed"),
+    ] = False,
+    max_concurrent: Annotated[
+        int,
+        typer.Option(
+            "--max-concurrent", help="Max parallel Lean compilations (default: 4)"
+        ),
+    ] = 4,
 ) -> None:
     """
-    Generate a Lean skeleton for a problem.
+    Generate Lean skeletons for problems.
 
-    Creates Erdos/Problem<ID>.lean with theorem stub.
-    Use --import-upstream to import an existing formalization instead.
+    Single mode: Pass a PROBLEM_ID to formalize one problem.
+
+    Batch mode: Omit PROBLEM_ID and use --all or filter options (--status, --tag)
+    to process multiple problems. Supports parallel execution with --max-concurrent.
+
+    Use --import-upstream to import existing formalizations instead.
     """
+    json_mode = bool((ctx.obj or {}).get("json"))
+
+    # Determine mode
+    batch_mode = _is_batch_formalize_mode(problem_id, all_problems, status, tag)
+
+    # Validate: need problem_id or batch filters
+    if not batch_mode and problem_id is None:
+        result = CLIOutput.err(
+            command="erdos lean formalize",
+            error_type="UsageError",
+            message="Provide a PROBLEM_ID or use batch options (--all, --status, --tag)",
+            code=ExitCode.USAGE_ERROR,
+        )
+        exit_with_result(ctx, result, print_human=_print_human)
+        return
+
     with measure_time_ms() as duration:
         app_ctx, app_error = get_app_context(ctx, command="erdos lean formalize")
         if app_error is not None:
@@ -845,8 +1167,36 @@ def formalize(
 
         path = project_path or Path("formal/lean")
 
-        if import_upstream:
-            # Import upstream formalization
+        if batch_mode:
+            # Batch formalize
+            filters = BatchFilters(
+                status=status,
+                tags=tag,
+                limit=limit,
+            )
+            problems = app_ctx.problems.load_all()
+            problem_ids_to_process = filter_problem_ids(problems, filters)
+
+            if not problem_ids_to_process:
+                result = CLIOutput.err(
+                    command="erdos lean formalize",
+                    error_type="NotFoundError",
+                    message="No problems match the given filters",
+                    code=ExitCode.NOT_FOUND,
+                )
+            else:
+                result = _run_batch_formalize(
+                    problem_ids_to_process,
+                    path,
+                    repo=app_ctx.problems,
+                    force=force,
+                    skip_existing=skip_existing,
+                    max_concurrent=max_concurrent,
+                    dry_run=dry_run,
+                    json_mode=json_mode,
+                )
+        elif problem_id is not None and import_upstream:
+            # Import upstream formalization (single problem)
             result = import_upstream_formalization(
                 problem_id,
                 path,
@@ -854,13 +1204,28 @@ def formalize(
                 no_network=no_network,
                 skip_lean_validation=True,  # Skip validation for formalize
             )
-        else:
+        elif problem_id is not None:
+            # Single problem formalize
             result = formalize_problem(
-                problem_id, path, repo=app_ctx.problems, force=force
+                problem_id,
+                path,
+                repo=app_ctx.problems,
+                force=force,
+            )
+        else:
+            # Should be unreachable due to earlier validation
+            result = CLIOutput.err(
+                command="erdos lean formalize",
+                error_type="UsageError",
+                message="Provide a PROBLEM_ID or use batch options",
+                code=ExitCode.USAGE_ERROR,
             )
 
     result.duration_ms = duration[0]
-    exit_with_result(ctx, result, print_human=_print_human)
+
+    # Use appropriate human printer
+    print_fn = _print_human_batch_formalize if batch_mode else _print_human
+    exit_with_result(ctx, result, print_human=print_fn)
 
 
 @app.command()

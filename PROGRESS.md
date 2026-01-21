@@ -90,8 +90,8 @@
   - Acceptance: All spec acceptance criteria met; `make ci` green.
   - Note: Requires `sentence-transformers` optional dep.
 
-- [ ] **SPEC-015**: Batch Operations
-  - Spec: `docs/specs/spec-015-batch-operations.md`
+- [x] **SPEC-015**: Batch Operations
+  - Spec: `docs/_archive/specs/spec-015-batch-operations.md`
   - Target: v1.3
   - Acceptance: All spec acceptance criteria met; `make ci` green.
 
@@ -418,6 +418,36 @@
 - Model mismatch detection prevents searching with incompatible embeddings
 - Cosine similarity normalized to 0..1 range for score mixing
 - Graceful degradation when sentence-transformers not installed (BM25 works without extra deps)
+
+### 2026-01-21: SPEC-015 Batch Operations implemented
+
+**Files created:**
+- `src/erdos/core/rate_limiter.py` - Simple rate limiter with configurable delay, sleep_if_needed(), time_until_next_call(), reset()
+- `src/erdos/core/batch.py` - Batch operations module with BatchFilters, BatchState, BatchResult, BatchRunner, filter_problems(), generate_batch_id(), state file persistence
+- `tests/unit/test_rate_limiter.py` - 14 unit tests for rate limiter initialization, timing, reset behavior
+- `tests/unit/test_batch.py` - 45 unit tests for filters, state, result, batch runner with mocked execution
+- `tests/integration/test_batch_operations.py` - 16 integration tests for CLI batch ingest and batch formalize
+
+**Files modified:**
+- `src/erdos/commands/ingest.py` - Extended IngestOptions with batch fields (all_problems, status, prize_min, prize_max, tags, limit, skip, resume, dry_run, max_concurrent); added batch mode logic with --all, --status, --tag, --dry-run, --resume flags; integrated rate limiter and batch runner
+- `src/erdos/commands/lean.py` - Added batch_formalize() function with ThreadPoolExecutor parallel execution; added batch formalize subcommand to CLI
+- `tests/unit/test_ingest_command_helpers.py` - Updated tests for new _run_single_ingestion function signature
+- `docs/specs/spec-015-batch-operations.md` - Status updated to Complete
+- `docs/specs/README.md` - Moved SPEC-015 from Deferred to Archived; marked v1.3 as DONE
+
+**Features:**
+- `erdos ingest --all` processes all problems matching filters
+- `erdos ingest --status open` filters by problem status
+- `erdos ingest --tag NUMBER_THEORY` filters by problem tags
+- `erdos ingest --prize-min 100 --prize-max 500` filters by prize range
+- `erdos ingest --limit 10 --skip 5` for pagination
+- `erdos ingest --dry-run` shows what would be processed without executing
+- `erdos ingest --resume` continues from last batch state
+- Rate limiting with configurable delay (default 3.0s between problems)
+- Batch state persisted to `.erdos/batch/` for resume support
+- `erdos lean batch-formalize` processes multiple problems with parallel execution
+- `--max-concurrent` controls parallelism (default 4 for formalize)
+- Progress callbacks for UI updates during batch operations
 
 (entries added by Ralph loop as tasks complete)
 

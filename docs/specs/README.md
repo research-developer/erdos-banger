@@ -8,7 +8,7 @@ Design specifications for the erdos-banger CLI toolkit.
 v1.0 (DONE)     Foundation: CLI, data loading, search, Lean integration
 v1.1 (DONE)     Literature: Ingest + RAG Q&A
 v1.2 (DONE)     Iteration: Loop + logging + OpenAlex metadata
-v1.3 (PARTIAL)  Enhancement: Vectors + batch ops
+v1.3 (DONE)     Enhancement: Vectors + batch ops
 v1.4 (FUTURE)   Integration: Formal conjectures + MCP
 v2.0 (READY)    Expansion: PDF conversion (Marker + LLM)
 ```
@@ -33,7 +33,6 @@ Specs designed for future versions.
 
 | ID | Title | Status | Target | Description |
 |----|-------|--------|--------|-------------|
-| 015 | [Batch Operations](spec-015-batch-operations.md) | Deferred | v1.3 | Batch ingest/formalize with rate limiting |
 | 017 | [MCP Server](spec-017-mcp-server.md) | Deferred | v1.4 | Model Context Protocol for AI integration |
 | 019 | [PDF Conversion](spec-019-pdf-conversion.md) | Ready | v2.0 | PDF to text with math preservation (Marker + LLM) |
 
@@ -62,6 +61,7 @@ Completed specs that are fully implemented.
 | 012-DESIGN | Loop Command Design | [archive](../_archive/specs/spec-012-design.md) |
 | 016 | Formal Conjectures | [archive](../_archive/specs/spec-016-formal-conjectures.md) |
 | 014 | Vector Embeddings | [archive](../_archive/specs/spec-014-vector-embeddings.md) |
+| 015 | Batch Operations | [archive](../_archive/specs/spec-015-batch-operations.md) |
 
 **Next Spec ID:** SPEC-022
 
@@ -92,9 +92,9 @@ v1.2 Iteration & Metadata (DONE)
 v1.2+ Optional Proving Backend (DONE)
 └── 021 Aristotle Integration ←── 007 Lean
 
-v1.3 Enhancement (PARTIAL)
+v1.3 Enhancement (DONE)
 ├── 014 Vector Embeddings ←── 006 Search Index (DONE)
-└── 015 Batch Operations ←── 010 Ingest + 007 Lean
+└── 015 Batch Operations ←── 010 Ingest + 007 Lean (DONE)
 
 v1.4 Integration (PARTIAL)
 ├── 016 Formal Conjectures ←── 007 Lean (DONE)
