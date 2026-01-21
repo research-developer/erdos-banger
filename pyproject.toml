@@ -164,6 +164,10 @@ module = "mcp.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
+module = "erdos.mcp.*"
+disallow_untyped_decorators = false  # FastMCP decorators lack type annotations
+
+[[tool.mypy.overrides]]
 module = [
     "marker",
     "marker.*",
@@ -210,6 +214,9 @@ filterwarnings = [
 source = ["src"]
 branch = true
 parallel = true
+omit = [
+    "src/erdos/mcp/*",  # Optional dependency, tested separately
+]
 
 [tool.coverage.report]
 exclude_lines = [
