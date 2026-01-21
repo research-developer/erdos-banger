@@ -1,8 +1,8 @@
 # erdos-banger - Ralph Wiggum Progress Tracker
 
-**Last Updated:** 2026-01-20
-**Status:** Ready - Debt Sprint (DEBT-026, 027, 028)
-**Branch:** ralph-wiggum
+**Last Updated:** 2026-01-21
+**Status:** Ready - Debt Sprint (DEBT-029..DEBT-035)
+**Branch:** ralph-wiggum-v1.2
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
 ---
@@ -26,17 +26,33 @@
 
 ## Active Queue
 
-- [x] **DEBT-026**: Long functions remain (≥ 80 LOC)
-  - Deck: `docs/debt/debt-026-long-functions-remain.md`
-  - Acceptance: Each core function ≥80 LOC is reduced below 80 LOC, or explicitly justified with an inline "linear parsing" rationale; new helpers are pure where possible with unit tests; `make ci` green.
+- [ ] **DEBT-029**: Logging coverage gaps
+  - Deck: `docs/debt/debt-029-no-logging-usage.md`
+  - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
 
-- [x] **DEBT-027**: Broad `except Exception` catches (masking risk)
-  - Deck: `docs/debt/debt-027-broad-exception-catches.md`
-  - Acceptance: Core service layers no longer use `except Exception` except where re-raising after cleanup; CLI boundary code returns friendly errors but retains debug signal; `make ci` green.
+- [ ] **DEBT-030**: Redundant dual `--json` flag
+  - Deck: `docs/debt/debt-030-redundant-json-flag.md`
+  - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
 
-- [x] **DEBT-028**: Ingest manifest churn (non-idempotent writes)
-  - Deck: `docs/debt/debt-028-ingest-manifest-churn.md`
-  - Acceptance: Running `erdos ingest <id>` twice with `--no-network --no-download` produces no file diffs when no content changes; clear policy on whether `literature/manifests/` is tracked or local-only; `make ci` green.
+- [ ] **DEBT-031**: API rate limiting missing / constant unused
+  - Deck: `docs/debt/debt-031-no-api-rate-limiting.md`
+  - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
+
+- [ ] **DEBT-032**: HTTP responses not closed properly
+  - Deck: `docs/debt/debt-032-http-response-not-closed.md`
+  - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
+
+- [ ] **DEBT-033**: No retry logic for network failures
+  - Deck: `docs/debt/debt-033-no-retry-logic.md`
+  - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
+
+- [ ] **DEBT-034**: Hardcoded `MAX_SIZE` constant
+  - Deck: `docs/debt/debt-034-hardcoded-max-size.md`
+  - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
+
+- [ ] **DEBT-035**: `type: ignore` in exit paths
+  - Deck: `docs/debt/debt-035-type-ignore-exit-paths.md`
+  - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
 
 ---
 

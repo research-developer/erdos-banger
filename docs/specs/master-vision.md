@@ -169,87 +169,38 @@ Note: In the diagram, "lean form" is shorthand for `erdos lean formalize`.
 
 ## 3) Repo Structure
 
-Below is a proposed repository file tree. Directories are marked with a trailing `/`. We indicate which parts are committed to git and which are user-local (ignored or generated).
+Below is the **current** repository layout (SSOT as of v1.1). Directories are marked with a trailing `/`. We indicate which parts are committed to git vs generated/ignored.
 
-```
+```text
 erdos-banger/
-├── README.md                   # Project overview, setup, basic usage (committed)
-├── LICENSE                     # Project license (committed, Apache-2.0)
-├── pyproject.toml              # PEP 621 project config (committed)
-├── uv.lock                     # Locked dependencies (committed)
-├── .python-version             # Dev Python pin (committed)
-├── src/                        # Python package source (committed)
-│   └── erdos/
-│       ├── __init__.py
-│       ├── cli.py              # Typer entry point (committed)
-│       ├── commands/           # Implementation of each subcommand (committed)
-│       │   ├── list_cmd.py, show.py, refs.py, ingest.py, ... (committed)
-│       ├── core/               # Core library (committed)
-│       │   ├── problem_loader.py   # Loads YAML from dataset (committed)
-│       │   ├── search_index.py     # Builds/queries SQLite FTS (committed)
-│       │   ├── lean_runner.py      # Runs Lake/Lean, parses errors (committed)
-│       │   ├── ingest_refs.py      # Metadata fetch & conversion (committed)
-│       │   └── models.py           # Pydantic models (committed)
-│       ├── agents/             # (Optional) LLM agent wrappers (deferred)
-│       │   └── loop_agent.py
-│       └── py.typed            # PEP 561 marker (committed)
-├── data/                       # Problem dataset (upstream + local enrichments)
-│   ├── problems_enriched.yaml  # Enriched v1 dataset (titles/statements) (committed)
-│   └── erdosproblems/          # teorth/erdosproblems submodule (not our code)
-│       ├── data/problems.yaml  # Upstream metadata-only dataset (not modified)
-│       └── ...                 # other files from the dataset
-├── literature/
-│   ├── manifests/              # Metadata manifests for references (committed or generated)
-│   │   ├── 0001.yaml           # Example: references for problem #1 (committed after ingest)
-│   │   └── ...
-│   ├── cache/                  # Fulltext cache (not in git, user local)
-│   │   ├── arxiv_1234567v1.pdf # example cached PDF (if legally allowed, otherwise not present)
-│   │   ├── arxiv_2201.00001.tar.gz # cached arXiv source if OA (not committed)
-│   │   └── ...
-│   └── extracts/               # Processed text extracts (e.g., markdown/HTML of papers) (git-ignored, can be regenerated)
-│       └── 0001_ref1.txt       # e.g. text of first reference for problem 1
-├── index/
-│   ├── erdos.sqlite            # SQLite database with FTS index and metadata (built) (git-ignored)
-│   ├── index.cfg               # Index configuration (committed, e.g. embedding model used)
-│   └── pgvector.sql            # (Optional) schema for Postgres if used (committed)
-├── formal/
-│   └── lean/                   # Lean4 project root (committed)
-│       ├── lean-toolchain      # Lean version (e.g. leanprover/lean4:v4.12.0) (committed)
-│       ├── lakefile.lean       # Lake configuration (committed)
-│       ├── .lake/              # Lake deps/build artifacts (git-ignored)
-│       ├── Erdos/              # Our Lean files for each problem (committed)
-│       │   ├── Problem001.lean # auto-generated skeleton for problem 1 (committed)
-│       │   ├── Problem001ProofAttempts.lean # iterative attempts (committed)
-│       │   └── ...
-│       └── build/              # Build artifacts (.olean files etc.) (git-ignored)
-├── .claude/
-│   └── skills/                 # Claude Code project-local skills (committed)
-│       ├── add_problem_note.SKILL.md        # Skill 1
-│       ├── triage_literature.SKILL.md       # Skill 2
-│       ├── generate_lean_skeleton.SKILL.md  # Skill 3
-│       ├── interpret_lean_errors.SKILL.md   # Skill 4
-│       ├── run_repro_loop.SKILL.md          # Skill 5
-│       └── contributor_policy.SKILL.md      # Skill 6
-├── scripts/
-│   ├── init_repo.sh            # Bash script for initial setup (submodule init, etc.) (committed)
-│   ├── ingest_all.sh           # Example script to ingest all open problems (committed)
-│   └── ...
-├── logs/
-│   ├── run_20260116_103000Z.yaml    # Sample log of a full run (timestamped) (git-ignored)
-│   ├── lean_errors_Problem001.json  # Extracted Lean errors for problem 1 (git-ignored)
-│   └── ...
-├── docs/
-│   ├── architecture.md         # More detailed architecture notes (committed)
-│   ├── user-guide.md           # Usage instructions (committed)
-│   ├── contributor-guide.md    # For open-source contributors (committed)
-│   ├── legal.md                # Licensing and data policy (committed)
-│   └── evaluation.md           # Plan for metrics and testing (committed)
-└── tests/
-    ├── test_cli_basic.py       # Basic tests for CLI outputs (committed)
-    ├── test_ingest.py          # Tests for ingestion logic (with sample data) (committed)
-    ├── test_search.py          # Tests for search indexing and querying (committed)
-    ├── test_lean.py            # Tests for Lean integration (mocking lean if needed) (committed)
-    └── ...
+├── src/erdos/                    # Python package (committed)
+│   ├── cli.py                    # Typer entry point + global flags
+│   ├── commands/                 # CLI subcommands (list/show/refs/search/ingest/ask/lean)
+│   ├── core/                     # Core logic (loader, search index, ingest, ask, Lean runner)
+│   ├── templates/                # Jinja2 templates (e.g., `lean_skeleton.j2`)
+│   └── data/                     # Built-in sample dataset (`problems_enriched.yaml`)
+├── tests/                        # pytest suite + fixtures (committed)
+├── docs/                         # specs, bugs/debt, protocol, archive (committed)
+│   ├── INDEX.md
+│   ├── specs/
+│   ├── bugs/
+│   ├── debt/
+│   ├── _archive/
+│   └── _ralphwiggum/
+├── data/                         # local + upstream datasets
+│   └── erdosproblems/            # teorth/erdosproblems submodule (metadata-only; committed via git submodule)
+├── data/problems_enriched.yaml   # local enriched dataset (gitignored; user-provided)
+├── literature/manifests/         # reference manifests (committed)
+├── literature/cache/             # downloads (gitignored)
+├── literature/extracts/          # extracted text (gitignored)
+├── index/*.sqlite                # SQLite FTS index (gitignored)
+├── formal/lean/                  # Lean project scaffold (committed)
+├── formal/lean/.lake/            # Lean deps/build artifacts (gitignored)
+├── logs/                         # run logs (gitignored)
+├── scripts/                      # helper scripts (committed)
+├── Makefile                      # local dev + CI convenience targets (committed)
+├── pyproject.toml / uv.lock      # deps + tool configs (committed)
+└── PROMPT.md / PROGRESS.md       # Ralph Wiggum loop prompt + state (committed)
 ```
 
 ### What's Committed vs Ignored
@@ -259,7 +210,7 @@ erdos-banger/
 - The erdosproblems dataset (as a submodule to keep it separate but versioned)
 - Structured manifests (YAML/JSON listing reference metadata) – these contain DOIs, arXiv IDs, etc., but not full paper text
 - Lean files and their updates (this is part of our work product)
-- The `.claude/skills` (project-specific LLM skills) are committed so that they can be shared and versioned
+- Ralph Wiggum protocol docs under `docs/_ralphwiggum/` and loop state files (`PROMPT.md`, `PROGRESS.md`) are committed so they can be shared and versioned
 
 **Git-ignored:**
 - Any large or non-redistributable data, including:
@@ -274,7 +225,7 @@ erdos-banger/
 
 ### Schema & Model Files
 
-We'll have Pydantic models in `src/erdos/core/models.py` (see Spec 003) for key entities:
+We'll have Pydantic models in `src/erdos/core/models/` (SSOT: `docs/_archive/specs/spec-003-domain-models.md`) for key entities:
 
 - **ProblemRecord:** Enriched internal representation used by the CLI. The upstream `teorth/erdosproblems` `data/problems.yaml` is metadata-only (no titles/statements); we supplement it via local enrichments and/or other sources (see Spec 005). Fields include `id`, `status`, `prize`, `tags`, plus enriched fields like `title`, `statement`, `references`, `notes`, and `formalized`.
 
@@ -296,15 +247,15 @@ All JSON output from commands will include a top-level `schema_version` and comm
 
 The CLI, invoked as `erdos`, supports multiple subcommands corresponding to stages of the workflow. Each command follows consistent conventions:
 
-- Non-interactive by default (no prompts unless `--yes` for confirmations)
-- Returns exit code 0 on success, nonzero on failure (different codes for different failure types)
-- Accepts `--json` to output machine-readable JSON (with a defined schema and version)
-- All commands respect global flags:
+- Non-interactive by default in v1.1 (no prompts).
+- Returns exit code 0 on success, nonzero on failure (different codes for different failure types).
+- Supports machine-readable output via the `CLIOutput` JSON envelope (`schema_version`, `command`, `success`, `data`, `error`, plus timing fields).
+- Global flags implemented in v1.1 (SSOT: `src/erdos/cli.py`):
   - `--json` (machine-readable output)
   - `--log-level` (e.g. DEBUG/INFO/WARN/ERROR)
   - `--version` (print version and exit)
 
-  Deferred / command-scoped flags (not global in v1): `--config`, `--cache-dir`, `--trace`, `--no-network`, `--resume`, `--yes`/`--no-input`
+Command-specific flags vary by command (SSOT: `erdos <command> --help`). In v1.1, for example, `erdos ingest` supports `--no-network` and `--no-download`.
 
 ### Commands and Usage
 
@@ -312,16 +263,19 @@ The CLI, invoked as `erdos`, supports multiple subcommands corresponding to stag
 
 List problems with optional filters. This reads the problem data (from the YAML or our imported JSON).
 
-**Filters:**
-- `--status` (e.g. open/proved/disproved)
-- `--prize` (yes/no or min-max prize amount)
-- `--tag` (match one or multiple tags, e.g. `--tag "number theory"`)
+**Filters (v1.1 SSOT):**
+- `--status` (e.g. `open`, `proved`, `disproved`, `partially_solved`, `unknown`)
+- `--prize-min INT`, `--prize-max INT`
+- `--tag TEXT` (repeatable)
+- `--limit INT`
 
 For instance, `erdos list --status open --prize-min 1000` lists open problems with prize ≥ $1000.
 
-**Output:** In human mode, a table with columns: ID, prize, status, title (shortened), maybe tags. In JSON, an array of ProblemRecords (with id and summary fields).
+**Output (v1.1):**
+- Human: a table with ID, status, prize, title, tags
+- JSON: a `CLIOutput` envelope containing a list of problem summaries (SSOT: `erdos.core.models.CLIOutput`)
 
-**Exit codes:** 0 if results found (even if empty list), 0 as well if no results (but maybe we differentiate by a message). Nonzero only if an error (e.g., dataset not found). Possibly use exit code 2 to indicate "no results" vs 1 for general error.
+**Exit codes (v1.1):** Exit code 0 on success (including empty results). Nonzero only for errors (e.g., dataset parse failure).
 
 **No network required.**
 
@@ -335,33 +289,16 @@ Show detailed info for a single problem.
 
 **Behavior:** Loads that problem from the dataset. Outputs the full problem statement, status, prize info, tags, and references list. Essentially a nicely formatted view of the YAML entry.
 
-**In JSON:** Returns a full ProblemRecord JSON (including list of reference keys/IDs but not the actual reference metadata, which might not be loaded yet until ingestion).
+**In JSON (v1.1):** Returns a `CLIOutput` envelope containing the full `ProblemRecord` under `data`. References are the problem's embedded `ReferenceEntry` records from the enriched dataset.
 
 **No network.**
 
 **Errors:** Nonzero exit if problem_id not found (exit code e.g. 3 for "not found").
 
-**Example:** `erdos show 100 --json` → outputs JSON like:
-```json
-{
-  "schema_version": 1,
-  "command": "erdos show",
-  "success": true,
-  "data": {
-    "id": 100,
-    "title": "...",
-    "statement": "...",
-    "status": "open",
-    "prize": 0,
-    "tags": ["number theory"],
-    "references": [{"key": "Erdos1975", "citation": "..."}],
-    "oeis_ids": [],
-    "notes": null,
-    "formalized": false
-  },
-  "error": null
-}
-```
+**Example (v1.1):** `erdos show 6 --json` emits a `CLIOutput` envelope:
+- `data.id`, `data.title`, `data.statement`, `data.status`, `data.prize`, `data.tags`
+- `data.references[]` entries (key, citation, optional doi/arXiv/url)
+- `timestamp`, `duration_ms` for observability
 
 In human output, could show a markdown-like output (title, statement, references enumerated).
 
@@ -371,24 +308,17 @@ In human output, could show a markdown-like output (title, statement, references
 
 List references for a problem, with available metadata.
 
-**Behavior:** Lists `ProblemRecord.references` from the enriched problems YAML. The upstream `teorth/erdosproblems` `data/problems.yaml` is metadata-only and does not contain reference lists. For v1, `erdos refs` is YAML-only (no API enrichment).
+**Behavior (v1.1):** Lists `ProblemRecord.references` from the enriched problems dataset. `erdos refs` is read-only and does not perform network calls.
 
-If ingestion was run (see next command), we can enhance output with fetched metadata (like actual titles, DOIs, etc.). Possibly `refs` triggers an ingest if none exists, or we separate concerns: `refs` just shows what's in the dataset, and `ingest` must be called to fetch details. A compromise: `refs` could check if a manifest exists (e.g. `literature/manifests/0001.yaml` for problem 1) and if not, print "(metadata not ingested)".
-
-**Output:** Numbered list of references. For example:
-1. Paul Erdős (1975), Some old and new problems in combinatorial number theory. J. Number Theory etc (with DOI if available).
-
-Or a placeholder if minimal info. JSON output would give an array of ReferenceRecords (with available fields; if not ingested, just what we know like author/title string).
-
-**Network:** Not needed if already ingested; if not ingested, we don't fetch automatically unless `--ingest` flag is passed for convenience. Keep `refs` read-only by default.
-
-**Example:** `erdos refs 42` might list "(No references listed)" if none in dataset, or a few references. If `--json`, list objects with known keys (maybe containing doi or arxivId if present in YAML).
+**Output (v1.1):**
+- Human: a table of embedded references (key, citation, optional DOI/arXiv).
+- JSON: `CLIOutput` envelope with `data.problem_id` and `data.references[]`.
 
 #### 4. `erdos ingest <problem_id>`
 
 Ingest (fetch) reference data for a problem. This is a key step involving external APIs, and may be interactive or lengthy.
 
-**v1.1 SSOT:** `docs/specs/spec-010-ingest-command.md`. In v1.1, ingest is intentionally scoped to:
+**v1.1 SSOT:** `docs/_archive/specs/spec-010-ingest-command.md`. In v1.1, ingest is intentionally scoped to:
 - arXiv metadata + source tarball caching + best-effort plain-text extract
 - Crossref metadata for DOI references (no full-text download)
 - No Unpaywall/OpenAlex/Semantic Scholar fallbacks
@@ -423,13 +353,11 @@ For each reference:
 
 Build or update the search index. In v1, this is exposed via `erdos search --build-index` rather than a dedicated `erdos index build` command.
 
-**Behavior:**
-- Ensure the SQLite (or Postgres) DB is set up (if not, create schema)
-- Insert/update Problem texts: the problem statements themselves can be searchable content
-- Insert reference texts (future): For each reference that has an extracted text, break into chunks (maybe 200-300 words per chunk). Store each chunk with a link to the reference and index it in SQLite FTS5. (In v1.0 the index builder only indexes problem statements/notes; ingestion extracts become searchable once a later indexing spec adds reference chunk indexing.) Future extension: compute embeddings for each chunk (Spec 014).
-- Save the index
+**Behavior (v1.1):**
+- Builds/rebuilds a local SQLite FTS5 index for **problem content** (statements/notes).
+- Literature extract indexing is deferred (see Spec 014 and related future work).
 
-**Output:** Human mode: some stats – "Indexed 50 problems and 120 references (980 chunks). FTS terms: ~10k, vector dim: 384." JSON: could output summary stats with counts.
+**Output (v1.1):** Progress messages are written to stderr. In `--json` mode, stdout is reserved for the final `CLIOutput` JSON.
 
 **Exit codes:** 0 on success, nonzero on failure.
 
@@ -441,9 +369,11 @@ Search the index for a query string.
 
 **Behavior:** Performs a keyword search against the local BM25 index (SQLite FTS5). Vector search is deferred until after the v1 BM25 pipeline is stable.
 
-**Output:** In human mode, a list of snippet results. JSON output: an array of RetrievedChunk objects.
+**Output (v1.1):**
+- Human: a list of snippet results (with highlighting when using FTS).
+- JSON: `CLIOutput` envelope with `data.results[]` including `chunk_id`, `snippet`, `score`, `source_type`, `problem_id`, and `title`.
 
-**Parameters:** Could support `--top-k 10` to adjust number of results.
+**Parameters (v1.1):** Supports `--limit` and optional `--problem` filter; `--build-index` rebuilds the index before searching.
 
 **No new network calls (uses local index).**
 
@@ -453,22 +383,20 @@ Search the index for a query string.
 
 Ask a question about a specific problem, get a citation-grounded answer.
 
-**Behavior:** (v1.1+) Invokes an LLM via the local environment (Claude Code workflow). Runs retrieval-augmented generation:
-- Searches the index with a query composed of [problem context + question]
-- Constructs a prompt for the LLM including retrieved snippets with citations
-- Post-processes the answer to ensure citations are properly numbered
+**v1.1 SSOT:** `docs/_archive/specs/spec-011-ask-command.md`.
 
-**Output:** A nicely formatted answer with citations. JSON mode provides answer text and a `sources` array.
+**Behavior (v1.1):**
+- Retrieves relevant sources from the local search index (problem content in v1.1).
+- Builds a deterministic prompt (problem + retrieved sources + question).
+- Optionally executes an external LLM subprocess (configurable; can be disabled with `--no-llm`).
 
-**Network:** Possibly required for LLM API call.
-
-**Example:** `erdos ask 100 "What partial results are known?"` returns a summary with citations.
+**Output (v1.1):** Human mode prints the answer. JSON mode returns a `CLIOutput` envelope containing the prompt, answer (or `null` in `--no-llm` mode), and a `sources[]` array.
 
 #### 8. `erdos lean init`
 
 Set up the Lean 4 project (if not already).
 
-**Behavior:** Initialize `formal/lean/` as a Lean project. Handle dependency setup: ensure elan is installed, run `lake update` to fetch mathlib4, etc.
+**Behavior (v1.1):** Ensures the Lean project scaffold exists under `formal/lean/` and validates required tooling. If `lake` is missing, it returns a structured error with instructions.
 
 **Output:** Confirmation that Lean project is ready.
 
@@ -507,7 +435,7 @@ Run an interactive (or automated) loop of Lean proof attempts using an LLM agent
 5. Apply changes, repeat
 6. Log every iteration
 
-**Safety:** Limit to N iterations or require user confirmation each step unless `--yes`.
+**Status:** Deferred to v1.2+ (SPEC-012). Not implemented in v1.1.
 
 **Output:** Stream the process in human mode. JSON output references log file.
 
@@ -515,14 +443,21 @@ Run an interactive (or automated) loop of Lean proof attempts using an LLM agent
 
 ### Global Flags and Behavior
 
-- Global flags implemented in v1 (SSOT: `src/erdos/cli.py`): `--json`, `--log-level`, `--version`
-- Deferred / command-scoped flags (not global in v1): `--config`, `--cache-dir`, `--trace`, `--no-network`, `--resume`, `--yes`/`--no-input`
+Global flags implemented in v1.1 (SSOT: `src/erdos/cli.py`): `--json`, `--log-level`, `--version`.
 
 ### Error Model and JSON Failure Outputs
 
 Structured error JSON for `--json` mode:
 ```json
-{ "schema_version": 1, "command": "erdos show", "success": false, "data": null, "error": { "type": "NotFound", "message": "Problem 9999 not found", "code": 3 } }
+{
+  "schema_version": 1,
+  "command": "erdos show",
+  "success": false,
+  "data": null,
+  "error": { "type": "NotFound", "message": "Problem 9999 not found", "code": 3 },
+  "timestamp": "2026-01-01T00:00:00Z",
+  "duration_ms": 0
+}
 ```
 
 ### Command Contract for Automation

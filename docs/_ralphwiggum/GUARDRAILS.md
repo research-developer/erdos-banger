@@ -36,8 +36,10 @@ This document is a **living record** of guardrails, failure patterns, and “got
 ### FP-004: Secrets accidentally end up in tracked logs
 
 - Symptom: API keys (or other secrets) are copied into tracked files during debugging or loop summaries.
-- Common cause: pasting raw `.env` content or command output into `ralph.log` or docs.
-- Mitigation: never paste secrets; keep `.env` gitignored; scan tracked logs (`rg -n "sk-" ralph.log`) before pushing.
+- Common cause: pasting raw `.env` content or command output into tracked files (docs, specs, prompts).
+- Mitigation: never paste secrets; keep `.env` gitignored; scan tracked files and staged diffs before pushing:
+  - `git diff --cached | rg -n "sk-"` (what you're about to push)
+  - `git ls-files -z | xargs -0 rg -n "sk-"` (full tracked tree)
 
 ---
 

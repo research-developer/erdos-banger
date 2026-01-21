@@ -68,17 +68,17 @@ git checkout dev
 git pull origin dev
 
 # Create Ralph branch
-git checkout -b ralph-wiggum-v1.1
+git checkout -b ralph-wiggum-v1.2
 
 # Push to remote for backup
-git push -u origin ralph-wiggum-v1.1
+git push -u origin ralph-wiggum-v1.2
 ```
 
 **Branch hierarchy:**
 ```
 main (protected, production)
   └── dev (integration, manual merges)
-        └── ralph-wiggum-v1.1 (autonomous work)
+        └── ralph-wiggum-v1.2 (autonomous work)
 ```
 
 ### Step 2: File Structure
@@ -87,7 +87,7 @@ main (protected, production)
 erdos-banger/
 ├── PROMPT.md                    # Loop prompt (root)
 ├── PROGRESS.md                  # State tracker (root)
-├── ralph.log                    # Tracked marker file (may be reset; never log secrets)
+├── logs/ralph/                  # Per-iteration logs (gitignored; safe to delete between runs)
 ├── docs/
 │   ├── _ralphwiggum/
 │   │   └── protocol.md          # This file
@@ -115,7 +115,7 @@ tmux attach -t erdos-ralph
 ```bash
 # Navigate to project
 cd /path/to/erdos-banger
-git checkout ralph-wiggum-v1.1
+git checkout ralph-wiggum-v1.2
 
 # THE RALPH LOOP (bounded by iteration + wall-clock timeouts)
 #
@@ -142,6 +142,7 @@ if [[ -z "$TIMEOUT_CMD" ]]; then
   fi
 fi
 
+rm -rf logs/ralph 2>/dev/null || true
 mkdir -p logs/ralph
 
 "$TIMEOUT_CMD" "$TIMEOUT" bash -c '

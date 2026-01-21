@@ -11,7 +11,7 @@
 - Search index: `docs/_archive/specs/spec-006-search-index.md`
 - Lean integration: `docs/_archive/specs/spec-007-lean-integration.md`
 - Optional tools require their owning specs:
-  - `ask_question`: `docs/specs/spec-011-ask-command.md`
+  - `ask_question`: `docs/_archive/specs/spec-011-ask-command.md`
   - `get_logs`: `docs/specs/spec-013-logging-evaluation.md`
   - semantic/hybrid modes: `docs/specs/spec-014-vector-embeddings.md`
   - formalization import/status: `docs/specs/spec-016-formal-conjectures.md`

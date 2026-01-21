@@ -5,7 +5,7 @@
 **Status:** Ready
 **Target:** v1.2+
 **Prerequisites (SSOT):**
-- Ingest command: `docs/specs/spec-010-ingest-command.md`
+- Ingest command: `docs/_archive/specs/spec-010-ingest-command.md`
 - Literature paths: `src/erdos/core/literature_paths.py`
 
 ---
@@ -390,16 +390,25 @@ class OpenAlexClient:
         ...
 ```
 
-### 7.2 Update: `src/erdos/core/ingest.py`
+### 7.2 Update: `src/erdos/core/ingest/fetch.py`
 
 Add OpenAlex as primary metadata source:
 
 ```python
 from erdos.core.openalex_client import OpenAlexClient
 from erdos.core.arxiv_client import fetch_arxiv_atom, parse_arxiv_atom
+from erdos.core.crossref_client import fetch_crossref_work, parse_crossref_work
 
-def ingest_reference(ref_id: str, source: str = "openalex") -> ReferenceRecord:
-    """Ingest reference metadata from specified source."""
+# NOTE: In v1.1 the ingest pipeline fetches metadata in `fetch_reference_entry(...)`.
+# Extend that pipeline to allow selecting the metadata source (default: openalex).
+def _fetch_reference_metadata(
+    ref_id: str,
+    *,
+    source: str = "openalex",
+    mailto: str,
+    timeout: float,
+) -> ReferenceRecord:
+    """Fetch reference metadata from a specified source."""
 
     if source == "openalex":
         client = OpenAlexClient()
@@ -413,6 +422,12 @@ def ingest_reference(ref_id: str, source: str = "openalex") -> ReferenceRecord:
     elif source == "arxiv":
         return parse_arxiv_atom(fetch_arxiv_atom(ref_id))
 
+    elif source == "crossref":
+        if not is_doi(ref_id):
+            raise ValueError(f"Crossref source requires DOI, got: {ref_id}")
+        payload = fetch_crossref_work(ref_id, mailto=mailto, timeout=timeout)
+        return parse_crossref_work(payload, doi=ref_id)
+
     # ... other sources
 ```
 
@@ -420,15 +435,11 @@ def ingest_reference(ref_id: str, source: str = "openalex") -> ReferenceRecord:
 
 ## 8) Dependencies
 
+**SSOT (v1.1):** `requests` is already a core dependency (see `pyproject.toml`). This spec only needs an optional extra for PyAlex (if desired).
+
 Add to `pyproject.toml`:
 
 ```toml
-[project]
-dependencies = [
-    # ... existing deps
-    "requests>=2.32.5",  # Used by ingest + OpenAlex client
-]
-
 [project.optional-dependencies]
 openalex = [
     "pyalex>=0.14.0",  # Optional: nicer API
