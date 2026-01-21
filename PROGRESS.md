@@ -38,8 +38,8 @@
   - Deck: `docs/_archive/debt/debt-031-no-api-rate-limiting.md`
   - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
 
-- [ ] **DEBT-032**: HTTP responses not closed properly
-  - Deck: `docs/debt/debt-032-http-response-not-closed.md`
+- [x] **DEBT-032**: HTTP responses not closed properly
+  - Deck: `docs/_archive/debt/debt-032-http-response-not-closed.md`
   - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
 
 - [ ] **DEBT-033**: No retry logic for network failures
@@ -205,6 +205,17 @@
 - `docs/debt/README.md` - Moved DEBT-031 to Archived
 
 **Decision:** Per-reference throttling (not per-request). Each reference makes at most 1-3 API requests, so a 3-second delay between references satisfies typical API rate limits.
+
+### 2026-01-20: DEBT-032 HTTP responses use context managers
+
+**Files modified:**
+- `src/erdos/core/crossref_client.py` - Wrap `requests.get()` in `with` statement for proper connection cleanup
+- `src/erdos/core/arxiv_client.py` - Wrap `requests.get()` in `with` statement for proper connection cleanup
+- `src/erdos/core/ingest/fetch.py` - Wrap `requests.get()` in `with` statement for proper connection cleanup
+- `docs/_archive/debt/debt-032-http-response-not-closed.md` - Status updated to Fixed (archived)
+- `docs/debt/README.md` - Moved DEBT-032 to Archived
+
+**Note:** Pure refactoring - no behavior change. Context managers ensure HTTP connections are released promptly, avoiding potential resource leaks in high-volume scenarios.
 
 (entries added by Ralph loop as tasks complete)
 

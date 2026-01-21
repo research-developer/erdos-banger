@@ -130,17 +130,17 @@ def fetch_arxiv_atom(arxiv_id: str, *, timeout: float = 30.0) -> str:
     logger.debug("Fetching arXiv metadata for ID: %s", arxiv_id)
     start_time = time.monotonic()
 
-    response = requests.get(url, params=params, headers=headers, timeout=timeout)
-    elapsed = time.monotonic() - start_time
-    logger.debug(
-        "arXiv response: %d bytes in %.2fs (status %d)",
-        len(response.content),
-        elapsed,
-        response.status_code,
-    )
-    response.raise_for_status()
+    with requests.get(url, params=params, headers=headers, timeout=timeout) as response:
+        elapsed = time.monotonic() - start_time
+        logger.debug(
+            "arXiv response: %d bytes in %.2fs (status %d)",
+            len(response.content),
+            elapsed,
+            response.status_code,
+        )
+        response.raise_for_status()
 
-    return response.text
+        return response.text
 
 
 def extract_arxiv_text(tarball_bytes: bytes) -> bytes:

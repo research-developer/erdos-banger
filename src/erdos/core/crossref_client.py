@@ -114,14 +114,14 @@ def fetch_crossref_work(
     logger.debug("Fetching Crossref metadata for DOI: %s", doi)
     start_time = time.monotonic()
 
-    response = requests.get(url, params=params, headers=headers, timeout=timeout)
-    elapsed = time.monotonic() - start_time
-    logger.debug(
-        "Crossref response: %d bytes in %.2fs (status %d)",
-        len(response.content),
-        elapsed,
-        response.status_code,
-    )
-    response.raise_for_status()
+    with requests.get(url, params=params, headers=headers, timeout=timeout) as response:
+        elapsed = time.monotonic() - start_time
+        logger.debug(
+            "Crossref response: %d bytes in %.2fs (status %d)",
+            len(response.content),
+            elapsed,
+            response.status_code,
+        )
+        response.raise_for_status()
 
-    return response.json()  # type: ignore[no-any-return]
+        return response.json()  # type: ignore[no-any-return]

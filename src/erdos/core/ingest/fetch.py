@@ -69,16 +69,16 @@ def download_and_extract_arxiv(
         source_url = f"https://arxiv.org/e-print/{arxiv_id}"
         logger.debug("Downloading arXiv source: %s", source_url)
         start_time = time.monotonic()
-        response = requests.get(source_url, timeout=timeout)
-        elapsed = time.monotonic() - start_time
-        logger.debug(
-            "arXiv download: %d bytes in %.2fs (status %d)",
-            len(response.content),
-            elapsed,
-            response.status_code,
-        )
-        response.raise_for_status()
-        tarball_bytes = response.content
+        with requests.get(source_url, timeout=timeout) as response:
+            elapsed = time.monotonic() - start_time
+            logger.debug(
+                "arXiv download: %d bytes in %.2fs (status %d)",
+                len(response.content),
+                elapsed,
+                response.status_code,
+            )
+            response.raise_for_status()
+            tarball_bytes = response.content
 
         # Write cache
         arxiv_cache_path.parent.mkdir(parents=True, exist_ok=True)
