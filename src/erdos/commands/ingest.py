@@ -12,7 +12,7 @@ from rich.console import Console
 from rich.table import Table
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.presenter import exit_with_result, set_json_mode
+from erdos.commands.presenter import exit_with_result
 from erdos.core.ingest import ingest_problem_references
 from erdos.core.timing import measure_time_ms
 
@@ -32,7 +32,6 @@ class IngestOptions:
     timeout: float = 30.0
     delay: float = 3.0
     mailto: str = ""
-    json_output: bool = False
 
 
 app = typer.Typer(
@@ -131,8 +130,6 @@ def _run_ingestion(
 ) -> Any:
     """Execute the core ingestion logic."""
     with measure_time_ms() as duration:
-        _show_progress_message(options.problem_id, options.json_output)
-
         result = ingest_problem_references(
             options.problem_id,
             repo=repo,
@@ -159,14 +156,14 @@ def ingest(
     timeout: Annotated[float, typer.Option("--timeout")] = 30.0,
     delay: Annotated[float, typer.Option("--delay")] = 3.0,
     mailto: Annotated[str, typer.Option("--mailto")] = "",
-    json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
     """Ingest literature metadata and cache for a problem."""
-    set_json_mode(ctx, json_output)
+    json_mode = bool((ctx.obj or {}).get("json"))
 
     # Prepare and execute
+    _show_progress_message(problem_id, json_mode)
     options = IngestOptions(
-        problem_id, force, no_download, no_network, timeout, delay, mailto, json_output
+        problem_id, force, no_download, no_network, timeout, delay, mailto
     )
     mailto_prepared, repo_root = _prepare_ingest_options(mailto)
     app_ctx, app_error = get_app_context(ctx, command="erdos ingest")

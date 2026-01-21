@@ -107,7 +107,6 @@ def test_ingest_options_dataclass() -> None:
     assert options.timeout == 30.0
     assert options.delay == 3.0
     assert options.mailto == ""
-    assert options.json_output is False
 
 
 def test_ingest_options_with_all_values() -> None:
@@ -120,7 +119,6 @@ def test_ingest_options_with_all_values() -> None:
         timeout=60.0,
         delay=5.0,
         mailto="test@example.com",
-        json_output=True,
     )
 
     assert options.problem_id == 42
@@ -130,13 +128,10 @@ def test_ingest_options_with_all_values() -> None:
     assert options.timeout == 60.0
     assert options.delay == 5.0
     assert options.mailto == "test@example.com"
-    assert options.json_output is True
 
 
 @patch("erdos.commands.ingest.ingest_problem_references")
-@patch("erdos.commands.ingest._show_progress_message")
 def test_run_ingestion_calls_core_logic(
-    _mock_progress: MagicMock,
     mock_ingest: MagicMock,
     tmp_path: Path,
 ) -> None:
@@ -150,7 +145,6 @@ def test_run_ingestion_calls_core_logic(
         timeout=30.0,
         delay=3.0,
         mailto="test@example.com",
-        json_output=False,
     )
     mock_result = MagicMock()
     mock_result.duration_ms = None
@@ -159,9 +153,6 @@ def test_run_ingestion_calls_core_logic(
     # Execute
     repo = MagicMock()
     result = _run_ingestion(options, tmp_path, "test@example.com", repo=repo)
-
-    # Verify progress message was called
-    _mock_progress.assert_called_once_with(6, False)
 
     # Verify core logic was called
     mock_ingest.assert_called_once_with(

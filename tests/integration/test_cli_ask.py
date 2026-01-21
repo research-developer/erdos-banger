@@ -66,7 +66,7 @@ def test_ask_command_json_output_no_llm(
     # Run command
     result = runner.invoke(
         app,
-        ["ask", "6", "What partial results are known?", "--json", "--no-llm"],
+        ["--json", "ask", "6", "What partial results are known?", "--no-llm"],
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
@@ -105,7 +105,7 @@ def test_ask_command_with_limit(
     # Run command with --limit 3
     result = runner.invoke(
         app,
-        ["ask", "6", "test", "--json", "--no-llm", "--limit", "3"],
+        ["--json", "ask", "6", "test", "--no-llm", "--limit", "3"],
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
@@ -127,7 +127,7 @@ def test_ask_command_sources_returned(
     # Run command with a single word query that should match problem 6
     result = runner.invoke(
         app,
-        ["ask", "6", "primes", "--json", "--no-llm"],
+        ["--json", "ask", "6", "primes", "--no-llm"],
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
@@ -158,7 +158,7 @@ def test_ask_command_prompt_includes_problem_statement(
     # Run command
     result = runner.invoke(
         app,
-        ["ask", "6", "test?", "--json", "--no-llm"],
+        ["--json", "ask", "6", "test?", "--no-llm"],
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
@@ -191,7 +191,7 @@ def test_ask_command_with_fake_llm(
     # Run command with fake LLM
     result = runner.invoke(
         app,
-        ["ask", "6", "test?", "--json", "--llm-cmd", str(fake_llm)],
+        ["--json", "ask", "6", "test?", "--llm-cmd", str(fake_llm)],
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
@@ -219,7 +219,7 @@ def test_ask_command_not_found_error(
     # Run command with invalid problem ID
     result = runner.invoke(
         app,
-        ["ask", "9999", "test", "--json", "--no-llm"],
+        ["--json", "ask", "9999", "test", "--no-llm"],
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
@@ -243,7 +243,7 @@ def test_ask_command_stdin_question(
     # Run command with '-' for stdin
     result = runner.invoke(
         app,
-        ["ask", "6", "-", "--json", "--no-llm"],
+        ["--json", "ask", "6", "-", "--no-llm"],
         input="What is the status?\n",
         env={
             "ERDOS_DATA_PATH": str(data_dir),
@@ -266,7 +266,7 @@ def test_ask_command_empty_stdin_question_is_usage_error_json(
 
     result = runner.invoke(
         app,
-        ["ask", "6", "-", "--json", "--no-llm"],
+        ["--json", "ask", "6", "-", "--no-llm"],
         input="\n",
         env={
             "ERDOS_DATA_PATH": str(data_dir),
@@ -290,7 +290,7 @@ def test_ask_command_falls_back_when_index_empty(
 
     result = runner.invoke(
         app,
-        ["ask", "6", "primes", "--json", "--no-llm"],
+        ["--json", "ask", "6", "primes", "--no-llm"],
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
@@ -343,7 +343,7 @@ def test_ask_command_config_error_exit_code(
     # Run command with nonexistent LLM command (not --no-llm)
     result = runner.invoke(
         app,
-        ["ask", "6", "test?", "--json", "--llm-cmd", "/nonexistent/llm"],
+        ["--json", "ask", "6", "test?", "--llm-cmd", "/nonexistent/llm"],
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),

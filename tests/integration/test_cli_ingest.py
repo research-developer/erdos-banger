@@ -51,7 +51,7 @@ def test_ingest_command_json_output(
     # Run command with --json --no-download
     result = runner.invoke(
         app,
-        ["ingest", "6", "--json", "--no-download"],
+        ["--json", "ingest", "6", "--no-download"],
         env={"ERDOS_DATA_PATH": str(data_dir), "ERDOS_REPO_ROOT": str(repo_root)},
     )
 
@@ -97,7 +97,7 @@ def test_ingest_command_no_download(
     # Run command with --no-download
     result = runner.invoke(
         app,
-        ["ingest", "6", "--no-download", "--json"],
+        ["--json", "ingest", "6", "--no-download"],
         env={"ERDOS_DATA_PATH": str(data_dir), "ERDOS_REPO_ROOT": str(repo_root)},
     )
 
@@ -131,7 +131,7 @@ def test_ingest_command_idempotent(
     # First run
     result1 = runner.invoke(
         app,
-        ["ingest", "6", "--no-download", "--json"],
+        ["--json", "ingest", "6", "--no-download"],
         env={"ERDOS_DATA_PATH": str(data_dir), "ERDOS_REPO_ROOT": str(repo_root)},
     )
     assert result1.exit_code == 0
@@ -142,7 +142,7 @@ def test_ingest_command_idempotent(
     # Second run with --no-network should succeed (uses cached manifest)
     result2 = runner.invoke(
         app,
-        ["ingest", "6", "--no-network", "--json"],
+        ["--json", "ingest", "6", "--no-network"],
         env={"ERDOS_DATA_PATH": str(data_dir), "ERDOS_REPO_ROOT": str(repo_root)},
     )
     assert result2.exit_code == 0
@@ -168,7 +168,7 @@ def test_ingest_command_no_network_without_existing_manifest(
 
     result = runner.invoke(
         app,
-        ["ingest", "6", "--no-network", "--json"],
+        ["--json", "ingest", "6", "--no-network"],
         env={"ERDOS_DATA_PATH": str(data_dir), "ERDOS_REPO_ROOT": str(repo_root)},
     )
 
@@ -186,7 +186,7 @@ def test_ingest_command_not_found(tmp_path: Path, sample_problems_yaml: Path) ->
 
     result = runner.invoke(
         app,
-        ["ingest", "99999", "--json"],
+        ["--json", "ingest", "99999"],
         env={"ERDOS_DATA_PATH": str(data_dir), "ERDOS_REPO_ROOT": str(repo_root)},
     )
 

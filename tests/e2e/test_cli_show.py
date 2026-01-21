@@ -8,8 +8,8 @@ import pytest
 @pytest.mark.e2e
 class TestErdosShow:
     def test_show_json_output(self, cli_runner) -> None:
-        """erdos show --json outputs valid JSON."""
-        result = cli_runner("show", "6", "--json")
+        """erdos --json show outputs valid JSON."""
+        result = cli_runner("--json", "show", "6")
 
         data = json.loads(result.stdout)
         assert data["success"] is True
@@ -30,8 +30,8 @@ class TestErdosShow:
         assert result.returncode == 3
 
     def test_show_json_not_found(self, cli_runner) -> None:
-        """erdos show --json returns error object for missing problem."""
-        result = cli_runner("show", "99999", "--json", check=False)
+        """erdos --json show returns error object for missing problem."""
+        result = cli_runner("--json", "show", "99999", check=False)
 
         data = json.loads(result.stdout)
         assert data["success"] is False

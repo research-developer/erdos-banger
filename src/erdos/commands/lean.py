@@ -10,7 +10,7 @@ import typer
 from rich.console import Console
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.presenter import exit_with_result, set_json_mode
+from erdos.commands.presenter import exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.formalizer import FormalizerError, generate_skeleton
 from erdos.core.lean_runner import LeanRunner, LeanRunnerError
@@ -191,20 +191,12 @@ def init(
         bool,
         typer.Option("--no-mathlib", help="Skip fetching mathlib"),
     ] = False,
-    json_output: Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Output as JSON for machine consumption.",
-        ),
-    ] = False,
 ) -> None:
     """
     Initialize Lean 4 project with mathlib.
 
     Creates lakefile.lean, lean-toolchain, and directory structure.
     """
-    set_json_mode(ctx, json_output)
 
     with measure_time_ms() as duration:
         path = project_path or Path("formal/lean")
@@ -234,21 +226,12 @@ def check(
             help="Path to Lean project (default: formal/lean/)",
         ),
     ] = None,
-    json_output: Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Output as JSON for machine consumption.",
-        ),
-    ] = False,
 ) -> None:
     """
     Check a Lean file for compilation errors.
 
     Example: erdos lean check Erdos/Problem006.lean
     """
-    set_json_mode(ctx, json_output)
-
     with measure_time_ms() as duration:
         path = project_path or Path("formal/lean")
         result = check_lean_file(file, path)
@@ -286,21 +269,12 @@ def formalize(
         bool,
         typer.Option("--force", "-f", help="Overwrite existing file"),
     ] = False,
-    json_output: Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Output as JSON for machine consumption.",
-        ),
-    ] = False,
 ) -> None:
     """
     Generate a Lean skeleton for a problem.
 
     Creates Erdos/Problem<ID>.lean with theorem stub.
     """
-    set_json_mode(ctx, json_output)
-
     with measure_time_ms() as duration:
         app_ctx, app_error = get_app_context(ctx, command="erdos lean formalize")
         if app_error is not None or app_ctx is None:

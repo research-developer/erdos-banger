@@ -30,8 +30,8 @@
   - Deck: `docs/debt/debt-029-no-logging-usage.md`
   - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
 
-- [ ] **DEBT-030**: Redundant dual `--json` flag
-  - Deck: `docs/debt/debt-030-redundant-json-flag.md`
+- [x] **DEBT-030**: Redundant dual `--json` flag
+  - Deck: `docs/_archive/debt/debt-030-redundant-json-flag.md`
   - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
 
 - [ ] **DEBT-031**: API rate limiting missing / constant unused
@@ -173,6 +173,27 @@
 - `docs/debt/README.md` - Moved DEBT-029 to Archived
 
 **Verified:** `--log-level DEBUG` now produces useful timing/progress output for API calls and batch operations.
+
+### 2026-01-20: DEBT-030 Redundant --json flag removed
+
+**Files modified:**
+- `src/erdos/commands/list_cmd.py` - Removed `json_output` parameter and `set_json_mode()` call
+- `src/erdos/commands/show.py` - Removed `json_output` parameter and `set_json_mode()` call
+- `src/erdos/commands/refs.py` - Removed `json_output` parameter and `set_json_mode()` call
+- `src/erdos/commands/search.py` - Removed `json_output` parameter and `set_json_mode()` call
+- `src/erdos/commands/ask.py` - Removed `json_output` parameter and `set_json_mode()` call; updated `_show_progress_message` call
+- `src/erdos/commands/ingest.py` - Removed `json_output` parameter and `set_json_mode()` call; removed `json_output` from `IngestOptions` dataclass
+- `src/erdos/commands/lean.py` - Removed `json_output` parameter from init/check/formalize; removed `set_json_mode()` calls
+- `src/erdos/commands/presenter.py` - Removed `set_json_mode()` function
+- `tests/e2e/test_cli_show.py` - Updated tests to use global `--json` flag
+- `tests/integration/test_cli_commands.py` - Updated tests to use global `--json` flag
+- `tests/integration/test_cli_ingest.py` - Updated tests to use global `--json` flag
+- `tests/integration/test_cli_ask.py` - Updated tests to use global `--json` flag
+- `tests/unit/test_ingest_command_helpers.py` - Removed `json_output` from test cases
+- `docs/_archive/debt/debt-030-redundant-json-flag.md` - Status updated to Fixed (archived)
+- `docs/debt/README.md` - Moved DEBT-030 to Archived
+
+**Breaking change:** The `--json` flag must now be placed before the command (e.g., `erdos --json show 6` instead of `erdos show 6 --json`).
 
 (entries added by Ralph loop as tasks complete)
 
