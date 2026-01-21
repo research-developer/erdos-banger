@@ -2,14 +2,6 @@
 
 from __future__ import annotations
 
-# IMPORTANT: Set terminal dimensions FIRST, before any imports that might cache them
-# This prevents Rich/Typer from truncating help output in CI
-import os
-
-
-os.environ["COLUMNS"] = "200"
-os.environ["LINES"] = "50"
-
 import sqlite3
 from pathlib import Path
 from typing import TYPE_CHECKING

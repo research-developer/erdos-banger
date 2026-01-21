@@ -33,7 +33,8 @@ class TestBatchIngestCLI:
 
     def test_ingest_help_shows_batch_options(self) -> None:
         """Test that ingest --help shows batch options."""
-        result = runner.invoke(app, ["ingest", "--help"])
+        # terminal_width prevents Rich from truncating help text in CI environments
+        result = runner.invoke(app, ["ingest", "--help"], terminal_width=200)
         assert result.exit_code == 0
         # Batch options should be visible
         assert "--all" in result.output
@@ -113,7 +114,8 @@ class TestBatchFormalizeCLI:
 
     def test_formalize_help_shows_batch_options(self) -> None:
         """Test that lean formalize --help shows batch options."""
-        result = runner.invoke(app, ["lean", "formalize", "--help"])
+        # terminal_width prevents Rich from truncating help text in CI environments
+        result = runner.invoke(app, ["lean", "formalize", "--help"], terminal_width=200)
         assert result.exit_code == 0
         # Batch options should be visible
         assert "--all" in result.output
