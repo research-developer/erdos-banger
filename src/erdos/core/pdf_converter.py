@@ -298,7 +298,15 @@ def convert_pdf(
         )
 
     # Select converter
-    preferred = PDFConverter(config.converter) if config.converter else None
+    try:
+        preferred = PDFConverter(config.converter) if config.converter else None
+    except ValueError:
+        return PDFConversionResult(
+            success=False,
+            text=None,
+            converter=config.converter,
+            error=f"Unknown converter: '{config.converter}'. Valid options: marker, pdfplumber",
+        )
     converter = select_converter(preferred)
 
     if converter is None:
@@ -309,7 +317,7 @@ def convert_pdf(
             error="No converter available. Install marker: uv sync --extra pdf",
         )
 
-    # Convert
+    # Convert using selected converter
     if converter == PDFConverter.MARKER:
         return convert_with_marker(
             pdf_path,
@@ -317,14 +325,5 @@ def convert_pdf(
             llm_service=config.llm_service,
             force_ocr=config.force_ocr,
         )
-
-    if converter == PDFConverter.PDFPLUMBER:
-        return convert_with_pdfplumber(pdf_path)
-
-    # Should not reach here
-    return PDFConversionResult(
-        success=False,
-        text=None,
-        converter=config.converter,
-        error=f"Unknown converter: {converter}",
-    )
+    # PDFConverter.PDFPLUMBER (or any future converter)
+    return convert_with_pdfplumber(pdf_path)

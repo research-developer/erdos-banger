@@ -38,14 +38,15 @@ def build_index(
         if problems_indexed % 100 == 0:
             logger.debug("Indexed %d problems", problems_indexed)
 
+    total_chunks = index.chunk_count()
     logger.info(
         "Index build complete: %d problems indexed, %d total chunks",
         problems_indexed,
-        index.chunk_count(),
+        total_chunks,
     )
 
     return {
         "problems_indexed": problems_indexed,
-        "total_chunks": index.chunk_count(),
+        "total_chunks": total_chunks,
         "stats": index.get_stats(),
     }

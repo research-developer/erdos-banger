@@ -64,11 +64,14 @@ class BatchFilters:
 
     def matches(self, other: BatchFilters) -> bool:
         """Check if filters match (for resume validation)."""
+        # Use set comparison for tags to ignore ordering differences
+        self_tags = set(self.tags) if self.tags else set()
+        other_tags = set(other.tags) if other.tags else set()
         return (
             self.status == other.status
             and self.prize_min == other.prize_min
             and self.prize_max == other.prize_max
-            and self.tags == other.tags
+            and self_tags == other_tags
             # limit/skip not compared since they may differ on resume
         )
 
@@ -244,10 +247,10 @@ def generate_batch_id() -> str:
     """Generate a unique batch ID based on current timestamp.
 
     Returns:
-        Batch ID in format: batch_YYYYMMDD_HHMMSS
+        Batch ID in format: batch_YYYYMMDD_HHMMSS_ffffff (includes microseconds)
     """
     now = datetime.now(tz=UTC)
-    return f"batch_{now.strftime('%Y%m%d_%H%M%S')}"
+    return f"batch_{now.strftime('%Y%m%d_%H%M%S_%f')}"
 
 
 def save_batch_state(path: Path, state: BatchState) -> None:

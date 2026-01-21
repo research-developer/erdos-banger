@@ -353,13 +353,14 @@ class TestGenerateBatchId:
     """Tests for generate_batch_id function."""
 
     def test_format(self) -> None:
-        """Test batch ID format."""
+        """Test batch ID format with microseconds for uniqueness."""
         batch_id = generate_batch_id()
         assert batch_id.startswith("batch_")
         parts = batch_id.split("_")
-        assert len(parts) == 3
+        assert len(parts) == 4  # batch, YYYYMMDD, HHMMSS, ffffff
         assert len(parts[1]) == 8  # YYYYMMDD
         assert len(parts[2]) == 6  # HHMMSS
+        assert len(parts[3]) == 6  # ffffff (microseconds)
 
     def test_uniqueness(self) -> None:
         """Test batch IDs are unique across calls."""

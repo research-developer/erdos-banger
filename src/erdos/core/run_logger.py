@@ -148,15 +148,25 @@ class RunLogEntry(ErdosBaseModel):
 
     @staticmethod
     def _sanitize_args(args: dict[str, Any]) -> dict[str, Any]:
-        """Redact sensitive values from args."""
-        result = {}
-        for key, value in args.items():
+        """Redact sensitive values from args, including nested structures."""
+
+        def sanitize_value(key: str, value: Any) -> Any:
+            """Recursively sanitize a value."""
             key_lower = key.lower()
             if any(pattern in key_lower for pattern in SECRET_KEY_PATTERNS):
-                result[key] = "[REDACTED]"
-            else:
-                result[key] = value
-        return result
+                return "[REDACTED]"
+            if isinstance(value, dict):
+                return {k: sanitize_value(k, v) for k, v in value.items()}
+            if isinstance(value, list):
+                return [
+                    sanitize_value("", item)
+                    if not isinstance(item, dict)
+                    else {k: sanitize_value(k, v) for k, v in item.items()}
+                    for item in value
+                ]
+            return value
+
+        return {key: sanitize_value(key, value) for key, value in args.items()}
 
     @staticmethod
     def _extract_problem_id(args: dict[str, Any], cli_output: CLIOutput) -> int | None:
