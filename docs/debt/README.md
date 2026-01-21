@@ -57,7 +57,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-029 | Logging coverage gaps | P2 | Fixed | f806edc |
 | DEBT-030 | Redundant dual --json flag | P3 | Fixed | ed2c2c8 |
 | DEBT-031 | Rate limiting constant unused | P3 | Fixed | c50766c |
-| DEBT-032 | HTTP responses not closed properly | P2 | Fixed | ccbb311 |
+| DEBT-032 | HTTP responses not closed properly | P2 | Fixed | 5fd4a57 |
 
 **Next Debt ID:** DEBT-036
 

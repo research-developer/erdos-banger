@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-21
 **Status:** Fixed
-**Fixed In:** ccbb311
+**Fixed In:** 5fd4a57
 **Priority:** P2 (Resource management)
 **Impact:** Potential resource leaks in high-volume scenarios
 
