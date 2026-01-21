@@ -14,10 +14,10 @@ runner = CliRunner()
 class TestLoopRunCommand:
     """Test erdos loop run command."""
 
-    def test_help_shows_usage(self) -> None:
+    def test_help_shows_usage(self, strip_ansi) -> None:
         result = runner.invoke(app, ["loop", "run", "--help"])
         assert result.exit_code == 0
-        assert "Run iterative proof loop for a problem" in result.stdout
+        assert "Run iterative proof loop for a problem" in strip_ansi(result.stdout)
 
     def test_missing_problem_id(self) -> None:
         result = runner.invoke(app, ["loop", "run"])
@@ -69,7 +69,7 @@ class TestLoopRunCommand:
         assert "command" in output
         assert output["command"] == "erdos loop"
 
-    def test_llm_cmd_option_accepted(self) -> None:
+    def test_llm_cmd_option_accepted(self, strip_ansi) -> None:
         """Test --llm-cmd option is accepted."""
         # Use --help to verify the option exists without actually running
         result = runner.invoke(
@@ -80,7 +80,7 @@ class TestLoopRunCommand:
                 "--help",
             ],
         )
-        assert "--llm-cmd" in result.stdout
+        assert "--llm-cmd" in strip_ansi(result.stdout)
 
     def test_config_options(self) -> None:
         """Test configuration options are accepted."""

@@ -479,17 +479,18 @@ class TestLeanImportCommand:
 class TestFormalizeImportUpstream:
     """Tests for erdos lean formalize --import-upstream flag."""
 
-    def test_formalize_help_shows_import_upstream(self) -> None:
+    def test_formalize_help_shows_import_upstream(self, strip_ansi) -> None:
         """Verify formalize command shows --import-upstream option."""
         result = runner.invoke(app, ["lean", "formalize", "--help"])
         # If the option is not there yet, skip
-        if "--import-upstream" not in result.stdout:
+        help_text = strip_ansi(result.stdout)
+        if "--import-upstream" not in help_text:
             pytest.skip("--import-upstream not implemented yet")
-        assert "--import-upstream" in result.stdout
+        assert "--import-upstream" in help_text
 
     @responses.activate
     def test_formalize_imports_when_flag_set(
-        self, tmp_path: Path, enriched_yaml: Path, lean_project: Path
+        self, tmp_path: Path, enriched_yaml: Path, lean_project: Path, strip_ansi
     ) -> None:
         """Formalize with --import-upstream imports instead of generating skeleton."""
         lean_content = b"-- Upstream formalization\ntheorem problem_6 := sorry"
@@ -517,9 +518,8 @@ class TestFormalizeImportUpstream:
                         "--import-upstream",
                     ],
                 )
-                if (
-                    "--import-upstream"
-                    not in runner.invoke(app, ["lean", "formalize", "--help"]).stdout
+                if "--import-upstream" not in strip_ansi(
+                    runner.invoke(app, ["lean", "formalize", "--help"]).stdout
                 ):
                     pytest.skip("--import-upstream not implemented yet")
 
@@ -535,7 +535,7 @@ class TestFormalizeImportUpstream:
                 os.chdir(old_cwd)
 
     def test_formalize_import_upstream_no_network_fails(
-        self, tmp_path: Path, enriched_yaml: Path, lean_project: Path
+        self, tmp_path: Path, enriched_yaml: Path, lean_project: Path, strip_ansi
     ) -> None:
         """Formalize --import-upstream with --no-network and no cache fails."""
         with patch.dict(
@@ -560,9 +560,8 @@ class TestFormalizeImportUpstream:
                         "--no-network",
                     ],
                 )
-                if (
-                    "--import-upstream"
-                    not in runner.invoke(app, ["lean", "formalize", "--help"]).stdout
+                if "--import-upstream" not in strip_ansi(
+                    runner.invoke(app, ["lean", "formalize", "--help"]).stdout
                 ):
                     pytest.skip("--import-upstream not implemented yet")
 

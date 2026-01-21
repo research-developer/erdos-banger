@@ -16,15 +16,16 @@ runner = CliRunner()
 class TestConvertCommandHelp:
     """Tests for convert command help output."""
 
-    def test_convert_help_shows_options(self) -> None:
+    def test_convert_help_shows_options(self, strip_ansi) -> None:
         """Convert --help shows expected options."""
         result = runner.invoke(app, ["convert", "--help"])
         assert result.exit_code == 0
+        output = strip_ansi(result.output)
         # Check key options are documented
-        assert "--output" in result.output or "-o" in result.output
-        assert "--format" in result.output
-        assert "--converter" in result.output
-        assert "--use-llm" in result.output
+        assert "--output" in output or "-o" in output
+        assert "--format" in output
+        assert "--converter" in output
+        assert "--use-llm" in output
 
 
 class TestConvertCommandValidation:

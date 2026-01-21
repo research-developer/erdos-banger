@@ -13,12 +13,13 @@ runner = CliRunner()
 class TestIngestPDFOptions:
     """Tests for ingest command PDF options."""
 
-    def test_ingest_help_shows_pdf_options(self) -> None:
+    def test_ingest_help_shows_pdf_options(self, strip_ansi) -> None:
         """Ingest --help shows PDF-related options."""
         result = runner.invoke(app, ["ingest", "--help"])
         assert result.exit_code == 0
+        output = strip_ansi(result.output)
         # Check PDF options are documented
-        assert "--pdf" in result.output or "--no-pdf" in result.output
+        assert "--pdf" in output or "--no-pdf" in output
 
     def test_ingest_pdf_flag_accepted(self) -> None:
         """Ingest --pdf flag is accepted."""

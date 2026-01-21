@@ -148,16 +148,17 @@ class TestLogsCommand:
         # All recent entries should be included
         assert len(output["data"]["entries"]) == 1
 
-    def test_logs_help(self) -> None:
+    def test_logs_help(self, strip_ansi) -> None:
         """logs --help shows usage."""
         result = runner.invoke(app, ["logs", "--help"])
         assert result.exit_code == 0
-        assert "--problem-id" in result.stdout
-        assert "--command" in result.stdout
-        assert "--since" in result.stdout
-        assert "--status" in result.stdout
-        assert "--limit" in result.stdout
-        assert "--summary" in result.stdout
+        output = strip_ansi(result.stdout)
+        assert "--problem-id" in output
+        assert "--command" in output
+        assert "--since" in output
+        assert "--status" in output
+        assert "--limit" in output
+        assert "--summary" in output
 
 
 class TestLogsIntegrationWithCommands:

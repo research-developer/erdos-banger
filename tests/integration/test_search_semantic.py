@@ -123,29 +123,30 @@ def fake_embedder() -> MagicMock:
 class TestSearchCLIHelp:
     """Tests for search command help."""
 
-    def test_search_help_shows_semantic_flag(self) -> None:
+    def test_search_help_shows_semantic_flag(self, strip_ansi) -> None:
         """Test that --semantic flag is documented in help."""
         result = runner.invoke(app, ["search", "--help"])
         assert result.exit_code == 0
-        assert "--semantic" in result.output or "-s" in result.output
+        output = strip_ansi(result.output)
+        assert "--semantic" in output or "-s" in output
 
-    def test_search_help_shows_hybrid_flag(self) -> None:
+    def test_search_help_shows_hybrid_flag(self, strip_ansi) -> None:
         """Test that --hybrid flag is documented in help."""
         result = runner.invoke(app, ["search", "--help"])
         assert result.exit_code == 0
-        assert "--hybrid" in result.output
+        assert "--hybrid" in strip_ansi(result.output)
 
-    def test_search_help_shows_alpha_flag(self) -> None:
+    def test_search_help_shows_alpha_flag(self, strip_ansi) -> None:
         """Test that --alpha flag is documented in help."""
         result = runner.invoke(app, ["search", "--help"])
         assert result.exit_code == 0
-        assert "--alpha" in result.output
+        assert "--alpha" in strip_ansi(result.output)
 
-    def test_search_help_shows_build_embeddings_flag(self) -> None:
+    def test_search_help_shows_build_embeddings_flag(self, strip_ansi) -> None:
         """Test that --build-embeddings flag is documented in help."""
         result = runner.invoke(app, ["search", "--help"])
         assert result.exit_code == 0
-        assert "--build-embeddings" in result.output
+        assert "--build-embeddings" in strip_ansi(result.output)
 
 
 # =============================================================================

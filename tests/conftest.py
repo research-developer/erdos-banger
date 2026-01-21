@@ -2,23 +2,24 @@
 
 from __future__ import annotations
 
+import os
+import re
+import sqlite3
+
 # IMPORTANT: Unset PY_COLORS BEFORE importing Rich/Typer.
 # When PY_COLORS is set, Typer's Rich-based help rendering can emit ANSI codes
 # and truncate help panels under Click's CliRunner, breaking tests that assert on
 # `--help` output.
 # See: https://github.com/pallets/click/issues/1997
-import os
-
-
-if "PY_COLORS" in os.environ:
-    del os.environ["PY_COLORS"]
-
-import sqlite3
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
 
+
+if "PY_COLORS" in os.environ:
+    del os.environ["PY_COLORS"]
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -80,3 +81,20 @@ def crossref_annals_fixture(fixtures_dir: Path) -> str:
     return (
         fixtures_dir / "crossref_responses" / "doi_10.4007_annals.2008.167.481.json"
     ).read_text()
+
+
+_ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
+
+
+@pytest.fixture
+def strip_ansi() -> Callable[[str], str]:
+    """Strip ANSI escape sequences from captured CLI output.
+
+    Typer+Rich may emit styling codes depending on environment. Tests asserting on
+    help text should normalize output before matching.
+    """
+
+    def _strip(text: str) -> str:
+        return _ANSI_ESCAPE_RE.sub("", text)
+
+    return _strip

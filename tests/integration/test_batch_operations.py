@@ -31,22 +31,23 @@ def sample_data_dir(tmp_path: Path) -> Path:
 class TestBatchIngestCLI:
     """Integration tests for batch ingest command."""
 
-    def test_ingest_help_shows_batch_options(self) -> None:
+    def test_ingest_help_shows_batch_options(self, strip_ansi) -> None:
         """Test that ingest --help shows batch options."""
         # terminal_width prevents Rich from truncating help text in CI environments
         result = runner.invoke(app, ["ingest", "--help"], terminal_width=200)
         assert result.exit_code == 0
+        output = strip_ansi(result.output)
         # Batch options should be visible
-        assert "--all" in result.output
-        assert "--status" in result.output
-        assert "--prize-min" in result.output
-        assert "--prize-max" in result.output
-        assert "--tag" in result.output
-        assert "--limit" in result.output
-        assert "--skip" in result.output
-        assert "--resume" in result.output
-        assert "--dry-run" in result.output
-        assert "--max-concurrent" in result.output
+        assert "--all" in output
+        assert "--status" in output
+        assert "--prize-min" in output
+        assert "--prize-max" in output
+        assert "--tag" in output
+        assert "--limit" in output
+        assert "--skip" in output
+        assert "--resume" in output
+        assert "--dry-run" in output
+        assert "--max-concurrent" in output
 
     def test_ingest_no_args_shows_error(self, sample_data_dir: Path) -> None:
         """Test that ingest without args shows usage error."""
@@ -112,19 +113,20 @@ class TestBatchIngestCLI:
 class TestBatchFormalizeCLI:
     """Integration tests for batch formalize command."""
 
-    def test_formalize_help_shows_batch_options(self) -> None:
+    def test_formalize_help_shows_batch_options(self, strip_ansi) -> None:
         """Test that lean formalize --help shows batch options."""
         # terminal_width prevents Rich from truncating help text in CI environments
         result = runner.invoke(app, ["lean", "formalize", "--help"], terminal_width=200)
         assert result.exit_code == 0
+        output = strip_ansi(result.output)
         # Batch options should be visible
-        assert "--all" in result.output
-        assert "--status" in result.output
-        assert "--tag" in result.output
-        assert "--limit" in result.output
-        assert "--skip-existing" in result.output
-        assert "--dry-run" in result.output
-        assert "--max-concurrent" in result.output
+        assert "--all" in output
+        assert "--status" in output
+        assert "--tag" in output
+        assert "--limit" in output
+        assert "--skip-existing" in output
+        assert "--dry-run" in output
+        assert "--max-concurrent" in output
 
     def test_formalize_no_args_shows_error(self, sample_data_dir: Path) -> None:
         """Test that formalize without args shows usage error."""
