@@ -58,6 +58,8 @@ jobs:
 
       - name: Tests (no Lean, no network)
         run: uv run --frozen pytest --cov=erdos --cov-report=xml --cov-fail-under=80 -m "not requires_lean and not requires_network"
+        env:
+          COLUMNS: "200"  # Prevent Rich from truncating help output
 
       - name: Smoke test
         run: make smoke
@@ -130,3 +132,5 @@ jobs:
             exit 0
           fi
           exit $status
+        env:
+          COLUMNS: "200"  # Prevent Rich from truncating help output

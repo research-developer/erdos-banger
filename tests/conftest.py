@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -11,6 +12,12 @@ import pytest
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
+
+
+# Set wide terminal width to prevent Rich output truncation in CI
+# This ensures help text assertions work consistently across environments
+os.environ.setdefault("COLUMNS", "200")
+os.environ.setdefault("LINES", "50")
 
 from erdos.core.models import ProblemRecord, ProblemStatus
 
