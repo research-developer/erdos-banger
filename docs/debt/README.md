@@ -57,7 +57,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-031 | Rate limiting constant unused | P3 | Fixed | c50766c |
 | DEBT-032 | HTTP responses not closed properly | P2 | Fixed | 5fd4a57 |
 | DEBT-033 | No retry logic for network failures | P2 | Fixed | 11a3519 |
-| DEBT-034 | Hardcoded MAX_SIZE constant | P3 | Fixed | 84cba97 |
+| DEBT-034 | Hardcoded MAX_SIZE constant | P3 | Fixed | 878aa7b |
 
 **Next Debt ID:** DEBT-036
 

@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-21
 **Status:** Fixed
-**Fixed In:** 84cba97
+**Fixed In:** 878aa7b
 **Priority:** P3 (Maintenance burden)
 **Impact:** Duplicate magic numbers; if limit needs changing, multiple places must be updated
 
