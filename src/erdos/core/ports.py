@@ -20,6 +20,29 @@ if TYPE_CHECKING:
     )
 
 
+class LLMExecute(Protocol):
+    """Callable for executing an LLM command.
+
+    This abstraction allows loop orchestration to depend on an interface
+    rather than a concrete implementation (DIP compliance).
+    """
+
+    def __call__(
+        self, llm_command: str, prompt: str, *, timeout: int | None = ...
+    ) -> tuple[str, int]:
+        """Execute an LLM command with the given prompt.
+
+        Args:
+            llm_command: Shell command to execute
+            prompt: The prompt to pass via stdin
+            timeout: Maximum seconds to wait (optional)
+
+        Returns:
+            Tuple of (answer, exit_code)
+        """
+        ...
+
+
 class MetadataProvider(Protocol):
     """Port for academic metadata sources (SPEC-022).
 

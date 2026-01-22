@@ -9,7 +9,7 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from erdos.core.ask.llm import execute_llm
+from erdos.core.ask.llm import execute_llm as default_execute_llm
 from erdos.core.loop.logging import LoopLogger, file_hash, generate_run_id
 from erdos.core.loop.patch_validator import PatchStatus, validate_patch
 from erdos.core.loop.prompt import build_loop_prompt
@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from erdos.core.lean_runner import LeanRunner
     from erdos.core.loop.config import LoopConfig
     from erdos.core.models import LeanCheckResult, ProblemRecord
+    from erdos.core.ports import LLMExecute
 
 
 logger = logging.getLogger(__name__)
@@ -199,6 +200,7 @@ def _run_single_iteration(  # noqa: PLR0911
     loop_logger: LoopLogger,
     iterations: list[IterationRecord],
     stall_count: int,
+    llm_execute: LLMExecute,
 ) -> tuple[LoopStatus | None, LeanCheckResult, int, bool]:
     """Run a single loop iteration.
 
@@ -245,7 +247,7 @@ def _run_single_iteration(  # noqa: PLR0911
     loop_logger.log_event("llm_prompt", iteration, {"prompt": prompt})
 
     try:
-        response, exit_code = execute_llm(llm_command, prompt)
+        response, exit_code = llm_execute(llm_command, prompt)
     except Exception as e:
         logger.error("LLM execution failed: %s", e)
         return (
@@ -382,10 +384,13 @@ def run_loop(
     llm_command: str | None,
     no_apply: bool = False,
     rag_chunks: list[Any] | None = None,
+    llm_execute: LLMExecute | None = None,
 ) -> LoopResult:
     """Run the iterative proof loop per spec-012-loop-command.md execution model."""
     if rag_chunks is None:
         rag_chunks = []
+    if llm_execute is None:
+        llm_execute = default_execute_llm
 
     # Set up logging
     log_path = Path("logs/loop") / f"{generate_run_id()}.jsonl"
@@ -440,6 +445,7 @@ def run_loop(
                 loop_logger=loop_logger,
                 iterations=iterations,
                 stall_count=stall_count,
+                llm_execute=llm_execute,
             )
             if terminal_status is not None:
                 completed = i if work_done else i - 1

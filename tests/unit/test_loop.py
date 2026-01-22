@@ -1,7 +1,7 @@
 """Tests for loop orchestration."""
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -318,10 +318,8 @@ class TestRunLoop:
         assert result.status == LoopStatus.LLM_REQUIRED
         assert result.iterations_completed == 0
 
-    @patch("erdos.core.loop.runner.execute_llm")
     def test_applies_patch_and_checks(
         self,
-        mock_execute_llm: MagicMock,
         tmp_path: Path,
         sample_problem: ProblemRecord,
     ) -> None:
@@ -331,15 +329,18 @@ class TestRunLoop:
         lean_file = erdos_dir / "Problem006.lean"
         lean_file.write_text("theorem foo : True := sorry\n", encoding="utf-8")
 
-        # Mock LLM to return valid patch
-        mock_execute_llm.return_value = (
-            """<<<<<<< SEARCH
+        # Fake LLM executor returns valid patch
+        def fake_llm(
+            llm_command: str, prompt: str, *, timeout: int | None = None
+        ) -> tuple[str, int]:
+            return (
+                """<<<<<<< SEARCH
 sorry
 =======
 by trivial
 >>>>>>> REPLACE""",
-            0,
-        )
+                0,
+            )
 
         # Mock Lean runner to return success after patch
         mock_runner = MagicMock()
@@ -358,16 +359,15 @@ by trivial
             lean_runner=mock_runner,
             llm_command="./llm.sh",
             no_apply=False,
+            llm_execute=fake_llm,
         )
 
         assert result.status == LoopStatus.SUCCESS
         assert result.iterations_completed == 1
         assert "by trivial" in lean_file.read_text()
 
-    @patch("erdos.core.loop.runner.execute_llm")
     def test_no_apply_mode_does_not_write(
         self,
-        mock_execute_llm: MagicMock,
         tmp_path: Path,
         sample_problem: ProblemRecord,
     ) -> None:
@@ -378,15 +378,18 @@ by trivial
         original_content = "theorem foo : True := sorry\n"
         lean_file.write_text(original_content, encoding="utf-8")
 
-        # Mock LLM to return valid patch
-        mock_execute_llm.return_value = (
-            """<<<<<<< SEARCH
+        # Fake LLM executor returns valid patch
+        def fake_llm(
+            llm_command: str, prompt: str, *, timeout: int | None = None
+        ) -> tuple[str, int]:
+            return (
+                """<<<<<<< SEARCH
 sorry
 =======
 by trivial
 >>>>>>> REPLACE""",
-            0,
-        )
+                0,
+            )
 
         mock_runner = MagicMock()
         mock_runner.check.return_value = LeanCheckResult(
@@ -412,16 +415,15 @@ by trivial
             lean_runner=mock_runner,
             llm_command="./llm.sh",
             no_apply=True,
+            llm_execute=fake_llm,
         )
 
         # File should not be modified
         assert lean_file.read_text() == original_content
         assert result.no_apply is True
 
-    @patch("erdos.core.loop.runner.execute_llm")
     def test_max_iterations_reached(
         self,
-        mock_execute_llm: MagicMock,
         tmp_path: Path,
         sample_problem: ProblemRecord,
     ) -> None:
@@ -431,8 +433,11 @@ by trivial
         lean_file = erdos_dir / "Problem006.lean"
         lean_file.write_text("theorem foo : True := sorry\n", encoding="utf-8")
 
-        # Mock LLM to always return NO_FIX_POSSIBLE
-        mock_execute_llm.return_value = ("NO_FIX_POSSIBLE", 0)
+        # Fake LLM executor returns NO_FIX_POSSIBLE
+        def fake_llm(
+            llm_command: str, prompt: str, *, timeout: int | None = None
+        ) -> tuple[str, int]:
+            return ("NO_FIX_POSSIBLE", 0)
 
         mock_runner = MagicMock()
         mock_runner.check.return_value = LeanCheckResult(
@@ -458,6 +463,7 @@ by trivial
             lean_runner=mock_runner,
             llm_command="./llm.sh",
             no_apply=False,
+            llm_execute=fake_llm,
         )
 
         # Should hit NO_FIX status on first iteration
