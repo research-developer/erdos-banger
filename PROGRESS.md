@@ -2,7 +2,7 @@
 
 **Last Updated:** 2026-01-22
 **Status:** Ready - Debt First (Search/Loop Cleanups)
-**Branch:** ralph-wiggum-v2.4 (create from `dev` before starting)
+**Branch:** ralph-wiggum-consolidated
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
 ---
