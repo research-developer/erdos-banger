@@ -60,16 +60,30 @@ for i in $(seq 1 "$MAX"); do
         : # No staged changes, all good
     else
         echo "" >> "$log"
-        echo "⚠️  WARNING: Staged but uncommitted changes detected!" >> "$log"
+        echo "WARNING: Staged but uncommitted changes detected!" >> "$log"
         echo "    The iteration may have timed out before committing." >> "$log"
         echo "    Run 'git status' and 'git diff --cached' to inspect." >> "$log"
         echo "    Consider committing manually: git commit -m 'WIP: iteration $i incomplete'" >> "$log"
         echo "" >> "$log"
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ⚠️  WARNING: Staged but uncommitted changes! Check logs/ralph/iteration_${n}.log"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] WARNING: Staged but uncommitted changes! Check logs/ralph/iteration_${n}.log"
     fi
 
     # Check completion
     if ! grep -q "^\- \[ \]" PROGRESS.md; then
+        # Guardrail: Never exit "successfully" with a dirty working tree.
+        # This catches cases where PROGRESS.md was edited but docs were not committed,
+        # or other changes were left unstaged/uncommitted.
+        if [[ -n "$(git status --porcelain)" ]]; then
+            echo "" >> "$log"
+            echo "ERROR: PROGRESS.md indicates completion but git working tree is dirty." >> "$log"
+            echo "       Refusing to exit cleanly to avoid losing work." >> "$log"
+            echo "       Run 'git status' to inspect and commit/push outstanding changes." >> "$log"
+            echo "" >> "$log"
+            git status --porcelain >> "$log" || true
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: PROGRESS complete but repo dirty. Inspect logs/ralph/iteration_${n}.log"
+            exit 1
+        fi
+
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] All tasks complete!"
         echo "All tasks complete!" >> "$log"
         break

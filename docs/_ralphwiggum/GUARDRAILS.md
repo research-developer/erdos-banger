@@ -61,7 +61,7 @@ This document is a **living record** of guardrails, failure patterns, and “got
 - Symptom: Iteration completes all work, stages changes, updates PROGRESS.md (marking task done), but never commits. Loop sees "all tasks complete" and exits, leaving work staged but not committed.
 - Root cause: PROMPT.md had commit step AFTER updating PROGRESS.md. If iteration times out after PROGRESS.md update but before commit, the loop completion check (`grep -q "^\- \[ \]" PROGRESS.md`) reads from the working directory (which shows task complete) and exits.
 - Mitigation (PROMPT.md fix): Restructured steps to commit code changes FIRST (Phase 3), then update docs/PROGRESS.md (Phase 4), then commit docs and push (Phase 5). This ensures code is saved even if the iteration times out during documentation updates.
-- Mitigation (ralph-loop.sh fix): Added guardrail check after each iteration that warns loudly if staged-but-uncommitted changes are detected.
+- Mitigation (ralph-loop.sh fix): Added guardrail check after each iteration that warns loudly if staged-but-uncommitted changes are detected. Also refuses to exit "successfully" if PROGRESS.md indicates completion but `git status` is dirty (unstaged/uncommitted changes).
 
 ---
 
