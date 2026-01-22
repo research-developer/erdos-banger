@@ -94,10 +94,27 @@ src/erdos/
 - `index/` - SQLite FTS5 index (gitignored)
 - `formal/lean/` - Lean 4 project
 
-## Ralph Wiggum Logs
+## Ralph Wiggum Loop (Autonomous Development)
 
-- Per-iteration logs are written under `logs/ralph/` (gitignored; safe to delete between runs).
-- Never include API keys or other secrets in tracked files (docs, specs, prompts, etc.). `.env` is gitignored by design.
+The Ralph Wiggum technique runs the same prompt repeatedly until all tasks complete. State lives in files, not context.
+
+```bash
+# Launch in tmux (recommended)
+tmux new-session -s erdos-ralph './scripts/ralph-loop.sh'
+
+# Monitor in another terminal
+tail -f logs/ralph/iteration_*.log
+watch -n5 'git log --oneline -5'
+```
+
+**Key files:**
+- `PROMPT.md` - Instructions read each iteration
+- `PROGRESS.md` - Task queue (checkboxes are state)
+- `docs/_ralphwiggum/protocol.md` - Full protocol
+
+**Logs:** Per-iteration logs written to `logs/ralph/` (gitignored; safe to delete between runs).
+
+**Security:** Never include API keys in tracked files. `.env` is gitignored.
 
 ## Test Markers
 

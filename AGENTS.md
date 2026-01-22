@@ -1,5 +1,30 @@
 # Repository Guidelines
 
+## Ralph Wiggum Loop (Autonomous Development)
+
+This repo uses the **Ralph Wiggum technique** for autonomous AI development sprints.
+
+**Core concept:** Same prompt repeated until completion. State lives in files (`PROGRESS.md`), not context.
+
+```bash
+# Launch (in tmux for persistence)
+tmux new-session -s erdos-ralph './scripts/ralph-loop.sh'
+
+# Monitor (another terminal)
+tail -f logs/ralph/iteration_*.log
+watch -n5 'git log --oneline -5'
+```
+
+**Key files:**
+- `PROMPT.md` - Loop instructions (read each iteration)
+- `PROGRESS.md` - Task queue with checkboxes (state)
+- `docs/debt/` - Active debt decks (SSOT for work)
+- `logs/ralph/` - Per-iteration logs (gitignored)
+
+**Protocol:** See `docs/_ralphwiggum/protocol.md` for full details.
+
+---
+
 ## Project Structure
 
 - `src/erdos/`: Python package (CLI + core logic).

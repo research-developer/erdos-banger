@@ -1,61 +1,66 @@
 #!/usr/bin/env bash
-# Ralph Wiggum Loop Runner
+# Ralph Wiggum Loop Runner (First Principles)
+#
 # Usage: ./scripts/ralph-loop.sh
+#
+# The Ralph Wiggum technique: same prompt repeated until done.
+# State lives in files (PROGRESS.md), not in context.
+#
+# Monitor in another terminal:
+#   tail -f logs/ralph/iteration_*.log
+#   watch -n5 'git log --oneline -5'
 
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
 MAX="${MAX:-50}"
-TIMEOUT="${TIMEOUT:-14400}"
 ITER_TIMEOUT="${ITER_TIMEOUT:-600}"
 
-# Find timeout command
-TIMEOUT_CMD=""
+# Find timeout command (macOS needs gtimeout from coreutils)
 if command -v gtimeout >/dev/null 2>&1; then
     TIMEOUT_CMD="gtimeout"
 elif command -v timeout >/dev/null 2>&1; then
     TIMEOUT_CMD="timeout"
 else
-    echo "Missing timeout command. Install coreutils (macOS) or use Linux timeout." >&2
+    echo "ERROR: Missing timeout command." >&2
+    echo "  macOS: brew install coreutils" >&2
+    echo "  Linux: timeout should be available" >&2
     exit 1
 fi
 
-echo "Ralph Wiggum Loop starting..."
-echo "  Branch: $(git branch --show-current)"
-echo "  Max iterations: $MAX"
-echo "  Session timeout: ${TIMEOUT}s"
-echo "  Iteration timeout: ${ITER_TIMEOUT}s"
+echo "=== Ralph Wiggum Loop ==="
+echo "Branch: $(git branch --show-current)"
+echo "Max iterations: $MAX"
+echo "Iteration timeout: ${ITER_TIMEOUT}s"
+echo ""
+echo "Monitor: tail -f logs/ralph/iteration_*.log"
 echo ""
 
 rm -rf logs/ralph 2>/dev/null || true
 mkdir -p logs/ralph
 
-start_ts="$(date +%s)"
-
 for i in $(seq 1 "$MAX"); do
-    now_ts="$(date +%s)"
-    elapsed="$((now_ts - start_ts))"
-    if (( elapsed >= TIMEOUT )); then
-        echo "Session timeout reached after ${elapsed}s (limit: ${TIMEOUT}s). Stopping." | tee -a "logs/ralph/iteration_$(printf "%03d" "$i").log"
-        break
-    fi
-
     n=$(printf "%03d" "$i")
     log="logs/ralph/iteration_${n}.log"
 
-    echo "=== Iteration $i/$MAX ===" | tee -a "$log"
+    echo "=== Iteration $i/$MAX ===" >> "$log"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting iteration $i/$MAX"
 
-    # Run claude with iteration timeout
-    "$TIMEOUT_CMD" "$ITER_TIMEOUT" claude --dangerously-skip-permissions -p "$(cat PROMPT.md)" 2>&1 | tee -a "$log" || true
+    # Run claude - output goes to file, no piping (avoids EPIPE)
+    "$TIMEOUT_CMD" "$ITER_TIMEOUT" claude --dangerously-skip-permissions \
+        -p "$(cat PROMPT.md)" >> "$log" 2>&1 || {
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Iteration $i exited with code $?"
+    }
 
-    # Check if all tasks complete
+    # Check completion
     if ! grep -q "^\- \[ \]" PROGRESS.md; then
-        echo "All tasks complete!" | tee -a "$log"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] All tasks complete!"
+        echo "All tasks complete!" >> "$log"
         break
     fi
 
     sleep 2
 done
 
-echo "Ralph loop finished."
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ralph loop finished."
