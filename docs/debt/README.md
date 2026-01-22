@@ -88,7 +88,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-062 | Search service "god module" claim invalid | P1 | Closed | a60fc35 |
 | DEBT-064 | `loop/runner.py` direct LLM coupling | P2 | Fixed | 06ffb51 |
 | DEBT-063 | `MetadataProvider` protocol ISP violation | P2 | Fixed | 8966898 |
-| DEBT-065 | Command layer contains application orchestration | P2 | Fixed | (pending) |
+| DEBT-065 | Command layer contains application orchestration | P2 | Fixed | 940a362 |
 
 **Next Debt ID:** DEBT-067
 
