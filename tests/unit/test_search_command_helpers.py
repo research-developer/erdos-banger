@@ -46,7 +46,7 @@ class TestSearchOptions:
 class TestBuildSearchIndex:
     """Tests for build_search_index() service function."""
 
-    @mock.patch("erdos.core.search.service.build_index")
+    @mock.patch("erdos.core.search.indexing_service.build_index")
     def test_successful_build(self, mock_build: mock.Mock) -> None:
         """Should return None on successful build."""
         mock_build.return_value = {"problems_indexed": 100}
@@ -58,7 +58,7 @@ class TestBuildSearchIndex:
         assert result is None
         mock_build.assert_called_once_with(loader=repo, index=index, rebuild=True)
 
-    @mock.patch("erdos.core.search.service.build_index")
+    @mock.patch("erdos.core.search.indexing_service.build_index")
     def test_loader_error(self, mock_build: mock.Mock) -> None:
         """Should return CLIOutput error on ProblemLoaderError."""
         mock_build.side_effect = ProblemLoaderError("Problems not found")
@@ -74,7 +74,7 @@ class TestBuildSearchIndex:
         assert "Problems not found" in result.error["message"]
         assert result.error["code"] == ExitCode.ERROR
 
-    @mock.patch("erdos.core.search.service.build_index")
+    @mock.patch("erdos.core.search.indexing_service.build_index")
     def test_index_error(self, mock_build: mock.Mock) -> None:
         """Should return CLIOutput error on SearchIndexError."""
         mock_build.side_effect = SearchIndexError("Index corrupted")

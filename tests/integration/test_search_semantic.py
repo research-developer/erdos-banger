@@ -333,9 +333,17 @@ class TestJsonOutput:
         """Test that semantic search JSON includes semantic_score field."""
         import json
 
-        with patch(
-            "erdos.core.search.service.get_embedding_model",
-            return_value=(fake_embedder, None),
+        # Patch at both usage sites: embeddings_service (for build_embeddings)
+        # and semantic_service (for search_semantic)
+        with (
+            patch(
+                "erdos.core.search.embeddings_service.get_embedding_model",
+                return_value=(fake_embedder, None),
+            ),
+            patch(
+                "erdos.core.search.semantic_service.get_embedding_model",
+                return_value=(fake_embedder, None),
+            ),
         ):
             result = runner.invoke(
                 app,
@@ -367,9 +375,17 @@ class TestJsonOutput:
         """Test that hybrid search JSON includes all score fields."""
         import json
 
-        with patch(
-            "erdos.core.search.service.get_embedding_model",
-            return_value=(fake_embedder, None),
+        # Patch at both usage sites: embeddings_service (for build_embeddings)
+        # and semantic_service (for search_hybrid)
+        with (
+            patch(
+                "erdos.core.search.embeddings_service.get_embedding_model",
+                return_value=(fake_embedder, None),
+            ),
+            patch(
+                "erdos.core.search.semantic_service.get_embedding_model",
+                return_value=(fake_embedder, None),
+            ),
         ):
             result = runner.invoke(
                 app,

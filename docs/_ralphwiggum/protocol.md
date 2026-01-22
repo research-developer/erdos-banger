@@ -97,38 +97,40 @@ erdos-banger/
 │   └── _archive/specs/          # Archived specs (implemented SSOT)
 ```
 
-### Step 3: Start tmux Session
+### Step 3: Run the Loop (Recommended)
+
+Use the provided script (avoids EPIPE errors from piping):
 
 ```bash
-# Create named session
-tmux new-session -s erdos-ralph
+# Launch in tmux
+tmux new-session -s erdos-ralph './scripts/ralph-loop.sh'
 
-# Or attach to existing
-tmux attach -t erdos-ralph
+# Monitor in another terminal
+tail -f logs/ralph/iteration_*.log
+watch -n5 'git log --oneline -5'
 
 # Detach without killing: Ctrl+B, then D
+# Reattach: tmux attach -t erdos-ralph
 # Kill session: tmux kill-session -t erdos-ralph
 ```
 
-### Step 4: Run the Loop
+Environment variables (optional):
+- `MAX=50` - Maximum iterations (default: 50)
+- `ITER_TIMEOUT=600` - Per-iteration timeout in seconds (default: 600)
+
+### Step 4: Manual Loop (Alternative)
+
+If you need more control, run manually:
 
 ```bash
-# Navigate to project
 cd /path/to/erdos-banger
 git checkout ralph-wiggum-<sprint>
 
-# THE RALPH LOOP (bounded by iteration + wall-clock timeouts)
-#
-# Linux: `timeout` is typically available.
-# macOS: install coreutils and use `gtimeout`:
+# macOS requires gtimeout from coreutils:
 #   brew install coreutils
-#
-# Optional: set TIMEOUT_CMD explicitly:
-#   TIMEOUT_CMD=gtimeout
 
 MAX=50
-TIMEOUT=14400      # 4 hours total max
-ITER_TIMEOUT=600   # 10 minutes per iteration max
+ITER_TIMEOUT=600
 
 TIMEOUT_CMD="${TIMEOUT_CMD:-}"
 if [[ -z "$TIMEOUT_CMD" ]]; then

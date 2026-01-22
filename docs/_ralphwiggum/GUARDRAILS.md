@@ -47,9 +47,19 @@ This document is a **living record** of guardrails, failure patterns, and “got
   - `git diff --cached | rg -in "(sk-|sk-ant-|ghp_|AIza|arstl_|xoxb-|hf_)"` (what you're about to push)
   - `git ls-files -z | xargs -0 rg -in "(sk-|sk-ant-|ghp_|AIza|arstl_|xoxb-|hf_)"` (full tracked tree)
 
+### FP-006: EPIPE errors when piping through tee
+
+- Symptom: `Error: write EPIPE` crashes the claude process mid-iteration.
+- Common cause: Piping claude output through `tee` (`claude ... | tee -a log`). The pipe can break if the receiving end closes unexpectedly.
+- Mitigation: Use direct file redirection instead of piping:
+  - Bad: `claude -p "$(cat PROMPT.md)" 2>&1 | tee -a "$log"`
+  - Good: `claude -p "$(cat PROMPT.md)" >> "$log" 2>&1`
+- The `scripts/ralph-loop.sh` script uses the correct approach.
+
 ---
 
 ## Guardrail Changes (Protocol/Prompt/CI)
 
+- 2026-01-22: Added FP-006 (EPIPE errors). Updated `scripts/ralph-loop.sh` to use direct file redirection instead of piping through `tee`. Updated protocol.md to recommend the script.
 - 2026-01-21: Added FP-005 (git rebase derailment). Updated PROMPT.md and protocol.md to explicitly forbid `git rebase` and `git pull`, with `--force-with-lease` as the recovery for divergence.
 - 2026-01-19: Added iteration + total runtime timeouts and per-iteration logs (`logs/ralph/`) to the recommended loop commands.
