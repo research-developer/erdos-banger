@@ -88,7 +88,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-044 | `core/` bounded-context refactor (reduce sprawl) | P2 | Fixed | b3b5730 (+ prior) |
 | DEBT-061 | Remove core backward-compatibility shims | P2 | Fixed | 4466340 |
 | DEBT-060 | Formalize command long Typer callback | P4 | Fixed | 7b871e5 |
-| DEBT-062 | Search service “god module” claim invalid | P1 | Closed | (see git history) |
+| DEBT-062 | Search service “god module” claim invalid | P1 | Closed | a60fc35 |
 
 **Next Debt ID:** DEBT-067
 

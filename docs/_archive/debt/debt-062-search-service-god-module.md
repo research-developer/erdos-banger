@@ -4,7 +4,7 @@
 **Priority:** P1
 **Found:** 2026-01-22
 **Closed:** 2026-01-22
-**Closed In:** (see git history)
+**Closed In:** a60fc35
 **Found By:** Clean Code audit (SOLID principles review)
 
 ---
