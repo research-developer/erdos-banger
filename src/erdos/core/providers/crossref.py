@@ -1,4 +1,8 @@
-"""Crossref metadata provider (SPEC-022)."""
+"""Crossref metadata provider (SPEC-022).
+
+Implements DOILookupProvider only (ISP compliance). arXiv lookups and
+search are not supported by the Crossref API.
+"""
 
 from __future__ import annotations
 
@@ -21,9 +25,10 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class CrossrefProvider:
-    """MetadataProvider implementation using Crossref API.
+    """DOILookupProvider implementation using Crossref API.
 
-    Note: Crossref is DOI-only. arXiv lookups and search are not supported.
+    ISP compliance: Only implements get_by_doi() because Crossref doesn't
+    support arXiv ID lookups or search.
     """
 
     mailto: str
@@ -52,18 +57,3 @@ class CrossrefProvider:
                 return None
             raise
         return parse_crossref_work(raw, doi=doi)
-
-    def get_by_arxiv(self, arxiv_id: str) -> ReferenceRecord | None:
-        """Crossref does not support arXiv ID lookups."""
-        logger.debug("Crossref does not support arXiv lookup: %s", arxiv_id)
-        return None
-
-    def search(
-        self,
-        query: str,  # noqa: ARG002
-        *,
-        limit: int = 25,  # noqa: ARG002
-    ) -> list[ReferenceRecord]:
-        """Crossref search is not implemented (use OpenAlex for search)."""
-        logger.debug("Crossref search not implemented")
-        return []

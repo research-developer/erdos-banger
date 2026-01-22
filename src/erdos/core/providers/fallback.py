@@ -1,4 +1,12 @@
-"""Fallback metadata provider chain (SPEC-022)."""
+"""Fallback metadata provider chain (SPEC-022).
+
+ISP-compliant router that composes three independent capability chains:
+- DOI chain: list[DOILookupProvider]
+- arXiv chain: list[ArxivLookupProvider]
+- search chain: list[SearchableMetadataProvider]
+
+This allows providers to implement only the capabilities they support.
+"""
 
 from __future__ import annotations
 
@@ -10,12 +18,16 @@ import requests
 
 if TYPE_CHECKING:
     from erdos.core.models import ReferenceRecord
-    from erdos.core.ports import MetadataProvider
+    from erdos.core.ports import (
+        ArxivLookupProvider,
+        DOILookupProvider,
+        SearchableMetadataProvider,
+    )
 
 
 logger = logging.getLogger(__name__)
 
-# Expected exception types per MetadataProvider contract (ports.py):
+# Expected exception types per provider protocol contract (ports.py):
 # - requests.RequestException: network/API errors (non-404)
 # - ValueError: invalid identifiers or irrecoverable parse errors
 # Unknown exceptions propagate (fail fast on programming errors).
@@ -23,43 +35,71 @@ _EXPECTED_PROVIDER_ERRORS = (requests.RequestException, ValueError)
 
 
 class FallbackProvider:
-    """MetadataProvider that chains multiple providers with fallback.
+    """MetadataProvider that routes to capability-specific fallback chains.
 
-    Tries the primary provider first. If it returns None (not found) or raises
-    an exception, falls back to the next provider in the chain.
+    ISP-compliant: each lookup method uses only providers that support
+    that capability. Providers no longer need stub methods for unsupported
+    operations.
 
     Example:
         provider = FallbackProvider(
-            OpenAlexProvider.from_env(),
-            CrossrefProvider.from_env(),
+            doi_chain=[OpenAlexProvider.from_env(), CrossrefProvider.from_env()],
+            arxiv_chain=[OpenAlexProvider.from_env(), ArxivProvider()],
+            search_chain=[OpenAlexProvider.from_env()],
         )
-        # Tries OpenAlex first, falls back to Crossref if OpenAlex fails
+        # DOI lookups try OpenAlex → Crossref
+        # arXiv lookups try OpenAlex → arXiv
+        # Search uses OpenAlex only
     """
 
-    __slots__ = ("_providers",)
+    __slots__ = ("_arxiv_chain", "_doi_chain", "_name", "_search_chain")
 
-    def __init__(self, *providers: MetadataProvider) -> None:
-        """Initialize with ordered list of providers.
+    def __init__(
+        self,
+        *,
+        doi_chain: list[DOILookupProvider],
+        arxiv_chain: list[ArxivLookupProvider],
+        search_chain: list[SearchableMetadataProvider],
+    ) -> None:
+        """Initialize with capability-specific chains.
 
         Args:
-            *providers: Providers in priority order (first is primary).
+            doi_chain: Providers for DOI lookup (in priority order).
+            arxiv_chain: Providers for arXiv lookup (in priority order).
+            search_chain: Providers for search (in priority order).
 
         Raises:
-            ValueError: If no providers are given.
+            ValueError: If all chains are empty.
         """
-        if not providers:
-            raise ValueError("FallbackProvider requires at least one provider")
-        self._providers = list(providers)
+        if not doi_chain and not arxiv_chain and not search_chain:
+            raise ValueError("FallbackProvider requires at least one provider chain")
+        self._doi_chain = list(doi_chain)
+        self._arxiv_chain = list(arxiv_chain)
+        self._search_chain = list(search_chain)
+        self._name = self._build_name()
+
+    def _build_name(self) -> str:
+        """Build human-readable name showing the capability chains."""
+        parts = []
+        if self._doi_chain:
+            doi_names = " -> ".join(p.provider_name for p in self._doi_chain)
+            parts.append(f"doi:{doi_names}")
+        if self._arxiv_chain:
+            arxiv_names = " -> ".join(p.provider_name for p in self._arxiv_chain)
+            parts.append(f"arxiv:{arxiv_names}")
+        if self._search_chain:
+            search_names = " -> ".join(p.provider_name for p in self._search_chain)
+            parts.append(f"search:{search_names}")
+        return f"fallback({', '.join(parts)})"
 
     @property
     def provider_name(self) -> str:
-        """Human-readable name showing the fallback chain."""
-        names = [p.provider_name for p in self._providers]
-        return f"fallback({' -> '.join(names)})"
+        """Human-readable name showing the capability chains."""
+        return self._name
 
     def get_by_doi(self, doi: str) -> ReferenceRecord | None:
-        """Try each provider in order until one returns a result."""
-        for provider in self._providers:
+        """Try each DOI provider in order until one returns a result."""
+        for provider in self._doi_chain:
             try:
                 result = provider.get_by_doi(doi)
                 if result is not None:
@@ -79,8 +119,8 @@ class FallbackProvider:
         return None
 
     def get_by_arxiv(self, arxiv_id: str) -> ReferenceRecord | None:
-        """Try each provider in order until one returns a result."""
-        for provider in self._providers:
+        """Try each arXiv provider in order until one returns a result."""
+        for provider in self._arxiv_chain:
             try:
                 result = provider.get_by_arxiv(arxiv_id)
                 if result is not None:
@@ -104,8 +144,8 @@ class FallbackProvider:
         return None
 
     def search(self, query: str, *, limit: int = 25) -> list[ReferenceRecord]:
-        """Use first provider that returns non-empty results."""
-        for provider in self._providers:
+        """Use first search provider that returns non-empty results."""
+        for provider in self._search_chain:
             try:
                 results = provider.search(query, limit=limit)
                 if results:

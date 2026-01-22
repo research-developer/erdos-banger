@@ -37,8 +37,8 @@ Work strictly top-to-bottom unless blocked by dependencies.
   Deck: `docs/_archive/debt/debt-062-search-service-god-module.md`
 - [x] **DEBT-064**: Inject LLM executor into loop runner (DIP)
   Deck: `docs/_archive/debt/debt-064-loop-runner-dip.md`
-- [ ] **DEBT-063**: Split `MetadataProvider` protocol (ISP)
-  Deck: `docs/debt/debt-063-metadata-provider-isp.md`
+- [x] **DEBT-063**: Split `MetadataProvider` protocol (ISP)
+  Deck: `docs/_archive/debt/debt-063-metadata-provider-isp.md`
 - [ ] **DEBT-065**: Move loop orchestration out of command layer (SRP)
   Deck: `docs/debt/debt-065-thick-cli-callbacks.md`
 - [ ] **DEBT-066**: Test directory structure should mirror src/ bounded contexts (CCP)
@@ -52,3 +52,4 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - **2026-01-22 (DEBT-061)**: Removed 10 backward-compatibility shim files from `src/erdos/core/` and updated all imports to use bounded-context modules directly. Added regression guard tests in `test_dependencies.py`. `make ci` passes.
 - **2026-01-22 (DEBT-062)**: Closed as invalid after re-auditing SSOT: `core/search/service.py` is 140 LOC and already decomposed; no exemption exists. Archived deck to prevent wasted iterations.
 - **2026-01-22 (DEBT-064)**: Injected LLM executor into loop runner (DIP compliance). Added `LLMExecute` protocol to `ports.py`, updated `run_loop()` and `_run_single_iteration()` to accept injected `llm_execute` dependency with default. Refactored 3 tests to pass `llm_execute=fake_llm` instead of patching module globals. `make ci` passes.
+- **2026-01-22 (DEBT-063)**: ISP compliance for `MetadataProvider` protocol. Split into `DOILookupProvider`, `ArxivLookupProvider`, `SearchableMetadataProvider`. Removed stub methods from `ArxivProvider` (no more `get_by_doi`, `search`) and `CrossrefProvider` (no more `get_by_arxiv`, `search`). Rewrote `FallbackProvider` to compose capability-specific chains (doi_chain, arxiv_chain, search_chain). Updated wiring in `context.py` and `ingest/fetch.py`. `make ci` passes.
