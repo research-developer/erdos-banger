@@ -32,7 +32,7 @@ This command is intentionally deferred because it is high-risk and high-complexi
 ### Command signature
 
 ```text
-erdos loop PROBLEM_ID [OPTIONS]
+erdos loop run PROBLEM_ID [OPTIONS]
 ```
 
 **Arguments**
@@ -42,7 +42,6 @@ erdos loop PROBLEM_ID [OPTIONS]
 **Options**
 
 - `--max-iter, -n INT`: maximum iterations (default: `10`)
-- `--yes, -y`: non-interactive; automatically apply changes
 - `--no-apply`: propose changes only; never write to disk
 - `--timeout SECONDS`: Lean check timeout (default: `120`)
 - `--allow-sorry-increase INT`: allow a patch to increase `sorry` count by up to N (default: `0`)
@@ -60,13 +59,13 @@ erdos loop PROBLEM_ID [OPTIONS]
 
 ```bash
 # Propose-only (safe): no file writes
-uv run erdos loop 6 --no-apply
+uv run erdos loop run 6 --no-apply
 
-# Non-interactive (dangerous): apply up to 3 iterations
-ERDOS_LLM_COMMAND="./scripts/llm.sh" uv run erdos loop 6 --yes --max-iter 3
+# Auto-apply (writes under formal/lean/Erdos/ unless --no-apply)
+ERDOS_LLM_COMMAND="./scripts/llm.sh" uv run erdos loop run 6 --max-iter 3
 
 # Machine output (propose-only)
-uv run erdos --json loop 6 --no-apply
+uv run erdos --json loop run 6 --no-apply
 ```
 
 ---
@@ -86,16 +85,12 @@ At a high level:
      - the current Lean file (or relevant excerpt)
      - Lean errors (from `LeanCheckResult.errors`)
      - the problem statement (`ProblemRecord`)
-     - optional retrieved context (via `SearchIndex.search`)
+   - optional retrieved context (via `SearchIndex.search`)
    - run the external LLM command (subprocess) to propose an edit
-   - show the proposed patch and request confirmation (unless `--yes`)
    - apply the patch (unless `--no-apply`)
    - repeat until success or max iterations reached
 
-**Invariant:** The loop never silently modifies files. Either:
-
-- it prompts the user, or
-- `--yes` is provided.
+**Invariant:** When not in `--no-apply` mode, the loop applies patches automatically.
 
 ---
 
@@ -191,7 +186,7 @@ Required `event` values:
 - `llm_response` (includes the raw model output)
 - `patch_applied` (includes file hash before/after)
 - `lean_check` (includes `LeanCheckResult` summary)
-- `user_decision` (`yes`/`no`/`skip`/`quit`, omitted in `--yes` mode)
+- `user_decision` (`yes`/`no`/`skip`/`quit`, omitted when no user prompt is shown, e.g., `--no-apply`)
 
 ---
 
@@ -245,8 +240,34 @@ When implemented, the following tests are required:
 
 ---
 
+## Implementation Deviations (SSOT: Code)
+
+Historical deviations existed during prior iterations; the spec has since been aligned with the implementation and the code is the source of truth (SSOT):
+
+### 1. CLI Shape: `erdos loop run` subcommand
+
+**Spec:** `erdos loop PROBLEM_ID [OPTIONS]`
+**Implementation:** `erdos loop run PROBLEM_ID [OPTIONS]`
+
+**Rationale:** Modern CLI style with `run` subcommand enables future subcommands (e.g., `erdos loop status`, `erdos loop resume`).
+
+### 2. `--yes/-y` flag removed (auto-apply by default)
+
+**Spec:** `--yes, -y` for non-interactive mode with explicit confirmation
+**Implementation:** Patches apply automatically when not in `--no-apply` mode; `--yes` flag removed
+
+**Rationale:** Simpler UX for automation pipelines. Use `--no-apply` for explicit human review. The original `--yes` flag was redundant with the absence of `--no-apply`.
+
+### 3. JSON success semantics enforced
+
+**Spec:** `CLIOutput.success=true` only on proof completion
+**Implementation:** Aligned. Non-success statuses (`max_iterations`, `llm_required`, `no_fix_possible`, etc.) now return `CLIOutput.success=false` with loop data embedded in the error object.
+
+---
+
 ## Changelog
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.3.0 | 2026-01-22 | Document implementation deviations; align JSON success semantics with spec |
 | 0.2.0 | 2026-01-18 | Rewrite: align with v1 `src/erdos/core` structure and Spec 011 external LLM approach |

@@ -19,7 +19,7 @@ uv run erdos list --status open --limit 5
 uv run erdos show 6
 
 # Full CI check (run before every commit)
-make ci                    # format-check + lint + typecheck + cov
+make ci                    # format-check + lint + typecheck + cov + audit
 
 # Individual checks
 make lint                  # ruff check
@@ -28,6 +28,7 @@ make typecheck             # mypy src/ tests/
 make test                  # pytest (skip Lean + network)
 make test-all              # pytest (all tests)
 make smoke                 # CLI smoke test
+make audit                 # LOC guardrails check
 ```
 
 ## Running Tests
@@ -115,28 +116,62 @@ src/erdos/
 - All CLI output through Rich console or `exit_with_result()`
 - Clean Code / SOLID: keep Typer callbacks thin, move orchestration into `src/erdos/core/`, and avoid growing new "god modules". If a necessary refactor is too large for the current change, create a debt deck in `docs/debt/` with evidence + acceptance criteria.
 
+## Code Health Guardrails
+
+CI enforces LOC (lines of code) thresholds to prevent god-file regressions:
+
+| Scope | Threshold | Rationale |
+|-------|-----------|-----------|
+| Command modules (`commands/**/*.py`) | 400 LOC | Keep Typer callbacks thin |
+| Core modules (`core/**/*.py`) | 500 LOC | Business logic may be denser |
+| Functions | 120 LOC | Readable, testable units |
+
+**Existing violations are exempted** if paired with a debt deck. Run `make audit` to check.
+
+**To add an exemption:**
+1. Create a debt deck in `docs/debt/debt-XXX-*.md` documenting the issue
+2. Add the module/function to `EXEMPTED_MODULES` or `EXEMPTED_FUNCTIONS` in `scripts/audit_code_health.py`
+
+**Inline exemption markers** (alternative to hardcoding):
+- Module: Add `# exempt: DEBT-XXX` in the first 50 lines
+- Function: Add `# exempt: DEBT-XXX` in the docstring
+
 ## Core Package Boundaries
 
 `src/erdos/core/` uses **bounded contexts** (subpackages) to organize code by domain:
 
-**Existing subpackages:**
+**Bounded-context subpackages:**
 - `ask/` - RAG Q&A logic (retrieval, prompt, LLM, service)
+- `batch/` - Batch processing (filters, state, runner)
+- `clients/` - HTTP client adapters (arXiv, Crossref, OpenAlex APIs)
+- `formal_conjectures/` - Lean formalization upstream sync (provenance, fetch, local)
 - `ingest/` - Reference ingestion (fetch, manifest models, service)
+- `loop/` - Iterative proof loop (config, verifier, patch validator, runner, prompt)
 - `models/` - Pydantic domain models (ProblemRecord, ReferenceRecord, CLIOutput, etc.)
-- `search/` - Search contract types (EmbeddingModelProtocol, SearchResult, SemanticSearchResult)
+- `pdf/` - PDF conversion utilities (Marker, pdfplumber)
+- `providers/` - Metadata provider implementations (arXiv, Crossref, OpenAlex, fallback)
+- `search/` - Search domain (FTS, semantic, hybrid, embeddings, index builder)
 
-**Top-level modules (legacy exceptions):**
-- `ports.py` - Protocol "ports" for dependency inversion (stable contract)
-- `context.py` - AppContext composition root
+**Top-level modules (stable contracts & utilities):**
+- `ports.py`, `repositories.py` - Protocol "ports" and in-memory implementations for dependency inversion
+- `context.py`, `config.py` - AppContext composition root and centralized configuration
 - `constants.py`, `timing.py`, `exit_codes.py` - Shared utilities
-- `problem_loader.py`, `search_index.py`, `index_builder.py` - Core data loading/search
-- `*_client.py` - HTTP clients (arxiv, crossref, openalex)
-- Domain modules: `loop.py`, `batch.py`, `lean_runner.py`, `embeddings.py`, etc.
+- `problem_loader.py`, `literature_paths.py` - Data loading and path conventions
+- `lean_runner.py`, `formalizer.py`, `aristotle.py` - Lean 4 compilation, skeleton generation, and Aristotle prover
+- `rate_limiter.py`, `retry.py` - HTTP resilience utilities
+- `run_logger.py`, `run_logger_summaries.py` - Execution logging
+
+**Backward-compatible shims (thin re-exports):**
+- `arxiv_client.py`, `crossref_client.py`, `openalex_client.py` → `clients/`
+- `embeddings.py`, `index_builder.py`, `search_index.py` → `search/`
+- `batch.py` → `batch/`
+- `loop_config.py`, `loop_verifier.py`, `patch_validator.py` → `loop/`
+- `pdf_converter.py` → `pdf/`
 
 **Rules for new code:**
 1. **No new top-level modules** at `src/erdos/core/*.py`. Place new code in an existing subpackage or create a new one for a distinct bounded context.
-2. **Infrastructure adapters** (HTTP clients, external service wrappers) should live in `core/clients/` or `core/adapters/` when this subpackage is created.
-3. **If a domain grows to 3+ related modules**, extract into a subpackage (e.g., `core/loop/` for loop-related modules).
+2. **Infrastructure adapters** (HTTP clients, external service wrappers) live in `core/clients/`.
+3. **If a domain grows to 3+ related modules**, extract into a subpackage.
 
 ## Technical Debt Status
 

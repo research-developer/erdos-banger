@@ -20,7 +20,6 @@ from mcp.server.fastmcp import FastMCP
 
 from erdos.commands.list_cmd import ListOptions, _execute_list_query
 from erdos.commands.refs import get_refs
-from erdos.commands.search import search_problems_basic, search_problems_fts
 from erdos.commands.show import get_problem as show_get_problem
 from erdos.core.ask import ask_question as core_ask_question
 from erdos.core.exit_codes import ExitCode
@@ -29,11 +28,16 @@ from erdos.core.lean_runner import LeanRunner, LeanRunnerError
 from erdos.core.models import CLIOutput
 from erdos.core.problem_loader import ProblemLoader
 from erdos.core.run_logger import RunLogger
+from erdos.core.search import search_basic, search_fts
 from erdos.core.search_index import SearchIndex
 
 
 if TYPE_CHECKING:
-    from erdos.core.ports import ProblemRepository, SearchIndexProtocol
+    from erdos.core.ports import (
+        ProblemRepository,
+        SearchIndexProtocol,
+        SearchIndexReadPort,
+    )
 
 
 # Initialize the FastMCP server
@@ -150,7 +154,7 @@ def mcp_search_index(
     limit: int = 10,
     problem_id: int | None = None,
     mode: str = "bm25",
-    index: SearchIndexProtocol,
+    index: SearchIndexReadPort,
     repo: ProblemRepository,
 ) -> dict[str, Any]:
     """Search the problem/literature index.
@@ -160,7 +164,7 @@ def mcp_search_index(
         limit: Maximum results to return
         problem_id: Filter to specific problem
         mode: Search mode (bm25, semantic, hybrid) - only bm25 supported via MCP
-        index: Search index
+        index: Search index read port (only read operations needed)
         repo: Problem repository
 
     Returns:
@@ -177,13 +181,21 @@ def mcp_search_index(
         return _cli_output_to_dict(error)
 
     # Use FTS search
-    result = search_problems_fts(
+    result = search_fts(
         query,
         index=index,
         repo=repo,
         limit=limit,
         problem_id=problem_id,
     )
+
+    # Fallback to basic search if index is empty (FTS returns None)
+    if result is None:
+        result = search_basic(query, repo, limit, problem_id)
+        if result.success and result.data:
+            result.data["mode"] = "basic"
+            result.data["fallback_reason"] = "index_empty"
+        return _cli_output_to_dict(result)
 
     # Update mode in response
     if result.success and result.data:
@@ -442,9 +454,7 @@ def search_index(
 
     if index is None:
         # Fall back to basic search
-        basic_result = search_problems_basic(
-            query, repo, limit=limit, problem_id=problem_id
-        )
+        basic_result = search_basic(query, repo, limit=limit, problem_id=problem_id)
         if basic_result.success and basic_result.data:
             basic_result.data["mode"] = "basic"
         return json.dumps(_cli_output_to_dict(basic_result))

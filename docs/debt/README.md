@@ -16,24 +16,8 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | Status | Deck |
 |----|-------|----------|--------|------|
-| DEBT-042 | Loop contract drift + `core/loop.py` god function | P1 | Open | `debt-042-loop-command-contract-and-god-module.md` |
-| DEBT-043 | `erdos search` command god module (SRP pressure) | P2 | Open | `debt-043-search-command-god-module.md` |
-| DEBT-044 | `core/` bounded-context refactor (reduce sprawl) | P2 | Open | `debt-044-core-bounded-context-refactor.md` |
-| DEBT-045 | Split `SearchIndexProtocol` (ISP/DIP) | P2 | Open | `debt-045-searchindexprotocol-interface-segregation.md` |
-| DEBT-046 | CLIOutput `success` vs exit code ambiguity | P2 | Open | `debt-046-clioutput-success-vs-exitcode.md` |
-| DEBT-047 | Loop logging sanitization/unification | P3 | Open | `debt-047-loop-logging-sanitization-and-unification.md` |
-| DEBT-048 | MCP server module size + CI coverage gap | P3 | Open | `debt-048-mcp-server-god-module-and-ci-coverage.md` |
-| DEBT-049 | SearchIndex monolith (SRP extraction) | P2 | Open | `debt-049-search-index-monolith.md` |
-| DEBT-050 | Ingest fetch SRP split | P2 | Open | `debt-050-ingest-fetch-srp.md` |
-| DEBT-051 | Batch module SRP split | P3 | Open | `debt-051-batch-module-srp.md` |
-| DEBT-052 | `erdos ingest` command god module | P2 | Open | `debt-052-ingest-command-god-module.md` |
-| DEBT-053 | Formal conjectures module monolith | P3 | Open | `debt-053-formal-conjectures-module-monolith.md` |
-| DEBT-054 | Run logger OCP violation (central command switch) | P3 | Open | `debt-054-run-logger-ocp-violation.md` |
-| DEBT-055 | Scattered env-based configuration | P2 | Open | `debt-055-configuration-scattered-env-deps.md` |
-| DEBT-056 | FallbackProvider broad exception catches | P3 | Open | `debt-056-fallback-provider-broad-exceptions.md` |
-| DEBT-057 | Guardrails against god-file regressions | P3 | Open | `debt-057-guardrails-against-god-files.md` |
-| DEBT-058 | MD5 `# noqa: S324` in loop module | P3 | Open | `debt-058-md5-noqa-in-loop.md` |
-| DEBT-059 | CodeRabbit PR#17 fixes (validation + invariants) | P2 | Open | `debt-059-coderabbit-pr17-fixes.md` |
+| DEBT-060 | Formalize command long Typer callback | P4 | Open | `debt-060-formalize-cmd-long-callback.md` |
+| DEBT-061 | Remove core backward-compatibility shims | P2 | Open | `debt-061-remove-core-compatibility-shims.md` |
 
 ## Archived Debt
 
@@ -82,8 +66,26 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-040 | `src/erdos/core/` module sprawl (doc-only) | P3 | Fixed | 994b99c |
 | DEBT-036 | Marker device selection not exposed | P3 | Fixed | 7005b65 |
 | DEBT-038 | MetadataProvider abstraction missing | P2 | Resolved | SPEC-022 |
+| DEBT-059 | CodeRabbit PR#17 fixes (validation + invariants) | P2 | Fixed | 61ad15e |
+| DEBT-046 | CLIOutput `success` vs exit code ambiguity | P2 | Fixed | 0046cdf |
+| DEBT-056 | FallbackProvider broad exception catches | P3 | Fixed | 5a6ce89 |
+| DEBT-058 | MD5 `# noqa: S324` in loop module | P3 | Fixed | 3891aeb |
+| DEBT-047 | Loop logging sanitization/unification | P3 | Fixed | c090fb3 |
+| DEBT-057 | Guardrails against god-file regressions | P3 | Fixed | 1f37f5c |
+| DEBT-042 | Loop contract drift + god function | P1 | Fixed | 4b90005 |
+| DEBT-043 | `erdos search` command god module (SRP pressure) | P2 | Fixed | 4f99202 |
+| DEBT-045 | Split `SearchIndexProtocol` (ISP/DIP) | P2 | Fixed | 279928f |
+| DEBT-049 | SearchIndex monolith (SRP extraction) | P2 | Fixed | 96ec69a |
+| DEBT-052 | `erdos ingest` command god module | P2 | Fixed | 8c53292 |
+| DEBT-050 | Ingest fetch SRP split | P2 | Fixed | 8cb7794 |
+| DEBT-054 | Run logger OCP violation (registry-based summarizers) | P3 | Fixed | b1637c6 |
+| DEBT-053 | Formal conjectures module monolith (SRP split) | P3 | Fixed | 1da90e7 |
+| DEBT-051 | Batch module SRP split | P3 | Fixed | 8cb7794 |
+| DEBT-048 | MCP server CI coverage gap | P3 | Fixed | c756f4e |
+| DEBT-055 | Scattered env-based configuration (centralized AppConfig) | P2 | Fixed | b3b5730 |
+| DEBT-044 | `core/` bounded-context refactor (reduce sprawl) | P2 | Fixed | b3b5730 (+ prior) |
 
-**Next Debt ID:** DEBT-060
+**Next Debt ID:** DEBT-062
 
 ### Archived Debt Decks
 
@@ -128,3 +130,21 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-040-core-package-module-sprawl.md`
 - `docs/_archive/debt/debt-036-marker-mps-not-configured.md`
 - `docs/_archive/debt/debt-038-metadata-provider-abstraction.md`
+- `docs/_archive/debt/debt-059-coderabbit-pr17-fixes.md`
+- `docs/_archive/debt/debt-046-clioutput-success-vs-exitcode.md`
+- `docs/_archive/debt/debt-056-fallback-provider-broad-exceptions.md`
+- `docs/_archive/debt/debt-058-md5-noqa-in-loop.md`
+- `docs/_archive/debt/debt-047-loop-logging-sanitization-and-unification.md`
+- `docs/_archive/debt/debt-057-guardrails-against-god-files.md`
+- `docs/_archive/debt/debt-042-loop-command-contract-and-god-module.md`
+- `docs/_archive/debt/debt-043-search-command-god-module.md`
+- `docs/_archive/debt/debt-045-searchindexprotocol-interface-segregation.md`
+- `docs/_archive/debt/debt-049-search-index-monolith.md`
+- `docs/_archive/debt/debt-052-ingest-command-god-module.md`
+- `docs/_archive/debt/debt-050-ingest-fetch-srp.md`
+- `docs/_archive/debt/debt-054-run-logger-ocp-violation.md`
+- `docs/_archive/debt/debt-053-formal-conjectures-module-monolith.md`
+- `docs/_archive/debt/debt-051-batch-module-srp.md`
+- `docs/_archive/debt/debt-048-mcp-server-god-module-and-ci-coverage.md`
+- `docs/_archive/debt/debt-055-configuration-scattered-env-deps.md`
+- `docs/_archive/debt/debt-044-core-bounded-context-refactor.md`

@@ -120,6 +120,12 @@ ignore = [
 "src/erdos/core/pdf_converter.py" = [
     "TC003",  # Path used at runtime in function signatures
 ]
+"src/erdos/core/pdf/*.py" = [
+    "TC003",  # Path used at runtime in function signatures
+]
+"src/erdos/core/batch/*.py" = [
+    "TC003",  # Path used at runtime in function signatures
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["erdos"]
@@ -219,9 +225,7 @@ filterwarnings = [
 source = ["src"]
 branch = true
 parallel = true
-omit = [
-    "src/erdos/mcp/*",  # Optional dependency, tested separately
-]
+# MCP is tested in dedicated CI job (test-mcp) with --extra mcp
 
 [tool.coverage.report]
 exclude_lines = [

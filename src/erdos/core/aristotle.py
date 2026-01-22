@@ -23,7 +23,7 @@ import logging
 import os
 import shutil
 import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -89,12 +89,20 @@ class AristotleResult:
         }
 
 
-def validate_aristotle_config() -> AristotleConfig:
-    """Validate Aristotle configuration from environment.
+def validate_aristotle_config(
+    *,
+    api_key: str | None = None,
+    command: str | None = None,
+) -> AristotleConfig:
+    """Validate Aristotle configuration.
 
     Checks that:
     - ARISTOTLE_API_KEY is set and non-empty
     - The aristotle command can be found (via ERDOS_ARISTOTLE_COMMAND or PATH)
+
+    Args:
+        api_key: Explicit API key (falls back to ARISTOTLE_API_KEY env var).
+        command: Explicit command path (falls back to ERDOS_ARISTOTLE_COMMAND env var).
 
     Returns:
         AristotleConfig with validated command path
@@ -102,23 +110,41 @@ def validate_aristotle_config() -> AristotleConfig:
     Raises:
         AristotleError: If configuration is invalid (error_type="ConfigError")
     """
-    # Check for API key
-    api_key = os.environ.get("ARISTOTLE_API_KEY", "").strip()
-    if not api_key:
-        raise AristotleError(
-            "ARISTOTLE_API_KEY environment variable is not set or empty. "
-            "Please set it in your .env file.",
-            error_type="ConfigError",
-        )
+    # Check for API key (explicit > env var)
+    if api_key is not None:
+        effective_api_key = api_key.strip()
+        if not effective_api_key:
+            raise AristotleError(
+                "Provided api_key parameter is empty.",
+                error_type="ConfigError",
+            )
+    else:
+        effective_api_key = os.environ.get("ARISTOTLE_API_KEY", "").strip()
+        if not effective_api_key:
+            raise AristotleError(
+                "ARISTOTLE_API_KEY environment variable is not set or empty. "
+                "Please set it in your .env file.",
+                error_type="ConfigError",
+            )
 
-    # Get command from environment or use default
-    command = os.environ.get("ERDOS_ARISTOTLE_COMMAND", "aristotle").strip()
+    # Get command (explicit > env var > default)
+    if command is not None:
+        effective_command = command.strip()
+        if not effective_command:
+            raise AristotleError(
+                "Provided command parameter is empty.",
+                error_type="ConfigError",
+            )
+    else:
+        effective_command = os.environ.get(
+            "ERDOS_ARISTOTLE_COMMAND", "aristotle"
+        ).strip()
 
     # Resolve command path
-    resolved_command = _resolve_command(command)
+    resolved_command = _resolve_command(effective_command)
     if resolved_command is None:
         raise AristotleError(
-            f"Aristotle command not found: {command}. "
+            f"Aristotle command not found: {effective_command}. "
             "Ensure aristotlelib is installed (pip install aristotlelib) "
             "or set ERDOS_ARISTOTLE_COMMAND to the correct path.",
             error_type="ConfigError",
@@ -183,6 +209,8 @@ def run_aristotle_prove_from_file(
     input_file: Path,
     output_file: Path,
     *,
+    api_key: str | None = None,
+    command: str | None = None,
     timeout: int = 600,
     informal: bool = False,
     formal_input_context: bool = False,
@@ -192,6 +220,8 @@ def run_aristotle_prove_from_file(
     Args:
         input_file: Path to the input Lean file
         output_file: Path for the output Lean file (must differ from input)
+        api_key: Explicit API key (falls back to ARISTOTLE_API_KEY env var)
+        command: Explicit command path (falls back to ERDOS_ARISTOTLE_COMMAND env var)
         timeout: Maximum seconds to wait for completion (default: 600)
         informal: Pass --informal flag to Aristotle
         formal_input_context: Pass --formal-input-context flag to Aristotle
@@ -202,11 +232,13 @@ def run_aristotle_prove_from_file(
     Raises:
         AristotleError: On configuration, validation, or timeout errors
     """
-    # Validate configuration first
-    config = validate_aristotle_config()
-    config.timeout = timeout
-    config.informal = informal
-    config.formal_input_context = formal_input_context
+    base_config = validate_aristotle_config(api_key=api_key, command=command)
+    config = replace(
+        base_config,
+        timeout=timeout,
+        informal=informal,
+        formal_input_context=formal_input_context,
+    )
 
     # Validate input file exists
     if not input_file.exists():
@@ -228,6 +260,11 @@ def run_aristotle_prove_from_file(
     cmd = build_aristotle_command(config, input_file, output_file)
     logger.debug("Running Aristotle: %s (timeout=%ds)", " ".join(cmd), config.timeout)
 
+    env: dict[str, str] | None = None
+    if api_key is not None:
+        env = dict(os.environ)
+        env["ARISTOTLE_API_KEY"] = api_key.strip()
+
     try:
         result = subprocess.run(  # noqa: S603
             cmd,
@@ -235,6 +272,7 @@ def run_aristotle_prove_from_file(
             text=True,
             timeout=config.timeout,
             check=False,
+            env=env,
         )
     except subprocess.TimeoutExpired as exc:
         raise AristotleError(
