@@ -87,7 +87,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-064 | `loop/runner.py` direct LLM coupling | P2 | Fixed | 06ffb51 |
 | DEBT-063 | `MetadataProvider` protocol ISP violation | P2 | Fixed | 8966898 |
 | DEBT-065 | Command layer contains application orchestration | P2 | Fixed | 940a362 |
-| DEBT-066 | Test directory structure mirrors src/ bounded contexts | P3 | Fixed | (pending) |
+| DEBT-066 | Test directory structure mirrors src/ bounded contexts | P3 | Fixed | d938411 |
 
 **Next Debt ID:** DEBT-067
 
