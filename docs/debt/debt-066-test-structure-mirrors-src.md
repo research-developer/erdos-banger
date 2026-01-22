@@ -111,4 +111,4 @@ tests/unit/
 
 ## Notes
 
-This is organizational debt only - does not affect correctness. Prioritize after functional debt (DEBT-062 through DEBT-065) is resolved.
+This is organizational debt only - does not affect correctness. Prioritize after functional debt (DEBT-063 through DEBT-065) is resolved.

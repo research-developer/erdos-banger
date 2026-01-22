@@ -16,7 +16,6 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | SOLID Violation |
 |----|-------|----------|-----------------|
-| [DEBT-062](debt-062-search-service-god-module.md) | `search/service.py` exceeds 500 LOC | P1 | SRP, OCP |
 | [DEBT-063](debt-063-metadata-provider-isp.md) | `MetadataProvider` protocol too broad | P2 | ISP |
 | [DEBT-064](debt-064-loop-runner-dip.md) | `loop/runner.py` direct LLM coupling | P2 | DIP |
 | [DEBT-065](debt-065-thick-cli-callbacks.md) | Command layer contains application orchestration | P2 | SRP |
@@ -89,6 +88,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-044 | `core/` bounded-context refactor (reduce sprawl) | P2 | Fixed | b3b5730 (+ prior) |
 | DEBT-061 | Remove core backward-compatibility shims | P2 | Fixed | 4466340 |
 | DEBT-060 | Formalize command long Typer callback | P4 | Fixed | 7b871e5 |
+| DEBT-062 | Search service “god module” claim invalid | P1 | Closed | (see git history) |
 
 **Next Debt ID:** DEBT-067
 
