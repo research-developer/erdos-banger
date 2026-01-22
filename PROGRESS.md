@@ -1,8 +1,8 @@
 # erdos-banger - Ralph Wiggum Progress Tracker
 
-**Last Updated:** 2026-01-21
-**Status:** Ready - v2.1 Architecture Sprint
-**Branch:** ralph-wiggum-v2.1
+**Last Updated:** 2026-01-22
+**Status:** Ready - Clean Code / SOLID Debt Sweep
+**Branch:** ralph-wiggum-v2.2 (create from `dev` before starting)
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
 ---
@@ -10,119 +10,64 @@
 ## Operating Rules (SSOT)
 
 1. **One task per iteration** (never batch)
-2. **TDD required**: add a failing test before production code
-3. **No reward hacks**:
+2. **TDD required**: add a failing test before production code for behavior changes
+3. **No reward hacks**
    - never delete/disable tests to "make CI green"
-   - never mock the unit under test (mock only boundaries: network/subprocess/time)
-   - never lower quality gates (coverage, lint, mypy)
-4. **Checkpoint discipline**:
+   - never mock the unit under test (mock boundaries only: network/subprocess/time)
+   - never lower quality gates (coverage/lint/mypy)
+4. **Checkpoint discipline**
    - commit after each completed task
    - push after each commit (remote is the backup)
 5. **Escalate early** (stop and request human review) if:
-   - a spec is ambiguous or contradicts SSOT
-   - required deps are missing / incompatible
-   - quality gates fail after 3 fix attempts
-   - the change would exceed ~500 LoC or touch >10 files for a single task
-
-## Active Queue
-
-### Priority Order: Debt Before Specs
-
-Fix architectural debt first, then implement new features.
+   - a debt doc contradicts SSOT / code reality
+   - the change exceeds ~500 LOC or >10 files for a single task (split into subtasks)
+   - quality gates fail after 3 fix attempts for the same root cause
 
 ---
 
-### Debt Items (Ordered to unblock SPEC-022)
+## Active Queue (Debt Before Specs)
 
-- [ ] **DEBT-041**: `ports.py` leaks concrete `search_index` types (P3)
-  - Deck: `docs/debt/debt-041-ports-leak-search-index-types.md`
-  - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
+Work strictly top-to-bottom unless blocked by dependencies.
 
-- [ ] **DEBT-039**: `erdos lean` command module is a god file (P2)
-  - Deck: `docs/debt/debt-039-lean-command-god-module.md`
-  - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
-
-- [ ] **DEBT-040**: `src/erdos/core/` module sprawl (P3)
-  - Deck: `docs/debt/debt-040-core-package-module-sprawl.md`
-  - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
-
-- [ ] **DEBT-036**: Marker device selection not exposed (P3)
-  - Deck: `docs/debt/debt-036-marker-mps-not-configured.md`
-  - Acceptance: Satisfy the deck acceptance criteria; `make ci` green.
-
----
-
-### Spec Items (v2.1 Architecture)
-
-- [ ] **SPEC-022**: MetadataProvider Orchestration
-  - Spec: `docs/specs/spec-022-metadata-provider-orchestration.md`
-  - ADR: `docs/adr/adr-001-metadata-provider-orchestration.md`
-  - Resolves: DEBT-038
-  - Target: v2.1
-  - Acceptance: All spec acceptance criteria met; `make ci` green.
-  - Note: This is a multi-step spec. Break into subtasks if needed:
-    - SPEC-022-A: Add MetadataProvider protocol to ports.py
-    - SPEC-022-B: Create providers/ package with OpenAlexProvider
-    - SPEC-022-C: Create CrossrefProvider wrapper
-    - SPEC-022-D: Create FallbackProvider
-    - SPEC-022-E: Add build_metadata_provider() to context.py
-    - SPEC-022-F: Refactor ingest/fetch.py to accept provider
-    - SPEC-022-G: Add unit tests for providers
-    - SPEC-022-H: Add integration tests (requires_network)
-
----
-
-## Guidelines
-
-- **DEBT-* tasks follow TDD** - write tests for new behavior BEFORE refactoring
-- **Pure refactors** should not change behavior - existing tests must pass
-- **One task per iteration** - do not batch tasks
-- **Quality gates must pass** before marking complete
-- **Atomic commits** with proper format: `[DEBT-XXX] Type: description`
-- **For SPEC-022**: Break into subtasks if needed (>500 LoC or >10 files)
+- [ ] **DEBT-059**: CodeRabbit PR#17 fixes (input validation + invariant bugs)
+  Deck: `docs/debt/debt-059-coderabbit-pr17-fixes.md`
+- [ ] **DEBT-046**: CLIOutput `success=false` with exit code 0 ambiguity (search IndexEmpty)
+  Deck: `docs/debt/debt-046-clioutput-success-vs-exitcode.md`
+- [ ] **DEBT-056**: FallbackProvider catches `Exception` broadly (may hide provider bugs)
+  Deck: `docs/debt/debt-056-fallback-provider-broad-exceptions.md`
+- [ ] **DEBT-058**: MD5 `# noqa: S324` in loop module (justify or replace)
+  Deck: `docs/debt/debt-058-md5-noqa-in-loop.md`
+- [ ] **DEBT-047**: Loop run logs are unsanitized/duplicated (LoopLogger vs RunLogger)
+  Deck: `docs/debt/debt-047-loop-logging-sanitization-and-unification.md`
+- [ ] **DEBT-057**: Add CI guardrails against god-file regressions
+  Deck: `docs/debt/debt-057-guardrails-against-god-files.md`
+- [ ] **DEBT-042**: Loop contract drift + `core/loop.py` god function
+  Deck: `docs/debt/debt-042-loop-command-contract-and-god-module.md`
+- [ ] **DEBT-043**: `erdos search` command god module
+  Deck: `docs/debt/debt-043-search-command-god-module.md`
+- [ ] **DEBT-045**: Split `SearchIndexProtocol` (ISP/DIP)
+  Deck: `docs/debt/debt-045-searchindexprotocol-interface-segregation.md`
+- [ ] **DEBT-049**: `SearchIndex` monolith (schema + indexing + retrieval + embeddings)
+  Deck: `docs/debt/debt-049-search-index-monolith.md`
+- [ ] **DEBT-052**: `erdos ingest` command god module
+  Deck: `docs/debt/debt-052-ingest-command-god-module.md`
+- [ ] **DEBT-050**: `core/ingest/fetch.py` SRP split (thin orchestrator + adapters)
+  Deck: `docs/debt/debt-050-ingest-fetch-srp.md`
+- [ ] **DEBT-054**: Run logger OCP violation (central `if command == ...` chain)
+  Deck: `docs/debt/debt-054-run-logger-ocp-violation.md`
+- [ ] **DEBT-053**: `core/formal_conjectures.py` monolith
+  Deck: `docs/debt/debt-053-formal-conjectures-module-monolith.md`
+- [ ] **DEBT-051**: `core/batch.py` SRP split
+  Deck: `docs/debt/debt-051-batch-module-srp.md`
+- [ ] **DEBT-048**: MCP server module size + CI coverage gap
+  Deck: `docs/debt/debt-048-mcp-server-god-module-and-ci-coverage.md`
+- [ ] **DEBT-055**: Scattered env-based configuration (hidden dependencies)
+  Deck: `docs/debt/debt-055-configuration-scattered-env-deps.md`
+- [ ] **DEBT-044**: `core/` bounded-context refactor (reduce sprawl)
+  Deck: `docs/debt/debt-044-core-bounded-context-refactor.md`
 
 ---
 
 ## Work Log
 
-### 2026-01-21: Architecture Audit Complete
-
-**External audit performed.** Deliverables added:
-
-- ADR-001: Metadata Provider Orchestration (Ports + Provider Chain)
-- SPEC-022: MetadataProvider Orchestration (corrected from first draft)
-- DEBT-041: `ports.py` leaks concrete `search_index` types
-
-**Files added/modified:**
-- `docs/adr/README.md` (new)
-- `docs/adr/adr-001-metadata-provider-orchestration.md` (new)
-- `docs/specs/spec-022-metadata-provider-orchestration.md` (corrected)
-- `docs/debt/debt-041-ports-leak-search-index-types.md` (new)
-- `docs/debt/README.md` (updated)
-- `docs/specs/README.md` (updated)
-- `docs/INDEX.md` (updated)
-
-(entries added by Ralph loop as tasks complete)
-
----
-
-## Completion Criteria
-
-The queue is complete when:
-1. All `[ ]` items in Active Queue are `[x]`
-2. `make ci` passes
-3. `make smoke` passes
-4. All debt documents updated with "Fixed" status and commit hashes
-5. All spec documents updated with "Complete" status and commit hashes
-
-The loop operator verifies completion via this file's state (no unchecked items), not by parsing model output.
-
----
-
-## Rollback / Recovery
-
-- Abort the loop: stop the process / kill the tmux session.
-- Inspect current state: `git status`, `git log -10 --oneline`.
-- To undo the last commit (keep working tree changes): `git reset --soft HEAD~1`
-- To undo the last commit (discard working tree changes): `git reset --hard HEAD~1`
-- To revert a commit on a shared branch: `git revert <sha>`
+(Ralph appends a short entry per completed task.)

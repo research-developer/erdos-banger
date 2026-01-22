@@ -26,7 +26,7 @@ git branch --show-current
 ```
 
 - [ ] Working tree is clean (no uncommitted changes)
-- [ ] You are **not** on `main` or `dev`
+- [ ] You will run the loop on a `ralph-wiggum-*` branch (not on `main`/`dev`)
 - [ ] `PROMPT.md` and `PROGRESS.md` exist
 - [ ] SSOT docs exist for the run:
   - Debt sprint: `docs/debt/README.md` and the referenced `docs/debt/debt-*.md` decks
@@ -36,7 +36,11 @@ Sync and sanity:
 
 ```bash
 git fetch origin
-git rebase origin/dev
+# Recommended: start a fresh Ralph branch from latest dev (avoid rebasing)
+git checkout dev
+git pull --ff-only origin dev
+git checkout -b ralph-wiggum-<sprint>
+git push -u origin ralph-wiggum-<sprint>
 make sync-frozen
 make lock-check
 make ci

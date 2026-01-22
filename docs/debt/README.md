@@ -16,11 +16,24 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | Status | Deck |
 |----|-------|----------|--------|------|
-| DEBT-036 | Marker device selection not exposed | P3 | Open | [debt-036-marker-mps-not-configured.md](debt-036-marker-mps-not-configured.md) |
-| DEBT-038 | MetadataProvider abstraction missing | P2 | Spec'd | [debt-038-metadata-provider-abstraction.md](debt-038-metadata-provider-abstraction.md) → [SPEC-022](../specs/spec-022-metadata-provider-orchestration.md) |
-| DEBT-039 | `erdos lean` command module is a god file | P2 | Open | [debt-039-lean-command-god-module.md](debt-039-lean-command-god-module.md) |
-| DEBT-040 | `src/erdos/core/` module sprawl | P3 | Open | [debt-040-core-package-module-sprawl.md](debt-040-core-package-module-sprawl.md) |
-| DEBT-041 | `ports.py` leaks concrete `search_index` types | P3 | Open | [debt-041-ports-leak-search-index-types.md](debt-041-ports-leak-search-index-types.md) |
+| DEBT-042 | Loop contract drift + `core/loop.py` god function | P1 | Open | `debt-042-loop-command-contract-and-god-module.md` |
+| DEBT-043 | `erdos search` command god module (SRP pressure) | P2 | Open | `debt-043-search-command-god-module.md` |
+| DEBT-044 | `core/` bounded-context refactor (reduce sprawl) | P2 | Open | `debt-044-core-bounded-context-refactor.md` |
+| DEBT-045 | Split `SearchIndexProtocol` (ISP/DIP) | P2 | Open | `debt-045-searchindexprotocol-interface-segregation.md` |
+| DEBT-046 | CLIOutput `success` vs exit code ambiguity | P2 | Open | `debt-046-clioutput-success-vs-exitcode.md` |
+| DEBT-047 | Loop logging sanitization/unification | P3 | Open | `debt-047-loop-logging-sanitization-and-unification.md` |
+| DEBT-048 | MCP server module size + CI coverage gap | P3 | Open | `debt-048-mcp-server-god-module-and-ci-coverage.md` |
+| DEBT-049 | SearchIndex monolith (SRP extraction) | P2 | Open | `debt-049-search-index-monolith.md` |
+| DEBT-050 | Ingest fetch SRP split | P2 | Open | `debt-050-ingest-fetch-srp.md` |
+| DEBT-051 | Batch module SRP split | P3 | Open | `debt-051-batch-module-srp.md` |
+| DEBT-052 | `erdos ingest` command god module | P2 | Open | `debt-052-ingest-command-god-module.md` |
+| DEBT-053 | Formal conjectures module monolith | P3 | Open | `debt-053-formal-conjectures-module-monolith.md` |
+| DEBT-054 | Run logger OCP violation (central command switch) | P3 | Open | `debt-054-run-logger-ocp-violation.md` |
+| DEBT-055 | Scattered env-based configuration | P2 | Open | `debt-055-configuration-scattered-env-deps.md` |
+| DEBT-056 | FallbackProvider broad exception catches | P3 | Open | `debt-056-fallback-provider-broad-exceptions.md` |
+| DEBT-057 | Guardrails against god-file regressions | P3 | Open | `debt-057-guardrails-against-god-files.md` |
+| DEBT-058 | MD5 `# noqa: S324` in loop module | P3 | Open | `debt-058-md5-noqa-in-loop.md` |
+| DEBT-059 | CodeRabbit PR#17 fixes (validation + invariants) | P2 | Open | `debt-059-coderabbit-pr17-fixes.md` |
 
 ## Archived Debt
 
@@ -64,8 +77,13 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-034 | Hardcoded MAX_SIZE constant | P3 | Fixed | 878aa7b |
 | DEBT-035 | type: ignore in all exit paths | P2 | Fixed | 86d3856 |
 | DEBT-037 | Placeholder semantic search tests | P2 | Fixed | b2dcdfe |
+| DEBT-039 | `erdos lean` command module is a god file | P2 | Fixed | 8540017 |
+| DEBT-041 | `ports.py` leaks concrete `search_index` types | P3 | Fixed | e27e5a3 |
+| DEBT-040 | `src/erdos/core/` module sprawl (doc-only) | P3 | Fixed | 994b99c |
+| DEBT-036 | Marker device selection not exposed | P3 | Fixed | 7005b65 |
+| DEBT-038 | MetadataProvider abstraction missing | P2 | Resolved | SPEC-022 |
 
-**Next Debt ID:** DEBT-042
+**Next Debt ID:** DEBT-060
 
 ### Archived Debt Decks
 
@@ -105,3 +123,8 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-034-hardcoded-max-size.md`
 - `docs/_archive/debt/debt-035-type-ignore-exit-paths.md`
 - `docs/_archive/debt/debt-037-semantic-search-placeholder-tests.md`
+- `docs/_archive/debt/debt-039-lean-command-god-module.md`
+- `docs/_archive/debt/debt-041-ports-leak-search-index-types.md`
+- `docs/_archive/debt/debt-040-core-package-module-sprawl.md`
+- `docs/_archive/debt/debt-036-marker-mps-not-configured.md`
+- `docs/_archive/debt/debt-038-metadata-provider-abstraction.md`
