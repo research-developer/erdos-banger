@@ -25,31 +25,50 @@ Then read the specific debt deck for the current task.
 
 ## Your Task This Iteration (One Item Only)
 
+### Phase 1: Read & Plan
 1. Find the **FIRST** unchecked `[ ]` item in `PROGRESS.md`
    - If there are no unchecked items, exit cleanly (do not invent new tasks)
 2. Determine task type:
    - **DEBT-XXX**: read `docs/debt/debt-XXX-*.md`
 3. **READ THE ACCEPTANCE CRITERIA** — complete ALL of them
 4. Apply the **Critical Review Prompt** (below) to validate the deck against SSOT
+
+### Phase 2: Implement (TDD)
 5. **FOLLOW TDD**:
    - behavior changes: write a failing test first
    - pure refactors: add tests only if needed to prevent regression
 6. Complete that ONE item fully:
    - acceptance criteria met
    - `make ci` passes
-   - **If this completes the sprint** (no unchecked boxes remain in `PROGRESS.md` after you check off the item), also run:
-     - `make test-all`
-     - If `mcp` tests were skipped, optionally install extras and re-run:
-       - `uv sync --extra mcp` then `uv run pytest tests/integration/test_mcp_server.py tests/unit/test_mcp_tools.py`
-7. Update the deck:
+
+### Phase 3: Commit Code FIRST (Critical!)
+7. **COMMIT CODE CHANGES IMMEDIATELY** after `make ci` passes:
+   ```bash
+   git add -A && git commit -m "refactor: <description> (DEBT-XXX)"
+   ```
+   - This ensures code changes are saved even if the iteration times out later
+   - Note the commit hash (e.g., `abc1234`) for the next step
+
+### Phase 4: Update Documentation (References the Commit)
+8. Update the deck with the commit from step 7:
    - set **Status: Fixed**
-   - add **Fixed In: <commit>**
-8. Update debt indices and archives:
+   - add **Fixed In: <commit-hash-from-step-7>**
+9. Update debt indices and archives:
    - move deck `docs/debt/` → `docs/_archive/debt/`
    - update `docs/debt/README.md` (Active → Archived)
-9. Check off the item in `PROGRESS.md` (`[ ]` → `[x]`) and add a short Work Log entry
-10. **ATOMIC COMMIT** and **PUSH**
-11. Exit
+10. Check off the item in `PROGRESS.md` (`[ ]` → `[x]`) and add a short Work Log entry
+
+### Phase 5: Commit Docs & Push
+11. **COMMIT DOCS** and **PUSH**:
+    ```bash
+    git add -A && git commit -m "docs: record DEBT-XXX closure commit"
+    git push
+    ```
+12. **If this completes the sprint** (no unchecked boxes remain), also run:
+    - `make test-all`
+    - If `mcp` tests were skipped, optionally install extras and re-run:
+      - `uv sync --extra mcp` then `uv run pytest tests/integration/test_mcp_server.py tests/unit/mcp/test_tools.py`
+13. Exit
 
 Do not batch tasks.
 
