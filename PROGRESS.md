@@ -41,8 +41,8 @@ Work strictly top-to-bottom unless blocked by dependencies.
   Deck: `docs/_archive/debt/debt-063-metadata-provider-isp.md`
 - [x] **DEBT-065**: Move loop orchestration out of command layer (SRP)
   Deck: `docs/_archive/debt/debt-065-thick-cli-callbacks.md`
-- [ ] **DEBT-066**: Test directory structure should mirror src/ bounded contexts (CCP)
-  Deck: `docs/debt/debt-066-test-structure-mirrors-src.md`
+- [x] **DEBT-066**: Test directory structure should mirror src/ bounded contexts (CCP)
+  Deck: `docs/_archive/debt/debt-066-test-structure-mirrors-src.md`
 
 ---
 
@@ -54,3 +54,4 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - **2026-01-22 (DEBT-064)**: Injected LLM executor into loop runner (DIP compliance). Added `LLMExecute` protocol to `ports.py`, updated `run_loop()` and `_run_single_iteration()` to accept injected `llm_execute` dependency with default. Refactored 3 tests to pass `llm_execute=fake_llm` instead of patching module globals. `make ci` passes.
 - **2026-01-22 (DEBT-063)**: ISP compliance for `MetadataProvider` protocol. Split into `DOILookupProvider`, `ArxivLookupProvider`, `SearchableMetadataProvider`. Removed stub methods from `ArxivProvider` (no more `get_by_doi`, `search`) and `CrossrefProvider` (no more `get_by_arxiv`, `search`). Rewrote `FallbackProvider` to compose capability-specific chains (doi_chain, arxiv_chain, search_chain). Updated wiring in `context.py` and `ingest/fetch.py`. `make ci` passes.
 - **2026-01-22 (DEBT-065)**: Moved loop orchestration out of command layer (SRP). Created `core/loop/service.py` with `execute_proof_loop()` function. Refactored `commands/loop.py` to be a thin adapter. Removed stale DEBT-042 exemptions from audit script. `make ci` passes.
+- **2026-01-22 (DEBT-066)**: Reorganized `tests/unit/` into 14 bounded-context subdirectories mirroring `src/erdos/core/`. Moved 50+ test files, renamed to drop redundant prefixes, added `__init__.py` files, fixed 5 relative path references. `make ci` passes.

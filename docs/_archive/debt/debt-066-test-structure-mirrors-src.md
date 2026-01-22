@@ -1,9 +1,10 @@
 # DEBT-066: Test Directory Structure Should Mirror src/ Bounded Contexts
 
-**Status:** Open
+**Status:** Fixed
 **Priority:** P3
 **Found:** 2026-01-22
 **Found By:** Clean Code audit (package organization review)
+**Fixed In:** (pending commit)
 
 ---
 
@@ -93,11 +94,34 @@ tests/unit/
 
 ## Acceptance Criteria
 
-1. [ ] `tests/unit/` has subdirectories mirroring `src/erdos/core/` bounded contexts
-2. [ ] Each bounded context's tests are co-located in their subdirectory
-3. [ ] No test files remain in the flat `tests/unit/` root (except `conftest.py`)
-4. [ ] All tests still pass (`make ci`)
-5. [ ] Test discovery still works correctly
+1. [x] `tests/unit/` has subdirectories mirroring `src/erdos/core/` bounded contexts
+2. [x] Each bounded context's tests are co-located in their subdirectory
+3. [x] No test files remain in the flat `tests/unit/` root (except `conftest.py`)
+4. [x] All tests still pass (`make ci`)
+5. [x] Test discovery still works correctly
+
+---
+
+## Resolution
+
+Reorganized `tests/unit/` into 14 bounded-context subdirectories:
+
+- `ask/` - RAG Q&A tests (test_llm.py, test_prompt.py, test_retrieval.py, test_helpers.py)
+- `batch/` - Batch processing tests (test_runner.py, test_cli_output.py)
+- `clients/` - HTTP client tests (test_arxiv.py, test_arxiv_extract.py, test_crossref.py, test_openalex.py)
+- `commands/` - CLI command tests (test_ask_helpers.py, test_ingest_helpers.py, test_search_helpers.py, test_lean_check.py, test_presenter.py, test_show.py)
+- `core/` - Top-level core module tests (test_aristotle.py, test_config.py, test_constants.py, etc.)
+- `formal_conjectures/` - Formalization tests (test_provenance.py)
+- `ingest/` - Ingestion tests (test_app.py, test_service.py)
+- `loop/` - Loop tests (test_runner.py, test_config.py, test_verifier.py, test_patch_validator.py)
+- `mcp/` - MCP server tests (test_tools.py)
+- `models/` - Model tests (test_base.py, test_hypothesis.py)
+- `pdf/` - PDF conversion tests (test_converter.py)
+- `providers/` - Metadata provider tests (test_fallback.py)
+- `search/` - Search tests (test_index.py, test_builder.py, test_embeddings.py, test_index_embeddings.py)
+- `services/` - Service layer tests (test_problem_service.py)
+
+Updated relative path references in 5 test files to account for new directory depth.
 
 ---
 

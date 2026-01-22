@@ -11,7 +11,7 @@ from erdos.core.clients.arxiv import fetch_arxiv_atom, parse_arxiv_atom
 from erdos.core.models import OpenAccessStatus, ReferenceRecord
 
 
-FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "arxiv_responses"
+FIXTURES_DIR = Path(__file__).parent.parent.parent / "fixtures" / "arxiv_responses"
 
 
 def test_parse_arxiv_atom_success():

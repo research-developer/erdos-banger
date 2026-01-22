@@ -12,7 +12,7 @@ import pytest
 
 
 # Path to the load-env.sh script
-REPO_ROOT = Path(__file__).parent.parent.parent
+REPO_ROOT = Path(__file__).parent.parent.parent.parent
 LOAD_ENV_SCRIPT = REPO_ROOT / "scripts" / "lib" / "load-env.sh"
 
 # Full path to bash for security linters
