@@ -15,8 +15,7 @@ from erdos.commands.presenter import exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.formalizer import generate_skeleton
 from erdos.core.lean_runner import LeanRunner, LeanRunnerError
-from erdos.core.loop import LoopStatus, run_loop
-from erdos.core.loop_config import LoopConfig
+from erdos.core.loop import LoopConfig, LoopStatus, run_loop
 from erdos.core.models import CLIOutput
 from erdos.core.timing import measure_time_ms
 
@@ -354,13 +353,13 @@ def run(
     - Rejects patches larger than configured limits
     - Aborts if file shrinks by > 20%
 
-    Example (propose only):
+    Example (propose only; does not write to disk):
 
-        erdos loop 6 --no-apply
+        ERDOS_LLM_COMMAND="./scripts/llm.sh" erdos loop run 6 --no-apply
 
     Example (auto-apply):
 
-        ERDOS_LLM_COMMAND="./scripts/llm.sh" erdos loop 6
+        ERDOS_LLM_COMMAND="./scripts/llm.sh" erdos loop run 6
     """
     with measure_time_ms() as duration:
         app_ctx, app_error = get_app_context(ctx, command="erdos loop")

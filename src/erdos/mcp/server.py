@@ -29,7 +29,7 @@ from erdos.core.models import CLIOutput
 from erdos.core.problem_loader import ProblemLoader
 from erdos.core.run_logger import RunLogger
 from erdos.core.search import search_basic, search_fts
-from erdos.core.search_index import SearchIndex
+from erdos.core.search.facade import SearchIndex
 
 
 if TYPE_CHECKING:
@@ -58,8 +58,8 @@ def _get_index() -> SearchIndexProtocol | None:
     index_path_env = os.environ.get("ERDOS_INDEX_PATH")
     if index_path_env:
         return SearchIndex(Path(index_path_env))
-    # Try default location
-    default_path = Path("index/erdos.db")
+    # Try default location (aligned with SearchIndex.from_default())
+    default_path = Path("index/erdos.sqlite")
     if default_path.exists():
         return SearchIndex(default_path)
     return None

@@ -1,9 +1,10 @@
 # DEBT-061: Remove `src/erdos/core/*` Backward-Compatibility Shims
 
-**Status:** Open
+**Status:** Fixed
 **Priority:** P2
 **Found:** 2026-01-22
 **Found By:** Clean architecture audit (module sprawl)
+**Fixed In:** 4466340
 
 ---
 
@@ -31,7 +32,7 @@ These are the *only* `src/erdos/core/*.py` modules that explicitly declare thems
 rg -l "Backward-compatible shim|BACKWARD COMPATIBILITY SHIM|has been moved to" src/erdos/core/*.py
 ```
 
-Expected output (11 files):
+Expected output (10 files):
 
 - `src/erdos/core/arxiv_client.py` → `erdos.core.clients.arxiv`
 - `src/erdos/core/crossref_client.py` → `erdos.core.clients.crossref`
@@ -43,15 +44,10 @@ Expected output (11 files):
 - `src/erdos/core/patch_validator.py` → `erdos.core.loop.patch_validator`
 - `src/erdos/core/loop_config.py` → `erdos.core.loop.config`
 - `src/erdos/core/loop_verifier.py` → `erdos.core.loop.verifier`
-- `src/erdos/core/batch.py` → **dead/unreachable file** (see note below)
 
 **Important note about `src/erdos/core/batch.py`**
 
-`src/erdos/core/` currently contains both:
-- `src/erdos/core/batch/` (the real package; **this is what `import erdos.core.batch` resolves to**), and
-- `src/erdos/core/batch.py` (a shim file that is **not imported** in practice and would recurse if it were).
-
-This file should be deleted as part of this debt item to eliminate confusion, but it does **not** require import-path updates because the canonical path is already `erdos.core.batch` (the package).
+This shim was already deleted in prior refactors. Keep the acceptance check (`test ! -f src/erdos/core/batch.py`) as a regression guard.
 
 ---
 
@@ -80,14 +76,17 @@ This file should be deleted as part of this debt item to eliminate confusion, bu
 
 ## Acceptance Criteria
 
-1. [ ] Shim files are gone (core root only):
+1. [x] Shim files are gone (core root only):
    - `rg -l "Backward-compatible shim|BACKWARD COMPATIBILITY SHIM|has been moved to" src/erdos/core/*.py` returns no matches
    - `test ! -f src/erdos/core/batch.py`
-2. [ ] No remaining imports of the removed shim module paths:
+2. [x] No remaining imports of the removed shim module paths:
    - `rg -n "erdos\\.core\\.(arxiv_client|crossref_client|openalex_client|embeddings|index_builder|search_index|pdf_converter|patch_validator|loop_config|loop_verifier)\\b" src/ tests/` returns no matches
-3. [ ] Full quality gates pass:
+3. [x] Full quality gates pass:
    - `make ci`
-   - `make test-all` (ensures we didn’t break `requires_network` / full-suite coverage)
+   - `make test-all` (ensures we didn't break `requires_network` / full-suite coverage)
+4. [x] Regression guard tests added in `tests/unit/test_dependencies.py`:
+   - `test_no_core_backward_compat_shim_files()` - fails if shim files reappear
+   - `test_no_imports_of_removed_shim_paths()` - fails if code imports old paths
 
 ---
 

@@ -1,8 +1,10 @@
 # DEBT-060: `formalize_cmd.py` Typer Callback Exceeds Function LOC Threshold
 
-**Status:** Open
+**Status:** Fixed
 **Priority:** P4
 **Found:** 2026-01-22
+**Fixed:** 2026-01-22
+**Fixed In:** 7b871e5
 **Found By:** audit_code_health.py guardrail
 
 ---
@@ -47,9 +49,25 @@ PY
 
 ## Acceptance Criteria
 
-1. [ ] `register()` reduced to ≤ 120 LOC (or split into multiple functions)
-2. [ ] Core logic extracted into testable helpers
-3. [ ] `make ci` passes
+1. [x] `register()` reduced to ≤ 120 LOC (or split into multiple functions)
+2. [x] Core logic extracted into testable helpers
+3. [x] `make ci` passes
+
+---
+
+## Fix Applied
+
+Refactored `formalize_cmd.py` to extract logic into helper functions:
+
+1. Added `_FormalizeArgs` dataclass to bundle validated arguments with `batch_mode` property
+2. Extracted `_validate_args()` for argument validation (24 LOC)
+3. Extracted `_execute_formalize()` for orchestration logic (48 LOC)
+4. Kept existing `_run_batch_formalize()` helper (42 LOC)
+
+Result:
+- `register()`: 80 LOC (down from 194)
+- `formalize()`: 76 LOC (down from 190)
+- All helpers under threshold
 
 ---
 

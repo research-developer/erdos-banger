@@ -14,10 +14,12 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-| ID | Title | Priority | Status | Deck |
-|----|-------|----------|--------|------|
-| DEBT-060 | Formalize command long Typer callback | P4 | Open | `debt-060-formalize-cmd-long-callback.md` |
-| DEBT-061 | Remove core backward-compatibility shims | P2 | Open | `debt-061-remove-core-compatibility-shims.md` |
+| ID | Title | Priority | SOLID Violation |
+|----|-------|----------|-----------------|
+| [DEBT-062](debt-062-search-service-god-module.md) | `search/service.py` exceeds 500 LOC | P1 | SRP, OCP |
+| [DEBT-063](debt-063-metadata-provider-isp.md) | `MetadataProvider` protocol too broad | P2 | ISP |
+| [DEBT-064](debt-064-loop-runner-dip.md) | `loop/runner.py` direct LLM coupling | P2 | DIP |
+| [DEBT-065](debt-065-thick-cli-callbacks.md) | Command layer contains application orchestration | P2 | SRP |
 
 ## Archived Debt
 
@@ -84,8 +86,10 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-048 | MCP server CI coverage gap | P3 | Fixed | c756f4e |
 | DEBT-055 | Scattered env-based configuration (centralized AppConfig) | P2 | Fixed | b3b5730 |
 | DEBT-044 | `core/` bounded-context refactor (reduce sprawl) | P2 | Fixed | b3b5730 (+ prior) |
+| DEBT-061 | Remove core backward-compatibility shims | P2 | Fixed | 4466340 |
+| DEBT-060 | Formalize command long Typer callback | P4 | Fixed | 7b871e5 |
 
-**Next Debt ID:** DEBT-062
+**Next Debt ID:** DEBT-066
 
 ### Archived Debt Decks
 
@@ -148,3 +152,5 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-048-mcp-server-god-module-and-ci-coverage.md`
 - `docs/_archive/debt/debt-055-configuration-scattered-env-deps.md`
 - `docs/_archive/debt/debt-044-core-bounded-context-refactor.md`
+- `docs/_archive/debt/debt-061-remove-core-compatibility-shims.md`
+- `docs/_archive/debt/debt-060-formalize-cmd-long-callback.md`
