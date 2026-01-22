@@ -204,8 +204,6 @@ def _run_single_iteration(  # noqa: PLR0911
 ) -> tuple[LoopStatus | None, LeanCheckResult, int, bool]:
     """Run a single loop iteration.
 
-    # exempt: DEBT-042
-
     Returns:
         (terminal_status, last_check, updated_stall_count, work_done) tuple.
         terminal_status is None if the loop should continue.
