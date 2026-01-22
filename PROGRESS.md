@@ -41,6 +41,8 @@ Work strictly top-to-bottom unless blocked by dependencies.
   Deck: `docs/debt/debt-063-metadata-provider-isp.md`
 - [ ] **DEBT-065**: Move loop orchestration out of command layer (SRP)
   Deck: `docs/debt/debt-065-thick-cli-callbacks.md`
+- [ ] **DEBT-066**: Test directory structure should mirror src/ bounded contexts (CCP)
+  Deck: `docs/debt/debt-066-test-structure-mirrors-src.md`
 
 ---
 

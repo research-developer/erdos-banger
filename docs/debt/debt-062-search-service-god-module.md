@@ -1,9 +1,10 @@
 # DEBT-062: `src/erdos/core/search/service.py` Is a God Module (626 LOC)
 
-**Status:** Open
+**Status:** Fixed
 **Priority:** P1
 **Found:** 2026-01-22
 **Found By:** Clean Code audit (SOLID principles review)
+**Fixed In:** c1720ff
 
 ---
 
@@ -93,11 +94,11 @@ Implementation steps (concrete):
 
 ## Acceptance Criteria
 
-1. [ ] `src/erdos/core/search/service.py` is ≤ 200 LOC
-2. [ ] No core search module exceeds `MODULE_LOC_THRESHOLD_CORE=500` without an exemption marker
-3. [ ] `src/erdos/core/search/service.py` no longer contains `# exempt:` markers
-4. [ ] `uv run python scripts/audit_code_health.py --strict` reports **no module-size violations** for `core/search/*`
-5. [ ] `make ci` passes
+1. [x] `src/erdos/core/search/service.py` is ≤ 200 LOC
+2. [x] No core search module exceeds `MODULE_LOC_THRESHOLD_CORE=500` without an exemption marker
+3. [x] `src/erdos/core/search/service.py` no longer contains `# exempt:` markers
+4. [x] `uv run python scripts/audit_code_health.py --strict` reports **no module-size violations** for `core/search/*`
+5. [x] `make ci` passes
 
 ---
 
