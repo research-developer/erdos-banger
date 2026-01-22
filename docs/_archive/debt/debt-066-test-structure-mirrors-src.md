@@ -4,7 +4,7 @@
 **Priority:** P3
 **Found:** 2026-01-22
 **Found By:** Clean Code audit (package organization review)
-**Fixed In:** (pending commit)
+**Fixed In:** d938411
 
 ---
 
