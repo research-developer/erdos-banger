@@ -88,7 +88,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-060 | Formalize command long Typer callback | P4 | Fixed | 7b871e5 |
 | DEBT-062 | Search service "god module" claim invalid | P1 | Closed | a60fc35 |
 | DEBT-064 | `loop/runner.py` direct LLM coupling | P2 | Fixed | 06ffb51 |
-| DEBT-063 | `MetadataProvider` protocol ISP violation | P2 | Fixed | (pending) |
+| DEBT-063 | `MetadataProvider` protocol ISP violation | P2 | Fixed | 8966898 |
 
 **Next Debt ID:** DEBT-067
 

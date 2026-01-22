@@ -4,7 +4,7 @@
 **Priority:** P2
 **Found:** 2026-01-22
 **Found By:** Clean Code audit (SOLID principles review)
-**Fixed In:** (pending commit)
+**Fixed In:** 8966898
 
 ---
 
