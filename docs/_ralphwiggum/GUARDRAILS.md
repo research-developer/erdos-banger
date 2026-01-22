@@ -67,7 +67,7 @@ This document is a **living record** of guardrails, failure patterns, and “got
 
 ## Guardrail Changes (Protocol/Prompt/CI)
 
-- 2026-01-22: Added FP-007 (staged but uncommitted changes). Restructured PROMPT.md to commit code FIRST, then docs. Added guardrail to `scripts/ralph-loop.sh` to detect and warn about uncommitted staged changes.
+- 2026-01-22: Added FP-007 (staged but uncommitted changes). Restructured PROMPT.md to commit code FIRST, then docs. Hardened `scripts/ralph-loop.sh` to warn on staged-but-uncommitted changes and refuse to exit cleanly with a dirty working tree.
 - 2026-01-22: Added FP-006 (EPIPE errors). Updated `scripts/ralph-loop.sh` to use direct file redirection instead of piping through `tee`. Updated protocol.md to recommend the script.
 - 2026-01-21: Added FP-005 (git rebase derailment). Updated PROMPT.md and protocol.md to explicitly forbid `git rebase` and `git pull`, with `--force-with-lease` as the recovery for divergence.
 - 2026-01-19: Added iteration + total runtime timeouts and per-iteration logs (`logs/ralph/`) to the recommended loop commands.
