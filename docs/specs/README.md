@@ -13,6 +13,13 @@ v1.4 (DONE)     Integration: Formal conjectures + MCP
 v2.0 (DONE)     Expansion: PDF conversion (Marker + LLM)
 v2.1 (DONE)     Architecture: MetadataProvider abstraction
 v3.0 (DONE)     Research: Workspace + campaign memory
+v3.1 (PENDING)  Verification: v3 integration tests
+v3.2 (PENDING)  Research APIs: Exa integration
+v3.3 (PENDING)  Research APIs: Semantic Scholar integration
+v3.4 (PENDING)  Research APIs: zbMATH integration
+v3.5 (PENDING)  Architecture: Multi-model routing
+v4.0 (PENDING)  Lean: Lean Copilot integration
+v4.1 (PENDING)  UX: Progress dashboard
 ```
 
 ## Active Specs
@@ -21,7 +28,13 @@ Specs currently in progress or awaiting implementation.
 
 | ID | Title | Status | Target | Resolves |
 |----|-------|--------|--------|----------|
-| (none) | | | | |
+| 028 | [v3 Integration Verification](./spec-028-v3-integration-verification.md) | Pending | v3.1 | Post-v3.0 verification gap |
+| 029 | [Exa Research Integration](./spec-029-exa-research-integration.md) | Pending | v3.2 | Agentic literature synthesis |
+| 030 | [Semantic Scholar Integration](./spec-030-semantic-scholar-integration.md) | Pending | v3.3 | Citation context ("WHY cites") |
+| 031 | [zbMATH Integration](./spec-031-zbmath-integration.md) | Pending | v3.4 | Math-specific metadata (MSC) |
+| 032 | [Multi-Model Routing](./spec-032-multi-model-routing.md) | Pending | v3.5 | Task-appropriate model selection |
+| 033 | [Lean Copilot Integration](./spec-033-lean-copilot-integration.md) | Pending | v4.0 | LLM-backed tactic suggestions |
+| 034 | [Progress Dashboard](./spec-034-progress-dashboard.md) | Pending | v4.1 | Visualization of research state |
 
 ## Design Documents
 
@@ -29,7 +42,7 @@ Research-backed design decisions for complex specs.
 
 | ID | Title | Status | Prerequisite For |
 |----|-------|--------|------------------|
-| (none) | | | |
+| [v3 Research State](../future/research-state-management-v3.md) | Implemented | SPEC-023 → SPEC-027 |
 
 ## Deferred Specs
 
@@ -74,7 +87,7 @@ Completed specs that are fully implemented.
 | 026 | Deterministic Research Synthesis | [archive](../_archive/specs/spec-026-deterministic-research-synthesis.md) |
 | 027 | Loop → Research Integration | [archive](../_archive/specs/spec-027-loop-research-integration.md) |
 
-**Next Spec ID:** SPEC-028
+**Next Spec ID:** SPEC-035
 
 ## Dependency Graph
 
@@ -116,6 +129,22 @@ v2.0 Expansion (DONE)
 
 v2.1 Architecture (DONE)
 └── 022 MetadataProvider Orchestration ←── Resolves DEBT-038, enables pluggable sources
+
+v3.0 Research (DONE)
+├── 023 Research Workspace ←── Filesystem SSOT for campaign memory
+├── 024 Research Records ←── Leads/Attempts/Hypotheses/Tasks CRUD
+├── 025 Index Research Artifacts ←── RAG integration
+├── 026 Deterministic Synthesis ←── SYNTHESIS.md rendering
+└── 027 Loop → Research ←── Attempt records from loop
+
+v3.1+ Future (PENDING)
+├── 028 v3 Integration Verification ←── Horizontal + vertical tests
+├── 029 Exa Research Integration ←── Agentic literature synthesis
+├── 030 Semantic Scholar Integration ←── Citation context
+├── 031 zbMATH Integration ←── Math-specific metadata
+├── 032 Multi-Model Routing ←── GPT-5.2 + Claude + Exa
+├── 033 Lean Copilot Integration ←── 032 (needs model routing)
+└── 034 Progress Dashboard ←── 028 (needs v3 verification)
 ```
 
 ## Master Documents

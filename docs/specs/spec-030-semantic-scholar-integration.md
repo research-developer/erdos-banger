@@ -69,11 +69,19 @@ This tells us: the citing paper *uses Erdős 1965 as methodology*, not just that
 ## Environment Configuration
 
 ```bash
-# .env
+# .env (OPTIONAL - works without authentication)
 SEMANTIC_SCHOLAR_API_KEY=your-api-key-here
 ```
 
-API key is **optional** but recommended for higher rate limits.
+**API key is OPTIONAL.** The API works without authentication:
+
+| Tier | Rate Limit | Notes |
+|------|------------|-------|
+| Unauthenticated | ~100 req / 5 min (shared pool) | Works immediately |
+| Authenticated | 1 req / sec (dedicated) | Requires free application |
+
+For light usage (a few queries per session), unauthenticated access is sufficient.
+For heavy batch processing, apply for a free API key at [semanticscholar.org/product/api](https://www.semanticscholar.org/product/api).
 
 ---
 

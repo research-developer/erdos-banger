@@ -4,7 +4,7 @@
 
 | Category | Index | Next ID |
 |----------|-------|---------|
-| [Specs](./specs/README.md) | Design specifications | SPEC-028 |
+| [Specs](./specs/README.md) | Design specifications | SPEC-035 |
 | [ADRs](./adr/README.md) | Architecture decision records | ADR-002 |
 | [Bugs](./bugs/README.md) | Bug reports & reviews | BUG-021 |
 | [Debt](./debt/README.md) | Technical debt tracking | DEBT-068 |
