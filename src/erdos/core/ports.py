@@ -20,11 +20,34 @@ if TYPE_CHECKING:
     )
 
 
-class MetadataProvider(Protocol):
-    """Port for academic metadata sources (SPEC-022).
+class LLMExecute(Protocol):
+    """Callable for executing an LLM command.
 
-    High-level ingest code depends on this abstraction, not concrete clients.
-    Implementations wrap existing clients (OpenAlexClient, crossref_client, etc.).
+    This abstraction allows loop orchestration to depend on an interface
+    rather than a concrete implementation (DIP compliance).
+    """
+
+    def __call__(
+        self, llm_command: str, prompt: str, *, timeout: int | None = ...
+    ) -> tuple[str, int]:
+        """Execute an LLM command with the given prompt.
+
+        Args:
+            llm_command: Shell command to execute
+            prompt: The prompt to pass via stdin
+            timeout: Maximum seconds to wait (optional)
+
+        Returns:
+            Tuple of (answer, exit_code)
+        """
+        ...
+
+
+class DOILookupProvider(Protocol):
+    """Provider that can resolve metadata by DOI (ISP: single responsibility).
+
+    Implementers: OpenAlexProvider, CrossrefProvider.
+    Non-implementers: ArxivProvider (arXiv API doesn't support DOI lookup).
     """
 
     @property
@@ -44,6 +67,19 @@ class MetadataProvider(Protocol):
         """
         ...
 
+
+class ArxivLookupProvider(Protocol):
+    """Provider that can resolve metadata by arXiv ID (ISP: single responsibility).
+
+    Implementers: OpenAlexProvider, ArxivProvider.
+    Non-implementers: CrossrefProvider (Crossref doesn't index arXiv IDs).
+    """
+
+    @property
+    def provider_name(self) -> str:
+        """Human-readable provider name for logging/debugging."""
+        ...
+
     def get_by_arxiv(self, arxiv_id: str) -> ReferenceRecord | None:
         """Fetch work metadata by arXiv ID.
 
@@ -59,6 +95,19 @@ class MetadataProvider(Protocol):
         """
         ...
 
+
+class SearchableMetadataProvider(Protocol):
+    """Provider that supports text search (ISP: single responsibility).
+
+    Implementers: OpenAlexProvider.
+    Non-implementers: ArxivProvider, CrossrefProvider (search not implemented).
+    """
+
+    @property
+    def provider_name(self) -> str:
+        """Human-readable provider name for logging/debugging."""
+        ...
+
     def search(self, query: str, *, limit: int = 25) -> list[ReferenceRecord]:
         """Search works by title/abstract.
 
@@ -66,6 +115,23 @@ class MetadataProvider(Protocol):
             List of matching ReferenceRecords, possibly empty.
         """
         ...
+
+
+class MetadataProvider(
+    DOILookupProvider, ArxivLookupProvider, SearchableMetadataProvider, Protocol
+):
+    """Full provider supporting all three operations (backward-compatible aggregate).
+
+    This protocol combines all metadata lookup capabilities for call sites that
+    need the complete interface. Prefer using the focused protocols
+    (DOILookupProvider, ArxivLookupProvider, SearchableMetadataProvider) when
+    only a subset of operations is needed.
+
+    Note: Protocol inheritance in Python typing creates a union of all methods.
+    OpenAlexProvider and FallbackProvider both implement this full protocol.
+    """
+
+    ...
 
 
 class ProblemRepository(Protocol):

@@ -196,22 +196,26 @@ Note: In the diagram, "lean form" is shorthand for `erdos lean formalize`.
 
 ## 3) Repo Structure
 
-Below is the **current** repository layout (SSOT as of v1.1). Directories are marked with a trailing `/`. We indicate which parts are committed to git vs generated/ignored.
+Below is the **current** repository layout (SSOT as of v2.1). Directories are marked with a trailing `/`. We indicate which parts are committed to git vs generated/ignored.
 
 ```text
 erdos-banger/
 ├── src/erdos/                    # Python package (committed)
 │   ├── cli.py                    # Typer entry point + global flags
 │   ├── commands/                 # CLI subcommands (list/show/refs/search/ingest/ask/lean)
-│   ├── core/                     # Core logic (loader, search index, ingest, ask, Lean runner)
+│   ├── core/                     # Core bounded contexts (ask/, ingest/, search/, loop/, ...)
+│   ├── mcp/                      # MCP server adapter (optional dependency)
+│   ├── services/                 # Application services / use-cases
 │   ├── templates/                # Jinja2 templates (e.g., `lean_skeleton.j2`)
 │   └── data/                     # Built-in sample dataset (`problems_enriched.yaml`)
 ├── tests/                        # pytest suite + fixtures (committed)
 ├── docs/                         # specs, bugs/debt, protocol, archive (committed)
 │   ├── INDEX.md
 │   ├── specs/
+│   ├── adr/
 │   ├── bugs/
 │   ├── debt/
+│   ├── _vendor-docs/
 │   ├── _archive/
 │   └── _ralphwiggum/
 ├── data/                         # local + upstream datasets
@@ -227,6 +231,8 @@ erdos-banger/
 ├── scripts/                      # helper scripts (committed)
 ├── Makefile                      # local dev + CI convenience targets (committed)
 ├── pyproject.toml / uv.lock      # deps + tool configs (committed)
+├── CLAUDE.md / AGENTS.md         # contributor/agent guidance (committed)
+├── ONBOARDING.md                 # contributor quickstart (committed)
 └── PROMPT.md / PROGRESS.md       # Ralph Wiggum loop prompt + state (committed)
 ```
 
@@ -689,20 +695,22 @@ Use Typer (built on Click) with Rich for formatting.
 
 **Architecture: Single Responsibility + Dependency Inversion**
 
-**Implementation status (v1.2):** metadata fetching is implemented, but the `MetadataProvider` protocol is not yet fully extracted; `src/erdos/core/ingest/fetch.py` still constructs concrete clients. Track: `docs/debt/debt-038-metadata-provider-abstraction.md`.
+**Implementation status (current):** metadata fetching uses ISP-segregated ports in `src/erdos/core/ports.py`
+(`DOILookupProvider`, `ArxivLookupProvider`, `SearchableMetadataProvider`). Capability-specific chains
+(`doi_chain`, `arxiv_chain`, `search_chain`) are composed by `FallbackProvider` and constructed in the
+composition root (`src/erdos/core/context.py`). Remaining public-API cleanup is tracked in DEBT-067.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    erdos ingest <id>                         │
+│                    erdos ingest <id>                        │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│               MetadataProvider (Protocol/Port)              │
-│  get_by_doi(doi) -> ReferenceRecord                         │
-│  get_by_arxiv(arxiv_id) -> ReferenceRecord                  │
-│  search(query) -> List[ReferenceRecord]                     │
-└───────────────────────────┬─────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│   ISP Ports (Protocols) + Capability Chains (FallbackProvider)         │
+│   DOILookupProvider / ArxivLookupProvider / SearchableMetadataProvider │
+│   doi_chain / arxiv_chain / search_chain                               │
+└───────────────────────────┬────────────────────────────────────────────┘
                             │
         ┌───────────────────┼───────────────────┐
         │                   │                   │

@@ -1,9 +1,10 @@
 # DEBT-064: `loop/runner.py` Violates Dependency Inversion (LLM Coupling)
 
-**Status:** Open
+**Status:** Fixed
 **Priority:** P2
 **Found:** 2026-01-22
 **Found By:** Clean Code audit (SOLID principles review)
+**Fixed In:** 06ffb51
 
 ---
 
@@ -32,7 +33,7 @@ response, exit_code = execute_llm(llm_command, prompt)
 **Testing impact (current SSOT):**
 
 - Tests patch `@patch("erdos.core.loop.runner.execute_llm")` to avoid subprocess calls.
-- This is workable, but it’s brittle: changing import structure breaks tests even if behavior is unchanged.
+- This is workable, but it's brittle: changing import structure breaks tests even if behavior is unchanged.
 
 ---
 
@@ -66,11 +67,11 @@ def _run_single_iteration(..., llm_execute: LLMExecute) -> tuple[...]:
 
 ## Acceptance Criteria
 
-1. [ ] `LLMExecute` protocol exists (in `src/erdos/core/ports.py` or `src/erdos/core/loop/runner.py`)
-2. [ ] `run_loop()` and `_run_single_iteration()` accept an injected `llm_execute` dependency
-3. [ ] Tests no longer patch `erdos.core.loop.runner.execute_llm` (they pass `llm_execute=` instead)
-4. [ ] All existing tests pass
-5. [ ] `make ci` passes
+1. [x] `LLMExecute` protocol exists (in `src/erdos/core/ports.py` or `src/erdos/core/loop/runner.py`)
+2. [x] `run_loop()` and `_run_single_iteration()` accept an injected `llm_execute` dependency
+3. [x] Tests no longer patch `erdos.core.loop.runner.execute_llm` (they pass `llm_execute=` instead)
+4. [x] All existing tests pass
+5. [x] `make ci` passes
 
 ---
 

@@ -12,7 +12,12 @@ from typing import TYPE_CHECKING
 from erdos.core.clients.openalex import OpenAlexConfig
 from erdos.core.config import AppConfig
 from erdos.core.problem_loader import ProblemLoader
-from erdos.core.providers import CrossrefProvider, FallbackProvider, OpenAlexProvider
+from erdos.core.providers import (
+    ArxivProvider,
+    CrossrefProvider,
+    FallbackProvider,
+    OpenAlexProvider,
+)
 from erdos.core.search.facade import SearchIndex
 
 
@@ -83,7 +88,15 @@ class AppContext:
 
 
 def build_metadata_provider(*, mailto: str, timeout: float) -> MetadataProvider:
-    """Create the default metadata provider chain (OpenAlex -> Crossref).
+    """Create the default metadata provider with capability-specific chains.
+
+    ISP-compliant: each capability (DOI, arXiv, search) has its own fallback
+    chain using only providers that support that operation.
+
+    Chains:
+    - DOI: OpenAlex → Crossref
+    - arXiv: OpenAlex → arXiv (via API)
+    - search: OpenAlex only (Crossref/arXiv don't support search)
 
     This function exists so call sites can pass CLI-derived configuration (e.g.,
     --mailto, --timeout) without constructing concrete clients inside
@@ -94,10 +107,16 @@ def build_metadata_provider(*, mailto: str, timeout: float) -> MetadataProvider:
         timeout: HTTP timeout in seconds.
 
     Returns:
-        A MetadataProvider that tries OpenAlex first, then falls back to Crossref.
+        A MetadataProvider that routes to capability-specific chains.
     """
-    primary = OpenAlexProvider.from_config(
+    openalex = OpenAlexProvider.from_config(
         OpenAlexConfig(email=mailto, timeout=timeout)
     )
-    fallback = CrossrefProvider(mailto=mailto, timeout=timeout)
-    return FallbackProvider(primary, fallback)
+    crossref = CrossrefProvider(mailto=mailto, timeout=timeout)
+    arxiv = ArxivProvider(timeout=timeout)
+
+    return FallbackProvider(
+        doi_chain=[openalex, crossref],
+        arxiv_chain=[openalex, arxiv],
+        search_chain=[openalex],
+    )

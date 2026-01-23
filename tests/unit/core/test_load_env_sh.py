@@ -11,12 +11,26 @@ from textwrap import dedent
 import pytest
 
 
-# Path to the load-env.sh script
-REPO_ROOT = Path(__file__).parent.parent.parent
-LOAD_ENV_SCRIPT = REPO_ROOT / "scripts" / "lib" / "load-env.sh"
+# Path to project root - computed once at module load
+# Note: This relies on test file being at tests/unit/core/test_load_env_sh.py
+# which is 4 directories deep from project root.
+_PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+_LOAD_ENV_SCRIPT = _PROJECT_ROOT / "scripts" / "lib" / "load-env.sh"
 
 # Full path to bash for security linters
 BASH_PATH = "/bin/bash"
+
+
+@pytest.fixture
+def project_root_path() -> Path:
+    """Return project root for tests that need it as fixture."""
+    return _PROJECT_ROOT
+
+
+@pytest.fixture
+def load_env_script() -> Path:
+    """Return path to load-env.sh script."""
+    return _LOAD_ENV_SCRIPT
 
 
 def run_load_env_test(env_content: str, expected_vars: dict[str, str]) -> None:
@@ -40,7 +54,7 @@ def run_load_env_test(env_content: str, expected_vars: dict[str, str]) -> None:
 ENVEOF
 
         # Source and run
-        source "{LOAD_ENV_SCRIPT}"
+        source "{_LOAD_ENV_SCRIPT}"
         load_env_file "$TEMP_ENV"
 
         # Print variables for verification
@@ -154,7 +168,7 @@ class TestLoadEnvFile:
 BAD KEY=value
 ENVEOF
 
-            source "{LOAD_ENV_SCRIPT}"
+            source "{_LOAD_ENV_SCRIPT}"
             load_env_file "$TEMP_ENV"
 
             rm -f "$TEMP_ENV"
@@ -189,7 +203,7 @@ ENVEOF
         script = dedent(f'''
             #!/usr/bin/env bash
             set -euo pipefail
-            source "{LOAD_ENV_SCRIPT}"
+            source "{_LOAD_ENV_SCRIPT}"
             load_env_file "/nonexistent/path/.env"
             echo "SUCCESS"
         ''')
@@ -209,14 +223,14 @@ ENVEOF
 class TestScriptIntegration:
     """Integration tests verifying scripts can be sourced."""
 
-    def test_load_env_script_exists(self) -> None:
+    def test_load_env_script_exists(self, load_env_script: Path) -> None:
         """Verify load-env.sh exists at expected location."""
-        assert LOAD_ENV_SCRIPT.exists(), f"Missing: {LOAD_ENV_SCRIPT}"
+        assert load_env_script.exists(), f"Missing: {load_env_script}"
 
-    def test_load_env_script_is_valid_bash(self) -> None:
+    def test_load_env_script_is_valid_bash(self, load_env_script: Path) -> None:
         """Verify load-env.sh has valid bash syntax."""
         result = subprocess.run(  # noqa: S603
-            [BASH_PATH, "-n", str(LOAD_ENV_SCRIPT)],
+            [BASH_PATH, "-n", str(load_env_script)],
             capture_output=True,
             text=True,
             timeout=10,
@@ -228,9 +242,11 @@ class TestScriptIntegration:
         "script_name",
         ["llm.sh", "llm-openai.sh", "llm-anthropic.sh"],
     )
-    def test_wrapper_scripts_source_shared_loader(self, script_name: str) -> None:
+    def test_wrapper_scripts_source_shared_loader(
+        self, project_root_path: Path, script_name: str
+    ) -> None:
         """Verify wrapper scripts source the shared load-env.sh."""
-        script_path = REPO_ROOT / "scripts" / script_name
+        script_path = project_root_path / "scripts" / script_name
         assert script_path.exists(), f"Missing: {script_path}"
 
         content = script_path.read_text()

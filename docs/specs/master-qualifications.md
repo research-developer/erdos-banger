@@ -2,6 +2,8 @@
 
 > Companion document to `docs/specs/master-vision.md`. This captures scope decisions, risk mitigations, and concrete choices that guide the actual v1 implementation. The master vision remains the vision; this document is the pragmatic filter.
 
+**Status (2026-01-23):** v1.0 through v2.1 have shipped and the corresponding specs are archived. Treat this document as a record of **v1-era scoping decisions** (the “why”), not as the authoritative current roadmap (the “what”). For current status, use `docs/specs/README.md`.
+
 ---
 
 ## 1) Scope Triage: What's Actually in V1
@@ -31,7 +33,7 @@ The master draft describes many capabilities. Here's what we're **actually build
 | Full-text indexing | Deferred | v1 index/search uses problem statements/notes only; ingested extracts are stored for a future indexing spec |
 | `erdos ask` | Basic RAG | Retrieval + LLM prompt, no reranking |
 
-### V1.2+ (OpenAlex Integration - Current)
+### V1.2+ (OpenAlex Integration)
 
 | Component | Scope | Notes |
 |-----------|-------|-------|
@@ -40,7 +42,7 @@ The master draft describes many capabilities. Here's what we're **actually build
 | arXiv for content | Source tarballs only | Default uses OpenAlex for metadata; legacy `--source arxiv` may still call the export API |
 | `MetadataProvider` protocol | Abstraction layer | Enables pluggable sources (see DEBT-038) |
 
-### V1.3+ (Deferred)
+### V1.3+ (Deferred at time of v1 planning)
 
 | Component | Why Deferred |
 |-----------|--------------|
@@ -158,8 +160,8 @@ Each data source has ONE job:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    High-Level Policy                         │
-│                  (IngestService, AskService)                 │
+│                    High-Level Policy                        │
+│                  (IngestService, AskService)                │
 └───────────────────────────┬─────────────────────────────────┘
                             │ depends on abstraction
                             ▼
@@ -418,8 +420,8 @@ Before coding starts:
 | "Perhaps sentence-transformers" | No vectors in v1, BM25 only |
 | Vertical slice includes ingestion + LLM | True vertical: show → lean init → formalize → check |
 | 15 GitHub issues | 23+ finer-grained issues |
-| MCP optional but described in detail | MCP cut from v1 entirely |
-| `erdos loop` as v1 feature | Deferred to v1.2+ after manual validation |
+| MCP optional but described in detail | MCP deferred past v1 (implemented in v1.4; see Spec 017) |
+| `erdos loop` as v1 feature | Implemented in v1.2 after manual validation (Spec 012) |
 | Crossref + arXiv as primary sources | OpenAlex as primary (v1.2+), Crossref as fallback |
 | No API orchestration strategy | MetadataProvider protocol for pluggable sources |
 | No deduplication discussion | OpenAlex handles deduplication internally |

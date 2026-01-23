@@ -44,14 +44,14 @@ def test_requests_version_meets_spec() -> None:
     )
 
 
-def test_pyproject_toml_has_requests_dependency() -> None:
+def test_pyproject_toml_has_requests_dependency(project_root: Path) -> None:
     """Verify pyproject.toml explicitly lists requests in dependencies.
 
     This prevents regression of BUG-007 where requests was imported but
     not declared as a dependency.
     """
     # Read pyproject.toml from project root
-    pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
+    pyproject_path = project_root / "pyproject.toml"
 
     with pyproject_path.open("rb") as f:
         pyproject = tomllib.load(f)
@@ -145,14 +145,14 @@ def _removed_shim_import_violations(
     return violations
 
 
-def test_no_core_backward_compat_shim_files() -> None:
+def test_no_core_backward_compat_shim_files(project_root: Path) -> None:
     """Ensure DEBT-061 shim files do not exist in src/erdos/core/.
 
     These modules were removed in DEBT-061. They re-exported symbols from
     bounded-context subpackages (clients/, search/, loop/, pdf/, batch/).
     If any exist, it indicates a regression.
     """
-    core_dir = Path(__file__).parent.parent.parent / "src" / "erdos" / "core"
+    core_dir = project_root / "src" / "erdos" / "core"
 
     for module in REMOVED_SHIM_MODULES:
         shim_path = core_dir / f"{module}.py"
@@ -163,14 +163,13 @@ def test_no_core_backward_compat_shim_files() -> None:
         )
 
 
-def test_no_imports_of_removed_shim_paths() -> None:
+def test_no_imports_of_removed_shim_paths(project_root: Path) -> None:
     """Ensure no code imports the removed shim module paths.
 
     DEBT-061 removed these shims; all imports should use the bounded-context
     subpackages directly (e.g., erdos.core.clients.arxiv instead of
     erdos.core.arxiv_client).
     """
-    project_root = Path(__file__).parent.parent.parent
     src_dir = project_root / "src"
     tests_dir = project_root / "tests"
     this_file = Path(__file__).resolve()

@@ -1,13 +1,40 @@
 # Repository Guidelines
 
+## Ralph Wiggum Loop (Autonomous Development)
+
+This repo uses the **Ralph Wiggum technique** for autonomous AI development sprints.
+
+**Core concept:** Same prompt repeated until completion. State lives in files (`PROGRESS.md`), not context.
+
+```bash
+# Launch (in tmux for persistence)
+tmux new-session -s erdos-ralph './scripts/ralph-loop.sh'
+
+# Monitor (another terminal)
+tail -f logs/ralph/iteration_*.log
+watch -n5 'git log --oneline -5'
+```
+
+**Key files:**
+- `PROMPT.md` - Loop instructions (read each iteration)
+- `PROGRESS.md` - Task queue with checkboxes (state)
+- `docs/debt/` - Active debt decks (SSOT for work)
+- `logs/ralph/` - Per-iteration logs (gitignored)
+
+**Protocol:** See `docs/_ralphwiggum/protocol.md` for full details.
+
+---
+
 ## Project Structure
 
 - `src/erdos/`: Python package (CLI + core logic).
   - `src/erdos/cli.py`: top-level Typer app entrypoint.
   - `src/erdos/commands/`: CLI command modules (e.g., `list_cmd.py`, `search.py`).
-  - `src/erdos/core/`: core services (models, loader, search index, ingest, Lean runner).
+  - `src/erdos/core/`: core bounded contexts (e.g., `ask/`, `ingest/`, `search/`, `loop/`, `providers/`) + stable utilities (`context.py`, `ports.py`).
+  - `src/erdos/services/`: application services/use-cases shared across adapters.
+  - `src/erdos/mcp/`: MCP server adapter (optional dependency).
 - `tests/`: pytest suite (`unit/`, `integration/`, `e2e/`) and `tests/fixtures/`.
-- `docs/`: specs, bug/debt decks, and process docs.
+- `docs/`: specs, ADRs, bug/debt decks, vendor docs, and process docs.
 - `formal/lean/`: Lean 4 project scaffold used by Lean integration.
 - `scripts/`: helper scripts (e.g., `scripts/smoke-test.sh`, LLM wrappers).
 - `logs/ralph/`: per-iteration Ralph Wiggum logs (gitignored; safe to clear between runs).

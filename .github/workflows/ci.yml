@@ -102,7 +102,7 @@ jobs:
         run: uv sync --frozen --extra mcp
 
       - name: Run MCP tests
-        run: uv run --frozen pytest tests/unit/test_mcp_tools.py tests/integration/test_mcp_server.py -v --color=no
+        run: uv run --frozen pytest tests/unit/mcp/test_tools.py tests/integration/test_mcp_server.py -v --color=no
         env:
           COLUMNS: "200"
           NO_COLOR: "1"

@@ -2,6 +2,9 @@
 
 This provider fetches metadata from arXiv's API (not source content).
 For downloading arXiv source tarballs, use erdos.core.ingest.arxiv_download.
+
+Implements ArxivLookupProvider only (ISP compliance). DOI lookups and
+search are not supported by the arXiv API.
 """
 
 from __future__ import annotations
@@ -22,12 +25,13 @@ logger = logging.getLogger(__name__)
 
 
 class ArxivProvider:
-    """MetadataProvider implementation using arXiv API.
+    """ArxivLookupProvider implementation using arXiv API.
 
     Note: This is for METADATA only (title, authors, abstract).
     Does not download source tarballs - use ingest.arxiv_download for that.
 
-    arXiv is arXiv-only. DOI lookups and search are not supported.
+    ISP compliance: Only implements get_by_arxiv() because arXiv API
+    doesn't support DOI lookups or search.
     """
 
     timeout: float
@@ -41,11 +45,6 @@ class ArxivProvider:
         """Human-readable provider name."""
         return "arxiv"
 
-    def get_by_doi(self, doi: str) -> ReferenceRecord | None:
-        """arXiv does not support DOI lookups."""
-        logger.debug("arXiv does not support DOI lookup: %s", doi)
-        return None
-
     def get_by_arxiv(self, arxiv_id: str) -> ReferenceRecord | None:
         """Fetch metadata by arXiv ID via arXiv API.
 
@@ -58,17 +57,7 @@ class ArxivProvider:
         try:
             return parse_arxiv_atom(atom_xml)
         except ET.ParseError as e:
-            # Convert ParseError to ValueError per MetadataProvider contract
+            # Convert ParseError to ValueError per ArxivLookupProvider contract
             raise ValueError(
                 f"Failed to parse arXiv response for {arxiv_id}: {e}"
             ) from e
-
-    def search(
-        self,
-        query: str,  # noqa: ARG002
-        *,
-        limit: int = 25,  # noqa: ARG002
-    ) -> list[ReferenceRecord]:
-        """arXiv search is not implemented (use OpenAlex for search)."""
-        logger.debug("arXiv search not implemented")
-        return []

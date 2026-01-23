@@ -2,29 +2,17 @@
 
 from __future__ import annotations
 
-import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
 
 from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
-from erdos.core.exit_codes import ExitCode
-from erdos.core.formalizer import generate_skeleton
-from erdos.core.lean_runner import LeanRunner, LeanRunnerError
-from erdos.core.loop import LoopConfig, LoopStatus, run_loop
-from erdos.core.models import CLIOutput
+from erdos.core.loop import LoopConfig, execute_proof_loop
 from erdos.core.timing import measure_time_ms
-
-
-if TYPE_CHECKING:
-    from erdos.core.ports import ProblemRepository
-
-
-logger = logging.getLogger(__name__)
 
 
 app = typer.Typer(help="Iterative Lean proof loop.")
@@ -85,172 +73,6 @@ def _print_human_result(result_data: dict[str, Any]) -> None:
                 f"  [{rec['iteration']}] {patch_str} "
                 f"sorry: {sorry_before} → {sorry_after}"
             )
-
-
-# ============================================================================
-# Core Logic
-# ============================================================================
-
-
-def execute_loop(  # noqa: PLR0911
-    problem_id: int,
-    *,
-    repo: ProblemRepository,
-    project_path: Path,
-    config: LoopConfig,
-    llm_command: str | None,
-    no_apply: bool,
-) -> CLIOutput:
-    """Execute the loop for a problem.
-
-    # exempt: DEBT-042
-
-    Args:
-        problem_id: Problem ID
-        repo: Problem repository
-        project_path: Path to Lean project
-        config: Loop configuration
-        llm_command: LLM command (or None)
-        no_apply: If True, don't write changes
-
-    Returns:
-        CLIOutput with result
-    """
-    # Get problem
-    problem = repo.get_by_id(problem_id)
-    if problem is None:
-        return CLIOutput.err(
-            command="erdos loop",
-            error_type="NotFound",
-            message=f"Problem {problem_id} not found",
-            code=ExitCode.NOT_FOUND,
-        )
-
-    # Ensure Lean project exists
-    if not project_path.exists():
-        try:
-            runner = LeanRunner(project_path)
-            runner.init(fetch_mathlib=True)
-        except LeanRunnerError as e:
-            return CLIOutput.err(
-                command="erdos loop",
-                error_type="InitError",
-                message=f"Failed to initialize Lean project: {e}",
-                code=ExitCode.ERROR,
-            )
-
-    # Ensure Lean file exists
-    file_path = project_path / "Erdos" / f"Problem{problem_id:03d}.lean"
-    if not file_path.exists():
-        try:
-            generate_skeleton(problem, project_path, overwrite=False)
-        except Exception as e:
-            return CLIOutput.err(
-                command="erdos loop",
-                error_type="FormalizerError",
-                message=f"Failed to generate skeleton: {e}",
-                code=ExitCode.ERROR,
-            )
-
-    # Create Lean runner
-    try:
-        lean_runner = LeanRunner(project_path)
-    except LeanRunnerError as e:
-        return CLIOutput.err(
-            command="erdos loop",
-            error_type="LeanRunnerError",
-            message=str(e),
-            code=ExitCode.ERROR,
-        )
-
-    # Run the loop
-    try:
-        result = run_loop(
-            problem=problem,
-            file_path=file_path,
-            config=config,
-            lean_runner=lean_runner,
-            llm_command=llm_command,
-            no_apply=no_apply,
-        )
-    except Exception as e:
-        logger.exception("Loop execution failed")
-        return CLIOutput.err(
-            command="erdos loop",
-            error_type="Error",
-            message=str(e),
-            code=ExitCode.ERROR,
-        )
-
-    # Map result to CLIOutput
-    # Per spec-012: success=true ONLY when proof is complete (zero sorry/admit, compiles)
-    # All other statuses return success=false with loop data in error object
-    result_dict = result.to_dict()
-
-    if result.status == LoopStatus.SUCCESS:
-        return CLIOutput.ok(
-            command="erdos loop",
-            data=result_dict,
-        )
-
-    # Map status to error type and exit code
-    status_map: dict[LoopStatus, tuple[str, str, ExitCode]] = {
-        LoopStatus.MAX_ITERATIONS: (
-            "MaxIterations",
-            f"Reached maximum iterations ({result.iterations_max})",
-            ExitCode.ERROR,
-        ),
-        LoopStatus.NO_PROGRESS: (
-            "NoProgress",
-            "No progress after multiple iterations",
-            ExitCode.ERROR,
-        ),
-        LoopStatus.NO_FIX_POSSIBLE: (
-            "NoFixPossible",
-            "LLM indicated no fix is possible",
-            ExitCode.ERROR,
-        ),
-        LoopStatus.REGRESSION: (
-            "Regression",
-            "File size shrank unexpectedly (possible deletion attack)",
-            ExitCode.ERROR,
-        ),
-        LoopStatus.LLM_REQUIRED: (
-            "LLMRequired",
-            "LLM required but not configured (set ERDOS_LLM_COMMAND)",
-            ExitCode.CONFIG_ERROR,
-        ),
-        LoopStatus.ERROR: (
-            "Error",
-            "Loop execution failed",
-            ExitCode.ERROR,
-        ),
-    }
-
-    error_type, message, exit_code = status_map.get(
-        result.status, ("Error", f"Unknown status: {result.status}", ExitCode.ERROR)
-    )
-
-    # Include loop result data in error object per spec-012
-    # (extra summary keys allowed by CLIOutput invariants)
-    error_obj = {
-        "type": error_type,
-        "message": message,
-        "code": int(exit_code),
-        **result_dict,  # Include full loop result data
-    }
-
-    return CLIOutput(
-        command="erdos loop",
-        success=False,
-        data=None,
-        error=error_obj,
-    )
-
-
-# ============================================================================
-# CLI Command
-# ============================================================================
 
 
 @app.command()
@@ -383,7 +205,7 @@ def run(
             rag_limit=rag_limit,
         )
 
-        result = execute_loop(
+        result = execute_proof_loop(
             problem_id,
             repo=app_ctx.problems,
             project_path=path,

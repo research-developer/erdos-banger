@@ -272,7 +272,7 @@ This suggests a multi-model approach may be optimal.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    erdos ingest <id>                         │
+│                    erdos ingest <id>                        │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼

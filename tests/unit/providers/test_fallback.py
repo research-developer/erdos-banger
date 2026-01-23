@@ -9,19 +9,16 @@ import pytest
 from erdos.core.models import ReferenceRecord
 
 
-class MockProvider:
-    """Mock MetadataProvider for testing fallback chains."""
+class MockDOIProvider:
+    """Mock DOILookupProvider for testing DOI fallback chains."""
 
     def __init__(
         self,
         name: str,
-        results: dict[tuple[str, str], ReferenceRecord | list[ReferenceRecord]]
-        | None = None,
+        results: dict[str, ReferenceRecord] | None = None,
     ) -> None:
         self._name = name
-        self._results: dict[
-            tuple[str, str], ReferenceRecord | list[ReferenceRecord]
-        ] = results or {}
+        self._results: dict[str, ReferenceRecord] = results or {}
         self._call_log: list[tuple[str, tuple[str, ...]]] = []
 
     @property
@@ -30,22 +27,53 @@ class MockProvider:
 
     def get_by_doi(self, doi: str) -> ReferenceRecord | None:
         self._call_log.append(("get_by_doi", (doi,)))
-        result = self._results.get(("doi", doi))
-        return result if isinstance(result, ReferenceRecord) else None
+        return self._results.get(doi)
+
+
+class MockArxivProvider:
+    """Mock ArxivLookupProvider for testing arXiv fallback chains."""
+
+    def __init__(
+        self,
+        name: str,
+        results: dict[str, ReferenceRecord] | None = None,
+    ) -> None:
+        self._name = name
+        self._results: dict[str, ReferenceRecord] = results or {}
+        self._call_log: list[tuple[str, tuple[str, ...]]] = []
+
+    @property
+    def provider_name(self) -> str:
+        return self._name
 
     def get_by_arxiv(self, arxiv_id: str) -> ReferenceRecord | None:
         self._call_log.append(("get_by_arxiv", (arxiv_id,)))
-        result = self._results.get(("arxiv", arxiv_id))
-        return result if isinstance(result, ReferenceRecord) else None
+        return self._results.get(arxiv_id)
+
+
+class MockSearchProvider:
+    """Mock SearchableMetadataProvider for testing search fallback chains."""
+
+    def __init__(
+        self,
+        name: str,
+        results: dict[str, list[ReferenceRecord]] | None = None,
+    ) -> None:
+        self._name = name
+        self._results: dict[str, list[ReferenceRecord]] = results or {}
+        self._call_log: list[tuple[str, tuple[str, ...]]] = []
+
+    @property
+    def provider_name(self) -> str:
+        return self._name
 
     def search(self, query: str, *, limit: int = 25) -> list[ReferenceRecord]:
         self._call_log.append(("search", (query, str(limit))))
-        result = self._results.get(("search", query))
-        return result if isinstance(result, list) else []
+        return self._results.get(query, [])
 
 
 class TestMetadataProviderProtocol:
-    """Tests for MetadataProvider protocol definition."""
+    """Tests for MetadataProvider protocol definitions."""
 
     def test_protocol_exists_in_ports(self) -> None:
         """MetadataProvider protocol should be defined in ports.py."""
@@ -56,51 +84,84 @@ class TestMetadataProviderProtocol:
         assert hasattr(MetadataProvider, "get_by_arxiv")
         assert hasattr(MetadataProvider, "search")
 
-    def test_mock_provider_satisfies_protocol(self) -> None:
-        """MockProvider should satisfy the MetadataProvider protocol."""
-        mock = MockProvider("test")
-        # Verify mock has protocol's interface
-        assert hasattr(mock, "provider_name")
-        assert hasattr(mock, "get_by_doi")
-        assert hasattr(mock, "get_by_arxiv")
-        assert hasattr(mock, "search")
-        assert mock.provider_name == "test"
+    def test_segregated_protocols_exist(self) -> None:
+        """ISP-compliant protocols should be defined in ports.py."""
+        from erdos.core.ports import (
+            ArxivLookupProvider,
+            DOILookupProvider,
+            SearchableMetadataProvider,
+        )
+
+        # DOILookupProvider
+        assert hasattr(DOILookupProvider, "provider_name")
+        assert hasattr(DOILookupProvider, "get_by_doi")
+
+        # ArxivLookupProvider
+        assert hasattr(ArxivLookupProvider, "provider_name")
+        assert hasattr(ArxivLookupProvider, "get_by_arxiv")
+
+        # SearchableMetadataProvider
+        assert hasattr(SearchableMetadataProvider, "provider_name")
+        assert hasattr(SearchableMetadataProvider, "search")
+
+    def test_mock_providers_satisfy_protocols(self) -> None:
+        """Mock providers should satisfy their respective protocols."""
+        doi_mock = MockDOIProvider("test")
+        assert hasattr(doi_mock, "provider_name")
+        assert hasattr(doi_mock, "get_by_doi")
+        assert doi_mock.provider_name == "test"
+
+        arxiv_mock = MockArxivProvider("test")
+        assert hasattr(arxiv_mock, "provider_name")
+        assert hasattr(arxiv_mock, "get_by_arxiv")
+
+        search_mock = MockSearchProvider("test")
+        assert hasattr(search_mock, "provider_name")
+        assert hasattr(search_mock, "search")
 
 
 class TestFallbackProvider:
-    """Tests for FallbackProvider chain logic."""
+    """Tests for FallbackProvider chain logic (ISP-compliant version)."""
 
-    def test_requires_at_least_one_provider(self) -> None:
-        """FallbackProvider should require at least one provider."""
+    def test_requires_at_least_one_chain(self) -> None:
+        """FallbackProvider should require at least one non-empty chain."""
         from erdos.core.providers import FallbackProvider
 
         with pytest.raises(ValueError, match="at least one provider"):
-            FallbackProvider()
+            FallbackProvider(doi_chain=[], arxiv_chain=[], search_chain=[])
 
-    def test_uses_primary_when_successful(self) -> None:
-        """Primary provider result is returned if found."""
+    def test_uses_primary_doi_when_successful(self) -> None:
+        """Primary DOI provider result is returned if found."""
         from erdos.core.providers import FallbackProvider
 
         record = ReferenceRecord(title="Test Paper", doi="10.1234/test")
-        primary = MockProvider("primary", {("doi", "10.1234/test"): record})
-        fallback = MockProvider("fallback")
+        primary = MockDOIProvider("primary", {"10.1234/test": record})
+        fallback = MockDOIProvider("fallback")
 
-        provider = FallbackProvider(primary, fallback)
+        provider = FallbackProvider(
+            doi_chain=[primary, fallback],
+            arxiv_chain=[],
+            search_chain=[],
+        )
         result = provider.get_by_doi("10.1234/test")
 
         assert result == record
         # Fallback should not be called
         assert len(fallback._call_log) == 0
 
-    def test_falls_back_when_primary_returns_none(self) -> None:
-        """Fallback is used when primary returns None."""
+    def test_falls_back_doi_when_primary_returns_none(self) -> None:
+        """DOI fallback is used when primary returns None."""
         from erdos.core.providers import FallbackProvider
 
         record = ReferenceRecord(title="Test Paper", doi="10.1234/test")
-        primary = MockProvider("primary")  # Returns None
-        fallback = MockProvider("fallback", {("doi", "10.1234/test"): record})
+        primary = MockDOIProvider("primary")  # Returns None
+        fallback = MockDOIProvider("fallback", {"10.1234/test": record})
 
-        provider = FallbackProvider(primary, fallback)
+        provider = FallbackProvider(
+            doi_chain=[primary, fallback],
+            arxiv_chain=[],
+            search_chain=[],
+        )
         result = provider.get_by_doi("10.1234/test")
 
         assert result == record
@@ -108,8 +169,8 @@ class TestFallbackProvider:
         assert len(primary._call_log) == 1
         assert len(fallback._call_log) == 1
 
-    def test_falls_back_when_primary_raises_expected_error(self) -> None:
-        """Fallback is used when primary raises an expected exception type."""
+    def test_falls_back_doi_when_primary_raises_expected_error(self) -> None:
+        """DOI fallback is used when primary raises an expected exception type."""
         import requests
 
         from erdos.core.providers import FallbackProvider
@@ -121,14 +182,18 @@ class TestFallbackProvider:
         # RequestException is an expected error type per port contract
         primary.get_by_doi.side_effect = requests.RequestException("API error")
 
-        fallback = MockProvider("fallback", {("doi", "10.1234/test"): record})
+        fallback = MockDOIProvider("fallback", {"10.1234/test": record})
 
-        provider = FallbackProvider(primary, fallback)
+        provider = FallbackProvider(
+            doi_chain=[primary, fallback],
+            arxiv_chain=[],
+            search_chain=[],
+        )
         result = provider.get_by_doi("10.1234/test")
 
         assert result == record
 
-    def test_propagates_unexpected_exceptions(self) -> None:
+    def test_propagates_unexpected_exceptions_doi(self) -> None:
         """Unexpected exceptions (programming errors) should propagate, not be caught."""
         from erdos.core.providers import FallbackProvider
 
@@ -137,9 +202,13 @@ class TestFallbackProvider:
         # RuntimeError is NOT an expected error type - should propagate
         primary.get_by_doi.side_effect = RuntimeError("Programming bug")
 
-        fallback = MockProvider("fallback")
+        fallback = MockDOIProvider("fallback")
 
-        provider = FallbackProvider(primary, fallback)
+        provider = FallbackProvider(
+            doi_chain=[primary, fallback],
+            arxiv_chain=[],
+            search_chain=[],
+        )
 
         with pytest.raises(RuntimeError, match="Programming bug"):
             provider.get_by_doi("10.1234/test")
@@ -152,9 +221,13 @@ class TestFallbackProvider:
         primary.provider_name = "primary"
         primary.get_by_arxiv.side_effect = TypeError("Unexpected type bug")
 
-        fallback = MockProvider("fallback")
+        fallback = MockArxivProvider("fallback")
 
-        provider = FallbackProvider(primary, fallback)
+        provider = FallbackProvider(
+            doi_chain=[],
+            arxiv_chain=[primary, fallback],
+            search_chain=[],
+        )
 
         with pytest.raises(TypeError, match="Unexpected type bug"):
             provider.get_by_arxiv("2103.03874")
@@ -167,14 +240,18 @@ class TestFallbackProvider:
         primary.provider_name = "primary"
         primary.search.side_effect = AttributeError("Missing attribute")
 
-        fallback = MockProvider("fallback")
+        fallback = MockSearchProvider("fallback")
 
-        provider = FallbackProvider(primary, fallback)
+        provider = FallbackProvider(
+            doi_chain=[],
+            arxiv_chain=[],
+            search_chain=[primary, fallback],
+        )
 
         with pytest.raises(AttributeError, match="Missing attribute"):
             provider.search("erdos", limit=10)
 
-    def test_falls_back_on_value_error(self) -> None:
+    def test_falls_back_doi_on_value_error(self) -> None:
         """ValueError (invalid identifier) should trigger fallback per contract."""
         from erdos.core.providers import FallbackProvider
 
@@ -184,45 +261,65 @@ class TestFallbackProvider:
         primary.provider_name = "primary"
         primary.get_by_doi.side_effect = ValueError("Invalid DOI format")
 
-        fallback = MockProvider("fallback", {("doi", "10.1234/test"): record})
+        fallback = MockDOIProvider("fallback", {"10.1234/test": record})
 
-        provider = FallbackProvider(primary, fallback)
+        provider = FallbackProvider(
+            doi_chain=[primary, fallback],
+            arxiv_chain=[],
+            search_chain=[],
+        )
         result = provider.get_by_doi("10.1234/test")
 
         assert result == record
 
-    def test_returns_none_when_all_providers_fail(self) -> None:
-        """None is returned when all providers return None."""
+    def test_returns_none_when_all_doi_providers_fail(self) -> None:
+        """None is returned when all DOI providers return None."""
         from erdos.core.providers import FallbackProvider
 
-        primary = MockProvider("primary")
-        fallback = MockProvider("fallback")
+        primary = MockDOIProvider("primary")
+        fallback = MockDOIProvider("fallback")
 
-        provider = FallbackProvider(primary, fallback)
+        provider = FallbackProvider(
+            doi_chain=[primary, fallback],
+            arxiv_chain=[],
+            search_chain=[],
+        )
         result = provider.get_by_doi("10.1234/nonexistent")
 
         assert result is None
 
-    def test_provider_name_shows_chain(self) -> None:
-        """Provider name reflects the fallback chain."""
+    def test_provider_name_shows_capability_chains(self) -> None:
+        """Provider name reflects the capability-specific chains."""
         from erdos.core.providers import FallbackProvider
 
-        primary = MockProvider("openalex")
-        fallback = MockProvider("crossref")
+        doi1 = MockDOIProvider("openalex")
+        doi2 = MockDOIProvider("crossref")
+        arxiv = MockArxivProvider("arxiv")
+        search = MockSearchProvider("openalex_search")
 
-        provider = FallbackProvider(primary, fallback)
+        provider = FallbackProvider(
+            doi_chain=[doi1, doi2],
+            arxiv_chain=[arxiv],
+            search_chain=[search],
+        )
 
-        assert provider.provider_name == "fallback(openalex -> crossref)"
+        assert "doi:openalex -> crossref" in provider.provider_name
+        assert "arxiv:arxiv" in provider.provider_name
+        assert "search:openalex_search" in provider.provider_name
 
     def test_get_by_arxiv_fallback(self) -> None:
         """Fallback works for arXiv lookups."""
         from erdos.core.providers import FallbackProvider
 
         record = ReferenceRecord(title="arXiv Paper", arxiv_id="2103.03874")
-        primary = MockProvider("primary")
-        fallback = MockProvider("fallback", {("arxiv", "2103.03874"): record})
+        primary = MockArxivProvider("primary")
+        fallback = MockArxivProvider("fallback", {"2103.03874": record})
 
-        provider = FallbackProvider(primary, fallback)
+        provider = FallbackProvider(
+            doi_chain=[],
+            arxiv_chain=[primary, fallback],
+            search_chain=[],
+        )
         result = provider.get_by_arxiv("2103.03874")
 
         assert result == record
@@ -235,10 +332,14 @@ class TestFallbackProvider:
             ReferenceRecord(title="Paper 1", doi="10.1234/1"),
             ReferenceRecord(title="Paper 2", doi="10.1234/2"),
         ]
-        primary = MockProvider("primary")  # Returns empty list
-        fallback = MockProvider("fallback", {("search", "erdos"): records})
+        primary = MockSearchProvider("primary")  # Returns empty list
+        fallback = MockSearchProvider("fallback", {"erdos": records})
 
-        provider = FallbackProvider(primary, fallback)
+        provider = FallbackProvider(
+            doi_chain=[],
+            arxiv_chain=[],
+            search_chain=[primary, fallback],
+        )
         result = provider.search("erdos", limit=10)
 
         assert result == records
@@ -328,7 +429,7 @@ class TestOpenAlexProvider:
 
 
 class TestCrossrefProvider:
-    """Tests for CrossrefProvider wrapper."""
+    """Tests for CrossrefProvider wrapper (DOILookupProvider only)."""
 
     def test_provider_name(self) -> None:
         """CrossrefProvider should have 'crossref' as provider name."""
@@ -337,35 +438,60 @@ class TestCrossrefProvider:
         provider = CrossrefProvider(mailto="test@example.com")
         assert provider.provider_name == "crossref"
 
-    def test_get_by_arxiv_returns_none(self) -> None:
-        """CrossrefProvider.get_by_arxiv should always return None (not supported)."""
+    def test_only_implements_doi_lookup(self) -> None:
+        """CrossrefProvider should only implement get_by_doi (ISP compliance)."""
         from erdos.core.providers import CrossrefProvider
 
         provider = CrossrefProvider(mailto="test@example.com")
-        result = provider.get_by_arxiv("2103.03874")
 
-        assert result is None
+        # Should have get_by_doi
+        assert hasattr(provider, "get_by_doi")
 
-    def test_search_returns_empty(self) -> None:
-        """CrossrefProvider.search should return empty list (not implemented)."""
-        from erdos.core.providers import CrossrefProvider
+        # Should NOT have get_by_arxiv or search (ISP compliance)
+        assert not hasattr(provider, "get_by_arxiv")
+        assert not hasattr(provider, "search")
 
-        provider = CrossrefProvider(mailto="test@example.com")
-        result = provider.search("erdos", limit=10)
 
-        assert result == []
+class TestArxivProvider:
+    """Tests for ArxivProvider wrapper (ArxivLookupProvider only)."""
+
+    def test_provider_name(self) -> None:
+        """ArxivProvider should have 'arxiv' as provider name."""
+        from erdos.core.providers import ArxivProvider
+
+        provider = ArxivProvider(timeout=30.0)
+        assert provider.provider_name == "arxiv"
+
+    def test_only_implements_arxiv_lookup(self) -> None:
+        """ArxivProvider should only implement get_by_arxiv (ISP compliance)."""
+        from erdos.core.providers import ArxivProvider
+
+        provider = ArxivProvider(timeout=30.0)
+
+        # Should have get_by_arxiv
+        assert hasattr(provider, "get_by_arxiv")
+
+        # Should NOT have get_by_doi or search (ISP compliance)
+        assert not hasattr(provider, "get_by_doi")
+        assert not hasattr(provider, "search")
 
 
 class TestBuildMetadataProvider:
     """Tests for build_metadata_provider factory function."""
 
     def test_creates_fallback_chain(self) -> None:
-        """build_metadata_provider should create a FallbackProvider chain."""
+        """build_metadata_provider should create a FallbackProvider with chains."""
         from erdos.core.context import build_metadata_provider
         from erdos.core.providers import FallbackProvider
 
         provider = build_metadata_provider(mailto="test@example.com", timeout=30.0)
 
         assert isinstance(provider, FallbackProvider)
+        # Check that all capability chains are represented
+        assert "doi:" in provider.provider_name
+        assert "arxiv:" in provider.provider_name
+        assert "search:" in provider.provider_name
+        # Check expected providers
         assert "openalex" in provider.provider_name
         assert "crossref" in provider.provider_name
+        assert "arxiv" in provider.provider_name

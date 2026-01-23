@@ -71,6 +71,10 @@ def _build_provider_from_source(
 ) -> MetadataProvider:
     """Build a MetadataProvider from a MetadataSource enum.
 
+    ISP-compliant: returns a FallbackProvider with capability-specific chains.
+    For single-source providers (ARXIV, CROSSREF), only the supported chain
+    is populated.
+
     Args:
         source: The metadata source to use.
         mailto: Contact email for API polite pools.
@@ -80,15 +84,31 @@ def _build_provider_from_source(
         A MetadataProvider instance for the specified source.
     """
     if source == MetadataSource.OPENALEX:
-        # OpenAlex primary with Crossref fallback (standard config)
+        # Full capability: OpenAlex primary with Crossref/arXiv fallback
+        openalex = OpenAlexProvider.from_env()
+        crossref = CrossrefProvider(mailto=mailto, timeout=timeout)
+        arxiv = ArxivProvider(timeout=timeout)
         return FallbackProvider(
-            OpenAlexProvider.from_env(),
-            CrossrefProvider(mailto=mailto, timeout=timeout),
+            doi_chain=[openalex, crossref],
+            arxiv_chain=[openalex, arxiv],
+            search_chain=[openalex],
         )
     if source == MetadataSource.ARXIV:
-        return ArxivProvider(timeout=timeout)
+        # arXiv-only: no DOI or search capability
+        arxiv = ArxivProvider(timeout=timeout)
+        return FallbackProvider(
+            doi_chain=[],
+            arxiv_chain=[arxiv],
+            search_chain=[],
+        )
     if source == MetadataSource.CROSSREF:
-        return CrossrefProvider(mailto=mailto, timeout=timeout)
+        # Crossref-only: no arXiv or search capability
+        crossref = CrossrefProvider(mailto=mailto, timeout=timeout)
+        return FallbackProvider(
+            doi_chain=[crossref],
+            arxiv_chain=[],
+            search_chain=[],
+        )
     # Exhaustive match - type checker will catch missing enum cases
     assert_never(source)
 
