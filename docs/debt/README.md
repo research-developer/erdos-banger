@@ -16,7 +16,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | Status | Commit |
 |----|-------|----------|--------|--------|
-| DEBT-067 | [Remove private helper re-exports from core packages](./debt-067-remove-private-reexports.md) | P3 | Open | (pending) |
+| *None* | | | | |
 
 ## Archived Debt
 
@@ -90,6 +90,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-063 | `MetadataProvider` protocol ISP violation | P2 | Fixed | 8966898 |
 | DEBT-065 | Command layer contains application orchestration | P2 | Fixed | 940a362 |
 | DEBT-066 | Test directory structure mirrors src/ bounded contexts | P3 | Fixed | d938411 |
+| DEBT-067 | Remove private helper re-exports from core packages | P3 | Fixed | 9c83b66 |
 
 **Next Debt ID:** DEBT-068
 
@@ -161,3 +162,4 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-063-metadata-provider-isp.md`
 - `docs/_archive/debt/debt-065-thick-cli-callbacks.md`
 - `docs/_archive/debt/debt-066-test-structure-mirrors-src.md`
+- `docs/_archive/debt/debt-067-remove-private-reexports.md`

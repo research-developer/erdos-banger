@@ -29,8 +29,7 @@
 
 Work strictly top-to-bottom unless blocked by dependencies.
 
-- [ ] **DEBT-067**: Remove private helper re-exports from core packages (ISP/SRP)
-  Deck: `docs/debt/debt-067-remove-private-reexports.md`
+*Sprint complete - no unchecked items remain.*
 
 ---
 
@@ -43,6 +42,7 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - [x] **DEBT-064**: Inject LLM executor into loop runner (DIP) → `docs/_archive/debt/debt-064-loop-runner-dip.md`
 - [x] **DEBT-065**: Move loop orchestration out of command layer (SRP) → `docs/_archive/debt/debt-065-thick-cli-callbacks.md`
 - [x] **DEBT-066**: Test directory structure mirrors src/ bounded contexts (CCP) → `docs/_archive/debt/debt-066-test-structure-mirrors-src.md`
+- [x] **DEBT-067**: Remove private helper re-exports from core packages (ISP/SRP) → `docs/_archive/debt/debt-067-remove-private-reexports.md`
 
 ---
 
@@ -55,3 +55,4 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - **2026-01-22 (DEBT-064)**: Injected LLM executor into loop runner (DIP compliance). Added `LLMExecute` protocol to `ports.py`, updated `run_loop()` and `_run_single_iteration()` to accept injected dependency. `make ci` passes.
 - **2026-01-22 (DEBT-065)**: Moved loop orchestration out of command layer (SRP). Created `core/loop/service.py` with `execute_proof_loop()` function. Refactored `commands/loop.py` to be a thin adapter. `make ci` passes.
 - **2026-01-22 (DEBT-066)**: Reorganized `tests/unit/` into 14 bounded-context subdirectories mirroring `src/erdos/core/`. Moved 50+ test files, renamed to drop redundant prefixes. `make ci` passes.
+- **2026-01-22 (DEBT-067)**: Removed private helper re-exports from `erdos.core.ask` and `erdos.core.ingest` package roots. Updated tests to import from implementation modules directly. Added regression guard test in `test_dependencies.py`. `make ci` passes.

@@ -1,9 +1,10 @@
 # DEBT-067: Remove Private Helper Re-exports from Core Packages
 
-**Status:** Open
+**Status:** Fixed
 **Priority:** P3
 **Found:** 2026-01-23
 **Found By:** Clean architecture audit (public API surface + test coupling)
+**Fixed In:** 9c83b66
 
 ---
 
@@ -39,7 +40,7 @@ This debt is about **tightening the public surface** and making tests import fro
 ## Why This Is Debt (Clean Code)
 
 - **SRP:** package `__init__.py` mixes public API design with test-only aliasing.
-- **OCP:** internal helpers become “semi-public” by accident; renames require broader coordination.
+- **OCP:** internal helpers become "semi-public" by accident; renames require broader coordination.
 - **Clarity:** makes it harder to know which module is the SSOT for a helper.
 
 ---
@@ -57,6 +58,17 @@ This debt is about **tightening the public surface** and making tests import fro
    - `execute_ingest`, `ingest_problem_references`, and public result dataclasses (ingest)
 4. Add a regression guard test:
    - Fail if any `__all__` in `src/erdos/core/*/__init__.py` contains a name starting with `_`.
+
+---
+
+## Resolution
+
+Fixed in commit 9c83b66:
+
+1. Updated `tests/unit/ask/test_helpers.py` to import private helpers from `erdos.core.ask.service`
+2. Updated `tests/unit/ingest/test_service.py` to import `download_and_extract_arxiv` from `erdos.core.ingest.arxiv_download`
+3. Removed all underscore-prefixed exports and aliases from both package `__init__.py` files
+4. Added regression guard test `test_no_private_exports_in_core_package_roots()` in `tests/unit/core/test_dependencies.py`
 
 ---
 
