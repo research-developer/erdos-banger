@@ -219,6 +219,9 @@ class TestRunSingleIngestion:
             timeout=45.0,
             delay=5.0,
             mailto="user@example.com",
+            pdf=False,
+            pdf_converter="marker",
+            pdf_use_llm=False,
             source=MetadataSource.ARXIV,
             openalex_api_key=None,
         )

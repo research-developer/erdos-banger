@@ -24,7 +24,15 @@ def _write_text_if_missing(path: Path, content: str) -> bool:
     if path.exists():
         return False
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8")
+    tmp_path = path.with_suffix(path.suffix + ".tmp")
+    try:
+        tmp_path.write_text(content, encoding="utf-8")
+        if path.exists():
+            return False
+        tmp_path.replace(path)
+    finally:
+        if tmp_path.exists():
+            tmp_path.unlink(missing_ok=True)
     return True
 
 

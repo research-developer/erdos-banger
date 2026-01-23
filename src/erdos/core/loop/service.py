@@ -34,6 +34,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+MIN_RAG_CHUNK_BYTES = 64
+
 
 def _truncate_bytes(text: str, max_bytes: int) -> str:
     """Truncate text to fit within max_bytes (UTF-8)."""
@@ -61,14 +63,15 @@ def _build_rag_chunks(
         return []
     text = _truncate_bytes(text, 8192)
     encoded = text.encode("utf-8")
-    chunk_size = max(1, math.ceil(len(encoded) / max(1, limit)))
+    effective_limit = max(1, min(limit, len(encoded) // MIN_RAG_CHUNK_BYTES or 1))
+    chunk_size = math.ceil(len(encoded) / effective_limit)
 
     parts: list[str] = []
     for i in range(0, len(encoded), chunk_size):
         part = encoded[i : i + chunk_size].decode("utf-8", errors="ignore").strip()
         if part:
             parts.append(part)
-        if len(parts) >= limit:
+        if len(parts) >= effective_limit:
             break
 
     if not parts:

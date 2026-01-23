@@ -8,13 +8,9 @@ This helper keeps our tests compatible with both.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import Any, cast
 
 from typer.testing import CliRunner
-
-
-if TYPE_CHECKING:
-    from typing import Any
 
 
 def make_cli_runner() -> CliRunner:
