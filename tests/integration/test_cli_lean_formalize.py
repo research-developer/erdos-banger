@@ -6,18 +6,17 @@ import json
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
-from typer.testing import CliRunner
-
 from erdos.cli import app
 from erdos.core.exit_codes import ExitCode
 from erdos.core.lean_runner import LeanRunnerError
+from tests.cli_runner import make_cli_runner
 
 
 if TYPE_CHECKING:
     from pathlib import Path
 
 
-runner = CliRunner()
+runner = make_cli_runner()
 
 
 class TestLeanFormalizeValidation:

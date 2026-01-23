@@ -144,7 +144,7 @@ class TestExecuteAskQuery:
         )
         repo = mock.Mock()
         index = mock.Mock()
-        result = _execute_ask_query(options, repo=repo, index=index)
+        result = _execute_ask_query(options, repo=repo, index=index, repo_root=None)
 
         mock_ask.assert_called_once_with(
             problem_id=6,
@@ -155,6 +155,7 @@ class TestExecuteAskQuery:
             build_index_flag=True,
             no_llm=False,
             llm_command="test-llm",
+            repo_root=None,
         )
         assert result.success is True
 
@@ -172,7 +173,9 @@ class TestExecuteAskQuery:
             no_llm=True,
             llm_cmd=None,
         )
-        result = _execute_ask_query(options, repo=mock.Mock(), index=mock.Mock())
+        result = _execute_ask_query(
+            options, repo=mock.Mock(), index=mock.Mock(), repo_root=None
+        )
 
         assert result.duration_ms is not None
         assert result.duration_ms >= 0
@@ -191,7 +194,7 @@ class TestExecuteAskQuery:
             no_llm=True,
             llm_cmd=None,
         )
-        _execute_ask_query(options, repo=mock.Mock(), index=mock.Mock())
+        _execute_ask_query(options, repo=mock.Mock(), index=mock.Mock(), repo_root=None)
 
         mock_ask.assert_called_once()
         assert mock_ask.call_args[1]["llm_command"] is None

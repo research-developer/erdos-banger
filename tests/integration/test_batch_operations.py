@@ -8,12 +8,12 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from typer.testing import CliRunner
 
 from erdos.cli import app
+from tests.cli_runner import make_cli_runner
 
 
-runner = CliRunner()
+runner = make_cli_runner()
 
 
 @pytest.fixture

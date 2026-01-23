@@ -73,7 +73,8 @@ def is_marker_available() -> bool:
         import marker.converters.pdf  # noqa: F401, PLC0415
 
         return True
-    except ImportError:
+    except Exception as e:
+        logger.debug("Marker unavailable: %s", e)
         return False
 
 

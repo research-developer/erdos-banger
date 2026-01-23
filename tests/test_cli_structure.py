@@ -1,11 +1,10 @@
 """Verify CLI structure is correct."""
 
-from typer.testing import CliRunner
-
 from erdos.cli import app
+from tests.cli_runner import make_cli_runner
 
 
-runner = CliRunner()
+runner = make_cli_runner()
 
 
 def test_cli_has_version_flag() -> None:

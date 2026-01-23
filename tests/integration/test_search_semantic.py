@@ -12,9 +12,9 @@ from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typer.testing import CliRunner
 
 from erdos.cli import app
+from tests.cli_runner import make_cli_runner
 
 
 # Check if numpy is available
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-runner = CliRunner()
+runner = make_cli_runner()
 
 
 # =============================================================================
@@ -263,8 +263,9 @@ class TestEmbeddingDependency:
                 },
             )
             assert result.exit_code == 10
-            assert "embeddings" in result.output.lower()
-            normalized = " ".join(result.output.lower().split())
+            output = (getattr(result, "stderr", "") or "") + (result.stdout or "")
+            assert "embeddings" in output.lower()
+            normalized = " ".join(output.lower().split())
             assert "uv sync --extra embeddings" in normalized
 
     def test_build_embeddings_without_deps_shows_error(
@@ -281,8 +282,9 @@ class TestEmbeddingDependency:
                 },
             )
             assert result.exit_code == 10
-            assert "embeddings" in result.output.lower()
-            normalized = " ".join(result.output.lower().split())
+            output = (getattr(result, "stderr", "") or "") + (result.stdout or "")
+            assert "embeddings" in output.lower()
+            normalized = " ".join(output.lower().split())
             assert "uv sync --extra embeddings" in normalized
 
 

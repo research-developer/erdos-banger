@@ -7,10 +7,9 @@ import subprocess
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
-from typer.testing import CliRunner
-
 from erdos.cli import app
 from erdos.core.exit_codes import ExitCode
+from tests.cli_runner import make_cli_runner
 
 
 if TYPE_CHECKING:
@@ -19,7 +18,7 @@ if TYPE_CHECKING:
     from pytest import MonkeyPatch
 
 
-runner = CliRunner()
+runner = make_cli_runner()
 
 
 class TestLeanProveCommandValidation:

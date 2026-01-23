@@ -1,5 +1,6 @@
 """Unit tests for ask retrieval logic."""
 
+from pathlib import Path
 from unittest.mock import MagicMock
 
 from erdos.core.ask import perform_retrieval, retrieve_sources
@@ -149,7 +150,7 @@ def test_retrieval_filters_by_problem_id():
     assert call_args.kwargs["problem_id"] == 42
 
 
-def test_retrieve_sources_empty_index():
+def test_retrieve_sources_empty_index(tmp_path: Path) -> None:
     """retrieve_sources returns fallback sources when index is empty."""
     problem = ProblemRecord(
         id=6,
@@ -166,6 +167,7 @@ def test_retrieve_sources_empty_index():
         problem=problem,
         question="Test?",
         limit=5,
+        repo_root=tmp_path,
     )
 
     # Should return fallback sources (statement + notes if present)

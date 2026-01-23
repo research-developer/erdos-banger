@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from typer.testing import CliRunner
-
 from erdos.cli import app
+from tests.cli_runner import make_cli_runner
 
 
-runner = CliRunner()
+runner = make_cli_runner()
 
 
 class TestIngestPDFOptions:

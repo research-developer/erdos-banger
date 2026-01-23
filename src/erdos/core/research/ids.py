@@ -1,0 +1,19 @@
+"""Record identity helpers (Spec 024)."""
+
+from __future__ import annotations
+
+import secrets
+from datetime import UTC, datetime
+
+
+def utc_now_id_timestamp(now: datetime | None = None) -> str:
+    dt = now if now is not None else datetime.now(UTC)
+    dt = dt.replace(microsecond=0)
+    return dt.strftime("%Y%m%dT%H%M%SZ")
+
+
+def generate_record_id(kind: str, *, now: datetime | None = None) -> str:
+    """Generate a stable, filename-safe record id."""
+    ts = utc_now_id_timestamp(now)
+    rand6 = secrets.token_hex(3)  # 3 bytes -> 6 hex chars
+    return f"{kind}_{ts}_{rand6}"

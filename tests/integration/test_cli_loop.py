@@ -3,12 +3,11 @@
 import json
 from pathlib import Path
 
-from typer.testing import CliRunner
-
 from erdos.cli import app
+from tests.cli_runner import make_cli_runner
 
 
-runner = CliRunner()
+runner = make_cli_runner()
 
 
 class TestLoopRunCommand:
@@ -23,7 +22,7 @@ class TestLoopRunCommand:
         result = runner.invoke(app, ["loop", "run"])
         assert result.exit_code != 0
         # Error message may be in stdout or stderr depending on typer version
-        output = result.stdout or result.output or ""
+        output = (getattr(result, "stderr", "") or "") + (result.stdout or "")
         assert "Missing argument" in output or "PROBLEM_ID" in output
 
     def test_invalid_problem_id_not_found(self) -> None:

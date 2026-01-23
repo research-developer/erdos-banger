@@ -1,11 +1,23 @@
 """Retrieval logic for RAG Q&A."""
 
 import re
+from pathlib import Path
 
 from erdos.core.constants import PREVIEW_LENGTH
 from erdos.core.models import ChunkSource, ProblemRecord
 from erdos.core.ports import SearchIndexReadPort
+from erdos.core.research.paths import get_problem_dir
 from erdos.core.search.types import SearchResult
+
+
+def _try_load_synthesis(problem_id: int, *, repo_root: Path | None) -> str | None:
+    path = get_problem_dir(repo_root, problem_id) / "SYNTHESIS.md"
+    if not path.exists():
+        return None
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError:
+        return None
 
 
 def perform_retrieval(
@@ -62,7 +74,31 @@ def perform_retrieval(
 
 def fallback_sources(problem: ProblemRecord, *, limit: int) -> list[SearchResult]:
     """Fallback retrieval when the FTS index has no data yet."""
+    return fallback_sources_with_research(problem, limit=limit, repo_root=None)
+
+
+def fallback_sources_with_research(
+    problem: ProblemRecord, *, limit: int, repo_root: Path | None
+) -> list[SearchResult]:
+    """Fallback retrieval including research synthesis when present."""
     sources: list[SearchResult] = []
+
+    # Always include synthesis first when present.
+    synthesis = _try_load_synthesis(problem.id, repo_root=repo_root)
+    if synthesis is not None and len(sources) < limit:
+        sources.append(
+            SearchResult(
+                chunk_id=f"research_{problem.id}_synthesis",
+                text=synthesis,
+                snippet=synthesis[:PREVIEW_LENGTH] + "..."
+                if len(synthesis) > PREVIEW_LENGTH
+                else synthesis,
+                score=1.0,
+                source_type=ChunkSource.RESEARCH_SYNTHESIS,
+                problem_id=problem.id,
+                reference_doi=None,
+            )
+        )
 
     # Always include the statement first (matches TextChunk.from_problem conventions).
     statement = problem.statement
@@ -106,6 +142,7 @@ def retrieve_sources(
     problem: ProblemRecord,
     question: str,
     limit: int,
+    repo_root: Path | None = None,
 ) -> tuple[list[SearchResult], bool, str | None]:
     """
     Retrieve sources for a question, with fallback.
@@ -122,11 +159,13 @@ def retrieve_sources(
     """
     # If index is empty, use fallback sources
     if index.chunk_count() == 0:
-        sources = fallback_sources(problem, limit=limit)
+        sources = fallback_sources_with_research(
+            problem, limit=limit, repo_root=repo_root
+        )
         return sources, False, None
 
     # Otherwise, combine fallback (statement/notes) with retrieved chunks
-    baseline = fallback_sources(problem, limit=limit)
+    baseline = fallback_sources_with_research(problem, limit=limit, repo_root=repo_root)
     retrieved, query = perform_retrieval(
         index=index,
         problem=problem,

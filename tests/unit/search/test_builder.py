@@ -36,6 +36,9 @@ class _FaultyIndex:
             raise RuntimeError("boom")
         self._indexed.append(problem.id)
 
+    def index_chunk(self, chunk: object) -> None:
+        return None
+
     def search(
         self, query: str, *, limit: int = 10, problem_id=None, source_types=None
     ):

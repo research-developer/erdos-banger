@@ -320,6 +320,11 @@ def mcp_ask_question(
     Returns:
         CLIOutput-compatible dict
     """
+    repo_root = (
+        Path(os.environ["ERDOS_REPO_ROOT"])
+        if os.environ.get("ERDOS_REPO_ROOT")
+        else None
+    )
     result = core_ask_question(
         problem_id=problem_id,
         question=question,
@@ -329,6 +334,7 @@ def mcp_ask_question(
         build_index_flag=False,
         no_llm=no_llm,
         llm_command=None,
+        repo_root=repo_root,
     )
     return _cli_output_to_dict(result)
 

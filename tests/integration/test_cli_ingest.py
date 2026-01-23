@@ -7,17 +7,17 @@ import shutil
 from typing import TYPE_CHECKING
 
 import responses
-from typer.testing import CliRunner
 
 from erdos.cli import app
 from erdos.core.exit_codes import ExitCode
+from tests.cli_runner import make_cli_runner
 
 
 if TYPE_CHECKING:
     from pathlib import Path
 
 
-runner = CliRunner()
+runner = make_cli_runner()
 
 
 def _data_dir(tmp_path: Path, sample_problems_yaml: Path) -> Path:

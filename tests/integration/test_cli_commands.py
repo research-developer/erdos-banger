@@ -6,14 +6,13 @@ import json
 import shutil
 from pathlib import Path
 
-from typer.testing import CliRunner
-
 from erdos.cli import app
 from erdos.core.lean_runner import LeanRunner
 from erdos.core.models import LeanCheckResult, LeanError
+from tests.cli_runner import make_cli_runner
 
 
-runner = CliRunner()
+runner = make_cli_runner()
 
 
 def _data_dir(tmp_path: Path, sample_problems_yaml: Path) -> Path:

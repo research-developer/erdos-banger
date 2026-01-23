@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
 
@@ -271,7 +272,7 @@ class TestTorchDeviceEnvVar:
 
         def patched_setitem(self, key: str, value: str) -> None:
             mock_environ_setitem(key, value)
-            return original_setitem(self, key, value)
+            cast("Any", original_setitem)(self, key, value)
 
         monkeypatch.setattr(os.environ.__class__, "__setitem__", patched_setitem)
 
@@ -312,7 +313,7 @@ class TestTorchDeviceEnvVar:
         def patched_setitem(self, key: str, value: str) -> None:
             if key == "TORCH_DEVICE":
                 captured_env["TORCH_DEVICE"] = value
-            return original_setitem(self, key, value)
+            cast("Any", original_setitem)(self, key, value)
 
         monkeypatch.setattr(os.environ.__class__, "__setitem__", patched_setitem)
 

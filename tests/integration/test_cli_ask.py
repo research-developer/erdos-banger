@@ -6,20 +6,19 @@ import json
 import shutil
 from typing import TYPE_CHECKING
 
-from typer.testing import CliRunner
-
 from erdos.cli import app
 from erdos.core.exit_codes import ExitCode
 from erdos.core.problem_loader import ProblemLoader
 from erdos.core.search.facade import SearchIndex
 from erdos.core.search.index_builder import build_index
+from tests.cli_runner import make_cli_runner
 
 
 if TYPE_CHECKING:
     from pathlib import Path
 
 
-runner = CliRunner()
+runner = make_cli_runner()
 
 
 def _setup_test_env(tmp_path: Path, sample_problems_yaml: Path) -> tuple[Path, Path]:
@@ -70,6 +69,7 @@ def test_ask_command_json_output_no_llm(
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
+            "ERDOS_REPO_ROOT": str(tmp_path),
         },
     )
 
@@ -109,6 +109,7 @@ def test_ask_command_with_limit(
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
+            "ERDOS_REPO_ROOT": str(tmp_path),
         },
     )
 
@@ -131,6 +132,7 @@ def test_ask_command_sources_returned(
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
+            "ERDOS_REPO_ROOT": str(tmp_path),
         },
     )
 
@@ -162,6 +164,7 @@ def test_ask_command_prompt_includes_problem_statement(
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
+            "ERDOS_REPO_ROOT": str(tmp_path),
         },
     )
 
@@ -195,6 +198,7 @@ def test_ask_command_with_fake_llm(
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
+            "ERDOS_REPO_ROOT": str(tmp_path),
         },
     )
 
@@ -223,6 +227,7 @@ def test_ask_command_not_found_error(
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
+            "ERDOS_REPO_ROOT": str(tmp_path),
         },
     )
 
@@ -248,6 +253,7 @@ def test_ask_command_stdin_question(
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
+            "ERDOS_REPO_ROOT": str(tmp_path),
         },
     )
 
@@ -271,6 +277,7 @@ def test_ask_command_empty_stdin_question_is_usage_error_json(
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
+            "ERDOS_REPO_ROOT": str(tmp_path),
         },
     )
 
@@ -294,6 +301,7 @@ def test_ask_command_falls_back_when_index_empty(
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
+            "ERDOS_REPO_ROOT": str(tmp_path),
         },
     )
 
@@ -320,6 +328,7 @@ def test_ask_command_human_output(
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
+            "ERDOS_REPO_ROOT": str(tmp_path),
         },
     )
 
@@ -347,6 +356,7 @@ def test_ask_command_config_error_exit_code(
         env={
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_INDEX_PATH": str(index_path),
+            "ERDOS_REPO_ROOT": str(tmp_path),
         },
     )
 

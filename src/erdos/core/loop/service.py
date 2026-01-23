@@ -21,6 +21,8 @@ from erdos.core.lean_runner import LeanRunner, LeanRunnerError
 from erdos.core.loop.result import LoopResult, LoopStatus
 from erdos.core.loop.runner import run_loop
 from erdos.core.models import CLIOutput
+from erdos.core.research.loop_integration import write_attempt_from_loop_result
+from erdos.core.research.paths import get_problem_dir
 
 
 if TYPE_CHECKING:
@@ -41,6 +43,7 @@ def execute_proof_loop(
     config: LoopConfig,
     llm_command: str | None,
     no_apply: bool,
+    repo_root: Path | None = None,
 ) -> CLIOutput:
     """Execute the proof loop for a problem.
 
@@ -109,6 +112,24 @@ def execute_proof_loop(
             code=ExitCode.ERROR,
         )
 
+    # Build RAG context: always include per-problem synthesis when present.
+    rag_chunks: list[dict[str, str]] = []
+    synthesis_path = get_problem_dir(repo_root, problem_id) / "SYNTHESIS.md"
+    if synthesis_path.exists():
+        try:
+            text = synthesis_path.read_text(encoding="utf-8")
+        except OSError:
+            text = ""
+        if text.strip():
+            rag_chunks.append(
+                {
+                    "chunk_id": f"research_{problem_id}_synthesis",
+                    "source_type": "research_synthesis",
+                    "text": text,
+                }
+            )
+    rag_chunks = rag_chunks[: max(config.rag_limit, 0)]
+
     # Run the loop
     try:
         result = run_loop(
@@ -118,6 +139,7 @@ def execute_proof_loop(
             lean_runner=lean_runner,
             llm_command=llm_command,
             no_apply=no_apply,
+            rag_chunks=rag_chunks,
         )
     except Exception as e:
         logger.exception("Loop execution failed")
@@ -127,6 +149,12 @@ def execute_proof_loop(
             message=str(e),
             code=ExitCode.ERROR,
         )
+
+    # Write a structured attempt record (best-effort; never block loop result).
+    try:
+        write_attempt_from_loop_result(problem_id, result, repo_root=repo_root)
+    except Exception as e:
+        logger.warning("Failed to write research attempt record: %s", e)
 
     return _map_loop_result_to_cli_output(result)
 

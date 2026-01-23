@@ -11,7 +11,6 @@ from unittest.mock import patch
 import pytest
 import responses
 import yaml
-from typer.testing import CliRunner
 
 from erdos.cli import app
 from erdos.core.exit_codes import ExitCode
@@ -20,9 +19,10 @@ from erdos.core.formal_conjectures import (
     get_cache_path,
     get_local_file_path,
 )
+from tests.cli_runner import make_cli_runner
 
 
-runner = CliRunner()
+runner = make_cli_runner()
 
 
 # ============================================================================

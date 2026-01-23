@@ -12,7 +12,6 @@ from erdos.core.ask.service import (
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import ChunkSource, CLIOutput, ProblemRecord
 from erdos.core.problem_loader import ProblemLoaderError
-from erdos.core.search.db import SearchIndexError
 from erdos.core.search.types import SearchResult
 
 
@@ -22,11 +21,12 @@ def test_ensure_index_ready_no_build():
     mock_repo = MagicMock()
     mock_index = MagicMock()
 
-    with patch("erdos.core.ask.service.build_index") as mock_build_index:
+    with patch("erdos.core.ask.service.build_search_index") as mock_build_index:
         result = _ensure_index_ready(
             loader=mock_repo,
             index=mock_index,
             build_index_flag=False,
+            repo_root=None,
         )
 
         assert result == mock_index
@@ -38,31 +38,42 @@ def test_ensure_index_ready_with_build():
     mock_repo = MagicMock()
     mock_index = MagicMock()
 
-    with patch("erdos.core.ask.service.build_index") as mock_build_index:
+    with patch("erdos.core.ask.service.build_search_index") as mock_build_index:
+        mock_build_index.return_value = None
         result = _ensure_index_ready(
             loader=mock_repo,
             index=mock_index,
             build_index_flag=True,
+            repo_root=None,
         )
 
         assert result == mock_index
         mock_build_index.assert_called_once_with(
-            loader=mock_repo, index=mock_index, rebuild=True
+            repo=mock_repo,
+            index=mock_index,
+            repo_root=None,
+            command="erdos ask",
         )
 
 
 def test_ensure_index_ready_build_error():
-    """_ensure_index_ready returns CLIOutput error if build fails with SearchIndexError."""
+    """_ensure_index_ready returns CLIOutput error if build fails."""
     mock_repo = MagicMock()
     mock_index = MagicMock()
 
-    with patch("erdos.core.ask.service.build_index") as mock_build_index:
-        mock_build_index.side_effect = SearchIndexError("Index build failed")
+    with patch("erdos.core.ask.service.build_search_index") as mock_build_index:
+        mock_build_index.return_value = CLIOutput.err(
+            command="erdos ask",
+            error_type="IndexError",
+            message="Index build failed",
+            code=ExitCode.ERROR,
+        )
 
         result = _ensure_index_ready(
             loader=mock_repo,
             index=mock_index,
             build_index_flag=True,
+            repo_root=None,
         )
 
         assert isinstance(result, CLIOutput)
@@ -72,17 +83,23 @@ def test_ensure_index_ready_build_error():
 
 
 def test_ensure_index_ready_loader_error():
-    """_ensure_index_ready returns CLIOutput error if build fails with ProblemLoaderError."""
+    """_ensure_index_ready returns CLIOutput error if build fails."""
     mock_repo = MagicMock()
     mock_index = MagicMock()
 
-    with patch("erdos.core.ask.service.build_index") as mock_build_index:
-        mock_build_index.side_effect = ProblemLoaderError("Problems not found")
+    with patch("erdos.core.ask.service.build_search_index") as mock_build_index:
+        mock_build_index.return_value = CLIOutput.err(
+            command="erdos ask",
+            error_type="LoaderError",
+            message="Problems not found",
+            code=ExitCode.ERROR,
+        )
 
         result = _ensure_index_ready(
             loader=mock_repo,
             index=mock_index,
             build_index_flag=True,
+            repo_root=None,
         )
 
         assert isinstance(result, CLIOutput)

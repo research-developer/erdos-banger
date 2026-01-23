@@ -212,6 +212,7 @@ def run(
             config=config,
             llm_command=llm_command,
             no_apply=no_apply,
+            repo_root=app_ctx.config.repo_root,
         )
 
     result.duration_ms = duration[0]
