@@ -2,11 +2,13 @@
 
 **Priority:** P3 (Minor; clean up when touching nearby code)
 
-**Status:** Open
+**Status:** Fixed
+**Fixed:** 2026-01-23
+**Commit:** 0291d1d
 
 ## Problem
 
-Three Lean-related modules in `src/erdos/core/` root form a cohesive domain but are not grouped into a subpackage, violating the documented architectural rule:
+Three Lean-related modules in `src/erdos/core/` root formed a cohesive domain but were not grouped into a subpackage, violating the documented architectural rule:
 
 > "If a domain grows to 3+ related modules, extract into a subpackage."
 > — CLAUDE.md
@@ -73,14 +75,26 @@ core/lean/
 5. Update CLAUDE.md to document `core/lean/` as a bounded context.
 6. Run `make ci` to verify.
 
+## Resolution
+
+Implemented in 0291d1d:
+
+- Created `src/erdos/core/lean/` and moved modules to:
+  - `core/lean/runner.py`
+  - `core/lean/formalizer.py`
+  - `core/lean/aristotle.py`
+- Updated all imports in `src/` and `tests/` to use `erdos.core.lean.*`
+- Updated `CLAUDE.md` bounded context list
+- Removed the old `src/erdos/core/(lean_runner|formalizer|aristotle).py` modules
+
 ## Acceptance Criteria
 
-- [ ] `core/lean/` directory created with modules moved
-- [ ] All imports in `commands/lean/` updated to canonical paths
-- [ ] `core/loop/service.py` and `core/loop/runner.py` updated
-- [ ] No remaining imports of `erdos.core.(lean_runner|formalizer|aristotle)`
-- [ ] CLAUDE.md updated to list `core/lean/` as bounded context
-- [ ] `make ci` passes
+- [x] `core/lean/` directory created with modules moved
+- [x] All imports in `commands/lean/` updated to canonical paths
+- [x] `core/loop/service.py` and `core/loop/runner.py` updated
+- [x] No remaining imports of `erdos.core.(lean_runner|formalizer|aristotle)`
+- [x] CLAUDE.md updated to list `core/lean/` as bounded context
+- [x] `make ci` passes
 
 ## Impact
 
@@ -92,4 +106,4 @@ core/lean/
 
 - CLAUDE.md rule: "If a domain grows to 3+ related modules, extract into a subpackage"
 - `commands/lean/` (consumers)
-- `core/loop/verifier.py` (consumer)
+- `core/loop/service.py`, `core/loop/runner.py` (consumers)
