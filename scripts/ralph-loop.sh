@@ -40,18 +40,23 @@ echo ""
 rm -rf logs/ralph 2>/dev/null || true
 mkdir -p logs/ralph
 
-for i in $(seq 1 "$MAX"); do
-    n=$(printf "%03d" "$i")
-    log="logs/ralph/iteration_${n}.log"
+	for i in $(seq 1 "$MAX"); do
+	    n=$(printf "%03d" "$i")
+	    log="logs/ralph/iteration_${n}.log"
 
-    echo "=== Iteration $i/$MAX ===" >> "$log"
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting iteration $i/$MAX"
+	    echo "=== Iteration $i/$MAX ===" >> "$log"
+	    start_msg="[$(date '+%Y-%m-%d %H:%M:%S')] Starting iteration $i/$MAX"
+	    echo "$start_msg" >> "$log"
+	    echo "$start_msg"
 
     # Run claude - output goes to file, no piping (avoids EPIPE)
-    "$TIMEOUT_CMD" "$ITER_TIMEOUT" claude --dangerously-skip-permissions \
-        -p "$(cat PROMPT.md)" >> "$log" 2>&1 || {
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Iteration $i exited with code $?"
-    }
+	    "$TIMEOUT_CMD" "$ITER_TIMEOUT" claude --dangerously-skip-permissions \
+	        -p "$(cat PROMPT.md)" >> "$log" 2>&1 || {
+	        exit_code=$?
+	        exit_msg="[$(date '+%Y-%m-%d %H:%M:%S')] Iteration $i/$MAX exited with code $exit_code"
+	        echo "$exit_msg" >> "$log"
+	        echo "$exit_msg"
+	    }
 
     # GUARDRAIL: Check for staged-but-uncommitted changes (FP-007)
     # If the iteration timed out or crashed after staging but before committing,
@@ -71,20 +76,22 @@ for i in $(seq 1 "$MAX"); do
     fi
 
     # Check completion
-    if ! grep -q "^\- \[ \]" PROGRESS.md; then
-        # Guardrail: Never exit "successfully" with a dirty working tree.
-        # This catches cases where PROGRESS.md was edited but docs were not committed,
-        # or other changes were left unstaged/uncommitted.
-        if [[ -n "$(git status --porcelain)" ]]; then
-            echo "" >> "$log"
-            echo "ERROR: PROGRESS.md indicates completion but git working tree is dirty." >> "$log"
-            echo "       Refusing to exit cleanly to avoid losing work." >> "$log"
-            echo "       Run 'git status' to inspect and commit/push outstanding changes." >> "$log"
-            echo "" >> "$log"
-            git status --porcelain >> "$log" || true
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: PROGRESS complete but repo dirty. Inspect logs/ralph/iteration_${n}.log"
-            exit 1
-        fi
+	    if ! grep -q "^\- \[ \]" PROGRESS.md; then
+	        # Guardrail: Never exit "successfully" with a dirty working tree.
+	        # This catches cases where PROGRESS.md was edited but docs were not committed,
+	        # or other changes were left unstaged/uncommitted.
+	        if [[ -n "$(git status --porcelain)" ]]; then
+	            {
+	                echo ""
+	                echo "ERROR: PROGRESS.md indicates completion but git working tree is dirty."
+	                echo "       Refusing to exit cleanly to avoid losing work."
+	                echo "       Run 'git status' to inspect and commit/push outstanding changes."
+	                echo ""
+	                git status --porcelain || true
+	            } >> "$log"
+	            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: PROGRESS complete but repo dirty. Inspect logs/ralph/iteration_${n}.log"
+	            exit 1
+	        fi
 
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] All tasks complete!"
         echo "All tasks complete!" >> "$log"

@@ -66,6 +66,7 @@ This debt is about **tightening the public surface** and making tests import fro
    - `rg -n "from erdos\\.core\\.ask import _" tests` returns no matches
    - `rg -n "from erdos\\.core\\.ingest import _" tests` returns no matches
 2. Package public APIs are clean:
-   - `rg -n "\"_\"|_ensure_index_ready|_download_and_extract_arxiv" src/erdos/core/*/__init__.py` returns no matches
+   - `uv run python -c "import erdos.core.ask as m; assert all(not n.startswith('_') for n in getattr(m, '__all__', []))"` exits 0
+   - `uv run python -c "import erdos.core.ingest as m; assert all(not n.startswith('_') for n in getattr(m, '__all__', []))"` exits 0
 3. All quality gates pass:
    - `make ci`

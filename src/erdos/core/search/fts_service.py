@@ -50,6 +50,14 @@ def search_fts(
                 code=ExitCode.USAGE_ERROR,
             )
 
+        if limit <= 0:
+            return CLIOutput.err(
+                command="erdos search",
+                error_type="UsageError",
+                message="Limit must be greater than 0",
+                code=ExitCode.USAGE_ERROR,
+            )
+
         # Return None to signal fallback needed if index is empty
         if index.problem_count() == 0:
             return None

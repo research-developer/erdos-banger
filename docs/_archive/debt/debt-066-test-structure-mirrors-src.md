@@ -19,7 +19,7 @@ When you modify `src/erdos/core/search/service.py`, you should find its tests at
 ## Evidence
 
 **Before fix: `src/` structure (already organized):**
-```
+```text
 src/erdos/core/
 ├── ask/           # 4 modules
 ├── batch/         # 4 modules
@@ -31,7 +31,8 @@ src/erdos/core/
 ```
 
 **Before fix: `tests/unit/` structure (flat):**
-```
+
+```text
 tests/unit/
 ├── test_ask_command_helpers.py
 ├── test_ask_helpers.py
@@ -54,7 +55,7 @@ tests/unit/
 
 Reorganize `tests/unit/` to mirror `src/erdos/core/` bounded contexts:
 
-```
+```text
 tests/unit/
 ├── ask/
 │   ├── __init__.py
