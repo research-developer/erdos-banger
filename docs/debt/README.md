@@ -16,7 +16,18 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | Status | Commit |
 |----|-------|----------|--------|--------|
-| *None* | | | | |
+| DEBT-072 | [CLI flags silently ignored](./debt-072-cli-flags-silently-ignored.md) | P2 | Open | (pending) |
+| DEBT-073 | [Magic numbers and hardcoded values](./debt-073-magic-numbers-hardcoded-values.md) | P3 | Open | (pending) |
+| DEBT-074 | [Test quality issues](./debt-074-test-quality-issues.md) | P3 | Open | (pending) |
+
+### Note on Audit False Positives (DEBT-068 through DEBT-071)
+
+The following debt IDs were drafted during an audit, then validated as **false positives** and were not retained:
+
+- **DEBT-068**: Tests do run — pytest discovers `test*` (no underscore required)
+- **DEBT-069**: `SELECT COUNT(*)` returns a row (not `None`) under SQLite semantics
+- **DEBT-070**: `ReferenceRecord` is mutable (`frozen=False`)
+- **DEBT-071**: Exception handling patterns were intentional design choices, not correctness bugs
 
 ## Archived Debt
 
@@ -92,7 +103,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-066 | Test directory structure mirrors src/ bounded contexts | P3 | Fixed | d938411 |
 | DEBT-067 | Remove private helper re-exports from core packages | P3 | Fixed | 9c83b66 |
 
-**Next Debt ID:** DEBT-068
+**Next Debt ID:** DEBT-075
 
 ### Archived Debt Decks
 
