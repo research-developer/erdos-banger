@@ -4,7 +4,9 @@
 
 **Status:** Superseded by BUG-022
 
-> **Note:** This was initially flagged as dead code, but investigation revealed it's part of an **incomplete feature** (SPEC-019 PDF integration for `erdos ingest`). The functions should be **wired in**, not removed. See BUG-022 for the actual fix.
+> **Note:** This was initially flagged as dead code, but investigation revealed it's part of an
+> **incomplete feature** (SPEC-019 PDF integration for `erdos ingest`).
+> The functions should be **wired in**, not removed. See **BUG-022** for the actual fix.
 
 ## Problem
 
@@ -48,31 +50,26 @@ The PDF functions have **no test coverage**.
 SPEC-019 (PDF Conversion) is marked **Complete** (`docs/_archive/specs/spec-019-pdf-conversion.md`), but the implementation uses a different approach:
 - `erdos convert` writes to stdout or user-specified path
 - No automatic caching to `literature/cache/pdf/` is implemented
-- These functions were likely scaffolding that was never integrated
+- These functions were scaffolding that was never integrated
 
 ## Proposed Fix
 
-**Option A (Recommended):** Delete the unused functions
-- Remove `get_pdf_cache_path()`, `get_pdf_extract_path()`, `sanitize_reference_id()`
-- These are 35 lines of dead code
-- If needed later, they can be re-added with actual usage
+No direct fix here. This deck exists only as the audit trail for the false-positive “dead code”
+classification.
 
-**Option B:** Implement PDF caching
-- Wire these functions into `erdos ingest` or `erdos convert`
-- Add tests for the functions
-- This is a feature enhancement, not a debt fix
+**Correct action:** implement **BUG-022** (wire `erdos ingest --pdf` end-to-end). Once BUG-022 is
+fixed, these functions become used and this deck can be archived.
 
 ## Acceptance Criteria
 
-- [ ] Unused PDF path functions removed from `literature_paths.py`
-- [ ] No import errors in codebase
+- [ ] BUG-022 is fixed (PDF caching/conversion uses these path helpers)
 - [ ] `make ci` passes
 
 ## Impact
 
-- **Risk:** Very low (dead code removal)
-- **Effort:** ~5 minutes
-- **Benefit:** Cleaner codebase, reduced confusion about SPEC-019 implementation
+- **Risk:** None (documentation-only)
+- **Effort:** None (implementation work tracked by BUG-022)
+- **Benefit:** Prevents accidental deletion of SPEC-019 scaffolding
 
 ## References
 
