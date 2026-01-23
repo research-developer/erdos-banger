@@ -2,7 +2,9 @@
 
 **Priority:** P3 (Minor; clean up when touching nearby code)
 
-**Status:** Superseded by BUG-022
+**Status:** Resolved (BUG-022 fixed)
+**Resolved:** 2026-01-23
+**Commit:** 1c8889e
 
 > **Note:** This was initially flagged as dead code, but investigation revealed it's part of an
 > **incomplete feature** (SPEC-019 PDF integration for `erdos ingest`).

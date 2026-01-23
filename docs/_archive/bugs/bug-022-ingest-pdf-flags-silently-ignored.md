@@ -2,9 +2,11 @@
 
 **Priority:** P2 (Medium - Feature partially broken, workaround exists)
 
-**Status:** Open
+**Status:** Fixed
 
 **Found:** 2026-01-23
+**Fixed:** 2026-01-23
+**Commit:** 1c8889e
 
 ## Description
 
@@ -77,6 +79,13 @@ def ingest_problem_references(
 - `sanitize_reference_id()` → Sanitizes DOI/arXiv IDs for filesystem
 
 These are **NOT dead code to be removed** — they are part of the incomplete implementation.
+
+## Fix
+
+- Thread `pdf`, `pdf_converter`, and `pdf_use_llm` from `execute_ingest()` → `ingest_problem_references()` → `process_all_references()`.
+- Add `core/ingest/pdf_download.py` for PDF download + conversion + caching.
+- Extend `core/ingest/fetch.py` to use `ReferenceRecord.pdf_url` when present for non-arXiv references.
+- Add integration coverage in `tests/integration/test_pdf_ingest.py`.
 
 ## Proposed Fix
 

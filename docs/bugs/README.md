@@ -12,9 +12,7 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 ## Active Bugs
 
-| ID | Title | Priority | Status |
-|----|-------|----------|--------|
-| BUG-022 | `erdos ingest --pdf` flags silently ignored | P2 | Open |
+*None currently active.*
 
 *Note: BUG-013 was invalidated as a false positive. BUG-015 and BUG-017 were review findings that were invalidated before standalone bug decks were created.*
 
@@ -43,6 +41,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-019 | `erdos convert --format` is a no-op | P2 | Fixed | b2dcdfe |
 | BUG-020 | OpenAlex `get_by_arxiv()` returns None for real arXiv IDs | P1 | Fixed | fe34ca1 |
 | BUG-021 | `erdos ingest` ignores `--mailto`/`--timeout` for OpenAlex requests | P2 | Fixed | 853dde8 |
+| BUG-022 | `erdos ingest --pdf` flags silently ignored | P2 | Fixed | 1c8889e |
 
 **Next Bug ID:** BUG-023
 
