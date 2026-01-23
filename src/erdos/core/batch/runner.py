@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import json
 import logging
+import signal
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -29,7 +31,7 @@ from erdos.core.rate_limiter import RateLimiter
 
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterator
 
 logger = logging.getLogger(__name__)
 
@@ -182,81 +184,151 @@ class BatchRunner:
 
     def _execute_batch(self, state: BatchState, start_time: datetime) -> BatchResult:
         """Execute the batch processing loop."""
-        # Handle dry run
+        with self._graceful_sigint():
+            return self._execute_batch_inner(state, start_time)
+
+    @contextmanager
+    def _graceful_sigint(self) -> Iterator[None]:
+        """Handle SIGINT for graceful shutdown.
+
+        First Ctrl+C requests stopping after the current problem.
+        Second Ctrl+C exits immediately (KeyboardInterrupt).
+        """
+        previous_sigint_handler = None
+        received_sigint = False
+
+        def _handle_sigint(_signum: int, _frame: object) -> None:
+            nonlocal received_sigint, previous_sigint_handler
+            if received_sigint:
+                if previous_sigint_handler is not None:
+                    signal.signal(signal.SIGINT, previous_sigint_handler)
+                raise KeyboardInterrupt
+
+            received_sigint = True
+            logger.warning(
+                "Interrupt requested; stopping after current problem. "
+                "Press Ctrl+C again to exit immediately."
+            )
+            self.interrupt()
+
+        try:
+            previous_sigint_handler = signal.getsignal(signal.SIGINT)
+            signal.signal(signal.SIGINT, _handle_sigint)
+        except ValueError:
+            # signal.signal only works in the main thread; skip graceful SIGINT wiring.
+            yield
+            return
+
+        try:
+            yield
+        finally:
+            if previous_sigint_handler is not None:
+                signal.signal(signal.SIGINT, previous_sigint_handler)
+
+    def _execute_batch_inner(
+        self, state: BatchState, start_time: datetime
+    ) -> BatchResult:
         if self.dry_run:
-            duration_ms = int(
-                (datetime.now(tz=UTC) - start_time).total_seconds() * 1000
-            )
-            return BatchResult(
-                batch_id=state.batch_id,
-                total=len(self.problem_ids),
-                completed_count=0,
-                failed_count=0,
-                failed_ids=[],
-                duration_ms=duration_ms,
-                dry_run=True,
-            )
+            return self._dry_run_result(state, start_time)
 
-        # Load prior state if resuming
-        if self.resume:
-            prior_state = self._load_prior_state_for_resume()
-            if prior_state is not None:
-                state = prior_state
-
-        # Ensure batches dir exists
+        state = self._resume_state_if_available(state)
         self.batches_dir.mkdir(parents=True, exist_ok=True)
 
-        # Rate limiter for API calls
         limiter = RateLimiter(delay_seconds=self.delay)
+        self._run_processing_loop(state, limiter)
 
-        # Process each problem
-        total = len(state.problem_ids)
-        to_process = state.failed + state.pending  # Retry failed, then pending
+        return self._build_batch_result(state, start_time)
 
-        for i, problem_id in enumerate(to_process):
-            if self._interrupted:
-                break
-
-            # Rate limit
-            limiter.sleep_if_needed()
-
-            # Process
-            try:
-                success = self.process_fn(problem_id)
-                if success:
-                    state.mark_completed(problem_id)
-                    message = "OK"
-                else:
-                    state.mark_failed(problem_id)
-                    message = "Failed"
-            except Exception as e:
-                logger.exception("Error processing problem %d", problem_id)
-                state.mark_failed(problem_id)
-                success = False
-                message = str(e)
-
-            # Progress callback
-            if self.on_progress:
-                self.on_progress(
-                    BatchProgress(
-                        problem_id=problem_id,
-                        index=i,
-                        total=total,
-                        success=success,
-                        message=message,
-                    )
-                )
-
-            # Save state after each problem
-            state_path = self.batches_dir / f"{state.batch_id}.json"
-            save_batch_state(state_path, state)
-            save_latest_batch_id(self.batches_dir / "latest.json", state.batch_id)
-
-        # Calculate result
+    def _dry_run_result(self, state: BatchState, start_time: datetime) -> BatchResult:
         duration_ms = int((datetime.now(tz=UTC) - start_time).total_seconds() * 1000)
         return BatchResult(
             batch_id=state.batch_id,
-            total=total,
+            total=len(state.problem_ids),
+            completed_count=0,
+            failed_count=0,
+            failed_ids=[],
+            duration_ms=duration_ms,
+            dry_run=True,
+        )
+
+    def _resume_state_if_available(self, state: BatchState) -> BatchState:
+        if not self.resume:
+            return state
+        prior_state = self._load_prior_state_for_resume()
+        return prior_state or state
+
+    def _run_processing_loop(self, state: BatchState, limiter: RateLimiter) -> None:
+        total = len(state.problem_ids)
+        to_process = state.failed + state.pending  # Retry failed, then pending
+
+        for index, problem_id in enumerate(to_process):
+            if self._interrupted:
+                break
+
+            limiter.sleep_if_needed()
+            if self._interrupted:
+                break
+
+            success, message = self._process_single_problem(problem_id, state)
+            self._maybe_report_progress(
+                problem_id=problem_id,
+                index=index,
+                total=total,
+                success=success,
+                message=message,
+            )
+            self._save_state(state)
+
+    def _process_single_problem(
+        self, problem_id: int, state: BatchState
+    ) -> tuple[bool, str]:
+        try:
+            success = self.process_fn(problem_id)
+        except Exception as e:
+            logger.exception("Error processing problem %d", problem_id)
+            state.mark_failed(problem_id)
+            return False, str(e)
+
+        if success:
+            state.mark_completed(problem_id)
+            return True, "OK"
+
+        state.mark_failed(problem_id)
+        return False, "Failed"
+
+    def _maybe_report_progress(
+        self,
+        *,
+        problem_id: int,
+        index: int,
+        total: int,
+        success: bool,
+        message: str,
+    ) -> None:
+        if self.on_progress is None:
+            return
+        self.on_progress(
+            BatchProgress(
+                problem_id=problem_id,
+                index=index,
+                total=total,
+                success=success,
+                message=message,
+            )
+        )
+
+    def _save_state(self, state: BatchState) -> None:
+        state_path = self.batches_dir / f"{state.batch_id}.json"
+        save_batch_state(state_path, state)
+        save_latest_batch_id(self.batches_dir / "latest.json", state.batch_id)
+
+    def _build_batch_result(
+        self, state: BatchState, start_time: datetime
+    ) -> BatchResult:
+        duration_ms = int((datetime.now(tz=UTC) - start_time).total_seconds() * 1000)
+        return BatchResult(
+            batch_id=state.batch_id,
+            total=len(state.problem_ids),
             completed_count=len(state.completed),
             failed_count=len(state.failed),
             failed_ids=state.failed.copy(),

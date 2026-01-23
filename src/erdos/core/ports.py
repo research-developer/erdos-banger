@@ -120,7 +120,7 @@ class SearchableMetadataProvider(Protocol):
 class MetadataProvider(
     DOILookupProvider, ArxivLookupProvider, SearchableMetadataProvider, Protocol
 ):
-    """Full provider supporting all three operations (backward-compatible aggregate).
+    """Aggregate provider supporting all three operations.
 
     This protocol combines all metadata lookup capabilities for call sites that
     need the complete interface. Prefer using the focused protocols
@@ -218,7 +218,7 @@ class EmbeddingIndexPort(Protocol):
 class SearchIndexProtocol(
     SearchIndexReadPort, SearchIndexWritePort, EmbeddingIndexPort, Protocol
 ):
-    """Full search index interface (backward-compatible aggregate).
+    """Aggregate search index interface.
 
     This protocol combines all search capabilities for call sites that need
     the complete interface. Prefer using the focused ports (SearchIndexReadPort,

@@ -51,7 +51,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# Re-export for backward compatibility
+# Public exports for orchestrator consumers (CLI/services)
 __all__ = [
     "ArxivDownloadResult",
     "MetadataSource",

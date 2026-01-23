@@ -7,10 +7,10 @@ This package provides:
 - service: Single-problem orchestration (ingest_problem_references)
 - app: Application service (batch + single orchestration)
 
-All public APIs are re-exported for backward compatibility.
+Public APIs are re-exported at the package level to provide a stable import surface.
 """
 
-# Re-export public APIs for backward compatibility
+# Public API re-exports
 from erdos.core.ingest.app import (
     IngestOptions,
     batch_result_to_cli_output,
@@ -24,6 +24,7 @@ from erdos.core.ingest.app import (
 )
 from erdos.core.ingest.fetch import (
     MetadataSource,
+    build_provider_from_source,
     download_and_extract_arxiv,
     fetch_reference_entry,
     process_all_references,
@@ -46,6 +47,7 @@ __all__ = [
     "ProcessAllReferencesResult",
     "ReferenceProcessResult",
     "batch_result_to_cli_output",
+    "build_provider_from_source",
     "create_batch_process_fn",
     "download_and_extract_arxiv",
     "execute_ingest",

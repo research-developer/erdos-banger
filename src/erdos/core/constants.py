@@ -1,18 +1,9 @@
 """Application-wide constants for erdos-banger CLI toolkit."""
 
-# --- Preview and truncation lengths (characters) ---
+# --- Preview lengths (characters) ---
 
 PREVIEW_LENGTH = 200
 """Default length for text previews and snippets."""
-
-MESSAGE_TRUNCATION = 500
-"""Maximum length for error messages and debug output."""
-
-TITLE_TRUNCATION = 50
-"""Maximum length for title displays."""
-
-TEXT_PREVIEW_LENGTH = 100
-"""Length for short text previews in ask command."""
 
 # --- Timeouts (seconds) ---
 
@@ -21,12 +12,6 @@ DEFAULT_HTTP_TIMEOUT = 30.0
 
 LEAN_TOOLCHAIN_VERSION = "v4.12.0"
 """Pinned Lean toolchain / mathlib version tag (keep in sync with formal/lean/lean-toolchain)."""
-
-LEAN_COMPILE_TIMEOUT = 120
-"""Timeout for Lean compilation operations."""
-
-LAKE_UPDATE_TIMEOUT = 600
-"""Timeout for lake update operations."""
 
 LLM_COMMAND_TIMEOUT = 300
 """Timeout for external LLM command execution (5 minutes)."""
@@ -42,15 +27,6 @@ typical API rate limits (Crossref, arXiv recommend ~3s between requests).
 """
 
 # --- Search defaults ---
-
-DEFAULT_SEARCH_LIMIT = 10
-"""Default number of search results to return."""
-
-DEFAULT_RAG_LIMIT = 5
-"""Default number of RAG context chunks to retrieve."""
-
-MAX_QUERY_TERMS = 25
-"""Maximum number of query terms to extract from user questions."""
 
 # --- Size limits ---
 

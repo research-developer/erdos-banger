@@ -476,15 +476,17 @@ class TestArxivProvider:
         assert not hasattr(provider, "search")
 
 
-class TestBuildMetadataProvider:
-    """Tests for build_metadata_provider factory function."""
+class TestBuildProviderFromSource:
+    """Tests for build_provider_from_source factory function."""
 
     def test_creates_fallback_chain(self) -> None:
-        """build_metadata_provider should create a FallbackProvider with chains."""
-        from erdos.core.context import build_metadata_provider
+        """build_provider_from_source should create a FallbackProvider with chains."""
+        from erdos.core.ingest import MetadataSource, build_provider_from_source
         from erdos.core.providers import FallbackProvider
 
-        provider = build_metadata_provider(mailto="test@example.com", timeout=30.0)
+        provider = build_provider_from_source(
+            MetadataSource.OPENALEX, mailto="test@example.com", timeout=30.0
+        )
 
         assert isinstance(provider, FallbackProvider)
         # Check that all capability chains are represented

@@ -5,7 +5,7 @@ for CLI execution. New code should **prefer** threading configuration through
 `AppConfig`/`AppContext` rather than reading `os.environ` directly.
 
 Note: a small number of legacy `from_env()` / `from_default()` helpers may still
-read environment variables for backward compatibility or third-party tooling.
+read environment variables to support third-party tooling integrations.
 These should be treated as transitional and avoided in new call sites.
 
 Usage:

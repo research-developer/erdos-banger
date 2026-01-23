@@ -40,8 +40,7 @@ class OpenAlexConfig:
     def from_env(cls) -> OpenAlexConfig:
         """Create config from environment variables.
 
-        Checks ERDOS_MAILTO first, then OPENALEX_EMAIL for email.
-        Checks OPENALEX_API_KEY for API key authentication.
+        Uses :class:`erdos.core.config.AppConfig` as the SSOT for environment reads.
         """
         config = AppConfig.from_env()
         return cls(

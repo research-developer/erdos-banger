@@ -13,7 +13,7 @@ This package provides the loop functionality split into modules:
 - service.py: execute_proof_loop (application-level orchestration)
 """
 
-# Re-export public API for backward compatibility
+# Public API re-exports
 from erdos.core.loop.config import LoopConfig
 from erdos.core.loop.logging import LoopLogger, file_hash, generate_run_id
 from erdos.core.loop.patch_validator import (

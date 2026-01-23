@@ -1,7 +1,7 @@
 """SearchIndex facade - thin coordinator delegating to focused collaborators.
 
-This module provides the SearchIndex class as a backward-compatible facade
-that composes the focused search modules (db, indexer, bm25, embeddings, hybrid).
+This module provides the SearchIndex class as a facade that composes the focused
+search modules (db, indexer, bm25, embeddings, hybrid).
 """
 
 from __future__ import annotations
@@ -22,9 +22,7 @@ from erdos.core.search.types import (
 
 
 if TYPE_CHECKING:
-    from contextlib import AbstractContextManager
     from pathlib import Path
-    from sqlite3 import Connection
 
     from erdos.core.models import ChunkSource, ProblemRecord, TextChunk
 
@@ -288,15 +286,3 @@ class SearchIndex:
         return self._hybrid.search_hybrid(
             query, embedder, limit=limit, alpha=alpha, problem_id=problem_id
         )
-
-    # =========================================================================
-    # Internal access (for backward compatibility in tests)
-    # =========================================================================
-
-    def _connect(self) -> AbstractContextManager[Connection]:
-        """Internal: access to database connection context manager.
-
-        NOTE: This is for backward compatibility with existing tests.
-        New code should not use this method.
-        """
-        return self._db.connect()

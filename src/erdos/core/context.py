@@ -10,14 +10,12 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from erdos.core.config import AppConfig
-from erdos.core.ingest.fetch import MetadataSource, build_provider_from_source
 from erdos.core.problem_loader import ProblemLoader
 from erdos.core.search.facade import SearchIndex
 
 
 if TYPE_CHECKING:
     from erdos.core.ports import (
-        MetadataProvider,
         ProblemRepository,
         SearchIndexProtocol,
     )
@@ -79,31 +77,3 @@ class AppContext:
             return self.index
         self.index = SearchIndex.from_default(index_path=self.config.index_path)
         return self.index
-
-
-def build_metadata_provider(
-    *,
-    mailto: str,
-    timeout: float,
-    openalex_api_key: str | None = None,
-) -> MetadataProvider:
-    """Create the default metadata provider with capability-specific chains.
-
-    Deprecated in favor of `erdos.core.ingest.fetch.build_provider_from_source()`,
-    but kept for backwards compatibility and tests.
-
-    Args:
-        mailto: Contact email for API polite pools.
-        timeout: HTTP timeout in seconds.
-        openalex_api_key: Optional OpenAlex API key override.
-
-    Returns:
-        ISP-compliant MetadataProvider with OpenAlex primary and Crossref/arXiv
-        fallbacks per capability.
-    """
-    return build_provider_from_source(
-        MetadataSource.OPENALEX,
-        mailto=mailto,
-        timeout=timeout,
-        openalex_api_key=openalex_api_key,
-    )
