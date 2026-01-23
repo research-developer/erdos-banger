@@ -4,6 +4,7 @@ This module orchestrates reference fetching by:
 - Converting MetadataSource enum to MetadataProvider instances
 - Delegating metadata resolution to providers
 - Delegating arXiv download/extraction to arxiv_download module
+- Delegating PDF download/conversion to pdf_download module (SPEC-019)
 - Building ManifestEntry results
 
 Follows SRP: orchestration only, no direct client usage.
@@ -28,7 +29,9 @@ from erdos.core.ingest.models import (
     ProcessAllReferencesResult,
     ReferenceProcessResult,
 )
+from erdos.core.ingest.pdf_download import download_and_extract_pdf
 from erdos.core.ingest.stable_key import get_stable_key
+from erdos.core.literature_paths import sanitize_reference_id
 from erdos.core.models import (
     ManifestEntry,
     ProblemManifest,
@@ -196,6 +199,37 @@ def _build_manifest_entry_with_arxiv(
     )
 
 
+def _build_manifest_entry_with_pdf(
+    reference: ReferenceRecord,
+    pdf_url: str,
+    *,
+    repo_root: Path,
+    reference_id: str,
+    timeout: float,
+    converter: str,
+    use_llm: bool,
+) -> ManifestEntry:
+    """Build a ManifestEntry with PDF download + conversion (SPEC-019)."""
+    download_result = download_and_extract_pdf(
+        pdf_url,
+        repo_root=repo_root,
+        reference_id=reference_id,
+        timeout=timeout,
+        converter=converter,
+        use_llm=use_llm,
+    )
+    return ManifestEntry(
+        reference=reference,
+        cached=download_result.cache_path is not None,
+        cache_path=download_result.cache_path,
+        cache_hash=download_result.cache_hash,
+        extracted=download_result.extracted,
+        extract_path=download_result.extract_path,
+        ingested_at=datetime.now(UTC),
+        error=download_result.error,
+    )
+
+
 def _fetch_with_provider(
     ref: ReferenceEntry,
     provider: MetadataProvider,
@@ -203,6 +237,9 @@ def _fetch_with_provider(
     repo_root: Path,
     allow_download: bool,
     timeout: float,
+    pdf: bool,
+    pdf_converter: str,
+    pdf_use_llm: bool,
 ) -> ManifestEntry:
     """Fetch reference metadata using MetadataProvider (SPEC-022).
 
@@ -251,6 +288,19 @@ def _fetch_with_provider(
             timeout=timeout,
         )
 
+    # Optional PDF conversion (SPEC-019): only for non-arXiv references.
+    if allow_download and pdf and reference.pdf_url:
+        reference_id = sanitize_reference_id(get_stable_key(reference))
+        return _build_manifest_entry_with_pdf(
+            reference,
+            reference.pdf_url,
+            repo_root=repo_root,
+            reference_id=reference_id,
+            timeout=timeout,
+            converter=pdf_converter,
+            use_llm=pdf_use_llm,
+        )
+
     return ManifestEntry(reference=reference, ingested_at=datetime.now(UTC))
 
 
@@ -262,6 +312,9 @@ def fetch_reference_entry(
     allow_network: bool,
     timeout: float,
     mailto: str,
+    pdf: bool = False,
+    pdf_converter: str = "marker",
+    pdf_use_llm: bool = False,
     source: MetadataSource = MetadataSource.OPENALEX,
     provider: MetadataProvider | None = None,
 ) -> ManifestEntry:
@@ -299,6 +352,9 @@ def fetch_reference_entry(
         repo_root=repo_root,
         allow_download=allow_download,
         timeout=timeout,
+        pdf=pdf,
+        pdf_converter=pdf_converter,
+        pdf_use_llm=pdf_use_llm,
     )
 
 
@@ -345,6 +401,9 @@ def process_single_reference(
     allow_network: bool,
     timeout: float,
     mailto: str,
+    pdf: bool = False,
+    pdf_converter: str = "marker",
+    pdf_use_llm: bool = False,
     source: MetadataSource = MetadataSource.OPENALEX,
     provider: MetadataProvider | None = None,
 ) -> ReferenceProcessResult:
@@ -383,6 +442,9 @@ def process_single_reference(
             allow_network=allow_network,
             timeout=timeout,
             mailto=mailto,
+            pdf=pdf,
+            pdf_converter=pdf_converter,
+            pdf_use_llm=pdf_use_llm,
             source=source,
             provider=provider,
         )
@@ -415,6 +477,9 @@ def process_all_references(
     timeout: float,
     mailto: str,
     delay: float,
+    pdf: bool = False,
+    pdf_converter: str = "marker",
+    pdf_use_llm: bool = False,
     source: MetadataSource = MetadataSource.OPENALEX,
     provider: MetadataProvider | None = None,
 ) -> ProcessAllReferencesResult:
@@ -459,6 +524,9 @@ def process_all_references(
             allow_network=allow_network,
             timeout=timeout,
             mailto=mailto,
+            pdf=pdf,
+            pdf_converter=pdf_converter,
+            pdf_use_llm=pdf_use_llm,
             source=source,
             provider=provider,
         )

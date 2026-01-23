@@ -26,6 +26,25 @@ class ArxivDownloadResult:
 
 
 @dataclass
+class PDFDownloadResult:
+    """Result of downloading and extracting a PDF reference.
+
+    Attributes:
+        cache_path: Relative path to cached PDF (None if not cached).
+        cache_hash: SHA256 hash of cached PDF (None if not cached).
+        extract_path: Relative path to extracted text (None if not extracted).
+        extracted: True if text extraction succeeded.
+        error: Error message if download or extraction failed.
+    """
+
+    cache_path: Path | None
+    cache_hash: str | None
+    extract_path: Path | None
+    extracted: bool
+    error: str | None
+
+
+@dataclass
 class ReferenceProcessResult:
     """Result of processing a single reference.
 

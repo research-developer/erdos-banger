@@ -301,6 +301,9 @@ def ingest_problem_references(
     timeout: float = 30.0,
     delay: float = API_RATE_LIMIT_DELAY,
     mailto: str,
+    pdf: bool = False,
+    pdf_converter: str = "marker",
+    pdf_use_llm: bool = False,
     source: MetadataSource = MetadataSource.OPENALEX,
     openalex_api_key: str | None = None,
 ) -> CLIOutput:
@@ -318,6 +321,9 @@ def ingest_problem_references(
             API_RATE_LIMIT_DELAY. Per-reference throttling is sufficient since each
             reference makes at most 1-3 requests (DOI, arXiv metadata, arXiv source).
         mailto: Contact email for API polite pools.
+        pdf: Enable PDF conversion for non-arXiv references (SPEC-019).
+        pdf_converter: PDF converter backend (marker or pdfplumber).
+        pdf_use_llm: Enable LLM-enhanced PDF extraction when supported.
         source: Metadata source to use (default: OpenAlex).
         openalex_api_key: Optional OpenAlex API key override (defaults to env/config).
 
@@ -373,6 +379,9 @@ def ingest_problem_references(
         timeout=timeout,
         mailto=mailto,
         delay=delay,
+        pdf=pdf,
+        pdf_converter=pdf_converter,
+        pdf_use_llm=pdf_use_llm,
         source=source,
         provider=provider,
     )

@@ -154,6 +154,9 @@ def run_single_ingestion(
         timeout=timeout,
         delay=options.delay,
         mailto=mailto,
+        pdf=options.pdf,
+        pdf_converter=options.pdf_converter,
+        pdf_use_llm=options.use_llm,
         source=options.source,
         openalex_api_key=openalex_api_key,
     )
@@ -237,6 +240,9 @@ def create_batch_process_fn(
             timeout=timeout,
             delay=0.0,  # Delay handled by BatchRunner
             mailto=mailto,
+            pdf=options.pdf,
+            pdf_converter=options.pdf_converter,
+            pdf_use_llm=options.use_llm,
             source=options.source,
             openalex_api_key=openalex_api_key,
         )
