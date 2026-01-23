@@ -14,7 +14,11 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-*None currently active.*
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| DEBT-082 | Unused constants in constants.py | P3 | Open |
+| DEBT-083 | Remove backwards-compatibility shims | P2 | Open |
+| DEBT-084 | Unused OCP patterns (register_summarizer, interrupt) | P3 | Open |
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -109,7 +113,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-080 | High cyclomatic complexity functions | P3 | Fixed | f1dbe92 |
 | DEBT-081 | Incomplete features — tested but never wired in | P2 | Fixed | 05a1161,4614bd8 |
 
-**Next Debt ID:** DEBT-082
+**Next Debt ID:** DEBT-085
 
 ### Archived Debt Decks
 
