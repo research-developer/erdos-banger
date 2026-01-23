@@ -28,6 +28,7 @@ Specs currently in progress or awaiting implementation.
 
 | ID | Title | Status | Target | Resolves |
 |----|-------|--------|--------|----------|
+| 035 | [Unified Problem Data Sync](./spec-035-unified-problem-data-sync.md) | Pending | v3.2 | Data source fragmentation (critical) |
 | 029 | [Exa Research Integration](./spec-029-exa-research-integration.md) | Pending | v3.2 | Agentic literature synthesis |
 | 030 | [Semantic Scholar Integration](./spec-030-semantic-scholar-integration.md) | Pending | v3.3 | Citation context ("WHY cites") |
 | 031 | [zbMATH Integration](./spec-031-zbmath-integration.md) | Pending | v3.4 | Math-specific metadata (MSC) |
@@ -87,7 +88,7 @@ Completed specs that are fully implemented.
 | 027 | Loop → Research Integration | [archive](../_archive/specs/spec-027-loop-research-integration.md) |
 | 028 | v3 Integration Verification | [archive](../_archive/specs/spec-028-v3-integration-verification.md) |
 
-**Next Spec ID:** SPEC-035
+**Next Spec ID:** SPEC-036
 
 ## Dependency Graph
 

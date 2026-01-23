@@ -1,7 +1,7 @@
 # erdos-banger - Ralph Wiggum Progress Tracker
 
 **Last Updated:** 2026-01-23
-**Status:** Ready - Research v3 shipped, awaiting senior review
+**Status:** Ready - New spec implementation sprint (v3.2+)
 **Branch:** ralph-wiggum-debt-067
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
@@ -25,26 +25,45 @@
 
 ---
 
-## Active Queue
+## Active Queue (One Task Per Iteration)
 
 Work strictly top-to-bottom unless blocked by dependencies.
 
-*No unchecked items. Add `- [ ]` tasks here to start an overnight run.*
+### SPEC-032: Multi-Model Routing (External Command)
+
+- [ ] [SPEC-032] (1/3) Add task→LLM-command router (`src/erdos/core/llm/*`) + unit tests (no CLI wiring)
+- [ ] [SPEC-032] (2/3) Wire router into `erdos ask` default LLM command selection + tests (preserve `--llm-cmd` override)
+- [ ] [SPEC-032] (3/3) Wire router into `erdos loop run` default LLM command selection + tests (preserve `--llm-cmd` override)
+
+### SPEC-029: Exa Research API Integration
+
+- [ ] [SPEC-029] (1/2) Implement `ExaClient` + caching + unit tests (no network; use `responses`)
+- [ ] [SPEC-029] (2/2) Implement `erdos research exa` command + tests (offline); add `requires_network` smoke test (skipped by default)
+
+### SPEC-030: Semantic Scholar API Integration
+
+- [ ] [SPEC-030] (1/2) Implement `SemanticScholarClient` + caching + unit tests (offline)
+- [ ] [SPEC-030] (2/2) Implement `erdos refs s2 {citations,cited-by,references}` + tests (offline); add `requires_network` smoke test
+
+### SPEC-031: zbMATH Open API Integration
+
+- [ ] [SPEC-031] (1/3) Implement `ZbMathClient` + caching + unit tests (offline)
+- [ ] [SPEC-031] (2/3) Implement `erdos refs zbmath` + tests (offline); add `requires_network` smoke test
+- [ ] [SPEC-031] (3/3) Add `erdos search --msc` mode + tests (offline)
+
+### SPEC-034: Progress Dashboard
+
+- [ ] [SPEC-034] (1/2) Implement dashboard aggregation (`src/erdos/core/dashboard/data.py`) + unit tests (JSON snapshot contract)
+- [ ] [SPEC-034] (2/2) Implement `erdos dashboard` UI (Rich) + tests; ensure `erdos --json dashboard` is non-interactive
+
+### SPEC-033: Lean Copilot Integration
+
+- [ ] [SPEC-033] (1/3) Add optional deps for copilot server (FastAPI/uvicorn) per spec + unit test scaffolding
+- [ ] [SPEC-033] (2/3) Implement minimal `erdos lean copilot serve` (`/generate`) using SPEC-032 routing + unit tests (offline)
+- [ ] [SPEC-033] (3/3) Implement `/encode` (embeddings) with a clear degraded mode + unit tests
 
 ---
 
-## Backlog (Needs Human Approval; not active)
+## Work Log
 
-Ideas for SPEC-028+ (do not convert to checkboxes without explicit approval):
-
-- Index literature extracts into the SQLite search DB (chunking + citations)
-- Expose `erdos research` operations via MCP server tools
-- Expand smoke test to include research workspace commands
-
----
-
-## Work Log (2026-01-23)
-
-- Research v3 implemented (workspace + records + synthesis + indexing + loop integration) and hardened for SSOT/senior review.
-- CI/code-health fixes: split oversized `erdos research` command module into a package; reduced `execute_proof_loop()` below audit threshold.
-- Test isolation: loop CLI tests now set `ERDOS_REPO_ROOT` to avoid polluting the repo with generated `research/` artifacts.
+- (clear for next sprint)
