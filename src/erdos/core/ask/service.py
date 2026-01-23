@@ -1,6 +1,5 @@
 """Ask service: orchestrates RAG Q&A for Erdős problems."""
 
-import os
 from pathlib import Path
 from typing import Any
 
@@ -139,7 +138,9 @@ def ask_question(
         limit: Maximum retrieved chunks
         build_index_flag: Whether to rebuild the index before retrieval
         no_llm: If True, skip LLM execution (prompt-only mode)
-        llm_command: Override LLM command (default: from ERDOS_LLM_COMMAND env)
+        llm_command: LLM command to execute. Callers (CLI) should thread this
+            value from `AppConfig` rather than relying on environment reads in
+            services. If None or empty, LLM execution is skipped.
         repo_root: Repository root for index building and retrieval
 
     Returns:
@@ -175,9 +176,7 @@ def ask_question(
 
     # Determine LLM command
     enable_llm = not no_llm
-    effective_llm_cmd = (
-        llm_command if llm_command else os.environ.get("ERDOS_LLM_COMMAND", "")
-    )
+    effective_llm_cmd = llm_command
 
     # Execute LLM if enabled
     llm_result = execute_llm_if_enabled(

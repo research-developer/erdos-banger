@@ -158,7 +158,7 @@ def ingest(
     force: Annotated[bool, typer.Option("--force", "-f")] = False,
     no_download: Annotated[bool, typer.Option("--no-download")] = False,
     no_network: Annotated[bool, typer.Option("--no-network")] = False,
-    timeout: Annotated[float, typer.Option("--timeout")] = 30.0,
+    timeout: Annotated[float | None, typer.Option("--timeout")] = None,
     delay: Annotated[float, typer.Option("--delay")] = API_RATE_LIMIT_DELAY,
     mailto: Annotated[str, typer.Option("--mailto")] = "",
     source: Annotated[
@@ -297,6 +297,10 @@ def ingest(
             options,
             repo=app_ctx.problems,
             on_progress=on_progress,
+            repo_root=app_ctx.config.repo_root,
+            mailto_default=app_ctx.config.mailto,
+            timeout_default=app_ctx.config.http_timeout,
+            openalex_api_key=app_ctx.config.openalex_api_key,
         )
 
     result.duration_ms = duration[0]

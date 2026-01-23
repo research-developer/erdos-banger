@@ -25,16 +25,14 @@ logger = logging.getLogger(__name__)
 # Conditional Imports (optional deps)
 # =============================================================================
 
-# Try importing sentence-transformers and numpy
+# Try importing optional dependency sentence-transformers.
 try:
-    import numpy as np
     from sentence_transformers import SentenceTransformer
 
     EMBEDDING_AVAILABLE = True
 except ImportError:
     EMBEDDING_AVAILABLE = False
     # Type stubs for when deps are unavailable
-    np = None  # type: ignore[assignment]
     SentenceTransformer = None
 
 

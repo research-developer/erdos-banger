@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING, assert_never
 import defusedxml.ElementTree as ET
 import requests
 
+from erdos.core.clients.openalex import OpenAlexConfig
 from erdos.core.ingest.arxiv_download import download_and_extract_arxiv
 from erdos.core.ingest.models import (
     ArxivDownloadResult,
@@ -51,6 +52,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "ArxivDownloadResult",
     "MetadataSource",
+    "build_provider_from_source",
     "download_and_extract_arxiv",
     "fetch_reference_entry",
     "process_all_references",
@@ -66,8 +68,12 @@ class MetadataSource(str, Enum):
     CROSSREF = "crossref"
 
 
-def _build_provider_from_source(
-    source: MetadataSource, *, mailto: str, timeout: float
+def build_provider_from_source(
+    source: MetadataSource,
+    *,
+    mailto: str,
+    timeout: float,
+    openalex_api_key: str | None = None,
 ) -> MetadataProvider:
     """Build a MetadataProvider from a MetadataSource enum.
 
@@ -79,13 +85,17 @@ def _build_provider_from_source(
         source: The metadata source to use.
         mailto: Contact email for API polite pools.
         timeout: HTTP timeout in seconds.
+        openalex_api_key: Optional OpenAlex API key. If not provided, falls back
+            to OpenAlexConfig.from_env().
 
     Returns:
         A MetadataProvider instance for the specified source.
     """
     if source == MetadataSource.OPENALEX:
         # Full capability: OpenAlex primary with Crossref/arXiv fallback
-        openalex = OpenAlexProvider.from_env()
+        api_key = (openalex_api_key or "").strip() or OpenAlexConfig.from_env().api_key
+        openalex_config = OpenAlexConfig(email=mailto, api_key=api_key, timeout=timeout)
+        openalex = OpenAlexProvider.from_config(openalex_config)
         crossref = CrossrefProvider(mailto=mailto, timeout=timeout)
         arxiv = ArxivProvider(timeout=timeout)
         return FallbackProvider(
@@ -279,7 +289,7 @@ def fetch_reference_entry(
         raise RuntimeError("Network access disabled but required for fetching")
 
     # Use injected provider or build from source enum
-    actual_provider = provider or _build_provider_from_source(
+    actual_provider = provider or build_provider_from_source(
         source, mailto=mailto, timeout=timeout
     )
 

@@ -12,7 +12,9 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 ## Active Bugs
 
-*None currently active.*
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| BUG-021 | `erdos ingest` ignores `--mailto`/`--timeout` for OpenAlex requests | P2 | Fixed (uncommitted) |
 
 *Note: BUG-013 was invalidated as a false positive. BUG-015 and BUG-017 were review findings that were invalidated before standalone bug decks were created.*
 
@@ -41,7 +43,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-019 | `erdos convert --format` is a no-op | P2 | Fixed | b2dcdfe |
 | BUG-020 | OpenAlex `get_by_arxiv()` returns None for real arXiv IDs | P1 | Fixed | fe34ca1 |
 
-**Next Bug ID:** BUG-021
+**Next Bug ID:** BUG-022
 
 ### Archived Bug Decks
 

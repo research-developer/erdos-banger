@@ -1,7 +1,12 @@
-"""Centralized application configuration.
+"""Centralized application configuration (preferred path).
 
-This module is the single source of truth for environment-based configuration.
-All os.environ reads for application settings should be centralized here.
+This module defines :class:`AppConfig` as the canonical configuration surface
+for CLI execution. New code should **prefer** threading configuration through
+`AppConfig`/`AppContext` rather than reading `os.environ` directly.
+
+Note: a small number of legacy `from_env()` / `from_default()` helpers may still
+read environment variables for backward compatibility or third-party tooling.
+These should be treated as transitional and avoided in new call sites.
 
 Usage:
     # In composition root (context.py or CLI entry points):
@@ -77,7 +82,7 @@ class AppConfig:
     def from_env(cls) -> AppConfig:
         """Create configuration from environment variables.
 
-        This is the single place where os.environ reads occur for application
+        This is the preferred place where `os.environ` reads occur for application
         configuration. All environment variable names and defaults are defined here.
 
         Environment variables:

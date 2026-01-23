@@ -10,10 +10,6 @@ from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 from erdos.core.exit_codes import ExitCode
-
-
-if TYPE_CHECKING:
-    import pytest
 from erdos.core.ingest.app import (
     IngestOptions,
     batch_result_to_cli_output,
@@ -25,6 +21,10 @@ from erdos.core.ingest.app import (
     run_single_ingestion,
 )
 from erdos.core.ingest.fetch import MetadataSource
+
+
+if TYPE_CHECKING:
+    import pytest
 
 
 class TestGetRepoRoot:
@@ -133,7 +133,7 @@ class TestIngestOptions:
         assert options.force is False
         assert options.no_download is False
         assert options.no_network is False
-        assert options.timeout == 30.0
+        assert options.timeout is None
         assert options.delay == 3.0
         assert options.mailto == ""
         assert options.source == MetadataSource.OPENALEX
@@ -179,7 +179,7 @@ class TestRunSingleIngestion:
         options = IngestOptions(problem_id=None)
 
         result = run_single_ingestion(
-            options, tmp_path, "test@example.com", repo=MagicMock()
+            options, tmp_path, "test@example.com", 30.0, None, repo=MagicMock()
         )
 
         assert result.success is False
@@ -205,7 +205,9 @@ class TestRunSingleIngestion:
         mock_ingest.return_value = mock_result
         repo = MagicMock()
 
-        result = run_single_ingestion(options, tmp_path, "user@example.com", repo=repo)
+        result = run_single_ingestion(
+            options, tmp_path, "user@example.com", 45.0, None, repo=repo
+        )
 
         mock_ingest.assert_called_once_with(
             6,
@@ -218,6 +220,7 @@ class TestRunSingleIngestion:
             delay=5.0,
             mailto="user@example.com",
             source=MetadataSource.ARXIV,
+            openalex_api_key=None,
         )
         assert result is mock_result
 
@@ -230,7 +233,7 @@ class TestRunBatchIngestion:
         options = IngestOptions(problem_id=None, all_problems=True, max_concurrent=2)
 
         result = run_batch_ingestion(
-            options, tmp_path, "test@example.com", repo=MagicMock()
+            options, tmp_path, "test@example.com", 30.0, None, repo=MagicMock()
         )
 
         assert result.success is False
@@ -246,7 +249,9 @@ class TestRunBatchIngestion:
         repo = MagicMock()
         repo.load_all.return_value = []  # No problems
 
-        result = run_batch_ingestion(options, tmp_path, "test@example.com", repo=repo)
+        result = run_batch_ingestion(
+            options, tmp_path, "test@example.com", 30.0, None, repo=repo
+        )
 
         assert result.success is False
         assert result.error is not None
@@ -406,7 +411,9 @@ class TestNoNetworkNowDownloadPolicyCombinations:
         options = IngestOptions(problem_id=6, no_download=True)
         mock_ingest.return_value = MagicMock(success=True)
 
-        run_single_ingestion(options, tmp_path, "test@example.com", repo=MagicMock())
+        run_single_ingestion(
+            options, tmp_path, "test@example.com", 30.0, None, repo=MagicMock()
+        )
 
         call_kwargs = mock_ingest.call_args.kwargs
         assert call_kwargs["no_download"] is True
@@ -419,7 +426,9 @@ class TestNoNetworkNowDownloadPolicyCombinations:
         options = IngestOptions(problem_id=6, no_network=True)
         mock_ingest.return_value = MagicMock(success=True)
 
-        run_single_ingestion(options, tmp_path, "test@example.com", repo=MagicMock())
+        run_single_ingestion(
+            options, tmp_path, "test@example.com", 30.0, None, repo=MagicMock()
+        )
 
         call_kwargs = mock_ingest.call_args.kwargs
         assert call_kwargs["no_network"] is True
@@ -432,7 +441,9 @@ class TestNoNetworkNowDownloadPolicyCombinations:
         options = IngestOptions(problem_id=6, no_download=True, no_network=True)
         mock_ingest.return_value = MagicMock(success=True)
 
-        run_single_ingestion(options, tmp_path, "test@example.com", repo=MagicMock())
+        run_single_ingestion(
+            options, tmp_path, "test@example.com", 30.0, None, repo=MagicMock()
+        )
 
         call_kwargs = mock_ingest.call_args.kwargs
         assert call_kwargs["no_download"] is True

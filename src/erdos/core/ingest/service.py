@@ -9,7 +9,11 @@ from pydantic import TypeAdapter, ValidationError
 
 from erdos.core.constants import API_RATE_LIMIT_DELAY
 from erdos.core.exit_codes import ExitCode
-from erdos.core.ingest.fetch import MetadataSource, process_all_references
+from erdos.core.ingest.fetch import (
+    MetadataSource,
+    build_provider_from_source,
+    process_all_references,
+)
 from erdos.core.ingest.stable_key import get_stable_key
 from erdos.core.literature_paths import get_manifest_path
 from erdos.core.models import (
@@ -298,6 +302,7 @@ def ingest_problem_references(
     delay: float = API_RATE_LIMIT_DELAY,
     mailto: str,
     source: MetadataSource = MetadataSource.OPENALEX,
+    openalex_api_key: str | None = None,
 ) -> CLIOutput:
     """Ingest references for a problem.
 
@@ -314,6 +319,7 @@ def ingest_problem_references(
             reference makes at most 1-3 requests (DOI, arXiv metadata, arXiv source).
         mailto: Contact email for API polite pools.
         source: Metadata source to use (default: OpenAlex).
+        openalex_api_key: Optional OpenAlex API key override (defaults to env/config).
 
     Returns:
         CLIOutput with ingestion results.
@@ -347,6 +353,15 @@ def ingest_problem_references(
     # Load existing manifest if present
     existing_manifest = _load_existing_manifest(manifest_path, force)
 
+    provider = None
+    if allow_network:
+        provider = build_provider_from_source(
+            source,
+            mailto=mailto,
+            timeout=timeout,
+            openalex_api_key=openalex_api_key,
+        )
+
     # Process all references
     process_result = process_all_references(
         problem,
@@ -359,6 +374,7 @@ def ingest_problem_references(
         mailto=mailto,
         delay=delay,
         source=source,
+        provider=provider,
     )
 
     # Check for duplicate stable keys

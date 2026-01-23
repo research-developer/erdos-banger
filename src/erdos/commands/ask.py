@@ -177,20 +177,24 @@ def ask(
 
     # Execute query
     _show_progress_message(problem_id, json_mode)
-    options = AskOptions(
-        problem_id=problem_id,
-        question=question,
-        limit=limit,
-        build_index=build_index,
-        no_llm=no_llm,
-        llm_cmd=llm_cmd if llm_cmd else None,
-    )
     app_ctx, app_error = get_app_context(ctx, command="erdos ask", require_index=True)
     if app_error is not None:
         exit_with_result(ctx, app_error)
         return
     if app_ctx is None:
         return  # Unreachable: get_app_context guarantees (ctx, None) or (None, error)
+
+    effective_llm_cmd = (
+        llm_cmd.strip() if llm_cmd and llm_cmd.strip() else app_ctx.config.llm_command
+    )
+    options = AskOptions(
+        problem_id=problem_id,
+        question=question,
+        limit=limit,
+        build_index=build_index,
+        no_llm=no_llm,
+        llm_cmd=effective_llm_cmd,
+    )
 
     result = _execute_ask_query(
         options,

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -193,8 +192,12 @@ def run(
 
         path = project_path or Path("formal/lean")
 
-        # Get LLM command from env if not specified
-        llm_command = llm_cmd or os.environ.get("ERDOS_LLM_COMMAND")
+        # Get LLM command from config if not specified
+        llm_command = (
+            llm_cmd.strip()
+            if llm_cmd is not None and llm_cmd.strip()
+            else (app_ctx.config.llm_command or None)
+        )
 
         config = LoopConfig.from_cli(
             max_iterations=max_iter,
