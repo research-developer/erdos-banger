@@ -12,9 +12,9 @@ from erdos.core.models import ReferenceRecord
 
 
 @pytest.fixture
-def fixture_dir() -> Path:
+def fixture_dir(request: pytest.FixtureRequest) -> Path:
     """Return the path to the crossref_responses fixture directory."""
-    return Path(__file__).parent.parent.parent / "fixtures" / "crossref_responses"
+    return Path(request.config.rootpath) / "tests" / "fixtures" / "crossref_responses"
 
 
 @pytest.fixture

@@ -29,6 +29,15 @@ from erdos.core.models import ProblemRecord, ProblemStatus
 
 
 @pytest.fixture
+def project_root(request: pytest.FixtureRequest) -> Path:
+    """Return the project root directory via pytest rootpath.
+
+    This is the canonical way to get the project root, robust to test file moves.
+    """
+    return Path(request.config.rootpath)
+
+
+@pytest.fixture
 def sample_problem() -> ProblemRecord:
     """A minimal valid ProblemRecord for testing."""
     return ProblemRecord(
@@ -43,9 +52,9 @@ def sample_problem() -> ProblemRecord:
 
 
 @pytest.fixture
-def fixtures_dir() -> Path:
+def fixtures_dir(project_root: Path) -> Path:
     """Path to test fixtures directory."""
-    return Path(__file__).parent / "fixtures"
+    return project_root / "tests" / "fixtures"
 
 
 @pytest.fixture

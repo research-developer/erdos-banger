@@ -11,12 +11,20 @@ from erdos.core.clients.arxiv import fetch_arxiv_atom, parse_arxiv_atom
 from erdos.core.models import OpenAccessStatus, ReferenceRecord
 
 
-FIXTURES_DIR = Path(__file__).parent.parent.parent / "fixtures" / "arxiv_responses"
+def _get_fixtures_dir(request: pytest.FixtureRequest) -> Path:
+    """Get path to arxiv fixtures directory via pytest root."""
+    return Path(request.config.rootpath) / "tests" / "fixtures" / "arxiv_responses"
 
 
-def test_parse_arxiv_atom_success():
+@pytest.fixture
+def fixtures_dir(request: pytest.FixtureRequest) -> Path:
+    """Return the path to the arxiv_responses fixture directory."""
+    return _get_fixtures_dir(request)
+
+
+def test_parse_arxiv_atom_success(fixtures_dir: Path):
     """Test parsing valid arXiv atom XML."""
-    xml_path = FIXTURES_DIR / "arxiv_2203.00001.xml"
+    xml_path = fixtures_dir / "arxiv_2203.00001.xml"
     xml_text = xml_path.read_text()
 
     record = parse_arxiv_atom(xml_text)
@@ -31,9 +39,9 @@ def test_parse_arxiv_atom_success():
     assert record.oa_url == "https://arxiv.org/abs/2203.00001v1"
 
 
-def test_parse_arxiv_atom_not_found():
+def test_parse_arxiv_atom_not_found(fixtures_dir: Path):
     """Test parsing arXiv not found response."""
-    xml_path = FIXTURES_DIR / "arxiv_not_found.xml"
+    xml_path = fixtures_dir / "arxiv_not_found.xml"
     xml_text = xml_path.read_text()
 
     with pytest.raises(ValueError, match="No entry found"):
@@ -125,9 +133,9 @@ def test_parse_arxiv_atom_missing_required_fields():
 
 
 @responses.activate
-def test_fetch_arxiv_atom_success():
+def test_fetch_arxiv_atom_success(fixtures_dir: Path):
     """Test fetching arXiv metadata via HTTP."""
-    xml_path = FIXTURES_DIR / "arxiv_2203.00001.xml"
+    xml_path = fixtures_dir / "arxiv_2203.00001.xml"
     xml_text = xml_path.read_text()
 
     responses.add(
@@ -147,9 +155,9 @@ def test_fetch_arxiv_atom_success():
 
 
 @responses.activate
-def test_fetch_arxiv_atom_strips_version():
+def test_fetch_arxiv_atom_strips_version(fixtures_dir: Path):
     """Test that version suffix is stripped for API query."""
-    xml_path = FIXTURES_DIR / "arxiv_2203.00001.xml"
+    xml_path = fixtures_dir / "arxiv_2203.00001.xml"
     xml_text = xml_path.read_text()
 
     responses.add(
