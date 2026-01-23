@@ -15,6 +15,7 @@ from rich.console import Console
 from rich.table import Table
 
 from erdos.commands.app_context import get_app_context
+from erdos.commands.cli_helpers import print_if_human
 from erdos.commands.presenter import exit_with_result
 from erdos.core.constants import API_RATE_LIMIT_DELAY
 from erdos.core.ingest import (
@@ -139,13 +140,13 @@ def _create_progress_callback(
 
 def _show_progress_message(problem_id: int | None, json_output: bool) -> None:
     """Show progress message if not in JSON mode."""
-    if not json_output:
-        if problem_id is not None:
-            err_console.print(
-                f"[dim]Ingesting references for Problem {problem_id}...[/dim]"
-            )
-        else:
-            err_console.print("[dim]Starting batch ingest...[/dim]")
+    if problem_id is not None:
+        print_if_human(
+            f"Ingesting references for Problem {problem_id}...",
+            json_output=json_output,
+        )
+        return
+    print_if_human("Starting batch ingest...", json_output=json_output)
 
 
 @app.callback(invoke_without_command=True)

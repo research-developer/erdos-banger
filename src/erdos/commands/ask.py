@@ -12,6 +12,7 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 
 from erdos.commands.app_context import get_app_context
+from erdos.commands.cli_helpers import print_if_human
 from erdos.commands.presenter import exit_with_result
 from erdos.core.ask import ask_question
 from erdos.core.exit_codes import ExitCode
@@ -30,7 +31,6 @@ app = typer.Typer(
     context_settings={"allow_interspersed_args": True},
 )
 console = Console()
-err_console = Console(stderr=True)
 
 
 @dataclass
@@ -71,8 +71,10 @@ def _validate_question_input(question: str) -> CLIOutput | None:
 
 def _show_progress_message(problem_id: int, json_output: bool) -> None:
     """Show progress message (only in human mode)."""
-    if not json_output:
-        err_console.print(f"[dim]Retrieving sources for Problem {problem_id}...[/dim]")
+    print_if_human(
+        f"Retrieving sources for Problem {problem_id}...",
+        json_output=json_output,
+    )
 
 
 def _execute_ask_query(
