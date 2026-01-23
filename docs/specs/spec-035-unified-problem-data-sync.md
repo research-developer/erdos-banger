@@ -33,16 +33,27 @@ Unify the three Erdős problem data sources into a single, coherent pipeline:
 
 1. **Single source of truth** for problem status (submodule → local cache).
 2. **Automated sync** of formal statements from DeepMind.
-3. **Proof extraction** when problems are solved (GitHub links, not HTML scraping).
-4. **Provenance tracking** (who solved, when, verification status).
-5. **Offline-first** — all data cached locally, network only for sync.
+3. **Proof extraction** when problems are solved (GitHub links from forum).
+4. **Website data extraction** — statements, LaTeX, tags, references, formalization flags.
+5. **Provenance tracking** (who solved, when, verification status).
+6. **Offline-first** — all data cached locally, network only for sync.
 
 ### Non-Goals
 
-- HTML scraping of erdosproblems.com (fragile, breaks on redesign).
+- **Arbitrary HTML scraping** (we parse structured fields, not arbitrary content).
 - Replacing the submodule with a custom data format.
 - Real-time sync (daily is sufficient).
 - Hosting our own problem database (we track, not publish).
+
+### Clarification: Structured Parsing vs Scraping
+
+We **do** parse HTML from erdosproblems.com, but only **structured fields**:
+- Status badges (CSS class-based, stable)
+- LaTeX statements (dedicated `<div>` containers)
+- Tags (semantic markup)
+- "View LaTeX source" links (stable URL pattern)
+
+We **don't** scrape arbitrary prose or layout-dependent content.
 
 ---
 
@@ -343,21 +354,122 @@ def test_extract_real_proof_link():
 1. [ ] `erdos sync submodule` updates the submodule
 2. [ ] `erdos sync submodule --check` warns if stale (for CI)
 3. [ ] `erdos sync statements` imports from DeepMind formal-conjectures
-4. [ ] `erdos sync proof <id>` extracts GitHub link from forum
-5. [ ] Proof verification runs `lake build` and reports success/failure
-6. [ ] Verified proofs stored in `formal/lean/Community/`
-7. [ ] `PROVENANCE.json` tracks who solved, when, source URL
-8. [ ] `erdos sync all` orchestrates full pipeline
-9. [ ] Offline-friendly: cached data used when network unavailable
+4. [ ] `erdos sync website <id>` fetches problem page data (status, statement, tags)
+5. [ ] `erdos sync website <id>` extracts raw LaTeX source
+6. [ ] `erdos sync proof <id>` extracts GitHub link from forum
+7. [ ] Proof verification runs `lake build` and reports success/failure
+8. [ ] Verified proofs stored in `formal/lean/Community/`
+9. [ ] `PROVENANCE.json` tracks who solved, when, source URL
+10. [ ] `erdos sync all` orchestrates full pipeline
+11. [ ] Website sync respects rate limits (2s delay)
+12. [ ] Offline-friendly: cached data used when network unavailable
+
+---
+
+## Website Data Extraction (Beyond Forum)
+
+The erdosproblems.com **main pages** (not just forum) have structured data we should extract:
+
+### Available Data per Problem Page
+
+| Field | URL Pattern | Value |
+|-------|-------------|-------|
+| Status badge | `erdosproblems.com/{id}` | "PROVED (LEAN)", "OPEN", etc. |
+| Problem statement | Same page | Full statement with LaTeX math |
+| LaTeX source | "View the LaTeX source" link | Raw `.tex` for formalization |
+| Tags | Same page | "number theory \| covering systems" |
+| References | `[Er65]`, `[ErGr80]` | Links to original Erdős papers |
+| Formalised? | "Formalised statement? Yes/No" | DeepMind formalization flag |
+| Difficulty | Community votes | "This problem looks difficult" |
+| Collaborators | Community list | Who's working on it |
+
+### Extraction Strategy
+
+```python
+# src/erdos/core/sync/website.py
+
+@dataclass
+class WebsiteProblemData:
+    """Structured data from erdosproblems.com main page."""
+    problem_id: int
+    status: str                     # "PROVED (LEAN)", "OPEN", etc.
+    statement_html: str             # Rendered statement
+    statement_latex: str | None     # Raw LaTeX source
+    tags: list[str]                 # ["number theory", "covering systems"]
+    references: list[str]           # ["Er65", "Er65b", "ErGr80"]
+    has_formalization: bool         # "Formalised statement? Yes"
+    difficulty_votes: int           # Community difficulty rating
+    collaborators: list[str]        # Who's interested/working
+
+def fetch_problem_page(problem_id: int) -> WebsiteProblemData:
+    """
+    Fetch and parse a single problem page.
+
+    URL: https://www.erdosproblems.com/{problem_id}
+
+    Strategy:
+    1. HTTP GET the main page
+    2. Parse status badge (CSS class or text)
+    3. Extract statement (div with LaTeX)
+    4. Follow "View LaTeX source" link for raw .tex
+    5. Parse tags, references, formalization flag
+    6. Return structured data
+    """
+    ...
+```
+
+### CLI Commands for Website Sync
+
+```bash
+# Fetch structured data from website for a problem
+erdos sync website <problem_id>
+
+# Batch sync all problems (with rate limiting)
+erdos sync website --all --delay 2
+
+# Output example:
+# Problem #275:
+#   Status: PROVED (LEAN)
+#   Tags: number theory, covering systems
+#   References: Er65, Er65b, ErGr80
+#   Formalised: Yes
+#   LaTeX source: Saved to data/latex/275.tex
+```
+
+### Integration with Local Cache
+
+Website data enriches `problems_enriched.yaml`:
+
+```yaml
+- number: 275
+  status: "proved (Lean)"           # From submodule
+  statement: "If a finite..."       # From website
+  statement_latex: "\\text{If}..."  # From website LaTeX source
+  tags: ["number theory", "covering systems"]
+  references: ["Er65", "Er65b", "ErGr80"]
+  has_formalization: true
+  source_urls:
+    website: "https://www.erdosproblems.com/275"
+    forum: "https://www.erdosproblems.com/forum/thread/275"
+```
+
+### Rate Limiting for Website
+
+```python
+# Be polite to T. F. Bloom's server
+WEBSITE_RATE_LIMIT = 2.0  # seconds between requests
+MAX_CONCURRENT = 1        # Sequential only
+```
 
 ---
 
 ## Future Enhancements
 
 - **RSS feed** for forum updates (if available) — more efficient than polling
-- **Contact Terence Tao** for structured data export or webhook
+- **Contact T. F. Bloom** for structured data export, API, or webhook
 - **CI integration** — Auto-sync on schedule, PR on new proofs
 - **Notification** when a problem in your watchlist is solved
+- **LaTeX → Lean pipeline** — Use extracted LaTeX as input to formalization
 
 ---
 
