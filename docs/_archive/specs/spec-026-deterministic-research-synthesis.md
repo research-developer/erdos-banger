@@ -108,7 +108,7 @@ Rules:
 
 - `src/erdos/core/research/synthesis.py`
   - Read inputs, compute deterministic view model, render markdown.
-- Extend `src/erdos/commands/research.py`
+- Extend `src/erdos/commands/research/workspace.py`
   - Add `synthesize` subcommand.
 
 ---

@@ -26,7 +26,7 @@ This is the exact architecture we will build first:
 Implementation pointers:
 
 - Specs: `docs/_archive/specs/spec-023-research-workspace.md` → `docs/_archive/specs/spec-027-loop-research-integration.md`
-- CLI entrypoints: `src/erdos/commands/research.py`, `src/erdos/commands/ask.py`, `src/erdos/commands/loop.py`
+- CLI entrypoints: `src/erdos/commands/research/__init__.py`, `src/erdos/commands/ask.py`, `src/erdos/commands/loop.py`
 - Core logic: `src/erdos/core/research/`, `src/erdos/core/ask/retrieval.py`, `src/erdos/core/search/research_indexing.py`
 
 Non-goals for v3 (explicitly not building):

@@ -230,7 +230,7 @@ Example (`lead add`):
 
 ### CLI wiring
 
-- Extend `src/erdos/commands/research.py` with subcommand groups:
+- Extend `src/erdos/commands/research/` with subcommand groups:
   - `lead`, `attempt`, `hypothesis`, `task`, plus `fmt` and `validate`.
 
 ---

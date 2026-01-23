@@ -1,10 +1,8 @@
-# erdos-banger - Ralph Wiggum Loop Prompt (Clean Code Debt Sweep)
+# erdos-banger - Ralph Wiggum Loop Prompt (Spec/Feature Implementation)
 
-You are fixing **technical debt** in the erdos-banger CLI toolkit using **Ironclad TDD** and **Rob C. Martin discipline**.
+You are implementing **exactly one** task from `PROGRESS.md` per iteration using **Ironclad TDD** and **Rob C. Martin discipline**.
 
 If `PROGRESS.md` has no unchecked items, exit cleanly without making changes.
-
-This run is **debt-first**: do not start new specs unless a human explicitly adds them to `PROGRESS.md`.
 
 ---
 
@@ -14,12 +12,12 @@ Immediately read:
 
 ```bash
 cat PROGRESS.md
-cat docs/debt/README.md
+cat docs/specs/README.md
 cat docs/bugs/README.md
 cat docs/adr/README.md
 ```
 
-Then read the specific debt deck for the current task.
+Then read the specific SSOT doc referenced by the current task (spec/deck/path).
 
 ---
 
@@ -29,10 +27,12 @@ Then read the specific debt deck for the current task.
 
 1. Find the **FIRST** unchecked `[ ]` item in `PROGRESS.md`
    - If there are no unchecked items, exit cleanly (do not invent new tasks)
-2. Determine task type:
-   - **DEBT-XXX**: read `docs/debt/debt-XXX-*.md`
+2. Identify the SSOT doc(s) for the task:
+   - **SPEC-XXX**: read `docs/specs/spec-XXX-*.md` (active) or `docs/_archive/specs/spec-XXX-*.md` (implemented SSOT)
+   - **DEBT-XXX**: read `docs/debt/debt-XXX-*.md` (active) or `docs/_archive/debt/debt-XXX-*.md` (implemented SSOT)
+   - If the task references a filepath, read that file directly
 3. **READ THE ACCEPTANCE CRITERIA** — complete ALL of them
-4. Apply the **Critical Review Prompt** (below) to validate the deck against SSOT
+4. Apply the **Critical Review Prompt** (below) to validate the task against SSOT
 
 ### Phase 2: Implement (TDD)
 
@@ -48,7 +48,7 @@ Then read the specific debt deck for the current task.
 1. **COMMIT CODE CHANGES IMMEDIATELY** after `make ci` passes:
 
    ```bash
-   git add -A && git commit -m "refactor: <description> (DEBT-XXX)"
+   git add -A && git commit -m "<type>: <description>"
    ```
 
    - This ensures code changes are saved even if the iteration times out later
@@ -56,20 +56,17 @@ Then read the specific debt deck for the current task.
 
 ### Phase 4: Update Documentation (References the Commit)
 
-1. Update the deck with the commit from Phase 3:
-   - set **Status: Fixed** (or **Closed (Invalid)** if the debt was invalid)
-   - add **Fixed In:** or **Closed In:** with `<commit-hash-from-step-7>`
-2. Update debt indices and archives:
-   - move deck `docs/debt/` → `docs/_archive/debt/`
-   - update `docs/debt/README.md` (Active → Archived)
-3. Check off the item in `PROGRESS.md` (`[ ]` → `[x]`) and add a short Work Log entry
+1. Update the relevant docs for traceability:
+   - If there is a deck/spec, record the commit hash and mark status appropriately
+   - If the task is just code, add a short note to `PROGRESS.md` Work Log
+2. Check off the item in `PROGRESS.md` (`[ ]` → `[x]`) and add a short Work Log entry
 
 ### Phase 5: Commit Docs & Push
 
 1. **COMMIT DOCS** and **PUSH**:
 
    ```bash
-   git add -A && git commit -m "docs: record DEBT-XXX closure commit"
+   git add -A && git commit -m "docs: update sprint state"
    git push
    ```
 

@@ -214,7 +214,7 @@ Template stubs must be deterministic and safe to commit.
 
 ### New CLI adapter
 
-- `src/erdos/commands/research.py`
+- `src/erdos/commands/research/__init__.py`
   - Typer app group with subcommands: `init`, `open`, `note`, `status`.
 
 ### Modify CLI composition root
