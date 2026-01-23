@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, cast
 
+from erdos.core.constants import LEAN_TOOLCHAIN_VERSION
 from erdos.core.models import LeanCheckResult, LeanError
 
 
@@ -142,7 +143,9 @@ class LeanRunner:
         (self._project_path / "Erdos").mkdir(exist_ok=True)
 
         if not self._toolchain.exists():
-            self._toolchain.write_text("leanprover/lean4:v4.12.0\n", encoding="utf-8")
+            self._toolchain.write_text(
+                f"leanprover/lean4:{LEAN_TOOLCHAIN_VERSION}\n", encoding="utf-8"
+            )
 
         if not self._lakefile.exists():
             lakefile = (
@@ -362,7 +365,7 @@ class LeanRunner:
 
     def _default_lakefile(self) -> str:
         """Return default lakefile.lean content."""
-        return """import Lake
+        return f"""import Lake
 open Lake DSL
 
 package erdos where
@@ -373,7 +376,7 @@ package erdos where
 
 -- Pin mathlib version - update along with lean-toolchain
 require mathlib from git
-  \"https://github.com/leanprover-community/mathlib4.git\" @ \"v4.12.0\"
+  "https://github.com/leanprover-community/mathlib4.git" @ "{LEAN_TOOLCHAIN_VERSION}"
 
 @[default_target]
 lean_lib Erdos where
