@@ -16,15 +16,14 @@ import pytest
 import responses
 import yaml
 
-import erdos.core.ingest as ingest_module
 import erdos.core.ingest.fetch as fetch_module
 from erdos.core.ingest import (
     ArxivDownloadResult,
     MetadataSource,
-    _download_and_extract_arxiv,
     get_stable_key,
     ingest_problem_references,
 )
+from erdos.core.ingest.arxiv_download import download_and_extract_arxiv
 from erdos.core.ingest.service import _entries_content_equal
 from erdos.core.models import CLIOutput, ManifestEntry, ReferenceEntry, ReferenceRecord
 from erdos.core.problem_loader import ProblemLoader
@@ -388,7 +387,7 @@ def test_ingest_internal_error_does_not_truncate_manifest(
         )
 
     monkeypatch.setattr(
-        ingest_module, "_fetch_reference_entry", fake_fetch_reference_entry
+        fetch_module, "fetch_reference_entry", fake_fetch_reference_entry
     )
 
     result = ingest_problem_references(
@@ -413,8 +412,8 @@ def test_ingest_internal_error_does_not_truncate_manifest(
 
 
 @responses.activate
-def test_download_and_extract_arxiv_success(temp_repo_root: Path) -> None:
-    """Test _download_and_extract_arxiv successfully downloads and extracts."""
+def testdownload_and_extract_arxiv_success(temp_repo_root: Path) -> None:
+    """Test download_and_extract_arxiv successfully downloads and extracts."""
     arxiv_id = "2203.00001"
 
     # Mock arXiv tarball download
@@ -432,7 +431,7 @@ def test_download_and_extract_arxiv_success(temp_repo_root: Path) -> None:
         status=200,
     )
 
-    result = _download_and_extract_arxiv(
+    result = download_and_extract_arxiv(
         arxiv_id=arxiv_id,
         repo_root=temp_repo_root,
         timeout=30.0,
@@ -455,8 +454,8 @@ def test_download_and_extract_arxiv_success(temp_repo_root: Path) -> None:
 
 
 @responses.activate
-def test_download_and_extract_arxiv_download_error(temp_repo_root: Path) -> None:
-    """Test _download_and_extract_arxiv handles download failures."""
+def testdownload_and_extract_arxiv_download_error(temp_repo_root: Path) -> None:
+    """Test download_and_extract_arxiv handles download failures."""
     arxiv_id = "2203.00002"
 
     # Mock a failed download
@@ -466,7 +465,7 @@ def test_download_and_extract_arxiv_download_error(temp_repo_root: Path) -> None
         status=404,
     )
 
-    result = _download_and_extract_arxiv(
+    result = download_and_extract_arxiv(
         arxiv_id=arxiv_id,
         repo_root=temp_repo_root,
         timeout=30.0,
@@ -483,8 +482,8 @@ def test_download_and_extract_arxiv_download_error(temp_repo_root: Path) -> None
 
 
 @responses.activate
-def test_download_and_extract_arxiv_extraction_error(temp_repo_root: Path) -> None:
-    """Test _download_and_extract_arxiv handles extraction failures."""
+def testdownload_and_extract_arxiv_extraction_error(temp_repo_root: Path) -> None:
+    """Test download_and_extract_arxiv handles extraction failures."""
     arxiv_id = "2203.00003"
 
     # Mock a corrupted tarball (not valid tar.gz)
@@ -495,7 +494,7 @@ def test_download_and_extract_arxiv_extraction_error(temp_repo_root: Path) -> No
         status=200,
     )
 
-    result = _download_and_extract_arxiv(
+    result = download_and_extract_arxiv(
         arxiv_id=arxiv_id,
         repo_root=temp_repo_root,
         timeout=30.0,

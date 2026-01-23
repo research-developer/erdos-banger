@@ -17,27 +17,10 @@ from erdos.core.ask.retrieval import (
     perform_retrieval,
     retrieve_sources,
 )
-from erdos.core.ask.service import (
-    _build_response_data,
-    _ensure_index_ready,
-    _load_problem,
-    ask_question,
-)
+from erdos.core.ask.service import ask_question
 
-
-# Private name aliases for backward compatibility with test imports
-_fallback_sources = fallback_sources
-_retrieve_sources = retrieve_sources
-_execute_llm_if_enabled = execute_llm_if_enabled
 
 __all__ = [
-    "_build_response_data",
-    # Internal (for tests)
-    "_ensure_index_ready",
-    "_execute_llm_if_enabled",  # Backward compat alias
-    "_fallback_sources",  # Backward compat alias
-    "_load_problem",
-    "_retrieve_sources",  # Backward compat alias
     # Service
     "ask_question",
     # Prompt
@@ -45,8 +28,8 @@ __all__ = [
     # LLM
     "execute_llm",
     "execute_llm_if_enabled",
-    "fallback_sources",
     # Retrieval
+    "fallback_sources",
     "perform_retrieval",
     "retrieve_sources",
 ]

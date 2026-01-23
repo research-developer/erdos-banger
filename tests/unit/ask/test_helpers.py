@@ -3,12 +3,12 @@
 import subprocess
 from unittest.mock import MagicMock, patch
 
-from erdos.core.ask import (
+from erdos.core.ask.llm import execute_llm_if_enabled
+from erdos.core.ask.service import (
     _build_response_data,
     _ensure_index_ready,
     _load_problem,
 )
-from erdos.core.ask.llm import execute_llm_if_enabled
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import ChunkSource, CLIOutput, ProblemRecord
 from erdos.core.problem_loader import ProblemLoaderError
