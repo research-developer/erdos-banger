@@ -6,7 +6,7 @@
 
 ## Problem
 
-Seven functions have cyclomatic complexity ≥15 (C grade or worse), exceeding the Clean Code recommendation of ≤10 for maintainable code. One function (`parse_crossref_work`) scores D-grade (21).
+`radon cc` reports **22 blocks** (functions/methods) at **C-grade or worse** (≥11), and one **D-grade** function (21). This exceeds the common Clean Code heuristic of keeping cyclomatic complexity ≤10 for maintainability.
 
 ## Evidence
 
@@ -15,6 +15,8 @@ Seven functions have cyclomatic complexity ≥15 (C grade or worse), exceeding t
 ```bash
 $ uv run radon cc src/erdos/ -a -s --min C
 ```
+
+Top hotspots (score ≥15):
 
 | File:Line | Function | Grade | Score |
 |-----------|----------|-------|-------|
@@ -25,6 +27,9 @@ $ uv run radon cc src/erdos/ -a -s --min C
 | `core/run_logger.py:309` | `RunLogger.query` | C | 18 |
 | `commands/search.py:43` | `_print_human` | C | 16 |
 | `core/problem_loader.py:388` | `ProblemLoader.filter` | C | 15 |
+| `core/ingest/fetch.py:233` | `_fetch_with_provider` | C | 15 |
+
+Note: additional C-grade blocks exist with scores 11–14 (run the command above for the full list).
 
 ### Complexity Grade Definitions
 
@@ -106,7 +111,6 @@ title = _extract_first(message, "title", required=True)
 ## Acceptance Criteria
 
 - [ ] No functions with D-grade (≥21) complexity
-- [ ] High-complexity functions documented with `# complexity: high` comment explaining why
 - [ ] `make ci` passes
 
 ## Impact

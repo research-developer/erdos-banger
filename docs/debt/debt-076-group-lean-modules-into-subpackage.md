@@ -35,9 +35,13 @@ All three modules share:
 ```
 commands/lean/check_cmd.py   → lean_runner.py
 commands/lean/init_cmd.py    → lean_runner.py
+commands/lean/import_cmd.py  → lean_runner.py
 commands/lean/formalize_cmd.py → formalizer.py
+commands/lean/batch_formalize.py → formalizer.py
 commands/lean/prove_cmd.py   → aristotle.py
-core/loop/verifier.py        → lean_runner.py
+core/loop/service.py         → formalizer.py, lean_runner.py
+core/loop/runner.py          → lean_runner.py (type-checking import)
+mcp/server.py                → formalizer.py, lean_runner.py
 ```
 
 All imports come from the same consumer domain (`commands/lean/` and `core/loop/`).
@@ -53,7 +57,7 @@ Create `core/lean/` subpackage:
 
 ```
 core/lean/
-├── __init__.py          # Re-exports for compatibility
+├── __init__.py
 ├── runner.py            # lean_runner.py moved
 ├── formalizer.py        # formalizer.py moved
 ├── aristotle.py         # aristotle.py moved
@@ -64,22 +68,17 @@ core/lean/
 
 1. Create `core/lean/` directory with `__init__.py`
 2. Move the three modules into the subpackage
-3. Add backward-compatible re-exports in `__init__.py`:
-   ```python
-   from erdos.core.lean.runner import LeanRunner, LeanRunnerError, ...
-   from erdos.core.lean.formalizer import generate_skeleton
-   from erdos.core.lean.aristotle import run_aristotle_prove, ...
-   ```
-4. Update all imports in `commands/lean/*.py` and `core/loop/verifier.py`
-5. Update CLAUDE.md to document `core/lean/` as a bounded context
-6. Run `make ci` to verify
+3. Update all imports in `src/erdos/` + `tests/` to use the new canonical paths.
+4. Delete the old `core/*.py` modules (no compatibility shims; this repo is greenfield and already removed other shims in DEBT-061).
+5. Update CLAUDE.md to document `core/lean/` as a bounded context.
+6. Run `make ci` to verify.
 
 ## Acceptance Criteria
 
 - [ ] `core/lean/` directory created with modules moved
 - [ ] All imports in `commands/lean/` updated to canonical paths
-- [ ] `core/loop/verifier.py` updated
-- [ ] Backward-compatible re-exports in `core/lean/__init__.py`
+- [ ] `core/loop/service.py` and `core/loop/runner.py` updated
+- [ ] No remaining imports of `erdos.core.(lean_runner|formalizer|aristotle)`
 - [ ] CLAUDE.md updated to list `core/lean/` as bounded context
 - [ ] `make ci` passes
 
