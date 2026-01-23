@@ -362,12 +362,25 @@ class TestGenerateBatchId:
         assert len(parts[2]) == 6  # HHMMSS
         assert len(parts[3]) == 6  # ffffff (microseconds)
 
-    def test_uniqueness(self) -> None:
+    def test_uniqueness(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test batch IDs are unique across calls."""
+        from datetime import UTC, datetime, timedelta
+
+        from erdos.core.batch import persistence
+
+        class FakeDateTime:
+            _now = datetime(2026, 1, 1, tzinfo=UTC)
+
+            @classmethod
+            def now(cls, tz=None):
+                current = cls._now
+                cls._now = current + timedelta(microseconds=1)
+                return current
+
+        monkeypatch.setattr(persistence, "datetime", FakeDateTime)
+
         ids = {generate_batch_id() for _ in range(10)}
-        # May have duplicates if called in same second, but unlikely
-        # At minimum should have at least one unique ID
-        assert len(ids) >= 1
+        assert len(ids) == 10
 
 
 class TestBatchStatePersistence:
