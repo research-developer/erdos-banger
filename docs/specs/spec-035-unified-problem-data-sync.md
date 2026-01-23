@@ -12,12 +12,13 @@
 
 ## Summary
 
-Unify the three Erdős problem data sources into a single, coherent pipeline:
+Unify the four Erdős problem data sources into a single, coherent pipeline:
 
 | Source | Has | Missing |
 |--------|-----|---------|
 | **teorth/erdosproblems** (submodule) | Status, metadata | Statements, proofs |
 | **google-deepmind/formal-conjectures** | Lean statements | Status, proofs |
+| **erdosproblems.com website** | Statements, LaTeX, tags, refs | API |
 | **erdosproblems.com forum** | Proofs (as links) | API |
 
 **Current gap:** When problem #347 was solved (2026-01-21), we didn't know:
@@ -105,8 +106,9 @@ src/erdos/core/
     __init__.py
     submodule.py        # Git submodule operations
     statements.py       # DeepMind formal-conjectures sync
+    website.py          # Website data extraction (statements, LaTeX, tags)
     proofs.py           # Forum proof link extraction + verification
-    models.py           # SyncStatus, ProofProvenance, etc.
+    models.py           # SyncStatus, ProofProvenance, WebsiteProblemData, etc.
     service.py          # Orchestrates all sync operations
 ```
 
