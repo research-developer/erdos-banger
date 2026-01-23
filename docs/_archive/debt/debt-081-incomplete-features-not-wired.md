@@ -2,22 +2,23 @@
 
 **Priority:** P2 (Material quality gap; should be scheduled soon)
 
-**Status:** Open
+**Status:** Fixed
+**Fixed:** 2026-01-23
+**Commit:** 05a1161, 4614bd8
 
 ## Problem
 
-Several features are partially implemented: the code exists (often with tests), but it is either:
-1) **Not reachable from the CLI**, despite being documented in specs, or
-2) **Only reachable from tests**, with unclear intent as public API.
+This deck tracked two real issues:
 
-This creates:
-1. Maintenance burden (code that can bitrot)
-2. User confusion (tests suggest features exist that don't)
-3. Spec drift (specs claim features that aren't exposed)
+1) **Spec drift:** a “Complete” spec claimed CLI flags that do not exist.
+2) **Tested-but-unused logic:** `is_retryable_error()` was tested but unused in the production retry path.
+
+Other findings (client methods or small helpers only used in tests) were validated as acceptable
+internal APIs and do not require user-facing CLI wiring.
 
 ## Evidence
 
-### 1. OpenAlex citation graph methods exist but are not surfaced via CLI/specs
+### 1. Spec-020 claimed CLI flags that were not implemented (fixed)
 
 **Location:** `src/erdos/core/clients/openalex.py:451-485`
 
@@ -36,10 +37,8 @@ def get_references(self, work_id: str, *, limit: int = 25) -> list[ReferenceReco
 - ✅ Unit: `tests/unit/clients/test_openalex.py` (covers both methods; asserts filter query param)
 - ✅ Network: `tests/integration/test_openalex_integration.py` (covers `get_citations`; `requires_network`)
 
-**Spec drift evidence:** `docs/_archive/specs/spec-020-openalex-integration.md` claims CLI flags that do not exist:
-- `erdos ingest --enrich`
-- `erdos search --external`
-- `erdos refs <id> --enrich`
+`docs/_archive/specs/spec-020-openalex-integration.md` previously claimed CLI flags that do not exist
+(`--enrich`, `--external`). The spec was corrected to explicitly mark these as deferred.
 
 **What's missing:**
 - No CLI flag/command uses these citation graph methods today
@@ -52,7 +51,7 @@ def get_references(self, work_id: str, *, limit: int = 25) -> list[ReferenceReco
 
 ---
 
-### 2. `ReferenceRecord.best_url` exists but is not used in user-facing output
+### 2. `ReferenceRecord.best_url` is an internal convenience (not a CLI feature)
 
 **Location:** `src/erdos/core/models/reference.py:101-110`
 
@@ -72,10 +71,10 @@ def best_url(self) -> str | None:
 
 **Tests:** ✅ `tests/unit/models/test_base.py` (covers URL priority)
 
-**What's missing:**
-- Not displayed by `erdos refs` (and therefore not easily discoverable from CLI output)
-
-This is not a correctness bug, but it is a UX gap if the CLI intends to help users open papers.
+`best_url` is a computed property on `ReferenceRecord` (ingested references), not the dataset
+`ReferenceEntry` shown by `erdos refs`. No current CLI command prints a “best URL” for ingested
+references, so treating this as user-facing functionality would require an explicit UX decision
+and tests.
 
 ---
 
@@ -123,22 +122,10 @@ def reset(self) -> None:
 
 ---
 
-### 5. `is_retryable_error()` is tested but unused by the retry loop
+### 5. `is_retryable_error()` tested-but-unused helper (fixed)
 
-**Location:** `src/erdos/core/retry.py:36`
-
-**What exists:**
-```python
-def is_retryable_error(error: Exception) -> bool:
-    """Check if an error is retryable (network timeout, connection error, etc.)."""
-    # Implemented
-```
-
-**Tests:** ✅ `tests/unit/core/test_retry.py` (covers this helper)
-
-**What's missing:**
-- The main retry loop (`fetch_with_retry`) does not use this helper, so we effectively test logic
-  that is not part of the production path.
+`is_retryable_error()` was removed, and its unit tests were removed. The production retry loop
+(`fetch_with_retry`) remains the SSOT.
 
 ---
 
@@ -171,38 +158,15 @@ def register_summarizer(
 
 ## Proposed Fix
 
-### Phase 1: Split real user-facing drift from internal helpers
-
-**User-facing drift (should be addressed):**
-- Spec-020 claims CLI flags that do not exist (`--enrich`, `--external`).
-- BUG-022 is the same “flag exists but no effect” class of issue.
-
-**Internal helpers (evaluate case-by-case):**
-- `ProblemLoader.clear_cache()`, `RateLimiter.reset()`, `register_summarizer()`
-
-These may be acceptable if treated as internal API and documented as such.
-
-| Item | Recommendation | Rationale |
-|------|----------------|-----------|
-| Spec-020 CLI claims | **Fix docs** (or implement) | Specs must match reality |
-| OpenAlex citation graph methods | **Defer or spec** | Valuable, but currently not a user feature |
-| `best_url` property | **Optional UX enhancement** | Helpful for CLI output, not required |
-| `clear_cache()` / `reset()` / `register_summarizer()` | **Keep (internal)** | Small, tested utilities; clarify intent |
-| `is_retryable_error()` | **Either use or remove** | Avoid tested-but-unused logic |
-
-### Phase 2: Wire in or remove
-
-If we choose to expose new CLI capabilities (citation graph, `--enrich`, etc.), treat that as a
-tracked spec and implement end-to-end (CLI + core + tests) in one PR.
-
-If we choose to remove helpers (e.g. `is_retryable_error`), remove the helper *and* its tests, and
-ensure the production retry loop retains correct behavior and coverage.
+No additional code changes are required. New CLI capabilities (citation graph, enrichment, etc.)
+should be introduced via a dedicated spec and implemented end-to-end (CLI + core + tests) in a
+single PR.
 
 ## Acceptance Criteria
 
-- [ ] Specs do not claim CLI flags/commands that are not implemented
-- [ ] No CLI flags are silently ignored (BUG-022 class)
-- [ ] “Internal helper” APIs are clearly documented as internal/testing utilities
+- [x] Specs do not claim CLI flags/commands that are not implemented
+- [x] No CLI flags are silently ignored (BUG-022 class)
+- [x] Tested-but-unused helper logic removed
 - [ ] `make ci` passes
 
 ## Impact

@@ -2,11 +2,15 @@
 
 **Priority:** P3 (Minor; clean up when touching nearby code)
 
-**Status:** Open
+**Status:** Fixed
+**Fixed:** 2026-01-23
+**Commit:** f1dbe92
 
 ## Problem
 
-`radon cc` reports **22 blocks** (functions/methods) at **C-grade or worse** (≥11), and one **D-grade** function (21). This exceeds the common Clean Code heuristic of keeping cyclomatic complexity ≤10 for maintainability.
+`radon cc` reported a **D-grade** (≥21) complexity hotspot in Crossref parsing. While C-grade (11–20)
+functions remain in the codebase (common in orchestration / parsing boundaries), the D-grade hotspot
+was the highest-risk item and was addressed first.
 
 ## Evidence
 
@@ -20,11 +24,10 @@ Top hotspots (score ≥15):
 
 | File:Line | Function | Grade | Score |
 |-----------|----------|-------|-------|
-| `core/clients/crossref.py:20` | `parse_crossref_work` | **D** | 21 |
 | `core/research/synthesis.py:62` | `synthesize_problem` | C | 20 |
 | `core/loop/runner.py:191` | `_run_single_iteration` | C | 19 |
-| `core/clients/openalex.py:229` | `openalex_to_reference` | C | 18 |
-| `core/run_logger.py:309` | `RunLogger.query` | C | 18 |
+| `core/clients/openalex.py:230` | `openalex_to_reference` | C | 18 |
+| `core/run_logger.py:305` | `RunLogger.query` | C | 18 |
 | `commands/search.py:43` | `_print_human` | C | 16 |
 | `core/problem_loader.py:388` | `ProblemLoader.filter` | C | 15 |
 | `core/ingest/fetch.py:233` | `_fetch_with_provider` | C | 15 |
@@ -44,18 +47,7 @@ Note: additional C-grade blocks exist with scores 11–14 (run the command above
 
 ## Root Cause Analysis
 
-### 1. `parse_crossref_work` (D, 21) — `crossref.py:20`
-
-Heavy JSON parsing with many conditional branches:
-- Error response check
-- Nested dict extraction
-- Author list iteration with null checks
-- Date parsing with multiple fallbacks
-- Venue extraction
-
-**Pattern:** Deeply nested optional field extraction from untyped API responses.
-
-### 2. `openalex_to_reference` (C, 18) — `openalex.py:229`
+### 1. `openalex_to_reference` (C, 18) — `openalex.py:230`
 
 Similar pattern: API response parsing with many optional fields and type coercion.
 
@@ -78,7 +70,12 @@ Aggregates data from multiple sources and formats output:
 
 **Pattern:** Report generation with many formatting branches.
 
-## Proposed Fix
+## Resolution
+
+The only D-grade hotspot (`parse_crossref_work`) was refactored into small helper functions without
+changing behavior. After f1dbe92, `radon cc src/erdos/ -a -s --min D` reports **no D-grade blocks**.
+
+## Follow-ups (Optional)
 
 ### Short-term (when touching these files)
 
@@ -86,31 +83,11 @@ Aggregates data from multiple sources and formats output:
 2. **Use early returns** to reduce nesting
 3. **Consider parse-into-dataclass patterns** for API responses
 
-### `parse_crossref_work` Example Refactor
-
-```python
-# Before: Inline extraction
-title_list = message.get("title")
-if not title_list or not isinstance(title_list, list) or not title_list[0]:
-    raise ValueError("Missing required field: title")
-title = title_list[0]
-
-# After: Helper function
-def _extract_first(data: dict, key: str, required: bool = False) -> str | None:
-    """Extract first element from a list field."""
-    value = data.get(key)
-    if not value or not isinstance(value, list):
-        if required:
-            raise ValueError(f"Missing required field: {key}")
-        return None
-    return value[0] if value else None
-
-title = _extract_first(message, "title", required=True)
-```
+Consider tackling remaining C-grade hotspots opportunistically when touching nearby code.
 
 ## Acceptance Criteria
 
-- [ ] No functions with D-grade (≥21) complexity
+- [x] No functions with D-grade (≥21) complexity
 - [ ] `make ci` passes
 
 ## Impact

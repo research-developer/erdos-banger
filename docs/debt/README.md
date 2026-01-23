@@ -14,10 +14,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-| ID | Title | Priority | Status | Commit |
-|----|-------|----------|--------|--------|
-| DEBT-080 | High cyclomatic complexity functions | P3 | Open | |
-| DEBT-081 | Incomplete features — tested but never wired in | P2 | Open | |
+*None currently active.*
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -109,6 +106,8 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-077 | CLI helper duplication across commands (DRY) | P3 | Fixed | 2ccd49d |
 | DEBT-078 | Test organization — misclassified integration test | P4 | Fixed | 596b5c4 |
 | DEBT-079 | Dead code in `literature_paths.py` (SPEC-019 stubs) | P3 | Resolved | 1c8889e |
+| DEBT-080 | High cyclomatic complexity functions | P3 | Fixed | f1dbe92 |
+| DEBT-081 | Incomplete features — tested but never wired in | P2 | Fixed | 05a1161,4614bd8 |
 
 **Next Debt ID:** DEBT-082
 
