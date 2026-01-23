@@ -16,7 +16,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | Status | Commit |
 |----|-------|----------|--------|--------|
-| *None* | | | | |
+| DEBT-075 | Remove remaining env fallbacks outside `AppConfig` | P3 | Open | |
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -104,7 +104,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-073 | Magic numbers and hardcoded values | P3 | Fixed | 0cf5747 |
 | DEBT-074 | Test quality issues | P3 | Fixed | e807fbf |
 
-**Next Debt ID:** DEBT-075
+**Next Debt ID:** DEBT-076
 
 ### Archived Debt Decks
 
