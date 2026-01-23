@@ -23,8 +23,12 @@ from erdos.commands.show import get_problem as show_get_problem
 from erdos.core.ask import ask_question as core_ask_question
 from erdos.core.config import DEFAULT_INDEX_PATH, AppConfig
 from erdos.core.exit_codes import ExitCode
-from erdos.core.formalizer import FormalizerError, generate_skeleton
-from erdos.core.lean_runner import LeanRunner, LeanRunnerError
+from erdos.core.lean import (
+    FormalizerError,
+    LeanRunner,
+    LeanRunnerError,
+    generate_skeleton,
+)
 from erdos.core.models import CLIOutput
 from erdos.core.problem_loader import ProblemLoader
 from erdos.core.run_logger import RunLogger

@@ -6,8 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from erdos.core import formalizer
-from erdos.core.formalizer import FormalizerError, generate_skeleton
+from erdos.core.lean import FormalizerError, formalizer, generate_skeleton
 from erdos.core.models import ProblemRecord, ProblemStatus
 
 

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from erdos.core.lean_runner import LeanEnvironment, LeanRunner, LeanRunnerError
+from erdos.core.lean import LeanEnvironment, LeanRunner, LeanRunnerError
 
 
 if TYPE_CHECKING:

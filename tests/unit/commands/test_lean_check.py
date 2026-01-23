@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from erdos.commands.lean.check_cmd import check_lean_file
-from erdos.core.lean_runner import LeanRunner
+from erdos.core.lean import LeanRunner
 from erdos.core.models import LeanCheckResult
 
 

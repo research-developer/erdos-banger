@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from erdos.core.lean_runner import LeanRunner
+from erdos.core.lean import LeanRunner
 
 
 lean_available = shutil.which("lean") is not None

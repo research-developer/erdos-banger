@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from erdos.core.aristotle import (
+from erdos.core.lean import (
     AristotleConfig,
     AristotleError,
     AristotleResult,

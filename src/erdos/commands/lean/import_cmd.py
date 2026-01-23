@@ -23,7 +23,7 @@ from erdos.core.formal_conjectures import (
     load_provenance,
     save_provenance,
 )
-from erdos.core.lean_runner import LeanRunner, LeanRunnerError
+from erdos.core.lean import LeanRunner, LeanRunnerError
 from erdos.core.models import CLIOutput
 from erdos.core.timing import measure_time_ms
 

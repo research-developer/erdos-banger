@@ -17,8 +17,7 @@ import math
 from typing import TYPE_CHECKING
 
 from erdos.core.exit_codes import ExitCode
-from erdos.core.formalizer import generate_skeleton
-from erdos.core.lean_runner import LeanRunner, LeanRunnerError
+from erdos.core.lean import LeanRunner, LeanRunnerError, generate_skeleton
 from erdos.core.loop.result import LoopResult, LoopStatus
 from erdos.core.loop.runner import run_loop
 from erdos.core.models import CLIOutput

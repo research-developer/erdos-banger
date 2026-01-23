@@ -23,7 +23,7 @@ from erdos.core.loop.verifier import (
 
 
 if TYPE_CHECKING:
-    from erdos.core.lean_runner import LeanRunner
+    from erdos.core.lean import LeanRunner
     from erdos.core.loop.config import LoopConfig
     from erdos.core.models import LeanCheckResult, ProblemRecord
     from erdos.core.ports import LLMExecute

@@ -70,6 +70,7 @@ src/erdos/
 │   ├── pdf/            # PDF conversion (Marker, pdfplumber)
 │   ├── batch/          # Batch operations (filters/state/runner)
 │   ├── formal_conjectures/ # Upstream sync + local provenance
+│   ├── lean/           # Lean tooling (compile, skeletons, prover)
 │   ├── ports.py        # Protocol “ports” for dependency inversion
 │   ├── context.py      # AppContext composition root (wiring concrete deps)
 │   └── …               # config/constants/exit codes/retry/logging/etc.
@@ -166,6 +167,7 @@ CI enforces LOC (lines of code) thresholds to prevent god-file regressions:
 - `clients/` - HTTP client adapters (arXiv, Crossref, OpenAlex APIs)
 - `formal_conjectures/` - Lean formalization upstream sync (provenance, fetch, local)
 - `ingest/` - Reference ingestion (fetch, manifest models, service)
+- `lean/` - Lean tooling (compilation, skeleton generation, prover wrappers)
 - `loop/` - Iterative proof loop (config, verifier, patch validator, runner, prompt)
 - `models/` - Pydantic domain models (ProblemRecord, ReferenceRecord, CLIOutput, etc.)
 - `pdf/` - PDF conversion utilities (Marker, pdfplumber)
@@ -177,7 +179,6 @@ CI enforces LOC (lines of code) thresholds to prevent god-file regressions:
 - `context.py`, `config.py` - AppContext composition root and centralized configuration
 - `constants.py`, `timing.py`, `exit_codes.py` - Shared utilities
 - `problem_loader.py`, `literature_paths.py` - Data loading and path conventions
-- `lean_runner.py`, `formalizer.py`, `aristotle.py` - Lean 4 compilation, skeleton generation, and Aristotle prover
 - `rate_limiter.py`, `retry.py` - HTTP resilience utilities
 - `run_logger.py`, `run_logger_summaries.py` - Execution logging
 

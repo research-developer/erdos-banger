@@ -10,9 +10,9 @@ import typer
 
 from erdos.commands.lean.common import print_human
 from erdos.commands.presenter import exit_with_result
-from erdos.core.aristotle import AristotleError, run_aristotle_prove_from_file
 from erdos.core.config import AppConfig
 from erdos.core.exit_codes import ExitCode
+from erdos.core.lean import AristotleError, run_aristotle_prove_from_file
 from erdos.core.models import CLIOutput
 from erdos.core.timing import measure_time_ms
 
