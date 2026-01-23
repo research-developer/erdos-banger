@@ -37,12 +37,6 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - [ ] [SPEC-035] (4/5) Implement forum proof-link extraction + unit tests (HTML fixtures); write `data/sync_cache/proofs/<id>/links.json`
 - [ ] [SPEC-035] (5/5) Implement `erdos sync proof <id> --verify` (opt-in) + provenance/log writing + tests (offline fixtures + `requires_network` smoke)
 
-### SPEC-032: Multi-Model Routing (External Command)
-
-- [ ] [SPEC-032] (1/3) Add task→LLM-command router (`src/erdos/core/llm/*`) + unit tests (no CLI wiring)
-- [ ] [SPEC-032] (2/3) Wire router into `erdos ask` default LLM command selection + tests (preserve `--llm-cmd` override)
-- [ ] [SPEC-032] (3/3) Wire router into `erdos loop run` default LLM command selection + tests (preserve `--llm-cmd` override)
-
 ### SPEC-029: Exa Research API Integration
 
 - [ ] [SPEC-029] (1/2) Implement `ExaClient` + caching + unit tests (no network; use `responses`)
@@ -59,16 +53,22 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - [ ] [SPEC-031] (2/3) Implement `erdos refs zbmath` + tests (offline); add `requires_network` smoke test
 - [ ] [SPEC-031] (3/3) Add `erdos search --msc` mode + tests (offline)
 
-### SPEC-034: Progress Dashboard
+### SPEC-032: Multi-Model Routing (External Command)
 
-- [ ] [SPEC-034] (1/2) Implement dashboard aggregation (`src/erdos/core/dashboard/data.py`) + unit tests (JSON snapshot contract)
-- [ ] [SPEC-034] (2/2) Implement `erdos dashboard` UI (Rich) + tests; ensure `erdos --json dashboard` is non-interactive
+- [ ] [SPEC-032] (1/3) Add task→LLM-command router (`src/erdos/core/llm/*`) + unit tests (no CLI wiring)
+- [ ] [SPEC-032] (2/3) Wire router into `erdos ask` default LLM command selection + tests (preserve `--llm-cmd` override)
+- [ ] [SPEC-032] (3/3) Wire router into `erdos loop run` default LLM command selection + tests (preserve `--llm-cmd` override)
 
 ### SPEC-033: Lean Copilot Integration
 
 - [ ] [SPEC-033] (1/3) Add optional deps for copilot server (FastAPI/uvicorn) per spec + unit test scaffolding
 - [ ] [SPEC-033] (2/3) Implement minimal `erdos lean copilot serve` (`/generate`) using SPEC-032 routing + unit tests (offline)
 - [ ] [SPEC-033] (3/3) Implement `/encode` (embeddings) with a clear degraded mode + unit tests
+
+### SPEC-034: Progress Dashboard
+
+- [ ] [SPEC-034] (1/2) Implement dashboard aggregation (`src/erdos/core/dashboard/data.py`) + unit tests (JSON snapshot contract)
+- [ ] [SPEC-034] (2/2) Implement `erdos dashboard` UI (Rich) + tests; ensure `erdos --json dashboard` is non-interactive
 
 ---
 

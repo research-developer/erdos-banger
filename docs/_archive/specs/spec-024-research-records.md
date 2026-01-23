@@ -176,12 +176,12 @@ erdos research task update PROBLEM_ID TASK_ID [--status STATUS] [--priority PRIO
 
 ```text
 erdos research attempt log PROBLEM_ID --result RESULT --summary TEXT
-                                     [--lean-file PATH] [--loop-log PATH]
+                                     [--lean-file PATH] [--loop-run-log PATH]
 
 erdos research attempt list PROBLEM_ID [--result RESULT]
 ```
 
-Note: `--loop-log` populates `artifacts.loop_run_log` in the stored record.
+Note: `--loop-run-log` (alias: `--loop-log`) populates `artifacts.loop_run_log` in the stored record.
 
 ### Maintenance
 

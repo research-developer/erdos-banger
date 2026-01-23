@@ -356,7 +356,7 @@ Primary entrypoints:
 - `erdos research open 6` → prints the path
 - `erdos research note 6 "..."` → appends to `SCRATCHPAD.md`
 - `erdos research lead add 6 --title "..." [--doi ...|--arxiv-id ...|--url ...] [--priority high] [--notes "..."]` → writes a new file under `leads/`
-- `erdos research attempt log 6 --result failed --summary "..." [--lean-file ...] [--loop-log logs/loop/...jsonl]` → writes a new file under `attempts/`
+- `erdos research attempt log 6 --result failed --summary "..." [--lean-file ...] [--loop-run-log logs/loop/...jsonl]` → writes a new file under `attempts/`
 - `erdos research hypothesis add 6 --statement "..."` → writes a new file under `hypotheses/`
 - `erdos research task add 6 --title "..." [--priority high]` → writes a new file under `tasks/`
 - `erdos research status 6` → prints file presence + record counts (v3; minimal dashboard)

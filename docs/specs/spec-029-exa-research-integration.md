@@ -81,7 +81,7 @@ erdos research exa 124 "Techniques for graph coloring bounds" --save-leads
 
 ### Output (Default)
 
-```
+```text
 Query: "What approaches have been tried for sum-free sets?"
 
 Sources (3):
@@ -144,7 +144,7 @@ Synthesis:
 
 ### Module Structure
 
-```
+```text
 src/erdos/core/
   clients/
     exa.py              # HTTP client for Exa API
@@ -204,7 +204,7 @@ def exa_to_leads(
 
 Cache Exa responses to avoid redundant API calls:
 
-```
+```text
 literature/cache/exa/
   <query_hash>.json    # Cached response
 ```
