@@ -13,8 +13,11 @@ The `erdos ingest` command advertises `--pdf`, `--pdf-converter`, and `--use-llm
 ## Steps to Reproduce
 
 ```bash
-# This should convert PDFs for non-arXiv references
-uv run erdos ingest 6 --pdf --use-llm
+# Pick a problem that includes at least one DOI-only reference where the chosen
+# metadata source can supply an open-access `pdf_url` (e.g., via OpenAlex).
+#
+# Example (dataset-dependent):
+uv run erdos ingest 316 --source openalex --pdf
 
 # Observe: No PDF conversion occurs
 # The flags are accepted but have no effect
@@ -26,7 +29,7 @@ When `--pdf` is passed:
 1. Non-arXiv references with open-access PDFs should be downloaded to `literature/cache/pdf/{reference_id}/paper.pdf`
 2. PDFs should be converted using Marker (or pdfplumber)
 3. Extracted text should be saved to `literature/extracts/pdf/{reference_id}/fulltext.md`
-4. The extracted text should be indexed for search
+4. The manifest entry should reflect cached/extracted state (cache/extract paths)
 
 ## Actual Behavior
 
@@ -104,10 +107,6 @@ These are **NOT dead code to be removed** — they are part of the incomplete im
    - Download to `get_pdf_cache_path(reference_id)`
    - Convert using `convert_pdf()` from `core/pdf/converter.py`
    - Save to `get_pdf_extract_path(reference_id)`
-
-### Phase 2: Index extracted text
-
-4. Update search indexing to include PDF extracts alongside arXiv source text
 
 ## Workaround
 

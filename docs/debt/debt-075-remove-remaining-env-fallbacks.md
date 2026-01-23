@@ -25,10 +25,12 @@ they should not be used by new call sites:
 
 - `src/erdos/core/problem_loader.py` (`ProblemLoader.from_default()`)
 - `src/erdos/core/search/facade.py` (`SearchIndex.from_default()`)
-- `src/erdos/core/run_logger.py` (`get_run_logger()`)
+- `src/erdos/core/run_logger.py` (`RunLogger.__init__()`, `get_run_logger()`)
 - `src/erdos/core/providers/crossref.py` (`CrossrefProvider.from_env()`)
-- `src/erdos/core/clients/openalex.py` (`OpenAlexConfig.from_env()`)
+- `src/erdos/core/providers/openalex.py` (`OpenAlexProvider.from_env()`)
+- `src/erdos/core/clients/openalex.py` (`OpenAlexConfig.from_env()`, `OpenAlexClient.__init__()`)
 - `src/erdos/core/ingest/app.py` (`get_repo_root()`, `prepare_mailto()`)
+- `src/erdos/core/aristotle.py` (`validate_aristotle_config()` reads `ARISTOTLE_API_KEY` / `ERDOS_ARISTOTLE_COMMAND`)
 
 Intentional non-`AppConfig` env usage that should remain (external tooling):
 
