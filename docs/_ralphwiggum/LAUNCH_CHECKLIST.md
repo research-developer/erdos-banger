@@ -117,6 +117,16 @@ watch -n 10 'git log --oneline -10'
 watch -n 10 'head -80 PROGRESS.md'
 ```
 
+Recommended: run the watchdog in a separate pane (fails fast on hangs / guardrail errors):
+
+```bash
+./scripts/ralph-watchdog.sh
+```
+
+If the watchdog exits non-zero, inspect:
+- `logs/ralph/watchdog.log`
+- the most recent `logs/ralph/iteration_*.log`
+
 If the loop appears stuck:
 
 ```bash
