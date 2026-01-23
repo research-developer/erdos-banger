@@ -1,10 +1,10 @@
 # Bug: `erdos ingest` ignores `--mailto`/`--timeout` for OpenAlex requests
 
 **Priority:** P2
-**Status:** Fixed (uncommitted)
+**Status:** Fixed
 **Found:** 2026-01-23
 **Fixed:** 2026-01-23
-**Commit:** (pending)
+**Commit:** 853dde8
 
 ## Description
 

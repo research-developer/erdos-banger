@@ -12,9 +12,7 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 ## Active Bugs
 
-| ID | Title | Priority | Status |
-|----|-------|----------|--------|
-| BUG-021 | `erdos ingest` ignores `--mailto`/`--timeout` for OpenAlex requests | P2 | Fixed (uncommitted) |
+*None currently active.*
 
 *Note: BUG-013 was invalidated as a false positive. BUG-015 and BUG-017 were review findings that were invalidated before standalone bug decks were created.*
 
@@ -42,6 +40,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-018 | OpenAlex client `get_by_arxiv()` broken + wrong test DOIs | P1 | Fixed | b2dcdfe |
 | BUG-019 | `erdos convert --format` is a no-op | P2 | Fixed | b2dcdfe |
 | BUG-020 | OpenAlex `get_by_arxiv()` returns None for real arXiv IDs | P1 | Fixed | fe34ca1 |
+| BUG-021 | `erdos ingest` ignores `--mailto`/`--timeout` for OpenAlex requests | P2 | Fixed | 853dde8 |
 
 **Next Bug ID:** BUG-022
 
@@ -68,6 +67,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/bug-018-openalex-client-broken.md`
 - `docs/_archive/bugs/bug-019-convert-format-no-op.md`
 - `docs/_archive/bugs/bug-020-openalex-get-by-arxiv-returns-none.md`
+- `docs/_archive/bugs/bug-021-ingest-openalex-mailto-timeout-ignored.md`
 
 ## Bug Priority Definitions
 
