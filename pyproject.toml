@@ -225,6 +225,9 @@ filterwarnings = [
 source = ["src"]
 branch = true
 parallel = true
+omit = [
+    "src/erdos/mcp/*",
+]
 # MCP is tested in dedicated CI job (test-mcp) with --extra mcp
 
 [tool.coverage.report]
