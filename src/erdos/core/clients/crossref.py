@@ -16,6 +16,71 @@ from erdos.core.retry import fetch_with_retry
 
 logger = logging.getLogger(__name__)
 
+_CrossrefMessage = dict[str, object]
+
+
+def _require_crossref_message(payload: dict[str, object]) -> _CrossrefMessage:
+    """Extract and validate the Crossref `message` object."""
+    status = payload.get("status")
+    if status == "error":
+        message = payload.get("message", "Unknown error")
+        raise ValueError(f"Crossref error: {message}")
+
+    message = payload.get("message")
+    if not message or not isinstance(message, dict):
+        raise ValueError("Invalid Crossref response: missing 'message' object")
+    return message
+
+
+def _extract_title(message: _CrossrefMessage) -> object:
+    """Extract the required title field from Crossref message."""
+    title_list = message.get("title")
+    if not title_list or not isinstance(title_list, list) or not title_list[0]:
+        raise ValueError("Missing required field: title")
+    return title_list[0]
+
+
+def _extract_authors(message: _CrossrefMessage) -> list[str]:
+    """Extract author display names from Crossref message."""
+    authors: list[str] = []
+    author_list = message.get("author", [])
+    if not isinstance(author_list, list):
+        return authors
+
+    for author in author_list:
+        if not isinstance(author, dict):
+            continue
+        given = author.get("given", "")
+        family = author.get("family", "")
+        if family:
+            authors.append(f"{given} {family}".strip())
+    return authors
+
+
+def _extract_year(message: _CrossrefMessage) -> object | None:
+    """Extract publication year from Crossref message (best-effort)."""
+    published_print = message.get("published-print")
+    if not published_print or not isinstance(published_print, dict):
+        return None
+
+    date_parts = published_print.get("date-parts")
+    if not date_parts or not isinstance(date_parts, list):
+        return None
+
+    first = date_parts[0] if date_parts else None
+    if not first or not isinstance(first, list):
+        return None
+
+    return first[0] if first else None
+
+
+def _extract_venue(message: _CrossrefMessage) -> object | None:
+    """Extract the container title (journal/venue) from Crossref message."""
+    container_title = message.get("container-title")
+    if not container_title or not isinstance(container_title, list):
+        return None
+    return container_title[0] if container_title else None
+
 
 def parse_crossref_work(payload: dict[str, object], *, doi: str) -> ReferenceRecord:
     """Parse Crossref work JSON into a ReferenceRecord.
@@ -30,58 +95,18 @@ def parse_crossref_work(payload: dict[str, object], *, doi: str) -> ReferenceRec
     Raises:
         ValueError: If response is an error or missing required fields.
     """
-    # Check for error response
-    status = payload.get("status")
-    if status == "error":
-        message = payload.get("message", "Unknown error")
-        raise ValueError(f"Crossref error: {message}")
-
-    # Extract the message object (the actual work data)
-    message = payload.get("message")
-    if not message or not isinstance(message, dict):
-        raise ValueError("Invalid Crossref response: missing 'message' object")
-
-    # Extract title (required)
-    title_list = message.get("title")
-    if not title_list or not isinstance(title_list, list) or not title_list[0]:
-        raise ValueError("Missing required field: title")
-    title = title_list[0]
-
-    # Extract authors (optional)
-    authors = []
-    author_list = message.get("author", [])
-    if isinstance(author_list, list):
-        for author in author_list:
-            if isinstance(author, dict):
-                given = author.get("given", "")
-                family = author.get("family", "")
-                if family:
-                    # Format as "Given Family"
-                    name = f"{given} {family}".strip()
-                    authors.append(name)
-
-    # Extract year (optional) from published-print
-    year = None
-    published_print = message.get("published-print")
-    if published_print and isinstance(published_print, dict):
-        date_parts = published_print.get("date-parts")
-        if date_parts and isinstance(date_parts, list) and len(date_parts) > 0:
-            year_parts = date_parts[0]
-            if isinstance(year_parts, list) and len(year_parts) > 0:
-                year = year_parts[0]
-
-    # Extract venue (optional) from container-title
-    venue = None
-    container_title = message.get("container-title")
-    if container_title and isinstance(container_title, list) and container_title:
-        venue = container_title[0]
+    message = _require_crossref_message(payload)
+    title = _extract_title(message)
+    authors = _extract_authors(message)
+    year = _extract_year(message)
+    venue = _extract_venue(message)
 
     return ReferenceRecord(
         doi=doi,
-        title=title,
+        title=str(title),
         authors=authors,
-        year=year,
-        venue=venue,
+        year=int(year) if isinstance(year, int) else None,
+        venue=str(venue) if isinstance(venue, str) and venue else None,
         source="crossref",
     )
 
