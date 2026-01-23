@@ -22,6 +22,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 | DEBT-078 | Test organization — misclassified integration test | P4 | Open | |
 | DEBT-079 | Dead code in `literature_paths.py` (SPEC-019 stubs) | P3 | Superseded | BUG-022 |
 | DEBT-080 | High cyclomatic complexity functions | P3 | Open | |
+| DEBT-081 | Incomplete features — tested but never wired in | P2 | Open | |
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -109,7 +110,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-073 | Magic numbers and hardcoded values | P3 | Fixed | 0cf5747 |
 | DEBT-074 | Test quality issues | P3 | Fixed | e807fbf |
 
-**Next Debt ID:** DEBT-081
+**Next Debt ID:** DEBT-082
 
 ### Archived Debt Decks
 
