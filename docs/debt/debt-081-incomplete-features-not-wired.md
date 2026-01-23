@@ -6,14 +6,18 @@
 
 ## Problem
 
-Several features are partially implemented: the code exists and is tested, but it's never used in production. This creates:
+Several features are partially implemented: the code exists (often with tests), but it is either:
+1) **Not reachable from the CLI**, despite being documented in specs, or
+2) **Only reachable from tests**, with unclear intent as public API.
+
+This creates:
 1. Maintenance burden (code that can bitrot)
 2. User confusion (tests suggest features exist that don't)
 3. Spec drift (specs claim features that aren't exposed)
 
 ## Evidence
 
-### 1. Citation Graph Methods — `OpenAlexClient.get_citations()` / `get_references()`
+### 1. OpenAlex citation graph methods exist but are not surfaced via CLI/specs
 
 **Location:** `src/erdos/core/clients/openalex.py:451-485`
 
@@ -24,18 +28,22 @@ def get_citations(self, work_id: str, *, limit: int = 25) -> list[ReferenceRecor
     # Fully implemented, fetches from OpenAlex API
 
 def get_references(self, work_id: str, *, limit: int = 25) -> list[ReferenceRecord]:
-    """Get works cited by this work."""
+    """Get related works via OpenAlex filter."""
     # Fully implemented, fetches from OpenAlex API
 ```
 
-**Tests:** ✅ `tests/unit/clients/test_openalex.py:447-480`, `tests/integration/test_openalex_integration.py:75-85`
+**Tests:**
+- ✅ Unit: `tests/unit/clients/test_openalex.py` (covers both methods; asserts filter query param)
+- ✅ Network: `tests/integration/test_openalex_integration.py` (covers `get_citations`; `requires_network`)
 
-**Spec:** SPEC-020 Section 8 mentions `--enrich` flag for "additional metadata (citations, concepts)"
+**Spec drift evidence:** `docs/_archive/specs/spec-020-openalex-integration.md` claims CLI flags that do not exist:
+- `erdos ingest --enrich`
+- `erdos search --external`
+- `erdos refs <id> --enrich`
 
 **What's missing:**
-- No `--enrich` flag in `erdos ingest`
-- No CLI command to query citation graph
-- These methods are **never called** in production code
+- No CLI flag/command uses these citation graph methods today
+- Specs should not claim CLI flags that are not implemented
 
 **Potential use cases:**
 - "Find papers that cite this work" for literature discovery
@@ -44,7 +52,7 @@ def get_references(self, work_id: str, *, limit: int = 25) -> list[ReferenceReco
 
 ---
 
-### 2. `ReferenceRecord.best_url` Property
+### 2. `ReferenceRecord.best_url` exists but is not used in user-facing output
 
 **Location:** `src/erdos/core/models/reference.py:101-110`
 
@@ -62,16 +70,16 @@ def best_url(self) -> str | None:
     return None
 ```
 
-**Tests:** ✅ `tests/unit/models/test_base.py:77-87`
+**Tests:** ✅ `tests/unit/models/test_base.py` (covers URL priority)
 
 **What's missing:**
-- Never used in any output formatting
-- `erdos refs` and `erdos show` don't display URLs
-- Could be useful for "click to read paper" links
+- Not displayed by `erdos refs` (and therefore not easily discoverable from CLI output)
+
+This is not a correctness bug, but it is a UX gap if the CLI intends to help users open papers.
 
 ---
 
-### 3. `ProblemLoader.clear_cache()` Method
+### 3. `ProblemLoader.clear_cache()` exists but is only used by tests
 
 **Location:** `src/erdos/core/problem_loader.py:439`
 
@@ -79,19 +87,20 @@ def best_url(self) -> str | None:
 ```python
 def clear_cache(self) -> None:
     """Clear the problem cache, forcing reload on next access."""
-    self._problems = None
+    self._cache = None
 ```
 
-**Tests:** ✅ `tests/unit/core/test_problem_loader.py:49-52`
+**Tests:** ✅ `tests/unit/core/test_problem_loader.py` (covers cache invalidation)
 
 **What's missing:**
-- No CLI command to clear cache
-- No programmatic callers
-- Could be useful for `erdos refresh` or `--no-cache` flag
+- No non-test callers today.
+
+This is likely intentional as an internal/testing helper. If we keep it, we should treat it as
+internal API (docstring clarity) rather than an “incomplete user feature”.
 
 ---
 
-### 4. `RateLimiter.reset()` and `.last_call_time`
+### 4. `RateLimiter.reset()` / `.last_call_time` are internal helpers (tested)
 
 **Location:** `src/erdos/core/rate_limiter.py:44,74`
 
@@ -107,15 +116,14 @@ def reset(self) -> None:
     self._last_call_time = None
 ```
 
-**Tests:** ❓ Not verified
+**Tests:** ✅ `tests/unit/core/test_rate_limiter.py` (covers both)
 
 **What's missing:**
-- Never called in production
-- Could be useful for testing or rate limit diagnostics
+- Not used by production code today (BatchRunner uses `sleep_if_needed()`).
 
 ---
 
-### 5. `is_retryable_error()` Function
+### 5. `is_retryable_error()` is tested but unused by the retry loop
 
 **Location:** `src/erdos/core/retry.py:36`
 
@@ -126,15 +134,15 @@ def is_retryable_error(error: Exception) -> bool:
     # Implemented
 ```
 
-**Tests:** ❓ May be tested
+**Tests:** ✅ `tests/unit/core/test_retry.py` (covers this helper)
 
 **What's missing:**
-- Not used in the actual retry logic
-- `fetch_with_retry()` has inline logic instead
+- The main retry loop (`fetch_with_retry`) does not use this helper, so we effectively test logic
+  that is not part of the production path.
 
 ---
 
-### 6. `register_summarizer()` Function
+### 6. `register_summarizer()` is tested but not used by production wiring
 
 **Location:** `src/erdos/core/run_logger_summaries.py:103`
 
@@ -142,17 +150,17 @@ def is_retryable_error(error: Exception) -> bool:
 ```python
 def register_summarizer(
     command: str,
-    summarizer: Callable[[list[RunLogEntry]], RunLogSummary],
+    summarizer: Callable[[dict[str, Any]], dict[str, Any]],
 ) -> None:
     """Register a custom summarizer for a command."""
-    _SUMMARIZER_REGISTRY[command] = summarizer
+    SUMMARIZERS[command] = summarizer
 ```
 
-**Tests:** ❓ May be tested
+**Tests:** ✅ `tests/unit/core/test_run_logger_summaries.py` (covers registering + end-to-end)
 
 **What's missing:**
-- Never called — summarizers are registered inline instead
-- OCP (Open/Closed Principle) violation: system should use this registry
+- Not called by production code today (only used in tests), but it is a valid extension hook.
+- The OCP boundary is still satisfied because `run_logger` consumes the registry via `get_summarizer()`.
 
 ---
 
@@ -163,34 +171,38 @@ def register_summarizer(
 
 ## Proposed Fix
 
-### Phase 1: Decide keep vs. remove for each
+### Phase 1: Split real user-facing drift from internal helpers
 
-| Feature | Recommendation | Rationale |
-|---------|---------------|-----------|
-| Citation graph methods | **KEEP** — wire into CLI | Valuable for literature discovery |
-| `best_url` property | **KEEP** — use in output | Improves UX for `erdos refs` |
-| `clear_cache()` | **KEEP** — add `--no-cache` flag | Useful for development |
-| `RateLimiter.reset()` | **REMOVE** or document as internal | Low value |
-| `is_retryable_error()` | **REMOVE** or use in retry.py | Currently duplicated logic |
-| `register_summarizer()` | **KEEP** — use in run_logger | OCP pattern already designed |
+**User-facing drift (should be addressed):**
+- Spec-020 claims CLI flags that do not exist (`--enrich`, `--external`).
+- BUG-022 is the same “flag exists but no effect” class of issue.
+
+**Internal helpers (evaluate case-by-case):**
+- `ProblemLoader.clear_cache()`, `RateLimiter.reset()`, `register_summarizer()`
+
+These may be acceptable if treated as internal API and documented as such.
+
+| Item | Recommendation | Rationale |
+|------|----------------|-----------|
+| Spec-020 CLI claims | **Fix docs** (or implement) | Specs must match reality |
+| OpenAlex citation graph methods | **Defer or spec** | Valuable, but currently not a user feature |
+| `best_url` property | **Optional UX enhancement** | Helpful for CLI output, not required |
+| `clear_cache()` / `reset()` / `register_summarizer()` | **Keep (internal)** | Small, tested utilities; clarify intent |
+| `is_retryable_error()` | **Either use or remove** | Avoid tested-but-unused logic |
 
 ### Phase 2: Wire in or remove
 
-For features marked KEEP:
-1. Add CLI flags or commands to expose them
-2. Document in `--help` and specs
-3. Add integration tests
+If we choose to expose new CLI capabilities (citation graph, `--enrich`, etc.), treat that as a
+tracked spec and implement end-to-end (CLI + core + tests) in one PR.
 
-For features marked REMOVE:
-1. Delete the code
-2. Delete the tests
-3. Update any specs that reference them
+If we choose to remove helpers (e.g. `is_retryable_error`), remove the helper *and* its tests, and
+ensure the production retry loop retains correct behavior and coverage.
 
 ## Acceptance Criteria
 
-- [ ] Each feature either wired in or removed
-- [ ] No tested-but-unused code remains
-- [ ] Specs updated to reflect actual implementation
+- [ ] Specs do not claim CLI flags/commands that are not implemented
+- [ ] No CLI flags are silently ignored (BUG-022 class)
+- [ ] “Internal helper” APIs are clearly documented as internal/testing utilities
 - [ ] `make ci` passes
 
 ## Impact
