@@ -14,7 +14,13 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-None.
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| DEBT-085 | Restore and wire removed constants (DEBT-082 regression) | P2 | Open |
+
+### Note on DEBT-082 Incorrect Resolution
+
+DEBT-082 was incorrectly resolved by removing constants that should have been WIRED IN, not removed. Five constants (`DEFAULT_SEARCH_LIMIT`, `DEFAULT_RAG_LIMIT`, `LEAN_COMPILE_TIMEOUT`, `LAKE_UPDATE_TIMEOUT`, `MAX_QUERY_TERMS`) had corresponding hardcoded magic numbers throughout the codebase that should have been replaced with the constants. DEBT-085 tracks the correct fix.
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -112,7 +118,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-083 | Remove internal compatibility shims + wording | P2 | Fixed | 117d510 |
 | DEBT-084 | Finish batch interrupt wiring (SIGINT) | P3 | Fixed | 117d510 |
 
-**Next Debt ID:** DEBT-085
+**Next Debt ID:** DEBT-086
 
 ### Archived Debt Decks
 
