@@ -17,7 +17,6 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 | ID | Title | Priority | Status | Commit |
 |----|-------|----------|--------|--------|
 | DEBT-077 | CLI helper duplication across commands (DRY) | P3 | Open | |
-| DEBT-078 | Test organization — misclassified integration test | P4 | Open | |
 | DEBT-080 | High cyclomatic complexity functions | P3 | Open | |
 | DEBT-081 | Incomplete features — tested but never wired in | P2 | Open | |
 
@@ -108,6 +107,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-074 | Test quality issues | P3 | Fixed | e807fbf |
 | DEBT-075 | Remove remaining env fallbacks outside `AppConfig` | P3 | Fixed | 292124f |
 | DEBT-076 | Group Lean modules into `core/lean/` subpackage | P3 | Fixed | 0291d1d |
+| DEBT-078 | Test organization — misclassified integration test | P4 | Fixed | 596b5c4 |
 | DEBT-079 | Dead code in `literature_paths.py` (SPEC-019 stubs) | P3 | Resolved | 1c8889e |
 
 **Next Debt ID:** DEBT-082

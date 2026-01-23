@@ -2,11 +2,13 @@
 
 **Priority:** P4 (Enhancement / polish)
 
-**Status:** Open
+**Status:** Fixed
+**Fixed:** 2026-01-23
+**Commit:** 596b5c4
 
 ## Problem
 
-`tests/integration/test_show_command.py` is an **integration** test (it reads a real YAML fixture via `ProblemLoader`), but the file name is misleading:
+`tests/integration/test_show_command.py` was an **integration** test (it reads a real YAML fixture via `ProblemLoader`), but the file name was misleading:
 - It is not a CLI test (no `CliRunner.invoke()`).
 - It is not a unit test (it performs filesystem I/O + YAML parsing).
 
@@ -16,7 +18,7 @@ This creates confusion because most other `tests/integration/test_cli_*.py` file
 
 ### 1. Test Content Analysis
 
-**File:** `tests/integration/test_show_command.py`
+**File (pre-fix):** `tests/integration/test_show_command.py`
 
 ```python
 from erdos.commands.show import get_problem
@@ -75,7 +77,7 @@ pytest tests/integration/test_show_loader_integration.py -v
 
 ## Acceptance Criteria
 
-- [ ] Test file renamed to reflect loader integration (not CLI)
+- [x] Test file renamed to reflect loader integration (not CLI)
 - [ ] `make ci` passes
 
 ## Impact
@@ -87,5 +89,5 @@ pytest tests/integration/test_show_loader_integration.py -v
 ## References
 
 - `tests/integration/test_cli_commands.py` (CLI integration tests)
-- `tests/integration/test_show_command.py` (loader+core integration test)
+- `tests/integration/test_show_loader_integration.py` (loader+core integration test)
 - `tests/unit/commands/test_show.py` (unit tests)
