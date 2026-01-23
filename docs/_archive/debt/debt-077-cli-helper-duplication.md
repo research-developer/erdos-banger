@@ -2,7 +2,9 @@
 
 **Priority:** P3 (Minor; clean up when touching nearby code)
 
-**Status:** Open
+**Status:** Fixed
+**Fixed:** 2026-01-23
+**Commit:** 2ccd49d
 
 ## Problem
 
@@ -83,36 +85,14 @@ Create a **minimal** `commands/cli_helpers.py` to consolidate only the clearly-g
 """Shared CLI helper functions for command modules."""
 
 from rich.console import Console
-from rich.panel import Panel
-
-console = Console()
 err_console = Console(stderr=True)
 
 
 def print_if_human(message: str, *, json_output: bool, style: str = "dim") -> None:
     """Print a message only when not in JSON mode."""
-    if not json_output:
-        err_console.print(f"[{style}]{message}[/{style}]")
-
-
-def print_panel(
-    title: str,
-    content: str,
-    *,
-    border_style: str = "blue",
-) -> None:
-    """Print a Rich panel with title and content."""
-    console.print(Panel(content, title=title, border_style=border_style))
-
-
-def validate_required_input(
-    value: str | None,
-    field_name: str,
-) -> str:
-    """Validate that a required input is provided."""
-    if not value or not value.strip():
-        raise typer.BadParameter(f"{field_name} is required")
-    return value.strip()
+    if json_output:
+        return
+    err_console.print(f"[{style}]{message}[/{style}]")
 ```
 
 ### Migration Steps
@@ -124,9 +104,9 @@ def validate_required_input(
 
 ## Acceptance Criteria
 
-- [ ] `commands/cli_helpers.py` created with `print_if_human()`
-- [ ] At least 2 commands refactored to use shared helpers
-- [ ] No functional changes to CLI behavior
+- [x] `commands/cli_helpers.py` created with `print_if_human()`
+- [x] At least 2 commands refactored to use shared helpers
+- [x] No functional changes to CLI behavior
 - [ ] `make ci` passes
 
 ## Impact
