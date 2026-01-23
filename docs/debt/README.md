@@ -20,7 +20,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 | DEBT-076 | Group Lean modules into `core/lean/` subpackage | P3 | Open | |
 | DEBT-077 | CLI helper duplication across commands (DRY) | P3 | Open | |
 | DEBT-078 | Test organization — misclassified integration test | P4 | Open | |
-| DEBT-079 | Dead code in `literature_paths.py` (SPEC-019 stubs) | P3 | Open | |
+| DEBT-079 | Dead code in `literature_paths.py` (SPEC-019 stubs) | P3 | Superseded | BUG-022 |
 | DEBT-080 | High cyclomatic complexity functions | P3 | Open | |
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)

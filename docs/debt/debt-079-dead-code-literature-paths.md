@@ -2,7 +2,9 @@
 
 **Priority:** P3 (Minor; clean up when touching nearby code)
 
-**Status:** Open
+**Status:** Superseded by BUG-022
+
+> **Note:** This was initially flagged as dead code, but investigation revealed it's part of an **incomplete feature** (SPEC-019 PDF integration for `erdos ingest`). The functions should be **wired in**, not removed. See BUG-022 for the actual fix.
 
 ## Problem
 
