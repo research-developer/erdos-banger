@@ -16,9 +16,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | Status | Commit |
 |----|-------|----------|--------|--------|
-| DEBT-072 | [CLI flags silently ignored](./debt-072-cli-flags-silently-ignored.md) | P2 | Open | (pending) |
-| DEBT-073 | [Magic numbers and hardcoded values](./debt-073-magic-numbers-hardcoded-values.md) | P3 | Open | (pending) |
-| DEBT-074 | [Test quality issues](./debt-074-test-quality-issues.md) | P3 | Open | (pending) |
+| *None* | | | | |
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -102,6 +100,9 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-065 | Command layer contains application orchestration | P2 | Fixed | 940a362 |
 | DEBT-066 | Test directory structure mirrors src/ bounded contexts | P3 | Fixed | d938411 |
 | DEBT-067 | Remove private helper re-exports from core packages | P3 | Fixed | 9c83b66 |
+| DEBT-072 | CLI flags silently ignored | P2 | Fixed | d386add |
+| DEBT-073 | Magic numbers and hardcoded values | P3 | Fixed | 0cf5747 |
+| DEBT-074 | Test quality issues | P3 | Fixed | e807fbf |
 
 **Next Debt ID:** DEBT-075
 
@@ -174,3 +175,6 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-065-thick-cli-callbacks.md`
 - `docs/_archive/debt/debt-066-test-structure-mirrors-src.md`
 - `docs/_archive/debt/debt-067-remove-private-reexports.md`
+- `docs/_archive/debt/debt-072-cli-flags-silently-ignored.md`
+- `docs/_archive/debt/debt-073-magic-numbers-hardcoded-values.md`
+- `docs/_archive/debt/debt-074-test-quality-issues.md`

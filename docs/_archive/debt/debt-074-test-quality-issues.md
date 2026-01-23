@@ -1,8 +1,10 @@
 # DEBT-074: Test Quality Issues
 
-**Status:** Open
+**Status:** Fixed
 **Priority:** P3 (Minor - improve when touching nearby code)
 **Found:** 2026-01-23
+**Fixed:** 2026-01-23
+**Commit:** e807fbf
 **Found By:** Codebase audit (tests)
 
 ---

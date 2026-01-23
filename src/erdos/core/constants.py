@@ -19,6 +19,9 @@ TEXT_PREVIEW_LENGTH = 100
 DEFAULT_HTTP_TIMEOUT = 30.0
 """Default timeout for HTTP requests to arXiv and Crossref APIs."""
 
+LEAN_TOOLCHAIN_VERSION = "v4.12.0"
+"""Pinned Lean toolchain / mathlib version tag (keep in sync with formal/lean/lean-toolchain)."""
+
 LEAN_COMPILE_TIMEOUT = 120
 """Timeout for Lean compilation operations."""
 

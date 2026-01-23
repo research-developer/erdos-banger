@@ -18,13 +18,23 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from erdos.core.constants import DEFAULT_HTTP_TIMEOUT
+
 
 # Default values (matching existing behavior)
 DEFAULT_MAILTO = "erdos-banger@example.com"
-DEFAULT_HTTP_TIMEOUT = 30.0
 DEFAULT_RUN_LOG_PATH = Path("logs/runs.jsonl")
 DEFAULT_INDEX_PATH = Path("index/erdos.sqlite")
 DEFAULT_ARISTOTLE_COMMAND = "aristotle"
+
+__all__ = [
+    "DEFAULT_ARISTOTLE_COMMAND",
+    "DEFAULT_HTTP_TIMEOUT",
+    "DEFAULT_INDEX_PATH",
+    "DEFAULT_MAILTO",
+    "DEFAULT_RUN_LOG_PATH",
+    "AppConfig",
+]
 
 
 @dataclass(frozen=True)

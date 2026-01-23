@@ -1,8 +1,10 @@
 # DEBT-072: CLI Flags Silently Ignored
 
-**Status:** Open
+**Status:** Fixed
 **Priority:** P2 (Material quality gap)
 **Found:** 2026-01-23
+**Fixed:** 2026-01-23
+**Commit:** d386add
 **Found By:** Codebase audit (CLI commands)
 
 ---

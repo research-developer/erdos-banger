@@ -327,6 +327,9 @@ class RunLogger:
         Returns:
             List of matching entries, most recent first
         """
+        if status is not None and status not in {"success", "failure"}:
+            raise ValueError(f"Invalid status: {status!r}. Use: success, failure.")
+
         if not self.log_file.exists():
             return []
 
@@ -371,6 +374,7 @@ class RunLogger:
         problem_id: int | None = None,
         command: str | None = None,
         since: str | None = None,
+        status: str | None = None,
     ) -> dict[str, Any]:
         """Compute aggregated summary of log entries.
 
@@ -378,6 +382,7 @@ class RunLogger:
             problem_id: Filter by problem ID
             command: Filter by command name
             since: Filter by timestamp
+            status: Filter by 'success' or 'failure'
 
         Returns:
             Summary dict with by_command, by_problem, and metrics
@@ -387,6 +392,7 @@ class RunLogger:
             problem_id=problem_id,
             command=command,
             since=since,
+            status=status,
             limit=100000,  # Effectively unlimited
         )
 
