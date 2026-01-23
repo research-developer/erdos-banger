@@ -44,8 +44,8 @@ def build_search_index(
         # This must never prevent the base problem index from being usable.
         try:
             index_research_artifacts(repo=repo, index=index, repo_root=repo_root)
-        except Exception as e:
-            logger.warning("Research indexing skipped due to error: %s", e)
+        except Exception:
+            logger.warning("Research indexing skipped due to error", exc_info=True)
         return None
     except (ProblemLoaderError, SearchIndexError) as e:
         error_type = (

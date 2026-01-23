@@ -36,7 +36,7 @@
 
 ---
 
-## 1) CLI Interface
+## 1) CLI
 
 ### Command group
 
@@ -74,6 +74,7 @@ erdos research note PROBLEM_ID -    # read TEXT from stdin
 ```
 
 Behavior:
+- Requires an initialized workspace (run `erdos research init PROBLEM_ID` first).
 - Appends a timestamped entry to `SCRATCHPAD.md` (append-only).
 - Must not rewrite prior content.
 
@@ -107,6 +108,8 @@ All JSON output must be wrapped in `CLIOutput` (schema_version=1).
   "created": true,
   "created_paths": [
     "research/VERSION",
+    "research/global/TECHNIQUES.md",
+    "research/global/GLOSSARY.md",
     "research/problems/0006/meta.yaml",
     "research/problems/0006/README.md",
     "research/problems/0006/SCRATCHPAD.md",

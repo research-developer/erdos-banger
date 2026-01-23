@@ -16,13 +16,15 @@ class TestLoopRunCommand:
     def test_help_shows_usage(self, strip_ansi) -> None:
         result = runner.invoke(app, ["loop", "run", "--help"])
         assert result.exit_code == 0
-        assert "Run iterative proof loop for a problem" in strip_ansi(result.stdout)
+        assert "Run iterative proof loop for a problem" in strip_ansi(result.output)
 
     def test_missing_problem_id(self) -> None:
         result = runner.invoke(app, ["loop", "run"])
         assert result.exit_code != 0
         # Error message may be in stdout or stderr depending on typer version
-        output = (getattr(result, "stderr", "") or "") + (result.stdout or "")
+        output = (getattr(result, "stderr", "") or "") + (
+            getattr(result, "stdout", None) or result.output or ""
+        )
         assert "Missing argument" in output or "PROBLEM_ID" in output
 
     def test_invalid_problem_id_not_found(self) -> None:
@@ -65,7 +67,7 @@ class TestLoopRunCommand:
         # Should return JSON even on error
         assert result.exit_code != 0
         # Output should be valid JSON structure
-        output = json.loads(result.stdout)
+        output = json.loads(getattr(result, "stdout", None) or result.output)
         assert "command" in output
         assert output["command"] == "erdos loop"
 
@@ -80,7 +82,7 @@ class TestLoopRunCommand:
                 "--help",
             ],
         )
-        assert "--llm-cmd" in strip_ansi(result.stdout)
+        assert "--llm-cmd" in strip_ansi(result.output)
 
     def test_config_options(self) -> None:
         """Test configuration options are accepted."""
@@ -139,7 +141,7 @@ class TestLoopJSONContract:
         )
 
         assert result.exit_code != 0
-        output = json.loads(result.stdout)
+        output = json.loads(getattr(result, "stdout", None) or result.output)
         # Per spec-012: LLM_REQUIRED is a failure (success=false)
         assert output["success"] is False
         assert output["error"] is not None
@@ -161,7 +163,7 @@ class TestLoopJSONContract:
         )
 
         assert result.exit_code != 0
-        output = json.loads(result.stdout)
+        output = json.loads(getattr(result, "stdout", None) or result.output)
         assert output["success"] is False
         assert output["error"] is not None
         assert output["error"]["type"] == "NotFound"
@@ -188,7 +190,7 @@ class TestLoopJSONContract:
             env={"ERDOS_REPO_ROOT": str(tmp_path)},
         )
 
-        output = json.loads(result.stdout)
+        output = json.loads(getattr(result, "stdout", None) or result.output)
         assert output["success"] is False
         error = output["error"]
         # Per CLIOutput invariants: error must have type, message, code
@@ -206,5 +208,6 @@ class TestLoopHelpCommand:
     def test_loop_help(self) -> None:
         result = runner.invoke(app, ["loop", "--help"])
         assert result.exit_code == 0
-        assert "Iterative Lean proof loop" in result.stdout
-        assert "run" in result.stdout
+        out = getattr(result, "stdout", None) or result.output
+        assert "Iterative Lean proof loop" in out
+        assert "run" in out

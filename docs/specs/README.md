@@ -14,7 +14,7 @@ v2.0 (DONE)     Expansion: PDF conversion (Marker + LLM)
 v2.1 (DONE)     Architecture: MetadataProvider abstraction
 v3.0 (DONE)     Research: Workspace + campaign memory
 v3.1 (DONE)     Verification: v3 integration tests
-v3.2 (PENDING)  Research APIs: Exa integration
+v3.2 (PENDING)  Data sync + Research APIs: Unified sync + Exa integration
 v3.3 (PENDING)  Research APIs: Semantic Scholar integration
 v3.4 (PENDING)  Research APIs: zbMATH integration
 v3.5 (PENDING)  Architecture: Multi-model routing
@@ -42,7 +42,7 @@ Research-backed design decisions for complex specs.
 
 | ID | Title | Status | Prerequisite For |
 |----|-------|--------|------------------|
-| [v3 Research State](../future/research-state-management-v3.md) | Implemented | SPEC-023 → SPEC-027 |
+| RSM-001 | [v3 Research State](../future/research-state-management-v3.md) | Implemented | SPEC-023 → SPEC-027 |
 
 ## Deferred Specs
 

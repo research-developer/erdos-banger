@@ -412,7 +412,7 @@ def test_ingest_internal_error_does_not_truncate_manifest(
 
 
 @responses.activate
-def testdownload_and_extract_arxiv_success(temp_repo_root: Path) -> None:
+def test_download_and_extract_arxiv_success(temp_repo_root: Path) -> None:
     """Test download_and_extract_arxiv successfully downloads and extracts."""
     arxiv_id = "2203.00001"
 
@@ -454,7 +454,7 @@ def testdownload_and_extract_arxiv_success(temp_repo_root: Path) -> None:
 
 
 @responses.activate
-def testdownload_and_extract_arxiv_download_error(temp_repo_root: Path) -> None:
+def test_download_and_extract_arxiv_download_error(temp_repo_root: Path) -> None:
     """Test download_and_extract_arxiv handles download failures."""
     arxiv_id = "2203.00002"
 
@@ -482,7 +482,7 @@ def testdownload_and_extract_arxiv_download_error(temp_repo_root: Path) -> None:
 
 
 @responses.activate
-def testdownload_and_extract_arxiv_extraction_error(temp_repo_root: Path) -> None:
+def test_download_and_extract_arxiv_extraction_error(temp_repo_root: Path) -> None:
     """Test download_and_extract_arxiv handles extraction failures."""
     arxiv_id = "2203.00003"
 

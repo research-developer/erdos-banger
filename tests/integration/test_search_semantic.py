@@ -263,7 +263,9 @@ class TestEmbeddingDependency:
                 },
             )
             assert result.exit_code == 10
-            output = (getattr(result, "stderr", "") or "") + (result.stdout or "")
+            output = (getattr(result, "stderr", "") or "") + (
+                getattr(result, "stdout", None) or result.output or ""
+            )
             assert "embeddings" in output.lower()
             normalized = " ".join(output.lower().split())
             assert "uv sync --extra embeddings" in normalized
@@ -282,7 +284,9 @@ class TestEmbeddingDependency:
                 },
             )
             assert result.exit_code == 10
-            output = (getattr(result, "stderr", "") or "") + (result.stdout or "")
+            output = (getattr(result, "stderr", "") or "") + (
+                getattr(result, "stdout", None) or result.output or ""
+            )
             assert "embeddings" in output.lower()
             normalized = " ".join(output.lower().split())
             assert "uv sync --extra embeddings" in normalized

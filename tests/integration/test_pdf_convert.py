@@ -55,7 +55,9 @@ class TestConvertCommandValidation:
         """Convert returns error for nonexistent file."""
         result = runner.invoke(app, ["convert", "/nonexistent/file.pdf"])
         assert result.exit_code != 0
-        output = (getattr(result, "stderr", "") or "") + (result.stdout or "")
+        output = (getattr(result, "stderr", "") or "") + (
+            getattr(result, "stdout", None) or result.output or ""
+        )
         assert "not found" in output.lower() or "error" in output.lower()
 
     def test_convert_rejects_non_pdf_file(self, tmp_path: Path) -> None:
@@ -65,7 +67,9 @@ class TestConvertCommandValidation:
 
         result = runner.invoke(app, ["convert", str(txt_file)])
         assert result.exit_code != 0
-        output = (getattr(result, "stderr", "") or "") + (result.stdout or "")
+        output = (getattr(result, "stderr", "") or "") + (
+            getattr(result, "stdout", None) or result.output or ""
+        )
         assert "pdf" in output.lower()
 
 

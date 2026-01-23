@@ -36,7 +36,11 @@ logger = logging.getLogger(__name__)
 
 
 def _chunk_preview(text: str) -> str:
-    return text[:PREVIEW_LENGTH] + "..." if len(text) > PREVIEW_LENGTH else text
+    if len(text) <= PREVIEW_LENGTH:
+        return text
+    if PREVIEW_LENGTH <= 3:
+        return text[:PREVIEW_LENGTH]
+    return text[: PREVIEW_LENGTH - 3] + "..."
 
 
 def _try_parse_record(

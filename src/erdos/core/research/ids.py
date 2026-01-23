@@ -8,6 +8,9 @@ from datetime import UTC, datetime
 
 def utc_now_id_timestamp(now: datetime | None = None) -> str:
     dt = now if now is not None else datetime.now(UTC)
+    if dt.tzinfo is None:
+        raise ValueError("now must be timezone-aware (UTC)")
+    dt = dt.astimezone(UTC)
     dt = dt.replace(microsecond=0)
     return dt.strftime("%Y%m%dT%H%M%SZ")
 

@@ -481,7 +481,7 @@ Run an interactive (or automated) loop of Lean proof attempts using an LLM agent
 5. Apply changes, repeat
 6. Log every iteration
 
-**Status:** Deferred to v1.2+ (SPEC-012). Not implemented in v1.1.
+**Status:** Implemented as `erdos loop run` (SPEC-012). Loop → research attempt recording shipped in v3.0 (SPEC-027).
 
 **Output:** Stream the process in human mode. JSON output references log file.
 

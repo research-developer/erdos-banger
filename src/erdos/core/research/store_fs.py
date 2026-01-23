@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from pathlib import PurePath
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from pydantic import TypeAdapter, ValidationError
@@ -41,6 +43,23 @@ if TYPE_CHECKING:
 def _utc_now(now: datetime | None = None) -> datetime:
     dt = now if now is not None else datetime.now(UTC)
     return dt.replace(microsecond=0)
+
+
+_RECORD_ID_RE = re.compile(r"^[a-z][a-z0-9]*_[0-9]{8}T[0-9]{6}Z_[0-9a-f]{6}$")
+
+
+def _validate_record_id(record_id: str, kind: str) -> None:
+    # Prevent path traversal and keep a stable filename contract.
+    if not record_id:
+        raise ResearchRecordInvalidError(f"Invalid {kind} id: empty")
+    if record_id in {".", ".."}:
+        raise ResearchRecordInvalidError(f"Invalid {kind} id: {record_id!r}")
+    if PurePath(record_id).name != record_id:
+        raise ResearchRecordInvalidError(f"Invalid {kind} id: {record_id!r}")
+    if not record_id.startswith(f"{kind}_"):
+        raise ResearchRecordInvalidError(f"Invalid {kind} id: {record_id!r}")
+    if not _RECORD_ID_RE.match(record_id):
+        raise ResearchRecordInvalidError(f"Invalid {kind} id: {record_id!r}")
 
 
 T = TypeVar("T")
@@ -147,11 +166,20 @@ class FSResearchStore:
         notes: str | None = None,
         now: datetime | None = None,
     ) -> tuple[LeadRecord, Path]:
+        _validate_record_id(lead_id, "lead")
         path = self._problem_dir(problem_id) / "leads" / f"{lead_id}.yaml"
         if not path.exists():
             raise ResearchRecordNotFoundError(f"Lead not found: {lead_id}")
         adapter: TypeAdapter[LeadRecord] = TypeAdapter(LeadRecord)
         rec = _read_record(path, adapter)
+        if rec.problem_id != problem_id:
+            raise ResearchRecordInvalidError(
+                f"Lead {rec.id} has problem_id={rec.problem_id}, expected {problem_id}"
+            )
+        if rec.id != lead_id:
+            raise ResearchRecordInvalidError(
+                f"Lead filename {path.name} does not match id={rec.id}"
+            )
         updated = _utc_now(now)
         new = rec.model_copy(
             update={
@@ -230,11 +258,20 @@ class FSResearchStore:
         notes: str | None = None,
         now: datetime | None = None,
     ) -> tuple[HypothesisRecord, Path]:
+        _validate_record_id(hyp_id, "hyp")
         path = self._problem_dir(problem_id) / "hypotheses" / f"{hyp_id}.yaml"
         if not path.exists():
             raise ResearchRecordNotFoundError(f"Hypothesis not found: {hyp_id}")
         adapter: TypeAdapter[HypothesisRecord] = TypeAdapter(HypothesisRecord)
         rec = _read_record(path, adapter)
+        if rec.problem_id != problem_id:
+            raise ResearchRecordInvalidError(
+                f"Hypothesis {rec.id} has problem_id={rec.problem_id}, expected {problem_id}"
+            )
+        if rec.id != hyp_id:
+            raise ResearchRecordInvalidError(
+                f"Hypothesis filename {path.name} does not match id={rec.id}"
+            )
         updated = _utc_now(now)
         new = rec.model_copy(
             update={
@@ -315,11 +352,20 @@ class FSResearchStore:
         priority: Priority | None = None,
         now: datetime | None = None,
     ) -> tuple[TaskRecord, Path]:
+        _validate_record_id(task_id, "task")
         path = self._problem_dir(problem_id) / "tasks" / f"{task_id}.yaml"
         if not path.exists():
             raise ResearchRecordNotFoundError(f"Task not found: {task_id}")
         adapter: TypeAdapter[TaskRecord] = TypeAdapter(TaskRecord)
         rec = _read_record(path, adapter)
+        if rec.problem_id != problem_id:
+            raise ResearchRecordInvalidError(
+                f"Task {rec.id} has problem_id={rec.problem_id}, expected {problem_id}"
+            )
+        if rec.id != task_id:
+            raise ResearchRecordInvalidError(
+                f"Task filename {path.name} does not match id={rec.id}"
+            )
         updated = _utc_now(now)
         new = rec.model_copy(
             update={

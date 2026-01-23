@@ -81,7 +81,7 @@ erdos dashboard --recent 7d        # Last 7 days only
 
 ## Dashboard Layout
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                         ERDŐS-BANGER DASHBOARD                               │
 │                         Last updated: 2026-01-23 12:00                       │
@@ -124,7 +124,7 @@ erdos dashboard --recent 7d        # Last 7 days only
 erdos dashboard --problem 6
 ```
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                         PROBLEM 6: Sum-Free Sets                             │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -162,7 +162,7 @@ erdos dashboard --problem 6
 
 ### Module Structure
 
-```
+```text
 src/erdos/
   commands/
     dashboard.py        # CLI entry point
@@ -181,6 +181,7 @@ src/erdos/
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from pathlib import Path
 
 @dataclass
 class ProblemStats:

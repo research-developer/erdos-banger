@@ -56,7 +56,7 @@ EXA_API_KEY=your-exa-api-key-here
 
 ---
 
-## CLI Interface
+## CLI
 
 ### Primary Command
 
@@ -250,10 +250,15 @@ def test_exa_to_leads_creates_records():
 ```python
 # tests/integration/test_exa_integration.py
 
+import os
+
+import pytest
+
 @pytest.mark.requires_network
-@pytest.mark.requires_exa_key
 def test_exa_research_query():
     """End-to-end Exa query."""
+    if not os.environ.get("EXA_API_KEY"):
+        pytest.skip("EXA_API_KEY not set")
     ...
 ```
 

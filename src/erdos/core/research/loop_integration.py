@@ -18,9 +18,11 @@ if TYPE_CHECKING:
 
 
 def _map_result(status: LoopStatus) -> AttemptResult:
-    return (
-        AttemptResult.SUCCESS if status == LoopStatus.SUCCESS else AttemptResult.FAILED
-    )
+    if status == LoopStatus.SUCCESS:
+        return AttemptResult.SUCCESS
+    if status == LoopStatus.MAX_ITERATIONS:
+        return AttemptResult.PARTIAL
+    return AttemptResult.FAILED
 
 
 def _summarize(loop_result: LoopResult) -> str:

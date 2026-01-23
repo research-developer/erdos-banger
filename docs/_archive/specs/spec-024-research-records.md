@@ -181,6 +181,8 @@ erdos research attempt log PROBLEM_ID --result RESULT --summary TEXT
 erdos research attempt list PROBLEM_ID [--result RESULT]
 ```
 
+Note: `--loop-log` populates `artifacts.loop_run_log` in the stored record.
+
 ### Maintenance
 
 ```text
@@ -222,7 +224,7 @@ Example (`lead add`):
 - `src/erdos/core/research/store_fs.py`
   - Filesystem adapter for CRUD, plus `fmt` and `validate`.
 - `src/erdos/core/research/ids.py`
-  - Deterministic record ID generation.
+  - Stable record ID generation (timestamp + random suffix).
 - `src/erdos/core/research/yaml_io.py`
   - Canonical YAML serialization + atomic writes.
 - `src/erdos/core/research/errors.py`

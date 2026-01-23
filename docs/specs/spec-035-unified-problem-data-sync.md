@@ -21,10 +21,10 @@ Unify the four Erdős problem data sources into a single, coherent pipeline:
 | **erdosproblems.com website** | Statements, LaTeX, tags, refs | API |
 | **erdosproblems.com forum** | Proofs (as links) | API |
 
-**Current gap:** When problem #347 was solved (2026-01-21), we didn't know:
-- Our submodule was stale
-- DeepMind still shows `sorry` (they don't track solutions)
-- The actual Lean proof exists only as a GitHub link in a forum comment
+**Example failure mode (real incident):** A problem can be solved and we miss it because:
+- the `data/erdosproblems` submodule can be stale locally,
+- DeepMind formal statements don’t imply a solved status (they intentionally contain `sorry`),
+- the actual proof may only be discoverable via a forum comment that links to a code repository.
 
 ---
 
@@ -32,12 +32,14 @@ Unify the four Erdős problem data sources into a single, coherent pipeline:
 
 ### Goals
 
-1. **Single source of truth** for problem status (submodule → local cache).
-2. **Automated sync** of formal statements from DeepMind.
-3. **Proof extraction** when problems are solved (GitHub links from forum).
-4. **Website data extraction** — statements, LaTeX, tags, references, formalization flags.
-5. **Provenance tracking** (who solved, when, verification status).
-6. **Offline-first** — all data cached locally, network only for sync.
+1. **Maintain the local CLI dataset** (`data/problems_enriched.yaml`, gitignored) by merging:
+   - status/prize/tags/formalized (+ last_update) from `data/erdosproblems/data/problems.yaml` (submodule)
+   - title/statement/references from `erdosproblems.com/{id}` (structured parsing)
+2. **Keep formal Lean statements synced** using the existing `erdos lean import` pipeline (SPEC-016), optionally surfaced via `erdos sync statements` as a thin wrapper.
+3. **Extract proof repository links** from `erdosproblems.com/forum/thread/{id}` (best-effort).
+4. **Optionally verify proofs** by cloning and running `lake build` in a temp directory (opt-in), recording toolchain + logs.
+5. **Record provenance** as best-effort structured metadata (some fields may be unknown/unavailable).
+6. **Offline-first** — cached data is used when network is unavailable; network is only required for sync steps.
 
 ### Non-Goals
 
@@ -63,39 +65,18 @@ We **don't** scrape arbitrary prose or layout-dependent content.
 ### Data Flow
 
 ```text
-┌─────────────────────────────────────────────────────────────────────┐
-│                         SYNC PIPELINE                               │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ┌─────────────────┐                                                │
-│  │  teorth/erdos-  │─────┐                                          │
-│  │  problems       │     │                                          │
-│  │  (submodule)    │     │  ┌──────────────────────────────────┐   │
-│  └─────────────────┘     ├─▶│  Local Problem Cache             │   │
-│          │               │  │  data/problems_enriched.yaml     │   │
-│          ▼               │  │                                  │   │
-│  git submodule update    │  │  - status (from submodule)       │   │
-│                          │  │  - statement (from DeepMind)     │   │
-│  ┌─────────────────┐     │  │  - proof_url (from forum)        │   │
-│  │  DeepMind       │─────┤  │  - provenance metadata           │   │
-│  │  formal-        │     │  └──────────────────────────────────┘   │
-│  │  conjectures    │     │                    │                    │
-│  └─────────────────┘     │                    ▼                    │
-│          │               │  ┌──────────────────────────────────┐   │
-│          ▼               │  │  formal/lean/Community/          │   │
-│  erdos sync statements   │  │  (verified proofs)               │   │
-│                          │  └──────────────────────────────────┘   │
-│  ┌─────────────────┐     │                                          │
-│  │  erdosproblems  │─────┘                                          │
-│  │  .com forum     │                                                │
-│  │  (proof links)  │                                                │
-│  └─────────────────┘                                                │
-│          │                                                          │
-│          ▼                                                          │
-│  erdos sync proofs --problem 347                                    │
-│  (extracts GitHub link, clones, verifies, stores)                   │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+Sources
+  - data/erdosproblems/ (git submodule): status/prize/tags/formalized + last_update
+  - https://www.erdosproblems.com/{id}: title/statement + references + (optional) LaTeX source
+  - https://www.erdosproblems.com/forum/thread/{id}: proof repo links (GitHub/GitLab)
+  - google-deepmind/formal-conjectures: Lean statement skeletons (with sorry)
+
+Artifacts / outputs
+  - data/problems_enriched.yaml (gitignored; ProblemLoader schema; SSOT for CLI)
+      <- merged status/prize/tags/formalized + title/statement/references
+  - data/latex/{id}.tex (gitignored; raw LaTeX source, optional)
+  - formal/lean/Erdos/Problem{ID}.lean (tracked; from `erdos lean import`, optional)
+  - data/sync_cache/proofs/{id}/... (gitignored; cloned repos + verification logs, optional)
 ```
 
 ### Module Structure
@@ -104,12 +85,13 @@ We **don't** scrape arbitrary prose or layout-dependent content.
 src/erdos/core/
   sync/
     __init__.py
-    submodule.py        # Git submodule operations
-    statements.py       # DeepMind formal-conjectures sync
-    website.py          # Website data extraction (statements, LaTeX, tags)
-    proofs.py           # Forum proof link extraction + verification
-    models.py           # SyncStatus, ProofProvenance, WebsiteProblemData, etc.
+    submodule.py        # Git submodule operations (teorth/erdosproblems)
+    website.py          # Website extraction (title/statement/refs + optional LaTeX)
+    forum.py            # Forum thread fetch + proof link extraction
+    proofs.py           # Repo clone + Lean verification (opt-in)
+    models.py           # Sync models + provenance records
     service.py          # Orchestrates all sync operations
+  formal_conjectures/   # Existing DeepMind import (SPEC-016; used by `erdos lean import`)
 ```
 
 ---
@@ -126,32 +108,47 @@ erdos sync submodule
 erdos sync submodule --check
 ```
 
-### Statement Sync
+### Statement Sync (DeepMind → Lean)
+
+This delegates to the existing `erdos lean import` command (SPEC-016). The `erdos sync` wrapper exists only so `erdos sync all` can orchestrate it.
 
 ```bash
-# Sync formal statements from DeepMind
-erdos sync statements
+# Import the upstream Lean statement skeleton into our Lean project
+erdos lean import 347
 
-# Sync specific problem
-erdos sync statements --problem 347
+# Equivalent wrapper (optional; kept under `erdos sync` for orchestration)
+erdos sync statements 347
+```
+
+### Website Sync (erdosproblems.com → problems_enriched.yaml)
+
+```bash
+# Fetch and parse the public problem page, updating data/problems_enriched.yaml
+erdos sync website 275
+
+# Optional: also fetch raw LaTeX source (saved to data/latex/275.tex)
+erdos sync website 275 --latex
 ```
 
 ### Proof Sync
 
 ```bash
-# Attempt to fetch proof for a solved problem
+# Extract proof repo links from the forum thread (records provenance)
 erdos sync proof <problem_id>
 
-# Example: Problem #347 was solved
-erdos sync proof 347
+# Additionally clone + verify proof (opt-in; runs `lake build`)
+erdos sync proof <problem_id> --verify
+
+# Example:
+erdos sync proof 347 --verify
 
 # Output:
-# Problem #347: Status = proved (Lean)
-# Found proof link: https://github.com/ebarschkis/erdos-347-proof
+# Problem #347: status=proved (from submodule)
+# Found proof repo link in forum: https://github.com/ebarschkis/erdos-347-proof
 # Cloning repository...
 # Verifying Lean compilation...
-# ✓ Proof verified (Lean 4.24.0)
-# Stored: formal/lean/Community/Problem347.lean
+# ✓ Proof verified (lake build)
+# Recorded provenance: data/sync_cache/proofs/347/provenance.json
 ```
 
 ### Full Sync
@@ -175,6 +172,12 @@ erdos sync all --dry-run
 1. **Proofs are code** — They live in Git repositories, not forum text.
 2. **Links are stable** — GitHub URLs don't break on forum redesign.
 3. **Verification is binary** — Either `lake build` succeeds or it doesn't.
+
+### Safety Constraints (MUST)
+
+- Default behavior is **discover-only** (extract links + record provenance). No cloning/building unless `--verify` is set.
+- Only allow `https://` links to an allowlist of hosts by default (at least `github.com` and `gitlab.com`).
+- Enforce clone/build timeouts and bounded log sizes; record logs to the sync cache for debugging.
 
 ### Extraction Pipeline
 
@@ -232,45 +235,46 @@ This is the **only** URL we need per problem. Stable, predictable.
 
 @dataclass
 class ProofProvenance:
-    """Track where a proof came from."""
+    """Best-effort record of an external proof repository + verification."""
     problem_id: int
-    status: Literal["verified", "pending", "failed"]
+    forum_thread_url: str
+    extracted_at: datetime
 
-    # Source information
-    source_url: str             # GitHub repo URL
-    source_commit: str          # Specific commit hash
-    author: str                 # Who solved it
-    solved_at: datetime         # When (from submodule)
+    repo_url: str
+    repo_commit: str | None
 
-    # Verification
-    lean_version: str           # e.g., "4.24.0"
+    posted_by: str | None
+    posted_at: datetime | None
+
+    verification_status: Literal["unverified", "verified", "failed", "source_unavailable"]
     verified_at: datetime | None
-    verification_log: str | None
-
-    # Storage
-    local_path: str             # formal/lean/Community/Problem347.lean
+    verification_command: str | None  # e.g., "lake build"
+    toolchain: str | None             # raw `lean-toolchain` contents, when present
+    log_path: str | None              # path under data/sync_cache/...
 ```
 
 ### Storage Layout
 
 ```
-formal/lean/Community/
-  Problem347/
-    Problem347.lean           # The actual proof
-    lakefile.lean             # Build config
-    PROVENANCE.json           # Metadata
+data/sync_cache/proofs/
+  <problem_id>/
+    links.json            # Extracted forum links (discover-only)
+    provenance.json       # Selected repo + verification metadata
+    verify.log            # Captured stdout/stderr from `lake build` (when verified)
+    repos/                # Optional clone cache (implementation detail; gitignored)
 ```
 
-`PROVENANCE.json` example:
+`provenance.json` example:
 ```json
 {
   "problem_id": 347,
-  "status": "verified",
-  "source_url": "https://github.com/ebarschkis/erdos-347-proof",
-  "source_commit": "abc123def456",
-  "author": "ebarschkis",
-  "solved_at": "2026-01-21T21:37:00Z",
-  "lean_version": "4.24.0",
+  "forum_thread_url": "https://www.erdosproblems.com/forum/thread/347",
+  "extracted_at": "2026-01-23T15:30:00Z",
+  "repo_url": "https://github.com/ebarschkis/erdos-347-proof",
+  "repo_commit": "abc123def456",
+  "posted_by": "forum_user",
+  "posted_at": "2026-01-21T21:37:00Z",
+  "verification_status": "verified",
   "verified_at": "2026-01-23T15:30:00Z"
 }
 ```
@@ -282,13 +286,16 @@ formal/lean/Community/
 ```
 data/sync_cache/
   submodule_status.json     # Last sync time, commit hash
-  statements/
-    <problem_id>.lean       # Cached formal statements
+  website/
+    <problem_id>.html       # Cached problem page HTML (optional)
   proofs/
     <problem_id>/
       links.json            # Extracted proof links
-      verification.json     # Last verification result
+      provenance.json       # Selected repo + verification metadata
+      verify.log            # Captured stdout/stderr from `lake build` (when verified)
 ```
+
+Note: DeepMind statement caching already exists via SPEC-016 (`formal/lean/.upstream_cache/...`) and should be reused.
 
 ---
 
@@ -296,8 +303,8 @@ data/sync_cache/
 
 ```bash
 # .env
+ERDOS_DATA_PATH=...                  # Optional: directory containing problems_enriched.yaml
 ERDOS_SYNC_INTERVAL=86400           # Seconds between auto-syncs (default: 24h)
-ERDOS_FORMAL_CONJECTURES_PATH=      # Override DeepMind repo path (optional)
 ```
 
 ---
@@ -307,10 +314,11 @@ ERDOS_FORMAL_CONJECTURES_PATH=      # Override DeepMind repo path (optional)
 | Scenario | Behavior |
 |----------|----------|
 | Submodule fetch fails | Warn, continue with cached data |
+| Website HTML parse fails (structure changed) | Warn, keep existing `data/problems_enriched.yaml` fields untouched; record failure in sync cache |
 | No proof link found | Log as "no proof available yet" |
 | Proof link broken (404) | Mark as "source_unavailable" |
-| Lean compilation fails | Mark as "verification_failed", store logs |
-| Multiple proof links | Verify all, prefer latest with matching Lean version |
+| Lean compilation fails | Mark `verification_status=\"failed\"`, store logs |
+| Multiple proof links | Record all links; when verifying, try each deterministically and keep the first verified |
 
 ---
 
@@ -353,18 +361,15 @@ def test_extract_real_proof_link():
 
 ## Acceptance Criteria
 
-1. [ ] `erdos sync submodule` updates the submodule
-2. [ ] `erdos sync submodule --check` warns if stale (for CI)
-3. [ ] `erdos sync statements` imports from DeepMind formal-conjectures
-4. [ ] `erdos sync website <id>` fetches problem page data (status, statement, tags)
-5. [ ] `erdos sync website <id>` extracts raw LaTeX source
-6. [ ] `erdos sync proof <id>` extracts GitHub link from forum
-7. [ ] Proof verification runs `lake build` and reports success/failure
-8. [ ] Verified proofs stored in `formal/lean/Community/`
-9. [ ] `PROVENANCE.json` tracks who solved, when, source URL
-10. [ ] `erdos sync all` orchestrates full pipeline
-11. [ ] Website sync respects rate limits (2s delay)
-12. [ ] Offline-friendly: cached data used when network unavailable
+1. [ ] `erdos sync submodule` updates `data/erdosproblems` (or fails with a clear `requires_network` error when offline)
+2. [ ] `erdos sync submodule --check` warns/fails if the submodule is stale (CI-friendly)
+3. [ ] `erdos sync website <id>` updates/creates a valid `data/problems_enriched.yaml` entry (ProblemLoader schema: `id,title,statement,status,prize,tags,references,oeis_ids,notes,formalized`)
+4. [ ] `erdos sync website <id> --latex` saves raw LaTeX source to `data/latex/<id>.tex` (gitignored)
+5. [ ] `erdos sync statements <id>` delegates to `erdos lean import <id>` (SPEC-016) without duplicating the import/cache logic
+6. [ ] `erdos sync proof <id>` extracts proof repo links from the forum thread and writes `data/sync_cache/proofs/<id>/links.json` + `provenance.json`
+7. [ ] `erdos sync proof <id> --verify` runs `lake build` with timeouts and updates `verification_status` + `verify.log`
+8. [ ] `erdos sync all` orchestrates submodule + website + proofs (+ optional statements) deterministically
+9. [ ] Offline-friendly: cached data is used when network is unavailable; sync steps degrade gracefully with warnings
 
 ---
 
@@ -394,14 +399,12 @@ The erdosproblems.com **main pages** (not just forum) have structured data we sh
 class WebsiteProblemData:
     """Structured data from erdosproblems.com main page."""
     problem_id: int
-    status: str                     # "PROVED (LEAN)", "OPEN", etc.
-    statement_html: str             # Rendered statement
-    statement_latex: str | None     # Raw LaTeX source
-    tags: list[str]                 # ["number theory", "covering systems"]
-    references: list[str]           # ["Er65", "Er65b", "ErGr80"]
-    has_formalization: bool         # "Formalised statement? Yes"
-    difficulty_votes: int           # Community difficulty rating
-    collaborators: list[str]        # Who's interested/working
+    title: str
+    statement: str
+    tags: list[str]
+    references: list[dict[str, str | None]]  # key/citation/doi/arxiv_id/url shape
+    status_badge_text: str | None            # best-effort (for cross-check only)
+    latex_source: str | None                 # saved separately (data/latex/<id>.tex)
 
 def fetch_problem_page(problem_id: int) -> WebsiteProblemData:
     """
@@ -411,11 +414,10 @@ def fetch_problem_page(problem_id: int) -> WebsiteProblemData:
 
     Strategy:
     1. HTTP GET the main page
-    2. Parse status badge (CSS class or text)
-    3. Extract statement (div with LaTeX)
-    4. Follow "View LaTeX source" link for raw .tex
-    5. Parse tags, references, formalization flag
-    6. Return structured data
+    2. Extract title + statement from stable containers
+    3. Parse tags + references into ProblemRecord-compatible shapes
+    4. (Optional) Follow "View LaTeX source" link and save `data/latex/<id>.tex`
+    5. Return structured data
     """
     ...
 ```
@@ -443,17 +445,24 @@ erdos sync website --all --delay 2
 Website data enriches `problems_enriched.yaml`:
 
 ```yaml
-- number: 275
-  status: "proved (Lean)"           # From submodule
-  statement: "If a finite..."       # From website
-  statement_latex: "\\text{If}..."  # From website LaTeX source
+- id: 275
+  title: "..."                       # From website
+  statement: "If a finite..."        # From website
+  status: proved                     # From submodule (normalized)
+  prize: 0                           # From submodule
   tags: ["number theory", "covering systems"]
-  references: ["Er65", "Er65b", "ErGr80"]
-  has_formalization: true
-  source_urls:
-    website: "https://www.erdosproblems.com/275"
-    forum: "https://www.erdosproblems.com/forum/thread/275"
+  references:
+    - key: Er65
+      citation: null
+      doi: null
+      arxiv_id: null
+      url: "https://www.erdosproblems.com/..."   # From website
+  oeis_ids: []
+  notes: null
+  formalized: true                   # From submodule
 ```
+
+Note: raw LaTeX (when fetched) is stored separately under `data/latex/<id>.tex` (gitignored).
 
 ### Rate Limiting for Website
 

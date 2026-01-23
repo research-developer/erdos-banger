@@ -79,7 +79,10 @@ def open(
     ctx: typer.Context,
     problem_id: Annotated[int, typer.Argument(help="Problem ID", min=1)],
 ) -> None:
-    """Print the absolute path to the per-problem research workspace."""
+    """Print the absolute path to the per-problem research workspace.
+
+    This command intentionally does not require the workspace to exist yet.
+    """
     app_ctx, app_error = get_app_context(ctx, command="erdos research open")
     if app_error is not None:
         exit_with_result(ctx, app_error)
@@ -119,6 +122,14 @@ def note(
         problem_id, repo=app_ctx.problems, command="erdos research note"
     ):
         exit_with_result(ctx, error)
+        return
+
+    if not _require_workspace_dir(
+        ctx,
+        problem_id=problem_id,
+        command="erdos research note",
+        repo_root=app_ctx.config.repo_root,
+    ):
         return
 
     text = read_text_arg(text_arg)

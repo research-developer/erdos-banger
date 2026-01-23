@@ -39,15 +39,17 @@ timestamp() {
 
 stat_mtime() {
   local path="$1"
-  if stat -f %m "$path" >/dev/null 2>&1; then
-    stat -f %m "$path"
-  else
-    stat -c %Y "$path"
+  local mtime=""
+  if mtime="$(stat -f %m "$path" 2>/dev/null)" && [[ "${mtime}" =~ ^[0-9]+$ ]]; then
+    echo "${mtime}"
+    return
   fi
+  stat -c %Y "$path"
 }
 
 latest_iteration_log() {
-  ls -1 "${LOG_DIR}"/iteration_*.log 2>/dev/null | sort | tail -n 1 || true
+  find "${LOG_DIR}" -maxdepth 1 -type f -name 'iteration_*.log' -print 2>/dev/null \
+    | sort | tail -n 1 || true
 }
 
 issue_patterns() {

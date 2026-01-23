@@ -191,7 +191,7 @@ def select_model(task_type: str) -> str:
 
 ### What Is Aristotle?
 
-Aristotle is Harmonic's automated theorem proving system that combines:
+Aristotle is Harmonic's automated theorem-proving system that combines:
 - Reinforcement learning
 - Monte Carlo tree search
 - Lean 4 formal verification
@@ -668,16 +668,19 @@ result = exa.research(
 ## References
 
 ### Lean & Theorem Proving
+
 - [Lean Copilot - GitHub](https://github.com/lean-dojo/LeanCopilot)
 - [LeanDojo Project](https://leandojo.org/)
 - [Lean Copilot Paper](https://arxiv.org/abs/2404.12534)
 
 ### Frontier Models
+
 - [AI Model Benchmarks 2026 | LM Council](https://lmcouncil.ai/benchmarks)
 - [Flagship Model Report | Vellum](https://www.vellum.ai/blog/flagship-model-report)
 - [2025 LLM Review | Atoms.dev](https://atoms.dev/blog/2025-llm-review-gpt-5-2-gemini-3-pro-claude-4-5)
 
 ### Harmonic & Aristotle
+
 - [Harmonic News](https://harmonic.fun/news)
 - [Aristotle IMO Paper](https://arxiv.org/abs/2510.01346)
 - [Erdős Problem #124 Discussion](https://www.erdosproblems.com/forum/thread/124)
@@ -685,11 +688,13 @@ result = exa.research(
 - [Vendor Notes: Harmonic Aristotle](../_vendor-docs/harmonic-aristotle/README.md)
 
 ### Research APIs
+
 - [Exa Research API](https://exa.ai/blog/introducing-exa-research)
 - [OpenAlex Documentation](https://docs.openalex.org/)
 - [Semantic Scholar API](https://www.semanticscholar.org/product/api)
 
 ### Math Reasoning
+
 - [DeepSeek-Prover-V2](https://www.infoq.com/news/2025/05/deepseek-prover-v2-formal-proof/)
 - [Benchmarking LLMs on Advanced Mathematical Reasoning](https://www2.eecs.berkeley.edu/Pubs/TechRpts/2025/EECS-2025-121.pdf)
 

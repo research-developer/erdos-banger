@@ -192,7 +192,11 @@ def test_no_private_exports_in_core_package_roots(project_root: Path) -> None:
         content = init_path.read_text(encoding="utf-8")
         try:
             tree = ast.parse(content, filename=str(init_path))
-        except SyntaxError:
+        except SyntaxError as exc:
+            rel_path = init_path.relative_to(project_root)
+            violations.append(
+                f"{rel_path}:{exc.lineno or 0}: SYNTAX ERROR: {exc.msg or 'SyntaxError'}"
+            )
             continue
 
         for node in ast.walk(tree):
