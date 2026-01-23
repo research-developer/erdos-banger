@@ -33,8 +33,9 @@ Unify the four Erdős problem data sources into a single, coherent pipeline:
 ### Goals
 
 1. **Maintain the local CLI dataset** (`data/problems_enriched.yaml`, gitignored) by merging:
-   - status/prize/tags/formalized (+ last_update) from `data/erdosproblems/data/problems.yaml` (submodule)
-   - title/statement/references from `erdosproblems.com/{id}` (structured parsing)
+   - **metadata** from `data/erdosproblems/data/problems.yaml` (submodule): `status`, `prize`, `tags`, `formalized`, `oeis_ids` (and optionally `notes` from upstream comments)
+   - **content** from `erdosproblems.com/{id}` (structured parsing): `title`, `statement`, `references`
+   - **sync timestamps / last_update fields** are recorded in `data/sync_cache/` (not in `ProblemRecord`, which is intentionally minimal)
 2. **Keep formal Lean statements synced** using the existing `erdos lean import` pipeline (SPEC-016), optionally surfaced via `erdos sync statements` as a thin wrapper.
 3. **Extract proof repository links** from `erdosproblems.com/forum/thread/{id}` (best-effort).
 4. **Optionally verify proofs** by cloning and running `lake build` in a temp directory (opt-in), recording toolchain + logs.
@@ -62,18 +63,45 @@ We **don't** scrape arbitrary prose or layout-dependent content.
 
 ## Architecture
 
+### SSOT & Merge Rules (Precise)
+
+This spec intentionally distinguishes:
+
+- **Operational SSOT for CLI**: `data/problems_enriched.yaml` (gitignored) is the *effective* dataset the CLI reads via `ProblemLoader`.
+- **Provenance SSOT for sync**: `data/sync_cache/` (gitignored) records what we fetched, when, from where, and what we verified.
+
+#### Field Precedence (per `ProblemRecord`)
+
+| Field | Source | Merge rule |
+|------|--------|------------|
+| `id` | CLI input / derived from upstream number | Must match requested problem id |
+| `title` | Website | Overwrite only on successful parse |
+| `statement` | Website (HTML) or LaTeX (optional) | Overwrite only on successful parse; never write empty |
+| `references` | Website | Overwrite only on successful parse |
+| `status` | Submodule | Overwrite on successful submodule parse (this is the main “staleness” fix) |
+| `prize` | Submodule | Overwrite on successful submodule parse |
+| `tags` | Submodule (primary), website (optional secondary) | Default: submodule tags; optional: union with website tags if we decide it’s safe |
+| `formalized` | Submodule | Overwrite on successful submodule parse |
+| `oeis_ids` | Submodule | Overwrite on successful submodule parse (normalizing `oeis` → `oeis_ids`) |
+| `notes` | Local (optional), or submodule comments (optional) | Default: preserve existing `notes`; only fill when missing unless `--overwrite-notes` is set |
+
+#### Cross-checks (never authoritative by default)
+
+- If website “status badge” disagrees with submodule `status`, record a warning and store the observed badge text under `data/sync_cache/website/<id>.json`.
+- DeepMind “formalized” UI hints from the website are treated as *advisory*; `formalized` remains submodule-sourced.
+
 ### Data Flow
 
 ```text
 Sources
-  - data/erdosproblems/ (git submodule): status/prize/tags/formalized + last_update
+  - data/erdosproblems/ (git submodule): status/prize/tags/formalized/oeis/comments (+ last_update, recorded in sync cache)
   - https://www.erdosproblems.com/{id}: title/statement + references + (optional) LaTeX source
   - https://www.erdosproblems.com/forum/thread/{id}: proof repo links (GitHub/GitLab)
   - google-deepmind/formal-conjectures: Lean statement skeletons (with sorry)
 
 Artifacts / outputs
   - data/problems_enriched.yaml (gitignored; ProblemLoader schema; SSOT for CLI)
-      <- merged status/prize/tags/formalized + title/statement/references
+      <- merged status/prize/tags/formalized/oeis_ids (+ optional notes) + title/statement/references
   - data/latex/{id}.tex (gitignored; raw LaTeX source, optional)
   - formal/lean/Erdos/Problem{ID}.lean (tracked; from `erdos lean import`, optional)
   - data/sync_cache/proofs/{id}/... (gitignored; cloned repos + verification logs, optional)
@@ -81,7 +109,7 @@ Artifacts / outputs
 
 ### Module Structure
 
-```
+```text
 src/erdos/core/
   sync/
     __init__.py
@@ -93,6 +121,22 @@ src/erdos/core/
     service.py          # Orchestrates all sync operations
   formal_conjectures/   # Existing DeepMind import (SPEC-016; used by `erdos lean import`)
 ```
+
+---
+
+## Determinism, Idempotency, and Safety (MUST)
+
+1. Every `erdos sync ...` command is **idempotent** (running twice yields no changes on the second run).
+2. Writes are **atomic**:
+   - `data/problems_enriched.yaml` is written via temp file + replace (no partial writes).
+   - sync cache JSON files use the same atomic strategy.
+3. Sync is **deterministic**:
+   - merge order is stable (per-field precedence defined above),
+   - iteration order is stable (ascending problem id),
+   - selection among multiple proof links is deterministic (see below).
+4. Defaults are **safe**:
+   - `erdos sync proof <id>` is discover-only (no cloning, no executing build tools),
+   - `--verify` is explicit and prints a clear warning that it runs untrusted build tooling.
 
 ---
 
@@ -167,6 +211,8 @@ erdos sync all --dry-run
 
 **Key insight:** We don't scrape HTML. We extract **GitHub/GitLab links** from forum posts.
 
+This is still HTML parsing, but it’s intentionally narrow: we treat the forum page as a transport for links, and the Git host as the durable storage.
+
 ### Why This Works
 
 1. **Proofs are code** — They live in Git repositories, not forum text.
@@ -211,9 +257,10 @@ def verify_proof(source: ProofSource) -> VerificationResult:
 
     Strategy:
     1. Clone to temp directory
-    2. Run `lake build` (or `lean --run` for single files)
-    3. Check for compilation errors
-    4. Return success/failure with logs
+    2. Run `lake build` (bounded time, bounded output)
+    3. Stronger check (when possible): run `lake env lean --no-sorries` on the best-matching problem file
+    4. Record verification strength + artifacts (toolchain, selected file)
+    5. Return success/failure with logs
     """
     ...
 ```
@@ -247,15 +294,18 @@ class ProofProvenance:
     posted_at: datetime | None
 
     verification_status: Literal["unverified", "verified", "failed", "source_unavailable"]
+    verification_strength: Literal["none", "build_only", "no_sorries"]  # see Verification section
+    verification_error: str | None  # short, user-facing reason (e.g., "toolchain install failed")
     verified_at: datetime | None
     verification_command: str | None  # e.g., "lake build"
     toolchain: str | None             # raw `lean-toolchain` contents, when present
+    verified_files: list[str]         # paths that were checked (best-effort)
     log_path: str | None              # path under data/sync_cache/...
 ```
 
 ### Storage Layout
 
-```
+```text
 data/sync_cache/proofs/
   <problem_id>/
     links.json            # Extracted forum links (discover-only)
@@ -284,7 +334,7 @@ data/sync_cache/proofs/
 
 ## Caching Strategy
 
-```
+```text
 data/sync_cache/
   submodule_status.json     # Last sync time, commit hash
   website/
@@ -315,11 +365,55 @@ ERDOS_SYNC_INTERVAL=86400           # Seconds between auto-syncs (default: 24h)
 | Scenario | Behavior |
 |----------|----------|
 | Submodule fetch fails | Warn, continue with cached data |
-| Website HTML parse fails (structure changed) | Warn, keep existing `data/problems_enriched.yaml` fields untouched; record failure in sync cache |
+| Submodule not initialized / missing git | Fail with clear setup instructions |
+| Website HTTP error (403/404/429/5xx) | Warn, keep existing `data/problems_enriched.yaml` fields untouched; record status code in sync cache |
+| Website HTML parse fails (structure changed) | Warn, keep existing `data/problems_enriched.yaml` fields untouched; record failure + HTML snapshot in sync cache |
 | No proof link found | Log as "no proof available yet" |
 | Proof link broken (404) | Mark as "source_unavailable" |
 | Lean compilation fails | Mark `verification_status=\"failed\"`, store logs |
-| Multiple proof links | Record all links; when verifying, try each deterministically and keep the first verified |
+| Multiple proof links | Record all links; `--verify` tries each deterministically and keeps the first that reaches `verification_strength=no_sorries` |
+| Verification toolchain missing | Mark failed with actionable instructions (and never auto-install toolchains by default) |
+
+---
+
+## Verification Semantics (What “Verified” Means)
+
+`lake build` is necessary but not sufficient: Lean can compile with `sorry` (warnings), and a repository may build without proving the specific problem.
+
+This spec defines two verification strengths:
+
+- `build_only`: repository builds successfully (`lake build`).
+- `no_sorries`: we successfully identify a problem-relevant Lean file and run `lake env lean --no-sorries` on it (or an equivalent no-sorry check).
+
+`verification_status="verified"` MUST imply `verification_strength="no_sorries"`.
+
+If we can only reach `build_only` (i.e., `lake build` succeeds but we cannot prove “no sorries for the right file”), we record:
+
+- `verification_status="failed"`
+- `verification_strength="build_only"`
+- `verification_error` explaining the limiting factor (e.g., “could not identify problem file”, “toolchain install failed”, “no-sorries check unsupported”)
+
+`verification_status="unverified"` is reserved for “verification was not attempted”.
+
+---
+
+## Security Considerations (Untrusted Code Execution)
+
+Verifying third-party repos is inherently risky because `lake build` executes repo-provided build configuration.
+
+Minimum guardrails (MUST):
+
+1. `--verify` is explicit and prints a warning before doing anything.
+2. Verification runs in a temp directory and never modifies the working tree.
+3. Verification sanitizes the environment:
+   - do not pass API keys / tokens into the child process environment,
+   - record only bounded logs (truncate stdout/stderr).
+4. Verification never runs git hooks and does not update submodules recursively.
+
+Recommended guardrails (SHOULD):
+
+- Add an optional “sandboxed verification” mode (e.g., Docker) that disables network access.
+- Maintain an allowlist of repo hosts and optionally an allowlist of orgs/users.
 
 ---
 
@@ -357,6 +451,17 @@ def test_extract_real_proof_link():
     # Use problem #347 as test case
     ...
 ```
+
+### Deterministic Offline Tests (Required)
+
+To keep CI reliable, the core of this spec should be testable without network:
+
+- Website parsing uses committed HTML fixtures under `tests/fixtures/sync/website/*.html`.
+- Forum parsing uses committed HTML fixtures under `tests/fixtures/sync/forum/*.html`.
+- Proof verification uses a tiny local fixture repo under `tests/fixtures/sync/proof_repo/` that:
+  - contains a minimal Lean project,
+  - includes one file with `sorry` (must fail `no_sorries` verification),
+  - includes one file without `sorry` (must pass).
 
 ---
 
