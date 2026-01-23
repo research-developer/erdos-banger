@@ -24,9 +24,9 @@ pytestmark = pytest.mark.skipif(
 
 
 @pytest.fixture
-def sample_problems_path() -> Path:
+def sample_problems_path(request: pytest.FixtureRequest) -> Path:
     """Return path to sample problems fixture."""
-    return Path(__file__).parent.parent.parent / "fixtures" / "sample_problems.yaml"
+    return Path(request.config.rootpath) / "tests" / "fixtures" / "sample_problems.yaml"
 
 
 @pytest.fixture

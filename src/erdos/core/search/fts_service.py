@@ -67,8 +67,8 @@ def search_fts(
                 "title": None,
                 "reference_doi": r.reference_doi,
             }
-            enrich_result(result_dict, repo, r.problem_id)
-            enriched_results.append(result_dict)
+            enriched = enrich_result(result_dict, repo, r.problem_id)
+            enriched_results.append(enriched)
 
         return CLIOutput.ok(
             command="erdos search",

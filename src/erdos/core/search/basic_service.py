@@ -44,6 +44,14 @@ def search_basic(
                 code=ExitCode.USAGE_ERROR,
             )
 
+        if limit <= 0:
+            return CLIOutput.err(
+                command="erdos search",
+                error_type="UsageError",
+                message="Limit must be greater than 0",
+                code=ExitCode.USAGE_ERROR,
+            )
+
         # If problem_id specified, search only that problem
         if problem_id is not None:
             problem = repo.get_by_id(problem_id)

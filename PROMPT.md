@@ -51,8 +51,8 @@ Then read the specific debt deck for the current task.
 
 ### Phase 4: Update Documentation (References the Commit)
 8. Update the deck with the commit from step 7:
-   - set **Status: Fixed**
-   - add **Fixed In: <commit-hash-from-step-7>**
+   - set **Status: Fixed** (or **Closed (Invalid)** if the debt was invalid)
+   - add **Fixed In:** or **Closed In:** with `<commit-hash-from-step-7>`
 9. Update debt indices and archives:
    - move deck `docs/debt/` → `docs/_archive/debt/`
    - update `docs/debt/README.md` (Active → Archived)

@@ -83,10 +83,9 @@ def _build_provider_from_source(
     Returns:
         A MetadataProvider instance for the specified source.
     """
-    openalex = OpenAlexProvider.from_env()
-
     if source == MetadataSource.OPENALEX:
         # Full capability: OpenAlex primary with Crossref/arXiv fallback
+        openalex = OpenAlexProvider.from_env()
         crossref = CrossrefProvider(mailto=mailto, timeout=timeout)
         arxiv = ArxivProvider(timeout=timeout)
         return FallbackProvider(

@@ -59,12 +59,14 @@ for i in $(seq 1 "$MAX"); do
     if git diff --cached --quiet 2>/dev/null; then
         : # No staged changes, all good
     else
-        echo "" >> "$log"
-        echo "WARNING: Staged but uncommitted changes detected!" >> "$log"
-        echo "    The iteration may have timed out before committing." >> "$log"
-        echo "    Run 'git status' and 'git diff --cached' to inspect." >> "$log"
-        echo "    Consider committing manually: git commit -m 'WIP: iteration $i incomplete'" >> "$log"
-        echo "" >> "$log"
+        {
+            echo ""
+            echo "WARNING: Staged but uncommitted changes detected!"
+            echo "    The iteration may have timed out before committing."
+            echo "    Run 'git status' and 'git diff --cached' to inspect."
+            echo "    Consider committing manually: git commit -m 'WIP: iteration $i incomplete'"
+            echo ""
+        } >> "$log"
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] WARNING: Staged but uncommitted changes! Check logs/ralph/iteration_${n}.log"
     fi
 

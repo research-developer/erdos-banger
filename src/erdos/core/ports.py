@@ -128,7 +128,7 @@ class MetadataProvider(
     only a subset of operations is needed.
 
     Note: Protocol inheritance in Python typing creates a union of all methods.
-    Only OpenAlexProvider fully implements this protocol.
+    OpenAlexProvider and FallbackProvider both implement this full protocol.
     """
 
     ...

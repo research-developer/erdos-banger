@@ -494,3 +494,4 @@ class TestBuildMetadataProvider:
         # Check expected providers
         assert "openalex" in provider.provider_name
         assert "crossref" in provider.provider_name
+        assert "arxiv" in provider.provider_name

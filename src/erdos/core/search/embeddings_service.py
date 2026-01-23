@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
 from erdos.core.search.db import SearchIndexError
-from erdos.core.search.facade import SearchIndex
 
 
 if TYPE_CHECKING:
@@ -15,13 +14,48 @@ if TYPE_CHECKING:
     from erdos.core.search.embeddings import EmbeddingModel
 
 
+# Model dimension registry for common embedding models
+# Keys are substrings to match in model names, values are dimensions
+_MODEL_DIMENSIONS: dict[str, int] = {
+    "MiniLM": 384,
+    "bge-small": 384,
+    "bge-base": 768,
+    "bge-large": 1024,
+    "mpnet-base": 768,
+    "e5-small": 384,
+    "e5-base": 768,
+    "e5-large": 1024,
+}
+
+# Default dimension for unknown models (most common size)
+_DEFAULT_DIMENSION = 768
+
+
+def _get_model_dimension(model_name: str) -> int:
+    """Determine embedding dimension for a model.
+
+    Args:
+        model_name: The model name/path
+
+    Returns:
+        Expected embedding dimension
+    """
+    for pattern, dim in _MODEL_DIMENSIONS.items():
+        if pattern in model_name:
+            return dim
+    return _DEFAULT_DIMENSION
+
+
 def get_embedding_model(
     model_name: str,
+    *,
+    dimension: int | None = None,
 ) -> tuple[EmbeddingModel | None, CLIOutput | None]:
     """Load embedding model, returning error if unavailable.
 
     Args:
         model_name: Name of the embedding model to load
+        dimension: Optional explicit dimension override
 
     Returns:
         Tuple of (model, error) - one will be None
@@ -46,8 +80,8 @@ def get_embedding_model(
         )
 
     try:
-        # Determine expected dimension based on model
-        dim = 384 if "MiniLM" in model_name else 768
+        # Use explicit dimension if provided, otherwise look up in registry
+        dim = dimension if dimension is not None else _get_model_dimension(model_name)
         config = EmbeddingConfig(model_name=model_name, dimension=dim)
         model = EmbeddingModel(config)
         return model, None
@@ -75,7 +109,7 @@ def build_embeddings(
     """Build embeddings for indexed chunks.
 
     Args:
-        index: Search index (must be SearchIndex instance)
+        index: Search index implementing SearchIndexProtocol
         model_name: Embedding model name
 
     Returns:
@@ -93,16 +127,9 @@ def build_embeddings(
         )
 
     try:
-        if isinstance(index, SearchIndex):
-            count = index.build_embeddings(embedder)
-            return count, None
-        else:
-            return 0, CLIOutput.err(
-                command="erdos search",
-                error_type="ConfigError",
-                message="Embedding build requires SearchIndex instance",
-                code=ExitCode.CONFIG_ERROR,
-            )
+        # Trust the protocol - if index has build_embeddings, use it
+        count = index.build_embeddings(embedder)
+        return count, None
     except SearchIndexError as e:
         return 0, CLIOutput.err(
             command="erdos search",
