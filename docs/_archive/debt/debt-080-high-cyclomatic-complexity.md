@@ -88,7 +88,7 @@ Consider tackling remaining C-grade hotspots opportunistically when touching nea
 ## Acceptance Criteria
 
 - [x] No functions with D-grade (≥21) complexity
-- [ ] `make ci` passes
+- [x] `make ci` passes
 
 ## Impact
 

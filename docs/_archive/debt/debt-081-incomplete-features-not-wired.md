@@ -167,7 +167,7 @@ single PR.
 - [x] Specs do not claim CLI flags/commands that are not implemented
 - [x] No CLI flags are silently ignored (BUG-022 class)
 - [x] Tested-but-unused helper logic removed
-- [ ] `make ci` passes
+- [x] `make ci` passes
 
 ## Impact
 
