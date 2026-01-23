@@ -13,7 +13,7 @@ v1.4 (DONE)     Integration: Formal conjectures + MCP
 v2.0 (DONE)     Expansion: PDF conversion (Marker + LLM)
 v2.1 (DONE)     Architecture: MetadataProvider abstraction
 v3.0 (DONE)     Research: Workspace + campaign memory
-v3.1 (PENDING)  Verification: v3 integration tests
+v3.1 (DONE)     Verification: v3 integration tests
 v3.2 (PENDING)  Research APIs: Exa integration
 v3.3 (PENDING)  Research APIs: Semantic Scholar integration
 v3.4 (PENDING)  Research APIs: zbMATH integration
@@ -28,7 +28,6 @@ Specs currently in progress or awaiting implementation.
 
 | ID | Title | Status | Target | Resolves |
 |----|-------|--------|--------|----------|
-| 028 | [v3 Integration Verification](./spec-028-v3-integration-verification.md) | Pending | v3.1 | Post-v3.0 verification gap |
 | 029 | [Exa Research Integration](./spec-029-exa-research-integration.md) | Pending | v3.2 | Agentic literature synthesis |
 | 030 | [Semantic Scholar Integration](./spec-030-semantic-scholar-integration.md) | Pending | v3.3 | Citation context ("WHY cites") |
 | 031 | [zbMATH Integration](./spec-031-zbmath-integration.md) | Pending | v3.4 | Math-specific metadata (MSC) |
@@ -86,6 +85,7 @@ Completed specs that are fully implemented.
 | 025 | Index Research Artifacts into Search DB | [archive](../_archive/specs/spec-025-index-research-artifacts.md) |
 | 026 | Deterministic Research Synthesis | [archive](../_archive/specs/spec-026-deterministic-research-synthesis.md) |
 | 027 | Loop → Research Integration | [archive](../_archive/specs/spec-027-loop-research-integration.md) |
+| 028 | v3 Integration Verification | [archive](../_archive/specs/spec-028-v3-integration-verification.md) |
 
 **Next Spec ID:** SPEC-035
 
@@ -137,14 +137,16 @@ v3.0 Research (DONE)
 ├── 026 Deterministic Synthesis ←── SYNTHESIS.md rendering
 └── 027 Loop → Research ←── Attempt records from loop
 
-v3.1+ Future (PENDING)
-├── 028 v3 Integration Verification ←── Horizontal + vertical tests
+v3.1 Verification (DONE)
+└── 028 v3 Integration Verification ←── Horizontal + vertical tests
+
+v3.2+ Future (PENDING)
 ├── 029 Exa Research Integration ←── Agentic literature synthesis
 ├── 030 Semantic Scholar Integration ←── Citation context
 ├── 031 zbMATH Integration ←── Math-specific metadata
-├── 032 Multi-Model Routing ←── GPT-5.2 + Claude + Exa
+├── 032 Multi-Model Routing ←── Task-level LLM routing (external commands)
 ├── 033 Lean Copilot Integration ←── 032 (needs model routing)
-└── 034 Progress Dashboard ←── 028 (needs v3 verification)
+└── 034 Progress Dashboard ←── 028 (verified v3 foundation)
 ```
 
 ## Master Documents

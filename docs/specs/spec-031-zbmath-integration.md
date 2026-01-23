@@ -114,7 +114,8 @@ erdos search --msc "11B05" --year-min 2000    # Recent papers only
 | `--limit` | 20 | Maximum results |
 | `--year-min` | — | Filter by publication year |
 | `--year-max` | — | Filter by publication year |
-| `--json` | false | Machine-readable output |
+
+**JSON mode:** use the global flag: `erdos --json refs zbmath ...`
 
 ### Output (Default)
 
@@ -139,26 +140,34 @@ Review (excerpt):
   arithmetic progressions. This resolves a long-standing conjecture...
 ```
 
-### Output (--json)
+### Output (JSON mode)
 
 ```json
 {
-  "zbl_id": "1234567",
-  "title": "The primes contain arbitrarily long arithmetic progressions",
-  "authors": [
-    {"name": "Green, Ben", "zbmath_author_id": "green.ben"},
-    {"name": "Tao, Terence", "zbmath_author_id": "tao.terence"}
-  ],
-  "year": 2008,
-  "journal": "Annals of Mathematics",
-  "doi": "10.4007/annals.2008.167.481",
-  "msc": [
-    {"code": "11B05", "primary": true, "text": "Density, gaps, topology"},
-    {"code": "11N13", "primary": false, "text": "Primes in progressions"},
-    {"code": "05D10", "primary": false, "text": "Ramsey theory"}
-  ],
-  "keywords": ["arithmetic progressions", "primes", "density", "ergodic methods"],
-  "review_excerpt": "The authors prove that the prime numbers contain..."
+  "schema_version": 1,
+  "command": "erdos refs zbmath",
+  "success": true,
+  "data": {
+    "identifier": "10.4007/annals.2008.167.481",
+    "entry": {
+      "zbl_id": "1234567",
+      "title": "The primes contain arbitrarily long arithmetic progressions",
+      "authors": ["Green, Ben", "Tao, Terence"],
+      "year": 2008,
+      "journal": "Annals of Mathematics",
+      "doi": "10.4007/annals.2008.167.481",
+      "msc": [
+        {"code": "11B05", "primary": true, "text": "Density, gaps, topology"},
+        {"code": "11N13", "primary": false, "text": "Primes in progressions"},
+        {"code": "05D10", "primary": false, "text": "Ramsey theory"}
+      ],
+      "keywords": ["arithmetic progressions", "primes", "density", "ergodic methods"],
+      "review_excerpt": "The authors prove that the prime numbers contain..."
+    }
+  },
+  "error": null,
+  "timestamp": "2026-01-23T12:00:00Z",
+  "duration_ms": 0
 }
 ```
 
@@ -180,7 +189,6 @@ src/erdos/core/
 # src/erdos/core/clients/zbmath.py
 
 from dataclasses import dataclass
-from erdos.core.retry import with_retry
 from erdos.core.rate_limiter import RateLimiter
 
 @dataclass
@@ -211,7 +219,7 @@ class ZbMathClient:
     def __init__(self, mailto: str | None = None):
         self.mailto = mailto
         # zbMATH doesn't publish rate limits; be conservative
-        self.rate_limiter = RateLimiter(requests_per_second=0.5)
+        self.rate_limiter = RateLimiter(delay_seconds=2.0)
 
     def get_by_doi(self, doi: str) -> ZbMathEntry | None:
         """Lookup by DOI."""

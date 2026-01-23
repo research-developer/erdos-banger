@@ -6,7 +6,7 @@
 >
 > **Verification:** `pytest -m "not requires_lean and not requires_network"`
 >
-> **Goal:** Add a durable, navigable “research workspace” layer so humans + agents can iteratively collect sources, take notes, track leads/attempts, and feed the right context into `erdos ask` / `erdos loop` without relying on the Ralph Wiggum *code-development* loop.
+> **Goal:** Add a durable, navigable “research workspace” layer so humans + agents can iteratively collect sources, take notes, track leads/attempts, and feed the right context into `erdos ask` / `erdos loop run` without relying on the Ralph Wiggum *code-development* loop.
 
 ---
 
@@ -18,7 +18,7 @@ This is the exact architecture we will build first:
 - **Merge-safe structure:** structured items are stored as **one YAML file per record** (e.g., `leads/lead_*.yaml`, `attempts/att_*.yaml`) to avoid “giant YAML list” merge conflicts.
 - **No extra event log:** no `activity.jsonl` in v3; Git history is the audit trail.
 - **No sessions:** no session model in v3; campaign = per-problem folder.
-- **Synthesis-first retrieval:** `SYNTHESIS.md` is always included in `erdos ask` / `erdos loop` context when present.
+- **Synthesis-first retrieval:** `SYNTHESIS.md` is always included in `erdos ask` / `erdos loop run` context when present.
 - **Index curated research:** index `SYNTHESIS.md` **and** rendered structured records (leads/attempts/hypotheses/tasks) into SQLite; do **not** index raw scratchpad text.
 - **Deterministic synthesis:** v3 does not allow an LLM to write canonical `SYNTHESIS.md`.
 - **Implementation order:** SPEC-023 → SPEC-024 → SPEC-025 → SPEC-026 → SPEC-027.
@@ -52,14 +52,14 @@ Non-goals for v3 (explicitly not building):
 
 ### The missing layer
 
-We lack a first-class system for:
+Pre-v3 we lacked a first-class system for:
 
 - multi-day “campaign” work on a problem (days/weeks)
 - scratchpad notes + structured lead tracking + attempt outcomes
 - durable synthesis that can be fed back into RAG + Lean loop
 - a clear, standardized place for humans/agents to write/read state
 
-This doc proposes that missing layer.
+v3 implements that missing layer via the repo-local `research/` workspace (see “Decision summary” above).
 
 ---
 
@@ -70,15 +70,19 @@ What exists already (relevant to this design):
 - **Search/RAG index DB:** `index/erdos.sqlite` (SQLite + FTS5 + optional embeddings).
   - `erdos search` queries it.
   - `erdos ask` retrieves chunks from it and builds a deterministic citation prompt.
-  - Today it indexes problem statements + the single `ProblemRecord.notes` blob (not literature extracts, and not any research workspace files).
+  - Today it indexes problem statements + `ProblemRecord.notes` **and** (best-effort) curated research artifacts:
+    - `research/problems/*/SYNTHESIS.md`
+    - rendered structured records: leads/attempts/hypotheses/tasks
+  - It does **not** index `SCRATCHPAD.md` (too noisy) and does **not** index raw literature extracts by default.
 - **Literature ingestion:** manifests in `literature/manifests/{problem_id:04d}.yaml`, content cached/extracted under `literature/cache/` and `literature/extracts/` (gitignored).
-- **Proof loop:** `erdos loop` generates/patches Lean code and writes detailed JSONL iteration logs under `logs/loop/`.
+- **Proof loop:** `erdos loop run` generates/patches Lean code and writes detailed JSONL iteration logs under `logs/loop/`.
 
-What does **not** exist:
+What still does **not** exist (by design in v3):
 
-- a per-problem scratchpad + lead/attempt tracking system
-- any persistence of “what we tried and why it failed” beyond raw logs
-- any indexable, curated “current synthesis” beyond the one `ProblemRecord.notes` blob
+- sessions/threads as first-class entities (campaign = per-problem folder)
+- an event-sourced activity log (Git history is the audit trail)
+- LLM-written canonical `SYNTHESIS.md` (synthesis is deterministic)
+- indexing full scratchpad text into RAG (too noisy)
 
 ---
 
@@ -262,10 +266,10 @@ We should assume two legitimate workflows will coexist:
 1) **Human-in-the-loop, no API keys**
    - The “agent” is you + Codex CLI / Claude Code operating on the repo.
    - `erdos research ...` provides the shared workspace + structure.
-   - `erdos ask` / `erdos loop` can still run in prompt-only mode when LLM isn’t configured.
+   - `erdos ask` / `erdos loop run` can still run in prompt-only mode when LLM isn’t configured.
 
 2) **Automated runs, API-backed**
-   - `erdos ask` / `erdos loop` will continue to use the existing external command interface (`ERDOS_LLM_COMMAND`).
+   - `erdos ask` / `erdos loop run` will continue to use the existing external command interface (`ERDOS_LLM_COMMAND`).
    - If you want provider APIs, run them behind that command (wrapper script or local service) so the core stays vendor-neutral.
    - The key is: whichever LLM is used, it writes back into the same canonical `research/` workspace.
 
@@ -377,11 +381,11 @@ Minimal behavior (v3):
 Then:
 
 - `erdos ask` always includes `SYNTHESIS.md` in the prompt when present (baseline source, not “best-effort retrieval”)
-- `erdos loop` always includes `SYNTHESIS.md` in the loop prompt context when present
+- `erdos loop run` always includes `SYNTHESIS.md` in the loop prompt context when present
 
 ### 4.4 Loop integration (closing the iteration loop)
 
-When `erdos loop` runs:
+When `erdos loop run` runs:
 
 - it already emits detailed logs under `logs/loop/`
 - v3 should also emit a single structured “attempt record” into:
@@ -551,7 +555,7 @@ _Last updated: 2026-01-23_
 ### Slice 4 — Deterministic synthesis + loop integration (SPEC-026 / SPEC-027)
 
 - `erdos research synthesize` updates `SYNTHESIS.md` deterministically
-- after `erdos loop`, automatically write an attempt record under `attempts/att_*.yaml`
+- after `erdos loop run`, automatically write an attempt record under `attempts/att_*.yaml`
 
 ---
 
@@ -569,7 +573,7 @@ Next spec ID is **SPEC-023**. Suggested breakdown:
 - **SPEC-026: Deterministic Research Synthesis**
   - deterministic `SYNTHESIS.md` rendering rules and update semantics
 - **SPEC-027: Loop → Research Integration**
-  - append attempt records after `erdos loop`, include synthesis in loop prompt context
+  - append attempt records after `erdos loop run`, include synthesis in loop prompt context
 
 ---
 
@@ -581,7 +585,7 @@ Next spec ID is **SPEC-023**. Suggested breakdown:
 4) We do **not** introduce first-class “sessions” in v3. Campaign = the per-problem folder.
 5) We index `SYNTHESIS.md` **and** rendered structured records into SQLite. We do **not** index `SCRATCHPAD.md` in v3 (too noisy).
 6) `SYNTHESIS.md` is **deterministic** (no LLM writes to canonical synthesis in v3).
-7) `erdos loop` will write a structured attempt record under `attempts/att_*.yaml` (SPEC-027).
+7) `erdos loop run` will write a structured attempt record under `attempts/att_*.yaml` (SPEC-027).
 8) Cross-problem knowledge graphs are out of scope until after this layer proves itself on real problems.
 
 ---

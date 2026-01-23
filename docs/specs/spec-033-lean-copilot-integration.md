@@ -20,7 +20,7 @@ Integrate [Lean Copilot](https://github.com/lean-dojo/LeanCopilot) to provide **
 
 **Current state:**
 1. Write Lean code manually
-2. Run `erdos loop` for automated iteration
+2. Run `erdos loop run` for automated iteration
 3. No in-editor assistance
 
 **Gap:** No real-time LLM suggestions during interactive proof development.
@@ -41,7 +41,7 @@ Integrate [Lean Copilot](https://github.com/lean-dojo/LeanCopilot) to provide **
 1. **External API server** — Python server implementing Lean Copilot's external model API
 2. **Lean Copilot lakefile integration** — Add LeanCopilot dependency
 3. **CLI command** — `erdos lean copilot serve` to start the API server
-4. **Model routing** — Use GPT-5.2 for tactic generation via SPEC-032
+4. **Task routing** — Use SPEC-032 to route `tactic_generation` to an external LLM command (default: `ERDOS_LLM_COMMAND_COPILOT`)
 
 ### Out of Scope
 
@@ -76,7 +76,7 @@ Integrate [Lean Copilot](https://github.com/lean-dojo/LeanCopilot) to provide **
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │   FastAPI server:                                           │
-│   POST /generate → calls ModelRouter(TACTIC_GENERATION)     │
+│   POST /generate → routes Task=tactic_generation            │
 │   POST /encode   → calls embedding model (for retrieval)    │
 │                                                             │
 └──────────────────────────┬──────────────────────────────────┘
@@ -165,6 +165,15 @@ paths:
                         type: number
 ```
 
+### Contract Lock (Required for “Ironclad” Compatibility)
+
+To keep this spec verifiable even if Lean Copilot evolves, implementation must:
+
+1. Pin Lean Copilot to a specific git commit or tag in `formal/lean/lakefile.lean`.
+2. Vendor the exact API contract used into the repo (SSOT):
+   - `docs/_vendor-docs/lean-copilot/external_model_api.yaml`
+3. Implement endpoints to match the vendored contract (not a guessed/approximate schema).
+
 ### Server Implementation
 
 ```python
@@ -172,7 +181,9 @@ paths:
 
 from fastapi import FastAPI
 from pydantic import BaseModel
-from erdos.core.llm.router import ModelRouter, TaskType
+from erdos.core.llm.router import LLMCommandRouter
+from erdos.core.llm.tasks import TaskType
+from erdos.core.llm.exec import execute_llm
 
 app = FastAPI(title="Erdos Lean Copilot API")
 
@@ -192,8 +203,8 @@ class EncodeResponse(BaseModel):
 
 @app.post("/generate", response_model=GenerateResponse)
 async def generate_tactics(request: GenerateRequest) -> GenerateResponse:
-    """Generate tactic suggestions using GPT-5.2."""
-    router = get_model_router()
+    """Generate tactic suggestions via the task router (SPEC-032)."""
+    router: LLMCommandRouter = get_llm_router()
 
     # Build prompt for tactic generation
     system_prompt = """You are a Lean 4 theorem prover assistant.
@@ -206,13 +217,11 @@ Do not include explanations."""
     # Generate multiple samples
     tactics = []
     for _ in range(request.num_samples):
-        response = await router.complete(
-            TaskType.TACTIC_GENERATION,
-            full_prompt,
-            temperature=request.temperature,
-        )
-        # Parse tactics from response
-        for line in response.content.strip().split("\n"):
+        llm_command = router.command_for(TaskType.TACTIC_GENERATION)
+        answer, exit_code = execute_llm(llm_command=llm_command, prompt=full_prompt)
+        if exit_code != 0:
+            continue
+        for line in answer.strip().split("\n"):
             tactic = line.strip()
             if tactic and tactic not in tactics:
                 tactics.append(tactic)
@@ -246,7 +255,8 @@ erdos lean copilot serve --host 0.0.0.0     # Expose to network
 |--------|---------|-------------|
 | `--port` | 8000 | Server port |
 | `--host` | 127.0.0.1 | Bind address |
-| `--model` | gpt-5.2 | Model for tactic generation |
+| `--llm-cmd` | (router default) | Override LLM command for `/generate` |
+| `--embedding-model` | (see below) | Embedding model for `/encode` |
 | `--log-level` | info | Logging verbosity |
 
 ---
@@ -262,7 +272,7 @@ import Lake
 open Lake DSL
 
 require LeanCopilot from git
-  "https://github.com/lean-dojo/LeanCopilot.git" @ "v4.23.0"
+  "https://github.com/lean-dojo/LeanCopilot.git" @ "<PINNED_TAG_OR_COMMIT>"
 
 package erdos where
   -- existing config...

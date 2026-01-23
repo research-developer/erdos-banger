@@ -1,42 +1,38 @@
-# SPEC-032: Multi-Model Routing
+# SPEC-032: Multi-Model Routing (External Command)
 
 > **Status:** Pending
 >
 > **Target:** v3.5
 >
-> **Resolves:** Single-model limitation; task-appropriate model selection
+> **Resolves:** Single-command limitation; task-appropriate LLM backends
 >
-> **Prerequisites:** SPEC-028 (v3 verification), SPEC-029 (Exa)
+> **Prerequisites:** SPEC-028 (v3 verification)
 
 ---
 
 ## Summary
 
-Implement **task-appropriate model routing** so different operations use the best-suited LLM:
+Add **task-level routing** for LLM calls while preserving the repo’s existing, vendor-neutral integration pattern: **LLMs are invoked via external commands** (e.g. `ERDOS_LLM_COMMAND=./scripts/llm.sh`).
 
-- **GPT-5.2** for mathematical reasoning (tactic generation, proof search)
-- **Claude Opus 4.5** for code generation (Lean skeletons, tooling)
-- **Exa Research** for literature synthesis
-
-This replaces the current single-model approach (`ERDOS_LLM_COMMAND`).
+This spec does **not** require direct OpenAI/Anthropic SDK integration in Python. “Model selection” is implemented by choosing the appropriate **command/script** per task.
 
 ---
 
-## Motivation
+## Goals / Non-Goals
 
-**Current state:** All LLM operations go through `ERDOS_LLM_COMMAND` — a single model for everything.
+### Goals
 
-**Problem:** Different tasks have different optimal models:
+1. Route LLM work to different backends per task (ask vs loop vs copilot).
+2. Keep the core vendor-neutral (commands/scripts decide provider/model).
+3. Preserve the existing UX (`ERDOS_LLM_COMMAND`, `--llm-cmd`, `--no-llm`).
+4. Make routing behavior fully testable offline (no network, no API keys).
 
-| Task | Best Model | Why |
-|------|------------|-----|
-| Tactic generation | GPT-5.2 | 100% AIME 2025, best math reasoning |
-| Proof strategy | GPT-5.2 | Abstract reasoning, multi-step math |
-| Lean code generation | Claude Opus 4.5 | 80.9% SWE-bench, best code |
-| Literature synthesis | Exa Research | Purpose-built, 94.9% SimpleQA |
-| General reasoning | GPT-5.2 | Default to math-optimized |
+### Non-Goals
 
-**Solution:** Route tasks to appropriate models based on task type.
+- Replacing `ERDOS_LLM_COMMAND` with provider-specific SDK calls.
+- Benchmark-based “best model” claims inside the spec.
+- Dynamic routing based on prompt content.
+- Streaming responses.
 
 ---
 
@@ -44,78 +40,60 @@ This replaces the current single-model approach (`ERDOS_LLM_COMMAND`).
 
 ### In Scope
 
-1. **Model router** — Selects model based on task type
-2. **Configuration** — Per-task model assignments
-3. **CLI integration** — Existing commands use router transparently
-4. **Fallback chain** — If primary unavailable, try secondary
+1. **Task enum** describing LLM call sites.
+2. **Command router** that resolves a task → command string (with fallback).
+3. **Execution helper** that runs the command shell-free (reusing existing patterns).
+4. **CLI wiring**:
+   - `erdos ask`: use router unless `--llm-cmd` override is provided
+   - `erdos loop run`: use router unless `--llm-cmd` override is provided
+   - (future) `erdos lean copilot serve` (SPEC-033): use router for tactic generation
 
 ### Out of Scope
 
-- Dynamic model selection based on content analysis
-- Cost optimization (future spec)
-- Model fine-tuning or custom models
-- Streaming responses (current batch mode sufficient)
+- Exa Research integration (covered by SPEC-029; not an LLM command).
+- Changing deterministic/template-based commands (e.g. `erdos lean formalize`).
 
 ---
 
 ## Configuration
 
-### Environment Variables
+### Environment Variables (Primary)
+
+These variables select **commands**, not “models”:
 
 ```bash
-# .env
+# Existing global fallback (still supported)
+ERDOS_LLM_COMMAND=./scripts/llm.sh
 
-# Primary models (task-specific)
-ERDOS_MODEL_MATH=gpt-5.2              # Math reasoning, tactics
-ERDOS_MODEL_CODE=claude-opus-4.5      # Code generation
-ERDOS_MODEL_RESEARCH=exa-research     # Literature synthesis
-
-# Fallback (if primary unavailable)
-ERDOS_MODEL_FALLBACK=gpt-5.2
-
-# API keys (existing)
-OPENAI_API_KEY=...
-ANTHROPIC_API_KEY=...
-EXA_API_KEY=...
+# Optional task-specific commands
+ERDOS_LLM_COMMAND_MATH=./scripts/llm-openai.sh
+ERDOS_LLM_COMMAND_CODE=./scripts/llm-anthropic.sh
+ERDOS_LLM_COMMAND_COPILOT=./scripts/llm-openai.sh
 ```
 
-### Configuration File (Optional)
+### Task → Command Mapping
+
+| Task | Default Command Resolution |
+|------|----------------------------|
+| `ask_question` | `ERDOS_LLM_COMMAND_MATH` → `ERDOS_LLM_COMMAND` |
+| `loop_patch` | `ERDOS_LLM_COMMAND_CODE` → `ERDOS_LLM_COMMAND` |
+| `tactic_generation` | `ERDOS_LLM_COMMAND_COPILOT` → `ERDOS_LLM_COMMAND_MATH` → `ERDOS_LLM_COMMAND` |
+
+### Optional Config File (Secondary)
+
+If present, a config file can define exact mappings (overrides env defaults):
 
 ```yaml
-# config/models.yaml
-
-models:
-  math:
-    provider: openai
-    model: gpt-5.2
-    temperature: 0.2
-    max_tokens: 4096
-    reasoning_effort: xhigh
-
-  code:
-    provider: anthropic
-    model: claude-opus-4-5-20251101
-    temperature: 0.1
-    max_tokens: 8192
-
-  research:
-    provider: exa
-    model: exa-research-pro
-
-  fallback:
-    provider: openai
-    model: gpt-5.2
-    temperature: 0.3
-
+# config/llm_routing.yaml
 routing:
-  tactic_generation: math
-  proof_search: math
-  lean_skeleton: code
-  lean_repair: code
-  literature_query: research
-  ask_question: math
-  general: math
+  ask_question: ERDOS_LLM_COMMAND_MATH
+  loop_patch: ERDOS_LLM_COMMAND_CODE
+  tactic_generation: ERDOS_LLM_COMMAND_COPILOT
 ```
+
+Rules:
+- Values must be **names of environment variables** (not raw commands) to avoid committing secrets/paths.
+- Missing entries fall back to the default resolution table above.
 
 ---
 
@@ -124,255 +102,95 @@ routing:
 ### Module Structure
 
 ```
-src/erdos/core/
-  llm/
-    __init__.py
-    router.py           # Task → model routing
-    providers/
-      __init__.py
-      openai.py         # OpenAI API adapter
-      anthropic.py      # Anthropic API adapter
-      exa.py           # Exa Research adapter
-      base.py          # Protocol/ABC for providers
+src/erdos/core/llm/
+  __init__.py
+  tasks.py            # TaskType enum + mapping rules
+  router.py           # Resolve task -> command string
+  exec.py             # Shell-free execution (wraps subprocess)
 ```
 
-### Router Implementation
+Implementation should reuse the existing execution model from `src/erdos/core/ask/llm.py` (shell-free `subprocess.run`, stdin prompt, timeout, structured errors).
 
-```python
-# src/erdos/core/llm/router.py
+### Router Semantics (Precise)
 
-from enum import Enum
-from dataclasses import dataclass
-from erdos.core.llm.providers.base import LLMProvider, LLMResponse
-
-class TaskType(str, Enum):
-    """Task types for model routing."""
-    TACTIC_GENERATION = "tactic_generation"
-    PROOF_SEARCH = "proof_search"
-    LEAN_SKELETON = "lean_skeleton"
-    LEAN_REPAIR = "lean_repair"
-    LITERATURE_QUERY = "literature_query"
-    ASK_QUESTION = "ask_question"
-    GENERAL = "general"
-
-@dataclass
-class ModelConfig:
-    """Configuration for a model."""
-    provider: str  # openai, anthropic, exa
-    model: str
-    temperature: float = 0.2
-    max_tokens: int = 4096
-    reasoning_effort: str | None = None  # OpenAI only
-
-class ModelRouter:
-    """Routes tasks to appropriate LLM providers."""
-
-    def __init__(
-        self,
-        providers: dict[str, LLMProvider],
-        routing: dict[TaskType, str],
-        fallback: str = "openai",
-    ):
-        self.providers = providers
-        self.routing = routing
-        self.fallback = fallback
-
-    def route(self, task: TaskType) -> LLMProvider:
-        """Get provider for task type."""
-        provider_name = self.routing.get(task, self.fallback)
-        if provider_name not in self.providers:
-            provider_name = self.fallback
-        return self.providers[provider_name]
-
-    async def complete(
-        self,
-        task: TaskType,
-        prompt: str,
-        **kwargs,
-    ) -> LLMResponse:
-        """Route and execute completion."""
-        provider = self.route(task)
-        return await provider.complete(prompt, **kwargs)
-```
-
-### Provider Protocol
-
-```python
-# src/erdos/core/llm/providers/base.py
-
-from typing import Protocol
-from dataclasses import dataclass
-
-@dataclass
-class LLMResponse:
-    """Response from an LLM provider."""
-    content: str
-    model: str
-    provider: str
-    usage: dict | None = None  # tokens used
-    cached: bool = False
-
-class LLMProvider(Protocol):
-    """Protocol for LLM providers."""
-
-    async def complete(
-        self,
-        prompt: str,
-        temperature: float = 0.2,
-        max_tokens: int = 4096,
-        **kwargs,
-    ) -> LLMResponse:
-        """Generate completion."""
-        ...
-
-    def is_available(self) -> bool:
-        """Check if provider is configured and reachable."""
-        ...
-```
+- A task resolves to a **primary command** and an optional **fallback**.
+- If the primary command is not configured (empty/missing), use fallback.
+- If execution fails due to **configuration** (missing executable, invalid command syntax), try fallback.
+- If execution fails with a **non-zero exit code**, do **not** automatically fall back by default (avoid masking real failures). Fallback on non-zero exit codes requires an explicit opt-in (e.g. `ERDOS_LLM_FALLBACK_ON_NONZERO=1`).
 
 ---
 
 ## CLI Integration
 
-### Transparent Routing
+### `erdos ask`
 
-Existing commands automatically use the router:
+- Existing behavior stays the same:
+  - `--no-llm` disables execution
+  - `--llm-cmd` overrides routing entirely
+- New default behavior when LLM is enabled and `--llm-cmd` is not provided:
+  - use `TaskType.ask_question` routing
 
-```bash
-# Uses MATH model (GPT-5.2)
-erdos ask 6 "What's the current best bound?"
+### `erdos loop run`
 
-# Uses CODE model (Claude)
-erdos lean formalize 6
+- Existing behavior stays the same:
+  - `--llm-cmd` overrides routing entirely
+- New default behavior when `--llm-cmd` is not provided:
+  - use `TaskType.loop_patch` routing
 
-# Uses MATH model for tactics, CODE model for repairs
-erdos loop 6 --max-iterations 10
-
-# Uses RESEARCH model (Exa)
-erdos research exa 6 "What approaches exist?"
-```
-
-### Explicit Override
-
-Force a specific model:
+### Examples
 
 ```bash
-erdos ask 6 "..." --model claude-opus-4.5
-erdos loop 6 --tactic-model gpt-5.2 --repair-model claude-opus-4.5
+# Ask uses the "math" LLM command (falls back to ERDOS_LLM_COMMAND).
+ERDOS_LLM_COMMAND_MATH=./scripts/llm-openai.sh erdos ask 6 "Summarize the current approach"
+
+# Loop uses the "code" LLM command (falls back to ERDOS_LLM_COMMAND).
+ERDOS_LLM_COMMAND_CODE=./scripts/llm-anthropic.sh erdos loop run 6 --max-iter 10
 ```
-
----
-
-## Fallback Chain
-
-If primary model unavailable:
-
-```
-1. Try primary model for task type
-2. If unavailable (no API key, rate limited, error):
-   - Log warning
-   - Try fallback model
-3. If fallback unavailable:
-   - Raise clear error with setup instructions
-```
-
-Example:
-
-```
-[WARN] Claude unavailable (ANTHROPIC_API_KEY not set)
-[INFO] Falling back to GPT-5.2 for code generation
-```
-
----
-
-## Migration Path
-
-### Phase 1: Parallel Support
-
-Both old and new approaches work:
-
-```bash
-# Old way (still works)
-ERDOS_LLM_COMMAND=./scripts/llm.sh erdos ask 6 "..."
-
-# New way
-ERDOS_MODEL_MATH=gpt-5.2 erdos ask 6 "..."
-```
-
-### Phase 2: Deprecation
-
-```
-[DEPRECATION] ERDOS_LLM_COMMAND is deprecated.
-              Use ERDOS_MODEL_MATH, ERDOS_MODEL_CODE instead.
-              Will be removed in v4.0.
-```
-
-### Phase 3: Removal (v4.0)
-
-Remove `ERDOS_LLM_COMMAND` support entirely.
 
 ---
 
 ## Testing
 
-### Unit Tests
+### Unit Tests (Offline)
 
-```python
-# tests/unit/llm/test_router.py
+- Task mapping resolution order.
+- Behavior when env vars are missing/empty.
+- Behavior for invalid commands (e.g. malformed quoting).
 
-def test_router_selects_correct_provider():
-    """Verify task → provider mapping."""
-    ...
+### Integration Tests (Offline)
 
-def test_router_falls_back_on_unavailable():
-    """Verify fallback behavior."""
-    ...
+Use tiny fixture scripts (no network) that:
+- read prompt from stdin
+- write a deterministic response to stdout
+- exit 0 or non-zero
 
-def test_router_raises_on_no_providers():
-    """Clear error when nothing configured."""
-    ...
+Example fixtures:
+
+```
+tests/fixtures/llm/ok.sh
+tests/fixtures/llm/fail.sh
 ```
 
-### Integration Tests
-
-```python
-# tests/integration/test_multi_model.py
-
-@pytest.mark.requires_network
-@pytest.mark.requires_openai_key
-def test_openai_provider():
-    """End-to-end OpenAI completion."""
-    ...
-
-@pytest.mark.requires_network
-@pytest.mark.requires_anthropic_key
-def test_anthropic_provider():
-    """End-to-end Anthropic completion."""
-    ...
-```
+Tests should confirm:
+- `erdos --json ask ...` selects the expected command based on env routing
+- `erdos --json loop run ...` selects the expected command based on env routing
 
 ---
 
 ## Acceptance Criteria
 
-1. [ ] `ModelRouter` selects provider based on task type
-2. [ ] Configuration via environment variables works
-3. [ ] Configuration via `config/models.yaml` works
-4. [ ] Fallback chain executes on provider unavailability
-5. [ ] `erdos ask` uses MATH model by default
-6. [ ] `erdos lean formalize` uses CODE model by default
-7. [ ] `--model` override works on all commands
-8. [ ] Clear error messages when no providers configured
-9. [ ] Deprecation warning for `ERDOS_LLM_COMMAND`
-10. [ ] Unit and integration tests pass
+1. [ ] Router selects per-task command with documented precedence.
+2. [ ] Existing `ERDOS_LLM_COMMAND` behavior remains valid.
+3. [ ] `--llm-cmd` bypasses routing (ask + loop).
+4. [ ] Clear errors when no command is configured.
+5. [ ] Offline unit + integration tests cover routing and execution.
 
 ---
 
 ## References
 
-- [future-ideations.md](../future/future-ideations.md) — Model comparison table
-- [OpenAI API](https://platform.openai.com/docs/api-reference)
-- [Anthropic API](https://docs.anthropic.com/en/api)
+- `src/erdos/core/ask/llm.py` (current external-command execution model)
+- `src/erdos/commands/ask.py` and `src/erdos/commands/loop.py` (current CLI call sites)
 
 ---
 
@@ -381,3 +199,4 @@ def test_anthropic_provider():
 | Date | Change |
 |------|--------|
 | 2026-01-23 | Initial draft |
+| 2026-01-23 | Rewritten to align with external-command LLM architecture and current CLI (`erdos loop run`) |

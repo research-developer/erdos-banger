@@ -25,7 +25,7 @@ Current literature workflow:
 
 **Gap:** No automated way to ask "What approaches exist for problem X?" and get structured, cited answers.
 
-**Exa fills this gap:** Natural language research queries with structured JSON output, automatic citation, and 94.9% accuracy on SimpleQA.
+**Exa fills this gap:** Natural language research queries with structured JSON output and citations.
 
 ---
 
@@ -76,7 +76,8 @@ erdos research exa 124 "Techniques for graph coloring bounds" --save-leads
 | `--max-results` | 5 | Maximum number of sources to return |
 | `--save-leads` | false | Auto-create lead records from results |
 | `--output-schema` | default | Custom JSON schema for structured extraction |
-| `--json` | false | Machine-readable output |
+
+**JSON mode:** use the global flag: `erdos --json research exa ...`
 
 ### Output (Default)
 
@@ -101,29 +102,39 @@ Synthesis:
   - Open questions: tight bounds for specific group structures
 ```
 
-### Output (--json)
+### Output (JSON mode)
 
 ```json
 {
-  "query": "What approaches have been tried for sum-free sets?",
-  "problem_id": 6,
-  "sources": [
-    {
-      "title": "The primes contain arbitrarily long arithmetic progressions",
-      "authors": ["Ben Green", "Terence Tao"],
-      "year": 2008,
-      "arxiv_id": "math/0404188",
-      "doi": null,
-      "relevance": "Density arguments applicable to sum-free sets",
-      "url": "https://arxiv.org/abs/math/0404188"
-    }
-  ],
-  "synthesis": {
-    "approaches": ["density arguments", "probabilistic methods", "algebraic structure"],
-    "open_questions": ["tight bounds for specific group structures"]
+  "schema_version": 1,
+  "command": "erdos research exa",
+  "success": true,
+  "data": {
+    "problem_id": 6,
+    "query": "What approaches have been tried for sum-free sets?",
+    "max_results": 5,
+    "sources": [
+      {
+        "title": "The primes contain arbitrarily long arithmetic progressions",
+        "authors": ["Ben Green", "Terence Tao"],
+        "year": 2008,
+        "arxiv_id": "math/0404188",
+        "doi": null,
+        "url": "https://arxiv.org/abs/math/0404188",
+        "relevance": "Density arguments applicable to sum-free sets"
+      }
+    ],
+    "synthesis": {
+      "approaches": ["density arguments", "probabilistic methods", "algebraic structure"],
+      "open_questions": ["tight bounds for specific group structures"]
+    },
+    "saved_leads": false,
+    "created_lead_ids": [],
+    "cached": false
   },
-  "cached": false,
-  "timestamp": "2026-01-23T12:00:00Z"
+  "error": null,
+  "timestamp": "2026-01-23T12:00:00Z",
+  "duration_ms": 0
 }
 ```
 
@@ -139,53 +150,17 @@ src/erdos/core/
     exa.py              # HTTP client for Exa API
   research/
     exa_integration.py  # Exa → research workspace integration
+src/erdos/commands/research/
+  exa.py                # `erdos research exa` command
 ```
 
 ### Exa Client
 
-```python
-# src/erdos/core/clients/exa.py
+Implementation notes (align with repo conventions):
 
-from dataclasses import dataclass
-from erdos.core.retry import with_retry
-from erdos.core.rate_limiter import RateLimiter
-
-@dataclass
-class ExaSource:
-    title: str
-    authors: list[str]
-    year: int | None
-    arxiv_id: str | None
-    doi: str | None
-    url: str
-    relevance: str
-
-@dataclass
-class ExaResearchResult:
-    query: str
-    sources: list[ExaSource]
-    synthesis: dict
-    cached: bool
-
-class ExaClient:
-    """HTTP client for Exa Research API."""
-
-    BASE_URL = "https://api.exa.ai/research"
-
-    def __init__(self, api_key: str, rate_limiter: RateLimiter | None = None):
-        self.api_key = api_key
-        self.rate_limiter = rate_limiter or RateLimiter(requests_per_second=1)
-
-    @with_retry(max_attempts=3, backoff_base=2.0)
-    def research(
-        self,
-        query: str,
-        max_results: int = 5,
-        output_schema: dict | None = None,
-    ) -> ExaResearchResult:
-        """Execute a research query against Exa API."""
-        ...
-```
+- Use `requests` like existing clients in `src/erdos/core/clients/`.
+- Use `erdos.core.rate_limiter.RateLimiter(delay_seconds=...)` to be polite.
+- Reuse the repo’s retry/backoff approach (see `erdos.core.retry.fetch_with_retry`), extending it as needed for Exa’s HTTP method(s).
 
 ### Integration with Research Workspace
 
@@ -287,13 +262,14 @@ def test_exa_research_query():
 ## Acceptance Criteria
 
 1. [ ] `EXA_API_KEY` documented in `.env.example`
-2. [ ] `ExaClient` implements rate limiting and retry
-3. [ ] `erdos research exa` command works end-to-end
-4. [ ] `--save-leads` creates valid lead records
-5. [ ] `--json` output matches documented schema
-6. [ ] Responses are cached for 24 hours
-7. [ ] Missing API key produces clear error message
-8. [ ] Unit tests cover client and integration logic
+2. [ ] `AppConfig` includes `exa_api_key` (centralized env config)
+3. [ ] `ExaClient` implements polite rate limiting and retry/backoff
+4. [ ] `erdos research exa` command works end-to-end
+5. [ ] `--save-leads` creates valid lead records
+6. [ ] `--json` output matches documented schema
+7. [ ] Responses are cached for 24 hours
+8. [ ] Missing API key produces clear error message
+9. [ ] Unit tests cover client and integration logic
 
 ---
 

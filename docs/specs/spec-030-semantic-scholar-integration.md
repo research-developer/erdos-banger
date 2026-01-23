@@ -6,7 +6,7 @@
 >
 > **Resolves:** Citation context gap ("WHY does paper X cite paper Y?")
 >
-> **Prerequisites:** SPEC-028 (v3 verification), SPEC-029 (Exa integration)
+> **Prerequisites:** SPEC-028 (v3 verification)
 
 ---
 
@@ -52,10 +52,10 @@ This tells us: the citing paper *uses Erdős 1965 as methodology*, not just that
 
 1. **Semantic Scholar client** — HTTP client for S2 API
 2. **Citation context extraction** — Get WHY papers cite each other
-3. **CLI commands:**
-   - `erdos refs citations <doi|arxiv_id>` — Show citation contexts
-   - `erdos refs citing <doi|arxiv_id>` — Papers that cite this work
-   - `erdos refs cited-by <doi|arxiv_id>` — Papers this work cites
+3. **CLI commands (new `s2` namespace under `erdos refs`):**
+   - `erdos refs s2 citations <doi|arxiv_id|s2_id>` — Citation contexts + intents (incoming)
+   - `erdos refs s2 cited-by <doi|arxiv_id|s2_id>` — List citing papers (incoming, no contexts)
+   - `erdos refs s2 references <doi|arxiv_id|s2_id>` — List referenced papers (outgoing)
 4. **Integration with leads** — Annotate leads with citation intent
 
 ### Out of Scope
@@ -90,12 +90,12 @@ For heavy batch processing, apply for a free API key at [semanticscholar.org/pro
 ### Citation Context Command
 
 ```bash
-erdos refs citations <identifier> [OPTIONS]
+erdos refs s2 citations <identifier> [OPTIONS]
 
 # Examples:
-erdos refs citations "10.4007/annals.2008.167.481"  # DOI
-erdos refs citations "math/0404188"                   # arXiv ID
-erdos refs citations --paper-id "649def34f8be52c8b66281af98ae884c09aef38b"  # S2 ID
+erdos refs s2 citations "10.4007/annals.2008.167.481"   # DOI
+erdos refs s2 citations "math/0404188"                  # arXiv ID
+erdos refs s2 citations "649def34f8be52c8b66281af98ae884c09aef38b"  # S2 Paper ID
 ```
 
 ### Options
@@ -104,7 +104,8 @@ erdos refs citations --paper-id "649def34f8be52c8b66281af98ae884c09aef38b"  # S2
 |--------|---------|-------------|
 | `--limit` | 10 | Maximum citations to return |
 | `--intent` | all | Filter by intent: background, methodology, result |
-| `--json` | false | Machine-readable output |
+
+**JSON mode:** use the global flag: `erdos --json refs s2 citations ...`
 
 ### Output (Default)
 
@@ -128,33 +129,42 @@ Citing Papers (10 of 1,234):
      Context: "While Green-Tao established positive density, we show that..."
 ```
 
-### Output (--json)
+### Output (JSON mode)
 
 ```json
 {
-  "paper": {
-    "title": "The primes contain arbitrarily long arithmetic progressions",
-    "authors": ["Ben Green", "Terence Tao"],
-    "year": 2008,
-    "s2_id": "649def34f8be52c8b66281af98ae884c09aef38b",
-    "doi": "10.4007/annals.2008.167.481",
-    "arxiv_id": "math/0404188"
+  "schema_version": 1,
+  "command": "erdos refs s2 citations",
+  "success": true,
+  "data": {
+    "identifier": "10.4007/annals.2008.167.481",
+    "paper": {
+      "title": "The primes contain arbitrarily long arithmetic progressions",
+      "authors": ["Ben Green", "Terence Tao"],
+      "year": 2008,
+      "s2_id": "649def34f8be52c8b66281af98ae884c09aef38b",
+      "doi": "10.4007/annals.2008.167.481",
+      "arxiv_id": "math/0404188"
+    },
+    "citations": [
+      {
+        "citing_paper": {
+          "title": "New bounds on sum-free sets",
+          "year": 2015,
+          "s2_id": "abc123..."
+        },
+        "intents": ["methodology"],
+        "contexts": [
+          "Using the density increment strategy of Green-Tao [12], we show..."
+        ]
+      }
+    ],
+    "total_citations": 1234,
+    "returned": 10
   },
-  "citations": [
-    {
-      "citing_paper": {
-        "title": "New bounds on sum-free sets",
-        "year": 2015,
-        "s2_id": "abc123..."
-      },
-      "intents": ["methodology"],
-      "contexts": [
-        "Using the density increment strategy of Green-Tao [12], we show..."
-      ]
-    }
-  ],
-  "total_citations": 1234,
-  "returned": 10
+  "error": null,
+  "timestamp": "2026-01-23T12:00:00Z",
+  "duration_ms": 0
 }
 ```
 
@@ -168,8 +178,8 @@ Citing Papers (10 of 1,234):
 src/erdos/core/
   clients/
     semantic_scholar.py   # HTTP client for S2 API
-  providers/
-    semantic_scholar.py   # MetadataProvider implementation (optional)
+src/erdos/commands/
+  refs.py                 # `erdos refs <problem_id>` (existing) + `s2` subcommands (new)
 ```
 
 ### Client Implementation
@@ -178,7 +188,6 @@ src/erdos/core/
 # src/erdos/core/clients/semantic_scholar.py
 
 from dataclasses import dataclass
-from erdos.core.retry import with_retry
 from erdos.core.rate_limiter import RateLimiter
 
 @dataclass
@@ -210,9 +219,11 @@ class SemanticScholarClient:
         self.api_key = api_key
         # Unauthenticated: 100 requests/5 min
         # Authenticated: 1 request/sec
-        self.rate_limiter = RateLimiter(
-            requests_per_second=0.33 if api_key is None else 1.0
-        )
+        # Repo RateLimiter is delay-based, not QPS-based.
+        # Conservative defaults:
+        # - unauthenticated: sleep ~3s between calls
+        # - authenticated: sleep ~1s between calls
+        self.rate_limiter = RateLimiter(delay_seconds=3.0 if api_key is None else 1.0)
 
     def get_paper(self, identifier: str) -> S2Paper:
         """Get paper by DOI, arXiv ID, or S2 ID."""
@@ -316,7 +327,7 @@ def test_s2_get_citation_contexts():
 
 1. [ ] `SEMANTIC_SCHOLAR_API_KEY` documented in `.env.example`
 2. [ ] `SemanticScholarClient` respects rate limits
-3. [ ] `erdos refs citations` works with DOI and arXiv ID
+3. [ ] `erdos refs s2 citations` works with DOI and arXiv ID
 4. [ ] Citation intent (background/methodology/result) extracted
 5. [ ] Context snippets included in output
 6. [ ] `--json` output matches documented schema

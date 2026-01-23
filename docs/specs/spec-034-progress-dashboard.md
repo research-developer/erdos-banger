@@ -72,6 +72,11 @@ erdos dashboard --recent 7d        # Last 7 days only
 | `--recent` | 30d | Time window (7d, 30d, 90d, all) |
 | `--refresh` | 5 | Auto-refresh interval (seconds, 0 to disable) |
 
+**JSON mode (`erdos --json dashboard ...`):**
+
+- Must **not** enter an interactive UI loop.
+- Must output a single `CLIOutput` envelope whose `data` is a deterministic snapshot of aggregated dashboard data (suitable for tests and tooling).
+
 ---
 
 ## Dashboard Layout
@@ -207,6 +212,14 @@ def aggregate_dashboard_data(
     ...
 ```
 
+**Primary data sources (SSOT):**
+
+- Research workspace (canonical): `research/problems/<id>/`
+  - `attempts/att_*.yaml` for attempt timeline + success rate
+  - `leads/*.yaml`, `hypotheses/*.yaml`, `tasks/*.yaml` for counts
+- Run logs (derived): `logs/runs.jsonl` (optional)
+  - used only for “recent activity” views when present; dashboard must still work without it
+
 ### Rich Rendering
 
 ```python
@@ -242,7 +255,8 @@ def render_problem_detail(
 6. [ ] Auto-refresh works (--refresh)
 7. [ ] Keyboard navigation (q, r, p, a)
 8. [ ] Works without research workspace (shows empty state)
-9. [ ] Unit tests for data aggregation
+9. [ ] `erdos --json dashboard` emits a single snapshot (no interactive loop)
+10. [ ] Unit tests for data aggregation
 
 ---
 
