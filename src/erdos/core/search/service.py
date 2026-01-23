@@ -15,7 +15,7 @@ Re-exports from submodules for backward compatibility:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
@@ -69,11 +69,20 @@ def search_with_fallback(
     Returns:
         CLIOutput with search results
     """
+
+    def _augment_data(output: CLIOutput, **extra: Any) -> CLIOutput:
+        """Return output with extra keys added to data (if successful dict payload)."""
+        if (
+            not output.success
+            or output.data is None
+            or not isinstance(output.data, dict)
+        ):
+            return output
+        return output.model_copy(update={"data": {**output.data, **extra}})
+
     if index is None:
         result = search_basic(options.query, repo, options.limit, options.problem_id)
-        if result.success and result.data:
-            result.data["mode"] = "basic"
-        return result
+        return _augment_data(result, mode="basic")
 
     fts_result = search_fts(
         options.query,
@@ -86,16 +95,10 @@ def search_with_fallback(
     # None means index is empty - fall back to basic search
     if fts_result is None:
         result = search_basic(options.query, repo, options.limit, options.problem_id)
-        if result.success and result.data:
-            result.data["mode"] = "basic"
-            result.data["fallback_reason"] = "index_empty"
-        return result
+        return _augment_data(result, mode="basic", fallback_reason="index_empty")
 
     # Update mode for display
-    if fts_result.success and fts_result.data:
-        fts_result.data["mode"] = "bm25"
-
-    return fts_result
+    return _augment_data(fts_result, mode="bm25")
 
 
 def execute_search(

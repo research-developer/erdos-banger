@@ -131,6 +131,7 @@ git checkout ralph-wiggum-<sprint>
 
 MAX=50
 ITER_TIMEOUT=600
+TIMEOUT=14400
 
 TIMEOUT_CMD="${TIMEOUT_CMD:-}"
 if [[ -z "$TIMEOUT_CMD" ]]; then

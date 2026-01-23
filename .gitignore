@@ -40,6 +40,7 @@ htmlcov/
 # Project-specific (gitignored data)
 .env
 ralph.log
+# Generated literature scratch (local-only; do not commit)
 _literature/
 data/problems_enriched.yaml
 data/problems.yaml

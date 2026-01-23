@@ -160,8 +160,8 @@ Each data source has ONE job:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    High-Level Policy                         │
-│                  (IngestService, AskService)                 │
+│                    High-Level Policy                        │
+│                  (IngestService, AskService)                │
 └───────────────────────────┬─────────────────────────────────┘
                             │ depends on abstraction
                             ▼

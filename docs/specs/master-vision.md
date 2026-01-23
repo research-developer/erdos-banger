@@ -695,20 +695,22 @@ Use Typer (built on Click) with Rich for formatting.
 
 **Architecture: Single Responsibility + Dependency Inversion**
 
-**Implementation status (v1.2):** metadata fetching is implemented, but the `MetadataProvider` protocol is not yet fully extracted; `src/erdos/core/ingest/fetch.py` still constructs concrete clients. Track: `docs/debt/debt-038-metadata-provider-abstraction.md`.
+**Implementation status (current):** metadata fetching uses ISP-segregated ports in `src/erdos/core/ports.py`
+(`DOILookupProvider`, `ArxivLookupProvider`, `SearchableMetadataProvider`). Capability-specific chains
+(`doi_chain`, `arxiv_chain`, `search_chain`) are composed by `FallbackProvider` and constructed in the
+composition root (`src/erdos/core/context.py`). Remaining public-API cleanup is tracked in DEBT-067.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    erdos ingest <id>                         │
+│                    erdos ingest <id>                        │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│               MetadataProvider (Protocol/Port)              │
-│  get_by_doi(doi) -> ReferenceRecord                         │
-│  get_by_arxiv(arxiv_id) -> ReferenceRecord                  │
-│  search(query) -> List[ReferenceRecord]                     │
-└───────────────────────────┬─────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│   ISP Ports (Protocols) + Capability Chains (FallbackProvider)         │
+│   DOILookupProvider / ArxivLookupProvider / SearchableMetadataProvider │
+│   doi_chain / arxiv_chain / search_chain                               │
+└───────────────────────────┬────────────────────────────────────────────┘
                             │
         ┌───────────────────┼───────────────────┐
         │                   │                   │

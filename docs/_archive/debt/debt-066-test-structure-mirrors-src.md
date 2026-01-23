@@ -18,7 +18,7 @@ When you modify `src/erdos/core/search/service.py`, you should find its tests at
 
 ## Evidence
 
-**src/ structure (organized):**
+**Before fix: `src/` structure (already organized):**
 ```
 src/erdos/core/
 ├── ask/           # 4 modules
@@ -30,7 +30,7 @@ src/erdos/core/
 └── ...
 ```
 
-**tests/unit/ structure (flat):**
+**Before fix: `tests/unit/` structure (flat):**
 ```
 tests/unit/
 ├── test_ask_command_helpers.py
