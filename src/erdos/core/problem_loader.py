@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from importlib.resources import as_file, files
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -11,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 import yaml
 from pydantic import ValidationError
 
+from erdos.core.config import AppConfig
 from erdos.core.models import ProblemRecord, ProblemStatus, ReferenceEntry
 
 
@@ -169,13 +169,13 @@ class ProblemLoader:
                 return loader
             raise ProblemLoaderError(f"data_path not found: {data_path}")
 
-        # 2. Environment variable (legacy fallback)
-        env_path = os.environ.get("ERDOS_DATA_PATH")
-        if env_path:
-            loader = cls._resolve_path(Path(env_path))
+        # 2. Environment variable via AppConfig (centralized env reads)
+        config_data_path = AppConfig.from_env().data_path
+        if config_data_path is not None:
+            loader = cls._resolve_path(config_data_path)
             if loader is not None:
                 return loader
-            raise ProblemLoaderError(f"ERDOS_DATA_PATH not found: {env_path}")
+            raise ProblemLoaderError(f"ERDOS_DATA_PATH not found: {config_data_path}")
 
         # 3. Common file paths
         return cls._find_default_paths()

@@ -6,10 +6,9 @@ that composes the focused search modules (db, indexer, bm25, embeddings, hybrid)
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
 from typing import TYPE_CHECKING
 
+from erdos.core.config import DEFAULT_INDEX_PATH, AppConfig
 from erdos.core.search.bm25 import BM25Search
 from erdos.core.search.db import DatabaseManager, SearchIndexError
 from erdos.core.search.embeddings_store import EmbeddingsStore
@@ -24,6 +23,7 @@ from erdos.core.search.types import (
 
 if TYPE_CHECKING:
     from contextlib import AbstractContextManager
+    from pathlib import Path
     from sqlite3 import Connection
 
     from erdos.core.models import ChunkSource, ProblemRecord, TextChunk
@@ -83,13 +83,13 @@ class SearchIndex:
         if index_path is not None:
             return cls(index_path)
 
-        # 2. Environment variable (legacy fallback)
-        env_path = os.environ.get("ERDOS_INDEX_PATH")
-        if env_path:
-            return cls(Path(env_path))
+        # 2. Environment variable via AppConfig (centralized env reads)
+        config_index_path = AppConfig.from_env().index_path
+        if config_index_path is not None:
+            return cls(config_index_path)
 
         # 3. Default path
-        return cls(Path("index/erdos.sqlite"))
+        return cls(DEFAULT_INDEX_PATH)
 
     @property
     def db_path(self) -> Path:

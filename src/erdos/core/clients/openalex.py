@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import re
 import time
 from dataclasses import dataclass
@@ -20,6 +19,7 @@ from urllib.parse import quote
 
 import requests
 
+from erdos.core.config import AppConfig
 from erdos.core.models import OpenAccessStatus, ReferenceRecord
 from erdos.core.retry import fetch_with_retry
 
@@ -43,9 +43,10 @@ class OpenAlexConfig:
         Checks ERDOS_MAILTO first, then OPENALEX_EMAIL for email.
         Checks OPENALEX_API_KEY for API key authentication.
         """
+        config = AppConfig.from_env()
         return cls(
-            email=os.getenv("ERDOS_MAILTO") or os.getenv("OPENALEX_EMAIL"),
-            api_key=os.getenv("OPENALEX_API_KEY"),
+            email=config.mailto,
+            api_key=config.openalex_api_key or None,
         )
 
 

@@ -42,6 +42,19 @@ __all__ = [
 ]
 
 
+def build_subprocess_env(overrides: dict[str, str] | None = None) -> dict[str, str]:
+    """Return a subprocess environment dict with optional overrides.
+
+    This is the preferred helper for cases where core modules must pass an explicit
+    `env=` to `subprocess.run()` (e.g., to inject a vendor API key) while keeping
+    raw `os.environ` access centralized in this module.
+    """
+    env = dict(os.environ)
+    if overrides:
+        env.update(overrides)
+    return env
+
+
 @dataclass(frozen=True)
 class AppConfig:
     """Immutable application configuration container.
@@ -91,6 +104,7 @@ class AppConfig:
             ERDOS_RUN_LOG_PATH: Path to run log JSONL file.
             ERDOS_REPO_ROOT: Repository root directory.
             ERDOS_MAILTO: Contact email for API polite pools.
+            OPENALEX_EMAIL: Optional alias for ERDOS_MAILTO (used by some OpenAlex tooling).
             ERDOS_LLM_COMMAND: External LLM command for ask/loop.
             ARISTOTLE_API_KEY: API key for Aristotle LLM service.
             ERDOS_ARISTOTLE_COMMAND: Path to aristotle CLI binary.
@@ -112,7 +126,9 @@ class AppConfig:
                 Path(run_log_path_str) if run_log_path_str else DEFAULT_RUN_LOG_PATH
             ),
             repo_root=Path(repo_root_str) if repo_root_str else None,
-            mailto=os.environ.get("ERDOS_MAILTO", DEFAULT_MAILTO),
+            mailto=os.environ.get("ERDOS_MAILTO")
+            or os.environ.get("OPENALEX_EMAIL")
+            or DEFAULT_MAILTO,
             llm_command=os.environ.get("ERDOS_LLM_COMMAND", ""),
             aristotle_api_key=os.environ.get("ARISTOTLE_API_KEY", "").strip(),
             aristotle_command=os.environ.get(

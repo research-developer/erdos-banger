@@ -12,7 +12,6 @@ Launch:
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -22,6 +21,7 @@ from erdos.commands.list_cmd import ListOptions, _execute_list_query
 from erdos.commands.refs import get_refs
 from erdos.commands.show import get_problem as show_get_problem
 from erdos.core.ask import ask_question as core_ask_question
+from erdos.core.config import DEFAULT_INDEX_PATH, AppConfig
 from erdos.core.exit_codes import ExitCode
 from erdos.core.formalizer import FormalizerError, generate_skeleton
 from erdos.core.lean_runner import LeanRunner, LeanRunnerError
@@ -50,16 +50,17 @@ DEFAULT_LEAN_PROJECT_PATH = Path("formal/lean")
 
 def _get_repo() -> ProblemRepository:
     """Get the problem repository from environment or default."""
-    return ProblemLoader.from_default()
+    config = AppConfig.from_env()
+    return ProblemLoader.from_default(data_path=config.data_path)
 
 
 def _get_index() -> SearchIndexProtocol | None:
     """Get the search index if available."""
-    index_path_env = os.environ.get("ERDOS_INDEX_PATH")
-    if index_path_env:
-        return SearchIndex(Path(index_path_env))
-    # Try default location (aligned with SearchIndex.from_default())
-    default_path = Path("index/erdos.sqlite")
+    config = AppConfig.from_env()
+    if config.index_path is not None:
+        return SearchIndex(config.index_path)
+    # Try default location (aligned with DEFAULT_INDEX_PATH)
+    default_path = DEFAULT_INDEX_PATH
     if default_path.exists():
         return SearchIndex(default_path)
     return None
@@ -320,11 +321,7 @@ def mcp_ask_question(
     Returns:
         CLIOutput-compatible dict
     """
-    repo_root = (
-        Path(os.environ["ERDOS_REPO_ROOT"])
-        if os.environ.get("ERDOS_REPO_ROOT")
-        else None
-    )
+    repo_root = AppConfig.from_env().repo_root
     result = core_ask_question(
         problem_id=problem_id,
         question=question,

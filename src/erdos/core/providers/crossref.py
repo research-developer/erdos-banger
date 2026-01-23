@@ -7,13 +7,13 @@ search are not supported by the Crossref API.
 from __future__ import annotations
 
 import logging
-import os
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import requests
 
 from erdos.core.clients.crossref import fetch_crossref_work, parse_crossref_work
+from erdos.core.config import AppConfig
 
 
 if TYPE_CHECKING:
@@ -42,9 +42,8 @@ class CrossrefProvider:
     @classmethod
     def from_env(cls) -> CrossrefProvider:
         """Create provider using ERDOS_MAILTO for Crossref's polite pool."""
-        # Keep a stable default for local dev, but real usage should set ERDOS_MAILTO.
-        mailto = os.environ.get("ERDOS_MAILTO", "erdos-banger@example.com")
-        return cls(mailto=mailto)
+        config = AppConfig.from_env()
+        return cls(mailto=config.mailto, timeout=config.http_timeout)
 
     def get_by_doi(self, doi: str) -> ReferenceRecord | None:
         """Fetch work by DOI via Crossref."""

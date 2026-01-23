@@ -9,7 +9,6 @@ separating business logic from CLI concerns (Typer/Rich). All functions here:
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -21,6 +20,7 @@ from erdos.core.batch import (
     BatchRunner,
     filter_problem_ids,
 )
+from erdos.core.config import AppConfig
 from erdos.core.constants import API_RATE_LIMIT_DELAY, DEFAULT_HTTP_TIMEOUT
 from erdos.core.exit_codes import ExitCode
 from erdos.core.ingest.fetch import MetadataSource
@@ -74,9 +74,9 @@ def get_repo_root(*, repo_root: Path | None = None) -> Path:
     """
     if repo_root is not None:
         return repo_root
-    env_root = os.environ.get("ERDOS_REPO_ROOT")
-    if env_root:
-        return Path(env_root)
+    config_repo_root = AppConfig.from_env().repo_root
+    if config_repo_root is not None:
+        return config_repo_root
     return Path.cwd()
 
 
@@ -93,7 +93,7 @@ def prepare_mailto(mailto: str, *, default: str | None = None) -> str:
         return mailto.strip()
     if default is not None and default.strip():
         return default.strip()
-    return os.environ.get("ERDOS_MAILTO", "erdos-banger@example.com")
+    return AppConfig.from_env().mailto
 
 
 def is_batch_mode(options: IngestOptions) -> bool:

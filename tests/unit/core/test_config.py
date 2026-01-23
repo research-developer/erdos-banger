@@ -107,6 +107,7 @@ class TestAppConfigFromEnv:
             "ERDOS_RUN_LOG_PATH",
             "ERDOS_REPO_ROOT",
             "ERDOS_MAILTO",
+            "OPENALEX_EMAIL",
             "ERDOS_LLM_COMMAND",
             "ARISTOTLE_API_KEY",
             "ERDOS_ARISTOTLE_COMMAND",

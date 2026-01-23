@@ -27,6 +27,8 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
+from erdos.core.config import AppConfig, build_subprocess_env
+
 
 logger = logging.getLogger(__name__)
 
@@ -110,6 +112,8 @@ def validate_aristotle_config(
     Raises:
         AristotleError: If configuration is invalid (error_type="ConfigError")
     """
+    config = AppConfig.from_env()
+
     # Check for API key (explicit > env var)
     if api_key is not None:
         effective_api_key = api_key.strip()
@@ -119,7 +123,7 @@ def validate_aristotle_config(
                 error_type="ConfigError",
             )
     else:
-        effective_api_key = os.environ.get("ARISTOTLE_API_KEY", "").strip()
+        effective_api_key = config.aristotle_api_key
         if not effective_api_key:
             raise AristotleError(
                 "ARISTOTLE_API_KEY environment variable is not set or empty. "
@@ -136,9 +140,7 @@ def validate_aristotle_config(
                 error_type="ConfigError",
             )
     else:
-        effective_command = os.environ.get(
-            "ERDOS_ARISTOTLE_COMMAND", "aristotle"
-        ).strip()
+        effective_command = config.aristotle_command.strip()
 
     # Resolve command path
     resolved_command = _resolve_command(effective_command)
@@ -262,8 +264,7 @@ def run_aristotle_prove_from_file(
 
     env: dict[str, str] | None = None
     if api_key is not None:
-        env = dict(os.environ)
-        env["ARISTOTLE_API_KEY"] = api_key.strip()
+        env = build_subprocess_env({"ARISTOTLE_API_KEY": api_key.strip()})
 
     try:
         result = subprocess.run(  # noqa: S603
