@@ -191,6 +191,7 @@ def summarize_logs(
     problem_id: int | None = None,
     command: str | None = None,
     since: str | None = None,
+    status: str | None = None,
 ) -> CLIOutput:
     """Get aggregated summary of log entries.
 
@@ -199,6 +200,7 @@ def summarize_logs(
         problem_id: Filter by problem ID
         command: Filter by command name
         since: Filter by timestamp
+        status: Filter by success/failure
 
     Returns:
         CLIOutput with summary data
@@ -208,6 +210,7 @@ def summarize_logs(
             problem_id=problem_id,
             command=command,
             since=since,
+            status=status,
         )
         return CLIOutput.ok(command="erdos logs", data=summary)
     except ValueError as e:
@@ -287,6 +290,7 @@ def logs(
                 problem_id=problem_id,
                 command=command,
                 since=since,
+                status=status,
             )
             print_human = _print_summary_human
         else:

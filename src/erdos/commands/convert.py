@@ -272,6 +272,18 @@ def convert(
             )
             return
 
+    if llm_service_enum is not None and not use_llm:
+        exit_with_result(
+            ctx,
+            CLIOutput.err(
+                command="erdos convert",
+                error_type="UsageError",
+                message="--llm-service requires --use-llm to be set",
+                code=ExitCode.USAGE_ERROR,
+            ),
+        )
+        return
+
     # Validate --device option
     allowed_devices = {"cpu", "cuda", "mps"}
     if device is not None and device.lower() not in allowed_devices:

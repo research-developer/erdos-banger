@@ -128,6 +128,29 @@ class TestLogsCommand:
         assert "by_problem" in data
         assert data["by_command"]["erdos show"]["runs"] == 2
 
+    def test_logs_summary_respects_status_filter(self, isolated_logs_env: Path) -> None:
+        """logs --summary --status filters before aggregating."""
+        logger = RunLogger(log_file=isolated_logs_env)
+        logger.log(CLIOutput.ok(command="erdos show", data={}), args={"problem_id": 6})
+        logger.log(
+            CLIOutput.err(
+                command="erdos show", error_type="NotFound", message="Not found", code=2
+            ),
+            args={"problem_id": 6},
+        )
+
+        result = runner.invoke(
+            app, ["--json", "logs", "--summary", "--status", "failure"]
+        )
+        assert result.exit_code == 0
+        output = json.loads(result.stdout)
+        assert output["success"] is True
+        data = output["data"]
+        assert data["total_runs"] == 1
+        assert data["by_command"]["erdos show"]["runs"] == 1
+        assert data["by_command"]["erdos show"]["success"] == 0
+        assert data["by_command"]["erdos show"]["failure"] == 1
+
     def test_logs_human_output(self, isolated_logs_env: Path) -> None:
         """logs without --json shows human-readable output."""
         logger = RunLogger(log_file=isolated_logs_env)
