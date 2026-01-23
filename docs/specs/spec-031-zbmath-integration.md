@@ -119,7 +119,7 @@ erdos search --msc "11B05" --year-min 2000    # Recent papers only
 
 ### Output (Default)
 
-```
+```text
 zbMATH Entry: Zbl 1234567
 
 Title: The primes contain arbitrarily long arithmetic progressions
@@ -177,7 +177,7 @@ Review (excerpt):
 
 ### Module Structure
 
-```
+```text
 src/erdos/core/
   clients/
     zbmath.py           # HTTP client for zbMATH Open API
@@ -279,7 +279,7 @@ This queries zbMATH and adds MSC codes to the lead's tags.
 
 Cache zbMATH responses:
 
-```
+```text
 literature/cache/zbmath/
   doi_<hash>.json     # DOI lookup cache
   zbl_<id>.json       # Direct zbMATH ID cache

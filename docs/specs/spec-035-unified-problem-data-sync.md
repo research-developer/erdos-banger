@@ -265,6 +265,7 @@ data/sync_cache/proofs/
 ```
 
 `provenance.json` example:
+
 ```json
 {
   "problem_id": 347,
@@ -386,7 +387,7 @@ The erdosproblems.com **main pages** (not just forum) have structured data we sh
 | LaTeX source | "View the LaTeX source" link | Raw `.tex` for formalization |
 | Tags | Same page | "number theory \| covering systems" |
 | References | `[Er65]`, `[ErGr80]` | Links to original Erdős papers |
-| Formalised? | "Formalised statement? Yes/No" | DeepMind formalization flag |
+| Formalized? | "Formalized statement? Yes/No" | DeepMind formalization flag |
 | Difficulty | Community votes | "This problem looks difficult" |
 | Collaborators | Community list | Who's working on it |
 
@@ -436,7 +437,7 @@ erdos sync website --all --delay 2
 #   Status: PROVED (LEAN)
 #   Tags: number theory, covering systems
 #   References: Er65, Er65b, ErGr80
-#   Formalised: Yes
+#   Formalized: Yes
 #   LaTeX source: Saved to data/latex/275.tex
 ```
 

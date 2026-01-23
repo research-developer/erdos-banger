@@ -4,6 +4,11 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from erdos.core.models.search import TextChunk
 
 from erdos.core.models import ProblemRecord, ProblemStatus
 from erdos.core.search.index_builder import build_index
@@ -36,7 +41,7 @@ class _FaultyIndex:
             raise RuntimeError("boom")
         self._indexed.append(problem.id)
 
-    def index_chunk(self, chunk: object) -> None:
+    def index_chunk(self, chunk: TextChunk) -> None:
         return None
 
     def search(

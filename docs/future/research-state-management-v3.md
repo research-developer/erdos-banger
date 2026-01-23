@@ -119,46 +119,46 @@ This is a non-exhaustive shortlist of patterns and tooling that show up repeated
 ### A) Agent/session orchestration + checkpointing (state over time)
 
 - **LangGraph persistence / checkpointers**
-  - Pattern: “thread id” + persisted checkpoints (SQLite/Postgres/Redis) so a workflow can resume and “time travel” to prior states.
+    - Pattern: “thread id” + persisted checkpoints (SQLite/Postgres/Redis) so a workflow can resume and “time travel” to prior states.
   - Sources:
-    - https://langchain-ai.github.io/langgraph/how-tos/persistence/
-    - https://langchain-ai.github.io/langgraphjs/how-tos/persistence/
+    - <https://langchain-ai.github.io/langgraph/how-tos/persistence/>
+    - <https://langchain-ai.github.io/langgraphjs/how-tos/persistence/>
 
 - **OpenAI Agents SDK sessions**
   - Pattern: explicit session objects for agent runs; store/restore context and tool outputs.
   - Sources:
-    - https://openai.github.io/openai-agents-python/sessions/
-    - https://openai.github.io/openai-agents-js/guides/sessions/
+    - <https://openai.github.io/openai-agents-python/sessions/>
+    - <https://openai.github.io/openai-agents-js/guides/sessions/>
 
 - **LlamaIndex Workflows state management**
   - Pattern: workflow graphs with explicit persisted state and resumability.
   - Source:
-    - https://docs.llamaindex.ai/en/stable/module_guides/workflow/state/
+    - <https://docs.llamaindex.ai/en/stable/module_guides/workflow/state/>
 
 ### B) “Memory” layers (episodic notes + durable summaries)
 
 - **File-based memory tool (Anthropic)**
   - Pattern: store durable “memories” outside the ephemeral chat context (CRUD-able).
   - Source:
-    - https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/memory-tool
+    - <https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/memory-tool>
 
 - **Explicit memory blocks (Letta)**
   - Pattern: separate memory into explicit blocks and treat them as first-class objects.
   - Source:
-    - https://docs.letta.com/concepts/memory-blocks
+    - <https://docs.letta.com/concepts/memory-blocks>
 
 - **Memory services (mem0, Zep)**
   - Pattern: durable store of “facts/episodes” + retrieval/updates across runs.
   - Sources:
-    - https://docs.mem0.ai/overview
-    - https://docs.getzep.com/
+    - <https://docs.mem0.ai/overview>
+    - <https://docs.getzep.com/>
 
 - **Microsoft ecosystem (Agent Framework / AutoGen / Semantic Kernel)**
   - Pattern: memory as a pluggable component with explicit storage backends.
   - Sources:
-    - https://learn.microsoft.com/en-us/ai/playbook/technology-guidance/agent-framework/overview
-    - https://microsoft.github.io/autogen/stable/user-guide/core-user-guide/components/memory.html
-    - https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-memory?pivots=programming-language-python
+    - <https://learn.microsoft.com/en-us/ai/playbook/technology-guidance/agent-framework/overview>
+    - <https://microsoft.github.io/autogen/stable/user-guide/core-user-guide/components/memory.html>
+    - <https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-memory?pivots=programming-language-python>
 
 ### C) Durable execution / workflow engines (production-grade robustness)
 
@@ -167,18 +167,18 @@ If we ever want “run this campaign for 6 hours, survive crashes, retry safely,
 - **Temporal**
   - Pattern: workflows with persisted state and replayable execution history (“durable execution”).
   - Sources:
-    - https://docs.temporal.io/
-    - https://docs.temporal.io/dev-guide/python
+    - <https://docs.temporal.io/>
+    - <https://docs.temporal.io/dev-guide/python>
 
 ### D) Vector search / retrieval infra (local-first vs production)
 
 We already have SQLite + FTS5. For semantic search, common 2025–2026 options:
 
 - **Stay local:** SQLite + vector extension
-  - https://github.com/asg017/sqlite-vec
-  - https://github.com/asg017/sqlite-vss
+  - <https://github.com/asg017/sqlite-vec>
+  - <https://github.com/asg017/sqlite-vss>
 - **Production default:** Postgres + pgvector
-  - https://github.com/pgvector/pgvector
+  - <https://github.com/pgvector/pgvector>
 
 ---
 
@@ -314,7 +314,7 @@ This matches our repo’s existing philosophy:
 
 Add a **git-tracked** directory:
 
-```
+```text
 research/
   VERSION
   problems/
@@ -592,20 +592,20 @@ Next spec ID is **SPEC-023**. Suggested breakdown:
 
 ## 9) References (web, 2025–2026)
 
-- LangGraph persistence (Python): https://langchain-ai.github.io/langgraph/how-tos/persistence/
-- LangGraph persistence (JS): https://langchain-ai.github.io/langgraphjs/how-tos/persistence/
-- OpenAI Agents SDK sessions (Python): https://openai.github.io/openai-agents-python/sessions/
-- OpenAI Agents SDK sessions (JS): https://openai.github.io/openai-agents-js/guides/sessions/
-- Anthropic memory tool: https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/memory-tool
-- Letta memory blocks: https://docs.letta.com/concepts/memory-blocks
-- mem0 overview: https://docs.mem0.ai/overview
-- Zep docs: https://docs.getzep.com/
-- Microsoft Agent Framework overview: https://learn.microsoft.com/en-us/ai/playbook/technology-guidance/agent-framework/overview
-- AutoGen memory: https://microsoft.github.io/autogen/stable/user-guide/core-user-guide/components/memory.html
-- Semantic Kernel agent memory: https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-memory?pivots=programming-language-python
-- LlamaIndex Workflows state: https://docs.llamaindex.ai/en/stable/module_guides/workflow/state/
-- Temporal docs: https://docs.temporal.io/
-- Temporal Python dev guide: https://docs.temporal.io/dev-guide/python
-- sqlite-vec: https://github.com/asg017/sqlite-vec
-- sqlite-vss: https://github.com/asg017/sqlite-vss
-- pgvector: https://github.com/pgvector/pgvector
+- LangGraph persistence (Python): <https://langchain-ai.github.io/langgraph/how-tos/persistence/>
+- LangGraph persistence (JS): <https://langchain-ai.github.io/langgraphjs/how-tos/persistence/>
+- OpenAI Agents SDK sessions (Python): <https://openai.github.io/openai-agents-python/sessions/>
+- OpenAI Agents SDK sessions (JS): <https://openai.github.io/openai-agents-js/guides/sessions/>
+- Anthropic memory tool: <https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/memory-tool>
+- Letta memory blocks: <https://docs.letta.com/concepts/memory-blocks>
+- mem0 overview: <https://docs.mem0.ai/overview>
+- Zep docs: <https://docs.getzep.com/>
+- Microsoft Agent Framework overview: <https://learn.microsoft.com/en-us/ai/playbook/technology-guidance/agent-framework/overview>
+- AutoGen memory: <https://microsoft.github.io/autogen/stable/user-guide/core-user-guide/components/memory.html>
+- Semantic Kernel agent memory: <https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-memory?pivots=programming-language-python>
+- LlamaIndex Workflows state: <https://docs.llamaindex.ai/en/stable/module_guides/workflow/state/>
+- Temporal docs: <https://docs.temporal.io/>
+- Temporal Python dev guide: <https://docs.temporal.io/dev-guide/python>
+- sqlite-vec: <https://github.com/asg017/sqlite-vec>
+- sqlite-vss: <https://github.com/asg017/sqlite-vss>
+- pgvector: <https://github.com/pgvector/pgvector>

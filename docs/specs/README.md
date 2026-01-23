@@ -142,6 +142,7 @@ v3.1 Verification (DONE)
 └── 028 v3 Integration Verification ←── Horizontal + vertical tests
 
 v3.2+ Future (PENDING)
+├── 035 Unified Problem Data Sync ←── 028 (verified v3 foundation)
 ├── 029 Exa Research Integration ←── Agentic literature synthesis
 ├── 030 Semantic Scholar Integration ←── Citation context
 ├── 031 zbMATH Integration ←── Math-specific metadata

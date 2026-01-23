@@ -12,7 +12,7 @@
 
 ## Summary
 
-Integrate [Lean Copilot](https://github.com/lean-dojo/LeanCopilot) to provide **LLM-backed tactic suggestions** directly within Lean 4 proof development. This enables GPT-5.2 or other frontier models to suggest tactics in real-time.
+Integrate [Lean Copilot](https://github.com/lean-dojo/LeanCopilot) to provide **LLM-backed tactic suggestions** directly within Lean 4 proof development. This enables an external LLM command (via task routing) to suggest tactics in real-time.
 
 ---
 
@@ -56,7 +56,7 @@ Integrate [Lean Copilot](https://github.com/lean-dojo/LeanCopilot) to provide **
 
 ### System Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    Lean 4 Proof Environment                 │
 │                    (VS Code + lean4 extension)              │
@@ -64,7 +64,7 @@ Integrate [Lean Copilot](https://github.com/lean-dojo/LeanCopilot) to provide **
 │                                                             │
 │   theorem erdos_42 : ... := by                              │
 │     suggest_tactics  -- Calls external API                  │
-│                      -- GPT-5.2 suggests: "apply Nat.le"    │
+│                      -- LLM suggests: "apply Nat.le"        │
 │     search_proof     -- Orchestrates multi-step search      │
 │                                                             │
 └──────────────────────────┬──────────────────────────────────┘
@@ -85,8 +85,8 @@ Integrate [Lean Copilot](https://github.com/lean-dojo/LeanCopilot) to provide **
         │                  │                  │
         ▼                  ▼                  ▼
    ┌─────────┐       ┌─────────┐       ┌─────────┐
-   │ GPT-5.2 │       │ Claude  │       │  Local  │
-   │ (math)  │       │ (code)  │       │ (embed) │
+   │   LLM   │       │   LLM   │       │  Local  │
+   │ (tactic)│       │ (backup)│       │ (embed) │
    └─────────┘       └─────────┘       └─────────┘
 ```
 
@@ -296,7 +296,7 @@ set_option LeanCopilot.externalApiUrl "http://localhost:8000"
 -- Example usage in proof:
 theorem example : 1 + 1 = 2 := by
   suggest_tactics  -- Calls external API
-  -- GPT-5.2 suggests: "rfl", "simp", "norm_num"
+  -- LLM suggests: "rfl", "simp", "norm_num"
 ```
 
 ---
@@ -305,7 +305,7 @@ theorem example : 1 + 1 = 2 := by
 
 ### Tactic Generation Prompt
 
-```
+```text
 You are a Lean 4 theorem prover assistant specializing in combinatorics and number theory.
 
 Given the following proof state:
@@ -396,7 +396,7 @@ def test_lean_copilot_integration():
 1. [ ] `erdos lean copilot serve` starts FastAPI server
 2. [ ] `/generate` endpoint returns tactic suggestions
 3. [ ] `/encode` endpoint returns embeddings
-4. [ ] Server uses SPEC-032 model router for GPT-5.2
+4. [ ] Server uses SPEC-032 task routing for `/generate`
 5. [ ] Lean Copilot lakefile integration documented
 6. [ ] `suggest_tactics` works in Lean 4 proof
 7. [ ] Latency < 2s for typical tactic generation

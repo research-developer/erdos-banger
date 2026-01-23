@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, cast
 from unittest.mock import MagicMock, patch
+
+
+if TYPE_CHECKING:
+    from typing import Any
 
 
 class TestConverterDetection:

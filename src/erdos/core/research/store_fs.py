@@ -145,6 +145,7 @@ class FSResearchStore:
                 raise ResearchRecordInvalidError(
                     f"Lead {rec.id} has problem_id={rec.problem_id}, expected {problem_id}"
                 )
+            _validate_record_id(rec.id, "lead")
             if rec.id != path.stem:
                 raise ResearchRecordInvalidError(
                     f"Lead filename {path.name} does not match id={rec.id}"
@@ -239,6 +240,7 @@ class FSResearchStore:
                 raise ResearchRecordInvalidError(
                     f"Hypothesis {rec.id} has problem_id={rec.problem_id}, expected {problem_id}"
                 )
+            _validate_record_id(rec.id, "hyp")
             if rec.id != path.stem:
                 raise ResearchRecordInvalidError(
                     f"Hypothesis filename {path.name} does not match id={rec.id}"
@@ -332,6 +334,7 @@ class FSResearchStore:
                 raise ResearchRecordInvalidError(
                     f"Task {rec.id} has problem_id={rec.problem_id}, expected {problem_id}"
                 )
+            _validate_record_id(rec.id, "task")
             if rec.id != path.stem:
                 raise ResearchRecordInvalidError(
                     f"Task filename {path.name} does not match id={rec.id}"
@@ -419,6 +422,7 @@ class FSResearchStore:
                 raise ResearchRecordInvalidError(
                     f"Attempt {rec.id} has problem_id={rec.problem_id}, expected {problem_id}"
                 )
+            _validate_record_id(rec.id, "att")
             if rec.id != path.stem:
                 raise ResearchRecordInvalidError(
                     f"Attempt filename {path.name} does not match id={rec.id}"

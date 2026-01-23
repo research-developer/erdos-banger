@@ -29,6 +29,7 @@ def _ensure_index_ready(
         loader: Problem loader for building index
         index: Search index to use (built/rebuilt if requested)
         build_index_flag: Whether to rebuild the index
+        repo_root: Repository root for index building and retrieval
 
     Returns:
         SearchIndexProtocol if successful, or CLIOutput error
@@ -139,6 +140,7 @@ def ask_question(
         build_index_flag: Whether to rebuild the index before retrieval
         no_llm: If True, skip LLM execution (prompt-only mode)
         llm_command: Override LLM command (default: from ERDOS_LLM_COMMAND env)
+        repo_root: Repository root for index building and retrieval
 
     Returns:
         CLIOutput with ask results

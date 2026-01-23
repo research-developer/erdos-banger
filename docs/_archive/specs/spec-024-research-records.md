@@ -141,7 +141,7 @@ created_at: "2026-01-23T01:02:03Z"
 
 ---
 
-## 3) CLI Interface
+## 3) CLI
 
 All commands are under `erdos research`.
 

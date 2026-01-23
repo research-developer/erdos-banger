@@ -52,7 +52,6 @@ class PDFConversionConfig:
     use_llm: bool = False
     llm_service: LLMService | None = None
     force_ocr: bool = False
-    timeout: float = 300.0
     torch_device: str | None = None  # cpu, cuda, mps - sets TORCH_DEVICE env var
 
 
@@ -84,7 +83,8 @@ def is_pdfplumber_available() -> bool:
         import pdfplumber  # noqa: F401, PLC0415
 
         return True
-    except ImportError:
+    except Exception as e:
+        logger.debug("pdfplumber unavailable: %s", e)
         return False
 
 

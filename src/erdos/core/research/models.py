@@ -74,12 +74,8 @@ class LeadRecord(_FrozenModel):
     title: Annotated[str, Field(min_length=1)]
     status: Annotated[LeadStatus, Field(default=LeadStatus.NEW)] = LeadStatus.NEW
     priority: Annotated[Priority, Field(default=Priority.MEDIUM)] = Priority.MEDIUM
-    tags: Annotated[list[str], Field(default_factory=list)] = Field(
-        default_factory=list
-    )
-    source: Annotated[LeadSource, Field(default_factory=LeadSource)] = Field(
-        default_factory=LeadSource
-    )
+    tags: Annotated[list[str], Field(default_factory=list)]
+    source: Annotated[LeadSource, Field(default_factory=LeadSource)]
     notes: Annotated[str, Field(default="")] = ""
     created_at: datetime
     updated_at: datetime
@@ -97,9 +93,7 @@ class HypothesisRecord(_FrozenModel):
     confidence: Annotated[Confidence, Field(default=Confidence.MEDIUM)] = (
         Confidence.MEDIUM
     )
-    evidence: Annotated[list[str], Field(default_factory=list)] = Field(
-        default_factory=list
-    )
+    evidence: Annotated[list[str], Field(default_factory=list)]
     notes: Annotated[str, Field(default="")] = ""
     created_at: datetime
     updated_at: datetime
@@ -113,12 +107,8 @@ class TaskRecord(_FrozenModel):
     title: Annotated[str, Field(min_length=1)]
     status: Annotated[TaskStatus, Field(default=TaskStatus.TODO)] = TaskStatus.TODO
     priority: Annotated[Priority, Field(default=Priority.MEDIUM)] = Priority.MEDIUM
-    blocked_on: Annotated[list[str], Field(default_factory=list)] = Field(
-        default_factory=list
-    )
-    links: Annotated[list[str], Field(default_factory=list)] = Field(
-        default_factory=list
-    )
+    blocked_on: Annotated[list[str], Field(default_factory=list)]
+    links: Annotated[list[str], Field(default_factory=list)]
     created_at: datetime
     updated_at: datetime
 
@@ -129,6 +119,8 @@ class AttemptArtifacts(_FrozenModel):
 
 
 class AttemptRecord(_FrozenModel):
+    """Append-only attempt record (immutable after creation)."""
+
     schema_version: Annotated[int, Field(default=1)] = 1
     problem_id: Annotated[int, Field(ge=1)]
     id: Annotated[str, Field(min_length=1)]
@@ -138,7 +130,5 @@ class AttemptRecord(_FrozenModel):
     )
     result: AttemptResult
     summary: Annotated[str, Field(min_length=1)]
-    artifacts: Annotated[AttemptArtifacts, Field(default_factory=AttemptArtifacts)] = (
-        Field(default_factory=AttemptArtifacts)
-    )
+    artifacts: Annotated[AttemptArtifacts, Field(default_factory=AttemptArtifacts)]
     created_at: datetime

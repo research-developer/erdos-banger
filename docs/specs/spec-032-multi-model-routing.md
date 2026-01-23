@@ -101,7 +101,7 @@ Rules:
 
 ### Module Structure
 
-```
+```text
 src/erdos/core/llm/
   __init__.py
   tasks.py            # TaskType enum + mapping rules
@@ -166,7 +166,7 @@ Use tiny fixture scripts (no network) that:
 
 Example fixtures:
 
-```
+```text
 tests/fixtures/llm/ok.sh
 tests/fixtures/llm/fail.sh
 ```

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 import yaml
@@ -13,17 +12,12 @@ from erdos.core.research.paths import (
     get_problem_dir,
     get_research_root,
 )
+from erdos.core.research.time import utc_now_iso_z
 
 
 if TYPE_CHECKING:
+    from datetime import datetime
     from pathlib import Path
-
-
-def _utc_now_iso_z(now: datetime | None = None) -> str:
-    dt = now if now is not None else datetime.now(UTC)
-    dt = dt.replace(microsecond=0)
-    # datetime.isoformat() uses "+00:00" for UTC; normalize to "Z"
-    return dt.isoformat().replace("+00:00", "Z")
 
 
 def _write_text_if_missing(path: Path, content: str) -> bool:
@@ -106,8 +100,8 @@ def ensure_problem_workspace(
         {
             "schema_version": 1,
             "problem_id": problem_id,
-            "created_at": _utc_now_iso_z(now),
-            "updated_at": _utc_now_iso_z(now),
+            "created_at": utc_now_iso_z(now),
+            "updated_at": utc_now_iso_z(now),
         },
     ):
         created.append(f"research/problems/{problem_id:04d}/meta.yaml")

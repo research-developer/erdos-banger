@@ -108,7 +108,7 @@ def test_ensure_index_ready_loader_error():
         assert "Problems not found" in result.error["message"]
 
 
-def testexecute_llm_if_enabled_disabled():
+def test_execute_llm_if_enabled_disabled():
     """execute_llm_if_enabled skips LLM when disabled."""
 
     result = execute_llm_if_enabled(
@@ -124,7 +124,7 @@ def testexecute_llm_if_enabled_disabled():
     assert result["llm_command"] is None
 
 
-def testexecute_llm_if_enabled_no_command():
+def test_execute_llm_if_enabled_no_command():
     """execute_llm_if_enabled skips LLM when no command available."""
 
     result = execute_llm_if_enabled(
@@ -140,7 +140,7 @@ def testexecute_llm_if_enabled_no_command():
     assert result["llm_command"] is None
 
 
-def testexecute_llm_if_enabled_success():
+def test_execute_llm_if_enabled_success():
     """execute_llm_if_enabled executes LLM successfully."""
 
     with patch("erdos.core.ask.llm.execute_llm") as mock_execute_llm:
@@ -159,7 +159,7 @@ def testexecute_llm_if_enabled_success():
         assert result["llm_command"] == "echo"
 
 
-def testexecute_llm_if_enabled_nonzero_exit():
+def test_execute_llm_if_enabled_nonzero_exit():
     """execute_llm_if_enabled returns error on nonzero exit code."""
 
     with patch("erdos.core.ask.llm.execute_llm") as mock_execute_llm:
@@ -177,7 +177,7 @@ def testexecute_llm_if_enabled_nonzero_exit():
         assert "exited with code 1" in result.error["message"]
 
 
-def testexecute_llm_if_enabled_command_not_found():
+def test_execute_llm_if_enabled_command_not_found():
     """execute_llm_if_enabled returns error when command not found."""
 
     with patch("erdos.core.ask.llm.execute_llm") as mock_execute_llm:
@@ -195,7 +195,7 @@ def testexecute_llm_if_enabled_command_not_found():
         assert "not found" in result.error["message"]
 
 
-def testexecute_llm_if_enabled_os_error():
+def test_execute_llm_if_enabled_os_error():
     """execute_llm_if_enabled returns error on OS error."""
 
     with patch("erdos.core.ask.llm.execute_llm") as mock_execute_llm:
@@ -213,7 +213,7 @@ def testexecute_llm_if_enabled_os_error():
         assert "error" in result.error["message"].lower()
 
 
-def testexecute_llm_if_enabled_value_error():
+def test_execute_llm_if_enabled_value_error():
     """execute_llm_if_enabled returns error on ValueError (e.g., invalid command syntax)."""
 
     with patch("erdos.core.ask.llm.execute_llm") as mock_execute_llm:
@@ -231,7 +231,7 @@ def testexecute_llm_if_enabled_value_error():
         assert "syntax" in result.error["message"].lower()
 
 
-def testexecute_llm_if_enabled_timeout():
+def test_execute_llm_if_enabled_timeout():
     """execute_llm_if_enabled returns error on timeout."""
     with patch("erdos.core.ask.llm.execute_llm") as mock_execute_llm:
         mock_execute_llm.side_effect = subprocess.TimeoutExpired(

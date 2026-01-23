@@ -69,7 +69,7 @@ Harmonic's Aristotle system has:
 
 This means you can use ANY LLM (GPT-5.2, Claude Opus 4.5, Gemini 3 Pro) as the backend:
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    Lean 4 Proof Environment                 │
 ├─────────────────────────────────────────────────────────────┤
@@ -210,7 +210,7 @@ Aristotle is Harmonic's automated theorem-proving system that combines:
 
 Aristotle's approach validates our architecture:
 
-```
+```text
 1. Problem Selection
    └── Identify tractable problems from corpus
 
@@ -272,7 +272,7 @@ This suggests a multi-model approach may be optimal.
 
 **Status:** Target architecture. Current metadata fetching is still wired via concrete clients in `src/erdos/core/ingest/fetch.py` and tracked as `docs/debt/debt-038-metadata-provider-abstraction.md`.
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    erdos ingest <id>                        │
 └───────────────────────────┬─────────────────────────────────┘
@@ -416,7 +416,7 @@ response = exa.research(
 
 ### Updated System Design
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                         ERDŐS-BANGER v2.0                               │
 ├─────────────────────────────────────────────────────────────────────────┤
@@ -459,7 +459,7 @@ response = exa.research(
 
 ### Data Flow
 
-```
+```text
 1. RESEARCH PHASE
    erdos ask 42 "What's known about this problem?"
    └── Exa Research API → structured literature review

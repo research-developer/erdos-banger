@@ -27,4 +27,6 @@ def get_research_root(repo_root: Path | None) -> Path:
 
 
 def get_problem_dir(repo_root: Path | None, problem_id: int) -> Path:
+    if problem_id < 1:
+        raise ValueError(f"problem_id must be >= 1, got {problem_id}")
     return get_research_root(repo_root) / "problems" / f"{problem_id:04d}"

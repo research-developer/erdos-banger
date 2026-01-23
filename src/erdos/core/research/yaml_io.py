@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import tempfile
 from typing import TYPE_CHECKING, Any
 
 import yaml
@@ -32,9 +34,13 @@ def load_yaml(path: Path) -> Any:
 
 def write_text_atomic(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp_handle, tmp_path_str = tempfile.mkstemp(
+        prefix=f".{path.name}.", suffix=".tmp", dir=path.parent
+    )
+    tmp = path.__class__(tmp_path_str)
     try:
-        tmp.write_text(content, encoding="utf-8")
+        with os.fdopen(tmp_handle, "w", encoding="utf-8") as f:
+            f.write(content)
         tmp.replace(path)
     finally:
         if tmp.exists():

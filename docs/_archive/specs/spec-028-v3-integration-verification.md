@@ -154,7 +154,7 @@ erdos search "dead_end"  # Should find updated lead
 
 ### Test Locations
 
-```
+```text
 tests/
   integration/
     test_cli_research.py                # Workspace commands

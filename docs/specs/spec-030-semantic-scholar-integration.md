@@ -109,7 +109,7 @@ erdos refs s2 citations "649def34f8be52c8b66281af98ae884c09aef38b"  # S2 Paper I
 
 ### Output (Default)
 
-```
+```text
 Paper: "The primes contain arbitrarily long arithmetic progressions"
 Authors: Ben Green, Terence Tao
 Year: 2008
@@ -174,7 +174,7 @@ Citing Papers (10 of 1,234):
 
 ### Module Structure
 
-```
+```text
 src/erdos/core/
   clients/
     semantic_scholar.py   # HTTP client for S2 API
@@ -275,7 +275,7 @@ This annotates the lead notes with citation intent summary.
 
 Cache paper metadata and citations:
 
-```
+```text
 literature/cache/s2/
   paper_<s2_id>.json       # Paper metadata
   citations_<s2_id>.json   # Citation contexts
