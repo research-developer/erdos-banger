@@ -15,6 +15,11 @@
 - [Master Vision](./specs/master-vision.md) - Full design & build plan
 - [Master Qualifications](./specs/master-qualifications.md) - Project scope & requirements
 
+## Future / Brainstorming
+
+- [Future Ideations](./future/future-ideations.md) - Living roadmap & integrations
+- [Research State Management (v3)](./future/research-state-management-v3.md) - Proposed research workspace + note/session system
+
 ## Numbering Convention
 
 - **Specs:** Sequential, permanent (SPEC-001, SPEC-002, ...)
