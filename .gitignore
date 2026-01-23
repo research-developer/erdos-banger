@@ -40,6 +40,7 @@ htmlcov/
 # Project-specific (gitignored data)
 .env
 ralph.log
+_literature/
 data/problems_enriched.yaml
 data/problems.yaml
 literature/cache/

@@ -6,8 +6,8 @@
 |----------|-------|---------|
 | [Specs](./specs/README.md) | Design specifications | SPEC-023 |
 | [ADRs](./adr/README.md) | Architecture decision records | ADR-002 |
-| [Bugs](./bugs/README.md) | Bug reports & reviews | BUG-020 |
-| [Debt](./debt/README.md) | Technical debt tracking | DEBT-042 |
+| [Bugs](./bugs/README.md) | Bug reports & reviews | BUG-021 |
+| [Debt](./debt/README.md) | Technical debt tracking | DEBT-068 |
 | [Archive](./_archive/) | Completed specs, bugs & debt | — |
 
 ## Master Documents

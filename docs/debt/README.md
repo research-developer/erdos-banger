@@ -14,7 +14,9 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-*No active debt items.*
+| ID | Title | Priority | Status | Commit |
+|----|-------|----------|--------|--------|
+| DEBT-067 | [Remove private helper re-exports from core packages](./debt-067-remove-private-reexports.md) | P3 | Open | (pending) |
 
 ## Archived Debt
 
@@ -89,7 +91,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-065 | Command layer contains application orchestration | P2 | Fixed | 940a362 |
 | DEBT-066 | Test directory structure mirrors src/ bounded contexts | P3 | Fixed | d938411 |
 
-**Next Debt ID:** DEBT-067
+**Next Debt ID:** DEBT-068
 
 ### Archived Debt Decks
 

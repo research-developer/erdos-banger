@@ -55,25 +55,28 @@ uv run pytest -m "requires_lean"
 ```text
 src/erdos/
 ├── cli.py              # Typer entry point, global flags (--json, --log-level)
-├── commands/           # CLI subcommands (list, show, refs, search, lean, ingest, ask)
+├── commands/           # CLI adapters (Typer + Rich)
 │   ├── presenter.py    # Shared output formatting (exit_with_result, CLIOutput)
-│   └── *.py           # Each command module (list_cmd.py, show.py, etc.)
-└── core/               # Business logic
-    ├── models/         # Pydantic models (ProblemRecord, ReferenceRecord, CLIOutput, etc.)
-    ├── ask/            # RAG Q&A logic (retrieval, prompt, llm, service)
-    ├── ingest/         # Reference ingestion (fetch, manifest models, service)
-    ├── ports.py        # Protocol “ports” for dependency inversion
-    ├── context.py      # AppContext composition root (wiring concrete deps)
-    ├── exit_codes.py   # ExitCode enum
-    ├── constants.py    # Shared constants (timeouts, preview lengths, limits)
-    ├── timing.py       # measure_time_ms() context manager
-    ├── problem_loader.py  # Loads problems from YAML
-    ├── search_index.py    # SQLite FTS5 search
-    ├── index_builder.py   # Index build orchestration
-    ├── lean_runner.py     # Lean 4 compilation wrapper
-    ├── literature_paths.py # Literature cache/manifests paths
-    ├── crossref_client.py # Crossref API client
-    └── arxiv_client.py    # arXiv API client
+│   ├── lean/           # Lean-related subcommands (init/check/formalize/…)
+│   └── *.py            # Other command modules (list/show/refs/search/ingest/ask/loop/logs/convert)
+├── core/               # Business logic (bounded contexts + ports)
+│   ├── models/         # Pydantic models (ProblemRecord, ReferenceRecord, CLIOutput, etc.)
+│   ├── ask/            # RAG Q&A (retrieval, prompt, llm, service)
+│   ├── ingest/         # Reference ingestion (fetch, models, service/app)
+│   ├── search/         # FTS + semantic/hybrid search + embeddings
+│   ├── loop/           # Iterative Lean proof loop (prompt/patch/verify/run)
+│   ├── clients/        # HTTP clients (OpenAlex/Crossref/arXiv)
+│   ├── providers/      # MetadataProvider implementations (SPEC-022)
+│   ├── pdf/            # PDF conversion (Marker, pdfplumber)
+│   ├── batch/          # Batch operations (filters/state/runner)
+│   ├── formal_conjectures/ # Upstream sync + local provenance
+│   ├── ports.py        # Protocol “ports” for dependency inversion
+│   ├── context.py      # AppContext composition root (wiring concrete deps)
+│   └── …               # config/constants/exit codes/retry/logging/etc.
+├── mcp/                # MCP server adapter (optional dependency)
+├── services/           # Application services/use-cases (shared by adapters)
+├── templates/          # Jinja2 templates (Lean skeletons, prompts)
+└── data/               # Built-in sample dataset (`problems_enriched.yaml`)
 ```
 
 **Data flow:** Commands → Core functions → ProblemLoader/SearchIndex → Storage
@@ -178,12 +181,7 @@ CI enforces LOC (lines of code) thresholds to prevent god-file regressions:
 - `rate_limiter.py`, `retry.py` - HTTP resilience utilities
 - `run_logger.py`, `run_logger_summaries.py` - Execution logging
 
-**Backward-compatible shims (thin re-exports):**
-- `arxiv_client.py`, `crossref_client.py`, `openalex_client.py` → `clients/`
-- `embeddings.py`, `index_builder.py`, `search_index.py` → `search/`
-- `batch.py` → `batch/`
-- `loop_config.py`, `loop_verifier.py`, `patch_validator.py` → `loop/`
-- `pdf_converter.py` → `pdf/`
+**Backwards-compatibility note:** core-root “shim modules” were removed (DEBT-061). Prefer canonical imports from the bounded-context subpackages (e.g., `erdos.core.clients.openalex`, `erdos.core.search.*`, `erdos.core.loop.*`).
 
 **Rules for new code:**
 1. **No new top-level modules** at `src/erdos/core/*.py`. Place new code in an existing subpackage or create a new one for a distinct bounded context.
