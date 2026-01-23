@@ -1,10 +1,42 @@
-# Research State Management (v3) — Notes, Sessions, and “Campaign Memory”
+# Research State Management (v3) — Notes, Leads, Attempts, and “Campaign Memory”
 
-> **Document Status:** Brainstorming / design proposal for senior review
+> **Document Status:** Implemented (pending senior review)
 >
 > **Last Updated:** 2026-01-23
 >
+> **Verification:** `pytest -m "not requires_lean and not requires_network"`
+>
 > **Goal:** Add a durable, navigable “research workspace” layer so humans + agents can iteratively collect sources, take notes, track leads/attempts, and feed the right context into `erdos ask` / `erdos loop` without relying on the Ralph Wiggum *code-development* loop.
+
+---
+
+## Decision summary (locked for v3)
+
+This is the exact architecture we will build first:
+
+- **Canonical research state (SSOT):** a git-tracked `research/` directory with per-problem folders and a small set of standard files (Markdown + YAML).
+- **Merge-safe structure:** structured items are stored as **one YAML file per record** (e.g., `leads/lead_*.yaml`, `attempts/att_*.yaml`) to avoid “giant YAML list” merge conflicts.
+- **No extra event log:** no `activity.jsonl` in v3; Git history is the audit trail.
+- **No sessions:** no session model in v3; campaign = per-problem folder.
+- **Synthesis-first retrieval:** `SYNTHESIS.md` is always included in `erdos ask` / `erdos loop` context when present.
+- **Index curated research:** index `SYNTHESIS.md` **and** rendered structured records (leads/attempts/hypotheses/tasks) into SQLite; do **not** index raw scratchpad text.
+- **Deterministic synthesis:** v3 does not allow an LLM to write canonical `SYNTHESIS.md`.
+- **Implementation order:** SPEC-023 → SPEC-024 → SPEC-025 → SPEC-026 → SPEC-027.
+
+Implementation pointers:
+
+- Specs: `docs/_archive/specs/spec-023-research-workspace.md` → `docs/_archive/specs/spec-027-loop-research-integration.md`
+- CLI entrypoints: `src/erdos/commands/research.py`, `src/erdos/commands/ask.py`, `src/erdos/commands/loop.py`
+- Core logic: `src/erdos/core/research/`, `src/erdos/core/ask/retrieval.py`, `src/erdos/core/search/research_indexing.py`
+
+Non-goals for v3 (explicitly not building):
+
+- database-as-SSOT research state
+- event-sourcing/replay systems
+- monolithic per-problem “one big YAML list” state files (merge pain)
+- indexing full scratchpad text into RAG (too noisy)
+- cross-problem knowledge graphs
+- vendor memory products as the canonical store
 
 ---
 
@@ -22,7 +54,7 @@
 
 We lack a first-class system for:
 
-- multi-session “campaign” work on a problem (days/weeks)
+- multi-day “campaign” work on a problem (days/weeks)
 - scratchpad notes + structured lead tracking + attempt outcomes
 - durable synthesis that can be fed back into RAG + Lean loop
 - a clear, standardized place for humans/agents to write/read state
@@ -38,6 +70,7 @@ What exists already (relevant to this design):
 - **Search/RAG index DB:** `index/erdos.sqlite` (SQLite + FTS5 + optional embeddings).
   - `erdos search` queries it.
   - `erdos ask` retrieves chunks from it and builds a deterministic citation prompt.
+  - Today it indexes problem statements + the single `ProblemRecord.notes` blob (not literature extracts, and not any research workspace files).
 - **Literature ingestion:** manifests in `literature/manifests/{problem_id:04d}.yaml`, content cached/extracted under `literature/cache/` and `literature/extracts/` (gitignored).
 - **Proof loop:** `erdos loop` generates/patches Lean code and writes detailed JSONL iteration logs under `logs/loop/`.
 
@@ -55,7 +88,7 @@ These are proven patterns we can adopt without importing a heavyweight framework
 
 1) **Persistent “threads/sessions” + checkpointing**
    - Many agent frameworks persist state by “thread id” with resumable checkpoints.
-   - Translation: treat each problem’s campaign (and optionally each work session) as a durable “thread” with a stable ID and resumable state.
+   - Translation: treat each problem’s campaign as a durable “thread” with a stable ID and resumable state.
 
 2) **Small durable memory + large external memory**
    - Keep a *small* always-available summary (“memory blocks”), while using RAG for the long tail.
@@ -65,7 +98,7 @@ These are proven patterns we can adopt without importing a heavyweight framework
 
 3) **Event log / append-only truth for auditability**
    - Event sourcing stores “what happened” and derives state from events.
-   - Translation: record key research actions (note added, lead promoted, attempt logged, loop run id) in an append-only stream (text-friendly), while maintaining human-readable working docs.
+   - Translation: use Git history as the append-only audit trail for canonical research artifacts; do **not** introduce a separate event log in v3.
 
 4) **File-based “memory directories”**
    - A practical approach for agents is “memory as files you can CRUD”.
@@ -74,6 +107,8 @@ These are proven patterns we can adopt without importing a heavyweight framework
 ---
 
 ## 2.5) 2025/2026 ecosystem survey (what’s out there)
+
+This section is **non-normative background** only. The v3 implementation does not depend on any of these tools/libraries; treat links as pointers to review separately.
 
 This is a non-exhaustive shortlist of patterns and tooling that show up repeatedly in 2025–2026 agent systems. The point is not to adopt everything; it’s to steal the *right* ideas for our constraints (CLI-first, repo-local, reproducible, auditable, multi-session research).
 
@@ -209,7 +244,7 @@ Examples (not endorsing; just acknowledging the landscape):
 **RECOMMENDED (for erdos-banger as of 2026-01-23):**
 
 - **Canonical SSOT:** repo-local, git-tracked `research/` workspace (Markdown + YAML).
-- **Audit trail:** append-only `activity.jsonl` written by `erdos` commands (optional but recommended).
+- **Audit trail:** Git history is the audit trail for research state; we do **not** introduce an additional per-problem event log in v3.
 - **Derived retrieval index:** keep using `index/erdos.sqlite` (FTS5 + optional embeddings) as *derived* search/RAG memory.
 - **Orchestration (near-term):** CLI-first, deterministic commands + structured state; keep agents swappable.
 - **Orchestration (future “enterprise mode”):** if we want restart-safe long-running campaigns, add Temporal workflows that run `erdos` operations durably.
@@ -230,7 +265,8 @@ We should assume two legitimate workflows will coexist:
    - `erdos ask` / `erdos loop` can still run in prompt-only mode when LLM isn’t configured.
 
 2) **Automated runs, API-backed**
-   - `erdos ask` / `erdos loop` can use direct provider APIs (optional) or an external command wrapper.
+   - `erdos ask` / `erdos loop` will continue to use the existing external command interface (`ERDOS_LLM_COMMAND`).
+   - If you want provider APIs, run them behind that command (wrapper script or local service) so the core stays vendor-neutral.
    - The key is: whichever LLM is used, it writes back into the same canonical `research/` workspace.
 
 In both cases, the research state layer stays stable and tool-agnostic.
@@ -239,10 +275,10 @@ In both cases, the research state layer stays stable and tool-agnostic.
 
 **Stack 1 (Recommended): Repo-local workspace + derived SQLite (today + v3)**
 
-- Canonical: `research/` (Markdown/YAML + optional `activity.jsonl`)
+- Canonical: `research/` (Markdown/YAML)
 - Retrieval: `index/erdos.sqlite` (FTS5 + embeddings optional)
 - Orchestration: `erdos` CLI commands (+ MCP server as an interface for external agents)
-- LLM: external command (existing) and/or direct APIs (optional later)
+- LLM: external command interface (`ERDOS_LLM_COMMAND`) only; provider APIs live behind a wrapper.
 
 **Stack 2 (Agent-graph native): LangGraph checkpointer + repo workspace**
 
@@ -276,15 +312,21 @@ Add a **git-tracked** directory:
 
 ```
 research/
+  VERSION
   problems/
     0006/
+      meta.yaml
       README.md
       SCRATCHPAD.md
       SYNTHESIS.md
-      leads.yaml
-      attempts.yaml
-      sessions.yaml
-      activity.jsonl          # append-only (optional but recommended)
+      leads/
+        lead_20260123T000501Z_a1b2c3.yaml
+      attempts/
+        att_20260123T010203Z_ab12cd.yaml
+      hypotheses/
+        hyp_20260123T001000Z_d4e5f6.yaml
+      tasks/
+        task_20260123T002000Z_f00baa.yaml
   global/
     TECHNIQUES.md
     GLOSSARY.md
@@ -294,7 +336,9 @@ research/
 
 - Markdown files are for free-form, human-readable thinking.
 - YAML files are for structured items we must query/update deterministically.
-- `activity.jsonl` is append-only operational trace (what changed, by whom, when).
+- Structured items are **one-record-per-file** (no giant YAML lists).
+- Git is the audit trail for research state (reviewable diffs, blameable changes).
+- Never write secrets, tokens, or raw API responses into `research/`.
 - The existing “big text” stays gitignored:
   - literature extracts in `literature/extracts/`
   - loop logs in `logs/loop/`
@@ -305,34 +349,35 @@ research/
 Primary entrypoints:
 
 - `erdos research init 6` → creates the folder + templates for Problem 6
-- `erdos research open 6` → prints the path (and optionally opens in editor)
-- `erdos research note 6 "..."` → appends to `SCRATCHPAD.md` (+ activity event)
-- `erdos research lead add 6 --title ... --source ... --priority high` → writes `leads.yaml`
-- `erdos research attempt log 6 --lean-file ... --result failed --run-log logs/loop/...` → writes `attempts.yaml`
-- `erdos research status 6` → prints:
-  - active session
-  - top leads
-  - last attempts + outcomes
-  - next suggested actions
-- `erdos research synthesize 6` → updates `SYNTHESIS.md` from:
-  - scratchpad + leads + attempts + (optional) top retrieved sources
+- `erdos research open 6` → prints the path
+- `erdos research note 6 "..."` → appends to `SCRATCHPAD.md`
+- `erdos research lead add 6 --title "..." [--doi ...|--arxiv-id ...|--url ...] [--priority high] [--notes "..."]` → writes a new file under `leads/`
+- `erdos research attempt log 6 --result failed --summary "..." [--lean-file ...] [--loop-log logs/loop/...jsonl]` → writes a new file under `attempts/`
+- `erdos research hypothesis add 6 --statement "..."` → writes a new file under `hypotheses/`
+- `erdos research task add 6 --title "..." [--priority high]` → writes a new file under `tasks/`
+- `erdos research status 6` → prints file presence + record counts (v3; minimal dashboard)
+- `erdos research synthesize 6` → updates `SYNTHESIS.md` deterministically (no LLM) from scratchpad + records
+- `erdos research fmt 6` → rewrites YAML records into canonical formatting
+- `erdos research validate 6` → validates all YAML records against schemas + invariants
 
 ### 4.3 RAG integration (so notes actually help)
 
 Add indexing of research artifacts into `index/erdos.sqlite` as additional chunks.
 
-Minimal behavior:
+Minimal behavior (v3):
 
-- `erdos index --research 6` (or extend existing index build) reads:
-  - `research/problems/0006/SYNTHESIS.md`
-  - `research/problems/0006/SCRATCHPAD.md` (maybe last N chars)
-  - possibly a rendered lead list (“Lead: … / status: …”)
-- writes them as `chunks` with `problem_id=6` and a new `source_type` (e.g., `research_synthesis`, `research_scratchpad`)
+- Extend `erdos search --build-index` to index:
+  - `research/problems/{id}/SYNTHESIS.md` → `source_type=research_synthesis`
+  - each `research/problems/{id}/leads/lead_*.yaml` rendered to text → `source_type=research_lead`
+  - each `research/problems/{id}/attempts/att_*.yaml` rendered to text → `source_type=research_attempt`
+  - each `research/problems/{id}/hypotheses/hyp_*.yaml` rendered to text → `source_type=research_hypothesis`
+  - each `research/problems/{id}/tasks/task_*.yaml` rendered to text → `source_type=research_task`
+- Do **not** index `SCRATCHPAD.md` in v3 (too noisy).
 
 Then:
 
-- `erdos ask` automatically pulls these chunks as part of retrieval
-- `erdos loop` can optionally include top research chunks in its prompt context
+- `erdos ask` always includes `SYNTHESIS.md` in the prompt when present (baseline source, not “best-effort retrieval”)
+- `erdos loop` always includes `SYNTHESIS.md` in the loop prompt context when present
 
 ### 4.4 Loop integration (closing the iteration loop)
 
@@ -340,7 +385,7 @@ When `erdos loop` runs:
 
 - it already emits detailed logs under `logs/loop/`
 - v3 should also emit a single structured “attempt record” into:
-  - `research/problems/{id}/attempts.yaml` (and an activity event)
+  - `research/problems/{id}/attempts/att_*.yaml`
 
 This converts raw logs into *navigable state*.
 
@@ -348,88 +393,165 @@ This converts raw logs into *navigable state*.
 
 ## 5) Data contracts (explicit, so nothing is underspecified)
 
-### 5.1 `leads.yaml` (structured, queryable)
+### 5.1 `research/VERSION` (workspace major version)
+
+Single line:
+
+```text
+1
+```
+
+This is used to coordinate future migrations across the `research/` workspace.
+
+### 5.2 `meta.yaml` (problem-level metadata)
 
 ```yaml
 schema_version: 1
 problem_id: 6
-leads:
-  - id: lead_20260123_001
-    title: "Green–Tao theorem"
-    status: new            # new | investigating | promising | dead_end | incorporated
-    priority: high         # low | medium | high
-    source:
-      doi: "10.4007/annals.2008.167.481"
-      arxiv_id: "math/0404188"
-      url: null
-    notes: "Seems directly relevant; figure out mapping to problem statement."
-    created_at: "2026-01-23T00:00:00Z"
-    updated_at: "2026-01-23T00:00:00Z"
+created_at: "2026-01-23T00:00:00Z"
+updated_at: "2026-01-23T00:00:00Z"
 ```
 
-### 5.2 `attempts.yaml` (attempt history)
+### 5.3 Lead record: `leads/lead_*.yaml` (one record per file)
 
 ```yaml
 schema_version: 1
 problem_id: 6
-attempts:
-  - id: att_20260123_001
-    session_id: sess_20260123_001
-    lean_file: "formal/lean/Erdos/Problem006.lean"
-    run_log: "logs/loop/run_20260123_010203_ab12cd.jsonl"
-    result: failed         # failed | partial | success
-    summary: "Stuck on lemma X; need stronger induction hypothesis."
-    created_at: "2026-01-23T00:00:00Z"
+id: lead_20260123T000501Z_a1b2c3
+title: "Green–Tao theorem"
+status: new                 # new | investigating | promising | dead_end | incorporated
+priority: high              # low | medium | high
+tags: []
+source:
+  doi: "10.4007/annals.2008.167.481"
+  arxiv_id: "math/0404188"
+  url: null
+notes: "Seems directly relevant; map to the problem statement."
+created_at: "2026-01-23T00:05:01Z"
+updated_at: "2026-01-23T00:05:01Z"
 ```
 
-### 5.3 `sessions.yaml` (campaign/session tracking)
+### 5.4 Attempt record: `attempts/att_*.yaml` (one record per file)
 
 ```yaml
 schema_version: 1
 problem_id: 6
-active_session_id: sess_20260123_001
-sessions:
-  - id: sess_20260123_001
-    goal: "Collect known results + identify Lean imports/lemmas."
-    started_at: "2026-01-23T00:00:00Z"
-    ended_at: null
-    tags: ["survey", "lean_setup"]
+id: att_20260123T010203Z_ab12cd
+kind: lean_loop            # lean_loop | manual
+result: failed             # failed | partial | success
+summary: "Stuck on lemma X; induction hypothesis too weak."
+artifacts:
+  lean_file: "formal/lean/Erdos/Problem006.lean"
+  loop_run_log: "logs/loop/run_20260123_010203_ab12cd.jsonl"
+created_at: "2026-01-23T01:02:03Z"
 ```
 
-### 5.4 `activity.jsonl` (append-only operational trace)
+### 5.5 Hypothesis record: `hypotheses/hyp_*.yaml` (one record per file)
 
-Each line is a JSON object (append-only):
+```yaml
+schema_version: 1
+problem_id: 6
+id: hyp_20260123T001000Z_d4e5f6
+statement: "Conjecture: ..."
+status: active              # active | refuted | proven | incorporated
+confidence: medium          # low | medium | high
+evidence: []
+notes: ""
+created_at: "2026-01-23T00:10:00Z"
+updated_at: "2026-01-23T00:10:00Z"
+```
 
-```json
-{"ts":"2026-01-23T00:00:00Z","actor":"human","event":"note_added","problem_id":6,"session_id":"sess_20260123_001","data":{"len":123}}
-{"ts":"2026-01-23T00:05:00Z","actor":"erdos","event":"lead_added","problem_id":6,"session_id":"sess_20260123_001","data":{"lead_id":"lead_20260123_001"}}
+### 5.6 Task record: `tasks/task_*.yaml` (one record per file)
+
+```yaml
+schema_version: 1
+problem_id: 6
+id: task_20260123T002000Z_f00baa
+title: "Extract exact lemma statement needed for step X"
+status: todo                # todo | doing | blocked | done
+priority: high              # low | medium | high
+blocked_on: []
+links: []
+created_at: "2026-01-23T00:20:00Z"
+updated_at: "2026-01-23T00:20:00Z"
+```
+
+### 5.7 `SCRATCHPAD.md` (free-form, but standardized)
+
+`SCRATCHPAD.md` is where day-to-day thinking goes. To keep it agent-friendly and mergeable, we standardize only the timestamp header. The body is free-form (it is exactly what you pass to `erdos research note`).
+
+```md
+# Scratchpad
+
+## 2026-01-23T18:12:00Z
+
+Tried approach X; stuck at lemma Y.
+- Next: look up lemma Y in Mathlib
+- Question: is there a known reduction to Z?
+
+## 2026-01-23T19:45:00Z
+
+Lead: Paper Z looks promising; extract the exact statement.
+```
+
+Rules:
+
+- New entries are appended to the end of the file.
+- Each entry begins with an ISO timestamp header (`## ...Z`).
+- The note body is not reflowed/rewritten by the CLI (append-only).
+- No secrets, tokens, or raw API responses are allowed in this file.
+
+### 5.8 `SYNTHESIS.md` (curated, indexable, always safe to feed to RAG)
+
+`SYNTHESIS.md` is the single curated artifact we feed back into retrieval.
+
+```md
+# Synthesis: Problem 0006
+_Last updated: 2026-01-23_
+
+## Summary
+- ...
+
+## Top tasks (by priority)
+- ...
+
+## Active hypotheses
+- ...
+
+## Key leads (by priority)
+- ...
+
+## Recent attempts (most recent first)
+- ...
+
+## Notes (recent scratchpad excerpts)
+- ...
 ```
 
 ---
 
 ## 6) Implementation slices (what to build first)
 
-### Slice 1 — Workspace + templates + minimal CLI
+### Slice 1 — Workspace + templates + minimal CLI (SPEC-023)
 
 - create `erdos research init/open/note/status`
 - define the file layout + template creation
 - keep it purely file-based (no DB)
 
-### Slice 2 — Structured lead/attempt CRUD
+### Slice 2 — Structured records CRUD (SPEC-024)
 
-- implement `lead add/list/update`
-- implement `attempt log/list`
-- guarantee stable IDs and schema_version checks
+- implement CRUD for `lead`, `attempt`, `hypothesis`, `task`
+- guarantee stable IDs and schema_version checks (one-record-per-file)
+- implement `erdos research fmt` (canonical YAML) and `erdos research validate` (schema validation)
 
-### Slice 3 — Index the workspace into the existing search DB
+### Slice 3 — Index research into the existing search DB (SPEC-025)
 
-- extend indexing so `erdos ask` can retrieve research notes + synthesis
-- (optional) include literature extracts as chunks if available
+- extend indexing so `erdos ask` can retrieve **SYNTHESIS + structured records** as first-class chunk sources
 
-### Slice 4 — Loop integration and synthesis
+### Slice 4 — Deterministic synthesis + loop integration (SPEC-026 / SPEC-027)
 
-- after `erdos loop`, automatically append an attempt record
 - `erdos research synthesize` updates `SYNTHESIS.md` deterministically
+- after `erdos loop`, automatically write an attempt record under `attempts/att_*.yaml`
 
 ---
 
@@ -437,24 +559,30 @@ Each line is a JSON object (append-only):
 
 Next spec ID is **SPEC-023**. Suggested breakdown:
 
-- **SPEC-023: Research Workspace (Filesystem Canonical)**
-  - folder layout, templates, YAML schemas, CLI init/open/status/note
-- **SPEC-024: Leads + Attempts (Structured Tracking)**
-  - CRUD, validation, stable IDs, activity log
+- **SPEC-023: Research Workspace (Filesystem SSOT)**
+  - folder layout + templates, CLI `research init/open/note/status`
+- **SPEC-024: Research Records (Structured Tracking)**
+  - one-record-per-file CRUD for leads/attempts/hypotheses/tasks + fmt/validate
 - **SPEC-025: Index Research Artifacts into Search DB**
-  - new chunk sources, indexing rules, ask/loop retrieval integration
-- **SPEC-026: Research Synthesis**
-  - deterministic synthesis format, optional LLM assist, update rules
+  - new chunk sources (`research_synthesis`, `research_lead`, `research_attempt`, `research_hypothesis`, `research_task`)
+  - indexing rules + ask retrieval behavior
+- **SPEC-026: Deterministic Research Synthesis**
+  - deterministic `SYNTHESIS.md` rendering rules and update semantics
+- **SPEC-027: Loop → Research Integration**
+  - append attempt records after `erdos loop`, include synthesis in loop prompt context
 
 ---
 
-## 8) Senior-review questions (things to decide explicitly)
+## 8) Decisions (locked for v3; no optionality)
 
-1) Should `research/` be git-tracked by default, or treated like `literature/cache/` (local-only)?
-2) Do we want `activity.jsonl` as a required SSOT, or an optional operational trace?
-3) How much should `erdos loop` automatically write into research state vs leaving it manual?
-4) Should we index *all* scratchpad text or only curated synthesis (+ last N bytes of scratchpad)?
-5) Do we need cross-problem linking (knowledge graph), or defer until v4?
+1) `research/` is **git-tracked by default**. This is the canonical authored research state.
+2) Structured records are **one-record-per-file** under `leads/`, `attempts/`, `hypotheses/`, `tasks/`.
+3) We do **not** implement `activity.jsonl` in v3. Git is the audit trail; `logs/*` remain derived/debug artifacts.
+4) We do **not** introduce first-class “sessions” in v3. Campaign = the per-problem folder.
+5) We index `SYNTHESIS.md` **and** rendered structured records into SQLite. We do **not** index `SCRATCHPAD.md` in v3 (too noisy).
+6) `SYNTHESIS.md` is **deterministic** (no LLM writes to canonical synthesis in v3).
+7) `erdos loop` will write a structured attempt record under `attempts/att_*.yaml` (SPEC-027).
+8) Cross-problem knowledge graphs are out of scope until after this layer proves itself on real problems.
 
 ---
 

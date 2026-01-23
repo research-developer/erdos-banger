@@ -12,6 +12,7 @@ v1.3 (DONE)     Enhancement: Vectors + batch ops
 v1.4 (DONE)     Integration: Formal conjectures + MCP
 v2.0 (DONE)     Expansion: PDF conversion (Marker + LLM)
 v2.1 (DONE)     Architecture: MetadataProvider abstraction
+v3.0 (DONE)     Research: Workspace + campaign memory
 ```
 
 ## Active Specs
@@ -67,8 +68,13 @@ Completed specs that are fully implemented.
 | 017 | MCP Server | [archive](../_archive/specs/spec-017-mcp-server.md) |
 | 019 | PDF Conversion | [archive](../_archive/specs/spec-019-pdf-conversion.md) |
 | 022 | MetadataProvider Orchestration | [archive](../_archive/specs/spec-022-metadata-provider-orchestration.md) |
+| 023 | Research Workspace (Filesystem SSOT) | [archive](../_archive/specs/spec-023-research-workspace.md) |
+| 024 | Research Records (Leads/Attempts/Hypotheses/Tasks) | [archive](../_archive/specs/spec-024-research-records.md) |
+| 025 | Index Research Artifacts into Search DB | [archive](../_archive/specs/spec-025-index-research-artifacts.md) |
+| 026 | Deterministic Research Synthesis | [archive](../_archive/specs/spec-026-deterministic-research-synthesis.md) |
+| 027 | Loop → Research Integration | [archive](../_archive/specs/spec-027-loop-research-integration.md) |
 
-**Next Spec ID:** SPEC-023
+**Next Spec ID:** SPEC-028
 
 ## Dependency Graph
 

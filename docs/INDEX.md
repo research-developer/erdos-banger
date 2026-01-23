@@ -4,7 +4,7 @@
 
 | Category | Index | Next ID |
 |----------|-------|---------|
-| [Specs](./specs/README.md) | Design specifications | SPEC-023 |
+| [Specs](./specs/README.md) | Design specifications | SPEC-028 |
 | [ADRs](./adr/README.md) | Architecture decision records | ADR-002 |
 | [Bugs](./bugs/README.md) | Bug reports & reviews | BUG-021 |
 | [Debt](./debt/README.md) | Technical debt tracking | DEBT-068 |
@@ -18,7 +18,7 @@
 ## Future / Brainstorming
 
 - [Future Ideations](./future/future-ideations.md) - Living roadmap & integrations
-- [Research State Management (v3)](./future/research-state-management-v3.md) - Proposed research workspace + note/session system
+- [Research State Management (v3)](./future/research-state-management-v3.md) - Implemented research workspace + campaign memory (no sessions)
 
 ## Numbering Convention
 
