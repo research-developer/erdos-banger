@@ -67,43 +67,16 @@ make test-all  # Full suite (includes requires_network; may hit real APIs)
 Start a tmux session:
 
 ```bash
-tmux new-session -s erdos-ralph
+MAX=50 ITER_TIMEOUT=600 tmux new-session -s erdos-ralph './scripts/ralph-loop.sh'
 ```
 
-Run the loop:
+This uses the repo’s loop runner (`scripts/ralph-loop.sh`), which:
+- writes per-iteration logs to `logs/ralph/iteration_*.log`
+- enforces per-iteration timeouts (avoids hangs)
+- avoids piping Claude output through `tee` (reduces EPIPE risk)
 
 ```bash
-MAX=50
-TIMEOUT=14400
-ITER_TIMEOUT=600
-
-TIMEOUT_CMD="${TIMEOUT_CMD:-}"
-if [[ -z "$TIMEOUT_CMD" ]]; then
-  if command -v timeout >/dev/null 2>&1; then
-    TIMEOUT_CMD="timeout"
-  elif command -v gtimeout >/dev/null 2>&1; then
-    TIMEOUT_CMD="gtimeout"
-  else
-    echo "Missing timeout command. Install coreutils (macOS) or use Linux `timeout`." >&2
-    exit 1
-  fi
-fi
-
-mkdir -p logs/ralph
-
-"$TIMEOUT_CMD" "$TIMEOUT" bash -c '
-  for i in $(seq 1 '"$MAX"'); do
-    n=$(printf "%03d" "$i")
-    log="logs/ralph/iteration_${n}.log"
-    echo "=== Iteration $i/'"$MAX"' ===" | tee -a "$log"
-    '"$TIMEOUT_CMD"' '"$ITER_TIMEOUT"' claude --dangerously-skip-permissions -p "$(cat PROMPT.md)" 2>&1 | tee -a "$log"
-    if ! grep -q "^\\- \\[ \\]" PROGRESS.md; then
-      echo "All tasks complete" | tee -a "$log"
-      break
-    fi
-    sleep 2
-  done
-'
+./scripts/ralph-loop.sh
 ```
 
 ---
@@ -116,6 +89,16 @@ In another pane:
 watch -n 10 'git log --oneline -10'
 watch -n 10 'head -80 PROGRESS.md'
 ```
+
+Recommended: run the watchdog in a separate pane (fails fast on hangs / guardrail errors):
+
+```bash
+./scripts/ralph-watchdog.sh
+```
+
+If the watchdog exits non-zero, inspect:
+- `logs/ralph/watchdog.log`
+- the most recent `logs/ralph/iteration_*.log`
 
 If the loop appears stuck:
 

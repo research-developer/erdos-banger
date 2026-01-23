@@ -148,6 +148,25 @@ class TestBuildLoopPrompt:
         assert "REPLACE" in prompt
         assert "NO_FIX_POSSIBLE" in prompt
 
+    def test_prompt_includes_rag_chunks(
+        self, sample_problem: ProblemRecord, sample_check_result: LeanCheckResult
+    ) -> None:
+        prompt = build_loop_prompt(
+            file_path=Path("formal/lean/Erdos/Problem006.lean"),
+            file_content="content",
+            problem=sample_problem,
+            check_result=sample_check_result,
+            rag_chunks=[
+                {
+                    "chunk_id": "research_6_synthesis",
+                    "source_type": "research_synthesis",
+                    "text": "SYNTHESIS_MARKER",
+                }
+            ],
+            config=LoopConfig(),
+        )
+        assert "SYNTHESIS_MARKER" in prompt
+
 
 class TestApplyPatch:
     """Test patch application."""

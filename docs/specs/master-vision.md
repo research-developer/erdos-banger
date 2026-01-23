@@ -1,5 +1,9 @@
 # Erdős Problem Research Harness – Design & Build Plan
 
+> **Status (2026-01-23):** Implementation has shipped through v3.1 (see `docs/specs/README.md`). This document is a long-lived design narrative; treat CLI specifics as illustrative. The SSOT for the CLI is `erdos COMMAND --help`.
+>
+> **Note:** The proof loop runner is invoked as `erdos loop run <problem_id>` in the current CLI.
+
 ## 1) Recommended Repo Name + Positioning
 
 ### Name Candidates (no hype)
@@ -190,7 +194,7 @@ Note: In the diagram, "lean form" is shorthand for `erdos lean formalize`.
 3. **Query** → CLI commands read/write to storage, invoke Lean compilation
 4. **Iterate** → Lean errors feed back to LLM loop, all steps logged
 
-**Diagram Summary:** The dataset feeds the problem DB. Ingestion fetches references (via external APIs) into manifests and possibly cached text. An index builder uses the DB content (problem statements, reference texts) to create a lexical search index (FTS5) in v1; vector embeddings and hybrid reranking are a future extension. The CLI commands orchestrate these: e.g., `erdos search` queries the index and returns relevant text chunks with citations; `erdos ask` uses LLM (via CLI integration) to answer questions with those citations. The Lean project is initialized by `erdos lean init` and contains Lean files. Commands like `erdos lean formalize` create a Lean stub for a problem, and `erdos loop` runs an iterative loop where the LLM proposes proofs, Lean checks them, and feedback is logged. Logging happens throughout to enable reproducibility and evaluation.
+**Diagram Summary:** The dataset feeds the problem DB. Ingestion fetches references (via external APIs) into manifests and possibly cached text. An index builder uses the DB content (problem statements, reference texts) to create a lexical search index (FTS5) in v1; vector embeddings and hybrid reranking are a future extension. The CLI commands orchestrate these: e.g., `erdos search` queries the index and returns relevant text chunks with citations; `erdos ask` uses LLM (via CLI integration) to answer questions with those citations. The Lean project is initialized by `erdos lean init` and contains Lean files. Commands like `erdos lean formalize` create a Lean stub for a problem, and `erdos loop run` runs an iterative loop where the LLM proposes proofs, Lean checks them, and feedback is logged. Logging happens throughout to enable reproducibility and evaluation.
 
 ---
 
@@ -465,7 +469,7 @@ Generate a Lean skeleton for the given problem.
 
 **Output:** Creates `Problem<id>.lean`. Outputs file path confirmation.
 
-#### 11. `erdos loop <problem_id>`
+#### 11. `erdos loop run <problem_id>`
 
 Run an interactive (or automated) loop of Lean proof attempts using an LLM agent.
 
@@ -477,7 +481,7 @@ Run an interactive (or automated) loop of Lean proof attempts using an LLM agent
 5. Apply changes, repeat
 6. Log every iteration
 
-**Status:** Deferred to v1.2+ (SPEC-012). Not implemented in v1.1.
+**Status:** Implemented as `erdos loop run` (SPEC-012). Loop → research attempt recording shipped in v3.0 (SPEC-027).
 
 **Output:** Stream the process in human mode. JSON output references log file.
 

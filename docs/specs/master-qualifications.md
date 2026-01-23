@@ -49,7 +49,7 @@ The master draft describes many capabilities. Here's what we're **actually build
 | Vector embeddings | BM25 is surprisingly good for technical text; adds complexity |
 | PDF conversion (deferred to v2.0+) | Heavy dependency + edge case hell; use arXiv HTML/LaTeX in v1; optional `[pdf]` extra (Marker) is v2.0+ |
 | MCP server | CLI + Claude skills sufficient for now |
-| `erdos loop` automation | Need manual workflow validated first |
+| `erdos loop run` automation | Need manual workflow validated first |
 | Postgres/pgvector | SQLite handles our scale |
 | Qdrant | Same as above |
 | Semantic Scholar integration | "Good redundancy" - adds citation context not in OpenAlex |
@@ -421,7 +421,7 @@ Before coding starts:
 | Vertical slice includes ingestion + LLM | True vertical: show → lean init → formalize → check |
 | 15 GitHub issues | 23+ finer-grained issues |
 | MCP optional but described in detail | MCP deferred past v1 (implemented in v1.4; see Spec 017) |
-| `erdos loop` as v1 feature | Implemented in v1.2 after manual validation (Spec 012) |
+| `erdos loop run` as v1 feature | Implemented in v1.2 after manual validation (Spec 012) |
 | Crossref + arXiv as primary sources | OpenAlex as primary (v1.2+), Crossref as fallback |
 | No API orchestration strategy | MetadataProvider protocol for pluggable sources |
 | No deduplication discussion | OpenAlex handles deduplication internally |

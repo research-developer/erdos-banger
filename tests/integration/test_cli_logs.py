@@ -6,14 +6,14 @@ import json
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from erdos.cli import app
 from erdos.core.models import CLIOutput
 from erdos.core.run_logger import RunLogger
+from tests.cli_runner import make_cli_runner
 
 
-runner = CliRunner()
+runner = make_cli_runner()
 
 
 @pytest.fixture

@@ -12,6 +12,14 @@ v1.3 (DONE)     Enhancement: Vectors + batch ops
 v1.4 (DONE)     Integration: Formal conjectures + MCP
 v2.0 (DONE)     Expansion: PDF conversion (Marker + LLM)
 v2.1 (DONE)     Architecture: MetadataProvider abstraction
+v3.0 (DONE)     Research: Workspace + campaign memory
+v3.1 (DONE)     Verification: v3 integration tests
+v3.2 (PENDING)  Data sync + Research APIs: Unified sync + Exa integration
+v3.3 (PENDING)  Research APIs: Semantic Scholar integration
+v3.4 (PENDING)  Research APIs: zbMATH integration
+v3.5 (PENDING)  Architecture: Multi-model routing
+v4.0 (PENDING)  Lean: Lean Copilot integration
+v4.1 (PENDING)  UX: Progress dashboard
 ```
 
 ## Active Specs
@@ -20,7 +28,13 @@ Specs currently in progress or awaiting implementation.
 
 | ID | Title | Status | Target | Resolves |
 |----|-------|--------|--------|----------|
-| (none) | | | | |
+| 035 | [Unified Problem Data Sync](./spec-035-unified-problem-data-sync.md) | Pending | v3.2 | Data source fragmentation (critical) |
+| 029 | [Exa Research Integration](./spec-029-exa-research-integration.md) | Pending | v3.2 | Agentic literature synthesis |
+| 030 | [Semantic Scholar Integration](./spec-030-semantic-scholar-integration.md) | Pending | v3.3 | Citation context ("WHY cites") |
+| 031 | [zbMATH Integration](./spec-031-zbmath-integration.md) | Pending | v3.4 | Math-specific metadata (MSC) |
+| 032 | [Multi-Model Routing](./spec-032-multi-model-routing.md) | Pending | v3.5 | Task-appropriate model selection |
+| 033 | [Lean Copilot Integration](./spec-033-lean-copilot-integration.md) | Pending | v4.0 | LLM-backed tactic suggestions |
+| 034 | [Progress Dashboard](./spec-034-progress-dashboard.md) | Pending | v4.1 | Visualization of research state |
 
 ## Design Documents
 
@@ -28,7 +42,7 @@ Research-backed design decisions for complex specs.
 
 | ID | Title | Status | Prerequisite For |
 |----|-------|--------|------------------|
-| (none) | | | |
+| RSM-001 | [v3 Research State](../future/research-state-management-v3.md) | Implemented | SPEC-023 → SPEC-027 |
 
 ## Deferred Specs
 
@@ -67,8 +81,14 @@ Completed specs that are fully implemented.
 | 017 | MCP Server | [archive](../_archive/specs/spec-017-mcp-server.md) |
 | 019 | PDF Conversion | [archive](../_archive/specs/spec-019-pdf-conversion.md) |
 | 022 | MetadataProvider Orchestration | [archive](../_archive/specs/spec-022-metadata-provider-orchestration.md) |
+| 023 | Research Workspace (Filesystem SSOT) | [archive](../_archive/specs/spec-023-research-workspace.md) |
+| 024 | Research Records (Leads/Attempts/Hypotheses/Tasks) | [archive](../_archive/specs/spec-024-research-records.md) |
+| 025 | Index Research Artifacts into Search DB | [archive](../_archive/specs/spec-025-index-research-artifacts.md) |
+| 026 | Deterministic Research Synthesis | [archive](../_archive/specs/spec-026-deterministic-research-synthesis.md) |
+| 027 | Loop → Research Integration | [archive](../_archive/specs/spec-027-loop-research-integration.md) |
+| 028 | v3 Integration Verification | [archive](../_archive/specs/spec-028-v3-integration-verification.md) |
 
-**Next Spec ID:** SPEC-023
+**Next Spec ID:** SPEC-036
 
 ## Dependency Graph
 
@@ -110,6 +130,25 @@ v2.0 Expansion (DONE)
 
 v2.1 Architecture (DONE)
 └── 022 MetadataProvider Orchestration ←── Resolves DEBT-038, enables pluggable sources
+
+v3.0 Research (DONE)
+├── 023 Research Workspace ←── Filesystem SSOT for campaign memory
+├── 024 Research Records ←── Leads/Attempts/Hypotheses/Tasks CRUD
+├── 025 Index Research Artifacts ←── RAG integration
+├── 026 Deterministic Synthesis ←── SYNTHESIS.md rendering
+└── 027 Loop → Research ←── Attempt records from loop
+
+v3.1 Verification (DONE)
+└── 028 v3 Integration Verification ←── Horizontal + vertical tests
+
+v3.2+ Future (PENDING)
+├── 035 Unified Problem Data Sync ←── 028 (verified v3 foundation)
+├── 029 Exa Research Integration ←── Agentic literature synthesis
+├── 030 Semantic Scholar Integration ←── Citation context
+├── 031 zbMATH Integration ←── Math-specific metadata
+├── 032 Multi-Model Routing ←── Task-level LLM routing (external commands)
+├── 033 Lean Copilot Integration ←── 032 (needs model routing)
+└── 034 Progress Dashboard ←── 028 (verified v3 foundation)
 ```
 
 ## Master Documents

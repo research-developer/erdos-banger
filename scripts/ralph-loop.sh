@@ -35,7 +35,13 @@ echo "Max iterations: $MAX"
 echo "Iteration timeout: ${ITER_TIMEOUT}s"
 echo ""
 echo "Monitor: tail -f logs/ralph/iteration_*.log"
+echo "Watchdog: ./scripts/ralph-watchdog.sh"
 echo ""
+
+if ! grep -q "^\- \[ \]" PROGRESS.md; then
+    echo "All tasks complete (no unchecked items in PROGRESS.md). Exiting."
+    exit 0
+fi
 
 rm -rf logs/ralph 2>/dev/null || true
 mkdir -p logs/ralph

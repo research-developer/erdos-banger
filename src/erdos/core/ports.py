@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from erdos.core.models import ChunkSource, ProblemRecord, ReferenceRecord
+    from erdos.core.models import ChunkSource, ProblemRecord, ReferenceRecord, TextChunk
     from erdos.core.search.types import (
         EmbeddingModelProtocol,
         SearchResult,
@@ -174,6 +174,8 @@ class SearchIndexWritePort(Protocol):
     """
 
     def index_problem(self, problem: ProblemRecord) -> None: ...
+
+    def index_chunk(self, chunk: TextChunk) -> None: ...
 
     def clear(self) -> None: ...
 

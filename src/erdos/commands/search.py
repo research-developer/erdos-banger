@@ -27,6 +27,8 @@ from erdos.core.timing import measure_time_ms
 
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from erdos.core.ports import ProblemRepository, SearchIndexProtocol
 
 
@@ -135,6 +137,7 @@ def _handle_index_build(
     progress_console: Console,
     *,
     repo: ProblemRepository,
+    repo_root: Path | None,
 ) -> CLIOutput | None:
     """Handle index building if requested.
 
@@ -152,7 +155,7 @@ def _handle_index_build(
         )
 
     progress_console.print("Building search index...")
-    error = build_search_index(repo=repo, index=index)
+    error = build_search_index(repo=repo, index=index, repo_root=repo_root)
     if error:
         return error
 
@@ -301,6 +304,7 @@ def search(
                     index,
                     progress_console,
                     repo=app_ctx.problems,
+                    repo_root=app_ctx.config.repo_root,
                 )
 
                 # Build embeddings if requested

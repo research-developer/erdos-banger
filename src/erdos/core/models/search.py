@@ -22,6 +22,11 @@ class ChunkSource(str, Enum):
     PROBLEM_NOTES = "problem_notes"
     REFERENCE_ABSTRACT = "reference_abstract"
     REFERENCE_FULLTEXT = "reference_fulltext"
+    RESEARCH_SYNTHESIS = "research_synthesis"
+    RESEARCH_LEAD = "research_lead"
+    RESEARCH_ATTEMPT = "research_attempt"
+    RESEARCH_HYPOTHESIS = "research_hypothesis"
+    RESEARCH_TASK = "research_task"
 
 
 class TextChunk(ErdosBaseModel):

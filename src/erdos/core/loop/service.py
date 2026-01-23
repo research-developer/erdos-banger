@@ -13,6 +13,7 @@ This separates application orchestration from the CLI layer (SRP).
 from __future__ import annotations
 
 import logging
+import math
 from typing import TYPE_CHECKING
 
 from erdos.core.exit_codes import ExitCode
@@ -21,6 +22,8 @@ from erdos.core.lean_runner import LeanRunner, LeanRunnerError
 from erdos.core.loop.result import LoopResult, LoopStatus
 from erdos.core.loop.runner import run_loop
 from erdos.core.models import CLIOutput
+from erdos.core.research.loop_integration import write_attempt_from_loop_result
+from erdos.core.research.paths import get_problem_dir
 
 
 if TYPE_CHECKING:
@@ -33,6 +36,62 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _truncate_bytes(text: str, max_bytes: int) -> str:
+    """Truncate text to fit within max_bytes (UTF-8)."""
+    encoded = text.encode("utf-8")
+    if len(encoded) <= max_bytes:
+        return text
+    truncated = encoded[: max_bytes - 3]
+    return truncated.decode("utf-8", errors="ignore") + "..."
+
+
+def _build_rag_chunks(
+    problem_id: int, *, repo_root: Path | None, limit: int
+) -> list[dict[str, str]]:
+    if limit <= 0:
+        return []
+    synthesis_path = get_problem_dir(repo_root, problem_id) / "SYNTHESIS.md"
+    if not synthesis_path.exists():
+        return []
+    try:
+        text = synthesis_path.read_text(encoding="utf-8")
+    except OSError:
+        return []
+    text = text.strip()
+    if not text:
+        return []
+    text = _truncate_bytes(text, 8192)
+    encoded = text.encode("utf-8")
+    chunk_size = max(1, math.ceil(len(encoded) / max(1, limit)))
+
+    parts: list[str] = []
+    for i in range(0, len(encoded), chunk_size):
+        part = encoded[i : i + chunk_size].decode("utf-8", errors="ignore").strip()
+        if part:
+            parts.append(part)
+        if len(parts) >= limit:
+            break
+
+    if not parts:
+        return []
+
+    chunks: list[dict[str, str]] = []
+    for idx, part in enumerate(parts, start=1):
+        chunk_id = (
+            f"research_{problem_id}_synthesis"
+            if len(parts) == 1
+            else f"research_{problem_id}_synthesis_{idx:02d}"
+        )
+        chunks.append(
+            {
+                "chunk_id": chunk_id,
+                "source_type": "research_synthesis",
+                "text": part,
+            }
+        )
+    return chunks
+
+
 def execute_proof_loop(
     problem_id: int,
     *,
@@ -41,6 +100,7 @@ def execute_proof_loop(
     config: LoopConfig,
     llm_command: str | None,
     no_apply: bool,
+    repo_root: Path | None = None,
 ) -> CLIOutput:
     """Execute the proof loop for a problem.
 
@@ -58,6 +118,7 @@ def execute_proof_loop(
         config: Loop configuration
         llm_command: LLM command (or None)
         no_apply: If True, don't write changes to disk
+        repo_root: Repository root for optional research workspace integration
 
     Returns:
         CLIOutput with result data or error
@@ -109,6 +170,11 @@ def execute_proof_loop(
             code=ExitCode.ERROR,
         )
 
+    # Build RAG context: always include per-problem synthesis when present.
+    rag_chunks = _build_rag_chunks(
+        problem_id, repo_root=repo_root, limit=config.rag_limit
+    )
+
     # Run the loop
     try:
         result = run_loop(
@@ -118,6 +184,7 @@ def execute_proof_loop(
             lean_runner=lean_runner,
             llm_command=llm_command,
             no_apply=no_apply,
+            rag_chunks=rag_chunks,
         )
     except Exception as e:
         logger.exception("Loop execution failed")
@@ -127,6 +194,12 @@ def execute_proof_loop(
             message=str(e),
             code=ExitCode.ERROR,
         )
+
+    # Write a structured attempt record (best-effort; never block loop result).
+    try:
+        write_attempt_from_loop_result(problem_id, result, repo_root=repo_root)
+    except Exception as e:
+        logger.warning("Failed to write research attempt record: %s", e)
 
     return _map_loop_result_to_cli_output(result)
 

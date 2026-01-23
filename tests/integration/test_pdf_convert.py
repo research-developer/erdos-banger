@@ -5,13 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import patch
 
-from typer.testing import CliRunner
-
 from erdos.cli import app
 from erdos.core.exit_codes import ExitCode
+from tests.cli_runner import make_cli_runner
 
 
-runner = CliRunner()
+runner = make_cli_runner()
 
 
 class TestConvertCommandHelp:
@@ -56,7 +55,10 @@ class TestConvertCommandValidation:
         """Convert returns error for nonexistent file."""
         result = runner.invoke(app, ["convert", "/nonexistent/file.pdf"])
         assert result.exit_code != 0
-        assert "not found" in result.output.lower() or "error" in result.output.lower()
+        output = (getattr(result, "stderr", "") or "") + (
+            getattr(result, "stdout", None) or result.output or ""
+        )
+        assert "not found" in output.lower() or "error" in output.lower()
 
     def test_convert_rejects_non_pdf_file(self, tmp_path: Path) -> None:
         """Convert returns error for non-PDF file."""
@@ -65,7 +67,10 @@ class TestConvertCommandValidation:
 
         result = runner.invoke(app, ["convert", str(txt_file)])
         assert result.exit_code != 0
-        assert "pdf" in result.output.lower()
+        output = (getattr(result, "stderr", "") or "") + (
+            getattr(result, "stdout", None) or result.output or ""
+        )
+        assert "pdf" in output.lower()
 
 
 class TestConvertCommandOutput:

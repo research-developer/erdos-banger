@@ -163,6 +163,70 @@ def test_no_core_backward_compat_shim_files(project_root: Path) -> None:
         )
 
 
+# DEBT-067 regression guard: prevent private helper re-exports in package roots
+#
+# Package __init__.py files should only export public APIs in __all__.
+# Names starting with underscore are private implementation details and
+# should be imported directly from their implementation modules.
+CORE_SUBPACKAGES = [
+    "ask",
+    "ingest",
+]
+
+
+def test_no_private_exports_in_core_package_roots(project_root: Path) -> None:
+    """Ensure DEBT-067 private re-exports do not regress.
+
+    Package __init__.py files should not export names starting with underscore
+    in their __all__ list. Private helpers should be imported from their
+    implementation modules directly (e.g., erdos.core.ask.service._load_problem).
+    """
+    core_dir = project_root / "src" / "erdos" / "core"
+    violations: list[str] = []
+
+    for subpackage in CORE_SUBPACKAGES:
+        init_path = core_dir / subpackage / "__init__.py"
+        if not init_path.exists():
+            continue
+
+        content = init_path.read_text(encoding="utf-8")
+        try:
+            tree = ast.parse(content, filename=str(init_path))
+        except SyntaxError as exc:
+            rel_path = init_path.relative_to(project_root)
+            violations.append(
+                f"{rel_path}:{exc.lineno or 0}: SYNTAX ERROR: {exc.msg or 'SyntaxError'}"
+            )
+            continue
+
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if (
+                        isinstance(target, ast.Name)
+                        and target.id == "__all__"
+                        and isinstance(node.value, ast.List)
+                    ):
+                        for elt in node.value.elts:
+                            if isinstance(elt, ast.Constant) and isinstance(
+                                elt.value, str
+                            ):
+                                name = elt.value
+                                if name.startswith("_"):
+                                    violations.append(
+                                        f"erdos.core.{subpackage}.__all__ exports "
+                                        f"private name: {name!r}"
+                                    )
+
+    assert not violations, (
+        f"Found {len(violations)} private export(s) in package __all__ (DEBT-067):\n"
+        + "\n".join(f"  - {v}" for v in violations)
+        + "\n\nPrivate helpers should be imported from implementation modules:\n"
+        "  erdos.core.ask._load_problem -> erdos.core.ask.service._load_problem\n"
+        "  erdos.core.ingest._fetch_reference_entry -> erdos.core.ingest.fetch.fetch_reference_entry"
+    )
+
+
 def test_no_imports_of_removed_shim_paths(project_root: Path) -> None:
     """Ensure no code imports the removed shim module paths.
 

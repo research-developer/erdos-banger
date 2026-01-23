@@ -20,6 +20,8 @@ from erdos.core.timing import measure_time_ms
 
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from erdos.core.ports import ProblemRepository, SearchIndexProtocol
 
 
@@ -78,6 +80,7 @@ def _execute_ask_query(
     *,
     repo: ProblemRepository,
     index: SearchIndexProtocol,
+    repo_root: Path | None,
 ) -> CLIOutput:
     """Execute the ask query and return result with timing."""
     with measure_time_ms() as duration:
@@ -90,6 +93,7 @@ def _execute_ask_query(
             build_index_flag=options.build_index,
             no_llm=options.no_llm,
             llm_command=options.llm_cmd,
+            repo_root=repo_root,
         )
     result.duration_ms = duration[0]
     return result
@@ -189,6 +193,9 @@ def ask(
         return  # Unreachable: get_app_context guarantees (ctx, None) or (None, error)
 
     result = _execute_ask_query(
-        options, repo=app_ctx.problems, index=app_ctx.ensure_index()
+        options,
+        repo=app_ctx.problems,
+        index=app_ctx.ensure_index(),
+        repo_root=app_ctx.config.repo_root,
     )
     exit_with_result(ctx, result, print_human=_print_human)

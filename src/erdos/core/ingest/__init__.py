@@ -38,14 +38,6 @@ from erdos.core.ingest.service import ingest_problem_references
 from erdos.core.ingest.stable_key import HasIdentifiers, get_stable_key
 
 
-# Private name aliases for backward compatibility with internal/test imports
-_download_and_extract_arxiv = download_and_extract_arxiv
-_fetch_reference_entry = fetch_reference_entry
-_process_all_references = process_all_references
-_process_single_reference = process_single_reference
-_ReferenceProcessResult = ReferenceProcessResult
-_ProcessAllReferencesResult = ProcessAllReferencesResult
-
 __all__ = [
     "ArxivDownloadResult",
     "HasIdentifiers",
@@ -53,12 +45,6 @@ __all__ = [
     "MetadataSource",
     "ProcessAllReferencesResult",
     "ReferenceProcessResult",
-    "_ProcessAllReferencesResult",
-    "_ReferenceProcessResult",
-    "_download_and_extract_arxiv",
-    "_fetch_reference_entry",
-    "_process_all_references",
-    "_process_single_reference",
     "batch_result_to_cli_output",
     "create_batch_process_fn",
     "download_and_extract_arxiv",

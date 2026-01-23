@@ -153,7 +153,8 @@ mkdir -p logs/ralph
     n=$(printf "%03d" "$i")
     log="logs/ralph/iteration_${n}.log"
     echo "=== Iteration $i/'"$MAX"' ===" | tee -a "$log"
-    '"$TIMEOUT_CMD"' '"$ITER_TIMEOUT"' claude --dangerously-skip-permissions -p "$(cat PROMPT.md)" 2>&1 | tee -a "$log"
+    # Avoid piping Claude output through tee (EPIPE risk); append directly.
+    '"$TIMEOUT_CMD"' '"$ITER_TIMEOUT"' claude --dangerously-skip-permissions -p "$(cat PROMPT.md)" >> "$log" 2>&1
     # Check if all tasks complete (no unchecked boxes)
     if ! grep -q "^\- \[ \]" PROGRESS.md; then
       echo "All tasks complete!" | tee -a "$log"
@@ -239,12 +240,17 @@ EOF
 Allowed to change:
 - `src/erdos/**`
 - `tests/**`
+- `formal/lean/**` (Lean project sources; never commit build artifacts)
+- `scripts/**`
 - `docs/specs/**` (active specs only)
 - `docs/bugs/**`, `docs/debt/**`
+- `docs/_vendor-docs/**`
+- `docs/future/**` (design notes; non-normative)
+- `docs/INDEX.md`, `docs/specs/README.md` (indexes)
 - `PROMPT.md`, `PROGRESS.md`, `docs/_ralphwiggum/**`
 
 Forbidden to change (treat as immutable SSOT unless a human explicitly authorizes it):
-- `docs/_archive/**`
+- **Existing** files under `docs/_archive/**` (write-once). Allowed: add new files when archiving completed work; do not edit after archiving.
 - `data/erdosproblems/**` (git submodule)
 
 Dependency manifests:
@@ -596,7 +602,8 @@ mkdir -p logs/ralph
     n=$(printf "%03d" "$i")
     log="logs/ralph/iteration_${n}.log"
     echo "=== Iteration $i/'"$MAX"' ===" | tee -a "$log"
-    '"$TIMEOUT_CMD"' '"$ITER_TIMEOUT"' claude --dangerously-skip-permissions -p "$(cat PROMPT.md)" 2>&1 | tee -a "$log"
+    # Avoid piping Claude output through tee (EPIPE risk); append directly.
+    '"$TIMEOUT_CMD"' '"$ITER_TIMEOUT"' claude --dangerously-skip-permissions -p "$(cat PROMPT.md)" >> "$log" 2>&1
     if ! grep -q "^\- \[ \]" PROGRESS.md; then
       echo "All tasks complete" | tee -a "$log"
       break

@@ -1,6 +1,7 @@
 """Ask service: orchestrates RAG Q&A for Erdős problems."""
 
 import os
+from pathlib import Path
 from typing import Any
 
 from erdos.core.ask.llm import execute_llm_if_enabled
@@ -10,8 +11,7 @@ from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord
 from erdos.core.ports import ProblemRepository, SearchIndexProtocol
 from erdos.core.problem_loader import ProblemLoaderError
-from erdos.core.search.db import SearchIndexError
-from erdos.core.search.index_builder import build_index
+from erdos.core.search.indexing_service import build_search_index
 from erdos.core.search.types import SearchResult
 
 
@@ -20,6 +20,7 @@ def _ensure_index_ready(
     loader: ProblemRepository,
     index: SearchIndexProtocol,
     build_index_flag: bool,
+    repo_root: Path | None,
 ) -> SearchIndexProtocol | CLIOutput:
     """
     Ensure search index is ready (build if requested, then open).
@@ -28,21 +29,18 @@ def _ensure_index_ready(
         loader: Problem loader for building index
         index: Search index to use (built/rebuilt if requested)
         build_index_flag: Whether to rebuild the index
+        repo_root: Repository root for index building and retrieval
 
     Returns:
         SearchIndexProtocol if successful, or CLIOutput error
     """
     # Build/rebuild index if requested
     if build_index_flag:
-        try:
-            build_index(loader=loader, index=index, rebuild=True)
-        except (SearchIndexError, ProblemLoaderError) as e:
-            return CLIOutput.err(
-                command="erdos ask",
-                error_type="ERROR",
-                message=f"Failed to build index: {e}",
-                code=ExitCode.ERROR,
-            )
+        err = build_search_index(
+            repo=loader, index=index, repo_root=repo_root, command="erdos ask"
+        )
+        if err is not None:
+            return err
     return index
 
 
@@ -128,6 +126,7 @@ def ask_question(
     build_index_flag: bool = False,
     no_llm: bool = False,
     llm_command: str | None = None,
+    repo_root: Path | None = None,
 ) -> CLIOutput:
     """
     Ask a question about an Erdős problem using RAG.
@@ -141,6 +140,7 @@ def ask_question(
         build_index_flag: Whether to rebuild the index before retrieval
         no_llm: If True, skip LLM execution (prompt-only mode)
         llm_command: Override LLM command (default: from ERDOS_LLM_COMMAND env)
+        repo_root: Repository root for index building and retrieval
 
     Returns:
         CLIOutput with ask results
@@ -156,13 +156,18 @@ def ask_question(
         loader=repo,
         index=index,
         build_index_flag=build_index_flag,
+        repo_root=repo_root,
     )
     if isinstance(index_or_error, CLIOutput):
         return index_or_error
 
     # Retrieve sources
     sources, used_fts, query = retrieve_sources(
-        index=index_or_error, problem=problem, question=question, limit=limit
+        index=index_or_error,
+        problem=problem,
+        question=question,
+        limit=limit,
+        repo_root=repo_root,
     )
 
     # Build prompt

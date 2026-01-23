@@ -1,8 +1,8 @@
 # erdos-banger - Ralph Wiggum Progress Tracker
 
-**Last Updated:** 2026-01-22
-**Status:** Ready - Debt Cleanup (API Surface)
-**Branch:** ralph-wiggum-consolidated
+**Last Updated:** 2026-01-23
+**Status:** Ready - New spec implementation sprint (v3.2+)
+**Branch:** ralph-wiggum-debt-067
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
 ---
@@ -19,39 +19,59 @@
    - commit after each completed task
    - push after each commit (remote is the backup)
 5. **Escalate early** (stop and request human review) if:
-   - a debt doc contradicts SSOT / code reality
+   - a spec/deck contradicts SSOT / code reality
    - the change exceeds ~500 LOC or >10 files for a single task (split into subtasks)
    - quality gates fail after 3 fix attempts for the same root cause
 
 ---
 
-## Active Queue (Debt Before Specs)
+## Active Queue (One Task Per Iteration)
 
 Work strictly top-to-bottom unless blocked by dependencies.
 
-- [ ] **DEBT-067**: Remove private helper re-exports from core packages (ISP/SRP)
-  Deck: `docs/debt/debt-067-remove-private-reexports.md`
+### SPEC-035: Unified Problem Data Sync
 
----
+- [ ] [SPEC-035] (1/5) Define sync cache schemas + pure merge logic for `data/problems_enriched.yaml` (submodule + website) + unit tests (no network)
+- [ ] [SPEC-035] (2/5) Implement `erdos sync website <id>` using HTML fixtures + unit tests; ensure output stays `ProblemLoader`-compatible
+- [ ] [SPEC-035] (3/5) Implement `erdos sync submodule` + offline `--check` mode; add `requires_network` test for remote freshness
+- [ ] [SPEC-035] (4/5) Implement forum proof-link extraction + unit tests (HTML fixtures); write `data/sync_cache/proofs/<id>/links.json`
+- [ ] [SPEC-035] (5/5) Implement `erdos sync proof <id> --verify` (opt-in) + provenance/log writing + tests (offline fixtures + `requires_network` smoke)
 
-## Completed (Sprint 2026-01-22)
+### SPEC-029: Exa Research API Integration
 
-- [x] **DEBT-060**: Formalize command long Typer callback → `docs/_archive/debt/debt-060-formalize-cmd-long-callback.md`
-- [x] **DEBT-061**: Remove core backward-compatibility shims → `docs/_archive/debt/debt-061-remove-core-compatibility-shims.md`
-- [x] **DEBT-062**: Search service "god module" (closed as invalid) → `docs/_archive/debt/debt-062-search-service-god-module.md`
-- [x] **DEBT-063**: Split MetadataProvider protocol (ISP) → `docs/_archive/debt/debt-063-metadata-provider-isp.md`
-- [x] **DEBT-064**: Inject LLM executor into loop runner (DIP) → `docs/_archive/debt/debt-064-loop-runner-dip.md`
-- [x] **DEBT-065**: Move loop orchestration out of command layer (SRP) → `docs/_archive/debt/debt-065-thick-cli-callbacks.md`
-- [x] **DEBT-066**: Test directory structure mirrors src/ bounded contexts (CCP) → `docs/_archive/debt/debt-066-test-structure-mirrors-src.md`
+- [ ] [SPEC-029] (1/2) Implement `ExaClient` + caching + unit tests (no network; use `responses`)
+- [ ] [SPEC-029] (2/2) Implement `erdos research exa` command + tests (offline); add `requires_network` smoke test (skipped by default)
+
+### SPEC-030: Semantic Scholar API Integration
+
+- [ ] [SPEC-030] (1/2) Implement `SemanticScholarClient` + caching + unit tests (offline)
+- [ ] [SPEC-030] (2/2) Implement `erdos refs s2 {citations,cited-by,references}` + tests (offline); add `requires_network` smoke test
+
+### SPEC-031: zbMATH Open API Integration
+
+- [ ] [SPEC-031] (1/3) Implement `ZbMathClient` + caching + unit tests (offline)
+- [ ] [SPEC-031] (2/3) Implement `erdos refs zbmath` + tests (offline); add `requires_network` smoke test
+- [ ] [SPEC-031] (3/3) Add `erdos search --msc` mode + tests (offline)
+
+### SPEC-032: Multi-Model Routing (External Command)
+
+- [ ] [SPEC-032] (1/3) Add task→LLM-command router (`src/erdos/core/llm/*`) + unit tests (no CLI wiring)
+- [ ] [SPEC-032] (2/3) Wire router into `erdos ask` default LLM command selection + tests (preserve `--llm-cmd` override)
+- [ ] [SPEC-032] (3/3) Wire router into `erdos loop run` default LLM command selection + tests (preserve `--llm-cmd` override)
+
+### SPEC-033: Lean Copilot Integration
+
+- [ ] [SPEC-033] (1/3) Add optional deps for copilot server (FastAPI/uvicorn) per spec + unit test scaffolding
+- [ ] [SPEC-033] (2/3) Implement minimal `erdos lean copilot serve` (`/generate`) using SPEC-032 routing + unit tests (offline)
+- [ ] [SPEC-033] (3/3) Implement `/encode` (embeddings) with a clear degraded mode + unit tests
+
+### SPEC-034: Progress Dashboard
+
+- [ ] [SPEC-034] (1/2) Implement dashboard aggregation (`src/erdos/core/dashboard/data.py`) + unit tests (JSON snapshot contract)
+- [ ] [SPEC-034] (2/2) Implement `erdos dashboard` UI (Rich) + tests; ensure `erdos --json dashboard` is non-interactive
 
 ---
 
 ## Work Log
 
-- **2026-01-22 (DEBT-060)**: Refactored `formalize_cmd.py` to reduce function LOC. Extracted `_FormalizeArgs` dataclass, `_validate_args()` and `_execute_formalize()` helpers. `register()` now 80 LOC (from 194), `formalize()` now 76 LOC (from 190). Removed DEBT-060 exemptions from audit script. `make ci` passes.
-- **2026-01-22 (DEBT-061)**: Removed 10 backward-compatibility shim files from `src/erdos/core/` and updated all imports to use bounded-context modules directly. Added regression guard tests in `test_dependencies.py`. `make ci` passes.
-- **2026-01-22 (DEBT-062)**: Closed as invalid after re-auditing SSOT: `core/search/service.py` is 140 LOC and already decomposed; no exemption exists. Archived deck to prevent wasted iterations.
-- **2026-01-22 (DEBT-063)**: ISP compliance for `MetadataProvider` protocol. Split into `DOILookupProvider`, `ArxivLookupProvider`, `SearchableMetadataProvider`. Removed stub methods from `ArxivProvider` and `CrossrefProvider`. Rewrote `FallbackProvider` to compose capability-specific chains. `make ci` passes.
-- **2026-01-22 (DEBT-064)**: Injected LLM executor into loop runner (DIP compliance). Added `LLMExecute` protocol to `ports.py`, updated `run_loop()` and `_run_single_iteration()` to accept injected dependency. `make ci` passes.
-- **2026-01-22 (DEBT-065)**: Moved loop orchestration out of command layer (SRP). Created `core/loop/service.py` with `execute_proof_loop()` function. Refactored `commands/loop.py` to be a thin adapter. `make ci` passes.
-- **2026-01-22 (DEBT-066)**: Reorganized `tests/unit/` into 14 bounded-context subdirectories mirroring `src/erdos/core/`. Moved 50+ test files, renamed to drop redundant prefixes. `make ci` passes.
+- (clear for next sprint)
