@@ -26,7 +26,9 @@ def attempt_log(
     summary: Annotated[str, typer.Option("--summary")],
     kind: Annotated[AttemptKind, typer.Option("--kind")] = AttemptKind.LEAN_LOOP,
     lean_file: Annotated[str | None, typer.Option("--lean-file")] = None,
-    loop_log: Annotated[str | None, typer.Option("--loop-log")] = None,
+    loop_log: Annotated[
+        str | None, typer.Option("--loop-run-log", "--loop-log")
+    ] = None,
 ) -> None:
     """Log an attempt record."""
     app_ctx, app_error = get_app_context(ctx, command="erdos research attempt log")

@@ -172,19 +172,15 @@ def status(
         exit_with_result(ctx, error)
         return
 
-    s = get_problem_status(problem_id, repo_root=app_ctx.config.repo_root)
-    if not s.problem_dir.exists():
-        exit_with_result(
-            ctx,
-            CLIOutput.err(
-                command="erdos research status",
-                error_type="NotInitialized",
-                message=f"Research workspace not initialized for problem {problem_id}. Run: erdos research init {problem_id}",
-                code=ExitCode.NOT_FOUND,
-            ),
-        )
+    if not _require_workspace_dir(
+        ctx,
+        problem_id=problem_id,
+        command="erdos research status",
+        repo_root=app_ctx.config.repo_root,
+    ):
         return
 
+    s = get_problem_status(problem_id, repo_root=app_ctx.config.repo_root)
     data = {
         "problem_id": problem_id,
         "problem_dir": str(s.problem_dir),

@@ -92,7 +92,7 @@ def _index_record_dir(
 
         text = render(rec)
         chunk = TextChunk(
-            id=f"research_{problem_id}_{rec_id}",
+            id=f"research_{problem_id}_{source.value}_{rec_id}",
             text=text,
             source=source,
             problem_id=problem_id,
