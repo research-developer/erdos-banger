@@ -2,7 +2,7 @@
 
 **Last Updated:** 2026-01-22
 **Status:** Ready - Debt Cleanup (API Surface)
-**Branch:** ralph-wiggum-consolidated
+**Branch:** ralph-wiggum-debt-067
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
 ---
