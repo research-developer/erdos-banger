@@ -14,11 +14,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-| ID | Title | Priority | Status |
-|----|-------|----------|--------|
-| DEBT-082 | Unused constants in constants.py | P3 | Open |
-| DEBT-083 | Remove backwards-compatibility shims | P2 | Open |
-| DEBT-084 | Unused OCP patterns (register_summarizer, interrupt) | P3 | Open |
+None.
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -112,6 +108,9 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-079 | Dead code in `literature_paths.py` (SPEC-019 stubs) | P3 | Resolved | 1c8889e |
 | DEBT-080 | High cyclomatic complexity functions | P3 | Fixed | f1dbe92 |
 | DEBT-081 | Incomplete features — tested but never wired in | P2 | Fixed | 05a1161,4614bd8 |
+| DEBT-082 | Remove unused constants in `constants.py` | P3 | Fixed | 117d510 |
+| DEBT-083 | Remove internal compatibility shims + wording | P2 | Fixed | 117d510 |
+| DEBT-084 | Finish batch interrupt wiring (SIGINT) | P3 | Fixed | 117d510 |
 
 **Next Debt ID:** DEBT-085
 
@@ -187,3 +186,6 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-072-cli-flags-silently-ignored.md`
 - `docs/_archive/debt/debt-073-magic-numbers-hardcoded-values.md`
 - `docs/_archive/debt/debt-074-test-quality-issues.md`
+- `docs/_archive/debt/debt-082-unused-constants.md`
+- `docs/_archive/debt/debt-083-backwards-compatibility-shims.md`
+- `docs/_archive/debt/debt-084-unused-ocp-patterns.md`
