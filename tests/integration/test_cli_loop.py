@@ -45,6 +45,7 @@ class TestLoopRunCommand:
                 "--path",
                 str(project_path),
             ],
+            env={"ERDOS_REPO_ROOT": str(tmp_path)},
         )
         # LLM_REQUIRED or similar status - we just check it runs
         assert result.exit_code in (0, 1)  # Either success or expected failure
@@ -134,6 +135,7 @@ class TestLoopJSONContract:
                 "--path",
                 str(tmp_path / "formal" / "lean"),
             ],
+            env={"ERDOS_REPO_ROOT": str(tmp_path)},
         )
 
         assert result.exit_code != 0
@@ -183,6 +185,7 @@ class TestLoopJSONContract:
                 "--path",
                 str(tmp_path / "formal" / "lean"),
             ],
+            env={"ERDOS_REPO_ROOT": str(tmp_path)},
         )
 
         output = json.loads(result.stdout)

@@ -35,6 +35,30 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _build_rag_chunks(
+    problem_id: int, *, repo_root: Path | None, limit: int
+) -> list[dict[str, str]]:
+    if limit <= 0:
+        return []
+    synthesis_path = get_problem_dir(repo_root, problem_id) / "SYNTHESIS.md"
+    if not synthesis_path.exists():
+        return []
+    try:
+        text = synthesis_path.read_text(encoding="utf-8")
+    except OSError:
+        return []
+    text = text.strip()
+    if not text:
+        return []
+    return [
+        {
+            "chunk_id": f"research_{problem_id}_synthesis",
+            "source_type": "research_synthesis",
+            "text": text,
+        }
+    ]
+
+
 def execute_proof_loop(
     problem_id: int,
     *,
@@ -113,22 +137,9 @@ def execute_proof_loop(
         )
 
     # Build RAG context: always include per-problem synthesis when present.
-    rag_chunks: list[dict[str, str]] = []
-    synthesis_path = get_problem_dir(repo_root, problem_id) / "SYNTHESIS.md"
-    if synthesis_path.exists():
-        try:
-            text = synthesis_path.read_text(encoding="utf-8")
-        except OSError:
-            text = ""
-        if text.strip():
-            rag_chunks.append(
-                {
-                    "chunk_id": f"research_{problem_id}_synthesis",
-                    "source_type": "research_synthesis",
-                    "text": text,
-                }
-            )
-    rag_chunks = rag_chunks[: max(config.rag_limit, 0)]
+    rag_chunks = _build_rag_chunks(
+        problem_id, repo_root=repo_root, limit=config.rag_limit
+    )
 
     # Run the loop
     try:
