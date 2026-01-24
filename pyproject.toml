@@ -136,6 +136,9 @@ ignore = [
 "src/erdos/core/batch/*.py" = [
     "TC003",  # Path used at runtime in function signatures
 ]
+"src/erdos/core/clients/cache.py" = [
+    "TC003",  # Path used at runtime in FileCache class
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["erdos"]

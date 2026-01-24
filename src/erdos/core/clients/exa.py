@@ -1,7 +1,5 @@
 """Exa Research API client for agentic literature synthesis.
 
-# exempt: DEBT-093
-
 Exa (https://exa.ai/) provides structured research queries with automatic
 source clustering and summarization for academic and research content.
 
@@ -10,11 +8,9 @@ API Reference: https://docs.exa.ai/
 
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
 import re
-import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -22,9 +18,11 @@ from urllib.parse import unquote
 
 import requests
 
+from erdos.core.clients.cache import FileCache, make_cache_key
 from erdos.core.config import AppConfig
-from erdos.core.constants import DEFAULT_HTTP_TIMEOUT
+from erdos.core.constants import DEFAULT_HTTP_TIMEOUT, RETRY_MAX_ATTEMPTS
 from erdos.core.rate_limiter import RateLimiter
+from erdos.core.retry import post_with_retry
 
 
 logger = logging.getLogger(__name__)
@@ -41,7 +39,7 @@ class ExaConfig:
 
     api_key: str | None = None
     timeout: float = DEFAULT_HTTP_TIMEOUT
-    max_retries: int = 3
+    max_retries: int = RETRY_MAX_ATTEMPTS
     cache_ttl_hours: int = DEFAULT_CACHE_TTL_HOURS
     cache_path: Path = field(default=DEFAULT_CACHE_PATH)
 
@@ -83,14 +81,7 @@ class ExaSource:
 
     @classmethod
     def from_api_response(cls, data: dict[str, Any]) -> ExaSource:
-        """Parse source from Exa API response.
-
-        Args:
-            data: Raw source dict from API.
-
-        Returns:
-            ExaSource instance.
-        """
+        """Parse source from Exa API response."""
         url = data.get("url", "")
         title = data.get("title", "")
 
@@ -108,27 +99,15 @@ class ExaSource:
             if match:
                 year = int(match.group(1))
 
-        # Extract arXiv ID from URL
-        arxiv_id = _extract_arxiv_id(url)
-
-        # Extract DOI from URL
-        doi = _extract_doi(url)
-
-        # Relevance from text snippet
-        relevance = data.get("text")
-
-        # Score
-        score = data.get("score")
-
         return cls(
             title=title,
             url=url,
             authors=authors,
             year=year,
-            arxiv_id=arxiv_id,
-            doi=doi,
-            relevance=relevance,
-            score=score,
+            arxiv_id=_extract_arxiv_id(url),
+            doi=_extract_doi(url),
+            relevance=data.get("text"),
+            score=data.get("score"),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -169,23 +148,9 @@ class ExaResearchResult:
 
     @classmethod
     def from_api_response(cls, data: dict[str, Any], query: str) -> ExaResearchResult:
-        """Parse result from Exa API response.
-
-        Args:
-            data: Raw API response dict.
-            query: Original query string.
-
-        Returns:
-            ExaResearchResult instance.
-        """
+        """Parse result from Exa API response."""
         sources = [ExaSource.from_api_response(r) for r in data.get("results", [])]
-        answer = data.get("summary")
-
-        return cls(
-            query=query,
-            sources=sources,
-            answer=answer,
-        )
+        return cls(query=query, sources=sources, answer=data.get("summary"))
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize to dict for caching."""
@@ -216,95 +181,22 @@ class ExaClient:
     BASE_URL = "https://api.exa.ai"
 
     def __init__(self, config: ExaConfig | None = None):
-        """Initialize client with configuration.
-
-        Args:
-            config: Client configuration. If None, loads from environment.
-        """
+        """Initialize client with configuration."""
         self.config = config or ExaConfig.from_env()
-        self._rate_limiter = RateLimiter(delay_seconds=1.0)  # 1 req/sec to be polite
+        self._rate_limiter = RateLimiter(delay_seconds=1.0)
+        self._cache = FileCache(
+            cache_path=self.config.cache_path,
+            ttl_seconds=self.config.cache_ttl_hours * 60 * 60,
+        )
 
-    def _cache_key(self, query: str, *, max_results: int) -> str:
-        """Generate cache key from request parameters.
-
-        Args:
-            query: Search query string.
-            max_results: Requested maximum number of results.
-
-        Returns:
-            SHA256 hash of normalized request parameters.
-        """
-        normalized = f"{query.lower().strip()}|max_results={max_results}"
-        return hashlib.sha256(normalized.encode()).hexdigest()
+    def _make_cache_key(self, query: str, *, max_results: int) -> str:
+        """Generate cache key from request parameters."""
+        return make_cache_key(query, f"max_results={max_results}")
 
     def get_cache_path(self, query: str, *, max_results: int) -> Path:
-        """Get cache file path for a query.
-
-        Args:
-            query: Search query string.
-            max_results: Requested maximum number of results.
-
-        Returns:
-            Path to cache file.
-        """
-        cache_key = self._cache_key(query, max_results=max_results)
-        return self.config.cache_path / f"{cache_key}.json"
-
-    def _load_from_cache(
-        self, query: str, *, max_results: int
-    ) -> ExaResearchResult | None:
-        """Load result from cache if valid.
-
-        Args:
-            query: Search query string.
-            max_results: Requested maximum number of results.
-
-        Returns:
-            Cached result if valid and not expired, None otherwise.
-        """
-        cache_file = self.get_cache_path(query, max_results=max_results)
-        if not cache_file.exists():
-            return None
-
-        try:
-            with cache_file.open() as f:
-                data = json.load(f)
-
-            # Check TTL
-            cached_at = data.get("cached_at", 0)
-            ttl_seconds = self.config.cache_ttl_hours * 60 * 60
-            if time.time() - cached_at > ttl_seconds:
-                logger.debug("Cache expired for query: %s", query)
-                return None
-
-            logger.debug("Cache hit for query: %s", query)
-            return ExaResearchResult.from_dict(data)
-
-        except (json.JSONDecodeError, OSError) as e:
-            logger.warning("Failed to load cache for query %s: %s", query, e)
-            return None
-
-    def _save_to_cache(self, result: ExaResearchResult, *, max_results: int) -> None:
-        """Save result to cache.
-
-        Args:
-            result: Search result to cache.
-            max_results: Requested maximum number of results.
-        """
-        cache_file = self.get_cache_path(result.query, max_results=max_results)
-
-        try:
-            cache_file.parent.mkdir(parents=True, exist_ok=True)
-            data = result.to_dict()
-            data["cached_at"] = time.time()
-
-            with cache_file.open("w") as f:
-                json.dump(data, f, indent=2)
-
-            logger.debug("Cached result for query: %s", result.query)
-
-        except OSError as e:
-            logger.warning("Failed to cache result for query %s: %s", result.query, e)
+        """Get cache file path for a query (for testing/debugging)."""
+        key = self._make_cache_key(query, max_results=max_results)
+        return self._cache.get_file_path(key)
 
     def search_with_cache_status(
         self,
@@ -313,14 +205,16 @@ class ExaClient:
         max_results: int = 5,
         use_cache: bool = True,
     ) -> tuple[ExaResearchResult, bool]:
-        """Search for research content and return whether it was served from cache."""
+        """Search for research content and return whether served from cache."""
         if not self.config.api_key:
             raise ValueError("EXA_API_KEY not set")
 
+        cache_key = self._make_cache_key(query, max_results=max_results)
+
         if use_cache:
-            cached = self._load_from_cache(query, max_results=max_results)
+            cached = self._cache.get(cache_key)
             if cached is not None:
-                return cached, True
+                return ExaResearchResult.from_dict(cached), True
 
         self._rate_limiter.sleep_if_needed()
 
@@ -334,12 +228,16 @@ class ExaClient:
             "numResults": max_results,
             "type": "neural",
             "useAutoprompt": True,
-            "contents": {
-                "text": {"maxCharacters": 500},
-            },
+            "contents": {"text": {"maxCharacters": 500}},
         }
 
-        response = self._post_with_retry(url, headers=headers, payload=payload)
+        response = post_with_retry(
+            url,
+            timeout=self.config.timeout,
+            json_payload=payload,
+            max_attempts=self.config.max_retries,
+            headers=headers,
+        )
 
         try:
             data = response.json()
@@ -356,7 +254,7 @@ class ExaClient:
         result = ExaResearchResult.from_api_response(data, query=query)
 
         if use_cache:
-            self._save_to_cache(result, max_results=max_results)
+            self._cache.set(cache_key, result.to_dict())
 
         return result, False
 
@@ -387,150 +285,20 @@ class ExaClient:
         )
         return result
 
-    def _post_with_retry(
-        self,
-        url: str,
-        *,
-        headers: dict[str, str],
-        payload: dict[str, Any],
-    ) -> requests.Response:
-        """POST with retry logic for transient failures.
-
-        Args:
-            url: API endpoint URL.
-            headers: HTTP headers.
-            payload: JSON payload.
-
-        Returns:
-            requests.Response on success.
-
-        Raises:
-            requests.HTTPError: On non-retryable HTTP errors.
-            requests.Timeout: After all retries exhausted.
-        """
-        last_error: Exception | None = None
-        last_response: requests.Response | None = None
-        retryable_codes = {429, 500, 502, 503, 504}
-
-        for attempt in range(self.config.max_retries):
-            try:
-                response = requests.post(
-                    url,
-                    headers=headers,
-                    json=payload,
-                    timeout=self.config.timeout,
-                )
-
-                if response.status_code in retryable_codes:
-                    last_response = response
-                    if attempt < self.config.max_retries - 1:
-                        delay = self._get_retry_delay(attempt, response)
-                        logger.debug(
-                            "Retry %d/%d for %s: HTTP %d, waiting %.1fs",
-                            attempt + 1,
-                            self.config.max_retries,
-                            url,
-                            response.status_code,
-                            delay,
-                        )
-                        time.sleep(delay)
-                        continue
-                    response.raise_for_status()
-
-                response.raise_for_status()
-                return response
-
-            except (requests.Timeout, requests.ConnectionError) as e:
-                last_error = e
-                if attempt < self.config.max_retries - 1:
-                    delay = self._get_retry_delay(attempt, None)
-                    logger.debug(
-                        "Retry %d/%d for %s: %s, waiting %.1fs",
-                        attempt + 1,
-                        self.config.max_retries,
-                        url,
-                        type(e).__name__,
-                        delay,
-                    )
-                    time.sleep(delay)
-                    continue
-                raise
-
-            except requests.HTTPError:
-                raise
-
-        if last_error is not None:
-            raise last_error
-        if last_response is not None:
-            last_response.raise_for_status()
-        raise requests.RequestException("Max retries exceeded")
-
-    def _get_retry_delay(
-        self, attempt: int, response: requests.Response | None
-    ) -> float:
-        """Calculate retry delay with exponential backoff.
-
-        Args:
-            attempt: Current attempt number (0-indexed).
-            response: HTTP response if available.
-
-        Returns:
-            Delay in seconds.
-        """
-        max_delay = 30.0
-
-        # Check Retry-After header for 429
-        if response is not None and response.status_code == 429:
-            retry_after = response.headers.get("Retry-After")
-            if retry_after:
-                try:
-                    return min(float(retry_after), max_delay)
-                except ValueError:
-                    pass
-
-        # Exponential backoff: 2^attempt
-        delay = 2.0 * (2**attempt)
-        return float(min(delay, max_delay))
-
 
 def _extract_arxiv_id(url: str) -> str | None:
-    """Extract arXiv ID from URL.
-
-    Args:
-        url: URL that may contain arXiv ID.
-
-    Returns:
-        arXiv ID without version suffix, or None.
-    """
-    # Match patterns like:
-    # https://arxiv.org/abs/2301.00001
-    # https://arxiv.org/abs/2301.00001v3
-    # https://arxiv.org/abs/math/0404188
-    # https://arxiv.org/abs/math/0404188v2
+    """Extract arXiv ID from URL."""
     match = re.search(
         r"arxiv\.org/(?:abs|pdf)/([a-z-]+/\d{7}|\d{4}\.\d{4,5})(?:v\d+)?",
         url,
         re.IGNORECASE,
     )
-    if match:
-        return match.group(1)
-    return None
+    return match.group(1) if match else None
 
 
 def _extract_doi(url: str) -> str | None:
-    """Extract DOI from URL.
-
-    Args:
-        url: URL that may contain DOI.
-
-    Returns:
-        DOI string, or None.
-    """
-    # Match patterns like:
-    # https://doi.org/10.1234/example
-    # https://doi.org/10.1007%2Fs00222-016-0678-7
+    """Extract DOI from URL."""
     match = re.search(r"doi\.org/(.+?)(?:\?|$)", url)
     if match:
-        doi = unquote(match.group(1))
-        return doi
+        return unquote(match.group(1))
     return None

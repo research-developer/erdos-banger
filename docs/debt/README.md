@@ -17,9 +17,6 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
 | DEBT-092 | [Proof verification module LOC violations](./debt-092-proof-verification-loc.md) | P3 | Exempted |
-| DEBT-093 | [Exa client infrastructure duplication](./debt-093-exa-client-loc.md) | P2 | Open |
-| DEBT-094 | [Semantic Scholar client module LOC violation](./debt-094-semantic-scholar-client-loc.md) | P3 | Superseded |
-| DEBT-095 | [zbMATH client module LOC violation](./debt-095-zbmath-client-loc.md) | P3 | Superseded |
 | DEBT-096 | [Search command module LOC violation](./debt-096-search-command-msc-loc.md) | P3 | Exempted |
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
@@ -129,6 +126,9 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-099 | Lean test fixture lakefile syntax outdated | P2 | Fixed | (this PR) |
 | DEBT-100 | Integration tests don't load .env file | P3 | Fixed | 8410c4f |
 | DEBT-101 | Lean/Mathlib version significantly behind | P2 | Fixed | 986035f,2ebb005 |
+| DEBT-093 | Exa client infrastructure duplication | P2 | Fixed | (this PR) |
+| DEBT-094 | Semantic Scholar client LOC violation | P3 | Fixed | (via DEBT-093) |
+| DEBT-095 | zbMATH client LOC violation | P3 | Fixed | (via DEBT-093) |
 
 **Next Debt ID:** DEBT-102
 
