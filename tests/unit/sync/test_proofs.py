@@ -22,6 +22,7 @@ from erdos.core.sync.proofs import (
     _read_toolchain,
     _sanitize_env,
     _truncate_log,
+    check_no_sorries,
     clone_repository,
     create_provenance,
     save_provenance,
@@ -136,6 +137,45 @@ class TestReadToolchain:
     def test_missing_toolchain_returns_none(self, tmp_path: Path) -> None:
         """Returns None when toolchain file missing."""
         assert _read_toolchain(tmp_path) is None
+
+
+class TestCheckNoSorries:
+    """Tests for Lean no-sorries verification (mocked subprocess)."""
+
+    def test_returns_true_when_no_sorry_flag_succeeds(self, tmp_path: Path) -> None:
+        """Returns True when lake env lean --no-sorry succeeds."""
+        mock_result = MagicMock(returncode=0, stdout="", stderr="")
+
+        with patch("erdos.core.sync.proofs.subprocess.run", return_value=mock_result):
+            ok, _log = check_no_sorries(tmp_path, tmp_path / "Problem347.lean")
+
+        assert ok is True
+
+    def test_falls_back_to_plain_compile_when_flag_fails(self, tmp_path: Path) -> None:
+        """Falls back to plain compile when --no-sorry flags fail."""
+        mock_no_sorry = MagicMock(returncode=1, stdout="", stderr="unknown option")
+        mock_no_sorries = MagicMock(returncode=1, stdout="", stderr="invalid option")
+        mock_plain = MagicMock(returncode=0, stdout="", stderr="")
+
+        with patch("erdos.core.sync.proofs.subprocess.run") as mock_run:
+            mock_run.side_effect = [mock_no_sorry, mock_no_sorries, mock_plain]
+            ok, _log = check_no_sorries(tmp_path, tmp_path / "Problem347.lean")
+
+        assert ok is True
+
+    def test_plain_compile_detects_sorry_warnings(self, tmp_path: Path) -> None:
+        """Detects sorries via warnings when plain compile succeeds."""
+        mock_no_sorry = MagicMock(returncode=1, stdout="", stderr="unknown option")
+        mock_no_sorries = MagicMock(returncode=1, stdout="", stderr="invalid option")
+        mock_plain = MagicMock(
+            returncode=0, stdout="", stderr="declaration uses 'sorry'"
+        )
+
+        with patch("erdos.core.sync.proofs.subprocess.run") as mock_run:
+            mock_run.side_effect = [mock_no_sorry, mock_no_sorries, mock_plain]
+            ok, _log = check_no_sorries(tmp_path, tmp_path / "Problem347.lean")
+
+        assert ok is False
 
 
 class TestFindProblemFiles:

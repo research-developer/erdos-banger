@@ -294,23 +294,12 @@ def check_no_sorries(
     Returns:
         Tuple of (no_sorries_found, log_content)
     """
-
-    def _looks_like_unknown_option(combined_output: str, option: str) -> bool:
-        if option not in combined_output:
-            return False
-        return (
-            "unknown option" in combined_output
-            or "unrecognized option" in combined_output
-            or "invalid option" in combined_output
-            or "unknown flag" in combined_output
-        )
-
     try:
         # Use lake env to get proper Lean environment, then check with --no-sorry.
         #
-        # NOTE: The flag name is `--no-sorry` (singular). Some older/alternate
-        # toolchains may not support it, so we fall back to a plain compile and
-        # detect sorry warnings in output.
+        # NOTE: The flag name is `--no-sorry` (singular). Some toolchains may not
+        # support it, so we fall back to a plain compile and detect sorry warnings
+        # in output.
         #
         # S603/S607: Intentional - lake is the Lean build tool
         attempts: list[list[str]] = [
@@ -318,12 +307,10 @@ def check_no_sorries(
             ["lake", "env", "lean", "--no-sorries", str(lean_file)],
             ["lake", "env", "lean", str(lean_file)],
         ]
-        last_result: subprocess.CompletedProcess[str] | None = None
-        last_cmd: list[str] | None = None
+        last_log = ""
 
         for cmd in attempts:
-            last_cmd = cmd
-            last_result = subprocess.run(  # noqa: S603
+            result = subprocess.run(  # noqa: S603
                 cmd,
                 cwd=repo_path,
                 capture_output=True,
@@ -332,38 +319,29 @@ def check_no_sorries(
                 env=_sanitize_env(),
                 check=False,
             )
+            combined = f"{result.stdout}\n{result.stderr}".lower()
 
-            combined = f"{last_result.stdout}\n{last_result.stderr}".lower()
-            if "--no-sorry" in cmd and _looks_like_unknown_option(
-                combined, "--no-sorry"
-            ):
+            log = (
+                "=== COMMAND ===\n"
+                + " ".join(cmd)
+                + "\n\n=== STDOUT ===\n"
+                + result.stdout
+                + "\n\n=== STDERR ===\n"
+                + result.stderr
+            )
+            last_log = _truncate_log(log)
+
+            # With --no-sorry, return code is sufficient: sorries become errors.
+            if "--no-sorry" in cmd or "--no-sorries" in cmd:
+                if result.returncode == 0:
+                    return True, last_log
                 continue
-            if "--no-sorries" in cmd and _looks_like_unknown_option(
-                combined, "--no-sorries"
-            ):
-                continue
-            break
 
-        if last_result is None or last_cmd is None:
-            return False, "No-sorries check internal error: no attempts executed"
+            # Fallback: detect sorry warnings in output.
+            has_sorry = "sorry" in combined
+            return result.returncode == 0 and not has_sorry, last_log
 
-        log = (
-            "=== COMMAND ===\n"
-            + " ".join(last_cmd)
-            + "\n\n=== STDOUT ===\n"
-            + last_result.stdout
-            + "\n\n=== STDERR ===\n"
-            + last_result.stderr
-        )
-        log = _truncate_log(log)
-
-        # With --no-sorry, return code is sufficient: sorries become errors.
-        if "--no-sorry" in last_cmd or "--no-sorries" in last_cmd:
-            return last_result.returncode == 0, log
-
-        # Fallback: detect sorry warnings in output.
-        has_sorry = "sorry" in combined
-        return last_result.returncode == 0 and not has_sorry, log
+        return False, last_log
 
     except subprocess.TimeoutExpired:
         return False, f"No-sorries check timed out after {timeout}s"
