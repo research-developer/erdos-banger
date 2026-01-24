@@ -19,6 +19,7 @@ from erdos.commands import (
     research,
     search,
     show,
+    sync,
 )
 
 
@@ -115,6 +116,7 @@ app.add_typer(logs.app, name="logs")
 app.add_typer(loop.app, name="loop")
 app.add_typer(convert.app, name="convert")
 app.add_typer(research.app, name="research")
+app.add_typer(sync.app, name="sync")
 
 
 if __name__ == "__main__":
