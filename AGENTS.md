@@ -85,6 +85,9 @@ Use `make` (preferred) or `uv` directly:
 - `sample_problem` - Minimal ProblemRecord
 - `fixtures_dir` - Path to test fixtures
 - `in_memory_db` - SQLite for search tests
+- `sample_problems_yaml` - Path to sample `problems_enriched.yaml` fixture
+- `arxiv_*_fixture` - Cached arXiv API XML fixtures
+- `crossref_*_fixture` - Cached Crossref API JSON fixtures
 
 ## Commits & Pull Requests
 
