@@ -14,27 +14,27 @@ v2.0 (DONE)     Expansion: PDF conversion (Marker + LLM)
 v2.1 (DONE)     Architecture: MetadataProvider abstraction
 v3.0 (DONE)     Research: Workspace + campaign memory
 v3.1 (DONE)     Verification: v3 integration tests
-v3.2 (PENDING)  Data sync + Research APIs: Unified sync + Exa integration
-v3.3 (PENDING)  Research APIs: Semantic Scholar integration
-v3.4 (PENDING)  Research APIs: zbMATH integration
-v3.5 (PENDING)  Architecture: Multi-model routing
-v4.0 (PENDING)  Lean: Lean Copilot integration
-v4.1 (PENDING)  UX: Progress dashboard
+v3.2 (DONE)     Data sync + Research APIs: Unified sync + Exa integration
+v3.3 (DONE)     Research APIs: Semantic Scholar integration
+v3.4 (DONE)     Research APIs: zbMATH integration
+v3.5 (DONE)     Architecture: Multi-model routing
+v4.0 (DONE)     Lean: Lean Copilot integration
+v4.1 (DONE)     UX: Progress dashboard
 ```
 
-## Active Specs
+## Specs (v3.2+)
 
-Specs currently in progress or awaiting implementation.
+Specs for the most recent roadmap slice.
 
 | ID | Title | Status | Target | Resolves |
 |----|-------|--------|--------|----------|
-| 035 | [Unified Problem Data Sync](./spec-035-unified-problem-data-sync.md) | Pending | v3.2 | Data source fragmentation (critical) |
-| 029 | [Exa Research Integration](./spec-029-exa-research-integration.md) | Pending | v3.2 | Agentic literature synthesis |
-| 030 | [Semantic Scholar Integration](./spec-030-semantic-scholar-integration.md) | Pending | v3.3 | Citation context ("WHY cites") |
-| 031 | [zbMATH Integration](./spec-031-zbmath-integration.md) | Pending | v3.4 | Math-specific metadata (MSC) |
-| 032 | [Multi-Model Routing](./spec-032-multi-model-routing.md) | Pending | v3.5 | Task-appropriate model selection |
-| 033 | [Lean Copilot Integration](./spec-033-lean-copilot-integration.md) | Pending | v4.0 | LLM-backed tactic suggestions |
-| 034 | [Progress Dashboard](./spec-034-progress-dashboard.md) | Pending | v4.1 | Visualization of research state |
+| 035 | [Unified Problem Data Sync](./spec-035-unified-problem-data-sync.md) | Complete | v3.2 | Data source fragmentation (critical) |
+| 029 | [Exa Research Integration](./spec-029-exa-research-integration.md) | Complete | v3.2 | Agentic literature synthesis |
+| 030 | [Semantic Scholar Integration](./spec-030-semantic-scholar-integration.md) | Complete | v3.3 | Citation context ("WHY cites") |
+| 031 | [zbMATH Integration](./spec-031-zbmath-integration.md) | Complete | v3.4 | Math-specific metadata (MSC) |
+| 032 | [Multi-Model Routing](./spec-032-multi-model-routing.md) | Complete | v3.5 | Task-appropriate model selection |
+| 033 | [Lean Copilot Integration](./spec-033-lean-copilot-integration.md) | Complete | v4.0 | LLM-backed tactic suggestions |
+| 034 | [Progress Dashboard](./spec-034-progress-dashboard.md) | Complete | v4.1 | Visualization of research state |
 
 ## Design Documents
 

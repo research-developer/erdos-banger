@@ -11,7 +11,7 @@ The Exa Research API client (SPEC-029/1) exceeds the LOC threshold:
 
 | Module | LOC | Threshold | Delta |
 |--------|-----|-----------|-------|
-| `src/erdos/core/clients/exa.py` | 539 | 500 | +39 |
+| `src/erdos/core/clients/exa.py` | 541 | 500 | +41 |
 
 ## Justification for Exemption
 
@@ -24,7 +24,7 @@ This module contains a complete HTTP client with 5 bounded responsibilities:
 5. **Caching** — SHA256-keyed file cache with TTL expiry
 
 The module is cohesive: all types and functions support a single capability (Exa API integration).
-The marginal violation (+18 LOC) doesn't justify splitting into multiple modules.
+The marginal violation (+41 LOC) doesn't justify splitting into multiple modules.
 
 ## Resolution
 

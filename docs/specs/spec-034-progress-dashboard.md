@@ -173,7 +173,6 @@ src/erdos/
       data.py           # Data aggregation
       state.py          # UI state machine (testable key handling)
       render.py         # Rich rendering
-      widgets.py        # Reusable UI components
 ```
 
 ### UI State Machine (Testability)
