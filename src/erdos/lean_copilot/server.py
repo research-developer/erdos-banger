@@ -1,10 +1,16 @@
 """FastAPI server implementing Lean Copilot external model API (SPEC-033).
 
-This module provides the `/generate` endpoint for tactic suggestions.
-The `/encode` endpoint (embeddings) is implemented in embeddings.py.
+This module provides:
+- `/generate` endpoint for tactic suggestions (via SPEC-032 LLM routing)
+- `/encode` endpoint for premise retrieval embeddings (via SPEC-014)
 
 Requires the 'copilot' optional dependency:
     uv sync --extra copilot
+
+For `/encode`, also requires the 'embeddings' optional dependency:
+    uv sync --extra embeddings
+
+If embeddings are not installed, `/encode` returns HTTP 503 (degraded mode).
 """
 
 from __future__ import annotations
@@ -53,6 +59,20 @@ class ErrorResponse(BaseModel):
 
     error: str
     detail: str | None = None
+
+
+class EncodeRequest(BaseModel):
+    """Request body for /encode endpoint."""
+
+    texts: list[str] = Field(..., description="Texts to embed")
+
+
+class EncodeResponse(BaseModel):
+    """Response body for /encode endpoint."""
+
+    embeddings: list[list[float]] = Field(
+        default_factory=list, description="Embedding vectors"
+    )
 
 
 # =============================================================================
@@ -296,6 +316,39 @@ def create_app(*, llm_command_override: str | None = None) -> FastAPI:
             raise HTTPException(
                 status_code=500,
                 detail=f"LLM execution error: {e}",
+            ) from e
+
+    @app.post("/encode", response_model=EncodeResponse)
+    async def encode(request: EncodeRequest) -> EncodeResponse:
+        """Generate embeddings for premise retrieval (SPEC-014 wrapper).
+
+        Returns HTTP 503 if the 'embeddings' extra is not installed (degraded mode).
+        """
+        from erdos.lean_copilot.embeddings import (  # noqa: PLC0415
+            EmbeddingsNotAvailableError,
+            encode_texts,
+        )
+
+        try:
+            embeddings = encode_texts(request.texts)
+            return EncodeResponse(embeddings=embeddings)
+        except EmbeddingsNotAvailableError as e:
+            logger.warning("Embeddings unavailable (degraded mode): %s", e)
+            raise HTTPException(
+                status_code=503,
+                detail=str(e),
+            ) from e
+        except ValueError as e:
+            logger.error("Embedding error: %s", e)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid request: {e}",
+            ) from e
+        except Exception as e:
+            logger.error("Unexpected embedding error: %s", e)
+            raise HTTPException(
+                status_code=500,
+                detail=f"Embedding error: {e}",
             ) from e
 
     return app

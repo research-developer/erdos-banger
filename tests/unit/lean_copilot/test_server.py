@@ -307,3 +307,44 @@ class TestGenerateTactics:
         prompt = call_args[0][1]
         assert "goal: 1 + 1 = 2" in prompt
         assert "Lean 4" in prompt  # From prompt template
+
+
+# =============================================================================
+# Encode Request/Response Model Tests
+# =============================================================================
+
+
+class TestEncodeRequest:
+    """Tests for EncodeRequest model."""
+
+    def test_required_texts(self):
+        """texts is required."""
+        from erdos.lean_copilot.server import EncodeRequest
+
+        request = EncodeRequest(texts=["hello", "world"])
+        assert request.texts == ["hello", "world"]
+
+    def test_empty_list_allowed(self):
+        """Empty list is allowed."""
+        from erdos.lean_copilot.server import EncodeRequest
+
+        request = EncodeRequest(texts=[])
+        assert request.texts == []
+
+
+class TestEncodeResponse:
+    """Tests for EncodeResponse model."""
+
+    def test_default_empty_embeddings(self):
+        """Default embeddings is empty list."""
+        from erdos.lean_copilot.server import EncodeResponse
+
+        response = EncodeResponse()
+        assert response.embeddings == []
+
+    def test_with_embeddings(self):
+        """Can set embeddings list."""
+        from erdos.lean_copilot.server import EncodeResponse
+
+        response = EncodeResponse(embeddings=[[0.1, 0.2], [0.3, 0.4]])
+        assert response.embeddings == [[0.1, 0.2], [0.3, 0.4]]
