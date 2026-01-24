@@ -195,16 +195,17 @@ class TestProofVerificationEndToEnd:
     def test_clone_and_verify_real_repo(self, tmp_path: Path) -> None:
         """Clone a real Lean repository and verify it builds.
 
-        Uses the Mathlib4 repository as a known-good target.
-        Note: This is a slow test due to large repo size.
+        Uses the batteries repository (formerly std4) as a known-good target.
+        Note: This is a slow test due to network dependency.
         """
         from erdos.core.sync.proofs import clone_repository
 
         # Clone a small known repo (we use depth=1 for speed)
-        # Using std4 which is smaller than Mathlib
+        # Using batteries (formerly std4) which is smaller than Mathlib
+        # See DEBT-098 for history on std4 -> batteries rename
         result = clone_repository(
-            "https://github.com/leanprover/std4",
-            tmp_path / "std4",
+            "https://github.com/leanprover-community/batteries",
+            tmp_path / "batteries",
             timeout=120,
             depth=1,
         )
@@ -215,5 +216,6 @@ class TestProofVerificationEndToEnd:
         assert len(result.commit) == 40  # Full SHA
 
         # Verify the repo directory exists
-        assert (tmp_path / "std4").exists()
-        assert (tmp_path / "std4" / "lakefile.lean").exists()
+        assert (tmp_path / "batteries").exists()
+        # Batteries uses lakefile.toml (Lean 4 convention)
+        assert (tmp_path / "batteries" / "lakefile.toml").exists()

@@ -21,6 +21,8 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 | DEBT-094 | [Semantic Scholar client module LOC violation](./debt-094-semantic-scholar-client-loc.md) | P4 | Exempted |
 | DEBT-095 | [zbMATH client module LOC violation](./debt-095-zbmath-client-loc.md) | P4 | Exempted |
 | DEBT-096 | [Search command module LOC violation](./debt-096-search-command-msc-loc.md) | P4 | Exempted |
+| DEBT-097 | [Test suite ANSI handling inconsistency](./debt-097-test-suite-consistency.md) | P2 | Open |
+| DEBT-098 | [Test references deprecated std4 repository](./debt-098-std4-repo-rename.md) | P1 | Fixed |
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -125,7 +127,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-090 | Cyclomatic complexity violations (C901) | P2 | Fixed | 22f14f6 |
 | DEBT-091 | Blind exception catches (BLE001) | P3 | Fixed | 22f14f6 |
 
-**Next Debt ID:** DEBT-097
+**Next Debt ID:** DEBT-099
 
 ### Archived Debt Decks
 
