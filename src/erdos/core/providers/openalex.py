@@ -44,6 +44,11 @@ class OpenAlexProvider:
         """Human-readable provider name."""
         return "openalex"
 
+    @property
+    def client_config(self) -> OpenAlexConfig:
+        """Return underlying client configuration (read-only)."""
+        return self._client.config
+
     @classmethod
     def from_env(cls) -> OpenAlexProvider:
         """Create provider with config from environment."""

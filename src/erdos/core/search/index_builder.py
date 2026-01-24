@@ -29,10 +29,11 @@ def build_index(
     """
     Build or update the search index.
 
-    Individual problem indexing failures are logged and skipped. This may leave
-    the index in a partially-updated state. If you need atomic behavior, you
-    could implement a transactional rollback strategy (e.g. rebuild into a
-    temporary database and swap on success).
+    Per-problem indexing failures are logged and skipped. However,
+    `SearchIndexError` indicates an index-level failure (e.g., missing FTS5) and
+    aborts the build immediately to avoid producing a misleading partial index.
+    If you need fully atomic behavior, you could implement a transactional
+    strategy (e.g. rebuild into a temporary database and swap on success).
 
     Args:
         loader: Problem repository

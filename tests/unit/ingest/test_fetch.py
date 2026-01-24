@@ -15,7 +15,7 @@ def test_build_provider_openalex_respects_mailto_and_timeout() -> None:
     )
 
     assert isinstance(provider, FallbackProvider)
-    openalex = provider._doi_chain[0]
+    openalex = provider.doi_chain[0]
     assert isinstance(openalex, OpenAlexProvider)
-    assert openalex._client.config.email == "cli@example.com"
-    assert openalex._client.config.timeout == 12.5
+    assert openalex.client_config.email == "cli@example.com"
+    assert openalex.client_config.timeout == 12.5

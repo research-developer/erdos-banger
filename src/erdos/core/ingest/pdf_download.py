@@ -91,7 +91,10 @@ def download_and_extract_pdf(
         extracted = True
     except (OSError, requests.RequestException) as e:
         logger.warning("PDF download/extract failed for %s: %s", pdf_url, e)
-        error = f"Download failed: {e}"
+        if isinstance(e, requests.RequestException):
+            error = f"Download failed: {e}"
+        else:
+            error = f"PDF cache/extract failed: {e}"
 
     return PDFDownloadResult(
         cache_path=cache_path,

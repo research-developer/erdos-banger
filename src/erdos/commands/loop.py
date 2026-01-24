@@ -194,11 +194,11 @@ def run(
         path = project_path or Path("formal/lean")
 
         # Get LLM command from config if not specified
-        llm_command = (
-            llm_cmd.strip()
-            if llm_cmd is not None and llm_cmd.strip()
-            else (app_ctx.config.llm_command or None)
-        )
+        llm_command: str | None
+        if llm_cmd is not None and llm_cmd.strip():
+            llm_command = llm_cmd.strip()
+        else:
+            llm_command = (app_ctx.config.llm_command or "").strip() or None
 
         config = LoopConfig.from_cli(
             max_iterations=max_iter,

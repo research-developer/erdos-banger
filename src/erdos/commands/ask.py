@@ -153,7 +153,13 @@ def ask(
     limit: Annotated[int, typer.Option("--limit", "-n")] = DEFAULT_RAG_LIMIT,
     build_index: Annotated[bool, typer.Option("--build-index")] = False,
     no_llm: Annotated[bool, typer.Option("--no-llm")] = False,
-    llm_cmd: Annotated[str, typer.Option("--llm-cmd")] = "",
+    llm_cmd: Annotated[
+        str | None,
+        typer.Option(
+            "--llm-cmd",
+            help="Override LLM command (default: from ERDOS_LLM_COMMAND). Pass an empty value to disable.",
+        ),
+    ] = None,
 ) -> None:
     """
     Ask a question about an Erdős problem using RAG.
@@ -170,7 +176,7 @@ def ask(
 
         echo "What is the status?" | erdos --json ask 6 -
     """
-    json_mode = bool((ctx.obj or {}).get("json"))
+    json_mode = bool(ctx.obj.get("json")) if isinstance(ctx.obj, dict) else False
 
     # Get and validate question
     question = _read_question_from_stdin() if question_arg == "-" else question_arg
@@ -187,9 +193,10 @@ def ask(
     if app_ctx is None:
         return  # Unreachable: get_app_context guarantees (ctx, None) or (None, error)
 
-    effective_llm_cmd = (
-        llm_cmd.strip() if llm_cmd and llm_cmd.strip() else app_ctx.config.llm_command
-    )
+    if llm_cmd is None:
+        effective_llm_cmd = (app_ctx.config.llm_command or "").strip() or None
+    else:
+        effective_llm_cmd = llm_cmd.strip() or None
     options = AskOptions(
         problem_id=problem_id,
         question=question,

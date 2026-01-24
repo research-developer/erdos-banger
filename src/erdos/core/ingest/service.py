@@ -334,7 +334,9 @@ def ingest_problem_references(
         CLIOutput with ingestion results.
 
     Note:
-        This function exceeds 80 LOC but is acceptable per DEBT-026 criteria:
+        # exempt: DEBT-026
+
+        This function exceeds 120 LOC but is acceptable per DEBT-026 criteria:
         it is pure linear orchestration with no branching complexity - each step
         is a single helper call. The body contains ~12 orchestration steps with
         clear names; extracting further would obscure the workflow. Docstring
@@ -384,6 +386,7 @@ def ingest_problem_references(
         pdf=PDFConfig(enabled=pdf, converter=pdf_converter, use_llm=pdf_use_llm),
         force=force,
         source=source,
+        openalex_api_key=openalex_api_key,
     )
     process_result = process_all_references(
         problem,

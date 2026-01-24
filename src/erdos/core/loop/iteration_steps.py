@@ -355,6 +355,21 @@ def apply_patch_and_record_iteration(
     )
 
     if verification.exit_condition == LoopExitCondition.REGRESSION:
+        sorries_after = count_sorries(new_content)
+        admits_after = count_admits(new_content)
+        iterations.append(
+            IterationRecord(
+                iteration=iteration,
+                patch_applied=True,
+                sorry_before=sorries_before,
+                sorry_after=sorries_after,
+                admit_before=admits_before,
+                admit_after=admits_after,
+                check_success=last_check.success,
+                error_count=len(last_check.errors),
+                reason="regression",
+            )
+        )
         return LoopStatus.REGRESSION, last_check, stall_count
 
     sorries_after = count_sorries(new_content)

@@ -41,7 +41,7 @@ class CrossrefProvider:
 
     @classmethod
     def from_env(cls) -> CrossrefProvider:
-        """Create provider using ERDOS_MAILTO for Crossref's polite pool."""
+        """Create provider from AppConfig (mailto + http timeout)."""
         config = AppConfig.from_env()
         return cls(mailto=config.mailto, timeout=config.http_timeout)
 

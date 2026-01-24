@@ -44,6 +44,8 @@ def _write_yaml_if_missing(path: Path, data: dict[str, object]) -> bool:
     try:
         with tmp_path.open("w", encoding="utf-8") as f:
             yaml.safe_dump(data, f, sort_keys=False, allow_unicode=True)
+        if path.exists():
+            return False
         tmp_path.replace(path)
     finally:
         if tmp_path.exists():

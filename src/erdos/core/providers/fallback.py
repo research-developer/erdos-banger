@@ -97,6 +97,11 @@ class FallbackProvider:
         """Human-readable name showing the capability chains."""
         return self._name
 
+    @property
+    def doi_chain(self) -> tuple[DOILookupProvider, ...]:
+        """Return DOI providers in priority order (read-only)."""
+        return tuple(self._doi_chain)
+
     def get_by_doi(self, doi: str) -> ReferenceRecord | None:
         """Try each DOI provider in order until one returns a result."""
         for provider in self._doi_chain:

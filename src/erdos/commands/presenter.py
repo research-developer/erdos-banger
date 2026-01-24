@@ -24,6 +24,8 @@ EXCLUDED_COMMANDS = frozenset({"erdos logs"})
 def _get_configured_run_logger(ctx: typer.Context) -> RunLogger:
     """Prefer the AppConfig log path when AppContext is available."""
     obj = ctx.obj
+    if isinstance(obj, AppContext):
+        return RunLogger(log_file=obj.config.run_log_path)
     if isinstance(obj, dict):
         app_ctx = obj.get("app_context")
         if isinstance(app_ctx, AppContext):
@@ -51,7 +53,8 @@ def output_result(
     print_human: HumanPrinter | None = None,
 ) -> None:
     """Render a CLIOutput according to global output settings."""
-    json_mode = bool((ctx.obj or {}).get("json", False))
+    obj = ctx.obj
+    json_mode = bool(obj.get("json", False)) if isinstance(obj, dict) else False
 
     if json_mode:
         console.print_json(result.model_dump_json())

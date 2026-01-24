@@ -326,7 +326,9 @@ def mcp_ask_question(
     Returns:
         CLIOutput-compatible dict
     """
-    repo_root = AppConfig.from_env().repo_root
+    config = AppConfig.from_env()
+    repo_root = config.repo_root
+    llm_cmd = None if no_llm else (config.llm_command.strip() or None)
     result = core_ask_question(
         problem_id=problem_id,
         question=question,
@@ -335,7 +337,7 @@ def mcp_ask_question(
         limit=DEFAULT_RAG_LIMIT,
         build_index_flag=False,
         no_llm=no_llm,
-        llm_command=None,
+        llm_command=llm_cmd,
         repo_root=repo_root,
     )
     return _cli_output_to_dict(result)

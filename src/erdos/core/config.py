@@ -39,6 +39,7 @@ __all__ = [
     "DEFAULT_MAILTO",
     "DEFAULT_RUN_LOG_PATH",
     "AppConfig",
+    "build_subprocess_env",
 ]
 
 
@@ -119,6 +120,18 @@ class AppConfig:
         run_log_path_str = os.environ.get("ERDOS_RUN_LOG_PATH")
         repo_root_str = os.environ.get("ERDOS_REPO_ROOT")
 
+        def _clean_env(value: str | None) -> str | None:
+            if value is None:
+                return None
+            cleaned = value.strip()
+            return cleaned or None
+
+        mailto = (
+            _clean_env(os.environ.get("ERDOS_MAILTO"))
+            or _clean_env(os.environ.get("OPENALEX_EMAIL"))
+            or DEFAULT_MAILTO
+        )
+
         return cls(
             data_path=Path(data_path_str) if data_path_str else None,
             index_path=Path(index_path_str) if index_path_str else None,
@@ -126,13 +139,11 @@ class AppConfig:
                 Path(run_log_path_str) if run_log_path_str else DEFAULT_RUN_LOG_PATH
             ),
             repo_root=Path(repo_root_str) if repo_root_str else None,
-            mailto=os.environ.get("ERDOS_MAILTO")
-            or os.environ.get("OPENALEX_EMAIL")
-            or DEFAULT_MAILTO,
+            mailto=mailto,
             llm_command=os.environ.get("ERDOS_LLM_COMMAND", ""),
             aristotle_api_key=os.environ.get("ARISTOTLE_API_KEY", "").strip(),
             aristotle_command=os.environ.get(
                 "ERDOS_ARISTOTLE_COMMAND", DEFAULT_ARISTOTLE_COMMAND
             ).strip(),
-            openalex_api_key=os.environ.get("OPENALEX_API_KEY", ""),
+            openalex_api_key=os.environ.get("OPENALEX_API_KEY", "").strip(),
         )

@@ -35,6 +35,14 @@ class FetchConfig:
     mailto: str
     delay: float
 
+    def __post_init__(self) -> None:
+        if self.timeout <= 0:
+            raise ValueError("timeout must be > 0")
+        if self.delay < 0:
+            raise ValueError("delay must be >= 0")
+        if self.allow_network and not self.mailto.strip():
+            raise ValueError("mailto must be non-empty when allow_network is True")
+
 
 @dataclass(frozen=True)
 class PDFConfig:
@@ -53,3 +61,4 @@ class IngestConfig:
     pdf: PDFConfig
     force: bool = False
     source: MetadataSource = MetadataSource.OPENALEX
+    openalex_api_key: str | None = None

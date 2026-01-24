@@ -113,7 +113,9 @@ def validate_aristotle_config(
     Raises:
         AristotleError: If configuration is invalid (error_type="ConfigError")
     """
-    config = AppConfig.from_env()
+    config: AppConfig | None = None
+    if api_key is None or command is None:
+        config = AppConfig.from_env()
 
     # Check for API key (explicit > env var)
     if api_key is not None:
@@ -124,6 +126,8 @@ def validate_aristotle_config(
                 error_type="ConfigError",
             )
     else:
+        if config is None:
+            config = AppConfig.from_env()
         effective_api_key = config.aristotle_api_key
         if not effective_api_key:
             raise AristotleError(
@@ -141,6 +145,8 @@ def validate_aristotle_config(
                 error_type="ConfigError",
             )
     else:
+        if config is None:
+            config = AppConfig.from_env()
         effective_command = config.aristotle_command.strip()
 
     # Resolve command path
@@ -225,7 +231,7 @@ def run_aristotle_prove_from_file(
         output_file: Path for the output Lean file (must differ from input)
         api_key: Explicit API key (falls back to ARISTOTLE_API_KEY env var)
         command: Explicit command path (falls back to ERDOS_ARISTOTLE_COMMAND env var)
-        timeout: Maximum seconds to wait for completion (default: 600)
+        timeout: Maximum seconds to wait for completion (default: LAKE_UPDATE_TIMEOUT)
         informal: Pass --informal flag to Aristotle
         formal_input_context: Pass --formal-input-context flag to Aristotle
 

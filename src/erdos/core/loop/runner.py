@@ -92,31 +92,30 @@ def run_loop(
 
     # Set up logging
     log_path = Path("logs/loop") / f"{generate_run_id()}.jsonl"
-    loop_logger = LoopLogger(log_path)
-    iterations: list[IterationRecord] = []
-    last_check: LeanCheckResult | None = None
+    with LoopLogger(log_path) as loop_logger:
+        iterations: list[IterationRecord] = []
+        last_check: LeanCheckResult | None = None
 
-    # Helper to create results with common fields
-    def make_result(
-        status: LoopStatus,
-        completed: int,
-        check: LeanCheckResult | None,
-        iters: list[IterationRecord],
-    ) -> LoopResult:
-        return _create_result(
-            problem_id=problem.id,
-            status=status,
-            iterations_completed=completed,
-            config=config,
-            file_path=file_path,
-            no_apply=no_apply,
-            llm_command=llm_command,
-            log_path=log_path,
-            last_check=check,
-            iterations=iters,
-        )
+        # Helper to create results with common fields
+        def make_result(
+            status: LoopStatus,
+            completed: int,
+            check: LeanCheckResult | None,
+            iters: list[IterationRecord],
+        ) -> LoopResult:
+            return _create_result(
+                problem_id=problem.id,
+                status=status,
+                iterations_completed=completed,
+                config=config,
+                file_path=file_path,
+                no_apply=no_apply,
+                llm_command=llm_command,
+                log_path=log_path,
+                last_check=check,
+                iterations=iters,
+            )
 
-    try:
         # Check if already complete
         is_complete, last_check = _check_initial_completion(
             file_path, lean_runner, config
@@ -154,6 +153,3 @@ def run_loop(
         return make_result(
             LoopStatus.MAX_ITERATIONS, config.max_iterations, last_check, iterations
         )
-
-    finally:
-        loop_logger.close()

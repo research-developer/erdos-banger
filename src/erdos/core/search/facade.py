@@ -70,7 +70,7 @@ class SearchIndex:
 
     @classmethod
     def from_default(cls, *, index_path: Path | None = None) -> SearchIndex:
-        """Create index using default path (index/erdos.sqlite).
+        """Create index using the default path (DEFAULT_INDEX_PATH).
 
         Args:
             index_path: Explicit path to use (skips env/default lookup).

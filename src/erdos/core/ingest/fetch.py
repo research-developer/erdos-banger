@@ -326,7 +326,10 @@ def fetch_reference_entry(
 
     # Use injected provider or build from source enum
     actual_provider = provider or build_provider_from_source(
-        config.source, mailto=config.fetch.mailto, timeout=config.fetch.timeout
+        config.source,
+        mailto=config.fetch.mailto,
+        timeout=config.fetch.timeout,
+        openalex_api_key=config.openalex_api_key,
     )
 
     return _fetch_with_provider(

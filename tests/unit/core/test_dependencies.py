@@ -290,7 +290,7 @@ def _collect_env_aliases(tree: ast.Module) -> tuple[set[str], set[str], set[str]
     environ_aliases: set[str] = set()
     getenv_aliases: set[str] = set()
 
-    for statement in tree.body:
+    for statement in ast.walk(tree):
         if isinstance(statement, ast.Import):
             for alias in statement.names:
                 if alias.name == "os":

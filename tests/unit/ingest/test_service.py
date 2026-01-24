@@ -24,6 +24,7 @@ from erdos.core.ingest import (
     ingest_problem_references,
 )
 from erdos.core.ingest.arxiv_download import download_and_extract_arxiv
+from erdos.core.ingest.config import IngestConfig
 from erdos.core.ingest.service import _entries_content_equal
 from erdos.core.models import CLIOutput, ManifestEntry, ReferenceEntry, ReferenceRecord
 from erdos.core.problem_loader import ProblemLoader
@@ -363,7 +364,7 @@ def test_ingest_internal_error_does_not_truncate_manifest(
     def fake_fetch_reference_entry(
         ref: object,
         *,
-        config: object,
+        config: IngestConfig,
         provider: object = None,  # SPEC-022: optional provider
     ) -> ManifestEntry:
         # Unused params required by signature
@@ -742,7 +743,7 @@ def test_ingest_updates_manifest_when_content_changes(
     def fake_fetch(
         ref: ReferenceEntry,
         *,
-        config: object,
+        config: IngestConfig,
         provider: object = None,  # SPEC-022: optional provider
     ) -> ManifestEntry:
         # Unused params required by signature

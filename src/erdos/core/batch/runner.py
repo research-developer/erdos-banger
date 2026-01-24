@@ -258,8 +258,8 @@ class BatchRunner:
         return prior_state or state
 
     def _run_processing_loop(self, state: BatchState, limiter: RateLimiter) -> None:
-        total = len(state.problem_ids)
         to_process = state.failed + state.pending  # Retry failed, then pending
+        total = len(to_process)
 
         for index, problem_id in enumerate(to_process):
             if self._interrupted:

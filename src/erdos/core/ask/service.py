@@ -177,13 +177,12 @@ def ask_question(
 
     # Determine LLM command
     enable_llm = not no_llm
-    effective_llm_cmd = llm_command
 
     # Execute LLM if enabled
     llm_result = execute_llm_if_enabled(
         prompt=prompt,
         enable_llm=enable_llm,
-        llm_command=effective_llm_cmd,
+        llm_command=llm_command,
         command="erdos ask",
     )
     if llm_result.error is not None:
