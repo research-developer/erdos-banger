@@ -1,4 +1,8 @@
-"""erdos ask - RAG Q&A for Erdős problems (SPEC-011)."""
+"""erdos ask - RAG Q&A for Erdős problems (SPEC-011).
+
+LLM routing per SPEC-032: uses TaskType.ask_question to select the appropriate
+LLM command via environment variable chain (ERDOS_LLM_COMMAND_MATH -> ERDOS_LLM_COMMAND).
+"""
 
 from __future__ import annotations
 
@@ -17,6 +21,7 @@ from erdos.commands.presenter import exit_with_result
 from erdos.core.ask import ask_question
 from erdos.core.constants import DEFAULT_RAG_LIMIT, TEXT_PREVIEW_LENGTH
 from erdos.core.exit_codes import ExitCode
+from erdos.core.llm import LLMRouterError, TaskType, resolve_llm_command
 from erdos.core.models import CLIOutput
 from erdos.core.timing import measure_time_ms
 
@@ -193,10 +198,30 @@ def ask(
     if app_ctx is None:
         return  # Unreachable: get_app_context guarantees (ctx, None) or (None, error)
 
-    if llm_cmd is None:
-        effective_llm_cmd = (app_ctx.config.llm_command or "").strip() or None
-    else:
-        effective_llm_cmd = llm_cmd.strip() or None
+    # Resolve LLM command via router (SPEC-032)
+    # - --no-llm: skip LLM entirely (no router lookup)
+    # - --llm-cmd: explicit override bypasses router
+    # - otherwise: use router with TaskType.ask_question
+    effective_llm_cmd: str | None = None
+    if not no_llm:
+        try:
+            # Pass llm_cmd as override - router uses it if non-empty, else checks env vars
+            effective_llm_cmd = resolve_llm_command(
+                TaskType.ask_question,
+                override=llm_cmd,
+            )
+        except LLMRouterError as e:
+            exit_with_result(
+                ctx,
+                CLIOutput.err(
+                    command="erdos ask",
+                    error_type="CONFIG_ERROR",
+                    message=str(e),
+                    code=ExitCode.CONFIG_ERROR,
+                ),
+            )
+            return
+
     options = AskOptions(
         problem_id=problem_id,
         question=question,
