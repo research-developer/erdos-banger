@@ -11,6 +11,7 @@ Requires the 'embeddings' optional dependency:
 from __future__ import annotations
 
 import logging
+import threading
 from typing import TYPE_CHECKING
 
 
@@ -61,6 +62,7 @@ class EmbeddingsNotAvailableError(Exception):
 
 
 _cached_model: EmbeddingModel | None = None
+_model_lock = threading.Lock()
 
 
 def get_embedding_model(model_name: str | None = None) -> EmbeddingModel:
@@ -99,13 +101,18 @@ def get_embedding_model(model_name: str | None = None) -> EmbeddingModel:
     if _cached_model is not None and _cached_model.model_name == effective_model:
         return _cached_model
 
-    try:
-        dim = _get_model_dimension(effective_model)
-        config = EmbeddingConfig(model_name=effective_model, dimension=dim)
-        _cached_model = EmbeddingModel(config)
-        return _cached_model
-    except EmbeddingNotAvailableError as e:
-        raise EmbeddingsNotAvailableError(str(e)) from e
+    with _model_lock:
+        # Double-check after acquiring lock
+        if _cached_model is not None and _cached_model.model_name == effective_model:
+            return _cached_model
+
+        try:
+            dim = _get_model_dimension(effective_model)
+            config = EmbeddingConfig(model_name=effective_model, dimension=dim)
+            _cached_model = EmbeddingModel(config)
+            return _cached_model
+        except EmbeddingNotAvailableError as e:
+            raise EmbeddingsNotAvailableError(str(e)) from e
 
 
 def encode_texts(

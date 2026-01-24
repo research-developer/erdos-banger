@@ -16,7 +16,7 @@ from rich.console import Console
 
 from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
-from erdos.core.clients.zbmath import ZbMathClient, ZbMathConfig, ZbMathEntry
+from erdos.core.clients.zbmath import ZbMathClient, ZbMathConfig, zbmath_entry_to_json
 from erdos.core.constants import DEFAULT_SEARCH_LIMIT
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
@@ -43,25 +43,6 @@ app = typer.Typer(
 )
 console = Console()
 err_console = Console(stderr=True)
-
-
-def _format_entry_for_json(entry: ZbMathEntry) -> dict[str, Any]:
-    """Format zbMATH entry for JSON output."""
-    return {
-        "zbl_id": entry.zbl_id,
-        "title": entry.title,
-        "authors": entry.authors,
-        "year": entry.year,
-        "doi": entry.doi,
-        "arxiv_id": entry.arxiv_id,
-        "journal": entry.journal,
-        "msc": [
-            {"code": m.code, "text": m.text, "primary": m.primary} for m in entry.msc
-        ],
-        "keywords": entry.keywords,
-        "review_excerpt": entry.review_excerpt,
-        "zbmath_url": entry.zbmath_url,
-    }
 
 
 def _print_msc_human(data: dict[str, Any]) -> None:
@@ -177,6 +158,8 @@ def _validate_mode_flags(
         incompatible_flags = [
             (semantic, "--semantic"),
             (hybrid, "--hybrid"),
+            (bm25_only, "--bm25-only"),
+            (alpha is not None, "--alpha"),
             (build_index_flag, "--build-index"),
             (build_embeddings_flag, "--build-embeddings"),
         ]
@@ -238,7 +221,7 @@ def _execute_msc_search(
             "limit": limit,
             "year_min": year_min,
             "year_max": year_max,
-            "entries": [_format_entry_for_json(e) for e in entries],
+            "entries": [zbmath_entry_to_json(e) for e in entries],
             "returned": len(entries),
         }
 
@@ -249,6 +232,13 @@ def _execute_msc_search(
             command="erdos search",
             error_type="ZbMathError",
             message=f"zbMATH API error: {e}",
+            code=ExitCode.ERROR,
+        )
+    except requests.RequestException as e:
+        return CLIOutput.err(
+            command="erdos search",
+            error_type="ZbMathError",
+            message=f"zbMATH request error: {e}",
             code=ExitCode.ERROR,
         )
 

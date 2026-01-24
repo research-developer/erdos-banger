@@ -7,16 +7,18 @@ Use `pytest -m requires_network` to run these tests.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from erdos.core.sync.submodule import (
+    DEFAULT_SUBMODULE_PATH,
     check_submodule_staleness,
     get_submodule_commit,
     get_submodule_path,
     load_submodule_problems,
 )
+
+
+MIN_EXPECTED_PROBLEMS = 1000
 
 
 # =============================================================================
@@ -30,7 +32,7 @@ class TestSubmoduleLocal:
     def test_default_path_exists(self) -> None:
         """Default submodule path should exist in the repo."""
         path = get_submodule_path()
-        assert path == Path("data/erdosproblems")
+        assert path == DEFAULT_SUBMODULE_PATH
         # Path should exist since the repo has the submodule initialized
         assert path.exists(), "Submodule directory not found"
 
@@ -43,7 +45,9 @@ class TestSubmoduleLocal:
         problems = load_submodule_problems(path)
 
         # The real submodule should have many problems
-        assert len(problems) > 1000, f"Expected 1000+ problems, got {len(problems)}"
+        assert len(problems) > MIN_EXPECTED_PROBLEMS, (
+            f"Expected {MIN_EXPECTED_PROBLEMS}+ problems, got {len(problems)}"
+        )
 
         # Spot check some known problems
         assert 1 in problems
@@ -110,4 +114,4 @@ class TestSubmoduleNetwork:
         assert result.data["checked"] is True
         assert isinstance(result.data["stale"], bool)
         assert result.data["current_commit"] is not None
-        assert result.data["problems_count"] > 1000
+        assert result.data["problems_count"] > MIN_EXPECTED_PROBLEMS

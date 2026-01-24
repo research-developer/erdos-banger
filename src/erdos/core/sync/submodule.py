@@ -275,9 +275,11 @@ def parse_problems_yaml(data: list[dict[str, Any]]) -> dict[int, SubmoduleProble
         try:
             problem = SubmoduleProblemData.from_upstream_yaml(item)
             result[problem.problem_id] = problem
-        except (ValueError, KeyError) as e:
+        except (ValueError, KeyError, TypeError) as e:
             # Skip invalid entries but log warning
-            number = item.get("number", "unknown")
+            number = (
+                item.get("number", "unknown") if isinstance(item, dict) else "unknown"
+            )
             logger.warning("Skipping invalid problem entry %s: %s", number, e)
             continue
 

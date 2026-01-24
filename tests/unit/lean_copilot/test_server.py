@@ -20,6 +20,7 @@ from erdos.core.llm.router import LLMRouterError
 from erdos.lean_copilot.server import (
     GenerateRequest,
     GenerateResponse,
+    LLMExecutionError,
     generate_tactics,
     parse_tactics,
 )
@@ -225,7 +226,7 @@ class TestGenerateTactics:
         monkeypatch.setenv("ERDOS_LLM_COMMAND", "echo 'rfl'")
 
         with mock.patch("erdos.lean_copilot.server.execute_llm_sync") as mock_exec:
-            mock_exec.return_value = ("rfl\nsimp", 0)
+            mock_exec.return_value = ("rfl\nsimp", "", 0)
             result = generate_tactics("goal: 1 + 1 = 2")
 
         assert result == ["rfl", "simp"]
@@ -239,7 +240,7 @@ class TestGenerateTactics:
         monkeypatch.setenv("ERDOS_LLM_COMMAND", "echo 'from-env'")
 
         with mock.patch("erdos.lean_copilot.server.execute_llm_sync") as mock_exec:
-            mock_exec.return_value = ("rfl\nsimp", 0)
+            mock_exec.return_value = ("rfl\nsimp", "", 0)
             result = generate_tactics("goal: 1 + 1 = 2", llm_command="echo 'override'")
 
         assert result == ["rfl", "simp"]
@@ -251,20 +252,23 @@ class TestGenerateTactics:
         monkeypatch.setenv("ERDOS_LLM_COMMAND", "echo 'test'")
 
         with mock.patch("erdos.lean_copilot.server.execute_llm_sync") as mock_exec:
-            mock_exec.return_value = ("rfl\nsimp\nexact h\napply le_of_lt\nnorm_num", 0)
+            mock_exec.return_value = (
+                "rfl\nsimp\nexact h\napply le_of_lt\nnorm_num",
+                "",
+                0,
+            )
             result = generate_tactics("test", num_samples=3)
 
         assert result == ["rfl", "simp", "exact h"]
 
-    def test_returns_empty_on_nonzero_exit(self, monkeypatch: pytest.MonkeyPatch):
-        """Returns empty list when LLM exits with non-zero code."""
+    def test_raises_on_nonzero_exit(self, monkeypatch: pytest.MonkeyPatch):
+        """Raises LLMExecutionError when LLM exits with non-zero code."""
         monkeypatch.setenv("ERDOS_LLM_COMMAND", "echo 'test'")
 
         with mock.patch("erdos.lean_copilot.server.execute_llm_sync") as mock_exec:
-            mock_exec.return_value = ("rfl\nsimp", 1)
-            result = generate_tactics("test")
-
-        assert result == []
+            mock_exec.return_value = ("rfl\nsimp", "boom", 1)
+            with pytest.raises(LLMExecutionError):
+                generate_tactics("test")
 
     def test_raises_when_no_command_configured(self, monkeypatch: pytest.MonkeyPatch):
         """Raises LLMRouterError when no command is configured."""
@@ -300,7 +304,7 @@ class TestGenerateTactics:
         monkeypatch.setenv("ERDOS_LLM_COMMAND", "echo 'rfl'")
 
         with mock.patch("erdos.lean_copilot.server.execute_llm_sync") as mock_exec:
-            mock_exec.return_value = ("rfl", 0)
+            mock_exec.return_value = ("rfl", "", 0)
             generate_tactics("goal: 1 + 1 = 2")
 
         call_args = mock_exec.call_args

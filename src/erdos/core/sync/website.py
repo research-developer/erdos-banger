@@ -16,13 +16,13 @@ from __future__ import annotations
 import html
 import logging
 import re
-import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
 import requests
 
+from erdos.core.rate_limiter import RateLimiter
 from erdos.core.sync.models import (
     WebsiteProblemData,
     WebsiteReferenceData,
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 # Rate limiting: Be polite to T. F. Bloom's server
 WEBSITE_RATE_LIMIT = 2.0  # seconds between requests
-_rate_limit_state: dict[str, float] = {"last_request_time": 0.0}
+_rate_limiter = RateLimiter(delay_seconds=WEBSITE_RATE_LIMIT)
 
 
 class WebsiteParseError(Exception):
@@ -60,15 +60,6 @@ class WebsiteFetchResult:
     fetched_at: datetime
 
 
-def _rate_limit() -> None:
-    """Enforce rate limiting between requests."""
-    now = time.monotonic()
-    elapsed = now - _rate_limit_state["last_request_time"]
-    if elapsed < WEBSITE_RATE_LIMIT:
-        time.sleep(WEBSITE_RATE_LIMIT - elapsed)
-    _rate_limit_state["last_request_time"] = time.monotonic()
-
-
 def fetch_problem_page(
     problem_id: int,
     *,
@@ -89,7 +80,7 @@ def fetch_problem_page(
     Raises:
         WebsiteFetchError: If fetch fails
     """
-    _rate_limit()
+    _rate_limiter.sleep_if_needed()
 
     url = f"{base_url}/{problem_id}"
     try:
@@ -337,7 +328,7 @@ def fetch_latex_source(
     Returns:
         LaTeX source text, or None if not available
     """
-    _rate_limit()
+    _rate_limiter.sleep_if_needed()
 
     url = f"{base_url}/latex/{problem_id}"
     try:

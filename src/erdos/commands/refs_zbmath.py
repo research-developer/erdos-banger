@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 import requests
 import typer
@@ -11,10 +15,10 @@ from rich.console import Console
 
 from erdos.commands.presenter import exit_with_result
 from erdos.core.clients.zbmath import (
-    MSCCode,
     ZbMathClient,
     ZbMathConfig,
     ZbMathEntry,
+    zbmath_entry_to_json,
 )
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
@@ -32,32 +36,6 @@ def _get_client() -> ZbMathClient:
     """Create zbMATH client from environment config."""
     config = ZbMathConfig.from_env()
     return ZbMathClient(config)
-
-
-def _format_msc_for_json(msc: MSCCode) -> dict[str, Any]:
-    """Format MSC code for JSON output."""
-    return {
-        "code": msc.code,
-        "text": msc.text,
-        "primary": msc.primary,
-    }
-
-
-def _format_entry_for_json(entry: ZbMathEntry) -> dict[str, Any]:
-    """Format entry for JSON output."""
-    return {
-        "zbl_id": entry.zbl_id,
-        "title": entry.title,
-        "authors": entry.authors,
-        "year": entry.year,
-        "doi": entry.doi,
-        "arxiv_id": entry.arxiv_id,
-        "journal": entry.journal,
-        "msc": [_format_msc_for_json(m) for m in entry.msc],
-        "keywords": entry.keywords,
-        "review_excerpt": entry.review_excerpt,
-        "zbmath_url": entry.zbmath_url,
-    }
 
 
 def _print_entry_human(data: dict[str, Any]) -> None:
@@ -159,6 +137,124 @@ def _lookup_entry(
     return None
 
 
+def _exit_help_if_no_query(
+    ctx: typer.Context,
+    *,
+    command: str,
+    json_mode: bool,
+    identifier: str | None,
+    zbl: str | None,
+    title: str | None,
+    msc: str | None,
+) -> bool:
+    """Exit early when no lookup/search option is provided.
+
+    Returns True when the caller should return (JSON mode). Human mode raises
+    `typer.Exit` after printing help.
+    """
+    if (
+        msc is not None
+        or zbl is not None
+        or title is not None
+        or identifier is not None
+    ):
+        return False
+
+    if json_mode:
+        exit_with_result(
+            ctx,
+            CLIOutput.err(
+                command=command,
+                error_type="UsageError",
+                message=ctx.get_help(),
+                code=ExitCode.USAGE_ERROR,
+            ),
+        )
+        return True
+
+    console.print(ctx.get_help())
+    raise typer.Exit(code=ExitCode.SUCCESS)
+
+
+def _run_query(
+    client: ZbMathClient,
+    *,
+    command: str,
+    identifier: str | None,
+    zbl: str | None,
+    title: str | None,
+    msc: str | None,
+    limit: int,
+    year_min: int | None,
+    year_max: int | None,
+) -> tuple[CLIOutput, Callable[[dict[str, Any]], None]]:
+    """Execute the selected zbMATH operation and return output + printer."""
+    print_human: Callable[[dict[str, Any]], None] = _print_entry_human
+    try:
+        if msc is not None:
+            entries = client.search_by_msc(
+                msc,
+                limit=limit,
+                year_min=year_min,
+                year_max=year_max,
+            )
+            output_data: dict[str, Any] = {
+                "query": {
+                    "msc": msc,
+                    "limit": limit,
+                    "year_min": year_min,
+                    "year_max": year_max,
+                },
+                "entries": [zbmath_entry_to_json(e) for e in entries],
+                "returned": len(entries),
+            }
+            return CLIOutput.ok(command=command, data=output_data), _print_entries_human
+
+        entry = _lookup_entry(client, identifier, zbl, title)
+        if entry is None:
+            search_term = zbl or title or identifier
+            return (
+                CLIOutput.err(
+                    command=command,
+                    error_type="NotFound",
+                    message=f"Entry not found: {search_term}",
+                    code=ExitCode.NOT_FOUND,
+                ),
+                print_human,
+            )
+
+        return (
+            CLIOutput.ok(
+                command=command,
+                data={
+                    "identifier": zbl or title or identifier,
+                    "entry": zbmath_entry_to_json(entry),
+                },
+            ),
+            print_human,
+        )
+    except requests.HTTPError as e:
+        return (
+            CLIOutput.err(
+                command=command,
+                error_type="ZbMathError",
+                message=f"zbMATH API error: {e}",
+                code=ExitCode.ERROR,
+            ),
+            print_human,
+        )
+    except requests.RequestException as e:
+        return (
+            CLIOutput.err(
+                command=command,
+                error_type="ZbMathError",
+                message=f"zbMATH request error: {e}",
+                code=ExitCode.ERROR,
+            ),
+            print_human,
+        )
+
+
 @app.callback(invoke_without_command=True)
 def zbmath(
     ctx: typer.Context,
@@ -206,71 +302,33 @@ def zbmath(
         erdos refs zbmath --msc "11B05" --year-min 2000   # With year filter
     """
     command = "erdos refs zbmath"
+    obj = ctx.obj
+    json_mode = bool(obj.get("json", False)) if isinstance(obj, dict) else False
+
+    if _exit_help_if_no_query(
+        ctx,
+        command=command,
+        json_mode=json_mode,
+        identifier=identifier,
+        zbl=zbl,
+        title=title,
+        msc=msc,
+    ):
+        return
 
     with measure_time_ms() as duration:
         client = _get_client()
-
-        try:
-            # Determine lookup mode
-            if msc is not None:
-                # MSC search mode
-                entries = client.search_by_msc(
-                    msc,
-                    limit=limit,
-                    year_min=year_min,
-                    year_max=year_max,
-                )
-
-                output_data: dict[str, Any] = {
-                    "query": {
-                        "msc": msc,
-                        "limit": limit,
-                        "year_min": year_min,
-                        "year_max": year_max,
-                    },
-                    "entries": [_format_entry_for_json(e) for e in entries],
-                    "returned": len(entries),
-                }
-
-                result = CLIOutput.ok(command=command, data=output_data)
-                result.duration_ms = duration[0]
-                exit_with_result(ctx, result, print_human=_print_entries_human)
-                return
-
-            elif zbl is not None or title is not None or identifier is not None:
-                # Single-entry lookup mode
-                entry = _lookup_entry(client, identifier, zbl, title)
-            else:
-                # No lookup specified - show help
-                typer.echo(ctx.get_help())
-                raise typer.Exit(code=0)
-
-            if entry is None:
-                search_term = zbl or title or identifier
-                result = CLIOutput.err(
-                    command=command,
-                    error_type="NotFound",
-                    message=f"Entry not found: {search_term}",
-                    code=ExitCode.NOT_FOUND,
-                )
-                result.duration_ms = duration[0]
-                exit_with_result(ctx, result)
-                return
-
-            output_data = {
-                "identifier": zbl or title or identifier,
-                "entry": _format_entry_for_json(entry),
-            }
-
-            result = CLIOutput.ok(command=command, data=output_data)
-
-        except requests.HTTPError as e:
-            result = CLIOutput.err(
-                command=command,
-                error_type="ZbMathError",
-                message=f"zbMATH API error: {e}",
-                code=ExitCode.ERROR,
-            )
+        result, print_human = _run_query(
+            client,
+            command=command,
+            identifier=identifier,
+            zbl=zbl,
+            title=title,
+            msc=msc,
+            limit=limit,
+            year_min=year_min,
+            year_max=year_max,
+        )
 
     result.duration_ms = duration[0]
-    exit_with_result(ctx, result, print_human=_print_entry_human)
+    exit_with_result(ctx, result, print_human=print_human)

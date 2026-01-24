@@ -50,6 +50,7 @@ app = typer.Typer(
     no_args_is_help=True,
     rich_markup_mode="rich",
     add_completion=True,
+    context_settings={"help_option_names": ["-h", "--help"]},
 )
 
 

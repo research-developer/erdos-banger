@@ -95,44 +95,37 @@ class TestSyncWebsiteProblem:
         self,
         html_problem_6_proved: str,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """dry_run=True should not write to disk."""
-        # Monkeypatch the data path to tmp_path
-        from erdos.commands.sync import website_cmd
-
-        monkeypatch.setattr(
-            website_cmd, "DEFAULT_DATA_PATH", tmp_path / "problems.yaml"
-        )
-        monkeypatch.setattr(website_cmd, "SYNC_CACHE_PATH", tmp_path / "cache")
+        data_path = tmp_path / "problems.yaml"
+        cache_path = tmp_path / "cache"
 
         result = sync_website_problem(
             problem_id=6,
             html_content=html_problem_6_proved,
             dry_run=True,
+            data_path=data_path,
+            sync_cache_dir=cache_path,
         )
 
         assert result.success is True
-        assert not (tmp_path / "problems.yaml").exists()
+        assert not data_path.exists()
 
     def test_sync_writes_to_disk_when_not_dry_run(
         self,
         html_problem_6_proved: str,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """sync without dry_run should write to disk."""
-        from erdos.commands.sync import website_cmd
-
         data_path = tmp_path / "problems_enriched.yaml"
         cache_path = tmp_path / "cache"
-        monkeypatch.setattr(website_cmd, "DEFAULT_DATA_PATH", data_path)
-        monkeypatch.setattr(website_cmd, "SYNC_CACHE_PATH", cache_path)
 
         result = sync_website_problem(
             problem_id=6,
             html_content=html_problem_6_proved,
             dry_run=False,
+            data_path=data_path,
+            sync_cache_dir=cache_path,
         )
 
         assert result.success is True
@@ -150,15 +143,10 @@ class TestSyncWebsiteProblem:
         self,
         html_problem_6_proved: str,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Sync should merge with existing problem data."""
-        from erdos.commands.sync import website_cmd
-
         data_path = tmp_path / "problems_enriched.yaml"
         cache_path = tmp_path / "cache"
-        monkeypatch.setattr(website_cmd, "DEFAULT_DATA_PATH", data_path)
-        monkeypatch.setattr(website_cmd, "SYNC_CACHE_PATH", cache_path)
 
         # Create existing data with notes
         existing_data = [
@@ -177,6 +165,8 @@ class TestSyncWebsiteProblem:
             problem_id=6,
             html_content=html_problem_6_proved,
             dry_run=False,
+            data_path=data_path,
+            sync_cache_dir=cache_path,
         )
 
         assert result.success is True
@@ -192,21 +182,18 @@ class TestSyncWebsiteProblem:
         self,
         html_problem_6_proved: str,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """updated should be False when syncing unchanged data."""
-        from erdos.commands.sync import website_cmd
-
         data_path = tmp_path / "problems_enriched.yaml"
         cache_path = tmp_path / "cache"
-        monkeypatch.setattr(website_cmd, "DEFAULT_DATA_PATH", data_path)
-        monkeypatch.setattr(website_cmd, "SYNC_CACHE_PATH", cache_path)
 
         # First sync
         result1 = sync_website_problem(
             problem_id=6,
             html_content=html_problem_6_proved,
             dry_run=False,
+            data_path=data_path,
+            sync_cache_dir=cache_path,
         )
         assert result1.data["updated"] is True
 
@@ -215,6 +202,8 @@ class TestSyncWebsiteProblem:
             problem_id=6,
             html_content=html_problem_6_proved,
             dry_run=False,
+            data_path=data_path,
+            sync_cache_dir=cache_path,
         )
         assert result2.data["updated"] is False
 
@@ -270,20 +259,17 @@ class TestProblemLoaderCompatibility:
         self,
         html_problem_6_proved: str,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Written YAML should be parseable as ProblemRecord."""
-        from erdos.commands.sync import website_cmd
-
         data_path = tmp_path / "problems_enriched.yaml"
         cache_path = tmp_path / "cache"
-        monkeypatch.setattr(website_cmd, "DEFAULT_DATA_PATH", data_path)
-        monkeypatch.setattr(website_cmd, "SYNC_CACHE_PATH", cache_path)
 
         sync_website_problem(
             problem_id=6,
             html_content=html_problem_6_proved,
             dry_run=False,
+            data_path=data_path,
+            sync_cache_dir=cache_path,
         )
 
         with data_path.open() as f:

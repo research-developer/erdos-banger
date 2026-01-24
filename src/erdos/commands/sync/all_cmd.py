@@ -26,7 +26,13 @@ console = Console()
 def _print_step_result(name: str, step_data: dict[str, Any]) -> None:
     """Print a single step result."""
     if not step_data.get("success"):
-        console.print(f"[red]\u2717[/red] {name}: {step_data.get('error', '')}")
+        error_msg = ""
+        errors = step_data.get("errors")
+        if isinstance(errors, list):
+            error_msg = ", ".join(str(e) for e in errors if e)
+        elif step_data.get("error"):
+            error_msg = str(step_data.get("error"))
+        console.print(f"[red]\u2717[/red] {name}: {error_msg}")
         return
 
     if step_data.get("skipped"):

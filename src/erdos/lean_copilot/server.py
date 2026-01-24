@@ -15,6 +15,7 @@ If embeddings are not installed, `/encode` returns HTTP 503 (degraded mode).
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import shlex
 import subprocess
@@ -168,7 +169,7 @@ def execute_llm_sync(
     prompt: str,
     *,
     timeout: int = LLM_COMMAND_TIMEOUT,
-) -> tuple[str, int]:
+) -> tuple[str, str, int]:
     """Execute LLM command synchronously.
 
     Args:
@@ -177,7 +178,7 @@ def execute_llm_sync(
         timeout: Maximum seconds to wait.
 
     Returns:
-        Tuple of (stdout, exit_code).
+        Tuple of (stdout, stderr, exit_code).
 
     Raises:
         ValueError: If command syntax is invalid.
@@ -203,7 +204,19 @@ def execute_llm_sync(
         result.returncode,
     )
 
-    return result.stdout, result.returncode
+    return result.stdout, result.stderr, result.returncode
+
+
+class LLMExecutionError(RuntimeError):
+    """Raised when an LLM command exits non-zero."""
+
+
+def _truncate_output(stdout: str, stderr: str, *, max_chars: int = 4000) -> str:
+    """Truncate stdout/stderr for inclusion in exception messages."""
+    combined = f"=== STDOUT ===\n{stdout}\n\n=== STDERR ===\n{stderr}"
+    if len(combined) <= max_chars:
+        return combined
+    return combined[:max_chars] + "\n... (truncated)"
 
 
 def generate_tactics(
@@ -238,11 +251,13 @@ def generate_tactics(
     full_prompt = TACTIC_PROMPT_TEMPLATE.format(prompt=prompt)
 
     # Execute LLM
-    stdout, exit_code = execute_llm_sync(command, full_prompt, timeout=timeout)
+    stdout, stderr, exit_code = execute_llm_sync(command, full_prompt, timeout=timeout)
 
     if exit_code != 0:
-        logger.warning("LLM command exited with code %d", exit_code)
-        return []
+        details = _truncate_output(stdout, stderr)
+        raise LLMExecutionError(
+            f"LLM command failed (exit code {exit_code}).\n\n{details}"
+        )
 
     # Parse and return tactics
     tactics = parse_tactics(stdout)
@@ -287,7 +302,8 @@ def create_app(*, llm_command_override: str | None = None) -> FastAPI:
     async def generate(request: GenerateRequest) -> GenerateResponse:
         """Generate tactic suggestions via SPEC-032 LLM routing."""
         try:
-            tactics = generate_tactics(
+            tactics = await asyncio.to_thread(
+                generate_tactics,
                 request.prompt,
                 num_samples=request.num_samples,
                 llm_command=llm_command_override,
@@ -295,6 +311,12 @@ def create_app(*, llm_command_override: str | None = None) -> FastAPI:
             return GenerateResponse(tactics=tactics)
         except LLMRouterError as e:
             logger.error("LLM router error: %s", e)
+            raise HTTPException(
+                status_code=503,
+                detail=str(e),
+            ) from e
+        except LLMExecutionError as e:
+            logger.error("LLM command failed: %s", e)
             raise HTTPException(
                 status_code=503,
                 detail=str(e),
@@ -330,7 +352,7 @@ def create_app(*, llm_command_override: str | None = None) -> FastAPI:
         )
 
         try:
-            embeddings = encode_texts(request.texts)
+            embeddings = await asyncio.to_thread(encode_texts, request.texts)
             return EncodeResponse(embeddings=embeddings)
         except EmbeddingsNotAvailableError as e:
             logger.warning("Embeddings unavailable (degraded mode): %s", e)

@@ -188,8 +188,7 @@ class TestRenderDashboard:
         )
         render_dashboard(console, data)
         output = _get_output(console)
-        # Should render without error
-        assert output.strip() != "" or True  # Allow empty output for empty dashboard
+        assert "No research data found" in output
 
     def test_render_dashboard_with_data(self) -> None:
         """Full dashboard shows all sections."""

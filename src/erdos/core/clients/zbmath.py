@@ -73,6 +73,7 @@ class ZbMathConfig:
 
         return cls(
             mailto=app_config.mailto if app_config.mailto else None,
+            timeout=app_config.http_timeout,
             cache_ttl_days=app_config.zbmath_cache_ttl_days,
             cache_path=(
                 app_config.zbmath_cache_path
@@ -280,6 +281,32 @@ class ZbMathEntry:
         )
 
 
+def msc_code_to_json(msc: MSCCode) -> dict[str, Any]:
+    """Format an MSCCode for CLI JSON output (stable shape)."""
+    return {
+        "code": msc.code,
+        "text": msc.text,
+        "primary": msc.primary,
+    }
+
+
+def zbmath_entry_to_json(entry: ZbMathEntry) -> dict[str, Any]:
+    """Format a ZbMathEntry for CLI JSON output (stable shape)."""
+    return {
+        "zbl_id": entry.zbl_id,
+        "title": entry.title,
+        "authors": entry.authors,
+        "year": entry.year,
+        "doi": entry.doi,
+        "arxiv_id": entry.arxiv_id,
+        "journal": entry.journal,
+        "msc": [msc_code_to_json(m) for m in entry.msc],
+        "keywords": entry.keywords,
+        "review_excerpt": entry.review_excerpt,
+        "zbmath_url": entry.zbmath_url,
+    }
+
+
 class ZbMathClient:
     """HTTP client for zbMATH Open API.
 
@@ -302,6 +329,11 @@ class ZbMathClient:
         self.config = config or ZbMathConfig.from_env()
         # Conservative rate limiting: 2s between calls
         self._rate_limiter = RateLimiter(delay_seconds=2.0)
+
+    @property
+    def rate_limit_delay_seconds(self) -> float:
+        """Return the configured delay between zbMATH API calls."""
+        return self._rate_limiter.delay_seconds
 
     def _normalize_zbl_id(self, zbl_id: str) -> str:
         """Normalize zbMATH ID.
@@ -380,7 +412,17 @@ class ZbMathClient:
                 data: dict[str, Any] = json.load(f)
 
             # Check TTL
-            cached_at = data.get("cached_at", 0)
+            cached_at_raw = data.get("cached_at", 0)
+            try:
+                cached_at = float(cached_at_raw)
+            except (TypeError, ValueError):
+                logger.debug(
+                    "Corrupt cache (invalid cached_at=%r) for %s:%s",
+                    cached_at_raw,
+                    endpoint,
+                    identifier,
+                )
+                return None
             ttl_seconds = self.config.cache_ttl_days * 24 * 60 * 60
             if time.time() - cached_at > ttl_seconds:
                 logger.debug("Cache expired for %s:%s", endpoint, identifier)

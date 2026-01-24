@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import logging
 import re
+import select
+import sys
+import time
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -27,6 +31,7 @@ from erdos.core.dashboard.render import (
 from erdos.core.dashboard.state import DashboardView, apply_key, initial_state
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
+from erdos.core.research.store_fs import FSResearchStore
 from erdos.core.timing import measure_time_ms
 
 
@@ -40,19 +45,7 @@ console = Console()
 
 
 def _parse_recent(recent: str) -> timedelta:
-    """Parse --recent option value to timedelta.
-
-    Accepts formats like: 7d, 30d, 90d, all
-
-    Args:
-        recent: String representation of time window.
-
-    Returns:
-        timedelta for the window.
-
-    Raises:
-        typer.BadParameter: If format is invalid.
-    """
+    """Parse `--recent` into a timedelta (`7d|30d|90d|all`)."""
     if recent.lower() == "all":
         return timedelta(days=36500)  # ~100 years
 
@@ -61,21 +54,16 @@ def _parse_recent(recent: str) -> timedelta:
         raise typer.BadParameter(
             f"Invalid format '{recent}'. Expected: 7d, 30d, 90d, or 'all'"
         )
-    return timedelta(days=int(match.group(1)))
+    days = int(match.group(1))
+    if days not in {7, 30, 90}:
+        raise typer.BadParameter(
+            f"Invalid format '{recent}'. Expected: 7d, 30d, 90d, or 'all'"
+        )
+    return timedelta(days=days)
 
 
 def _parse_problems(problems_str: str | None) -> list[int] | None:
-    """Parse --problems option value to list of IDs.
-
-    Args:
-        problems_str: Comma-separated problem IDs.
-
-    Returns:
-        List of problem IDs or None if not specified.
-
-    Raises:
-        typer.BadParameter: If format is invalid.
-    """
+    """Parse `--problems` into a list of ints."""
     if not problems_str:
         return None
 
@@ -93,12 +81,12 @@ def _parse_problems(problems_str: str | None) -> list[int] | None:
     return ids if ids else None
 
 
-def _get_research_path(ctx: typer.Context) -> Path | None:
-    """Get research workspace path from context."""
+def _get_research_path(ctx: typer.Context) -> Path | CLIOutput:
+    """Get research workspace path from context or return a CLIOutput error."""
     app_ctx, app_error = get_app_context(ctx, command="erdos dashboard")
-    if app_error is not None or app_ctx is None:
-        return None
-    if app_ctx.config.repo_root:
+    if app_error is not None:
+        return app_error
+    if app_ctx is not None and app_ctx.config.repo_root:
         return app_ctx.config.repo_root / "research"
     return Path.cwd() / "research"
 
@@ -122,6 +110,7 @@ def _run_interactive(
     research_path: Path,
     problem_ids: list[int] | None,
     recent: timedelta,
+    refresh_seconds: int,
 ) -> None:
     """Run interactive dashboard loop.
 
@@ -133,6 +122,7 @@ def _run_interactive(
         recent: Time window filter.
     """
     state = initial_state(problem_id=problem_id)
+    last_data_refresh = time.monotonic()
 
     try:
         with Live(console=console, refresh_per_second=1, transient=True):
@@ -140,13 +130,26 @@ def _run_interactive(
                 # Refresh data if needed
                 if state.should_refresh:
                     data = _aggregate_data(research_path, problem_ids, recent)
+                    last_data_refresh = time.monotonic()
+                    state = replace(state, should_refresh=False)
+                elif (
+                    refresh_seconds > 0
+                    and (time.monotonic() - last_data_refresh) >= refresh_seconds
+                ):
+                    data = _aggregate_data(research_path, problem_ids, recent)
+                    last_data_refresh = time.monotonic()
 
                 # Render based on current view
                 console.clear()
                 if state.view == DashboardView.OVERVIEW:
                     render_dashboard(console, data)
                 elif state.view == DashboardView.PROBLEM_DETAIL:
-                    _render_detail_view(console, data, state.selected_problem_id)
+                    _render_detail_view(
+                        console,
+                        data,
+                        state.selected_problem_id,
+                        research_path=research_path,
+                    )
                 else:
                     render_dashboard(console, data)
 
@@ -156,8 +159,9 @@ def _run_interactive(
                     break
 
                 try:
-                    key = console.input("[dim]Press key (q=quit, r=refresh): [/dim]")
-                    state = apply_key(state, key.lower())
+                    key = _read_key(timeout_seconds=refresh_seconds)
+                    if key:
+                        state = apply_key(state, key.lower())
                 except (EOFError, KeyboardInterrupt):
                     break
 
@@ -165,10 +169,31 @@ def _run_interactive(
         logger.debug("Interactive mode not available", exc_info=True)
 
 
+def _read_key(*, timeout_seconds: int) -> str | None:
+    """Read a line from stdin with an optional timeout (seconds)."""
+    if not sys.stdin or not hasattr(sys.stdin, "fileno"):
+        return None
+
+    timeout: float | None = None if timeout_seconds <= 0 else float(timeout_seconds)
+    try:
+        ready, _, _ = select.select([sys.stdin], [], [], timeout)
+    except Exception:
+        return None
+    if not ready:
+        return None
+
+    line = sys.stdin.readline()
+    if not line:
+        return None
+    return line.strip()
+
+
 def _render_detail_view(
     con: Console,
     data: DashboardData,
     problem_id: int | None,
+    *,
+    research_path: Path,
 ) -> None:
     """Render problem detail view."""
     if problem_id is None:
@@ -181,8 +206,39 @@ def _render_detail_view(
         con.print(f"[red]Problem {problem_id} not found in research data.[/red]")
         return
 
-    render_problem_detail(con, stats, attempts_data=[])
+    store = FSResearchStore(repo_root=research_path.parent)
+    attempts = sorted(
+        store.attempt_list(problem_id),
+        key=lambda a: a.created_at,
+        reverse=True,
+    )
+    attempts_data: list[dict[str, object]] = [
+        {
+            "id": a.id,
+            "result": a.result.value,
+            "summary": a.summary,
+            "created_at": a.created_at.isoformat(),
+        }
+        for a in attempts
+    ]
+    render_problem_detail(con, stats, attempts_data=attempts_data)
     render_help_bar(con, is_detail=True)
+
+
+def _parse_iso_datetime(value: object) -> datetime | None:
+    """Parse a (possibly Z-suffixed) ISO timestamp into a UTC datetime."""
+    if not isinstance(value, str) or not value.strip():
+        return None
+    raw = value.strip()
+    if raw.endswith("Z"):
+        raw = raw[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(raw)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
 
 
 def _print_human(data: dict[str, Any]) -> None:
@@ -197,7 +253,7 @@ def _print_human(data: dict[str, Any]) -> None:
             task_count=p["task_count"],
             attempt_count=p["attempt_count"],
             success_count=p["success_count"],
-            last_activity=None,
+            last_activity=_parse_iso_datetime(p.get("last_activity")),
         )
         for p in problems_data
     ]
@@ -249,8 +305,8 @@ def _parse_and_validate_options(
             problem_ids.append(problem)
 
     research_path = _get_research_path(ctx)
-    if research_path is None:
-        research_path = Path.cwd() / "research"
+    if isinstance(research_path, CLIOutput):
+        return research_path
 
     return (recent_td, problem_ids, research_path)
 
@@ -322,6 +378,6 @@ def dashboard(
         return
 
     if console.is_terminal and refresh > 0:
-        _run_interactive(data, problem, research_path, problem_ids, recent_td)
+        _run_interactive(data, problem, research_path, problem_ids, recent_td, refresh)
     else:
         exit_with_result(ctx, result, print_human=_print_human)

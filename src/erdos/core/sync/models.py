@@ -106,7 +106,17 @@ def _parse_formalized(raw: dict[str, Any]) -> tuple[bool, str | None]:
 def _parse_tags(raw: dict[str, Any]) -> list[str]:
     """Parse tags from upstream YAML."""
     tags_raw = raw.get("tags", [])
-    return [str(t) for t in tags_raw] if isinstance(tags_raw, list) else []
+    if not isinstance(tags_raw, list):
+        return []
+
+    tags: list[str] = []
+    for t in tags_raw:
+        if not isinstance(t, str):
+            continue
+        cleaned = t.strip()
+        if cleaned:
+            tags.append(cleaned)
+    return tags
 
 
 # =============================================================================

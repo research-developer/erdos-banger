@@ -166,7 +166,6 @@ class ExaResearchResult:
     query: str
     sources: list[ExaSource]
     answer: str | None = None
-    autoprompt: str | None = None
 
     @classmethod
     def from_api_response(cls, data: dict[str, Any], query: str) -> ExaResearchResult:
@@ -181,13 +180,11 @@ class ExaResearchResult:
         """
         sources = [ExaSource.from_api_response(r) for r in data.get("results", [])]
         answer = data.get("summary")
-        autoprompt = data.get("autopromptString")
 
         return cls(
             query=query,
             sources=sources,
             answer=answer,
-            autoprompt=autoprompt,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -196,7 +193,6 @@ class ExaResearchResult:
             "query": self.query,
             "sources": [s.to_dict() for s in self.sources],
             "answer": self.answer,
-            "autoprompt": self.autoprompt,
         }
 
     @classmethod
@@ -207,7 +203,6 @@ class ExaResearchResult:
             query=data.get("query", ""),
             sources=sources,
             answer=data.get("answer"),
-            autoprompt=data.get("autoprompt"),
         )
 
 

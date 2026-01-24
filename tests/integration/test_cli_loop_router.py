@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from erdos.cli import app
 from erdos.core.exit_codes import ExitCode
 from tests.cli_runner import make_cli_runner
@@ -29,6 +31,7 @@ def _setup_lean_project(tmp_path: Path) -> Path:
     return project_path
 
 
+@pytest.mark.requires_lean
 class TestLoopRunRouterIntegration:
     """Tests for erdos loop run using LLM router (SPEC-032)."""
 

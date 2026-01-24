@@ -127,7 +127,6 @@ class TestExaResearchResult:
             == "The primes contain arbitrarily long arithmetic progressions"
         )
         assert result.answer is None
-        assert result.autoprompt == "Research on sum-free sets approaches"
 
     def test_parse_with_summary(self) -> None:
         """Parses result with summary/answer."""

@@ -12,12 +12,11 @@ from __future__ import annotations
 
 import json
 
-from typer.testing import CliRunner
-
 from erdos.cli import app
+from tests.cli_runner import make_cli_runner
 
 
-runner = CliRunner()
+runner = make_cli_runner()
 
 
 class TestCopilotCommandRegistration:
@@ -85,12 +84,17 @@ class TestCopilotServeDependencyCheck:
 class TestCopilotServeOptions:
     """Tests for copilot serve command options."""
 
-    def test_default_port(self, strip_ansi):
-        """Default port is 8000."""
-        result = runner.invoke(app, ["lean", "copilot", "serve", "--help"])
-        assert "8000" in strip_ansi(result.output)
+    def test_help_short_flag_works(self, strip_ansi):
+        """-h should remain the help flag (not --host)."""
+        result = runner.invoke(app, ["lean", "copilot", "serve", "-h"])
+        assert result.exit_code == 0
+        output = strip_ansi(result.output)
+        assert "--host" in output
+        assert "--help" in output
 
-    def test_default_host(self, strip_ansi):
-        """Default host is 127.0.0.1."""
+    def test_host_short_flag_is_capital_h(self, strip_ansi):
+        """Host short flag should be -H to avoid conflicting with help."""
         result = runner.invoke(app, ["lean", "copilot", "serve", "--help"])
-        assert "127.0.0.1" in strip_ansi(result.output)
+        assert result.exit_code == 0
+        output = strip_ansi(result.output)
+        assert "-H" in output

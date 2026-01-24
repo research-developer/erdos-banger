@@ -234,7 +234,7 @@ class TestZbMathClient:
         config = ZbMathConfig()
         client = ZbMathClient(config)
 
-        assert client._rate_limiter.delay_seconds == 2.0
+        assert client.rate_limit_delay_seconds == 2.0
 
     @responses.activate
     def test_get_by_zbl_id_success(self) -> None:
@@ -469,6 +469,7 @@ class TestZbMathClient:
         assert entry is not None
         assert len(responses.calls) == 2
 
+    @pytest.mark.slow
     @responses.activate
     def test_raises_on_server_error(self) -> None:
         """Raises HTTPError on 500 errors after retries."""

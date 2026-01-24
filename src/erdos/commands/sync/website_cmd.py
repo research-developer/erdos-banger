@@ -4,17 +4,26 @@ from __future__ import annotations
 
 import json
 import logging
-from pathlib import Path
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 import typer
 from rich.console import Console
 from rich.panel import Panel
 
 from erdos.commands.presenter import exit_with_result
+from erdos.core.config import AppConfig
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord
-from erdos.core.sync.dataset import load_enriched_problems, save_enriched_problems
+from erdos.core.sync.dataset import (
+    load_enriched_problems,
+    resolve_enriched_dataset_path,
+    resolve_sync_cache_dir,
+    save_enriched_problems,
+)
 from erdos.core.sync.merge import merge_problem_data
 from erdos.core.sync.submodule import get_submodule_path, load_submodule_problems
 from erdos.core.sync.website import (
@@ -32,39 +41,35 @@ logger = logging.getLogger(__name__)
 console = Console()
 
 
-# =============================================================================
-# Data paths
-# =============================================================================
-
-DEFAULT_DATA_PATH = Path("data/problems_enriched.yaml")
-SYNC_CACHE_PATH = Path("data/sync_cache/website")
-
-
-def _ensure_data_dir() -> None:
+def _ensure_data_dir(data_path: Path, *, website_cache_dir: Path) -> None:
     """Ensure data directories exist."""
-    DEFAULT_DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
-    SYNC_CACHE_PATH.mkdir(parents=True, exist_ok=True)
+    data_path.parent.mkdir(parents=True, exist_ok=True)
+    website_cache_dir.mkdir(parents=True, exist_ok=True)
 
 
-def _load_existing_problems() -> dict[int, ProblemRecord]:
+def _load_existing_problems(data_path: Path) -> dict[int, ProblemRecord]:
     """Load existing problems from the enriched YAML file."""
-    return load_enriched_problems(DEFAULT_DATA_PATH)
+    return load_enriched_problems(data_path)
 
 
-def _save_problems(problems: dict[int, ProblemRecord]) -> None:
+def _save_problems(data_path: Path, problems: dict[int, ProblemRecord]) -> None:
     """Save problems to the enriched YAML file (atomic write)."""
-    _ensure_data_dir()
-    save_enriched_problems(DEFAULT_DATA_PATH, problems)
+    save_enriched_problems(data_path, problems)
 
 
-def _save_sync_status(problem_id: int, status_data: dict[str, Any]) -> None:
+def _save_sync_status(
+    problem_id: int,
+    status_data: dict[str, Any],
+    *,
+    website_cache_dir: Path,
+) -> Path:
     """Save sync status to cache."""
-    _ensure_data_dir()
-    status_path = SYNC_CACHE_PATH / f"{problem_id}.json"
+    status_path = website_cache_dir / f"{problem_id}.json"
     tmp_path = status_path.with_suffix(".json.tmp")
     with tmp_path.open("w", encoding="utf-8") as f:
         json.dump(status_data, f, indent=2, default=str)
     tmp_path.replace(status_path)
+    return status_path
 
 
 # =============================================================================
@@ -113,6 +118,8 @@ def sync_website_problem(
     fetch_latex: bool = False,
     dry_run: bool = False,
     html_content: str | None = None,
+    data_path: Path | None = None,
+    sync_cache_dir: Path | None = None,
 ) -> CLIOutput:
     """
     Sync a problem from erdosproblems.com to the local dataset.
@@ -130,6 +137,11 @@ def sync_website_problem(
     """
     warnings: list[str] = []
     cached = html_content is not None
+    if data_path is None:
+        data_path = resolve_enriched_dataset_path(AppConfig.from_env())
+    if sync_cache_dir is None:
+        sync_cache_dir = resolve_sync_cache_dir(data_path)
+    website_cache_dir = sync_cache_dir / "website"
 
     try:
         website_data, sync_status = _fetch_website_data(
@@ -145,7 +157,7 @@ def sync_website_problem(
         except Exception as e:
             logger.debug("Submodule metadata unavailable: %s", e)
 
-        existing_problems = _load_existing_problems()
+        existing_problems = _load_existing_problems(data_path)
         existing = existing_problems.get(problem_id)
 
         merged = merge_problem_data(
@@ -164,17 +176,21 @@ def sync_website_problem(
 
         updated = _check_updated(existing, merged)
         if not dry_run and updated:
+            _ensure_data_dir(data_path, website_cache_dir=website_cache_dir)
             existing_problems[problem_id] = merged
-            _save_problems(existing_problems)
+            _save_problems(data_path, existing_problems)
 
         latex_saved = _handle_latex(problem_id, fetch_latex, dry_run, warnings)
 
         # Record sync status (extended with observed status badge for debugging/drift checks).
         if sync_status is not None and not dry_run:
+            _ensure_data_dir(data_path, website_cache_dir=website_cache_dir)
             status_data = sync_status.model_dump(mode="json")
             status_data["status_badge_text"] = website_data.status_badge_text
             status_data["warnings"] = warnings
-            _save_sync_status(problem_id, status_data)
+            _save_sync_status(
+                problem_id, status_data, website_cache_dir=website_cache_dir
+            )
 
         return CLIOutput.ok(
             command="erdos sync website",

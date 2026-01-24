@@ -4,17 +4,26 @@ from __future__ import annotations
 
 import json
 import logging
-from pathlib import Path
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 import typer
 from rich.console import Console
 from rich.panel import Panel
 
 from erdos.commands.presenter import exit_with_result
+from erdos.core.config import AppConfig
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
-from erdos.core.sync.dataset import load_enriched_problems, save_enriched_problems
+from erdos.core.sync.dataset import (
+    load_enriched_problems,
+    resolve_enriched_dataset_path,
+    resolve_sync_cache_dir,
+    save_enriched_problems,
+)
 from erdos.core.sync.merge import merge_problem_data
 from erdos.core.sync.submodule import (
     SubmoduleCheckError,
@@ -32,27 +41,15 @@ logger = logging.getLogger(__name__)
 console = Console()
 
 
-# =============================================================================
-# Data paths
-# =============================================================================
-
-SYNC_CACHE_PATH = Path("data/sync_cache")
-DEFAULT_DATA_PATH = Path("data/problems_enriched.yaml")
-
-
-def _ensure_cache_dir() -> None:
-    """Ensure sync cache directory exists."""
-    SYNC_CACHE_PATH.mkdir(parents=True, exist_ok=True)
-
-
-def _save_sync_status(status_data: dict[str, Any]) -> None:
+def _save_sync_status(status_data: dict[str, Any], *, sync_cache_dir: Path) -> Path:
     """Save submodule sync status to cache."""
-    _ensure_cache_dir()
-    status_path = SYNC_CACHE_PATH / "submodule_status.json"
+    sync_cache_dir.mkdir(parents=True, exist_ok=True)
+    status_path = sync_cache_dir / "submodule_status.json"
     tmp_path = status_path.with_suffix(".json.tmp")
     with tmp_path.open("w", encoding="utf-8") as f:
         json.dump(status_data, f, indent=2, default=str)
     tmp_path.replace(status_path)
+    return status_path
 
 
 def _merge_submodule_metadata(
@@ -119,6 +116,7 @@ def sync_submodule(
     check_only: bool = False,
     submodule_path: Path | None = None,
     data_path: Path | None = None,
+    sync_cache_dir: Path | None = None,
     dry_run: bool = False,
 ) -> CLIOutput:
     """
@@ -134,7 +132,9 @@ def sync_submodule(
     if submodule_path is None:
         submodule_path = get_submodule_path()
     if data_path is None:
-        data_path = DEFAULT_DATA_PATH
+        data_path = resolve_enriched_dataset_path(AppConfig.from_env())
+    if sync_cache_dir is None:
+        sync_cache_dir = resolve_sync_cache_dir(data_path)
 
     try:
         # Get current commit before any operation
@@ -162,7 +162,9 @@ def sync_submodule(
 
         # Save status to cache (skip in dry-run mode)
         if not dry_run:
-            _save_sync_status(status.model_dump(mode="json"))
+            _save_sync_status(
+                status.model_dump(mode="json"), sync_cache_dir=sync_cache_dir
+            )
 
         merge_result: dict[str, Any] | None = None
         if not check_only:

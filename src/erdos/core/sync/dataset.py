@@ -9,6 +9,7 @@ They are intentionally small and deterministic so sync commands can share them.
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import yaml
@@ -18,8 +19,7 @@ from erdos.core.models import ProblemRecord
 
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
+    from erdos.core.config import AppConfig
 
 logger = logging.getLogger(__name__)
 
@@ -44,15 +44,26 @@ def load_enriched_problems(path: Path) -> dict[int, ProblemRecord]:
         return {}
 
     problems: dict[int, ProblemRecord] = {}
-    for item in data:
+    for idx, item in enumerate(data):
         if not isinstance(item, dict):
+            logger.debug(
+                "Skipping non-dict dataset entry at index %d (type=%s)",
+                idx,
+                type(item).__name__,
+            )
             continue
         raw_id: Any = item.get("id")
         if raw_id is None:
+            logger.debug("Skipping dataset entry missing id at index %d", idx)
             continue
         try:
             record = ProblemRecord.model_validate(item, strict=False)
         except (ValidationError, ValueError):
+            logger.debug(
+                "Skipping invalid dataset entry id=%r at index %d",
+                raw_id,
+                idx,
+            )
             continue
         problems[record.id] = record
 
@@ -72,3 +83,39 @@ def save_enriched_problems(path: Path, problems: dict[int, ProblemRecord]) -> No
             data, f, default_flow_style=False, allow_unicode=True, sort_keys=False
         )
     tmp_path.replace(path)
+
+
+def resolve_enriched_dataset_path(config: AppConfig) -> Path:
+    """Resolve the enriched dataset path from configuration.
+
+    This mirrors the behavior used elsewhere in the system:
+    - If ERDOS_DATA_PATH points to a directory, look for problems_enriched.yaml
+      or problems.yaml in that directory.
+    - If ERDOS_DATA_PATH points to a file (existing or not), use it directly.
+    - Otherwise, default to <repo_root>/data/problems_enriched.yaml when
+      ERDOS_REPO_ROOT is set, or ./data/problems_enriched.yaml when not.
+    """
+    base_dir = config.repo_root or Path.cwd()
+
+    if config.data_path is None:
+        return base_dir / "data" / "problems_enriched.yaml"
+
+    configured = config.data_path
+    if not configured.is_absolute():
+        configured = base_dir / configured
+
+    # Directory: choose an existing dataset file, or default to problems_enriched.yaml
+    if configured.exists() and configured.is_dir():
+        for filename in ("problems_enriched.yaml", "problems.yaml"):
+            candidate = configured / filename
+            if candidate.exists():
+                return candidate
+        return configured / "problems_enriched.yaml"
+
+    # File path (existing or not)
+    return configured
+
+
+def resolve_sync_cache_dir(dataset_path: Path) -> Path:
+    """Resolve the sync cache directory for a dataset file path."""
+    return dataset_path.parent / "sync_cache"

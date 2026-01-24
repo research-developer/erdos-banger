@@ -298,7 +298,7 @@ def check_no_sorries(
         # Use lake env to get proper Lean environment, then check with --no-sorries
         # Note: --no-sorries was added in Lean 4.x; may not be available in all versions
         # S603/S607: Intentional - lake is the Lean build tool
-        cmd = ["lake", "env", "lean", str(lean_file)]
+        cmd = ["lake", "env", "lean", "--no-sorries", str(lean_file)]
         result = subprocess.run(  # noqa: S603
             cmd,
             cwd=repo_path,
@@ -308,6 +308,24 @@ def check_no_sorries(
             env=_sanitize_env(),
             check=False,
         )
+
+        # Fallback for older Lean versions that don't support --no-sorries
+        combined = f"{result.stdout}\n{result.stderr}".lower()
+        if (
+            result.returncode != 0
+            and "unknown option" in combined
+            and "--no-sorries" in combined
+        ):
+            cmd = ["lake", "env", "lean", str(lean_file)]
+            result = subprocess.run(  # noqa: S603
+                cmd,
+                cwd=repo_path,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                env=_sanitize_env(),
+                check=False,
+            )
 
         log = f"=== STDOUT ===\n{result.stdout}\n\n=== STDERR ===\n{result.stderr}"
         log = _truncate_log(log)

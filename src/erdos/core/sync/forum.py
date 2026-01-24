@@ -11,13 +11,14 @@ from __future__ import annotations
 import json
 import logging
 import re
-import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 
+from erdos.core.rate_limiter import RateLimiter
 from erdos.core.sync.models import ProofLink, ProofLinksCache
 
 
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 # Rate limiting: Be polite to T. F. Bloom's server
 FORUM_RATE_LIMIT = 2.0  # seconds between requests
-_rate_limit_state: dict[str, float] = {"last_request_time": 0.0}
+_rate_limiter = RateLimiter(delay_seconds=FORUM_RATE_LIMIT)
 
 # Allowed repository hosts (security: only https, allowlist)
 ALLOWED_HOSTS = frozenset({"github.com", "gitlab.com"})
@@ -65,27 +66,24 @@ class ForumFetchResult:
     fetched_at: datetime
 
 
-def _rate_limit() -> None:
-    """Enforce rate limiting between requests."""
-    now = time.monotonic()
-    elapsed = now - _rate_limit_state["last_request_time"]
-    if elapsed < FORUM_RATE_LIMIT:
-        time.sleep(FORUM_RATE_LIMIT - elapsed)
-    _rate_limit_state["last_request_time"] = time.monotonic()
-
-
 def _is_valid_repo_url(url: str) -> bool:
     """Check if URL is a valid repository URL (https, allowed host, not excluded)."""
-    if not url.startswith("https://"):
+    parsed = urlparse(url)
+    if parsed.scheme != "https":
+        return False
+    if not parsed.hostname:
+        return False
+    if parsed.hostname.lower() not in ALLOWED_HOSTS:
         return False
 
-    # Check against allowed hosts
-    for host in ALLOWED_HOSTS:
-        if f"https://{host}/" in url:
-            # Check not in excluded paths
-            return all(excluded not in url for excluded in EXCLUDED_PATHS)
+    path = parsed.path or ""
+    # Must look like /owner/repo (at least two path segments)
+    segments = [seg for seg in path.split("/") if seg]
+    if len(segments) < 2:
+        return False
 
-    return False
+    # Exclude non-repo URLs (issues/PRs/blobs/etc.) by path only (query shouldn't bypass)
+    return all(excluded not in path for excluded in EXCLUDED_PATHS)
 
 
 def _normalize_repo_url(url: str) -> str:
@@ -239,7 +237,7 @@ def fetch_forum_thread(
     Raises:
         ForumFetchError: If fetch fails
     """
-    _rate_limit()
+    _rate_limiter.sleep_if_needed()
 
     url = f"{base_url}/forum/thread/{problem_id}"
     try:

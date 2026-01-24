@@ -88,13 +88,11 @@ class TestSyncSubmodule:
                     previous_commit_hash="old789",
                     stale=False,
                 )
-                with patch(
-                    "erdos.commands.sync.submodule_cmd.SYNC_CACHE_PATH",
-                    tmp_path / "cache",
-                ):
-                    result = sync_submodule(
-                        check_only=False, submodule_path=mock_submodule_dir
-                    )
+                result = sync_submodule(
+                    check_only=False,
+                    submodule_path=mock_submodule_dir,
+                    sync_cache_dir=tmp_path / "cache",
+                )
 
         assert result.success is True
         assert result.data is not None
@@ -119,13 +117,11 @@ class TestSyncSubmodule:
                     previous_commit_hash="abc123",
                     stale=False,
                 )
-                with patch(
-                    "erdos.commands.sync.submodule_cmd.SYNC_CACHE_PATH",
-                    tmp_path / "cache",
-                ):
-                    result = sync_submodule(
-                        check_only=True, submodule_path=mock_submodule_dir
-                    )
+                result = sync_submodule(
+                    check_only=True,
+                    submodule_path=mock_submodule_dir,
+                    sync_cache_dir=tmp_path / "cache",
+                )
 
         assert result.success is True
         assert result.data is not None
@@ -148,13 +144,11 @@ class TestSyncSubmodule:
                     previous_commit_hash="abc123",
                     stale=True,
                 )
-                with patch(
-                    "erdos.commands.sync.submodule_cmd.SYNC_CACHE_PATH",
-                    tmp_path / "cache",
-                ):
-                    result = sync_submodule(
-                        check_only=True, submodule_path=mock_submodule_dir
-                    )
+                result = sync_submodule(
+                    check_only=True,
+                    submodule_path=mock_submodule_dir,
+                    sync_cache_dir=tmp_path / "cache",
+                )
 
         assert result.success is True
         assert result.data is not None
@@ -211,13 +205,11 @@ class TestSyncSubmodule:
                     previous_commit_hash="abc123",
                     stale=False,
                 )
-                with patch(
-                    "erdos.commands.sync.submodule_cmd.SYNC_CACHE_PATH",
-                    tmp_path / "cache",
-                ):
-                    result = sync_submodule(
-                        check_only=False, submodule_path=mock_submodule_dir
-                    )
+                result = sync_submodule(
+                    check_only=False,
+                    submodule_path=mock_submodule_dir,
+                    sync_cache_dir=tmp_path / "cache",
+                )
 
         assert result.success is True
         assert result.data is not None
@@ -242,12 +234,11 @@ class TestSyncSubmodule:
                     previous_commit_hash="abc123",
                     stale=False,
                 )
-                with patch(
-                    "erdos.commands.sync.submodule_cmd.SYNC_CACHE_PATH", cache_path
-                ):
-                    result = sync_submodule(
-                        check_only=False, submodule_path=mock_submodule_dir
-                    )
+                result = sync_submodule(
+                    check_only=False,
+                    submodule_path=mock_submodule_dir,
+                    sync_cache_dir=cache_path,
+                )
 
         assert result.success is True
         status_file = cache_path / "submodule_status.json"
@@ -289,9 +280,6 @@ class TestSyncSubmodule:
                 "erdos.commands.sync.submodule_cmd.get_submodule_commit"
             ) as mock_commit,
             patch("erdos.commands.sync.submodule_cmd.update_submodule") as mock_update,
-            patch(
-                "erdos.commands.sync.submodule_cmd.SYNC_CACHE_PATH", tmp_path / "cache"
-            ),
         ):
             mock_commit.return_value = "abc123"
             mock_update.return_value = SubmoduleSyncStatus(
@@ -303,6 +291,7 @@ class TestSyncSubmodule:
                 check_only=False,
                 submodule_path=mock_submodule_dir,
                 data_path=data_path,
+                sync_cache_dir=tmp_path / "cache",
             )
 
         assert result.success is True
@@ -345,9 +334,6 @@ class TestSyncSubmodule:
                 "erdos.commands.sync.submodule_cmd.get_submodule_commit"
             ) as mock_commit,
             patch("erdos.commands.sync.submodule_cmd.update_submodule") as mock_update,
-            patch(
-                "erdos.commands.sync.submodule_cmd.SYNC_CACHE_PATH", tmp_path / "cache"
-            ),
         ):
             mock_commit.return_value = "abc123"
             mock_update.return_value = SubmoduleSyncStatus(
@@ -360,6 +346,7 @@ class TestSyncSubmodule:
                 submodule_path=mock_submodule_dir,
                 data_path=data_path,
                 dry_run=True,
+                sync_cache_dir=tmp_path / "cache",
             )
 
         assert result.success is True
@@ -396,13 +383,11 @@ class TestJsonOutputContract:
                     previous_commit_hash="old123",
                     stale=False,
                 )
-                with patch(
-                    "erdos.commands.sync.submodule_cmd.SYNC_CACHE_PATH",
-                    tmp_path / "cache",
-                ):
-                    result = sync_submodule(
-                        check_only=False, submodule_path=mock_submodule_dir
-                    )
+                result = sync_submodule(
+                    check_only=False,
+                    submodule_path=mock_submodule_dir,
+                    sync_cache_dir=tmp_path / "cache",
+                )
 
         # Verify JSON structure matches spec:
         # { "checked": bool, "updated": bool, "previous_commit": str | null,

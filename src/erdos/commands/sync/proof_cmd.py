@@ -427,14 +427,14 @@ def proof(
     """
     # Print security warning for --verify (but not in JSON mode)
     json_mode = bool((ctx.obj or {}).get("json"))
-    if verify and not dry_run and not json_mode:
+    if verify and not json_mode:
         _print_verify_warning()
 
     with measure_time_ms() as duration:
         result = sync_proof_links(
             problem_id,
             dry_run=dry_run,
-            verify=verify,
+            verify=verify and not dry_run,
         )
 
     result.duration_ms = duration[0]

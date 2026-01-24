@@ -109,7 +109,7 @@ def _website_ref_to_entry(ref_dict: dict[str, Any]) -> ReferenceEntry:
 
 def _resolve_references(ctx: _MergeContext) -> list[ReferenceEntry]:
     """Resolve references field (Website authoritative)."""
-    if ctx.website is not None and ctx.website.references:
+    if ctx.website is not None:
         return [
             _website_ref_to_entry(ref.model_dump()) for ref in ctx.website.references
         ]

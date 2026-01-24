@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 from typing import Annotated, Any
 
+import requests
 import typer
 from rich.console import Console
 
@@ -117,6 +119,53 @@ def _print_human_output(data: dict[str, Any]) -> None:
         console.print("[dim](cached result)[/dim]")
 
 
+def _search_with_cli_output(
+    client: ExaClient,
+    *,
+    command: str,
+    query: str,
+    max_results: int,
+) -> tuple[ExaResearchResult, bool] | CLIOutput:
+    """Run Exa search and convert errors to a CLIOutput."""
+    try:
+        return client.search_with_cache_status(query, max_results=max_results)
+    except json.JSONDecodeError as e:
+        return CLIOutput.err(
+            command=command,
+            error_type="ExaError",
+            message=f"Invalid JSON response from Exa API: {e}",
+            code=ExitCode.ERROR,
+        )
+    except requests.RequestException as e:
+        return CLIOutput.err(
+            command=command,
+            error_type="ExaError",
+            message=f"Exa request error: {e}",
+            code=ExitCode.ERROR,
+        )
+    except OSError as e:
+        return CLIOutput.err(
+            command=command,
+            error_type="ExaError",
+            message=str(e),
+            code=ExitCode.ERROR,
+        )
+    except ValueError as e:
+        return CLIOutput.err(
+            command=command,
+            error_type="ConfigError",
+            message=str(e),
+            code=ExitCode.ERROR,
+        )
+    except Exception as e:
+        return CLIOutput.err(
+            command=command,
+            error_type="ExaError",
+            message=str(e),
+            code=ExitCode.ERROR,
+        )
+
+
 @app.command("search")
 def exa_search(
     ctx: typer.Context,
@@ -180,56 +229,41 @@ def exa_search(
     )
     client = ExaClient(config)
 
-    try:
-        result, was_cached = client.search_with_cache_status(
-            query, max_results=max_results
-        )
-    except ValueError as e:
-        exit_with_result(
-            ctx,
-            CLIOutput.err(
-                command=command,
-                error_type="ConfigError",
-                message=str(e),
-                code=ExitCode.ERROR,
-            ),
-        )
-        return
-    except Exception as e:
-        exit_with_result(
-            ctx,
-            CLIOutput.err(
-                command=command,
-                error_type="ExaError",
-                message=str(e),
-                code=ExitCode.ERROR,
-            ),
-        )
-        return
+    search_result = _search_with_cli_output(
+        client,
+        command=command,
+        query=query,
+        max_results=max_results,
+    )
 
-    cache_path = client.get_cache_path(query, max_results=max_results)
+    if isinstance(search_result, CLIOutput):
+        output = search_result
+    else:
+        result, was_cached = search_result
+        cache_path = client.get_cache_path(query, max_results=max_results)
 
-    # Save leads if requested
-    created_lead_ids: list[str] = []
-    if save_leads:
-        store = FSResearchStore(repo_root=app_ctx.config.repo_root)
-        created_lead_ids = _exa_to_leads(result, problem_id, store)
+        created_lead_ids: list[str] = []
+        if save_leads:
+            store = FSResearchStore(repo_root=app_ctx.config.repo_root)
+            created_lead_ids = _exa_to_leads(result, problem_id, store)
 
-    # Build output data
-    output_data: dict[str, Any] = {
-        "problem_id": problem_id,
-        "query": query,
-        "max_results": max_results,
-        "sources": [s.to_dict() for s in result.sources],
-        "answer": result.answer,
-        "saved_leads": save_leads,
-        "created_lead_ids": created_lead_ids,
-        "cached": was_cached,
-        "cache_path": str(cache_path),
-    }
+        output = CLIOutput.ok(
+            command=command,
+            data={
+                "problem_id": problem_id,
+                "query": query,
+                "max_results": max_results,
+                "sources": [s.to_dict() for s in result.sources],
+                "answer": result.answer,
+                "saved_leads": save_leads,
+                "created_lead_ids": created_lead_ids,
+                "cached": was_cached,
+                "cache_path": str(cache_path),
+            },
+        )
 
     exit_with_result(
         ctx,
-        CLIOutput.ok(command=command, data=output_data),
-        print_human=_print_human_output,
+        output,
+        print_human=_print_human_output if output.success else None,
     )

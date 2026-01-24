@@ -131,7 +131,7 @@ class TestReadToolchain:
     def test_reads_toolchain(self, repo_with_sorry: Path) -> None:
         """Reads toolchain from fixture repo."""
         toolchain = _read_toolchain(repo_with_sorry)
-        assert toolchain == "leanprover/lean4:v4.3.0"
+        assert toolchain == "leanprover/lean4:v4.12.0"
 
     def test_missing_toolchain_returns_none(self, tmp_path: Path) -> None:
         """Returns None when toolchain file missing."""

@@ -151,5 +151,5 @@ def refs_callback(ctx: typer.Context) -> None:
         return
 
     # No subcommand invoked - show help
-    typer.echo(ctx.get_help())
-    raise typer.Exit(code=0)
+    console.print(ctx.get_help())
+    raise typer.Exit(code=ExitCode.SUCCESS)

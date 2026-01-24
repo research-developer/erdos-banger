@@ -267,6 +267,7 @@ class SemanticScholarClient:
     PAPER_FIELDS = "paperId,title,authors,year,externalIds,citationCount"
     CITATION_FIELDS = "paperId,title,year,intents,contexts"
     REFERENCE_FIELDS = "paperId,title,year,intents,contexts"
+    _NESTED_PAPER_FIELDS = frozenset({"paperId", "title", "year"})
 
     def __init__(self, config: S2Config | None = None):
         """Initialize client with configuration.
@@ -593,8 +594,14 @@ class SemanticScholarClient:
 
         normalized_id = self._normalize_identifier(identifier)
         url = f"{self.BASE_URL}/paper/{normalized_id}/citations"
+        fields = ",".join(
+            [
+                f"citingPaper.{f}" if f in self._NESTED_PAPER_FIELDS else f
+                for f in self.CITATION_FIELDS.split(",")
+            ]
+        )
         params = {
-            "fields": f"citingPaper.{self.CITATION_FIELDS}",
+            "fields": fields,
             "limit": limit,
         }
 
@@ -657,8 +664,14 @@ class SemanticScholarClient:
 
         normalized_id = self._normalize_identifier(identifier)
         url = f"{self.BASE_URL}/paper/{normalized_id}/references"
+        fields = ",".join(
+            [
+                f"citedPaper.{f}" if f in self._NESTED_PAPER_FIELDS else f
+                for f in self.REFERENCE_FIELDS.split(",")
+            ]
+        )
         params = {
-            "fields": f"citedPaper.{self.REFERENCE_FIELDS}",
+            "fields": fields,
             "limit": limit,
         }
 

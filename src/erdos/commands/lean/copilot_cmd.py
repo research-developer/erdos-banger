@@ -16,7 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 # Create subgroup for copilot commands
-copilot_app = typer.Typer(help="Lean Copilot integration commands.")
+copilot_app = typer.Typer(
+    help="Lean Copilot integration commands.",
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
 
 
 @copilot_app.command(name="serve")
@@ -28,7 +31,7 @@ def serve(
     ] = 8000,
     host: Annotated[
         str,
-        typer.Option("--host", "-h", help="Bind address"),
+        typer.Option("--host", "-H", help="Bind address"),
     ] = "127.0.0.1",
     llm_cmd: Annotated[
         str | None,
@@ -106,13 +109,28 @@ def serve(
     else:
         logger.info("Using SPEC-032 router for LLM command resolution")
 
+    normalized_log_level = log_level.strip().lower()
+    valid_levels = {"critical", "error", "warning", "info", "debug", "trace"}
+    if normalized_log_level not in valid_levels:
+        result = CLIOutput.err(
+            command="erdos lean copilot serve",
+            error_type="UsageError",
+            message=(
+                f"Invalid --log-level {log_level!r}. "
+                f"Expected one of: {', '.join(sorted(valid_levels))}"
+            ),
+            code=ExitCode.USAGE_ERROR,
+        )
+        exit_with_result(ctx, result, print_human=_print_human)
+        return
+
     # Run the server (this blocks until interrupted)
     # Note: uvicorn.run() doesn't return until the server stops
     uvicorn.run(
         app,
         host=host,
         port=port,
-        log_level=log_level.lower(),
+        log_level=normalized_log_level,
     )
 
 
