@@ -15,6 +15,7 @@ from erdos.commands.app_context import get_app_context
 from erdos.commands.cli_helpers import print_if_human
 from erdos.commands.presenter import exit_with_result
 from erdos.core.ask import ask_question
+from erdos.core.constants import DEFAULT_RAG_LIMIT, TEXT_PREVIEW_LENGTH
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
 from erdos.core.timing import measure_time_ms
@@ -120,7 +121,7 @@ def _print_human(result_data: dict[str, Any]) -> None:
             rank = source.get("rank", "?")
             source_type = source.get("source_type", "?")
             chunk_id = source.get("chunk_id", "?")
-            text_preview = (source.get("text") or "")[:100]
+            text_preview = (source.get("text") or "")[:TEXT_PREVIEW_LENGTH]
             console.print(f"  [{rank}] ({source_type}) {chunk_id}")
             console.print(f"      {text_preview}...")
     else:
@@ -149,7 +150,7 @@ def ask(
     ctx: typer.Context,
     problem_id: Annotated[int, typer.Argument(help="Problem ID", min=1)],
     question_arg: Annotated[str, typer.Argument(help="Question or '-' for stdin")],
-    limit: Annotated[int, typer.Option("--limit", "-n")] = 5,
+    limit: Annotated[int, typer.Option("--limit", "-n")] = DEFAULT_RAG_LIMIT,
     build_index: Annotated[bool, typer.Option("--build-index")] = False,
     no_llm: Annotated[bool, typer.Option("--no-llm")] = False,
     llm_cmd: Annotated[str, typer.Option("--llm-cmd")] = "",

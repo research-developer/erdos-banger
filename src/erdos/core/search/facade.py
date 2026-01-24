@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from erdos.core.config import DEFAULT_INDEX_PATH, AppConfig
+from erdos.core.constants import DEFAULT_SEARCH_LIMIT
 from erdos.core.search.bm25 import BM25Search
 from erdos.core.search.db import DatabaseManager, SearchIndexError
 from erdos.core.search.embeddings_store import EmbeddingsStore
@@ -136,7 +137,7 @@ class SearchIndex:
         self,
         query: str,
         *,
-        limit: int = 10,
+        limit: int = DEFAULT_SEARCH_LIMIT,
         problem_id: int | None = None,
         source_types: list[ChunkSource] | None = None,
     ) -> list[SearchResult]:
@@ -238,7 +239,7 @@ class SearchIndex:
         query: str,
         embedder: EmbeddingModelProtocol,
         *,
-        limit: int = 10,
+        limit: int = DEFAULT_SEARCH_LIMIT,
         problem_id: int | None = None,
     ) -> list[SemanticSearchResult]:
         """Search using semantic similarity.
@@ -264,7 +265,7 @@ class SearchIndex:
         query: str,
         embedder: EmbeddingModelProtocol,
         *,
-        limit: int = 10,
+        limit: int = DEFAULT_SEARCH_LIMIT,
         alpha: float = 0.5,
         problem_id: int | None = None,
     ) -> list[SemanticSearchResult]:

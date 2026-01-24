@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from erdos.core.constants import DEFAULT_SEARCH_LIMIT
 from erdos.core.search.types import EmbeddingModelProtocol, SemanticSearchResult
 
 
@@ -47,7 +48,7 @@ class HybridSearch:
         query: str,
         embedder: EmbeddingModelProtocol,
         *,
-        limit: int = 10,
+        limit: int = DEFAULT_SEARCH_LIMIT,
         alpha: float = 0.5,
         problem_id: int | None = None,
     ) -> list[SemanticSearchResult]:

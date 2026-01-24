@@ -17,7 +17,7 @@ from rich.table import Table
 from erdos.commands.app_context import get_app_context
 from erdos.commands.cli_helpers import print_if_human
 from erdos.commands.presenter import exit_with_result
-from erdos.core.constants import API_RATE_LIMIT_DELAY
+from erdos.core.constants import API_RATE_LIMIT_DELAY, TITLE_TRUNCATION
 from erdos.core.ingest import (
     IngestOptions,
     MetadataSource,
@@ -73,7 +73,7 @@ def _print_human(result_data: dict[str, Any]) -> None:
         for entry in entries[:10]:
             ref = entry.get("reference", {})
             table.add_row(
-                str(ref.get("title") or "")[:50],
+                str(ref.get("title") or "")[:TITLE_TRUNCATION],
                 str(ref.get("source") or ""),
                 str(ref.get("doi") or ""),
                 str(ref.get("arxiv_id") or ""),

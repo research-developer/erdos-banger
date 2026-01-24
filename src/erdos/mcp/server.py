@@ -22,6 +22,7 @@ from erdos.commands.refs import get_refs
 from erdos.commands.show import get_problem as show_get_problem
 from erdos.core.ask import ask_question as core_ask_question
 from erdos.core.config import DEFAULT_INDEX_PATH, AppConfig
+from erdos.core.constants import DEFAULT_RAG_LIMIT, DEFAULT_SEARCH_LIMIT
 from erdos.core.exit_codes import ExitCode
 from erdos.core.lean import (
     FormalizerError,
@@ -156,7 +157,7 @@ def mcp_get_references(problem_id: int, *, repo: ProblemRepository) -> dict[str,
 def mcp_search_index(
     query: str,
     *,
-    limit: int = 10,
+    limit: int = DEFAULT_SEARCH_LIMIT,
     problem_id: int | None = None,
     mode: str = "bm25",
     index: SearchIndexReadPort,
@@ -331,7 +332,7 @@ def mcp_ask_question(
         question=question,
         repo=repo,
         index=index,
-        limit=5,
+        limit=DEFAULT_RAG_LIMIT,
         build_index_flag=False,
         no_llm=no_llm,
         llm_command=None,
@@ -441,7 +442,7 @@ def get_references(problem_id: int) -> str:
 @mcp.tool()
 def search_index(
     query: str,
-    limit: int = 10,
+    limit: int = DEFAULT_SEARCH_LIMIT,
     problem_id: int | None = None,
     mode: str = "bm25",
 ) -> str:

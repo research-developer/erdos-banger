@@ -10,7 +10,12 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, cast
 
-from erdos.core.constants import LEAN_TOOLCHAIN_VERSION
+from erdos.core.constants import (
+    LAKE_UPDATE_TIMEOUT,
+    LEAN_COMPILE_TIMEOUT,
+    LEAN_TOOLCHAIN_VERSION,
+    MESSAGE_TRUNCATION,
+)
 from erdos.core.models import LeanCheckResult, LeanError
 
 
@@ -179,12 +184,12 @@ class LeanRunner:
                     cwd=self._project_path,
                     capture_output=True,
                     text=True,
-                    timeout=600,
+                    timeout=LAKE_UPDATE_TIMEOUT,
                     check=False,
                 )
             except subprocess.TimeoutExpired as exc:
                 raise LeanRunnerError(
-                    "lake update timed out after 600 seconds"
+                    f"lake update timed out after {LAKE_UPDATE_TIMEOUT} seconds"
                 ) from exc
             if result.returncode != 0:
                 raise LeanRunnerError(
@@ -249,7 +254,9 @@ class LeanRunner:
         if result.returncode != 0 and not errors:
             raw = (result.stderr or result.stdout).strip()
             message = (
-                raw[:500] if raw else f"lake build failed (exit {result.returncode})"
+                raw[:MESSAGE_TRUNCATION]
+                if raw
+                else f"lake build failed (exit {result.returncode})"
             )
             errors = [
                 LeanError(
@@ -294,7 +301,9 @@ class LeanRunner:
             ],
         )
 
-    def check(self, file_path: Path, *, timeout: int = 120) -> LeanCheckResult:
+    def check(
+        self, file_path: Path, *, timeout: int = LEAN_COMPILE_TIMEOUT
+    ) -> LeanCheckResult:
         """Check a Lean file for errors.
 
         Args:

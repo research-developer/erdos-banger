@@ -6,6 +6,7 @@ from typing import Any
 from erdos.core.ask.llm import execute_llm_if_enabled
 from erdos.core.ask.prompt import build_prompt
 from erdos.core.ask.retrieval import retrieve_sources
+from erdos.core.constants import DEFAULT_RAG_LIMIT
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord
 from erdos.core.ports import ProblemRepository, SearchIndexProtocol
@@ -121,7 +122,7 @@ def ask_question(
     *,
     repo: ProblemRepository,
     index: SearchIndexProtocol,
-    limit: int = 5,
+    limit: int = DEFAULT_RAG_LIMIT,
     build_index_flag: bool = False,
     no_llm: bool = False,
     llm_command: str | None = None,

@@ -13,6 +13,7 @@ from rich.console import Console
 
 from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
+from erdos.core.constants import DEFAULT_SEARCH_LIMIT
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
 from erdos.core.search import (
@@ -207,7 +208,7 @@ def search(
     limit: Annotated[
         int,
         typer.Option("--limit", "-n", help="Maximum results to return"),
-    ] = 10,
+    ] = DEFAULT_SEARCH_LIMIT,
     problem_filter: Annotated[
         int | None,
         typer.Option("--problem", "-p", help="Filter to specific problem ID"),

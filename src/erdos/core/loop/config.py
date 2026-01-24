@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from erdos.core.constants import DEFAULT_RAG_LIMIT, LEAN_COMPILE_TIMEOUT
+
 
 @dataclass(frozen=True)
 class LoopConfig:
@@ -32,7 +34,7 @@ class LoopConfig:
     stall_threshold: int = 3
     """Abort after this many consecutive no-progress iterations."""
 
-    lean_timeout_seconds: int = 120
+    lean_timeout_seconds: int = LEAN_COMPILE_TIMEOUT
     """Timeout for Lean compilation checks."""
 
     min_file_size_ratio: float = 0.8
@@ -41,7 +43,7 @@ class LoopConfig:
     allow_sorry_increase: int = 0
     """Allow a patch to increase sorry count by up to this amount (default: reject)."""
 
-    rag_limit: int = 5
+    rag_limit: int = DEFAULT_RAG_LIMIT
     """Maximum number of RAG context chunks to include in prompt."""
 
     @classmethod

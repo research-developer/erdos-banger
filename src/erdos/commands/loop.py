@@ -10,6 +10,7 @@ from rich.console import Console
 
 from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
+from erdos.core.constants import DEFAULT_RAG_LIMIT, LEAN_COMPILE_TIMEOUT
 from erdos.core.loop import LoopConfig, execute_proof_loop
 from erdos.core.timing import measure_time_ms
 
@@ -112,10 +113,10 @@ def run(
         int,
         typer.Option(
             "--timeout",
-            help="Lean check timeout in seconds (default: 120).",
+            help=f"Lean check timeout in seconds (default: {LEAN_COMPILE_TIMEOUT}).",
             min=1,
         ),
-    ] = 120,
+    ] = LEAN_COMPILE_TIMEOUT,
     allow_sorry_increase: Annotated[
         int,
         typer.Option(
@@ -144,10 +145,10 @@ def run(
         int,
         typer.Option(
             "--rag-limit",
-            help="Maximum retrieved context chunks in prompt (default: 5).",
+            help=f"Maximum retrieved context chunks in prompt (default: {DEFAULT_RAG_LIMIT}).",
             min=0,
         ),
-    ] = 5,
+    ] = DEFAULT_RAG_LIMIT,
     llm_cmd: Annotated[
         str | None,
         typer.Option(

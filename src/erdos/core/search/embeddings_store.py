@@ -10,6 +10,7 @@ import logging
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
+from erdos.core.constants import DEFAULT_SEARCH_LIMIT
 from erdos.core.models import ChunkSource
 from erdos.core.search.db import SearchIndexError
 from erdos.core.search.types import EmbeddingModelProtocol, SemanticSearchResult
@@ -160,7 +161,7 @@ class EmbeddingsStore:
         query: str,
         embedder: EmbeddingModelProtocol,
         *,
-        limit: int = 10,
+        limit: int = DEFAULT_SEARCH_LIMIT,
         problem_id: int | None = None,
     ) -> list[SemanticSearchResult]:
         """Search using semantic similarity.
