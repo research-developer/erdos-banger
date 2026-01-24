@@ -3,7 +3,7 @@
 import re
 from pathlib import Path
 
-from erdos.core.constants import PREVIEW_LENGTH
+from erdos.core.constants import MAX_QUERY_TERMS, PREVIEW_LENGTH
 from erdos.core.models import ChunkSource, ProblemRecord
 from erdos.core.ports import SearchIndexReadPort
 from erdos.core.research.paths import get_problem_dir
@@ -60,7 +60,7 @@ def perform_retrieval(
     if not terms:
         return ([], None)
 
-    query = " OR ".join(terms[:25])
+    query = " OR ".join(terms[:MAX_QUERY_TERMS])
 
     # Search with problem_id filter to bias towards this problem
     results = index.search(

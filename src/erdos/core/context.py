@@ -9,21 +9,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from erdos.core.clients.openalex import OpenAlexConfig
 from erdos.core.config import AppConfig
 from erdos.core.problem_loader import ProblemLoader
-from erdos.core.providers import (
-    ArxivProvider,
-    CrossrefProvider,
-    FallbackProvider,
-    OpenAlexProvider,
-)
 from erdos.core.search.facade import SearchIndex
 
 
 if TYPE_CHECKING:
     from erdos.core.ports import (
-        MetadataProvider,
         ProblemRepository,
         SearchIndexProtocol,
     )
@@ -85,38 +77,3 @@ class AppContext:
             return self.index
         self.index = SearchIndex.from_default(index_path=self.config.index_path)
         return self.index
-
-
-def build_metadata_provider(*, mailto: str, timeout: float) -> MetadataProvider:
-    """Create the default metadata provider with capability-specific chains.
-
-    ISP-compliant: each capability (DOI, arXiv, search) has its own fallback
-    chain using only providers that support that operation.
-
-    Chains:
-    - DOI: OpenAlex → Crossref
-    - arXiv: OpenAlex → arXiv (via API)
-    - search: OpenAlex only (Crossref/arXiv don't support search)
-
-    This function exists so call sites can pass CLI-derived configuration (e.g.,
-    --mailto, --timeout) without constructing concrete clients inside
-    ingest/fetch.py.
-
-    Args:
-        mailto: Contact email for API polite pools.
-        timeout: HTTP timeout in seconds.
-
-    Returns:
-        A MetadataProvider that routes to capability-specific chains.
-    """
-    openalex = OpenAlexProvider.from_config(
-        OpenAlexConfig(email=mailto, timeout=timeout)
-    )
-    crossref = CrossrefProvider(mailto=mailto, timeout=timeout)
-    arxiv = ArxivProvider(timeout=timeout)
-
-    return FallbackProvider(
-        doi_chain=[openalex, crossref],
-        arxiv_chain=[openalex, arxiv],
-        search_chain=[openalex],
-    )

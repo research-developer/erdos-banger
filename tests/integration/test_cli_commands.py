@@ -7,7 +7,7 @@ import shutil
 from pathlib import Path
 
 from erdos.cli import app
-from erdos.core.lean_runner import LeanRunner
+from erdos.core.lean import LeanRunner
 from erdos.core.models import LeanCheckResult, LeanError
 from tests.cli_runner import make_cli_runner
 

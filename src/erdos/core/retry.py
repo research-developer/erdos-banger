@@ -33,25 +33,6 @@ def is_retryable_status_code(status_code: int) -> bool:
     return status_code in RETRYABLE_STATUS_CODES
 
 
-def is_retryable_error(error: Exception) -> bool:
-    """Check if an exception is a transient error that warrants a retry.
-
-    Args:
-        error: Exception raised during HTTP request.
-
-    Returns:
-        True if the error is retryable (timeout, connection error, or
-        HTTPError with retryable status code), False otherwise.
-    """
-    if isinstance(error, (requests.Timeout, requests.ConnectionError)):
-        return True
-    if isinstance(error, requests.HTTPError):
-        response = error.response
-        if response is not None:
-            return is_retryable_status_code(response.status_code)
-    return False
-
-
 def _get_retry_delay(attempt: int, response: requests.Response | None) -> float:
     """Calculate the delay before the next retry attempt.
 

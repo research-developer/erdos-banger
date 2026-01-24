@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol
 
+from erdos.core.constants import DEFAULT_SEARCH_LIMIT
+
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -120,7 +122,7 @@ class SearchableMetadataProvider(Protocol):
 class MetadataProvider(
     DOILookupProvider, ArxivLookupProvider, SearchableMetadataProvider, Protocol
 ):
-    """Full provider supporting all three operations (backward-compatible aggregate).
+    """Aggregate provider supporting all three operations.
 
     This protocol combines all metadata lookup capabilities for call sites that
     need the complete interface. Prefer using the focused protocols
@@ -155,7 +157,7 @@ class SearchIndexReadPort(Protocol):
         self,
         query: str,
         *,
-        limit: int = 10,
+        limit: int = DEFAULT_SEARCH_LIMIT,
         problem_id: int | None = None,
         source_types: list[ChunkSource] | None = None,
     ) -> list[SearchResult]: ...
@@ -200,7 +202,7 @@ class EmbeddingIndexPort(Protocol):
         query: str,
         embedder: EmbeddingModelProtocol,
         *,
-        limit: int = 10,
+        limit: int = DEFAULT_SEARCH_LIMIT,
         problem_id: int | None = None,
     ) -> list[SemanticSearchResult]: ...
 
@@ -209,7 +211,7 @@ class EmbeddingIndexPort(Protocol):
         query: str,
         embedder: EmbeddingModelProtocol,
         *,
-        limit: int = 10,
+        limit: int = DEFAULT_SEARCH_LIMIT,
         alpha: float = 0.5,
         problem_id: int | None = None,
     ) -> list[SemanticSearchResult]: ...
@@ -218,7 +220,7 @@ class EmbeddingIndexPort(Protocol):
 class SearchIndexProtocol(
     SearchIndexReadPort, SearchIndexWritePort, EmbeddingIndexPort, Protocol
 ):
-    """Full search index interface (backward-compatible aggregate).
+    """Aggregate search index interface.
 
     This protocol combines all search capabilities for call sites that need
     the complete interface. Prefer using the focused ports (SearchIndexReadPort,

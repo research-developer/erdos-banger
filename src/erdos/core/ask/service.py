@@ -1,12 +1,12 @@
 """Ask service: orchestrates RAG Q&A for Erdős problems."""
 
-import os
 from pathlib import Path
 from typing import Any
 
-from erdos.core.ask.llm import execute_llm_if_enabled
+from erdos.core.ask.llm import LLMExecutionResult, execute_llm_if_enabled
 from erdos.core.ask.prompt import build_prompt
 from erdos.core.ask.retrieval import retrieve_sources
+from erdos.core.constants import DEFAULT_RAG_LIMIT
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord
 from erdos.core.ports import ProblemRepository, SearchIndexProtocol
@@ -83,14 +83,14 @@ def _build_response_data(
     query: str,
     limit: int,
     used_fts: bool,
-    llm_result: dict[str, str | int | bool | None],
+    llm_result: LLMExecutionResult,
 ) -> dict[str, Any]:
     """Build the response data dictionary."""
     return {
         "problem_id": problem_id,
         "question": question,
         "prompt": prompt,
-        "answer": llm_result["answer"],
+        "answer": llm_result.answer,
         "sources": [
             {
                 "chunk_id": source.chunk_id,
@@ -109,9 +109,9 @@ def _build_response_data(
             "used_fts": used_fts,
         },
         "llm": {
-            "enabled": llm_result["llm_enabled"],
-            "command": llm_result["llm_command"],
-            "exit_code": llm_result["llm_exit_code"],
+            "enabled": llm_result.llm_enabled,
+            "command": llm_result.llm_command,
+            "exit_code": llm_result.llm_exit_code,
         },
     }
 
@@ -122,7 +122,7 @@ def ask_question(
     *,
     repo: ProblemRepository,
     index: SearchIndexProtocol,
-    limit: int = 5,
+    limit: int = DEFAULT_RAG_LIMIT,
     build_index_flag: bool = False,
     no_llm: bool = False,
     llm_command: str | None = None,
@@ -139,7 +139,9 @@ def ask_question(
         limit: Maximum retrieved chunks
         build_index_flag: Whether to rebuild the index before retrieval
         no_llm: If True, skip LLM execution (prompt-only mode)
-        llm_command: Override LLM command (default: from ERDOS_LLM_COMMAND env)
+        llm_command: LLM command to execute. Callers (CLI) should thread this
+            value from `AppConfig` rather than relying on environment reads in
+            services. If None or empty, LLM execution is skipped.
         repo_root: Repository root for index building and retrieval
 
     Returns:
@@ -175,16 +177,16 @@ def ask_question(
 
     # Determine LLM command
     enable_llm = not no_llm
-    effective_llm_cmd = (
-        llm_command if llm_command else os.environ.get("ERDOS_LLM_COMMAND", "")
-    )
 
     # Execute LLM if enabled
     llm_result = execute_llm_if_enabled(
-        prompt=prompt, enable_llm=enable_llm, llm_command=effective_llm_cmd
+        prompt=prompt,
+        enable_llm=enable_llm,
+        llm_command=llm_command,
+        command="erdos ask",
     )
-    if isinstance(llm_result, CLIOutput):
-        return llm_result
+    if llm_result.error is not None:
+        return llm_result.error
 
     # Build response
     data = _build_response_data(

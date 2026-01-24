@@ -14,9 +14,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-| ID | Title | Priority | Status | Commit |
-|----|-------|----------|--------|--------|
-| *None* | | | | |
+_No active debt decks._
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -103,8 +101,25 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-072 | CLI flags silently ignored | P2 | Fixed | d386add |
 | DEBT-073 | Magic numbers and hardcoded values | P3 | Fixed | 0cf5747 |
 | DEBT-074 | Test quality issues | P3 | Fixed | e807fbf |
+| DEBT-075 | Remove remaining env fallbacks outside `AppConfig` | P3 | Fixed | 292124f |
+| DEBT-076 | Group Lean modules into `core/lean/` subpackage | P3 | Fixed | 0291d1d |
+| DEBT-077 | CLI helper duplication across commands (DRY) | P3 | Fixed | 2ccd49d |
+| DEBT-078 | Test organization — misclassified integration test | P4 | Fixed | 596b5c4 |
+| DEBT-079 | Dead code in `literature_paths.py` (SPEC-019 stubs) | P3 | Resolved | 1c8889e |
+| DEBT-080 | High cyclomatic complexity functions | P3 | Fixed | f1dbe92 |
+| DEBT-081 | Incomplete features — tested but never wired in | P2 | Fixed | 05a1161,4614bd8 |
+| DEBT-082 | Remove unused constants in `constants.py` | P3 | Fixed | 117d510 |
+| DEBT-083 | Remove internal compatibility shims + wording | P2 | Fixed | 117d510 |
+| DEBT-084 | Finish batch interrupt wiring (SIGINT) | P3 | Fixed | 117d510 |
+| DEBT-085 | Restore and wire removed constants (DEBT-082 regression) | P2 | Fixed | c5b5d9f,f70613a |
+| DEBT-086 | Loop runner state machine refactor | P2 | Fixed | 22f14f6 |
+| DEBT-087 | LLM execute error handling consolidation | P3 | Fixed | 22f14f6 |
+| DEBT-088 | Patch validator multiple returns (acceptable) | P4 | Won't Fix | 22f14f6 |
+| DEBT-089 | Ingest/fetch long parameter lists | P1 | Fixed | 22f14f6 |
+| DEBT-090 | Cyclomatic complexity violations (C901) | P2 | Fixed | 22f14f6 |
+| DEBT-091 | Blind exception catches (BLE001) | P3 | Fixed | 22f14f6 |
 
-**Next Debt ID:** DEBT-075
+**Next Debt ID:** DEBT-092
 
 ### Archived Debt Decks
 
@@ -178,3 +193,20 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-072-cli-flags-silently-ignored.md`
 - `docs/_archive/debt/debt-073-magic-numbers-hardcoded-values.md`
 - `docs/_archive/debt/debt-074-test-quality-issues.md`
+- `docs/_archive/debt/debt-075-remove-remaining-env-fallbacks.md`
+- `docs/_archive/debt/debt-076-group-lean-modules-into-subpackage.md`
+- `docs/_archive/debt/debt-077-cli-helper-duplication.md`
+- `docs/_archive/debt/debt-078-test-organization-misclassification.md`
+- `docs/_archive/debt/debt-079-dead-code-literature-paths.md`
+- `docs/_archive/debt/debt-080-high-cyclomatic-complexity.md`
+- `docs/_archive/debt/debt-081-incomplete-features-not-wired.md`
+- `docs/_archive/debt/debt-082-unused-constants.md`
+- `docs/_archive/debt/debt-083-backwards-compatibility-shims.md`
+- `docs/_archive/debt/debt-084-unused-ocp-patterns.md`
+- `docs/_archive/debt/debt-085-restore-and-wire-constants.md`
+- `docs/_archive/debt/debt-086-loop-runner-state-machine.md`
+- `docs/_archive/debt/debt-087-llm-execute-error-handling.md`
+- `docs/_archive/debt/debt-088-patch-validator-returns.md`
+- `docs/_archive/debt/debt-089-ingest-fetch-parameter-objects.md`
+- `docs/_archive/debt/debt-090-cyclomatic-complexity-violations.md`
+- `docs/_archive/debt/debt-091-blind-exception-catches.md`

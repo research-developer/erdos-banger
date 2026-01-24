@@ -27,6 +27,9 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
+from erdos.core.config import AppConfig, build_subprocess_env
+from erdos.core.constants import LAKE_UPDATE_TIMEOUT
+
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +53,7 @@ class AristotleConfig:
     """Configuration for Aristotle CLI invocation."""
 
     command: str = "aristotle"
-    timeout: int = 600
+    timeout: int = LAKE_UPDATE_TIMEOUT
     informal: bool = False
     formal_input_context: bool = False
 
@@ -110,6 +113,10 @@ def validate_aristotle_config(
     Raises:
         AristotleError: If configuration is invalid (error_type="ConfigError")
     """
+    config: AppConfig | None = None
+    if api_key is None or command is None:
+        config = AppConfig.from_env()
+
     # Check for API key (explicit > env var)
     if api_key is not None:
         effective_api_key = api_key.strip()
@@ -119,7 +126,9 @@ def validate_aristotle_config(
                 error_type="ConfigError",
             )
     else:
-        effective_api_key = os.environ.get("ARISTOTLE_API_KEY", "").strip()
+        if config is None:
+            config = AppConfig.from_env()
+        effective_api_key = config.aristotle_api_key
         if not effective_api_key:
             raise AristotleError(
                 "ARISTOTLE_API_KEY environment variable is not set or empty. "
@@ -136,9 +145,9 @@ def validate_aristotle_config(
                 error_type="ConfigError",
             )
     else:
-        effective_command = os.environ.get(
-            "ERDOS_ARISTOTLE_COMMAND", "aristotle"
-        ).strip()
+        if config is None:
+            config = AppConfig.from_env()
+        effective_command = config.aristotle_command.strip()
 
     # Resolve command path
     resolved_command = _resolve_command(effective_command)
@@ -211,7 +220,7 @@ def run_aristotle_prove_from_file(
     *,
     api_key: str | None = None,
     command: str | None = None,
-    timeout: int = 600,
+    timeout: int = LAKE_UPDATE_TIMEOUT,
     informal: bool = False,
     formal_input_context: bool = False,
 ) -> AristotleResult:
@@ -222,7 +231,7 @@ def run_aristotle_prove_from_file(
         output_file: Path for the output Lean file (must differ from input)
         api_key: Explicit API key (falls back to ARISTOTLE_API_KEY env var)
         command: Explicit command path (falls back to ERDOS_ARISTOTLE_COMMAND env var)
-        timeout: Maximum seconds to wait for completion (default: 600)
+        timeout: Maximum seconds to wait for completion (default: LAKE_UPDATE_TIMEOUT)
         informal: Pass --informal flag to Aristotle
         formal_input_context: Pass --formal-input-context flag to Aristotle
 
@@ -262,8 +271,7 @@ def run_aristotle_prove_from_file(
 
     env: dict[str, str] | None = None
     if api_key is not None:
-        env = dict(os.environ)
-        env["ARISTOTLE_API_KEY"] = api_key.strip()
+        env = build_subprocess_env({"ARISTOTLE_API_KEY": api_key.strip()})
 
     try:
         result = subprocess.run(  # noqa: S603

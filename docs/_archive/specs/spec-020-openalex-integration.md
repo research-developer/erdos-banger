@@ -2,12 +2,18 @@
 
 > Integrates OpenAlex as primary academic metadata source, replacing/augmenting arXiv + Crossref.
 
-**Status:** Complete
+**Status:** Complete (core); CLI extensions deferred
 **Target:** v1.2+
 **Commit:** a09bf57, b2dcdfe
 **Prerequisites (SSOT):**
 - Ingest command: `docs/_archive/specs/spec-010-ingest-command.md`
 - Literature paths: `src/erdos/core/literature_paths.py`
+
+**Note (2026-01-23):** The OpenAlex client/provider integration was implemented, but the CLI extensions described in
+Section 6 (`--enrich`, `--external`, `refs --enrich`) were **not** shipped. Current SSOT modules are:
+
+- `src/erdos/core/clients/openalex.py`
+- `src/erdos/core/providers/openalex.py`
 
 ---
 
@@ -332,7 +338,15 @@ erdos ingest PROBLEM_ID [OPTIONS]
 **New Options**
 
 - `--source openalex|arxiv|crossref`: Metadata source (default: openalex)
-- `--enrich`: Fetch additional metadata (citations, concepts)
+  - Implemented
+
+### Deferred (Not Implemented)
+
+The following CLI flags were proposed in this spec but are not implemented as of 2026-01-23:
+
+- `erdos ingest --enrich`: Fetch additional metadata (citations, concepts)
+- `erdos search --external`: Also search OpenAlex (not just local index)
+- `erdos refs <id> --enrich`: Enrich references via OpenAlex citation graph
 
 ### `erdos search` (Extended)
 
@@ -342,20 +356,13 @@ erdos search QUERY [OPTIONS]
 
 **New Options**
 
-- `--external`: Also search OpenAlex (not just local index)
-- `--limit N`: Max results from external search
+Not implemented — see "Deferred" above.
 
 ### Examples
 
 ```bash
 # Ingest with OpenAlex metadata
 uv run erdos ingest 42
-
-# Search OpenAlex directly
-uv run erdos search "sum-free sets" --external --limit 10
-
-# Get rich metadata for a DOI
-uv run erdos refs 42 --enrich
 ```
 
 ---

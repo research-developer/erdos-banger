@@ -10,8 +10,10 @@ import typer
 
 from erdos.commands.lean.common import print_human
 from erdos.commands.presenter import exit_with_result
-from erdos.core.aristotle import AristotleError, run_aristotle_prove_from_file
+from erdos.core.config import AppConfig
+from erdos.core.constants import LAKE_UPDATE_TIMEOUT
 from erdos.core.exit_codes import ExitCode
+from erdos.core.lean import AristotleError, run_aristotle_prove_from_file
 from erdos.core.models import CLIOutput
 from erdos.core.timing import measure_time_ms
 
@@ -23,7 +25,7 @@ def prove_with_aristotle(
     input_file: Path,
     output_file: Path,
     *,
-    timeout: int = 600,
+    timeout: int = LAKE_UPDATE_TIMEOUT,
     informal: bool = False,
     formal_input_context: bool = False,
 ) -> CLIOutput:
@@ -40,9 +42,12 @@ def prove_with_aristotle(
         CLIOutput with execution details
     """
     try:
+        config = AppConfig.from_env()
         result = run_aristotle_prove_from_file(
             input_file,
             output_file,
+            api_key=config.aristotle_api_key or None,
+            command=config.aristotle_command.strip() or None,
             timeout=timeout,
             informal=informal,
             formal_input_context=formal_input_context,
@@ -115,7 +120,7 @@ def register(app: typer.Typer) -> None:
                 "-t",
                 help="Maximum seconds to wait for completion.",
             ),
-        ] = 600,
+        ] = LAKE_UPDATE_TIMEOUT,
         informal: Annotated[
             bool,
             typer.Option("--informal", help="Pass --informal flag to Aristotle."),

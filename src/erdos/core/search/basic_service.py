@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from erdos.core.constants import PREVIEW_LENGTH
+from erdos.core.constants import DEFAULT_SEARCH_LIMIT, PREVIEW_LENGTH
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord
 
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 def search_basic(
     query: str,
     repo: ProblemRepository,
-    limit: int = 10,
+    limit: int = DEFAULT_SEARCH_LIMIT,
     problem_id: int | None = None,
 ) -> CLIOutput:
     """Fallback: basic substring search (no ranking).

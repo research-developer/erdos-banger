@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 from erdos.cli import app
 from erdos.core.exit_codes import ExitCode
-from erdos.core.lean_runner import LeanRunnerError
+from erdos.core.lean import LeanRunnerError
 from tests.cli_runner import make_cli_runner
 
 

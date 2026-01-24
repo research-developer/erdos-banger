@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sqlite3
 from pathlib import Path
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
@@ -125,7 +126,7 @@ class TestEmbeddingSchema:
 
     def test_embedding_table_created(self, temp_index: SearchIndex) -> None:
         """Test that chunk_embeddings table is created."""
-        with temp_index._connect() as conn:
+        with sqlite3.connect(temp_index.db_path) as conn:
             cursor = conn.execute(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='chunk_embeddings'"
             )
@@ -167,7 +168,7 @@ class TestBuildEmbeddings:
 
         assert count == 2  # Two problems indexed
 
-        with indexed_index._connect() as conn:
+        with sqlite3.connect(indexed_index.db_path) as conn:
             cursor = conn.execute("SELECT COUNT(*) FROM chunk_embeddings")
             result = cursor.fetchone()
             assert result[0] == 2
@@ -194,7 +195,7 @@ class TestBuildEmbeddings:
         assert count == 2
 
         # Should still have exactly 2 embeddings
-        with indexed_index._connect() as conn:
+        with sqlite3.connect(indexed_index.db_path) as conn:
             cursor = conn.execute("SELECT COUNT(*) FROM chunk_embeddings")
             result = cursor.fetchone()
             assert result[0] == 2

@@ -24,6 +24,7 @@ from erdos.core.ingest import (
     ingest_problem_references,
 )
 from erdos.core.ingest.arxiv_download import download_and_extract_arxiv
+from erdos.core.ingest.config import IngestConfig
 from erdos.core.ingest.service import _entries_content_equal
 from erdos.core.models import CLIOutput, ManifestEntry, ReferenceEntry, ReferenceRecord
 from erdos.core.problem_loader import ProblemLoader
@@ -363,16 +364,11 @@ def test_ingest_internal_error_does_not_truncate_manifest(
     def fake_fetch_reference_entry(
         ref: object,
         *,
-        repo_root: Path,
-        allow_download: bool,
-        allow_network: bool,
-        timeout: float,
-        mailto: str,
-        source: MetadataSource = MetadataSource.OPENALEX,
+        config: IngestConfig,
         provider: object = None,  # SPEC-022: optional provider
     ) -> ManifestEntry:
         # Unused params required by signature
-        _ = repo_root, allow_download, allow_network, timeout, mailto, source, provider
+        _ = (config, provider)
         if getattr(ref, "key", "") == "Boom2026":
             raise Exception("boom")
         return ManifestEntry(
@@ -747,16 +743,11 @@ def test_ingest_updates_manifest_when_content_changes(
     def fake_fetch(
         ref: ReferenceEntry,
         *,
-        repo_root: Path,
-        allow_download: bool,
-        allow_network: bool,
-        timeout: float,
-        mailto: str,
-        source: MetadataSource = MetadataSource.OPENALEX,
+        config: IngestConfig,
         provider: object = None,  # SPEC-022: optional provider
     ) -> ManifestEntry:
         # Unused params required by signature
-        _ = repo_root, allow_download, allow_network, timeout, mailto, source, provider
+        _ = (config, provider)
         call_count[0] += 1
         # Return different title on second call to simulate content change
         title = "First Title" if call_count[0] == 1 else "Updated Title"

@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+from erdos.core.constants import DEFAULT_SEARCH_LIMIT
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
 from erdos.core.search.db import SearchIndexError
@@ -23,7 +24,7 @@ def search_fts(
     *,
     index: SearchIndexReadPort,
     repo: ProblemRepository | None = None,
-    limit: int = 10,
+    limit: int = DEFAULT_SEARCH_LIMIT,
     problem_id: int | None = None,
 ) -> CLIOutput | None:
     """Search using FTS5 index (preferred).

@@ -1,6 +1,6 @@
 """Core domain models for erdos-banger.
 
-This package provides backward-compatible exports of all domain models.
+This package provides a curated export surface for domain models.
 Import from here (e.g., `from erdos.core.models import ProblemRecord`)
 or from specific submodules for reduced import overhead.
 """

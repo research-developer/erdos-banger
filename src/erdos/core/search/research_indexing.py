@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-    from erdos.core.ports import ProblemRepository, SearchIndexProtocol
+    from erdos.core.ports import ProblemRepository, SearchIndexWritePort
 
 
 logger = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ def _index_record_dir(
     adapter: TypeAdapter[Any],
     source: ChunkSource,
     render: Callable[[Any], str],
-    index: SearchIndexProtocol,
+    index: SearchIndexWritePort,
 ) -> int:
     if not dir_path.exists():
         return 0
@@ -106,7 +106,7 @@ def _index_record_dir(
 def index_research_artifacts(
     *,
     repo: ProblemRepository,
-    index: SearchIndexProtocol,
+    index: SearchIndexWritePort,
     repo_root: Path | None,
 ) -> int:
     """Index research artifacts for all known problems.
@@ -133,19 +133,30 @@ def index_research_artifacts(
         synthesis_path = problem_dir / "SYNTHESIS.md"
         if synthesis_path.exists():
             try:
-                text = synthesis_path.read_text(encoding="utf-8")
-            except OSError as e:
-                logger.warning("Skipping synthesis for %s: %s", synthesis_path, e)
-            else:
-                chunk = TextChunk(
-                    id=f"research_{problem_id}_synthesis",
-                    text=text,
-                    source=ChunkSource.RESEARCH_SYNTHESIS,
-                    problem_id=problem_id,
-                    preview=_chunk_preview(text),
+                text = synthesis_path.read_text(encoding="utf-8").strip()
+                if not text:
+                    logger.warning(
+                        "Skipping empty synthesis for problem %s: %s",
+                        problem_id,
+                        synthesis_path,
+                    )
+                else:
+                    chunk = TextChunk(
+                        id=f"research_{problem_id}_synthesis",
+                        text=text,
+                        source=ChunkSource.RESEARCH_SYNTHESIS,
+                        problem_id=problem_id,
+                        preview=_chunk_preview(text),
+                    )
+                    index.index_chunk(chunk)
+                    total += 1
+            except (OSError, ValidationError) as e:
+                logger.warning(
+                    "Skipping synthesis for problem %s (%s): %s",
+                    problem_id,
+                    synthesis_path,
+                    e,
                 )
-                index.index_chunk(chunk)
-                total += 1
 
         total += _index_record_dir(
             problem_id=problem_id,

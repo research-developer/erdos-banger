@@ -38,30 +38,22 @@ MODULE_LOC_THRESHOLD_COMMANDS = 400
 MODULE_LOC_THRESHOLD_CORE = 500
 FUNCTION_LOC_THRESHOLD = 120
 
-# Known exemptions paired with debt decks (module -> debt ID)
-# These files are tracked for refactoring and should not trigger CI failures
-EXEMPTED_MODULES: dict[str, str] = {
-    "src/erdos/commands/search.py": "DEBT-043",
-    "src/erdos/commands/ingest.py": "DEBT-052",
-    "src/erdos/core/search_index.py": "DEBT-049",
-    "src/erdos/core/batch.py": "DEBT-051",
-    "src/erdos/core/formal_conjectures.py": "DEBT-053",
-    "src/erdos/core/run_logger.py": "DEBT-054",
-    "src/erdos/core/ingest/fetch.py": "DEBT-050",
-}
+# Known exemptions paired with debt decks (module -> debt ID).
+# These files are tracked for refactoring and should not trigger CI failures.
+# NOTE: Keep this list small. Prefer reducing modules below thresholds.
+EXEMPTED_MODULES: dict[str, str] = {}
 
 # Known exemptions for long functions paired with debt decks
 # Note: Typer command functions are long due to option declarations + docstrings,
-#       not business logic. We exempt them but track with the closest debt deck.
+#       not business logic. We exempt them as FALSE POSITIVES (see DEBT-086).
 EXEMPTED_FUNCTIONS: dict[tuple[str, str], str] = {
-    ("src/erdos/commands/search.py", "search"): "DEBT-043",
-    ("src/erdos/commands/ingest.py", "ingest"): "DEBT-052",
-    ("src/erdos/commands/convert.py", "convert"): "DEBT-036",
-    # Loop command: 140 LOC mostly Typer boilerplate, delegates to core service
-    ("src/erdos/commands/loop.py", "run"): "DEBT-065",
+    # FALSE POSITIVES: Typer CLI boilerplate, not business logic complexity
+    ("src/erdos/commands/search.py", "search"): "DEBT-043",  # 140 LOC, ~35 LOC logic
+    ("src/erdos/commands/ingest.py", "ingest"): "DEBT-052",  # 157 LOC, ~45 LOC logic
+    ("src/erdos/commands/convert.py", "convert"): "DEBT-036",  # 171 LOC, ~40 LOC logic
+    ("src/erdos/commands/loop.py", "run"): "DEBT-065",  # 145 LOC, ~37 LOC logic
+    # LEGITIMATE DEBT: Linear orchestration (acceptable pattern)
     ("src/erdos/core/ingest/service.py", "ingest_problem_references"): "DEBT-050",
-    # Loop runner: complex iteration logic, could be future debt if needed
-    ("src/erdos/core/loop/runner.py", "_run_single_iteration"): "DEBT-065",
 }
 
 

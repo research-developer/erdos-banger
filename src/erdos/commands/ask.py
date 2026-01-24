@@ -12,8 +12,10 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 
 from erdos.commands.app_context import get_app_context
+from erdos.commands.cli_helpers import print_if_human
 from erdos.commands.presenter import exit_with_result
 from erdos.core.ask import ask_question
+from erdos.core.constants import DEFAULT_RAG_LIMIT, TEXT_PREVIEW_LENGTH
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
 from erdos.core.timing import measure_time_ms
@@ -30,7 +32,6 @@ app = typer.Typer(
     context_settings={"allow_interspersed_args": True},
 )
 console = Console()
-err_console = Console(stderr=True)
 
 
 @dataclass
@@ -71,8 +72,10 @@ def _validate_question_input(question: str) -> CLIOutput | None:
 
 def _show_progress_message(problem_id: int, json_output: bool) -> None:
     """Show progress message (only in human mode)."""
-    if not json_output:
-        err_console.print(f"[dim]Retrieving sources for Problem {problem_id}...[/dim]")
+    print_if_human(
+        f"Retrieving sources for Problem {problem_id}...",
+        json_output=json_output,
+    )
 
 
 def _execute_ask_query(
@@ -118,7 +121,7 @@ def _print_human(result_data: dict[str, Any]) -> None:
             rank = source.get("rank", "?")
             source_type = source.get("source_type", "?")
             chunk_id = source.get("chunk_id", "?")
-            text_preview = (source.get("text") or "")[:100]
+            text_preview = (source.get("text") or "")[:TEXT_PREVIEW_LENGTH]
             console.print(f"  [{rank}] ({source_type}) {chunk_id}")
             console.print(f"      {text_preview}...")
     else:
@@ -147,10 +150,16 @@ def ask(
     ctx: typer.Context,
     problem_id: Annotated[int, typer.Argument(help="Problem ID", min=1)],
     question_arg: Annotated[str, typer.Argument(help="Question or '-' for stdin")],
-    limit: Annotated[int, typer.Option("--limit", "-n")] = 5,
+    limit: Annotated[int, typer.Option("--limit", "-n")] = DEFAULT_RAG_LIMIT,
     build_index: Annotated[bool, typer.Option("--build-index")] = False,
     no_llm: Annotated[bool, typer.Option("--no-llm")] = False,
-    llm_cmd: Annotated[str, typer.Option("--llm-cmd")] = "",
+    llm_cmd: Annotated[
+        str | None,
+        typer.Option(
+            "--llm-cmd",
+            help="Override LLM command (default: from ERDOS_LLM_COMMAND). Pass an empty value to disable.",
+        ),
+    ] = None,
 ) -> None:
     """
     Ask a question about an Erdős problem using RAG.
@@ -167,7 +176,7 @@ def ask(
 
         echo "What is the status?" | erdos --json ask 6 -
     """
-    json_mode = bool((ctx.obj or {}).get("json"))
+    json_mode = bool(ctx.obj.get("json")) if isinstance(ctx.obj, dict) else False
 
     # Get and validate question
     question = _read_question_from_stdin() if question_arg == "-" else question_arg
@@ -177,20 +186,25 @@ def ask(
 
     # Execute query
     _show_progress_message(problem_id, json_mode)
-    options = AskOptions(
-        problem_id=problem_id,
-        question=question,
-        limit=limit,
-        build_index=build_index,
-        no_llm=no_llm,
-        llm_cmd=llm_cmd if llm_cmd else None,
-    )
     app_ctx, app_error = get_app_context(ctx, command="erdos ask", require_index=True)
     if app_error is not None:
         exit_with_result(ctx, app_error)
         return
     if app_ctx is None:
         return  # Unreachable: get_app_context guarantees (ctx, None) or (None, error)
+
+    if llm_cmd is None:
+        effective_llm_cmd = (app_ctx.config.llm_command or "").strip() or None
+    else:
+        effective_llm_cmd = llm_cmd.strip() or None
+    options = AskOptions(
+        problem_id=problem_id,
+        question=question,
+        limit=limit,
+        build_index=build_index,
+        no_llm=no_llm,
+        llm_cmd=effective_llm_cmd,
+    )
 
     result = _execute_ask_query(
         options,

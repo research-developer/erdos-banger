@@ -5,8 +5,9 @@ from typing import Any
 import typer
 from rich.console import Console
 
+from erdos.core.context import AppContext
 from erdos.core.models import CLIOutput
-from erdos.core.run_logger import get_run_logger
+from erdos.core.run_logger import RunLogger, get_run_logger
 
 
 logger = logging.getLogger(__name__)
@@ -18,6 +19,18 @@ HumanPrinter = Callable[[Any], None]
 
 # Commands that should not be logged (to avoid infinite recursion or noise)
 EXCLUDED_COMMANDS = frozenset({"erdos logs"})
+
+
+def _get_configured_run_logger(ctx: typer.Context) -> RunLogger:
+    """Prefer the AppConfig log path when AppContext is available."""
+    obj = ctx.obj
+    if isinstance(obj, AppContext):
+        return RunLogger(log_file=obj.config.run_log_path)
+    if isinstance(obj, dict):
+        app_ctx = obj.get("app_context")
+        if isinstance(app_ctx, AppContext):
+            return RunLogger(log_file=app_ctx.config.run_log_path)
+    return get_run_logger()
 
 
 def _error_details(result: CLIOutput) -> tuple[str, int]:
@@ -40,7 +53,8 @@ def output_result(
     print_human: HumanPrinter | None = None,
 ) -> None:
     """Render a CLIOutput according to global output settings."""
-    json_mode = bool((ctx.obj or {}).get("json", False))
+    obj = ctx.obj
+    json_mode = bool(obj.get("json", False)) if isinstance(obj, dict) else False
 
     if json_mode:
         console.print_json(result.model_dump_json())
@@ -84,7 +98,7 @@ def exit_with_result(
     # Log the command (unless excluded)
     if result.command not in EXCLUDED_COMMANDS:
         try:
-            run_logger = get_run_logger()
+            run_logger = _get_configured_run_logger(ctx)
             args = _get_command_args(ctx)
             run_logger.log(result, args)
         except Exception as e:

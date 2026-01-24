@@ -6,7 +6,7 @@ This package provides:
 - embeddings: Embedding model for semantic search
 - index_builder: Index building utilities
 
-All public APIs are re-exported for backward compatibility.
+Public APIs are re-exported at the package level to provide a stable import surface.
 """
 
 from erdos.core.search.embeddings import (

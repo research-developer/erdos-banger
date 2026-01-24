@@ -20,8 +20,8 @@ from erdos.core.clients.crossref import (
 from erdos.core.clients.openalex import (
     OpenAlexClient,
     OpenAlexConfig,
-    reconstruct_abstract,
 )
+from erdos.core.clients.openalex_transform import reconstruct_abstract
 
 
 __all__ = [

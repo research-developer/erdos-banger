@@ -14,7 +14,7 @@ from erdos.core.batch import (
 )
 from erdos.core.exit_codes import ExitCode
 from erdos.core.formal_conjectures import get_local_file_path
-from erdos.core.formalizer import FormalizerError, generate_skeleton
+from erdos.core.lean import FormalizerError, generate_skeleton
 from erdos.core.models import CLIOutput
 from erdos.core.timing import measure_time_ms
 

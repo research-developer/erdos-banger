@@ -9,7 +9,6 @@ separating business logic from CLI concerns (Typer/Rich). All functions here:
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -21,7 +20,8 @@ from erdos.core.batch import (
     BatchRunner,
     filter_problem_ids,
 )
-from erdos.core.constants import API_RATE_LIMIT_DELAY
+from erdos.core.config import AppConfig
+from erdos.core.constants import API_RATE_LIMIT_DELAY, DEFAULT_HTTP_TIMEOUT
 from erdos.core.exit_codes import ExitCode
 from erdos.core.ingest.fetch import MetadataSource
 from erdos.core.ingest.service import ingest_problem_references
@@ -42,7 +42,7 @@ class IngestOptions:
     force: bool = False
     no_download: bool = False
     no_network: bool = False
-    timeout: float = 30.0
+    timeout: float | None = None
     delay: float = API_RATE_LIMIT_DELAY
     mailto: str = ""
     source: MetadataSource = MetadataSource.OPENALEX
@@ -74,17 +74,26 @@ def get_repo_root(*, repo_root: Path | None = None) -> Path:
     """
     if repo_root is not None:
         return repo_root
-    env_root = os.environ.get("ERDOS_REPO_ROOT")
-    if env_root:
-        return Path(env_root)
+    config_repo_root = AppConfig.from_env().repo_root
+    if config_repo_root is not None:
+        return config_repo_root
     return Path.cwd()
 
 
-def prepare_mailto(mailto: str) -> str:
-    """Prepare mailto from CLI input or environment."""
-    if not mailto:
-        return os.environ.get("ERDOS_MAILTO", "erdos-banger@example.com")
-    return mailto
+def prepare_mailto(mailto: str, *, default: str | None = None) -> str:
+    """Prepare mailto from CLI input, config default, or environment.
+
+    Precedence:
+        1) Explicit CLI value (non-empty)
+        2) default (if provided and non-empty)
+        3) ERDOS_MAILTO environment variable
+        4) Stable fallback "erdos-banger@example.com" for local dev
+    """
+    if mailto.strip():
+        return mailto.strip()
+    if default is not None and default.strip():
+        return default.strip()
+    return AppConfig.from_env().mailto
 
 
 def is_batch_mode(options: IngestOptions) -> bool:
@@ -111,6 +120,8 @@ def run_single_ingestion(
     options: IngestOptions,
     repo_root: Path,
     mailto: str,
+    timeout: float,
+    openalex_api_key: str | None,
     *,
     repo: ProblemRepository,
 ) -> CLIOutput:
@@ -140,10 +151,14 @@ def run_single_ingestion(
         force=options.force,
         no_download=options.no_download,
         no_network=options.no_network,
-        timeout=options.timeout,
+        timeout=timeout,
         delay=options.delay,
         mailto=mailto,
+        pdf=options.pdf,
+        pdf_converter=options.pdf_converter,
+        pdf_use_llm=options.use_llm,
         source=options.source,
+        openalex_api_key=openalex_api_key,
     )
 
 
@@ -196,6 +211,8 @@ def create_batch_process_fn(
     options: IngestOptions,
     repo_root: Path,
     mailto: str,
+    timeout: float,
+    openalex_api_key: str | None,
     *,
     repo: ProblemRepository,
 ) -> Callable[[int], bool]:
@@ -220,10 +237,14 @@ def create_batch_process_fn(
             force=options.force,
             no_download=options.no_download,
             no_network=options.no_network,
-            timeout=options.timeout,
+            timeout=timeout,
             delay=0.0,  # Delay handled by BatchRunner
             mailto=mailto,
+            pdf=options.pdf,
+            pdf_converter=options.pdf_converter,
+            pdf_use_llm=options.use_llm,
             source=options.source,
+            openalex_api_key=openalex_api_key,
         )
         return result.success
 
@@ -234,6 +255,8 @@ def run_batch_ingestion(
     options: IngestOptions,
     repo_root: Path,
     mailto: str,
+    timeout: float,
+    openalex_api_key: str | None,
     *,
     repo: ProblemRepository,
     on_progress: Callable[[BatchProgress], None] | None = None,
@@ -282,7 +305,14 @@ def run_batch_ingestion(
         )
 
     # Create batch runner
-    process_fn = create_batch_process_fn(options, repo_root, mailto, repo=repo)
+    process_fn = create_batch_process_fn(
+        options,
+        repo_root,
+        mailto,
+        timeout,
+        openalex_api_key,
+        repo=repo,
+    )
 
     runner = BatchRunner(
         command="erdos ingest",
@@ -306,6 +336,10 @@ def execute_ingest(
     *,
     repo: ProblemRepository,
     on_progress: Callable[[BatchProgress], None] | None = None,
+    repo_root: Path | None = None,
+    mailto_default: str | None = None,
+    timeout_default: float | None = None,
+    openalex_api_key: str | None = None,
 ) -> CLIOutput:
     """Main ingest orchestration: determines mode and executes.
 
@@ -332,17 +366,31 @@ def execute_ingest(
         )
 
     # Prepare common options
-    mailto = prepare_mailto(options.mailto)
-    repo_root = get_repo_root()
+    mailto = prepare_mailto(options.mailto, default=mailto_default)
+    resolved_timeout = (
+        options.timeout
+        if options.timeout is not None
+        else (timeout_default if timeout_default is not None else DEFAULT_HTTP_TIMEOUT)
+    )
+    resolved_repo_root = get_repo_root(repo_root=repo_root)
 
     # Execute
     if batch_mode:
         return run_batch_ingestion(
             options,
-            repo_root,
+            resolved_repo_root,
             mailto,
+            resolved_timeout,
+            openalex_api_key,
             repo=repo,
             on_progress=on_progress,
         )
     else:
-        return run_single_ingestion(options, repo_root, mailto, repo=repo)
+        return run_single_ingestion(
+            options,
+            resolved_repo_root,
+            mailto,
+            resolved_timeout,
+            openalex_api_key,
+            repo=repo,
+        )

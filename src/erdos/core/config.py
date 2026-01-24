@@ -1,7 +1,12 @@
-"""Centralized application configuration.
+"""Centralized application configuration (preferred path).
 
-This module is the single source of truth for environment-based configuration.
-All os.environ reads for application settings should be centralized here.
+This module defines :class:`AppConfig` as the canonical configuration surface
+for CLI execution. New code should **prefer** threading configuration through
+`AppConfig`/`AppContext` rather than reading `os.environ` directly.
+
+Note: a small number of legacy `from_env()` / `from_default()` helpers may still
+read environment variables to support third-party tooling integrations.
+These should be treated as transitional and avoided in new call sites.
 
 Usage:
     # In composition root (context.py or CLI entry points):
@@ -34,7 +39,21 @@ __all__ = [
     "DEFAULT_MAILTO",
     "DEFAULT_RUN_LOG_PATH",
     "AppConfig",
+    "build_subprocess_env",
 ]
+
+
+def build_subprocess_env(overrides: dict[str, str] | None = None) -> dict[str, str]:
+    """Return a subprocess environment dict with optional overrides.
+
+    This is the preferred helper for cases where core modules must pass an explicit
+    `env=` to `subprocess.run()` (e.g., to inject a vendor API key) while keeping
+    raw `os.environ` access centralized in this module.
+    """
+    env = dict(os.environ)
+    if overrides:
+        env.update(overrides)
+    return env
 
 
 @dataclass(frozen=True)
@@ -77,7 +96,7 @@ class AppConfig:
     def from_env(cls) -> AppConfig:
         """Create configuration from environment variables.
 
-        This is the single place where os.environ reads occur for application
+        This is the preferred place where `os.environ` reads occur for application
         configuration. All environment variable names and defaults are defined here.
 
         Environment variables:
@@ -86,6 +105,7 @@ class AppConfig:
             ERDOS_RUN_LOG_PATH: Path to run log JSONL file.
             ERDOS_REPO_ROOT: Repository root directory.
             ERDOS_MAILTO: Contact email for API polite pools.
+            OPENALEX_EMAIL: Optional alias for ERDOS_MAILTO (used by some OpenAlex tooling).
             ERDOS_LLM_COMMAND: External LLM command for ask/loop.
             ARISTOTLE_API_KEY: API key for Aristotle LLM service.
             ERDOS_ARISTOTLE_COMMAND: Path to aristotle CLI binary.
@@ -100,6 +120,18 @@ class AppConfig:
         run_log_path_str = os.environ.get("ERDOS_RUN_LOG_PATH")
         repo_root_str = os.environ.get("ERDOS_REPO_ROOT")
 
+        def _clean_env(value: str | None) -> str | None:
+            if value is None:
+                return None
+            cleaned = value.strip()
+            return cleaned or None
+
+        mailto = (
+            _clean_env(os.environ.get("ERDOS_MAILTO"))
+            or _clean_env(os.environ.get("OPENALEX_EMAIL"))
+            or DEFAULT_MAILTO
+        )
+
         return cls(
             data_path=Path(data_path_str) if data_path_str else None,
             index_path=Path(index_path_str) if index_path_str else None,
@@ -107,11 +139,11 @@ class AppConfig:
                 Path(run_log_path_str) if run_log_path_str else DEFAULT_RUN_LOG_PATH
             ),
             repo_root=Path(repo_root_str) if repo_root_str else None,
-            mailto=os.environ.get("ERDOS_MAILTO", DEFAULT_MAILTO),
+            mailto=mailto,
             llm_command=os.environ.get("ERDOS_LLM_COMMAND", ""),
             aristotle_api_key=os.environ.get("ARISTOTLE_API_KEY", "").strip(),
             aristotle_command=os.environ.get(
                 "ERDOS_ARISTOTLE_COMMAND", DEFAULT_ARISTOTLE_COMMAND
             ).strip(),
-            openalex_api_key=os.environ.get("OPENALEX_API_KEY", ""),
+            openalex_api_key=os.environ.get("OPENALEX_API_KEY", "").strip(),
         )

@@ -8,20 +8,21 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import re
 import secrets
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pydantic import ConfigDict, Field
 
+from erdos.core.config import AppConfig
 from erdos.core.models.base import ErdosBaseModel, utc_now
 from erdos.core.run_logger_summaries import get_summarizer
 
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from erdos.core.models.output import CLIOutput
 
 
@@ -29,9 +30,6 @@ logger = logging.getLogger(__name__)
 
 # Schema version for log entries (increment on breaking changes)
 LOG_SCHEMA_VERSION = 1
-
-# Default log file location
-DEFAULT_LOG_FILE = Path("logs/runs.jsonl")
 
 # Secret keys to redact from args (matched case-insensitively in key names)
 SECRET_KEY_PATTERNS = ("key", "token", "secret", "password", "credential")
@@ -270,13 +268,47 @@ class RunLogger:
         """Initialize the run logger.
 
         Args:
-            log_file: Path to the log file. Defaults to ERDOS_RUN_LOG_PATH
-                     env var or logs/runs.jsonl
+            log_file: Path to the log file. Defaults to AppConfig.from_env().run_log_path.
         """
         if log_file is None:
-            env_path = os.environ.get("ERDOS_RUN_LOG_PATH")
-            log_file = Path(env_path) if env_path else DEFAULT_LOG_FILE
+            log_file = AppConfig.from_env().run_log_path
         self.log_file = log_file
+
+    @staticmethod
+    def _validate_status_filter(status: str | None) -> None:
+        if status is not None and status not in {"success", "failure"}:
+            raise ValueError(f"Invalid status: {status!r}. Use: success, failure.")
+
+    @staticmethod
+    def _parse_entry_line(raw_line: str) -> RunLogEntry | None:
+        stripped_line = raw_line.strip()
+        if not stripped_line:
+            return None
+        try:
+            data = json.loads(stripped_line)
+            return RunLogEntry.model_validate(data)
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.warning("Skipping invalid log line: %s", e)
+            return None
+
+    @staticmethod
+    def _matches_filters(
+        entry: RunLogEntry,
+        *,
+        problem_id: int | None,
+        command: str | None,
+        status: str | None,
+        since_dt: datetime | None,
+    ) -> bool:
+        if problem_id is not None and entry.problem_id != problem_id:
+            return False
+        if command is not None and entry.command != command:
+            return False
+        if status == "success" and not entry.success:
+            return False
+        if status == "failure" and entry.success:
+            return False
+        return since_dt is None or entry.timestamp >= since_dt
 
     def log(
         self,
@@ -327,8 +359,7 @@ class RunLogger:
         Returns:
             List of matching entries, most recent first
         """
-        if status is not None and status not in {"success", "failure"}:
-            raise ValueError(f"Invalid status: {status!r}. Use: success, failure.")
+        self._validate_status_filter(status)
 
         if not self.log_file.exists():
             return []
@@ -338,29 +369,18 @@ class RunLogger:
         entries: list[RunLogEntry] = []
         with self.log_file.open(encoding="utf-8") as f:
             for raw_line in f:
-                stripped_line = raw_line.strip()
-                if not stripped_line:
+                entry = self._parse_entry_line(raw_line)
+                if entry is None:
                     continue
-                try:
-                    data = json.loads(stripped_line)
-                    entry = RunLogEntry.model_validate(data)
-
-                    # Apply filters
-                    if problem_id is not None and entry.problem_id != problem_id:
-                        continue
-                    if command is not None and entry.command != command:
-                        continue
-                    if status == "success" and not entry.success:
-                        continue
-                    if status == "failure" and entry.success:
-                        continue
-                    if since_dt is not None and entry.timestamp < since_dt:
-                        continue
-
-                    entries.append(entry)
-                except (json.JSONDecodeError, ValueError) as e:
-                    logger.warning("Skipping invalid log line: %s", e)
+                if not self._matches_filters(
+                    entry,
+                    problem_id=problem_id,
+                    command=command,
+                    status=status,
+                    since_dt=since_dt,
+                ):
                     continue
+                entries.append(entry)
 
         # Sort by timestamp descending (most recent first)
         entries.sort(key=lambda e: e.timestamp, reverse=True)

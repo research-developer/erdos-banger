@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -11,6 +10,7 @@ from rich.console import Console
 
 from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
+from erdos.core.constants import DEFAULT_RAG_LIMIT, LEAN_COMPILE_TIMEOUT
 from erdos.core.loop import LoopConfig, execute_proof_loop
 from erdos.core.timing import measure_time_ms
 
@@ -113,10 +113,10 @@ def run(
         int,
         typer.Option(
             "--timeout",
-            help="Lean check timeout in seconds (default: 120).",
+            help=f"Lean check timeout in seconds (default: {LEAN_COMPILE_TIMEOUT}).",
             min=1,
         ),
-    ] = 120,
+    ] = LEAN_COMPILE_TIMEOUT,
     allow_sorry_increase: Annotated[
         int,
         typer.Option(
@@ -145,10 +145,10 @@ def run(
         int,
         typer.Option(
             "--rag-limit",
-            help="Maximum retrieved context chunks in prompt (default: 5).",
+            help=f"Maximum retrieved context chunks in prompt (default: {DEFAULT_RAG_LIMIT}).",
             min=0,
         ),
-    ] = 5,
+    ] = DEFAULT_RAG_LIMIT,
     llm_cmd: Annotated[
         str | None,
         typer.Option(
@@ -193,8 +193,12 @@ def run(
 
         path = project_path or Path("formal/lean")
 
-        # Get LLM command from env if not specified
-        llm_command = llm_cmd or os.environ.get("ERDOS_LLM_COMMAND")
+        # Get LLM command from config if not specified
+        llm_command: str | None
+        if llm_cmd is not None and llm_cmd.strip():
+            llm_command = llm_cmd.strip()
+        else:
+            llm_command = (app_ctx.config.llm_command or "").strip() or None
 
         config = LoopConfig.from_cli(
             max_iterations=max_iter,

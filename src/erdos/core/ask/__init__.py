@@ -6,10 +6,10 @@ This package provides:
 - llm: LLM execution
 - service: Orchestration (ask_question)
 
-All public APIs are re-exported for backward compatibility.
+Public APIs are re-exported at the package level to provide a stable import surface.
 """
 
-# Re-export public APIs for backward compatibility
+# Public API re-exports
 from erdos.core.ask.llm import execute_llm, execute_llm_if_enabled
 from erdos.core.ask.prompt import build_prompt
 from erdos.core.ask.retrieval import (

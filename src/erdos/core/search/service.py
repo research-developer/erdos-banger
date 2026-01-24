@@ -4,7 +4,7 @@ This module is a thin orchestrator that coordinates the specialized search
 services. The CLI adapter (commands/search.py) calls these functions and
 handles Typer/Rich presentation.
 
-Re-exports from submodules for backward compatibility:
+Re-exports from submodules to provide a stable service API:
 - SearchMode, SearchOptions from options
 - search_fts from fts_service
 - search_basic from basic_service
@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Any
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
 
-# Re-export from submodules for backward compatibility
+# Re-export from focused modules
 from erdos.core.search.basic_service import search_basic
 from erdos.core.search.embeddings_service import build_embeddings, get_embedding_model
 from erdos.core.search.fts_service import search_fts
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     )
 
 
-# Re-export symbols for backward compatibility
+# Explicit public surface for this module
 __all__ = [
     "SearchMode",
     "SearchOptions",

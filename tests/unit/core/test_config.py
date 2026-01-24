@@ -107,6 +107,7 @@ class TestAppConfigFromEnv:
             "ERDOS_RUN_LOG_PATH",
             "ERDOS_REPO_ROOT",
             "ERDOS_MAILTO",
+            "OPENALEX_EMAIL",
             "ERDOS_LLM_COMMAND",
             "ARISTOTLE_API_KEY",
             "ERDOS_ARISTOTLE_COMMAND",
@@ -135,6 +136,34 @@ class TestAppConfigFromEnv:
 
         assert config.aristotle_api_key == "key-with-spaces"
         assert config.aristotle_command == "/path/to/cmd"
+
+    def test_openalex_email_alias_with_appconfig(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """AppConfig.from_env() prefers ERDOS_MAILTO over OPENALEX_EMAIL."""
+        monkeypatch.setenv("ERDOS_MAILTO", "primary@example.com")
+        monkeypatch.setenv("OPENALEX_EMAIL", "alias@example.com")
+
+        config = AppConfig.from_env()
+        assert config.mailto == "primary@example.com"
+
+        monkeypatch.delenv("ERDOS_MAILTO", raising=False)
+        config = AppConfig.from_env()
+        assert config.mailto == "alias@example.com"
+
+    def test_mailto_env_values_are_stripped_and_blank_treated_as_unset(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Whitespace-only env values should not override alias/defaults."""
+        monkeypatch.setenv("ERDOS_MAILTO", "   ")
+        monkeypatch.setenv("OPENALEX_EMAIL", "  alias@example.com  ")
+
+        config = AppConfig.from_env()
+        assert config.mailto == "alias@example.com"
+
+        monkeypatch.setenv("OPENALEX_EMAIL", "   ")
+        config = AppConfig.from_env()
+        assert config.mailto == DEFAULT_MAILTO
 
 
 class TestAppContextFromConfig:

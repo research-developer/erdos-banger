@@ -7,7 +7,6 @@ from responses import matchers
 
 from erdos.core.retry import (
     fetch_with_retry,
-    is_retryable_error,
     is_retryable_status_code,
 )
 
@@ -50,47 +49,6 @@ class TestIsRetryableStatusCode:
     def test_401_not_retryable(self) -> None:
         """401 Unauthorized should not be retryable."""
         assert is_retryable_status_code(401) is False
-
-
-class TestIsRetryableError:
-    """Tests for is_retryable_error."""
-
-    def test_timeout_is_retryable(self) -> None:
-        """Timeout exceptions should be retryable."""
-        assert is_retryable_error(requests.Timeout()) is True
-
-    def test_connection_error_is_retryable(self) -> None:
-        """ConnectionError exceptions should be retryable."""
-        assert is_retryable_error(requests.ConnectionError()) is True
-
-    def test_http_error_with_500_is_retryable(self) -> None:
-        """HTTPError with 500 status should be retryable."""
-        response = requests.Response()
-        response.status_code = 500
-        error = requests.HTTPError(response=response)
-        assert is_retryable_error(error) is True
-
-    def test_http_error_with_429_is_retryable(self) -> None:
-        """HTTPError with 429 status should be retryable."""
-        response = requests.Response()
-        response.status_code = 429
-        error = requests.HTTPError(response=response)
-        assert is_retryable_error(error) is True
-
-    def test_http_error_with_404_not_retryable(self) -> None:
-        """HTTPError with 404 status should not be retryable."""
-        response = requests.Response()
-        response.status_code = 404
-        error = requests.HTTPError(response=response)
-        assert is_retryable_error(error) is False
-
-    def test_value_error_not_retryable(self) -> None:
-        """ValueError should not be retryable."""
-        assert is_retryable_error(ValueError("bad value")) is False
-
-    def test_os_error_not_retryable(self) -> None:
-        """OSError should not be retryable."""
-        assert is_retryable_error(OSError("file not found")) is False
 
 
 class TestFetchWithRetry:

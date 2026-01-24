@@ -272,3 +272,145 @@ def test_no_imports_of_removed_shim_paths(project_root: Path) -> None:
         "  erdos.core.loop_config -> erdos.core.loop.config\n"
         "  erdos.core.loop_verifier -> erdos.core.loop.verifier"
     )
+
+
+# DEBT-075 regression guard: centralized environment reads
+#
+# AppConfig (src/erdos/core/config.py) is the SSOT for environment variables.
+# A small, explicit allowlist exists for cases that must manipulate the process
+# environment (e.g., TORCH_DEVICE for marker).
+ENV_READ_ALLOWLIST = {
+    Path("src/erdos/core/config.py"),
+    Path("src/erdos/core/pdf/converter.py"),
+}
+
+
+def _collect_env_aliases(tree: ast.Module) -> tuple[set[str], set[str], set[str]]:
+    os_aliases: set[str] = set()
+    environ_aliases: set[str] = set()
+    getenv_aliases: set[str] = set()
+
+    for statement in ast.walk(tree):
+        if isinstance(statement, ast.Import):
+            for alias in statement.names:
+                if alias.name == "os":
+                    os_aliases.add(alias.asname or "os")
+            continue
+
+        if isinstance(statement, ast.ImportFrom) and statement.module == "os":
+            for alias in statement.names:
+                if alias.name == "environ":
+                    environ_aliases.add(alias.asname or "environ")
+                elif alias.name == "getenv":
+                    getenv_aliases.add(alias.asname or "getenv")
+
+    return os_aliases, environ_aliases, getenv_aliases
+
+
+def _append_violation(
+    violations: list[str],
+    *,
+    rel_path: Path,
+    lineno: int,
+    lines: list[str],
+) -> None:
+    line = lines[lineno - 1].strip() if 0 < lineno <= len(lines) else ""
+    violations.append(f"{rel_path}:{lineno}: {line}")
+
+
+def _env_read_violations(py_file: Path, *, project_root: Path) -> list[str]:
+    rel_path = py_file.relative_to(project_root)
+    content = py_file.read_text(encoding="utf-8")
+    try:
+        tree = ast.parse(content, filename=str(py_file))
+    except SyntaxError as exc:
+        lineno = exc.lineno or 0
+        message = exc.msg or "SyntaxError"
+        return [f"{rel_path}:{lineno}: SYNTAX ERROR: {message}"]
+
+    os_aliases, environ_aliases, getenv_aliases = _collect_env_aliases(tree)
+    lines = content.splitlines()
+    violations: list[str] = []
+
+    for node in ast.walk(tree):
+        # os.environ / os.getenv (including os imported as alias)
+        if (
+            isinstance(node, ast.Attribute)
+            and isinstance(node.value, ast.Name)
+            and node.value.id in os_aliases
+            and node.attr in {"environ", "getenv"}
+        ):
+            _append_violation(
+                violations,
+                rel_path=rel_path,
+                lineno=getattr(node, "lineno", 0) or 0,
+                lines=lines,
+            )
+            continue
+
+        if (
+            isinstance(node, ast.Attribute)
+            and isinstance(node.value, ast.Name)
+            and node.value.id in environ_aliases
+            and node.attr == "get"
+        ):
+            _append_violation(
+                violations,
+                rel_path=rel_path,
+                lineno=getattr(node, "lineno", 0) or 0,
+                lines=lines,
+            )
+            continue
+
+        # environ[...] subscripts (when imported via `from os import environ`)
+        if (
+            isinstance(node, ast.Subscript)
+            and isinstance(node.value, ast.Name)
+            and node.value.id in environ_aliases
+        ):
+            _append_violation(
+                violations,
+                rel_path=rel_path,
+                lineno=getattr(node, "lineno", 0) or 0,
+                lines=lines,
+            )
+            continue
+
+        # getenv(...) calls (when imported via `from os import getenv`)
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id in getenv_aliases
+        ):
+            _append_violation(
+                violations,
+                rel_path=rel_path,
+                lineno=getattr(node, "lineno", 0) or 0,
+                lines=lines,
+            )
+
+    return violations
+
+
+def test_no_env_reads_outside_app_config(project_root: Path) -> None:
+    """Ensure env reads stay centralized in AppConfig (DEBT-075).
+
+    Disallow `os.environ` / `os.getenv` usage anywhere under src/ except for the
+    explicit allowlist.
+    """
+    src_dir = project_root / "src"
+    allowlisted = {project_root / p for p in ENV_READ_ALLOWLIST}
+
+    violations: list[str] = []
+    for py_file in src_dir.rglob("*.py"):
+        if py_file in allowlisted:
+            continue
+        violations.extend(_env_read_violations(py_file, project_root=project_root))
+
+    assert not violations, (
+        f"Found {len(violations)} environment-read violation(s) (DEBT-075):\n"
+        + "\n".join(f"  - {v}" for v in violations[:20])
+        + ("\n  ..." if len(violations) > 20 else "")
+        + "\n\nUse erdos.core.config.AppConfig (or helpers in config.py) instead of "
+        "reading environment variables directly."
+    )

@@ -9,7 +9,14 @@ from pydantic import TypeAdapter, ValidationError
 
 from erdos.core.constants import API_RATE_LIMIT_DELAY
 from erdos.core.exit_codes import ExitCode
-from erdos.core.ingest.fetch import MetadataSource, process_all_references
+from erdos.core.ingest.fetch import (
+    FetchConfig,
+    IngestConfig,
+    MetadataSource,
+    PDFConfig,
+    build_provider_from_source,
+    process_all_references,
+)
 from erdos.core.ingest.stable_key import get_stable_key
 from erdos.core.literature_paths import get_manifest_path
 from erdos.core.models import (
@@ -297,7 +304,11 @@ def ingest_problem_references(
     timeout: float = 30.0,
     delay: float = API_RATE_LIMIT_DELAY,
     mailto: str,
+    pdf: bool = False,
+    pdf_converter: str = "marker",
+    pdf_use_llm: bool = False,
     source: MetadataSource = MetadataSource.OPENALEX,
+    openalex_api_key: str | None = None,
 ) -> CLIOutput:
     """Ingest references for a problem.
 
@@ -313,13 +324,19 @@ def ingest_problem_references(
             API_RATE_LIMIT_DELAY. Per-reference throttling is sufficient since each
             reference makes at most 1-3 requests (DOI, arXiv metadata, arXiv source).
         mailto: Contact email for API polite pools.
+        pdf: Enable PDF conversion for non-arXiv references (SPEC-019).
+        pdf_converter: PDF converter backend (marker or pdfplumber).
+        pdf_use_llm: Enable LLM-enhanced PDF extraction when supported.
         source: Metadata source to use (default: OpenAlex).
+        openalex_api_key: Optional OpenAlex API key override (defaults to env/config).
 
     Returns:
         CLIOutput with ingestion results.
 
     Note:
-        This function exceeds 80 LOC but is acceptable per DEBT-026 criteria:
+        # exempt: DEBT-026
+
+        This function exceeds 120 LOC but is acceptable per DEBT-026 criteria:
         it is pure linear orchestration with no branching complexity - each step
         is a single helper call. The body contains ~12 orchestration steps with
         clear names; extracting further would obscure the workflow. Docstring
@@ -347,18 +364,35 @@ def ingest_problem_references(
     # Load existing manifest if present
     existing_manifest = _load_existing_manifest(manifest_path, force)
 
+    provider = None
+    if allow_network:
+        provider = build_provider_from_source(
+            source,
+            mailto=mailto,
+            timeout=timeout,
+            openalex_api_key=openalex_api_key,
+        )
+
     # Process all references
+    ingest_config = IngestConfig(
+        fetch=FetchConfig(
+            repo_root=repo_root,
+            allow_download=allow_download,
+            allow_network=allow_network,
+            timeout=timeout,
+            mailto=mailto,
+            delay=delay,
+        ),
+        pdf=PDFConfig(enabled=pdf, converter=pdf_converter, use_llm=pdf_use_llm),
+        force=force,
+        source=source,
+        openalex_api_key=openalex_api_key,
+    )
     process_result = process_all_references(
         problem,
         existing_manifest=existing_manifest,
-        force=force,
-        repo_root=repo_root,
-        allow_download=allow_download,
-        allow_network=allow_network,
-        timeout=timeout,
-        mailto=mailto,
-        delay=delay,
-        source=source,
+        config=ingest_config,
+        provider=provider,
     )
 
     # Check for duplicate stable keys

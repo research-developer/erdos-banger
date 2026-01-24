@@ -3,7 +3,7 @@
 import subprocess
 from unittest.mock import MagicMock, patch
 
-from erdos.core.ask.llm import execute_llm_if_enabled
+from erdos.core.ask.llm import LLMExecutionResult, execute_llm_if_enabled
 from erdos.core.ask.service import (
     _build_response_data,
     _ensure_index_ready,
@@ -115,13 +115,15 @@ def test_execute_llm_if_enabled_disabled():
         prompt="Test prompt",
         enable_llm=False,
         llm_command=None,
+        command="erdos ask",
     )
 
-    assert isinstance(result, dict)
-    assert result["answer"] is None
-    assert result["llm_exit_code"] is None
-    assert result["llm_enabled"] is False
-    assert result["llm_command"] is None
+    assert isinstance(result, LLMExecutionResult)
+    assert result.answer is None
+    assert result.llm_exit_code is None
+    assert result.llm_enabled is False
+    assert result.llm_command is None
+    assert result.error is None
 
 
 def test_execute_llm_if_enabled_no_command():
@@ -131,13 +133,15 @@ def test_execute_llm_if_enabled_no_command():
         prompt="Test prompt",
         enable_llm=True,
         llm_command=None,
+        command="erdos ask",
     )
 
-    assert isinstance(result, dict)
-    assert result["answer"] is None
-    assert result["llm_exit_code"] is None
-    assert result["llm_enabled"] is False
-    assert result["llm_command"] is None
+    assert isinstance(result, LLMExecutionResult)
+    assert result.answer is None
+    assert result.llm_exit_code is None
+    assert result.llm_enabled is False
+    assert result.llm_command is None
+    assert result.error is None
 
 
 def test_execute_llm_if_enabled_success():
@@ -150,13 +154,15 @@ def test_execute_llm_if_enabled_success():
             prompt="Test prompt",
             enable_llm=True,
             llm_command="echo",
+            command="erdos ask",
         )
 
-        assert isinstance(result, dict)
-        assert result["answer"] == "Answer text"
-        assert result["llm_exit_code"] == 0
-        assert result["llm_enabled"] is True
-        assert result["llm_command"] == "echo"
+        assert isinstance(result, LLMExecutionResult)
+        assert result.answer == "Answer text"
+        assert result.llm_exit_code == 0
+        assert result.llm_enabled is True
+        assert result.llm_command == "echo"
+        assert result.error is None
 
 
 def test_execute_llm_if_enabled_nonzero_exit():
@@ -169,12 +175,14 @@ def test_execute_llm_if_enabled_nonzero_exit():
             prompt="Test prompt",
             enable_llm=True,
             llm_command="echo",
+            command="erdos ask",
         )
 
-        assert isinstance(result, CLIOutput)
-        assert not result.success
+        assert isinstance(result, LLMExecutionResult)
+        assert result.ok is False
         assert result.error is not None
-        assert "exited with code 1" in result.error["message"]
+        assert result.error.error is not None
+        assert "exited with code 1" in result.error.error["message"]
 
 
 def test_execute_llm_if_enabled_command_not_found():
@@ -187,12 +195,14 @@ def test_execute_llm_if_enabled_command_not_found():
             prompt="Test prompt",
             enable_llm=True,
             llm_command="nonexistent",
+            command="erdos ask",
         )
 
-        assert isinstance(result, CLIOutput)
-        assert not result.success
+        assert isinstance(result, LLMExecutionResult)
+        assert result.ok is False
         assert result.error is not None
-        assert "not found" in result.error["message"]
+        assert result.error.error is not None
+        assert "not found" in result.error.error["message"]
 
 
 def test_execute_llm_if_enabled_os_error():
@@ -205,12 +215,14 @@ def test_execute_llm_if_enabled_os_error():
             prompt="Test prompt",
             enable_llm=True,
             llm_command="echo",
+            command="erdos ask",
         )
 
-        assert isinstance(result, CLIOutput)
-        assert not result.success
+        assert isinstance(result, LLMExecutionResult)
+        assert result.ok is False
         assert result.error is not None
-        assert "error" in result.error["message"].lower()
+        assert result.error.error is not None
+        assert "error" in result.error.error["message"].lower()
 
 
 def test_execute_llm_if_enabled_value_error():
@@ -223,12 +235,14 @@ def test_execute_llm_if_enabled_value_error():
             prompt="Test prompt",
             enable_llm=True,
             llm_command="echo 'unclosed",
+            command="erdos ask",
         )
 
-        assert isinstance(result, CLIOutput)
-        assert not result.success
+        assert isinstance(result, LLMExecutionResult)
+        assert result.ok is False
         assert result.error is not None
-        assert "syntax" in result.error["message"].lower()
+        assert result.error.error is not None
+        assert "syntax" in result.error.error["message"].lower()
 
 
 def test_execute_llm_if_enabled_timeout():
@@ -242,13 +256,15 @@ def test_execute_llm_if_enabled_timeout():
             prompt="Test prompt",
             enable_llm=True,
             llm_command="slow-llm",
+            command="erdos ask",
         )
 
-        assert isinstance(result, CLIOutput)
-        assert not result.success
+        assert isinstance(result, LLMExecutionResult)
+        assert result.ok is False
         assert result.error is not None
-        assert "timed out" in result.error["message"].lower()
-        assert result.error["type"] == "TIMEOUT"
+        assert result.error.error is not None
+        assert "timed out" in result.error.error["message"].lower()
+        assert result.error.error["type"] == "TIMEOUT"
 
 
 # Tests for _load_problem
@@ -327,12 +343,12 @@ def test_build_response_data_basic():
             reference_doi=None,
         )
     ]
-    llm_result: dict[str, str | int | bool | None] = {
-        "answer": "Test answer",
-        "llm_exit_code": 0,
-        "llm_enabled": True,
-        "llm_command": "test-llm",
-    }
+    llm_result = LLMExecutionResult(
+        answer="Test answer",
+        llm_exit_code=0,
+        llm_enabled=True,
+        llm_command="test-llm",
+    )
 
     data = _build_response_data(
         problem_id=6,
@@ -364,12 +380,7 @@ def test_build_response_data_basic():
 
 def test_build_response_data_no_llm():
     """_build_response_data handles disabled LLM."""
-    llm_result: dict[str, str | int | bool | None] = {
-        "answer": None,
-        "llm_exit_code": None,
-        "llm_enabled": False,
-        "llm_command": None,
-    }
+    llm_result = LLMExecutionResult()
 
     data = _build_response_data(
         problem_id=6,
@@ -403,12 +414,7 @@ def test_build_response_data_multiple_sources():
         )
         for i in range(3)
     ]
-    llm_result: dict[str, str | int | bool | None] = {
-        "answer": None,
-        "llm_exit_code": None,
-        "llm_enabled": False,
-        "llm_command": None,
-    }
+    llm_result = LLMExecutionResult()
 
     data = _build_response_data(
         problem_id=6,

@@ -1,15 +1,15 @@
 """SearchIndex facade - thin coordinator delegating to focused collaborators.
 
-This module provides the SearchIndex class as a backward-compatible facade
-that composes the focused search modules (db, indexer, bm25, embeddings, hybrid).
+This module provides the SearchIndex class as a facade that composes the focused
+search modules (db, indexer, bm25, embeddings, hybrid).
 """
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
 from typing import TYPE_CHECKING
 
+from erdos.core.config import DEFAULT_INDEX_PATH, AppConfig
+from erdos.core.constants import DEFAULT_SEARCH_LIMIT
 from erdos.core.search.bm25 import BM25Search
 from erdos.core.search.db import DatabaseManager, SearchIndexError
 from erdos.core.search.embeddings_store import EmbeddingsStore
@@ -23,8 +23,7 @@ from erdos.core.search.types import (
 
 
 if TYPE_CHECKING:
-    from contextlib import AbstractContextManager
-    from sqlite3 import Connection
+    from pathlib import Path
 
     from erdos.core.models import ChunkSource, ProblemRecord, TextChunk
 
@@ -52,7 +51,7 @@ class SearchIndex:
     Usage:
         index = SearchIndex.from_default()
         index.index_problem(problem)
-        results = index.search("prime numbers", limit=10)
+        results = index.search("prime numbers", limit=DEFAULT_SEARCH_LIMIT)
     """
 
     SCHEMA_VERSION = 1
@@ -71,7 +70,7 @@ class SearchIndex:
 
     @classmethod
     def from_default(cls, *, index_path: Path | None = None) -> SearchIndex:
-        """Create index using default path (index/erdos.sqlite).
+        """Create index using the default path (DEFAULT_INDEX_PATH).
 
         Args:
             index_path: Explicit path to use (skips env/default lookup).
@@ -83,13 +82,13 @@ class SearchIndex:
         if index_path is not None:
             return cls(index_path)
 
-        # 2. Environment variable (legacy fallback)
-        env_path = os.environ.get("ERDOS_INDEX_PATH")
-        if env_path:
-            return cls(Path(env_path))
+        # 2. Environment variable via AppConfig (centralized env reads)
+        config_index_path = AppConfig.from_env().index_path
+        if config_index_path is not None:
+            return cls(config_index_path)
 
         # 3. Default path
-        return cls(Path("index/erdos.sqlite"))
+        return cls(DEFAULT_INDEX_PATH)
 
     @property
     def db_path(self) -> Path:
@@ -138,7 +137,7 @@ class SearchIndex:
         self,
         query: str,
         *,
-        limit: int = 10,
+        limit: int = DEFAULT_SEARCH_LIMIT,
         problem_id: int | None = None,
         source_types: list[ChunkSource] | None = None,
     ) -> list[SearchResult]:
@@ -240,7 +239,7 @@ class SearchIndex:
         query: str,
         embedder: EmbeddingModelProtocol,
         *,
-        limit: int = 10,
+        limit: int = DEFAULT_SEARCH_LIMIT,
         problem_id: int | None = None,
     ) -> list[SemanticSearchResult]:
         """Search using semantic similarity.
@@ -266,7 +265,7 @@ class SearchIndex:
         query: str,
         embedder: EmbeddingModelProtocol,
         *,
-        limit: int = 10,
+        limit: int = DEFAULT_SEARCH_LIMIT,
         alpha: float = 0.5,
         problem_id: int | None = None,
     ) -> list[SemanticSearchResult]:
@@ -288,15 +287,3 @@ class SearchIndex:
         return self._hybrid.search_hybrid(
             query, embedder, limit=limit, alpha=alpha, problem_id=problem_id
         )
-
-    # =========================================================================
-    # Internal access (for backward compatibility in tests)
-    # =========================================================================
-
-    def _connect(self) -> AbstractContextManager[Connection]:
-        """Internal: access to database connection context manager.
-
-        NOTE: This is for backward compatibility with existing tests.
-        New code should not use this method.
-        """
-        return self._db.connect()

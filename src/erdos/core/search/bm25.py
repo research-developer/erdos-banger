@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from erdos.core.constants import DEFAULT_SEARCH_LIMIT
 from erdos.core.models import ChunkSource
 from erdos.core.search.types import SearchResult
 
@@ -37,7 +38,7 @@ class BM25Search:
         self,
         query: str,
         *,
-        limit: int = 10,
+        limit: int = DEFAULT_SEARCH_LIMIT,
         problem_id: int | None = None,
         source_types: list[ChunkSource] | None = None,
     ) -> list[SearchResult]:

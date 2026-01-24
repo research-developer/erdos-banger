@@ -25,8 +25,11 @@ LEAN_TOOLCHAIN_VERSION = "v4.12.0"
 LEAN_COMPILE_TIMEOUT = 120
 """Timeout for Lean compilation operations."""
 
+LEAN_VERSION_TIMEOUT = 10
+"""Timeout for `lean --version` environment checks."""
+
 LAKE_UPDATE_TIMEOUT = 600
-"""Timeout for lake update operations."""
+"""Timeout for long-running Lean tool operations (e.g., `lake update`, Aristotle)."""
 
 LLM_COMMAND_TIMEOUT = 300
 """Timeout for external LLM command execution (5 minutes)."""

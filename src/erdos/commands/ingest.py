@@ -15,8 +15,9 @@ from rich.console import Console
 from rich.table import Table
 
 from erdos.commands.app_context import get_app_context
+from erdos.commands.cli_helpers import print_if_human
 from erdos.commands.presenter import exit_with_result
-from erdos.core.constants import API_RATE_LIMIT_DELAY
+from erdos.core.constants import API_RATE_LIMIT_DELAY, TITLE_TRUNCATION
 from erdos.core.ingest import (
     IngestOptions,
     MetadataSource,
@@ -72,7 +73,7 @@ def _print_human(result_data: dict[str, Any]) -> None:
         for entry in entries[:10]:
             ref = entry.get("reference", {})
             table.add_row(
-                str(ref.get("title") or "")[:50],
+                str(ref.get("title") or "")[:TITLE_TRUNCATION],
                 str(ref.get("source") or ""),
                 str(ref.get("doi") or ""),
                 str(ref.get("arxiv_id") or ""),
@@ -139,13 +140,13 @@ def _create_progress_callback(
 
 def _show_progress_message(problem_id: int | None, json_output: bool) -> None:
     """Show progress message if not in JSON mode."""
-    if not json_output:
-        if problem_id is not None:
-            err_console.print(
-                f"[dim]Ingesting references for Problem {problem_id}...[/dim]"
-            )
-        else:
-            err_console.print("[dim]Starting batch ingest...[/dim]")
+    if problem_id is not None:
+        print_if_human(
+            f"Ingesting references for Problem {problem_id}...",
+            json_output=json_output,
+        )
+        return
+    print_if_human("Starting batch ingest...", json_output=json_output)
 
 
 @app.callback(invoke_without_command=True)
@@ -158,7 +159,7 @@ def ingest(
     force: Annotated[bool, typer.Option("--force", "-f")] = False,
     no_download: Annotated[bool, typer.Option("--no-download")] = False,
     no_network: Annotated[bool, typer.Option("--no-network")] = False,
-    timeout: Annotated[float, typer.Option("--timeout")] = 30.0,
+    timeout: Annotated[float | None, typer.Option("--timeout")] = None,
     delay: Annotated[float, typer.Option("--delay")] = API_RATE_LIMIT_DELAY,
     mailto: Annotated[str, typer.Option("--mailto")] = "",
     source: Annotated[
@@ -297,6 +298,10 @@ def ingest(
             options,
             repo=app_ctx.problems,
             on_progress=on_progress,
+            repo_root=app_ctx.config.repo_root,
+            mailto_default=app_ctx.config.mailto,
+            timeout_default=app_ctx.config.http_timeout,
+            openalex_api_key=app_ctx.config.openalex_api_key,
         )
 
     result.duration_ms = duration[0]

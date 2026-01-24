@@ -17,8 +17,12 @@ import math
 from typing import TYPE_CHECKING
 
 from erdos.core.exit_codes import ExitCode
-from erdos.core.formalizer import generate_skeleton
-from erdos.core.lean_runner import LeanRunner, LeanRunnerError
+from erdos.core.lean import (
+    FormalizerError,
+    LeanRunner,
+    LeanRunnerError,
+    generate_skeleton,
+)
 from erdos.core.loop.result import LoopResult, LoopStatus
 from erdos.core.loop.runner import run_loop
 from erdos.core.models import CLIOutput
@@ -34,6 +38,8 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
+
+MIN_RAG_CHUNK_BYTES = 64
 
 
 def _truncate_bytes(text: str, max_bytes: int) -> str:
@@ -62,14 +68,15 @@ def _build_rag_chunks(
         return []
     text = _truncate_bytes(text, 8192)
     encoded = text.encode("utf-8")
-    chunk_size = max(1, math.ceil(len(encoded) / max(1, limit)))
+    effective_limit = max(1, min(limit, len(encoded) // MIN_RAG_CHUNK_BYTES or 1))
+    chunk_size = math.ceil(len(encoded) / effective_limit)
 
     parts: list[str] = []
     for i in range(0, len(encoded), chunk_size):
         part = encoded[i : i + chunk_size].decode("utf-8", errors="ignore").strip()
         if part:
             parts.append(part)
-        if len(parts) >= limit:
+        if len(parts) >= effective_limit:
             break
 
     if not parts:
@@ -151,7 +158,7 @@ def execute_proof_loop(
     if not file_path.exists():
         try:
             generate_skeleton(problem, project_path, overwrite=False)
-        except Exception as e:
+        except FormalizerError as e:
             return CLIOutput.err(
                 command="erdos loop",
                 error_type="FormalizerError",

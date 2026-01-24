@@ -42,7 +42,7 @@ class _FaultyIndex:
         self._indexed.append(problem.id)
 
     def index_chunk(self, chunk: TextChunk) -> None:
-        return None
+        pass
 
     def search(
         self, query: str, *, limit: int = 10, problem_id=None, source_types=None

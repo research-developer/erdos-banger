@@ -40,8 +40,10 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-018 | OpenAlex client `get_by_arxiv()` broken + wrong test DOIs | P1 | Fixed | b2dcdfe |
 | BUG-019 | `erdos convert --format` is a no-op | P2 | Fixed | b2dcdfe |
 | BUG-020 | OpenAlex `get_by_arxiv()` returns None for real arXiv IDs | P1 | Fixed | fe34ca1 |
+| BUG-021 | `erdos ingest` ignores `--mailto`/`--timeout` for OpenAlex requests | P2 | Fixed | 853dde8 |
+| BUG-022 | `erdos ingest --pdf` flags silently ignored | P2 | Fixed | 1c8889e |
 
-**Next Bug ID:** BUG-021
+**Next Bug ID:** BUG-023
 
 ### Archived Bug Decks
 
@@ -66,6 +68,8 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/bug-018-openalex-client-broken.md`
 - `docs/_archive/bugs/bug-019-convert-format-no-op.md`
 - `docs/_archive/bugs/bug-020-openalex-get-by-arxiv-returns-none.md`
+- `docs/_archive/bugs/bug-021-ingest-openalex-mailto-timeout-ignored.md`
+- `docs/_archive/bugs/bug-022-ingest-pdf-flags-silently-ignored.md`
 
 ## Bug Priority Definitions
 

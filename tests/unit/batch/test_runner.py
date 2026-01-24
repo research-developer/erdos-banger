@@ -528,6 +528,31 @@ class TestBatchRunner:
         assert progress_calls[0].index == 0
         assert progress_calls[0].total == 3
 
+    def test_run_can_be_interrupted_via_callback(self, tmp_path: Path) -> None:
+        """Test BatchRunner stops after an interrupt request."""
+        runner_ref: dict[str, BatchRunner] = {}
+
+        def on_progress(progress: BatchProgress) -> None:
+            if progress.index == 0:
+                runner_ref["runner"].interrupt()
+
+        process_fn = MagicMock(return_value=True)
+        runner = BatchRunner(
+            command="erdos ingest",
+            problem_ids=[1, 2, 3],
+            process_fn=process_fn,
+            state_dir=tmp_path,
+            on_progress=on_progress,
+        )
+        runner_ref["runner"] = runner
+
+        result = runner.run()
+
+        assert process_fn.call_count == 1
+        assert result.total == 3
+        assert result.completed_count == 1
+        assert result.failed_count == 0
+
     def test_dry_run(self, tmp_path: Path) -> None:
         """Test dry run doesn't process or create state."""
         process_fn = MagicMock(return_value=True)
