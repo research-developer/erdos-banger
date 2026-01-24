@@ -48,6 +48,7 @@ The flags have **zero effect** on execution.
 The orchestration layer (`core/ingest/app.py`) was not updated to pass PDF options to the service layer:
 
 **app.py lines 147-159 (run_single_ingestion):**
+
 ```python
 return ingest_problem_references(
     options.problem_id,
@@ -63,6 +64,7 @@ return ingest_problem_references(
 ```
 
 **service.py lines 293-306 (ingest_problem_references signature):**
+
 ```python
 def ingest_problem_references(
     problem_id: int,
@@ -92,6 +94,7 @@ These are **NOT dead code to be removed** — they are part of the incomplete im
 ### Phase 1: Wire through existing scaffolding
 
 1. Add PDF parameters to `ingest_problem_references()` signature:
+
    ```python
    def ingest_problem_references(
        # ...existing params...
@@ -102,6 +105,7 @@ These are **NOT dead code to be removed** — they are part of the incomplete im
    ```
 
 2. Update `run_single_ingestion()` and `create_batch_process_fn()` to pass options:
+
    ```python
    return ingest_problem_references(
        # ...existing args...
@@ -120,6 +124,7 @@ These are **NOT dead code to be removed** — they are part of the incomplete im
 ## Workaround
 
 Use `erdos convert` for manual PDF conversion:
+
 ```bash
 # Download PDF manually
 curl -o paper.pdf https://example.com/paper.pdf
@@ -137,7 +142,7 @@ uv run erdos convert paper.pdf --output paper.md
 ## References
 
 - SPEC-019: `docs/_archive/specs/spec-019-pdf-conversion.md` (Section 3.1, 5.2)
-- DEBT-079: `docs/debt/debt-079-dead-code-literature-paths.md` (superseded by this bug)
+- DEBT-079: `docs/_archive/debt/debt-079-dead-code-literature-paths.md` (superseded by this bug)
 - Related commit: b32a91d (SPEC-019 implementation)
 
 ## Detection Method

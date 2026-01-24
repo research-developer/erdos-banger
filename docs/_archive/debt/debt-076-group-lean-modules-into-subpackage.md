@@ -34,7 +34,7 @@ All three modules share:
 
 ### 2. Import Graph
 
-```
+```text
 commands/lean/check_cmd.py   → lean_runner.py
 commands/lean/init_cmd.py    → lean_runner.py
 commands/lean/import_cmd.py  → lean_runner.py
@@ -57,7 +57,7 @@ All imports come from the same consumer domain (`commands/lean/` and `core/loop/
 
 Create `core/lean/` subpackage:
 
-```
+```text
 core/lean/
 ├── __init__.py
 ├── runner.py            # lean_runner.py moved

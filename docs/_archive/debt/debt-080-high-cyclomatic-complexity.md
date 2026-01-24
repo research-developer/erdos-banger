@@ -17,7 +17,7 @@ was the highest-risk item and was addressed first.
 ### Radon Complexity Analysis
 
 ```bash
-$ uv run radon cc src/erdos/ -a -s --min C
+uv run radon cc src/erdos/ -a -s --min C
 ```
 
 Top hotspots (score ≥15):

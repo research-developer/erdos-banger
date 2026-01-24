@@ -356,7 +356,7 @@ erdos search QUERY [OPTIONS]
 
 **New Options**
 
-*(Not implemented — see "Deferred" above.)*
+Not implemented — see "Deferred" above.
 
 ### Examples
 

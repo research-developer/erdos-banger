@@ -193,6 +193,13 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-072-cli-flags-silently-ignored.md`
 - `docs/_archive/debt/debt-073-magic-numbers-hardcoded-values.md`
 - `docs/_archive/debt/debt-074-test-quality-issues.md`
+- `docs/_archive/debt/debt-075-remove-remaining-env-fallbacks.md`
+- `docs/_archive/debt/debt-076-group-lean-modules-into-subpackage.md`
+- `docs/_archive/debt/debt-077-cli-helper-duplication.md`
+- `docs/_archive/debt/debt-078-test-organization-misclassification.md`
+- `docs/_archive/debt/debt-079-dead-code-literature-paths.md`
+- `docs/_archive/debt/debt-080-high-cyclomatic-complexity.md`
+- `docs/_archive/debt/debt-081-incomplete-features-not-wired.md`
 - `docs/_archive/debt/debt-082-unused-constants.md`
 - `docs/_archive/debt/debt-083-backwards-compatibility-shims.md`
 - `docs/_archive/debt/debt-084-unused-ocp-patterns.md`

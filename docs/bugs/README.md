@@ -69,6 +69,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/bug-019-convert-format-no-op.md`
 - `docs/_archive/bugs/bug-020-openalex-get-by-arxiv-returns-none.md`
 - `docs/_archive/bugs/bug-021-ingest-openalex-mailto-timeout-ignored.md`
+- `docs/_archive/bugs/bug-022-ingest-pdf-flags-silently-ignored.md`
 
 ## Bug Priority Definitions
 
