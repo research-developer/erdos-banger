@@ -57,7 +57,7 @@ Work strictly top-to-bottom unless blocked by dependencies.
 
 - [x] [SPEC-032] (1/3) Add task→LLM-command router (`src/erdos/core/llm/*`) + unit tests (no CLI wiring)
 - [x] [SPEC-032] (2/3) Wire router into `erdos ask` default LLM command selection + tests (preserve `--llm-cmd` override)
-- [ ] [SPEC-032] (3/3) Wire router into `erdos loop run` default LLM command selection + tests (preserve `--llm-cmd` override)
+- [x] [SPEC-032] (3/3) Wire router into `erdos loop run` default LLM command selection + tests (preserve `--llm-cmd` override)
 
 ### SPEC-033: Lean Copilot Integration
 
@@ -88,3 +88,4 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - 2026-01-24: [SPEC-031] (3/3) ✅ Implemented `erdos search --msc` mode for zbMATH MSC code search. Added --year-min/--year-max filters. 13 unit tests + 2 integration tests. Added DEBT-095/096 exemptions. CI passes (81.03% coverage). Commit: 931ec36.
 - 2026-01-24: [SPEC-032] (1/3) ✅ Implemented task→LLM-command router (`src/erdos/core/llm/*`). TaskType enum + get_env_var_chain() + resolve_llm_command() with override support. 22 unit tests covering resolution order, empty/missing env vars, override bypass. Added router.py to DEBT-075 env allowlist. CI passes (81.09% coverage). Commit: 150a549.
 - 2026-01-24: [SPEC-032] (2/3) ✅ Wired LLM router into `erdos ask` with TaskType.ask_question. Uses ERDOS_LLM_COMMAND_MATH -> ERDOS_LLM_COMMAND chain. Preserves --llm-cmd override and --no-llm behavior. 6 integration tests for router wiring. CI passes (81.09% coverage). Commit: ba3777a.
+- 2026-01-24: [SPEC-032] (3/3) ✅ Wired LLM router into `erdos loop run` with TaskType.loop_patch. Uses ERDOS_LLM_COMMAND_CODE -> ERDOS_LLM_COMMAND chain. Preserves --llm-cmd override. 6 integration tests in test_cli_loop_router.py. Updated existing loop tests to provide ERDOS_LLM_COMMAND. CI passes (80.97% coverage). Commit: 83465f3.
