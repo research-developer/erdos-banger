@@ -31,7 +31,7 @@ Work strictly top-to-bottom unless blocked by dependencies.
 
 ### DEBT-100: Integration Tests Load `.env` When Present
 
-- [ ] [DEBT-100] Load `.env` (if present) for local network tests; document approach; preserve CI determinism
+- [x] [DEBT-100] Load `.env` (if present) for local network tests; document approach; preserve CI determinism
 
 ### DEBT-101: Lean/Mathlib Version Upgrade
 
@@ -64,3 +64,4 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - 2026-01-24: [SPEC-033] (3/3) ✅ Implemented `/encode` endpoint with embeddings (SPEC-014) + degraded mode (HTTP 503). Added embeddings.py wrapper with is_embeddings_available(), EmbeddingsNotAvailableError, encode_texts(), model caching. 23 unit tests (test_embeddings.py + test_server.py). CI passes (80.61% coverage). Commit: 2d4f974.
 - 2026-01-24: [SPEC-034] (1/2) ✅ Implemented dashboard aggregation (`src/erdos/core/dashboard/data.py`). DashboardData + ProblemStats dataclasses, aggregate_dashboard_data() with filtering, problem status (new/active/stale), attempt timeline, to_dict() JSON snapshot. 20 unit tests. CI passes (80.82% coverage). Commit: 3a81101.
 - 2026-01-24: [SPEC-034] (2/2) ✅ Implemented `erdos dashboard` CLI UI (Rich). Problem overview table, attempt timeline heatmap, aggregate stats panel. State machine (state.py) for keyboard navigation (q/r/p/a/b). --problem detail view, --recent time filter, --refresh auto-refresh. Non-interactive JSON mode (erdos --json dashboard). 45 unit tests (state.py + render.py + CLI). Refactored dashboard() to pass LOC audit. CI passes (80.69% coverage). Commit: 38c826c.
+- 2026-01-24: [DEBT-100] ✅ Added pytest-dotenv for `.env` loading in local tests. Fixed tests expecting unset vars. Documented in AGENTS.md. CI passes (80.23% coverage). Commit: 8410c4f.

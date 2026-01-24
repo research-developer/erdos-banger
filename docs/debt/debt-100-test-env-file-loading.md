@@ -1,8 +1,10 @@
 # DEBT-100: Integration Tests Don't Load .env File
 
-**Status:** Open
+**Status:** Resolved
 **Priority:** P3 (Tests skip instead of fail)
 **Created:** 2026-01-24
+**Resolved:** 2026-01-24
+**Commit:** 8410c4f
 **Related:** Exa integration tests, SPEC-029
 
 ## Problem
@@ -49,10 +51,23 @@ load_dotenv()
 
 ## Acceptance Criteria
 
-1. [ ] Choose approach and implement
-2. [ ] `EXA_API_KEY` tests run when `.env` is present
-3. [ ] Document the approach in AGENTS.md testing section
-4. [ ] Ensure `.env` is still gitignored (no secrets in repo)
+1. [x] Choose approach and implement → Option A (pytest-dotenv)
+2. [x] `EXA_API_KEY` tests run when `.env` is present
+3. [x] Document the approach in AGENTS.md testing section
+4. [x] Ensure `.env` is still gitignored (no secrets in repo)
+
+## Resolution
+
+Implemented Option A (pytest-dotenv plugin):
+
+1. Added `pytest-dotenv>=0.5.2` to dev dependencies
+2. Configured `env_files = [".env"]` in `[tool.pytest.ini_options]`
+3. Fixed tests expecting vars to be unset by explicitly setting them to `""`
+4. Documented approach in AGENTS.md "API Keys for Network Tests" section
+5. Verified `.env` is gitignored (line 41 of .gitignore)
+
+**Note:** Click's CliRunner merges `env={}` with `os.environ`, so tests expecting
+env vars to be absent must explicitly set them to empty strings.
 
 ## Effort Estimate
 
