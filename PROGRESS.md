@@ -45,7 +45,7 @@ Work strictly top-to-bottom unless blocked by dependencies.
 ### SPEC-030: Semantic Scholar API Integration
 
 - [x] [SPEC-030] (1/2) Implement `SemanticScholarClient` + caching + unit tests (offline)
-- [ ] [SPEC-030] (2/2) Implement `erdos refs s2 {citations,cited-by,references}` + tests (offline); add `requires_network` smoke test
+- [x] [SPEC-030] (2/2) Implement `erdos refs s2 {citations,cited-by,references}` + tests (offline); add `requires_network` smoke test
 
 ### SPEC-031: zbMATH Open API Integration
 
@@ -82,3 +82,4 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - 2026-01-24: [SPEC-029] (1/2) ✅ Implemented `ExaClient` + caching + 30 unit tests. Rate limiting (1 req/sec), retry with backoff, 24h cache TTL, arXiv/DOI extraction. Added DEBT-093 exemption for LOC (+18). CI passes (80.76% coverage). Commit: c27848c.
 - 2026-01-24: [SPEC-029] (2/2) ✅ Implemented `erdos research exa search` command. 12 unit tests + 2 requires_network integration tests. Added `--save-leads` for lead creation, `ERDOS_EXA_CACHE_PATH` for test isolation. CI passes (80.77% coverage). Commit: ac82f85.
 - 2026-01-24: [SPEC-030] (1/2) ✅ Implemented `SemanticScholarClient` + caching + 30 unit tests. S2Paper/CitationContext/S2Reference models, rate limiting (3s unauth/1s auth), retry with backoff, 7-day cache TTL. Added DEBT-094 exemption for LOC (+184). CI passes (80.88% coverage). Commit: 1afe110.
+- 2026-01-24: [SPEC-030] (2/2) ✅ Implemented `erdos refs s2 {citations,cited-by,references}` commands + backward compat. Added RefsGroup(TyperGroup) for `erdos refs <id>` compat. 13 unit tests + 6 integration tests. All acceptance criteria met. CI passes (80.64% coverage). Commit: d0bc1da.
