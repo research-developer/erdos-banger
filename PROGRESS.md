@@ -61,7 +61,7 @@ Work strictly top-to-bottom unless blocked by dependencies.
 
 ### SPEC-033: Lean Copilot Integration
 
-- [ ] [SPEC-033] (1/3) Add optional deps for copilot server (FastAPI/uvicorn) per spec + unit test scaffolding
+- [x] [SPEC-033] (1/3) Add optional deps for copilot server (FastAPI/uvicorn) per spec + unit test scaffolding
 - [ ] [SPEC-033] (2/3) Implement minimal `erdos lean copilot serve` (`/generate`) using SPEC-032 routing + unit tests (offline)
 - [ ] [SPEC-033] (3/3) Implement `/encode` (embeddings) with a clear degraded mode + unit tests
 
@@ -89,3 +89,4 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - 2026-01-24: [SPEC-032] (1/3) ✅ Implemented task→LLM-command router (`src/erdos/core/llm/*`). TaskType enum + get_env_var_chain() + resolve_llm_command() with override support. 22 unit tests covering resolution order, empty/missing env vars, override bypass. Added router.py to DEBT-075 env allowlist. CI passes (81.09% coverage). Commit: 150a549.
 - 2026-01-24: [SPEC-032] (2/3) ✅ Wired LLM router into `erdos ask` with TaskType.ask_question. Uses ERDOS_LLM_COMMAND_MATH -> ERDOS_LLM_COMMAND chain. Preserves --llm-cmd override and --no-llm behavior. 6 integration tests for router wiring. CI passes (81.09% coverage). Commit: ba3777a.
 - 2026-01-24: [SPEC-032] (3/3) ✅ Wired LLM router into `erdos loop run` with TaskType.loop_patch. Uses ERDOS_LLM_COMMAND_CODE -> ERDOS_LLM_COMMAND chain. Preserves --llm-cmd override. 6 integration tests in test_cli_loop_router.py. Updated existing loop tests to provide ERDOS_LLM_COMMAND. CI passes (80.97% coverage). Commit: 83465f3.
+- 2026-01-24: [SPEC-033] (1/3) ✅ Added `copilot` optional extra (fastapi>=0.115.0, uvicorn>=0.32.0). Created src/erdos/lean_copilot package with is_copilot_available() and CopilotNotAvailableError. Added mypy overrides for FastAPI. 6 unit tests. CI passes (80.98% coverage). Commit: ab08be3.
