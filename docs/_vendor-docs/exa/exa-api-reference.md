@@ -59,12 +59,14 @@ erdos-banger currently uses only Exa's **Search** API.
 **Base URL:** `https://api.exa.ai`
 
 **Authentication:**
-```
+
+```http
 x-api-key: YOUR_EXA_API_KEY
 ```
 
 Or use Bearer token:
-```
+
+```http
 Authorization: Bearer YOUR_EXA_API_KEY
 ```
 

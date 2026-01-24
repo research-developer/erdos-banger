@@ -68,17 +68,17 @@ class TestLoopRunRouterIntegration:
         )
 
         # The loop will run and use the CODE-specific command
-        # We just verify it doesn't fail with CONFIG_ERROR
+        # We just verify it doesn't fail with ConfigError
         data = json.loads(result.stdout)
         # If llm was used, it should have the command recorded in loop data
         assert data["command"] == "erdos loop"
-        # Either success (proof complete) or loop-specific failure (not CONFIG_ERROR)
+        # Either success (proof complete) or loop-specific failure (not ConfigError)
         if data["success"]:
             # Proof completed
             pass
         else:
-            # Should not be a CONFIG_ERROR - that would mean routing failed
-            assert data["error"]["type"] != "CONFIG_ERROR"
+            # Should not be a ConfigError - that would mean routing failed
+            assert data["error"]["type"] != "ConfigError"
 
     def test_loop_falls_back_to_global_llm_command(self, tmp_path: Path) -> None:
         """loop run command falls back to ERDOS_LLM_COMMAND when CODE not set."""
@@ -115,9 +115,9 @@ class TestLoopRunRouterIntegration:
 
         data = json.loads(result.stdout)
         assert data["command"] == "erdos loop"
-        # Should not fail with CONFIG_ERROR
+        # Should not fail with ConfigError
         if not data["success"]:
-            assert data["error"]["type"] != "CONFIG_ERROR"
+            assert data["error"]["type"] != "ConfigError"
 
     def test_loop_llm_cmd_override_bypasses_router(self, tmp_path: Path) -> None:
         """--llm-cmd override bypasses router entirely."""
@@ -161,12 +161,12 @@ class TestLoopRunRouterIntegration:
 
         data = json.loads(result.stdout)
         assert data["command"] == "erdos loop"
-        # Should not fail with CONFIG_ERROR
+        # Should not fail with ConfigError
         if not data["success"]:
-            assert data["error"]["type"] != "CONFIG_ERROR"
+            assert data["error"]["type"] != "ConfigError"
 
     def test_loop_error_when_no_llm_command_configured(self, tmp_path: Path) -> None:
-        """Error when no LLM command configured (router fails with CONFIG_ERROR)."""
+        """Error when no LLM command configured (router fails with ConfigError)."""
         project_path = _setup_lean_project(tmp_path)
 
         result = runner.invoke(
@@ -186,11 +186,11 @@ class TestLoopRunRouterIntegration:
             },
         )
 
-        # Should fail with CONFIG_ERROR
+        # Should fail with ConfigError
         assert result.exit_code == ExitCode.CONFIG_ERROR, f"Output: {result.stdout}"
         data = json.loads(result.stdout)
         assert data["success"] is False
-        assert data["error"]["type"] == "CONFIG_ERROR"
+        assert data["error"]["type"] == "ConfigError"
         assert "No LLM command configured" in data["error"]["message"]
         # Should mention what env vars to set
         assert "ERDOS_LLM_COMMAND_CODE" in data["error"]["message"]
@@ -244,7 +244,7 @@ class TestLoopRunRouterIntegration:
             },
         )
 
-        # Should fail with CONFIG_ERROR (MATH doesn't satisfy loop_patch)
+        # Should fail with ConfigError (MATH doesn't satisfy loop_patch)
         assert result.exit_code == ExitCode.CONFIG_ERROR, f"Output: {result.stdout}"
         data = json.loads(result.stdout)
         assert data["success"] is False

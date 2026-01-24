@@ -157,7 +157,7 @@ class TestLoopJSONContract:
         # Per SPEC-032: router fails upfront with CONFIG_ERROR
         assert output["success"] is False
         assert output["error"] is not None
-        assert output["error"]["type"] == "CONFIG_ERROR"
+        assert output["error"]["type"] == "ConfigError"
         # Error message should mention what env vars to set
         assert "ERDOS_LLM_COMMAND_CODE" in output["error"]["message"]
 

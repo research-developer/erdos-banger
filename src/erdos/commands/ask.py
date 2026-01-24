@@ -215,7 +215,7 @@ def ask(
                 ctx,
                 CLIOutput.err(
                     command="erdos ask",
-                    error_type="CONFIG_ERROR",
+                    error_type="ConfigError",
                     message=str(e),
                     code=ExitCode.CONFIG_ERROR,
                 ),

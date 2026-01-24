@@ -264,7 +264,7 @@ def test_execute_llm_if_enabled_timeout():
         assert result.error is not None
         assert result.error.error is not None
         assert "timed out" in result.error.error["message"].lower()
-        assert result.error.error["type"] == "TIMEOUT"
+        assert result.error.error["type"] == "Timeout"
 
 
 # Tests for _load_problem

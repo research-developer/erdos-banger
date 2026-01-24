@@ -61,7 +61,7 @@ def serve(
     if not is_copilot_available():
         result = CLIOutput.err(
             command="erdos lean copilot serve",
-            error_type="DEPENDENCY_ERROR",
+            error_type="DependencyError",
             message=(
                 "Copilot server requires the 'copilot' extra. "
                 "Install with: uv sync --extra copilot"
@@ -79,7 +79,7 @@ def serve(
     except ImportError as e:
         result = CLIOutput.err(
             command="erdos lean copilot serve",
-            error_type="DEPENDENCY_ERROR",
+            error_type="DependencyError",
             message=f"Failed to import copilot dependencies: {e}",
             code=ExitCode.CONFIG_ERROR,
         )
@@ -92,7 +92,7 @@ def serve(
     except CopilotNotAvailableError as e:
         result = CLIOutput.err(
             command="erdos lean copilot serve",
-            error_type="DEPENDENCY_ERROR",
+            error_type="DependencyError",
             message=str(e),
             code=ExitCode.CONFIG_ERROR,
         )

@@ -78,7 +78,7 @@ class TestCopilotServeDependencyCheck:
         assert result.exit_code != 0
         output = json.loads(result.output)
         assert output["success"] is False
-        assert "DEPENDENCY_ERROR" in output["error"]["type"]
+        assert "DependencyError" in output["error"]["type"]
         assert "copilot" in output["error"]["message"].lower()
 
 

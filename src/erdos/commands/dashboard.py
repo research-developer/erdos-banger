@@ -276,7 +276,7 @@ def dashboard(
     refresh: int = typer.Option(
         5,
         "--refresh",
-        help="Auto-refresh interval in seconds (0 to disable).",
+        help="Enable interactive mode (non-zero) with manual 'r' to refresh. Set 0 for single-render.",
         min=0,
         max=3600,
     ),
