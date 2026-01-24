@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import Any
 
 from erdos.core.config import AppConfig, build_subprocess_env
+from erdos.core.constants import LAKE_UPDATE_TIMEOUT
 
 
 logger = logging.getLogger(__name__)
@@ -52,7 +53,7 @@ class AristotleConfig:
     """Configuration for Aristotle CLI invocation."""
 
     command: str = "aristotle"
-    timeout: int = 600
+    timeout: int = LAKE_UPDATE_TIMEOUT
     informal: bool = False
     formal_input_context: bool = False
 
@@ -213,7 +214,7 @@ def run_aristotle_prove_from_file(
     *,
     api_key: str | None = None,
     command: str | None = None,
-    timeout: int = 600,
+    timeout: int = LAKE_UPDATE_TIMEOUT,
     informal: bool = False,
     formal_input_context: bool = False,
 ) -> AristotleResult:
