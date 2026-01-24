@@ -284,6 +284,8 @@ ENV_READ_ALLOWLIST = {
     Path("src/erdos/core/pdf/converter.py"),
     # proofs.py must filter os.environ for subprocess security (strip API keys)
     Path("src/erdos/core/sync/proofs.py"),
+    # router.py resolves LLM commands from task-specific env vars (SPEC-032)
+    Path("src/erdos/core/llm/router.py"),
 }
 
 
