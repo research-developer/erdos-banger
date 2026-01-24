@@ -34,7 +34,7 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - [x] [SPEC-035] (1/5) Define sync cache schemas + pure merge logic for `data/problems_enriched.yaml` (submodule + website) + unit tests (no network)
 - [x] [SPEC-035] (2/5) Implement `erdos sync website <id>` using HTML fixtures + unit tests; ensure output stays `ProblemLoader`-compatible
 - [x] [SPEC-035] (3/5) Implement `erdos sync submodule` + offline `--check` mode; add `requires_network` test for remote freshness
-- [ ] [SPEC-035] (4/5) Implement forum proof-link extraction + unit tests (HTML fixtures); write `data/sync_cache/proofs/<id>/links.json`
+- [x] [SPEC-035] (4/5) Implement forum proof-link extraction + unit tests (HTML fixtures); write `data/sync_cache/proofs/<id>/links.json`
 - [ ] [SPEC-035] (5/5) Implement `erdos sync proof <id> --verify` (opt-in) + provenance/log writing + tests (offline fixtures + `requires_network` smoke)
 
 ### SPEC-029: Exa Research API Integration
@@ -77,3 +77,4 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - 2026-01-24: [SPEC-035] (1/5) ✅ Verified sync cache schemas + merge logic already implemented in `src/erdos/core/sync/{models,merge}.py` with 57 unit tests passing. CI passes (81.55% coverage).
 - 2026-01-24: [SPEC-035] (2/5) ✅ Implemented `erdos sync website <id>` with HTML fixtures (4 files), 37 unit tests (94 total sync tests). JSON output contract validated. ProblemLoader-compatible. CI passes (80.77% coverage). Commit: 0216497.
 - 2026-01-24: [SPEC-035] (3/5) ✅ Implemented `erdos sync submodule` + `--check` mode. 31 unit tests + 4 integration tests (requires_network). Fixed DEBT-075 violation (added ERDOS_SUBMODULE_PATH to AppConfig). CI passes (80.55% coverage). Commit: 3d5df70.
+- 2026-01-24: [SPEC-035] (4/5) ✅ Implemented `erdos sync proof <id>` forum extraction. 4 HTML fixtures, 36 unit tests (25 forum.py + 11 proof_cmd.py). Extracts GitHub/GitLab links, author, Lean version hints. Writes links.json to sync cache. CI passes (80.55% coverage). Commit: 26b373a.
