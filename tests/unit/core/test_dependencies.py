@@ -278,10 +278,12 @@ def test_no_imports_of_removed_shim_paths(project_root: Path) -> None:
 #
 # AppConfig (src/erdos/core/config.py) is the SSOT for environment variables.
 # A small, explicit allowlist exists for cases that must manipulate the process
-# environment (e.g., TORCH_DEVICE for marker).
+# environment (e.g., TORCH_DEVICE for marker, subprocess security sanitization).
 ENV_READ_ALLOWLIST = {
     Path("src/erdos/core/config.py"),
     Path("src/erdos/core/pdf/converter.py"),
+    # proofs.py must filter os.environ for subprocess security (strip API keys)
+    Path("src/erdos/core/sync/proofs.py"),
 }
 
 

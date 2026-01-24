@@ -252,3 +252,227 @@ class TestProofCLI:
             result = runner.invoke(app, ["--json", "sync", "proof", "9999"])
 
         assert result.exit_code == ExitCode.NOT_FOUND.value
+
+
+# =============================================================================
+# Verification tests (--verify flag)
+# =============================================================================
+
+
+class TestProofVerification:
+    """Tests for the --verify flag functionality."""
+
+    def test_verify_flag_in_help(self, runner: CliRunner) -> None:
+        """--verify flag appears in help."""
+        result = runner.invoke(app, ["sync", "proof", "--help"])
+        assert result.exit_code == 0
+        assert "--verify" in result.output
+
+    def test_verify_with_no_links(
+        self, runner: CliRunner, html_thread_no_links: str, tmp_path: Path
+    ) -> None:
+        """--verify with no links returns appropriate status."""
+        cache_path = tmp_path / "proofs"
+        result = sync_proof_links(
+            50,
+            html_content=html_thread_no_links,
+            verify=True,
+            cache_path=cache_path,
+        )
+
+        assert result.success is True
+        assert result.data is not None
+        assert result.data["verification_status"] == "unverified"
+        assert "No proof links found" in result.data.get("verification_error", "")
+
+    def test_verify_calls_verification(
+        self, runner: CliRunner, html_thread_with_github: str, tmp_path: Path
+    ) -> None:
+        """--verify flag triggers verification pipeline."""
+        from erdos.core.sync.forum import parse_forum_html
+        from erdos.core.sync.models import VerificationStatus, VerificationStrength
+        from erdos.core.sync.proofs import VerificationResult
+
+        mock_result = VerificationResult(
+            status=VerificationStatus.VERIFIED,
+            strength=VerificationStrength.NO_SORRIES,
+            repo_commit="abc123",
+            toolchain="leanprover/lean4:v4.3.0",
+            verified_files=["Problem347.lean"],
+            log_content="Build succeeded",
+        )
+
+        with (
+            patch("erdos.commands.sync.proof_cmd.fetch_and_parse_forum") as mock_fetch,
+            patch(
+                "erdos.commands.sync.proof_cmd.DEFAULT_CACHE_PATH", tmp_path / "proofs"
+            ),
+            patch(
+                "erdos.commands.sync.proof_cmd.verify_proof", return_value=mock_result
+            ),
+        ):
+            mock_fetch.return_value = parse_forum_html(html_thread_with_github, 347)
+
+            result = runner.invoke(app, ["--json", "sync", "proof", "347", "--verify"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["success"] is True
+        assert data["data"]["verification_status"] == "verified"
+        assert data["data"]["verification_strength"] == "no_sorries"
+        assert data["data"]["verified_commit"] == "abc123"
+
+    def test_verify_saves_provenance(
+        self, runner: CliRunner, html_thread_with_github: str, tmp_path: Path
+    ) -> None:
+        """--verify saves provenance.json with verification details."""
+        from erdos.core.sync.forum import parse_forum_html
+        from erdos.core.sync.models import VerificationStatus, VerificationStrength
+        from erdos.core.sync.proofs import VerificationResult
+
+        mock_result = VerificationResult(
+            status=VerificationStatus.INCONCLUSIVE,
+            strength=VerificationStrength.BUILD_ONLY,
+            repo_commit="abc123",
+            error="Could not identify problem file",
+            log_content="Build passed",
+        )
+
+        with (
+            patch("erdos.commands.sync.proof_cmd.fetch_and_parse_forum") as mock_fetch,
+            patch(
+                "erdos.commands.sync.proof_cmd.DEFAULT_CACHE_PATH", tmp_path / "proofs"
+            ),
+            patch(
+                "erdos.commands.sync.proof_cmd.verify_proof", return_value=mock_result
+            ),
+        ):
+            mock_fetch.return_value = parse_forum_html(html_thread_with_github, 347)
+
+            result = runner.invoke(app, ["sync", "proof", "347", "--verify"])
+
+        assert result.exit_code == 0
+
+        # Check provenance was saved
+        provenance_path = tmp_path / "proofs" / "347" / "provenance.json"
+        assert provenance_path.exists()
+
+        with provenance_path.open(encoding="utf-8") as f:
+            provenance = json.load(f)
+
+        assert provenance["problem_id"] == 347
+        assert provenance["verification_status"] == "inconclusive"
+        assert provenance["verification_strength"] == "build_only"
+
+    def test_verify_saves_log(
+        self, runner: CliRunner, html_thread_with_github: str, tmp_path: Path
+    ) -> None:
+        """--verify saves verification log."""
+        from erdos.core.sync.forum import parse_forum_html
+        from erdos.core.sync.models import VerificationStatus, VerificationStrength
+        from erdos.core.sync.proofs import VerificationResult
+
+        mock_result = VerificationResult(
+            status=VerificationStatus.FAILED,
+            strength=VerificationStrength.NONE,
+            error="Build failed",
+            log_content="Error: missing dependency Mathlib",
+        )
+
+        with (
+            patch("erdos.commands.sync.proof_cmd.fetch_and_parse_forum") as mock_fetch,
+            patch(
+                "erdos.commands.sync.proof_cmd.DEFAULT_CACHE_PATH", tmp_path / "proofs"
+            ),
+            patch(
+                "erdos.commands.sync.proof_cmd.verify_proof", return_value=mock_result
+            ),
+        ):
+            mock_fetch.return_value = parse_forum_html(html_thread_with_github, 347)
+
+            result = runner.invoke(app, ["sync", "proof", "347", "--verify"])
+
+        assert result.exit_code == 0
+
+        # Check log was saved
+        log_path = tmp_path / "proofs" / "347" / "verify.log"
+        assert log_path.exists()
+        assert "missing dependency Mathlib" in log_path.read_text(encoding="utf-8")
+
+    def test_verify_dry_run_no_write(
+        self, runner: CliRunner, html_thread_with_github: str, tmp_path: Path
+    ) -> None:
+        """--verify --dry-run does not write files."""
+        from erdos.core.sync.forum import parse_forum_html
+        from erdos.core.sync.models import VerificationStatus, VerificationStrength
+        from erdos.core.sync.proofs import VerificationResult
+
+        mock_result = VerificationResult(
+            status=VerificationStatus.VERIFIED,
+            strength=VerificationStrength.NO_SORRIES,
+            repo_commit="abc123",
+        )
+
+        with (
+            patch("erdos.commands.sync.proof_cmd.fetch_and_parse_forum") as mock_fetch,
+            patch(
+                "erdos.commands.sync.proof_cmd.DEFAULT_CACHE_PATH", tmp_path / "proofs"
+            ),
+            patch(
+                "erdos.commands.sync.proof_cmd.verify_proof", return_value=mock_result
+            ),
+        ):
+            mock_fetch.return_value = parse_forum_html(html_thread_with_github, 347)
+
+            result = runner.invoke(
+                app, ["--json", "sync", "proof", "347", "--verify", "--dry-run"]
+            )
+
+        assert result.exit_code == 0
+        # Should not create any files
+        assert not (tmp_path / "proofs" / "347").exists()
+
+    def test_verify_json_output_contract(
+        self, runner: CliRunner, html_thread_with_github: str, tmp_path: Path
+    ) -> None:
+        """--verify JSON output matches SPEC-035 contract."""
+        from erdos.core.sync.forum import parse_forum_html
+        from erdos.core.sync.models import VerificationStatus, VerificationStrength
+        from erdos.core.sync.proofs import VerificationResult
+
+        mock_result = VerificationResult(
+            status=VerificationStatus.VERIFIED,
+            strength=VerificationStrength.NO_SORRIES,
+            repo_commit="abc123",
+            toolchain="leanprover/lean4:v4.3.0",
+            verified_files=["Problem347.lean"],
+        )
+
+        with (
+            patch("erdos.commands.sync.proof_cmd.fetch_and_parse_forum") as mock_fetch,
+            patch(
+                "erdos.commands.sync.proof_cmd.DEFAULT_CACHE_PATH", tmp_path / "proofs"
+            ),
+            patch(
+                "erdos.commands.sync.proof_cmd.verify_proof", return_value=mock_result
+            ),
+        ):
+            mock_fetch.return_value = parse_forum_html(html_thread_with_github, 347)
+
+            result = runner.invoke(app, ["--json", "sync", "proof", "347", "--verify"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+
+        # Check required fields per SPEC-035 JSON contract
+        d = data["data"]
+        assert "problem_id" in d
+        assert "links" in d
+        assert "provenance_path" in d
+        assert "verification_status" in d
+
+        # Additional verification fields
+        assert "verification_strength" in d
+        assert "verified_repo" in d
+        assert "verified_commit" in d
+        assert "verified_files" in d

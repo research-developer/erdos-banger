@@ -14,7 +14,9 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-_No active debt decks._
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| DEBT-092 | [Proof verification module LOC violations](./debt-092-proof-verification-loc.md) | P4 | Exempted |
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -119,7 +121,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-090 | Cyclomatic complexity violations (C901) | P2 | Fixed | 22f14f6 |
 | DEBT-091 | Blind exception catches (BLE001) | P3 | Fixed | 22f14f6 |
 
-**Next Debt ID:** DEBT-092
+**Next Debt ID:** DEBT-093
 
 ### Archived Debt Decks
 
