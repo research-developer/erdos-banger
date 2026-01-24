@@ -1,5 +1,6 @@
 """Tests for sync statements command (SPEC-035)."""
 
+from collections.abc import Callable
 from io import StringIO
 from typing import Any
 from unittest.mock import patch
@@ -13,35 +14,41 @@ from erdos.commands.sync.statements_cmd import _print_human
 runner = CliRunner()
 
 
-def test_sync_statements_help() -> None:
+def test_sync_statements_help(strip_ansi: Callable[[str], str]) -> None:
     """Verify statements command shows help."""
     result = runner.invoke(app, ["sync", "statements", "--help"])
+    output = strip_ansi(result.output)
     assert result.exit_code == 0
-    assert "Sync Lean statement from DeepMind" in result.output
-    assert "--force" in result.output
-    assert "--dry-run" in result.output
-    assert "--no-network" in result.output
+    assert "Sync Lean statement from DeepMind" in output
+    assert "--force" in output
+    assert "--dry-run" in output
+    assert "--no-network" in output
 
 
-def test_sync_statements_requires_problem_id() -> None:
+def test_sync_statements_requires_problem_id(strip_ansi: Callable[[str], str]) -> None:
     """Verify statements command requires problem ID."""
     result = runner.invoke(app, ["sync", "statements"])
+    output = strip_ansi(result.output)
     assert result.exit_code != 0
-    assert "Missing argument 'PROBLEM_ID'" in result.output
+    assert "Missing argument 'PROBLEM_ID'" in output
 
 
-def test_sync_statements_shows_skip_lean_validation() -> None:
+def test_sync_statements_shows_skip_lean_validation(
+    strip_ansi: Callable[[str], str],
+) -> None:
     """Verify statements command shows --skip-lean-validation flag."""
     result = runner.invoke(app, ["sync", "statements", "--help"])
+    output = strip_ansi(result.output)
     assert result.exit_code == 0
-    assert "--skip-lean-validation" in result.output
+    assert "--skip-lean-validation" in output
 
 
-def test_sync_statements_shows_path_option() -> None:
+def test_sync_statements_shows_path_option(strip_ansi: Callable[[str], str]) -> None:
     """Verify statements command shows --path option."""
     result = runner.invoke(app, ["sync", "statements", "--help"])
+    output = strip_ansi(result.output)
     assert result.exit_code == 0
-    assert "--path" in result.output
+    assert "--path" in output
 
 
 class TestPrintHuman:

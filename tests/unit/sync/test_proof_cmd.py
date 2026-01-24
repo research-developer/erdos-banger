@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 from unittest.mock import patch
 
@@ -186,11 +187,14 @@ class TestSyncProofLinks:
 class TestProofCLI:
     """CLI integration tests for erdos sync proof."""
 
-    def test_help_message(self, runner: CliRunner) -> None:
+    def test_help_message(
+        self, runner: CliRunner, strip_ansi: Callable[[str], str]
+    ) -> None:
         """Help message displays correctly."""
         result = runner.invoke(app, ["sync", "proof", "--help"])
+        output = strip_ansi(result.output)
         assert result.exit_code == 0
-        assert "Extract proof repository links" in result.output
+        assert "Extract proof repository links" in output
 
     def test_json_output(
         self, runner: CliRunner, html_thread_with_github: str, tmp_path: Path
@@ -281,11 +285,14 @@ class TestProofCLI:
 class TestProofVerification:
     """Tests for the --verify flag functionality."""
 
-    def test_verify_flag_in_help(self, runner: CliRunner) -> None:
+    def test_verify_flag_in_help(
+        self, runner: CliRunner, strip_ansi: Callable[[str], str]
+    ) -> None:
         """--verify flag appears in help."""
         result = runner.invoke(app, ["sync", "proof", "--help"])
+        output = strip_ansi(result.output)
         assert result.exit_code == 0
-        assert "--verify" in result.output
+        assert "--verify" in output
 
     def test_verify_with_no_links(
         self, runner: CliRunner, html_thread_no_links: str, tmp_path: Path

@@ -1,5 +1,6 @@
 """Tests for sync all command (SPEC-035)."""
 
+from collections.abc import Callable
 from io import StringIO
 from typing import Any
 from unittest.mock import patch
@@ -14,16 +15,17 @@ from erdos.core.models import CLIOutput
 runner = CliRunner()
 
 
-def test_sync_all_help() -> None:
+def test_sync_all_help(strip_ansi: Callable[[str], str]) -> None:
     """Verify sync all command shows help."""
     result = runner.invoke(app, ["sync", "all", "--help"])
+    output = strip_ansi(result.output)
     assert result.exit_code == 0
-    assert "Run all sync operations in sequence" in result.output
-    assert "--problems" in result.output
-    assert "--skip-submodule" in result.output
-    assert "--skip-website" in result.output
-    assert "--skip-proof" in result.output
-    assert "--skip-statements" in result.output
+    assert "Run all sync operations in sequence" in output
+    assert "--problems" in output
+    assert "--skip-submodule" in output
+    assert "--skip-website" in output
+    assert "--skip-proof" in output
+    assert "--skip-statements" in output
 
 
 def test_sync_all_skip_all_no_network() -> None:
@@ -64,25 +66,28 @@ def test_sync_all_invalid_problem_ids() -> None:
     assert "Invalid problem ID" in result.output
 
 
-def test_sync_all_shows_force_flag() -> None:
+def test_sync_all_shows_force_flag(strip_ansi: Callable[[str], str]) -> None:
     """Verify sync all shows --force flag."""
     result = runner.invoke(app, ["sync", "all", "--help"])
+    output = strip_ansi(result.output)
     assert result.exit_code == 0
-    assert "--force" in result.output
+    assert "--force" in output
 
 
-def test_sync_all_shows_no_network_flag() -> None:
+def test_sync_all_shows_no_network_flag(strip_ansi: Callable[[str], str]) -> None:
     """Verify sync all shows --no-network flag."""
     result = runner.invoke(app, ["sync", "all", "--help"])
+    output = strip_ansi(result.output)
     assert result.exit_code == 0
-    assert "--no-network" in result.output
+    assert "--no-network" in output
 
 
-def test_sync_all_shows_lean_path_flag() -> None:
+def test_sync_all_shows_lean_path_flag(strip_ansi: Callable[[str], str]) -> None:
     """Verify sync all shows --lean-path flag."""
     result = runner.invoke(app, ["sync", "all", "--help"])
+    output = strip_ansi(result.output)
     assert result.exit_code == 0
-    assert "--lean-path" in result.output
+    assert "--lean-path" in output
 
 
 def test_sync_all_orchestrates_website_and_proof_steps() -> None:
