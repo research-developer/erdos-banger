@@ -14,6 +14,9 @@ from tests.cli_runner import make_cli_runner
 
 runner = make_cli_runner()
 
+# Check if lake is available for skipping tests
+lake_available = shutil.which("lake") is not None
+
 
 def _setup_env(tmp_path: Path, sample_problems_yaml: Path) -> dict[str, str]:
     data_dir = tmp_path / "data"
@@ -22,6 +25,7 @@ def _setup_env(tmp_path: Path, sample_problems_yaml: Path) -> dict[str, str]:
     return {"ERDOS_DATA_PATH": str(data_dir), "ERDOS_REPO_ROOT": str(tmp_path)}
 
 
+@pytest.mark.skipif(not lake_available, reason="lake not found (Lean not installed)")
 @pytest.mark.requires_lean
 def test_loop_writes_attempt_record(tmp_path: Path, sample_problems_yaml: Path) -> None:
     env = _setup_env(tmp_path, sample_problems_yaml)
