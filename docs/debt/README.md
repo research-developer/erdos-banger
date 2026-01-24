@@ -21,6 +21,9 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 | DEBT-094 | [Semantic Scholar client module LOC violation](./debt-094-semantic-scholar-client-loc.md) | P4 | Exempted |
 | DEBT-095 | [zbMATH client module LOC violation](./debt-095-zbmath-client-loc.md) | P4 | Exempted |
 | DEBT-096 | [Search command module LOC violation](./debt-096-search-command-msc-loc.md) | P4 | Exempted |
+| DEBT-099 | [Lean test fixture lakefile syntax outdated](./debt-099-lean-fixture-lakefile-syntax.md) | P2 | Fixed |
+| DEBT-100 | [Integration tests don't load .env file](./debt-100-test-env-file-loading.md) | P3 | Open |
+| DEBT-101 | [Lean/Mathlib version significantly behind](./debt-101-lean-mathlib-version-upgrade.md) | P2 | Open |
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -127,7 +130,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-097 | Test suite ANSI handling inconsistency | P2 | Fixed | 3d19c58 |
 | DEBT-098 | Test references deprecated std4 repository | P1 | Fixed | e49696e |
 
-**Next Debt ID:** DEBT-099
+**Next Debt ID:** DEBT-102
 
 ### Archived Debt Decks
 
