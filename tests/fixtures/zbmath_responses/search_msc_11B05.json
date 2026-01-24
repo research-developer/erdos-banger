@@ -1,0 +1,59 @@
+{
+  "result": [
+    {
+      "id": 3227181,
+      "identifier": "0141.04405",
+      "title": { "title": "Sequences. Vol. I", "subtitle": null },
+      "year": "1966",
+      "contributors": {
+        "authors": [
+          { "name": "Halberstam, H.", "codes": ["halberstam.heini"] },
+          { "name": "Roth, Klaus F.", "codes": ["roth.klaus-f"] }
+        ],
+        "editors": []
+      },
+      "msc": [
+        { "code": "11B05", "scheme": "msc2020", "text": "Density, gaps, topology" },
+        { "code": "11Bxx", "scheme": "msc2020", "text": "Sequences and sets" }
+      ],
+      "keywords": ["sequences", "sieve methods"],
+      "links": [],
+      "source": { "series": [], "pages": null },
+      "editorial_contributions": [],
+      "zbmath_url": "https://zbmath.org/3227181"
+    },
+    {
+      "id": 3663470,
+      "identifier": "0426.28014",
+      "title": { "title": "An ergodic Szemerédi theorem for commuting transformations", "subtitle": null },
+      "year": "1978",
+      "contributors": {
+        "authors": [
+          { "name": "Furstenberg, H.", "codes": ["furstenberg.hillel"] },
+          { "name": "Katznelson, Y.", "codes": ["katznelson.yitzhak"] }
+        ],
+        "editors": []
+      },
+      "msc": [
+        { "code": "11B05", "scheme": "msc2020", "text": "Density, gaps, topology" },
+        { "code": "11B25", "scheme": "msc2020", "text": "Arithmetic progressions" }
+      ],
+      "keywords": ["ergodic Szemerédi theorem", "Poincaré recurrence theorem"],
+      "links": [
+        { "identifier": "10.1007/BF02790016", "type": "doi", "url": "https://doi.org/10.1007/BF02790016" }
+      ],
+      "source": { "series": [], "pages": "275-291" },
+      "editorial_contributions": [
+        { "contribution_type": "review", "text": "The authors prove the measure-theoretic analogue..." }
+      ],
+      "zbmath_url": "https://zbmath.org/3663470"
+    }
+  ],
+  "status": {
+    "execution": "successful request",
+    "execution_bool": true,
+    "status_code": 200,
+    "nr_total_results": 1247,
+    "nr_request_results": 2
+  }
+}

@@ -22,6 +22,9 @@ These fixtures are consumed by unit tests to keep parsing behavior deterministic
 - `crossref_responses/doi_not_found.json`
 - `arxiv_responses/arxiv_2203.00001.xml`
 - `arxiv_responses/arxiv_not_found.xml`
+- `exa_responses/search_sum_free_sets.json`
+- `semantic_scholar_responses/paper_green_tao.json`
+- `zbmath_responses/document_green_tao.json`
 
 ## Sync Fixtures (SPEC-035)
 
@@ -37,8 +40,6 @@ Local “toy repo” fixtures used to test proof verification behavior without c
 
 ## External API Mocks (Inline)
 
-Some clients use inline sample JSON payloads in unit tests (mocked via `responses`):
+Some clients still use inline sample JSON payloads in unit tests (mocked via `responses`):
 
-- Exa (`tests/unit/clients/test_exa.py`)
-- Semantic Scholar (`tests/unit/clients/test_semantic_scholar.py`)
-- zbMATH (`tests/unit/clients/test_zbmath.py`)
+- OpenAlex (`tests/unit/clients/test_openalex.py`)

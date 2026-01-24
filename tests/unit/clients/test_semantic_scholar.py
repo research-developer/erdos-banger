@@ -22,80 +22,21 @@ from erdos.core.clients.semantic_scholar import (
 )
 
 
-# Sample S2 API responses based on their documentation
-SAMPLE_PAPER_RESPONSE: dict[str, Any] = {
-    "paperId": "649def34f8be52c8b66281af98ae884c09aef38b",
-    "title": "The primes contain arbitrarily long arithmetic progressions",
-    "authors": [
-        {"authorId": "1", "name": "Ben Green"},
-        {"authorId": "2", "name": "Terence Tao"},
-    ],
-    "year": 2008,
-    "externalIds": {
-        "ArXiv": "math/0404188",
-        "DOI": "10.4007/annals.2008.167.481",
-    },
-    "citationCount": 1234,
-}
+FIXTURES_DIR = Path(__file__).resolve().parents[2] / "fixtures"
 
-SAMPLE_CITATIONS_RESPONSE: dict[str, Any] = {
-    "data": [
-        {
-            "citingPaper": {
-                "paperId": "abc123",
-                "title": "New bounds on sum-free sets",
-                "year": 2015,
-            },
-            "intents": ["methodology"],
-            "contexts": [
-                "Using the density increment strategy of Green-Tao [12], we show..."
-            ],
-        },
-        {
-            "citingPaper": {
-                "paperId": "def456",
-                "title": "Arithmetic progressions in random subsets",
-                "year": 2019,
-            },
-            "intents": ["background"],
-            "contexts": ["Since the breakthrough result of [GT08], there has been..."],
-        },
-        {
-            "citingPaper": {
-                "paperId": "ghi789",
-                "title": "A contrasting result",
-                "year": 2021,
-            },
-            "intents": ["result"],
-            "contexts": [
-                "While Green-Tao established positive density, we show that..."
-            ],
-        },
-    ]
-}
-
-SAMPLE_REFERENCES_RESPONSE: dict[str, Any] = {
-    "data": [
-        {
-            "citedPaper": {
-                "paperId": "ref123",
-                "title": "Szemeredi's theorem",
-                "year": 1975,
-            },
-            "intents": ["background", "methodology"],
-            "contexts": ["Building on Szemeredi's seminal work..."],
-        },
-        {
-            "citedPaper": {
-                "paperId": "ref456",
-                "title": "An earlier result",
-                "year": 1965,
-            },
-            "intents": ["background"],
-            "contexts": [],
-        },
-    ]
-}
+SAMPLE_PAPER_RESPONSE: dict[str, Any] = json.loads(
+    (FIXTURES_DIR / "semantic_scholar_responses" / "paper_green_tao.json").read_text()
+)
+SAMPLE_CITATIONS_RESPONSE: dict[str, Any] = json.loads(
+    (
+        FIXTURES_DIR / "semantic_scholar_responses" / "citations_green_tao.json"
+    ).read_text()
+)
+SAMPLE_REFERENCES_RESPONSE: dict[str, Any] = json.loads(
+    (
+        FIXTURES_DIR / "semantic_scholar_responses" / "references_green_tao.json"
+    ).read_text()
+)
 
 
 class TestS2Config:

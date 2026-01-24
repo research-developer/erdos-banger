@@ -1,0 +1,56 @@
+{
+  "result": {
+    "id": 5578697,
+    "identifier": "1191.11025",
+    "title": {
+      "title": "The primes contain arbitrarily long arithmetic progressions",
+      "subtitle": null,
+      "addition": null,
+      "original": null
+    },
+    "year": "2008",
+    "contributors": {
+      "authors": [
+        { "name": "Green, Ben", "codes": ["green.ben"], "checked": "1" },
+        { "name": "Tao, Terence", "codes": ["tao.terence-c"], "checked": "1" }
+      ],
+      "editors": []
+    },
+    "msc": [
+      { "code": "11B25", "scheme": "msc2020", "text": "Arithmetic progressions" },
+      { "code": "11N13", "scheme": "msc2020", "text": "Primes in congruence classes" },
+      { "code": "11A41", "scheme": "msc2020", "text": "Primes" }
+    ],
+    "keywords": ["primes", "arithmetic progressions", "density"],
+    "links": [
+      {
+        "identifier": "10.4007/annals.2008.167.481",
+        "type": "doi",
+        "url": "https://doi.org/10.4007/annals.2008.167.481"
+      },
+      { "identifier": "math/0404188", "type": "arxiv", "url": "https://arxiv.org/abs/math/0404188" }
+    ],
+    "source": {
+      "series": [
+        {
+          "title": "Annals of Mathematics. Second Series",
+          "short_title": "Ann. Math. (2)",
+          "volume": "167",
+          "issue": "2",
+          "year": "2008"
+        }
+      ],
+      "pages": "481-547"
+    },
+    "editorial_contributions": [
+      {
+        "contribution_type": "review",
+        "language": "English",
+        "reviewer": { "name": "Tom Sanders", "reviewer_id": "11861", "sign": "Tom Sanders (Cambridge)" },
+        "text": "This paper needs little introduction: in 2004, the authors proved that the primes contain arbitrarily long arithmetic progressions, a startling result..."
+      }
+    ],
+    "zbmath_url": "https://zbmath.org/5578697"
+  },
+  "status": { "execution": "successful request", "execution_bool": true, "status_code": 200 }
+}

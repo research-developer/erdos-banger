@@ -21,44 +21,16 @@ from erdos.core.clients.exa import (
 )
 
 
-# Sample Exa API response based on their documentation
-SAMPLE_EXA_RESPONSE: dict[str, Any] = {
-    "autopromptString": "Research on sum-free sets approaches",
-    "results": [
-        {
-            "url": "https://arxiv.org/abs/math/0404188",
-            "title": "The primes contain arbitrarily long arithmetic progressions",
-            "author": "Ben Green, Terence Tao",
-            "publishedDate": "2008-04-01",
-            "text": "This paper proves...",
-            "score": 0.95,
-            "id": "result-1",
-        },
-        {
-            "url": "https://doi.org/10.1007/s00222-016-0678-7",
-            "title": "Sum-free sets in abelian groups",
-            "author": "Sean Eberhard",
-            "publishedDate": "2016-07-15",
-            "text": "We study sum-free sets...",
-            "score": 0.88,
-            "id": "result-2",
-        },
-        {
-            "url": "https://doi.org/10.1007/BF02787556",
-            "title": "Sum-free subsets",
-            "author": "Noga Alon",
-            "publishedDate": "2002-03-01",
-            "text": "Using probabilistic methods...",
-            "score": 0.82,
-            "id": "result-3",
-        },
-    ],
-}
+FIXTURES_DIR = Path(__file__).resolve().parents[2] / "fixtures"
 
-SAMPLE_EXA_RESPONSE_WITH_SUMMARY = {
-    **SAMPLE_EXA_RESPONSE,
-    "summary": "Several approaches have been tried for sum-free sets...",
-}
+SAMPLE_EXA_RESPONSE: dict[str, Any] = json.loads(
+    (FIXTURES_DIR / "exa_responses" / "search_sum_free_sets.json").read_text()
+)
+SAMPLE_EXA_RESPONSE_WITH_SUMMARY: dict[str, Any] = json.loads(
+    (
+        FIXTURES_DIR / "exa_responses" / "search_sum_free_sets_with_summary.json"
+    ).read_text()
+)
 
 
 class TestExaConfig:
