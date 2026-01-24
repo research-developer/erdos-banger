@@ -91,6 +91,7 @@ class AppConfig:
     openalex_api_key: str = ""
     exa_api_key: str = ""
     exa_cache_ttl_hours: int = 24
+    exa_cache_path: Path | None = None
 
     # Network
     http_timeout: float = DEFAULT_HTTP_TIMEOUT
@@ -116,6 +117,7 @@ class AppConfig:
             OPENALEX_API_KEY: API key for OpenAlex polite pool.
             EXA_API_KEY: API key for Exa Research API.
             ERDOS_EXA_CACHE_TTL: Cache TTL in hours for Exa API (default: 24).
+            ERDOS_EXA_CACHE_PATH: Path to Exa cache directory (for testing).
 
         Returns:
             AppConfig instance with values from environment.
@@ -126,6 +128,7 @@ class AppConfig:
         run_log_path_str = os.environ.get("ERDOS_RUN_LOG_PATH")
         repo_root_str = os.environ.get("ERDOS_REPO_ROOT")
         submodule_path_str = os.environ.get("ERDOS_SUBMODULE_PATH")
+        exa_cache_path_str = os.environ.get("ERDOS_EXA_CACHE_PATH")
 
         def _clean_env(value: str | None) -> str | None:
             if value is None:
@@ -156,6 +159,7 @@ class AppConfig:
             openalex_api_key=os.environ.get("OPENALEX_API_KEY", "").strip(),
             exa_api_key=os.environ.get("EXA_API_KEY", "").strip(),
             exa_cache_ttl_hours=_parse_int_env("ERDOS_EXA_CACHE_TTL", 24),
+            exa_cache_path=Path(exa_cache_path_str) if exa_cache_path_str else None,
         )
 
 

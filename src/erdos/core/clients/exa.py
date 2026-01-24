@@ -60,6 +60,11 @@ class ExaConfig:
         return cls(
             api_key=api_key,
             cache_ttl_hours=app_config.exa_cache_ttl_hours,
+            cache_path=(
+                app_config.exa_cache_path
+                if app_config.exa_cache_path
+                else DEFAULT_CACHE_PATH
+            ),
         )
 
 
