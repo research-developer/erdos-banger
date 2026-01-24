@@ -1,6 +1,6 @@
 # SPEC-031: zbMATH Open API Integration
 
-> **Status:** Pending
+> **Status:** Complete
 >
 > **Target:** v3.4
 >
@@ -63,7 +63,8 @@ Integrate the [zbMATH Open API](https://zbmath.org/) as a "good redundancy" sour
 3. **CLI commands:**
    - `erdos refs zbmath <identifier>` — Get zbMATH metadata for a paper
    - `erdos search --msc "11B05"` — Search by MSC code
-4. **Lead enrichment** — Annotate leads with MSC codes
+4. **CLI compatibility** — Preserve existing `erdos refs <problem_id>` behavior while adding `erdos refs zbmath ...`
+5. **Lead enrichment** — Annotate leads with MSC codes (opt-in)
 
 ### Out of Scope
 
@@ -181,7 +182,18 @@ Review (excerpt):
 src/erdos/core/
   clients/
     zbmath.py           # HTTP client for zbMATH Open API
+src/erdos/commands/
+  refs.py               # Existing: `erdos refs <problem_id>` + new `zbmath` subcommand
+  refs_zbmath.py        # Registers the `refs zbmath ...` subcommand into refs.app
 ```
+
+### CLI Compatibility Notes
+
+`erdos refs` is currently implemented as `erdos refs <problem_id>` with a required argument. To add `erdos refs zbmath ...` without breaking the existing behavior, implementation MUST follow the same approach as SPEC-030:
+
+1. Make the callback `problem_id` argument optional, and only require it when no subcommand is invoked.
+2. Check `ctx.invoked_subcommand` in the callback and return early when a subcommand is present.
+3. Keep `erdos refs <problem_id>` working as-is (compat alias), even if a future refactor introduces `erdos refs problem <problem_id>`.
 
 ### Client Implementation
 
@@ -334,12 +346,13 @@ def test_zbmath_search_by_msc():
 
 1. [ ] `ZbMathClient` implemented with rate limiting
 2. [ ] `erdos refs zbmath` works with DOI and zbMATH ID
-3. [ ] `erdos search --msc` returns papers by MSC code
-4. [ ] MSC codes included in JSON output
-5. [ ] Review excerpts included (first 500 chars)
-6. [ ] Caching reduces redundant API calls
-7. [ ] `--fetch-msc` enriches leads with MSC tags
-8. [ ] No API key required (open API)
+3. [ ] Existing `erdos refs <problem_id>` remains functional
+4. [ ] `erdos search --msc` returns papers by MSC code
+5. [ ] MSC codes included in JSON output
+6. [ ] Review excerpts included (first 500 chars)
+7. [ ] Caching reduces redundant API calls
+8. [ ] `--fetch-msc` enriches leads with MSC tags
+9. [ ] No API key required (open API)
 
 ---
 

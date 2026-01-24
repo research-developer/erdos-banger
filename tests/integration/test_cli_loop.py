@@ -36,6 +36,11 @@ class TestLoopRunCommand:
         """--no-apply mode accepts --path option."""
         project_path = tmp_path / "formal" / "lean"
 
+        # Create minimal LLM script for router (SPEC-032 requires configured LLM)
+        fake_llm = tmp_path / "fake_llm.sh"
+        fake_llm.write_text("#!/bin/bash\necho 'fake response'\n")
+        fake_llm.chmod(0o755)
+
         # Just verify the options are accepted
         result = runner.invoke(
             app,
@@ -47,9 +52,12 @@ class TestLoopRunCommand:
                 "--path",
                 str(project_path),
             ],
-            env={"ERDOS_REPO_ROOT": str(tmp_path)},
+            env={
+                "ERDOS_REPO_ROOT": str(tmp_path),
+                "ERDOS_LLM_COMMAND": str(fake_llm),
+            },
         )
-        # LLM_REQUIRED or similar status - we just check it runs
+        # Loop will run (exit code depends on Lean file state)
         assert result.exit_code in (0, 1)  # Either success or expected failure
 
     def test_json_output(self) -> None:
@@ -118,8 +126,12 @@ class TestLoopJSONContract:
     All other statuses return success=false with loop data in error object.
     """
 
-    def test_json_llm_required_returns_failure(self, tmp_path: Path) -> None:
-        """LLM_REQUIRED status returns success=false with error object."""
+    def test_json_no_llm_config_returns_config_error(self, tmp_path: Path) -> None:
+        """CONFIG_ERROR when no LLM configured per SPEC-032 router.
+
+        Note: Prior to SPEC-032, this would return LLMRequired from the loop.
+        Now the router fails upfront with CONFIG_ERROR if no LLM is configured.
+        """
         # Create minimal Lean file structure with sorry
         erdos_dir = tmp_path / "formal" / "lean" / "Erdos"
         erdos_dir.mkdir(parents=True)
@@ -142,15 +154,20 @@ class TestLoopJSONContract:
 
         assert result.exit_code != 0
         output = json.loads(getattr(result, "stdout", None) or result.output)
-        # Per spec-012: LLM_REQUIRED is a failure (success=false)
+        # Per SPEC-032: router fails upfront with CONFIG_ERROR
         assert output["success"] is False
         assert output["error"] is not None
-        assert output["error"]["type"] == "LLMRequired"
-        assert "status" in output["error"]
-        assert output["error"]["status"] == "llm_required"
+        assert output["error"]["type"] == "ConfigError"
+        # Error message should mention what env vars to set
+        assert "ERDOS_LLM_COMMAND_CODE" in output["error"]["message"]
 
-    def test_json_not_found_returns_failure(self) -> None:
+    def test_json_not_found_returns_failure(self, tmp_path: Path) -> None:
         """NotFound error returns success=false with proper error structure."""
+        # Create fake LLM so router passes (SPEC-032)
+        fake_llm = tmp_path / "fake_llm.sh"
+        fake_llm.write_text("#!/bin/bash\necho 'fake'\n")
+        fake_llm.chmod(0o755)
+
         result = runner.invoke(
             app,
             [
@@ -160,6 +177,7 @@ class TestLoopJSONContract:
                 "99999",  # Non-existent problem
                 "--no-apply",
             ],
+            env={"ERDOS_LLM_COMMAND": str(fake_llm)},
         )
 
         assert result.exit_code != 0
@@ -176,6 +194,7 @@ class TestLoopJSONContract:
         lean_file = erdos_dir / "Problem006.lean"
         lean_file.write_text("theorem foo : True := sorry\n", encoding="utf-8")
 
+        # No LLM configured - will fail with CONFIG_ERROR from router
         result = runner.invoke(
             app,
             [

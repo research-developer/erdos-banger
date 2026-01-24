@@ -2,7 +2,9 @@
 
 You are implementing **exactly one** task from `PROGRESS.md` per iteration using **Ironclad TDD** and **Rob C. Martin discipline**.
 
-If `PROGRESS.md` has no unchecked items, exit cleanly without making changes.
+If `PROGRESS.md` has no unchecked items:
+- if `git status --porcelain` is clean, exit cleanly without making changes.
+- if the repo is dirty, run **Recovery Mode** (below) to commit/push the final docs/PROGRESS updates, then exit.
 
 ---
 
@@ -11,6 +13,7 @@ If `PROGRESS.md` has no unchecked items, exit cleanly without making changes.
 Immediately read:
 
 ```bash
+git status --porcelain=v1
 cat PROGRESS.md
 cat docs/specs/README.md
 cat docs/bugs/README.md
@@ -18,6 +21,34 @@ cat docs/adr/README.md
 ```
 
 Then read the specific SSOT doc referenced by the current task (spec/deck/path).
+
+---
+
+## Recovery Mode (Dirty Repo / Sprint Complete)
+
+If `PROGRESS.md` has **no unchecked** items but `git status --porcelain=v1` is **not empty**:
+
+1. **Do not start a new task**. You are finishing a previous iteration that timed out mid-docs.
+2. Inspect what changed:
+
+   ```bash
+   git status --porcelain=v1
+   git diff
+   git diff --cached
+   ```
+
+3. If changes are **docs/PROGRESS only**, commit and push:
+
+   ```bash
+   git add -A
+   git commit -m "docs: finalize sprint state"
+   git push
+   ```
+
+4. If changes include **production code or tests** that were not committed:
+   - stop and request human review (do not guess a commit message)
+   - write a bug deck in `docs/bugs/` describing the incomplete state and how to recover
+   - exit
 
 ---
 
@@ -48,7 +79,9 @@ Then read the specific SSOT doc referenced by the current task (spec/deck/path).
 1. **COMMIT CODE CHANGES IMMEDIATELY** after `make ci` passes:
 
    ```bash
-   git add -A && git commit -m "<type>: <description>"
+   git add -A
+   git diff --cached --name-only
+   git commit -m "<type>: <description>"
    ```
 
    - This ensures code changes are saved even if the iteration times out later
@@ -66,7 +99,9 @@ Then read the specific SSOT doc referenced by the current task (spec/deck/path).
 1. **COMMIT DOCS** and **PUSH**:
 
    ```bash
-   git add -A && git commit -m "docs: update sprint state"
+   git add -A
+   git diff --cached --name-only
+   git commit -m "docs: update sprint state"
    git push
    ```
 
@@ -82,7 +117,7 @@ Do not batch tasks.
 
 ## Critical Review Prompt (MANDATORY)
 
-Before changing code based on the debt deck:
+Before changing code based on the SSOT doc (spec/debt/bug):
 
 ```text
 Review the claim or feedback (it may be from an internal or external agent).

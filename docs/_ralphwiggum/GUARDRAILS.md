@@ -47,26 +47,39 @@ This document is a **living record** of guardrails, failure patterns, and “got
   - `git diff --cached | rg -in "(sk-|sk-ant-|ghp_|AIza|arstl_|xoxb-|hf_)"` (what you're about to push)
   - `git ls-files -z | xargs -0 rg -in "(sk-|sk-ant-|ghp_|AIza|arstl_|xoxb-|hf_)"` (full tracked tree)
 
-### FP-006: EPIPE errors when piping through tee
+### FP-006: EPIPE / stream-destroyed errors from timeouts and piping
 
-- Symptom: `Error: write EPIPE` crashes the claude process mid-iteration.
-- Common cause: Piping claude output through `tee` (`claude ... | tee -a log`). The pipe can break if the receiving end closes unexpectedly.
-- Mitigation: Use direct file redirection instead of piping:
-  - Bad: `claude -p "$(cat PROMPT.md)" 2>&1 | tee -a "$log"`
-  - Good: `claude -p "$(cat PROMPT.md)" >> "$log" 2>&1`
-- The `scripts/ralph-loop.sh` script uses the correct approach.
+- Symptom: the Claude CLI exits mid-iteration with `Error: write EPIPE` / `ERR_STREAM_DESTROYED` and/or exit code `124`.
+- Common causes:
+  - Piping Claude output through `tee` (`claude ... | tee -a log`).
+  - The per-iteration `timeout`/`gtimeout` kills the Claude process, and the Node CLI crashes while writing during shutdown.
+- Mitigations:
+  - Always append output via redirection (never pipe Claude output through `tee`):
+    - Bad: `claude -p "$(cat PROMPT.md)" 2>&1 | tee -a "$log"`
+    - Good: `claude -p "$(cat PROMPT.md)" >> "$log" 2>&1`
+  - If you see repeated exit `124`, increase `ITER_TIMEOUT` for that sprint (or split tasks smaller).
+  - Treat occasional EPIPE as a recoverable failure mode: ensure the runner commits/pushes progress so the next iteration can continue.
 
 ### FP-007: Staged but uncommitted changes (iteration timeout before commit)
 
 - Symptom: Iteration completes all work, stages changes, updates PROGRESS.md (marking task done), but never commits. Loop sees "all tasks complete" and exits, leaving work staged but not committed.
 - Root cause: PROMPT.md had commit step AFTER updating PROGRESS.md. If iteration times out after PROGRESS.md update but before commit, the loop completion check (`grep -q "^\- \[ \]" PROGRESS.md`) reads from the working directory (which shows task complete) and exits.
 - Mitigation (PROMPT.md fix): Restructured steps to commit code changes FIRST (Phase 3), then update docs/PROGRESS.md (Phase 4), then commit docs and push (Phase 5). This ensures code is saved even if the iteration times out during documentation updates.
-- Mitigation (ralph-loop.sh fix): Added guardrail check after each iteration that warns loudly if staged-but-uncommitted changes are detected. Also refuses to exit "successfully" if PROGRESS.md indicates completion but `git status` is dirty (unstaged/uncommitted changes).
+- Mitigation (ralph-loop.sh fix): Added guardrail check after each iteration that warns loudly if staged-but-uncommitted changes are detected. On sprint completion, auto-commits docs/`PROGRESS.md` if (and only if) those are the only dirty paths.
+
+### FP-008: Commit message does not match staged diff
+
+- Symptom: commit message suggests a broader change than what actually shipped (e.g., “docs(debt)” but only `PROGRESS.md` changed).
+- Root cause: committing without reviewing the staged diff.
+- Mitigation: before every commit, run:
+  - `git diff --cached --name-only`
+  - `git diff --cached`
 
 ---
 
 ## Guardrail Changes (Protocol/Prompt/CI)
 
+- 2026-01-24: Hardened sprint-complete recovery. Updated PROMPT.md with explicit “Recovery Mode” and improved commit-diff validation. Updated `scripts/ralph-loop.sh` to auto-finalize docs/`PROGRESS.md` on completion (docs-only) instead of exiting dirty.
 - 2026-01-22: Added FP-007 (staged but uncommitted changes). Restructured PROMPT.md to commit code FIRST, then docs. Hardened `scripts/ralph-loop.sh` to warn on staged-but-uncommitted changes and refuse to exit cleanly with a dirty working tree.
 - 2026-01-22: Added FP-006 (EPIPE errors). Updated `scripts/ralph-loop.sh` to use direct file redirection instead of piping through `tee`. Updated protocol.md to recommend the script.
 - 2026-01-21: Added FP-005 (git rebase derailment). Updated PROMPT.md and protocol.md to explicitly forbid `git rebase` and `git pull`, with `--force-with-lease` as the recovery for divergence.

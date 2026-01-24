@@ -1,0 +1,14 @@
+{
+  "data": [
+    {
+      "citedPaper": { "paperId": "ref123", "title": "Szemeredi's theorem", "year": 1975 },
+      "intents": ["background", "methodology"],
+      "contexts": ["Building on Szemeredi's seminal work..."]
+    },
+    {
+      "citedPaper": { "paperId": "ref456", "title": "An earlier result", "year": 1965 },
+      "intents": ["background"],
+      "contexts": []
+    }
+  ]
+}

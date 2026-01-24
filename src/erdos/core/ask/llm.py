@@ -82,14 +82,14 @@ def _handle_llm_exception(
     if isinstance(exc, FileNotFoundError):
         return CLIOutput.err(
             command=command,
-            error_type="CONFIG_ERROR",
+            error_type="ConfigError",
             message=f"LLM command not found: {llm_command}",
             code=ExitCode.CONFIG_ERROR,
         )
     if isinstance(exc, subprocess.TimeoutExpired):
         return CLIOutput.err(
             command=command,
-            error_type="TIMEOUT",
+            error_type="Timeout",
             message=f"LLM command timed out after {LLM_COMMAND_TIMEOUT}s: {llm_command}",
             code=ExitCode.ERROR,
         )
@@ -97,20 +97,20 @@ def _handle_llm_exception(
         # shlex.split can raise ValueError for malformed command strings
         return CLIOutput.err(
             command=command,
-            error_type="CONFIG_ERROR",
+            error_type="ConfigError",
             message=f"Invalid LLM command syntax: {exc}",
             code=ExitCode.CONFIG_ERROR,
         )
     if isinstance(exc, OSError):
         return CLIOutput.err(
             command=command,
-            error_type="CONFIG_ERROR",
+            error_type="ConfigError",
             message=f"LLM command error: {exc}",
             code=ExitCode.CONFIG_ERROR,
         )
     return CLIOutput.err(
         command=command,
-        error_type="ERROR",
+        error_type="Error",
         message=f"LLM command failed: {exc}",
         code=ExitCode.ERROR,
     )
@@ -158,7 +158,7 @@ def execute_llm_if_enabled(
             llm_exit_code=exit_code,
             error=CLIOutput.err(
                 command=command,
-                error_type="ERROR",
+                error_type="Error",
                 message=f"LLM command exited with code {exit_code}",
                 code=ExitCode.ERROR,
             ),

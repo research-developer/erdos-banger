@@ -12,7 +12,7 @@
 #
 # Environment variables:
 #   SESSION_NAME   tmux session to watch (default: erdos-ralph)
-#   MAX_AGE        seconds without log updates before failing (default: 900)
+#   MAX_AGE        seconds without log updates before failing (default: 1500)
 #   POLL           polling interval seconds (default: 30)
 #   DURATION       total run seconds (default: 28800 = 8 hours)
 #
@@ -24,7 +24,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 SESSION_NAME="${SESSION_NAME:-erdos-ralph}"
-MAX_AGE="${MAX_AGE:-900}"
+MAX_AGE="${MAX_AGE:-1500}"
 POLL="${POLL:-30}"
 DURATION="${DURATION:-28800}"
 
@@ -55,6 +55,7 @@ latest_iteration_log() {
 issue_patterns() {
   cat <<'EOF'
 ERROR: PROGRESS\.md indicates completion but git working tree is dirty
+ERROR: Sprint complete but repo dirty
 WARNING: Staged but uncommitted changes detected
 To fix:
 FAILED:

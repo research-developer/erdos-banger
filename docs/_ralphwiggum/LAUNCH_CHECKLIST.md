@@ -67,13 +67,13 @@ make test-all  # Full suite (includes requires_network; may hit real APIs)
 Start a tmux session:
 
 ```bash
-MAX=50 ITER_TIMEOUT=600 tmux new-session -s erdos-ralph './scripts/ralph-loop.sh'
+MAX=50 ITER_TIMEOUT=1200 tmux new-session -s erdos-ralph './scripts/ralph-loop.sh'
 ```
 
 This uses the repo’s loop runner (`scripts/ralph-loop.sh`), which:
 - writes per-iteration logs to `logs/ralph/iteration_*.log`
 - enforces per-iteration timeouts (avoids hangs)
-- avoids piping Claude output through `tee` (reduces EPIPE risk)
+- avoids piping Claude output through `tee` (but timeouts can still trigger EPIPE in the CLI)
 
 ```bash
 ./scripts/ralph-loop.sh
@@ -93,7 +93,7 @@ watch -n 10 'head -80 PROGRESS.md'
 Recommended: run the watchdog in a separate pane (fails fast on hangs / guardrail errors):
 
 ```bash
-./scripts/ralph-watchdog.sh
+MAX_AGE=1500 ./scripts/ralph-watchdog.sh  # keep MAX_AGE >= ITER_TIMEOUT + buffer
 ```
 
 If the watchdog exits non-zero, inspect:

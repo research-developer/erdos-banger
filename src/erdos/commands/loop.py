@@ -1,4 +1,8 @@
-"""erdos loop - Iterative Lean proof attempts."""
+"""erdos loop - Iterative Lean proof attempts.
+
+LLM routing per SPEC-032: uses TaskType.loop_patch to select the appropriate
+LLM command via environment variable chain (ERDOS_LLM_COMMAND_CODE -> ERDOS_LLM_COMMAND).
+"""
 
 from __future__ import annotations
 
@@ -11,7 +15,10 @@ from rich.console import Console
 from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
 from erdos.core.constants import DEFAULT_RAG_LIMIT, LEAN_COMPILE_TIMEOUT
+from erdos.core.exit_codes import ExitCode
+from erdos.core.llm import LLMRouterError, TaskType, resolve_llm_command
 from erdos.core.loop import LoopConfig, execute_proof_loop
+from erdos.core.models import CLIOutput
 from erdos.core.timing import measure_time_ms
 
 
@@ -193,12 +200,26 @@ def run(
 
         path = project_path or Path("formal/lean")
 
-        # Get LLM command from config if not specified
-        llm_command: str | None
-        if llm_cmd is not None and llm_cmd.strip():
-            llm_command = llm_cmd.strip()
-        else:
-            llm_command = (app_ctx.config.llm_command or "").strip() or None
+        # Resolve LLM command via router (SPEC-032)
+        # - --llm-cmd: explicit override bypasses router
+        # - otherwise: use router with TaskType.loop_patch
+        try:
+            # Pass llm_cmd as override - router uses it if non-empty, else checks env vars
+            llm_command = resolve_llm_command(
+                TaskType.loop_patch,
+                override=llm_cmd,
+            )
+        except LLMRouterError as e:
+            exit_with_result(
+                ctx,
+                CLIOutput.err(
+                    command="erdos loop",
+                    error_type="ConfigError",
+                    message=str(e),
+                    code=ExitCode.CONFIG_ERROR,
+                ),
+            )
+            return
 
         config = LoopConfig.from_cli(
             max_iterations=max_iter,

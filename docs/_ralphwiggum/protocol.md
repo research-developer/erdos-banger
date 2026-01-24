@@ -99,7 +99,7 @@ erdos-banger/
 
 ### Step 3: Run the Loop (Recommended)
 
-Use the provided script (avoids EPIPE errors from piping):
+Use the provided script (avoids tee-piping Claude output; auto-finalizes sprint docs on completion):
 
 ```bash
 # Launch in tmux
@@ -116,7 +116,7 @@ watch -n5 'git log --oneline -5'
 
 Environment variables (optional):
 - `MAX=50` - Maximum iterations (default: 50)
-- `ITER_TIMEOUT=600` - Per-iteration timeout in seconds (default: 600)
+- `ITER_TIMEOUT=1200` - Per-iteration timeout in seconds (default: 600; use a higher value for large tasks)
 
 ### Step 4: Manual Loop (Alternative)
 
@@ -130,7 +130,7 @@ git checkout ralph-wiggum-<sprint>
 #   brew install coreutils
 
 MAX=50
-ITER_TIMEOUT=600
+ITER_TIMEOUT=1200
 TIMEOUT=14400
 
 TIMEOUT_CMD="${TIMEOUT_CMD:-}"
@@ -153,7 +153,7 @@ mkdir -p logs/ralph
     n=$(printf "%03d" "$i")
     log="logs/ralph/iteration_${n}.log"
     echo "=== Iteration $i/'"$MAX"' ===" | tee -a "$log"
-    # Avoid piping Claude output through tee (EPIPE risk); append directly.
+    # Avoid piping Claude output through tee (EPIPE risk); append directly (timeouts can still trigger EPIPE).
     '"$TIMEOUT_CMD"' '"$ITER_TIMEOUT"' claude --dangerously-skip-permissions -p "$(cat PROMPT.md)" >> "$log" 2>&1
     # Check if all tasks complete (no unchecked boxes)
     if ! grep -q "^\- \[ \]" PROGRESS.md; then
@@ -532,6 +532,22 @@ tmux list-sessions
 tmux attach -t erdos-ralph
 ```
 
+### Sprint Complete but Repo Dirty
+
+If the loop stops at the end of a sprint with a “repo dirty” message:
+
+1. Inspect the most recent `logs/ralph/iteration_*.log` (and `logs/ralph/recovery.log` if present).
+2. If only `docs/**` and/or `PROGRESS.md` changed, finalize with a docs-only commit:
+
+   ```bash
+   git status --porcelain=v1
+   git add PROGRESS.md docs
+   git commit -m "docs: finalize sprint state"
+   git push
+   ```
+
+3. If production code/tests are dirty, stop and recover manually (don’t guess).
+
 ### Quality Gates Failing
 
 - Loop should auto-fix on next iteration
@@ -580,7 +596,7 @@ tmux new -s erdos-ralph
 # 5. Run the loop (bounded by timeouts; logs captured)
 MAX=50
 TIMEOUT=14400
-ITER_TIMEOUT=600
+ITER_TIMEOUT=1200
 
 TIMEOUT_CMD="${TIMEOUT_CMD:-}"
 if [[ -z "$TIMEOUT_CMD" ]]; then
@@ -602,7 +618,7 @@ mkdir -p logs/ralph
     n=$(printf "%03d" "$i")
     log="logs/ralph/iteration_${n}.log"
     echo "=== Iteration $i/'"$MAX"' ===" | tee -a "$log"
-    # Avoid piping Claude output through tee (EPIPE risk); append directly.
+    # Avoid piping Claude output through tee (EPIPE risk); append directly (timeouts can still trigger EPIPE).
     '"$TIMEOUT_CMD"' '"$ITER_TIMEOUT"' claude --dangerously-skip-permissions -p "$(cat PROMPT.md)" >> "$log" 2>&1
     if ! grep -q "^\- \[ \]" PROGRESS.md; then
       echo "All tasks complete" | tee -a "$log"

@@ -368,6 +368,6 @@ def test_ask_command_config_error_exit_code(
     # Verify error message in JSON output
     data = json.loads(result.stdout)
     assert data["success"] is False
-    assert data["error"]["type"] == "CONFIG_ERROR"
+    assert data["error"]["type"] == "ConfigError"
     assert "not found" in data["error"]["message"].lower()
     assert data["error"]["code"] == 10  # ExitCode.CONFIG_ERROR value

@@ -10,6 +10,7 @@ from erdos import __version__
 from erdos.commands import (
     ask,
     convert,
+    dashboard,
     ingest,
     lean,
     list_cmd,
@@ -19,6 +20,7 @@ from erdos.commands import (
     research,
     search,
     show,
+    sync,
 )
 
 
@@ -48,6 +50,7 @@ app = typer.Typer(
     no_args_is_help=True,
     rich_markup_mode="rich",
     add_completion=True,
+    context_settings={"help_option_names": ["-h", "--help"]},
 )
 
 
@@ -115,6 +118,8 @@ app.add_typer(logs.app, name="logs")
 app.add_typer(loop.app, name="loop")
 app.add_typer(convert.app, name="convert")
 app.add_typer(research.app, name="research")
+app.add_typer(sync.app, name="sync")
+app.add_typer(dashboard.app, name="dashboard")
 
 
 if __name__ == "__main__":

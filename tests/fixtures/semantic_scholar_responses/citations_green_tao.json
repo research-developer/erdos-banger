@@ -1,0 +1,19 @@
+{
+  "data": [
+    {
+      "citingPaper": { "paperId": "abc123", "title": "New bounds on sum-free sets", "year": 2015 },
+      "intents": ["methodology"],
+      "contexts": ["Using the density increment strategy of Green-Tao [12], we show..."]
+    },
+    {
+      "citingPaper": { "paperId": "def456", "title": "Arithmetic progressions in random subsets", "year": 2019 },
+      "intents": ["background"],
+      "contexts": ["Since the breakthrough result of [GT08], there has been..."]
+    },
+    {
+      "citingPaper": { "paperId": "ghi789", "title": "A contrasting result", "year": 2021 },
+      "intents": ["result"],
+      "contexts": ["While Green-Tao established positive density, we show that..."]
+    }
+  ]
+}

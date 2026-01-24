@@ -1,6 +1,6 @@
 # SPEC-035: Unified Problem Data Sync
 
-> **Status:** Pending
+> **Status:** Complete
 >
 > **Target:** v3.2 (critical path)
 >
@@ -110,15 +110,24 @@ Artifacts / outputs
 ### Module Structure
 
 ```text
+src/erdos/commands/
+  sync/
+    __init__.py         # `erdos sync` Typer app entrypoint
+    all_cmd.py          # `erdos sync all`
+    proof_cmd.py        # `erdos sync proof`
+    statements_cmd.py   # `erdos sync statements` (thin wrapper over `erdos lean import`)
+    submodule_cmd.py    # `erdos sync submodule`
+    website_cmd.py      # `erdos sync website`
 src/erdos/core/
   sync/
     __init__.py
+    dataset.py          # Read/write local problems_enriched.yaml (atomic)
+    merge.py            # Pure merge logic for combining sources
     submodule.py        # Git submodule operations (teorth/erdosproblems)
     website.py          # Website extraction (title/statement/refs + optional LaTeX)
     forum.py            # Forum thread fetch + proof link extraction
     proofs.py           # Repo clone + Lean verification (opt-in)
     models.py           # Sync models + provenance records
-    service.py          # Orchestrates all sync operations
   formal_conjectures/   # Existing DeepMind import (SPEC-016; used by `erdos lean import`)
 ```
 
@@ -198,12 +207,24 @@ erdos sync proof 347 --verify
 ### Full Sync
 
 ```bash
-# Run all sync operations
+# Update submodule only (default)
 erdos sync all
 
+# Full sync for specific problems
+erdos sync all --problems 6,347
+
 # Dry-run (report what would change)
-erdos sync all --dry-run
+erdos sync all --problems 6,347 --dry-run
 ```
+
+### JSON Output Contract (Global `--json`)
+
+All `erdos sync ...` commands MUST support the global `--json` flag and return `CLIOutput` with deterministic `data` shapes suitable for tests:
+
+- `erdos --json sync submodule`: `{ "checked": bool, "dry_run": bool, "updated": bool, "previous_commit": str | null, "current_commit": str | null, "stale": bool | null, "problems_count": int, "merge": object | null }`
+- `erdos --json sync website <id>`: `{ "problem_id": int, "updated": bool, "latex_saved": bool, "cached": bool, "warnings": list[str] }`
+- `erdos --json sync proof <id>`: `{ "problem_id": int, "links": list[{"url": str}], "provenance_path": str, "verification_status": str }`
+- `erdos --json sync all`: `{ "submodule": {...}, "website": {...}, "proof": {...}, "statements": {...} }`
 
 ---
 
@@ -235,8 +256,8 @@ class ProofSource:
     """Extracted proof link from forum."""
     problem_id: int
     url: str                    # GitHub/GitLab URL
-    author: str                 # Forum username
-    posted_at: datetime
+    author: str | None          # Forum username (best-effort)
+    posted_at: datetime | None  # Best-effort
     lean_version: str | None    # If mentioned
 
 def extract_proof_links(problem_id: int) -> list[ProofSource]:
@@ -293,7 +314,13 @@ class ProofProvenance:
     posted_by: str | None
     posted_at: datetime | None
 
-    verification_status: Literal["unverified", "verified", "failed", "source_unavailable"]
+    verification_status: Literal[
+        "unverified",
+        "verified",
+        "inconclusive",
+        "failed",
+        "source_unavailable",
+    ]
     verification_strength: Literal["none", "build_only", "no_sorries"]  # see Verification section
     verification_error: str | None  # short, user-facing reason (e.g., "toolchain install failed")
     verified_at: datetime | None
@@ -355,8 +382,9 @@ Note: DeepMind statement caching already exists via SPEC-016 (`formal/lean/.upst
 ```bash
 # .env
 ERDOS_DATA_PATH=...                  # Optional: directory containing problems_enriched.yaml
-ERDOS_SYNC_INTERVAL=86400           # Seconds between auto-syncs (default: 24h)
 ```
+
+Note: v3.2 sync is CLI-driven. There is no background daemon/auto-sync process in this spec.
 
 ---
 
@@ -389,7 +417,7 @@ This spec defines two verification strengths:
 
 If we can only reach `build_only` (i.e., `lake build` succeeds but we cannot prove “no sorries for the right file”), we record:
 
-- `verification_status="failed"`
+- `verification_status="inconclusive"`
 - `verification_strength="build_only"`
 - `verification_error` explaining the limiting factor (e.g., “could not identify problem file”, “toolchain install failed”, “no-sorries check unsupported”)
 
@@ -472,7 +500,7 @@ To keep CI reliable, the core of this spec should be testable without network:
 3. [ ] `erdos sync website <id>` updates/creates a valid `data/problems_enriched.yaml` entry (ProblemLoader schema: `id,title,statement,status,prize,tags,references,oeis_ids,notes,formalized`)
 4. [ ] `erdos sync website <id> --latex` saves raw LaTeX source to `data/latex/<id>.tex` (gitignored)
 5. [ ] `erdos sync statements <id>` delegates to `erdos lean import <id>` (SPEC-016) without duplicating the import/cache logic
-6. [ ] `erdos sync proof <id>` extracts proof repo links from the forum thread and writes `data/sync_cache/proofs/<id>/links.json` + `provenance.json`
+6. [ ] `erdos sync proof <id>` extracts proof repo links from the forum thread and writes `data/sync_cache/proofs/<id>/links.json` (+ `provenance.json` when at least one link is found)
 7. [ ] `erdos sync proof <id> --verify` runs `lake build` with timeouts and updates `verification_status` + `verify.log`
 8. [ ] `erdos sync all` orchestrates submodule + website + proofs (+ optional statements) deterministically
 9. [ ] Offline-friendly: cached data is used when network is unavailable; sync steps degrade gracefully with warnings
@@ -535,8 +563,6 @@ def fetch_problem_page(problem_id: int) -> WebsiteProblemData:
 erdos sync website <problem_id>
 
 # Batch sync all problems (with rate limiting)
-erdos sync website --all --delay 2
-
 # Output example:
 # Problem #275:
 #   Status: PROVED (LEAN)

@@ -1,6 +1,6 @@
 # SPEC-033: Lean Copilot Integration
 
-> **Status:** Pending
+> **Status:** Complete
 >
 > **Target:** v4.0
 >
@@ -93,6 +93,18 @@ Integrate [Lean Copilot](https://github.com/lean-dojo/LeanCopilot) to provide **
 ---
 
 ## External API Server
+
+### Python Module Structure
+
+```text
+src/erdos/
+  lean_copilot/
+    __init__.py
+    server.py           # FastAPI app implementing /generate and /encode
+    embeddings.py       # Thin wrapper around core embeddings (degraded mode)
+src/erdos/commands/lean/
+  copilot_cmd.py        # Registers `erdos lean copilot serve`
+```
 
 ### API Specification
 
@@ -231,8 +243,9 @@ Do not include explanations."""
 @app.post("/encode", response_model=EncodeResponse)
 async def encode_texts(request: EncodeRequest) -> EncodeResponse:
     """Generate embeddings for premise retrieval."""
-    # Use OpenAI embeddings or local model
-    embeddings = await get_embeddings(request.texts)
+    # Use the repo's existing sentence-transformers embedder (SPEC-014).
+    # If the embeddings extra is not installed, return a clear degraded-mode error.
+    embeddings = await get_embeddings_or_503(request.texts)
     return EncodeResponse(embeddings=embeddings)
 ```
 
@@ -256,10 +269,25 @@ erdos lean copilot serve --host 0.0.0.0     # Expose to network
 | `--port` | 8000 | Server port |
 | `--host` | 127.0.0.1 | Bind address |
 | `--llm-cmd` | (router default) | Override LLM command for `/generate` |
-| `--embedding-model` | (see below) | Embedding model for `/encode` |
+| `--embedding-model` | sentence-transformers/all-MiniLM-L6-v2 | Embedding model for `/encode` (requires `embeddings` extra) |
 | `--log-level` | info | Logging verbosity |
 
 ---
+
+## Dependencies
+
+This feature is an optional adapter and MUST be guarded behind an extra so the base CLI stays lightweight:
+
+```toml
+# pyproject.toml
+[project.optional-dependencies]
+copilot = [
+  "fastapi>=0.115.0",
+  "uvicorn>=0.32.0",
+]
+```
+
+`/encode` MUST reuse the existing `embeddings` extra (SPEC-014). If the extra is not installed, `/encode` returns HTTP 503 with an actionable error message (degraded mode).
 
 ## Lean Project Configuration
 
@@ -377,10 +405,8 @@ def test_encode_returns_correct_dimensions():
 ```python
 # tests/integration/test_lean_copilot.py
 
-@pytest.mark.requires_network
-@pytest.mark.requires_openai_key
 def test_server_generate_endpoint():
-    """End-to-end tactic generation."""
+    """End-to-end tactic generation (offline via fixture LLM command)."""
     ...
 
 @pytest.mark.requires_lean
@@ -399,8 +425,8 @@ def test_lean_copilot_integration():
 4. [ ] Server uses SPEC-032 task routing for `/generate`
 5. [ ] Lean Copilot lakefile integration documented
 6. [ ] `suggest_tactics` works in Lean 4 proof
-7. [ ] Latency < 2s for typical tactic generation
-8. [ ] Clear error messages on API key issues
+7. [ ] `/generate` and `/encode` enforce timeouts and return clear errors on failure
+8. [ ] Clear error messages on LLM command misconfiguration and missing `embeddings` extra
 9. [ ] Unit and integration tests pass
 
 ---

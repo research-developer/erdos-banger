@@ -201,7 +201,7 @@ def test_ingest_command_not_found(tmp_path: Path, sample_problems_yaml: Path) ->
 
 
 def test_ingest_command_human_output(
-    tmp_path: Path, sample_problems_yaml: Path
+    tmp_path: Path, sample_problems_yaml: Path, strip_ansi
 ) -> None:
     """Test erdos ingest without --json shows human-readable output."""
     data_dir = _data_dir(tmp_path, sample_problems_yaml)
@@ -212,8 +212,10 @@ def test_ingest_command_human_output(
         app,
         ["ingest", "--help"],
         env={"ERDOS_DATA_PATH": str(data_dir), "ERDOS_REPO_ROOT": str(repo_root)},
+        terminal_width=200,
     )
 
     # Help should work
     assert result.exit_code == 0
-    assert "ingest" in result.stdout.lower()
+    output = strip_ansi(result.stdout)
+    assert "ingest" in output.lower()

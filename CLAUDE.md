@@ -129,6 +129,50 @@ watch -n5 'git log --oneline -5'
 @pytest.mark.e2e             # End-to-end tests
 ```
 
+## Testing Gotchas
+
+### CLI Help Output & ANSI Codes
+
+**Problem:** Typer/Rich emit ANSI escape codes (`\x1b[1m`) in CI when `PY_COLORS=1` is set. Tests asserting on `--help` output fail with:
+```
+AssertionError: assert '--flag' in '\x1b[1m-\x1b[0m\x1b[1m-flag\x1b[0m'
+```
+
+**Solution:** Always use the `strip_ansi` fixture from `tests/conftest.py`:
+```python
+def test_help_shows_flag(strip_ansi: Callable[[str], str]) -> None:
+    result = runner.invoke(app, ["command", "--help"])
+    output = strip_ansi(result.output)  # Normalize ANSI codes
+    assert "--flag" in output
+```
+
+**Why:** `conftest.py` already unsets `PY_COLORS` before Rich imports, but this doesn't cover all edge cases. The fixture is the defensive pattern.
+
+### External Repository Dependencies
+
+**Problem:** Tests that clone external repos (e.g., Lean libraries) break when repos are renamed or restructured.
+
+**Examples:**
+- `leanprover/std4` → `leanprover-community/batteries` (2024)
+- `lakefile.lean` → `lakefile.toml` (Lean 4 convention change)
+
+**Solution:**
+1. Prefer fixture repos under `tests/fixtures/` for deterministic tests
+2. If you must use external repos, add a comment with DEBT ticket reference
+3. Check for both old and new file conventions when asserting
+
+### Key Test Fixtures (conftest.py)
+
+| Fixture | Purpose |
+|---------|---------|
+| `strip_ansi` | Normalize CLI output for assertions |
+| `sample_problem` | Minimal `ProblemRecord` instance |
+| `fixtures_dir` | Path to `tests/fixtures/` |
+| `sample_problems_yaml` | Path to test YAML data |
+| `in_memory_db` | SQLite connection for search tests |
+| `arxiv_*_fixture` | Cached arXiv API responses |
+| `crossref_*_fixture` | Cached Crossref API responses |
+
 ## Code Style
 
 - Python 3.11+, strict mypy typing

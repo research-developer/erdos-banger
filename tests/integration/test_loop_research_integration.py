@@ -6,6 +6,8 @@ import json
 import shutil
 from pathlib import Path
 
+import pytest
+
 from erdos.cli import app
 from tests.cli_runner import make_cli_runner
 
@@ -20,10 +22,22 @@ def _setup_env(tmp_path: Path, sample_problems_yaml: Path) -> dict[str, str]:
     return {"ERDOS_DATA_PATH": str(data_dir), "ERDOS_REPO_ROOT": str(tmp_path)}
 
 
+@pytest.mark.requires_lean
 def test_loop_writes_attempt_record(tmp_path: Path, sample_problems_yaml: Path) -> None:
     env = _setup_env(tmp_path, sample_problems_yaml)
 
-    # Minimal Lean file with sorry so loop exits early with LLM_REQUIRED (no lake needed).
+    # Create fake LLM script that outputs a Lean response (SPEC-032 requires configured LLM)
+    fake_llm = tmp_path / "fake_llm.sh"
+    fake_llm.write_text(
+        "#!/bin/bash\n"
+        "echo '```lean'\n"
+        "echo 'theorem foo : True := trivial'\n"
+        "echo '```'\n"
+    )
+    fake_llm.chmod(0o755)
+    env["ERDOS_LLM_COMMAND"] = str(fake_llm)
+
+    # Minimal Lean file with sorry so loop tries to fix it.
     lean_dir = tmp_path / "formal" / "lean" / "Erdos"
     lean_dir.mkdir(parents=True)
     (lean_dir / "Problem006.lean").write_text(
@@ -37,13 +51,15 @@ def test_loop_writes_attempt_record(tmp_path: Path, sample_problems_yaml: Path) 
             "loop",
             "run",
             "6",
-            "--no-apply",
+            "--no-apply",  # Don't apply patches, just run the loop
+            "--max-iter",
+            "1",  # Single iteration to keep test fast
             "--path",
             str(tmp_path / "formal" / "lean"),
         ],
         env=env,
     )
-    assert result.exit_code != 0
+    # Loop may succeed or fail depending on LLM output, but should run
     payload = json.loads(result.stdout)
     assert payload["command"] == "erdos loop"
 

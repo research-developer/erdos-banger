@@ -1,6 +1,6 @@
 # SPEC-032: Multi-Model Routing (External Command)
 
-> **Status:** Pending
+> **Status:** Complete
 >
 > **Target:** v3.5
 >
@@ -79,22 +79,6 @@ ERDOS_LLM_COMMAND_COPILOT=./scripts/llm-openai.sh
 | `loop_patch` | `ERDOS_LLM_COMMAND_CODE` → `ERDOS_LLM_COMMAND` |
 | `tactic_generation` | `ERDOS_LLM_COMMAND_COPILOT` → `ERDOS_LLM_COMMAND_MATH` → `ERDOS_LLM_COMMAND` |
 
-### Optional Config File (Secondary)
-
-If present, a config file can define exact mappings (overrides env defaults):
-
-```yaml
-# config/llm_routing.yaml
-routing:
-  ask_question: ERDOS_LLM_COMMAND_MATH
-  loop_patch: ERDOS_LLM_COMMAND_CODE
-  tactic_generation: ERDOS_LLM_COMMAND_COPILOT
-```
-
-Rules:
-- Values must be **names of environment variables** (not raw commands) to avoid committing secrets/paths.
-- Missing entries fall back to the default resolution table above.
-
 ---
 
 ## Architecture
@@ -106,17 +90,19 @@ src/erdos/core/llm/
   __init__.py
   tasks.py            # TaskType enum + mapping rules
   router.py           # Resolve task -> command string
-  exec.py             # Shell-free execution (wraps subprocess)
 ```
 
-Implementation should reuse the existing execution model from `src/erdos/core/ask/llm.py` (shell-free `subprocess.run`, stdin prompt, timeout, structured errors).
+Execution is intentionally reused from existing call sites (ask/loop/copilot) so the router remains a small, testable unit:
+
+- `src/erdos/commands/ask.py` resolves `TaskType.ask_question`
+- `src/erdos/commands/loop.py` resolves `TaskType.loop_patch`
+- `src/erdos/lean_copilot/server.py` resolves `TaskType.tactic_generation`
 
 ### Router Semantics (Precise)
 
-- A task resolves to a **primary command** and an optional **fallback**.
-- If the primary command is not configured (empty/missing), use fallback.
-- If execution fails due to **configuration** (missing executable, invalid command syntax), try fallback.
-- If execution fails with a **non-zero exit code**, do **not** automatically fall back by default (avoid masking real failures). Fallback on non-zero exit codes requires an explicit opt-in (e.g. `ERDOS_LLM_FALLBACK_ON_NONZERO=1`).
+- A task resolves to a command string by checking the environment-variable chain defined in `TaskType`.
+- If `--llm-cmd` (override) is provided and non-empty, routing is bypassed entirely.
+- If no command is configured, the CLI returns a clear configuration error (lists the env vars that were checked).
 
 ---
 
@@ -155,25 +141,14 @@ ERDOS_LLM_COMMAND_CODE=./scripts/llm-anthropic.sh erdos loop run 6 --max-iter 10
 
 - Task mapping resolution order.
 - Behavior when env vars are missing/empty.
-- Behavior for invalid commands (e.g. malformed quoting).
+- Error message includes the checked env vars.
 
 ### Integration Tests (Offline)
 
-Use tiny fixture scripts (no network) that:
-- read prompt from stdin
-- write a deterministic response to stdout
-- exit 0 or non-zero
+Use `CliRunner` with temporary fixture scripts to confirm routing is honored:
 
-Example fixtures:
-
-```text
-tests/fixtures/llm/ok.sh
-tests/fixtures/llm/fail.sh
-```
-
-Tests should confirm:
-- `erdos --json ask ...` selects the expected command based on env routing
-- `erdos --json loop run ...` selects the expected command based on env routing
+- `tests/integration/test_cli_ask_router.py`
+- `tests/integration/test_cli_loop_router.py`
 
 ---
 

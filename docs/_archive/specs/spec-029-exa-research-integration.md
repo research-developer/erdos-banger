@@ -1,6 +1,6 @@
 # SPEC-029: Exa Research API Integration
 
-> **Status:** Pending
+> **Status:** Complete
 >
 > **Target:** v3.2
 >
@@ -34,7 +34,7 @@ Current literature workflow:
 ### In Scope
 
 1. **Exa client** — HTTP client for Exa Research API
-2. **CLI command** — `erdos research exa <problem_id> "<query>"`
+2. **CLI command** — `erdos research exa search <problem_id> "<query>"`
 3. **Structured output** — Exa responses stored as research leads
 4. **Rate limiting** — Respect Exa API limits
 5. **Caching** — Cache responses to avoid redundant API calls
@@ -61,12 +61,12 @@ EXA_API_KEY=your-exa-api-key-here
 ### Primary Command
 
 ```bash
-erdos research exa <problem_id> "<query>" [OPTIONS]
+erdos research exa search <problem_id> "<query>" [OPTIONS]
 
 # Examples:
-erdos research exa 6 "What approaches have been tried for sum-free sets?"
-erdos research exa 42 "Progress on arithmetic progressions in primes" --max-results 10
-erdos research exa 124 "Techniques for graph coloring bounds" --save-leads
+erdos research exa search 6 "What approaches have been tried for sum-free sets?"
+erdos research exa search 42 "Progress on arithmetic progressions in primes" --max-results 10
+erdos research exa search 124 "Techniques for graph coloring bounds" --save-leads
 ```
 
 ### Options
@@ -75,9 +75,8 @@ erdos research exa 124 "Techniques for graph coloring bounds" --save-leads
 |--------|---------|-------------|
 | `--max-results` | 5 | Maximum number of sources to return |
 | `--save-leads` | false | Auto-create lead records from results |
-| `--output-schema` | default | Custom JSON schema for structured extraction |
 
-**JSON mode:** use the global flag: `erdos --json research exa ...`
+**JSON mode:** use the global flag: `erdos --json research exa search ...`
 
 ### Output (Default)
 
@@ -97,9 +96,8 @@ Sources (3):
      - DOI: 10.1007/BF02787556
      - Relevance: Probabilistic methods for existence
 
-Synthesis:
-  - Main approaches: density arguments, probabilistic methods, algebraic structure
-  - Open questions: tight bounds for specific group structures
+Answer:
+  - (best-effort) A short Exa-provided answer/summary, when available.
 ```
 
 ### Output (JSON mode)
@@ -124,13 +122,11 @@ Synthesis:
         "relevance": "Density arguments applicable to sum-free sets"
       }
     ],
-    "synthesis": {
-      "approaches": ["density arguments", "probabilistic methods", "algebraic structure"],
-      "open_questions": ["tight bounds for specific group structures"]
-    },
+    "answer": "Exa answer text (if provided by the API; otherwise null)",
     "saved_leads": false,
     "created_lead_ids": [],
-    "cached": false
+    "cached": false,
+    "cache_path": "literature/cache/exa/<query_hash>.json"
   },
   "error": null,
   "timestamp": "2026-01-23T12:00:00Z",
@@ -150,8 +146,8 @@ src/erdos/core/
     exa.py              # HTTP client for Exa API
   research/
     exa_integration.py  # Exa → research workspace integration
-src/erdos/commands/research/
-  exa.py                # `erdos research exa` command
+  src/erdos/commands/research/
+    exa.py                # `erdos research exa search` command
 ```
 
 ### Exa Client
@@ -210,6 +206,7 @@ literature/cache/exa/
 ```
 
 Cache key: SHA256 of normalized query string.
+Cache key includes request parameters that affect results (currently: `max_results`).
 Cache TTL: 24 hours (configurable via `ERDOS_EXA_CACHE_TTL`).
 
 ---
@@ -269,9 +266,9 @@ def test_exa_research_query():
 1. [ ] `EXA_API_KEY` documented in `.env.example`
 2. [ ] `AppConfig` includes `exa_api_key` (centralized env config)
 3. [ ] `ExaClient` implements polite rate limiting and retry/backoff
-4. [ ] `erdos research exa` command works end-to-end
+4. [ ] `erdos research exa search` command works end-to-end
 5. [ ] `--save-leads` creates valid lead records
-6. [ ] `--json` output matches documented schema
+6. [ ] `--json` output matches documented schema (including `answer` being optional)
 7. [ ] Responses are cached for 24 hours
 8. [ ] Missing API key produces clear error message
 9. [ ] Unit tests cover client and integration logic

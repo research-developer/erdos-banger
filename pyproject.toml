@@ -40,6 +40,10 @@ embeddings = [
 mcp = [
     "mcp[cli]>=1.25.0,<2",
 ]
+copilot = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
+]
 
 [project.scripts]
 erdos = "erdos.cli:app"
@@ -69,6 +73,8 @@ dev = [
     "types-requests>=2.32.0",
     "types-defusedxml>=0.7.0.20240218",
     "numpy>=2.4.1",  # Type checking for embeddings module
+    "radon>=6.0.1",
+    "vulture>=2.14",
 ]
 
 [tool.ruff]
@@ -122,6 +128,9 @@ ignore = [
 ]
 "src/erdos/core/pdf/*.py" = [
     "TC003",  # Path used at runtime in function signatures
+]
+"src/erdos/commands/refs.py" = [
+    "TC002",  # click import used at runtime for RefsGroup(TyperGroup) subclass
 ]
 "src/erdos/core/batch/*.py" = [
     "TC003",  # Path used at runtime in function signatures
@@ -190,6 +199,14 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["pdfplumber", "pdfplumber.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["fastapi", "fastapi.*", "uvicorn", "uvicorn.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "erdos.lean_copilot.*"
+disallow_untyped_decorators = false  # FastAPI decorators lack type annotations
 
 [tool.pydantic-mypy]
 init_forbid_extra = true
