@@ -1,8 +1,10 @@
 # DEBT-098: Test References Deprecated std4 Repository
 
-**Status:** Open
-**Priority:** High (causes CI failure)
+**Status:** Fixed
+**Priority:** P1 (causes CI failure)
 **Created:** 2026-01-24
+**Fixed:** 2026-01-24
+**Commit:** e49696e
 **Related:** `test-with-lean` CI job failure
 
 ## Problem
@@ -14,14 +16,14 @@ The test `test_clone_and_verify_real_repo` in `tests/integration/test_sync_proof
 ```python
 # tests/integration/test_sync_proof.py:205-219
 result = clone_repository(
-    "https://github.com/leanprover/std4",  # DEPRECATED URL
-    tmp_path / "std4",
+    "https://github.com/leanprover-community/batteries",
+    tmp_path / "batteries",
     timeout=120,
     depth=1,
 )
 
-assert (tmp_path / "std4").exists()
-assert (tmp_path / "std4" / "lakefile.lean").exists()  # FAILS
+assert (tmp_path / "batteries").exists()
+assert (tmp_path / "batteries" / "lakefile.toml").exists()
 ```
 
 CI Error:
@@ -44,29 +46,10 @@ E    +    where exists = ((PosixPath('.../test_clone_and_verify_real_rep0') / 's
 
 ## Fix Options
 
-### Option A: Update to batteries (Recommended)
-```python
-result = clone_repository(
-    "https://github.com/leanprover-community/batteries",
-    tmp_path / "batteries",
-    timeout=120,
-    depth=1,
-)
-assert (tmp_path / "batteries" / "lakefile.toml").exists()  # Note: may use .toml now
-```
-
-### Option B: Use a smaller, more stable test repo
-Create a dedicated test fixture repo under the org that won't change.
-
-### Option C: Skip the test
-Mark as `@pytest.mark.skip(reason="DEBT-098: std4 renamed to batteries")` until fixed.
+Implemented Option A (update to batteries).
 
 ## Acceptance Criteria
 
-1. [ ] Update test to use correct repository URL
-2. [ ] Verify test passes in CI
+1. [x] Update test to use correct repository URL
+2. [x] Verify test passes (`make ci` / `make test-all` with Lean)
 3. [ ] Consider using a stable, dedicated test repo for proof verification tests
-
-## Effort Estimate
-
-~30 minutes for Option A, ~2 hours for Option B.
