@@ -18,7 +18,7 @@ This fix restores those constants and wires them into the relevant defaults, rem
   - `DEFAULT_SEARCH_LIMIT`
   - `DEFAULT_RAG_LIMIT`
   - `LEAN_COMPILE_TIMEOUT`
-  - `LAKE_UPDATE_TIMEOUT` (used for `lake update`, not Aristotle)
+  - `LAKE_UPDATE_TIMEOUT`
   - `MAX_QUERY_TERMS`
   - `MESSAGE_TRUNCATION`
   - `TITLE_TRUNCATION`

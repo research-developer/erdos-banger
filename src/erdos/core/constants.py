@@ -26,7 +26,7 @@ LEAN_COMPILE_TIMEOUT = 120
 """Timeout for Lean compilation operations."""
 
 LAKE_UPDATE_TIMEOUT = 600
-"""Timeout for lake update operations."""
+"""Timeout for long-running Lean tool operations (e.g., `lake update`, Aristotle)."""
 
 LLM_COMMAND_TIMEOUT = 300
 """Timeout for external LLM command execution (5 minutes)."""

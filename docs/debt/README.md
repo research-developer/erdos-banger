@@ -111,7 +111,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-082 | Remove unused constants in `constants.py` | P3 | Fixed | 117d510 |
 | DEBT-083 | Remove internal compatibility shims + wording | P2 | Fixed | 117d510 |
 | DEBT-084 | Finish batch interrupt wiring (SIGINT) | P3 | Fixed | 117d510 |
-| DEBT-085 | Restore and wire removed constants (DEBT-082 regression) | P2 | Fixed | c5b5d9f |
+| DEBT-085 | Restore and wire removed constants (DEBT-082 regression) | P2 | Fixed | c5b5d9f,f70613a |
 
 **Next Debt ID:** DEBT-086
 
