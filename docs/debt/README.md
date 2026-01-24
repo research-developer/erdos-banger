@@ -14,13 +14,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-| ID | Title | Priority | Status |
-|----|-------|----------|--------|
-| DEBT-085 | Restore and wire removed constants (DEBT-082 regression) | P2 | Open |
-
-### Note on DEBT-082 Incorrect Resolution
-
-DEBT-082 was incorrectly resolved by removing constants that should have been WIRED IN, not removed. Five constants (`DEFAULT_SEARCH_LIMIT`, `DEFAULT_RAG_LIMIT`, `LEAN_COMPILE_TIMEOUT`, `LAKE_UPDATE_TIMEOUT`, `MAX_QUERY_TERMS`) had corresponding hardcoded magic numbers throughout the codebase that should have been replaced with the constants. DEBT-085 tracks the correct fix.
+None.
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -117,6 +111,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-082 | Remove unused constants in `constants.py` | P3 | Fixed | 117d510 |
 | DEBT-083 | Remove internal compatibility shims + wording | P2 | Fixed | 117d510 |
 | DEBT-084 | Finish batch interrupt wiring (SIGINT) | P3 | Fixed | 117d510 |
+| DEBT-085 | Restore and wire removed constants (DEBT-082 regression) | P2 | Fixed | c5b5d9f |
 
 **Next Debt ID:** DEBT-086
 
@@ -195,3 +190,4 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-082-unused-constants.md`
 - `docs/_archive/debt/debt-083-backwards-compatibility-shims.md`
 - `docs/_archive/debt/debt-084-unused-ocp-patterns.md`
+- `docs/_archive/debt/debt-085-restore-and-wire-constants.md`
