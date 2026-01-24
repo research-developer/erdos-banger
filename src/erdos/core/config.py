@@ -95,6 +95,8 @@ class AppConfig:
     semantic_scholar_api_key: str = ""
     semantic_scholar_cache_ttl_days: int = 7
     semantic_scholar_cache_path: Path | None = None
+    zbmath_cache_ttl_days: int = 30
+    zbmath_cache_path: Path | None = None
 
     # Network
     http_timeout: float = DEFAULT_HTTP_TIMEOUT
@@ -124,6 +126,8 @@ class AppConfig:
             SEMANTIC_SCHOLAR_API_KEY: API key for Semantic Scholar (optional).
             ERDOS_S2_CACHE_TTL: Cache TTL in days for S2 API (default: 7).
             ERDOS_S2_CACHE_PATH: Path to S2 cache directory (for testing).
+            ERDOS_ZBMATH_CACHE_TTL: Cache TTL in days for zbMATH API (default: 30).
+            ERDOS_ZBMATH_CACHE_PATH: Path to zbMATH cache directory (for testing).
 
         Returns:
             AppConfig instance with values from environment.
@@ -136,6 +140,7 @@ class AppConfig:
         submodule_path_str = os.environ.get("ERDOS_SUBMODULE_PATH")
         exa_cache_path_str = os.environ.get("ERDOS_EXA_CACHE_PATH")
         s2_cache_path_str = os.environ.get("ERDOS_S2_CACHE_PATH")
+        zbmath_cache_path_str = os.environ.get("ERDOS_ZBMATH_CACHE_PATH")
 
         def _clean_env(value: str | None) -> str | None:
             if value is None:
@@ -173,6 +178,10 @@ class AppConfig:
             semantic_scholar_cache_ttl_days=_parse_int_env("ERDOS_S2_CACHE_TTL", 7),
             semantic_scholar_cache_path=(
                 Path(s2_cache_path_str) if s2_cache_path_str else None
+            ),
+            zbmath_cache_ttl_days=_parse_int_env("ERDOS_ZBMATH_CACHE_TTL", 30),
+            zbmath_cache_path=(
+                Path(zbmath_cache_path_str) if zbmath_cache_path_str else None
             ),
         )
 
