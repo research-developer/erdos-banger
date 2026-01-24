@@ -1,0 +1,24 @@
+"""Tests for lead add enrichment flags (SPEC-030, SPEC-031)."""
+
+from typer.testing import CliRunner
+
+from erdos.cli import app
+
+
+runner = CliRunner()
+
+
+def test_lead_add_help_shows_fetch_citations() -> None:
+    """Verify lead add help shows --fetch-citations flag."""
+    result = runner.invoke(app, ["research", "lead", "add", "--help"])
+    assert result.exit_code == 0
+    assert "--fetch-citations" in result.output
+    assert "Semantic Scholar" in result.output
+
+
+def test_lead_add_help_shows_fetch_msc() -> None:
+    """Verify lead add help shows --fetch-msc flag."""
+    result = runner.invoke(app, ["research", "lead", "add", "--help"])
+    assert result.exit_code == 0
+    assert "--fetch-msc" in result.output
+    assert "zbMATH" in result.output

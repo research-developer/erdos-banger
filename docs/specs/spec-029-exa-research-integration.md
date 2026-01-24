@@ -1,6 +1,6 @@
 # SPEC-029: Exa Research API Integration
 
-> **Status:** Pending
+> **Status:** Complete
 >
 > **Target:** v3.2
 >

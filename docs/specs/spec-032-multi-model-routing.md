@@ -1,6 +1,6 @@
 # SPEC-032: Multi-Model Routing (External Command)
 
-> **Status:** Pending
+> **Status:** Complete
 >
 > **Target:** v3.5
 >

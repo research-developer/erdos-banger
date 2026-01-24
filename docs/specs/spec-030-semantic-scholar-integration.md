@@ -1,6 +1,6 @@
 # SPEC-030: Semantic Scholar API Integration
 
-> **Status:** Pending
+> **Status:** Complete
 >
 > **Target:** v3.3
 >

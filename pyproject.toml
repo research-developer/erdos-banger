@@ -73,6 +73,8 @@ dev = [
     "types-requests>=2.32.0",
     "types-defusedxml>=0.7.0.20240218",
     "numpy>=2.4.1",  # Type checking for embeddings module
+    "radon>=6.0.1",
+    "vulture>=2.14",
 ]
 
 [tool.ruff]

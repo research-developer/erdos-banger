@@ -1,6 +1,6 @@
 # SPEC-031: zbMATH Open API Integration
 
-> **Status:** Pending
+> **Status:** Complete
 >
 > **Target:** v3.4
 >

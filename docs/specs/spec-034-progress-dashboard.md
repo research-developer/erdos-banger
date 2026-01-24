@@ -1,6 +1,6 @@
 # SPEC-034: Progress Dashboard
 
-> **Status:** Pending
+> **Status:** Complete
 >
 > **Target:** v4.1
 >

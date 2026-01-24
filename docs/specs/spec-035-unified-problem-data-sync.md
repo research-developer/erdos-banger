@@ -1,6 +1,6 @@
 # SPEC-035: Unified Problem Data Sync
 
-> **Status:** Pending
+> **Status:** Complete
 >
 > **Target:** v3.2 (critical path)
 >
