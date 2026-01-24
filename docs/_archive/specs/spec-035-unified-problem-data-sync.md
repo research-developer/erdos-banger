@@ -221,7 +221,7 @@ erdos sync all --problems 6,347 --dry-run
 
 All `erdos sync ...` commands MUST support the global `--json` flag and return `CLIOutput` with deterministic `data` shapes suitable for tests:
 
-- `erdos --json sync submodule`: `{ "checked": bool, "updated": bool, "previous_commit": str | null, "current_commit": str | null, "stale": bool | null }`
+- `erdos --json sync submodule`: `{ "checked": bool, "dry_run": bool, "updated": bool, "previous_commit": str | null, "current_commit": str | null, "stale": bool | null, "problems_count": int, "merge": object | null }`
 - `erdos --json sync website <id>`: `{ "problem_id": int, "updated": bool, "latex_saved": bool, "cached": bool, "warnings": list[str] }`
 - `erdos --json sync proof <id>`: `{ "problem_id": int, "links": list[{"url": str}], "provenance_path": str, "verification_status": str }`
 - `erdos --json sync all`: `{ "submodule": {...}, "website": {...}, "proof": {...}, "statements": {...} }`

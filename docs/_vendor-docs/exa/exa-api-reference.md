@@ -40,7 +40,6 @@ erdos-banger currently uses only Exa's **Search** API.
   - `useAutoprompt` = `true`
   - `contents.text.maxCharacters` = `500`
 - Response fields consumed:
-  - `autopromptString` → `autoprompt`
   - `summary` → `answer`
   - `results[]`: `url`, `title`, `author`, `publishedDate`, `text`, `score`
 - Caching:
@@ -119,7 +118,7 @@ Intelligently find webpages using embeddings-based search.
 | `news` | News articles |
 | `research paper` | Academic papers |
 | `pdf` | PDF documents |
-| `github` | GitHub repositories |
+| `GitHub` | GitHub repositories |
 | `tweet` | Twitter/X posts |
 | `personal site` | Personal websites/blogs |
 | `financial report` | Financial documents |
@@ -188,6 +187,7 @@ Intelligently find webpages using embeddings-based search.
 ### Code Examples
 
 **cURL:**
+
 ```bash
 curl -X POST 'https://api.exa.ai/search' \
   -H 'x-api-key: YOUR_EXA_API_KEY' \
@@ -196,6 +196,7 @@ curl -X POST 'https://api.exa.ai/search' \
 ```
 
 **Python:**
+
 ```python
 from exa_py import Exa
 
@@ -207,6 +208,7 @@ for result in results.results:
 ```
 
 **JavaScript:**
+
 ```javascript
 import Exa from 'exa-js';
 const exa = new Exa('YOUR_EXA_API_KEY');
@@ -644,7 +646,7 @@ Research API uses consumption-based billing. You're only charged for tasks that 
 | `/findSimilar` | 5 QPS (assumed, not documented) |
 | `/research/v1` | 15 concurrent tasks |
 
-> **Note:** QPS = Queries Per Second. Research API uses concurrent task limits for long-running operations. Contact hello@exa.ai for Enterprise rate limit increases.
+> **Note:** QPS = Queries Per Second. Research API uses concurrent task limits for long-running operations. Contact <hello@exa.ai> for Enterprise rate limit increases.
 
 ---
 
