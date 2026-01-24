@@ -1,8 +1,11 @@
 """Internal steps for a single loop iteration.
 
 This module holds small, testable helpers used by the loop iteration state
-machine. It is not part of the public API; `erdos.core.loop` re-exports only
-what callers need.
+machine.
+
+Only `apply_patch()` is intended for external use, via the stable re-export
+`erdos.core.loop.apply_patch`. Everything else is internal implementation
+detail and may change without notice.
 """
 
 from __future__ import annotations

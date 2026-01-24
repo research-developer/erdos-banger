@@ -12,6 +12,8 @@ import responses
 from erdos.core.clients.openalex import (
     OpenAlexClient,
     OpenAlexConfig,
+)
+from erdos.core.clients.openalex_transform import (
     _map_oa_status,
     extract_arxiv_id,
     find_pdf_url,

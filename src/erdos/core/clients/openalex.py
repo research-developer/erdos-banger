@@ -19,13 +19,7 @@ from urllib.parse import quote
 
 import requests
 
-from erdos.core.clients.openalex_transform import (
-    _map_oa_status,
-    extract_arxiv_id,
-    find_pdf_url,
-    openalex_to_reference,
-    reconstruct_abstract,
-)
+from erdos.core.clients.openalex_transform import openalex_to_reference
 from erdos.core.config import AppConfig
 from erdos.core.retry import fetch_with_retry
 
@@ -34,17 +28,6 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from erdos.core.models import ReferenceRecord
-
-
-__all__ = [
-    "OpenAlexClient",
-    "OpenAlexConfig",
-    "_map_oa_status",
-    "extract_arxiv_id",
-    "find_pdf_url",
-    "openalex_to_reference",
-    "reconstruct_abstract",
-]
 
 
 @dataclass(frozen=True)
