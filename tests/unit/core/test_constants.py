@@ -8,6 +8,7 @@ from erdos.core.constants import (
     LAKE_UPDATE_TIMEOUT,
     LEAN_COMPILE_TIMEOUT,
     LEAN_TOOLCHAIN_VERSION,
+    LEAN_VERSION_TIMEOUT,
     LLM_COMMAND_TIMEOUT,
     MAX_QUERY_TERMS,
     MAX_TEX_FILE_SIZE,
@@ -38,6 +39,9 @@ def test_timeouts_are_positive_numbers():
 
     assert isinstance(LEAN_COMPILE_TIMEOUT, int)
     assert LEAN_COMPILE_TIMEOUT > 0
+
+    assert isinstance(LEAN_VERSION_TIMEOUT, int)
+    assert LEAN_VERSION_TIMEOUT > 0
 
     assert isinstance(LAKE_UPDATE_TIMEOUT, int)
     assert LAKE_UPDATE_TIMEOUT > 0

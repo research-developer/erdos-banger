@@ -14,6 +14,7 @@ from erdos.core.constants import (
     LAKE_UPDATE_TIMEOUT,
     LEAN_COMPILE_TIMEOUT,
     LEAN_TOOLCHAIN_VERSION,
+    LEAN_VERSION_TIMEOUT,
     MESSAGE_TRUNCATION,
 )
 from erdos.core.models import LeanCheckResult, LeanError
@@ -111,7 +112,7 @@ class LeanRunner:
                     [lean_path, "--version"],
                     capture_output=True,
                     text=True,
-                    timeout=10,
+                    timeout=LEAN_VERSION_TIMEOUT,
                     check=False,
                 )
                 if result.returncode == 0:
