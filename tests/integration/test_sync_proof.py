@@ -85,9 +85,9 @@ class TestProofSyncNetwork:
             result = runner.invoke(app, ["--json", "sync", "proof", "99999"])
 
         # Should return an error (404 or similar)
-        if result.exit_code != 0:
-            data = json.loads(result.output)
-            assert data["success"] is False
+        data = json.loads(result.output)
+        assert result.exit_code != 0
+        assert data["success"] is False
 
 
 # =============================================================================
@@ -138,7 +138,10 @@ class TestProofVerificationLean:
         no_sorry, check_log = check_no_sorries(repo_dir, lean_file)
 
         # Should detect the sorry
-        assert no_sorry is False or "sorry" in check_log.lower()
+        assert no_sorry is False, (
+            f"Expected sorry to be detected, got no_sorry={no_sorry}. "
+            f"Log preview: {check_log[:200]}"
+        )
 
     def test_verify_fixture_repo_no_sorry(self, tmp_path: Path) -> None:
         """Verify fixture repo without sorry passes verification."""
@@ -165,7 +168,9 @@ class TestProofVerificationLean:
         no_sorry, check_log = check_no_sorries(repo_dir, lean_file)
 
         # Should have no sorries
-        assert no_sorry is True or "sorry" not in check_log.lower()
+        assert no_sorry is True, (
+            f"Expected no sorry, got no_sorry={no_sorry}. Log preview: {check_log[:200]}"
+        )
 
 
 # =============================================================================
@@ -175,6 +180,8 @@ class TestProofVerificationLean:
 
 @pytest.mark.requires_network
 @pytest.mark.requires_lean
+@pytest.mark.e2e
+@pytest.mark.slow
 class TestProofVerificationEndToEnd:
     """End-to-end verification tests requiring both network and Lean.
 

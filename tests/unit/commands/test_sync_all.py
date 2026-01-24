@@ -36,6 +36,7 @@ def test_sync_all_skip_all_no_network() -> None:
             "--json",
             "sync",
             "all",
+            "--no-network",
             "--skip-submodule",
             "--skip-website",
             "--skip-proof",

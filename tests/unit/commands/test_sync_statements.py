@@ -5,16 +5,23 @@ from io import StringIO
 from typing import Any
 from unittest.mock import patch
 
+import pytest
+from rich.console import Console
 from typer.testing import CliRunner
 
 from erdos.cli import app
 from erdos.commands.sync.statements_cmd import _print_human
+from tests.cli_runner import make_cli_runner
 
 
-runner = CliRunner()
+@pytest.fixture
+def runner() -> CliRunner:
+    return make_cli_runner()
 
 
-def test_sync_statements_help(strip_ansi: Callable[[str], str]) -> None:
+def test_sync_statements_help(
+    runner: CliRunner, strip_ansi: Callable[[str], str]
+) -> None:
     """Verify statements command shows help."""
     result = runner.invoke(app, ["sync", "statements", "--help"])
     output = strip_ansi(result.output)
@@ -25,7 +32,9 @@ def test_sync_statements_help(strip_ansi: Callable[[str], str]) -> None:
     assert "--no-network" in output
 
 
-def test_sync_statements_requires_problem_id(strip_ansi: Callable[[str], str]) -> None:
+def test_sync_statements_requires_problem_id(
+    runner: CliRunner, strip_ansi: Callable[[str], str]
+) -> None:
     """Verify statements command requires problem ID."""
     result = runner.invoke(app, ["sync", "statements"])
     output = strip_ansi(result.output)
@@ -34,6 +43,7 @@ def test_sync_statements_requires_problem_id(strip_ansi: Callable[[str], str]) -
 
 
 def test_sync_statements_shows_skip_lean_validation(
+    runner: CliRunner,
     strip_ansi: Callable[[str], str],
 ) -> None:
     """Verify statements command shows --skip-lean-validation flag."""
@@ -43,7 +53,9 @@ def test_sync_statements_shows_skip_lean_validation(
     assert "--skip-lean-validation" in output
 
 
-def test_sync_statements_shows_path_option(strip_ansi: Callable[[str], str]) -> None:
+def test_sync_statements_shows_path_option(
+    runner: CliRunner, strip_ansi: Callable[[str], str]
+) -> None:
     """Verify statements command shows --path option."""
     result = runner.invoke(app, ["sync", "statements", "--help"])
     output = strip_ansi(result.output)
@@ -51,15 +63,19 @@ def test_sync_statements_shows_path_option(strip_ansi: Callable[[str], str]) -> 
     assert "--path" in output
 
 
+@pytest.fixture
+def console_output() -> tuple[Console, StringIO]:
+    output = StringIO()
+    console = Console(file=output, force_terminal=False, width=120)
+    return console, output
+
+
 class TestPrintHuman:
     """Tests for _print_human function."""
 
-    def test_print_human_dry_run(self) -> None:
+    def test_print_human_dry_run(self, console_output) -> None:
         """Test dry run output."""
-        from rich.console import Console
-
-        output = StringIO()
-        console = Console(file=output, force_terminal=False, width=120)
+        console, output = console_output
         data: dict[str, Any] = {
             "problem_id": 347,
             "dry_run": True,
@@ -71,12 +87,9 @@ class TestPrintHuman:
         assert "Would import" in text
         assert "347" in text
 
-    def test_print_human_written(self) -> None:
+    def test_print_human_written(self, console_output) -> None:
         """Test written output."""
-        from rich.console import Console
-
-        output = StringIO()
-        console = Console(file=output, force_terminal=False, width=120)
+        console, output = console_output
         data: dict[str, Any] = {
             "problem_id": 347,
             "written": True,
@@ -88,12 +101,9 @@ class TestPrintHuman:
         assert "Imported" in text
         assert "347" in text
 
-    def test_print_human_already_imported(self) -> None:
+    def test_print_human_already_imported(self, console_output) -> None:
         """Test already imported output."""
-        from rich.console import Console
-
-        output = StringIO()
-        console = Console(file=output, force_terminal=False, width=120)
+        console, output = console_output
         data: dict[str, Any] = {
             "problem_id": 347,
             "written": False,
@@ -105,12 +115,9 @@ class TestPrintHuman:
         assert "Up to date" in text
         assert "347" in text
 
-    def test_print_human_fallback(self) -> None:
+    def test_print_human_fallback(self, console_output) -> None:
         """Test fallback output when no specific reason."""
-        from rich.console import Console
-
-        output = StringIO()
-        console = Console(file=output, force_terminal=False, width=120)
+        console, output = console_output
         data: dict[str, Any] = {
             "problem_id": 347,
             "written": False,
