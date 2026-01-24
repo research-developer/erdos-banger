@@ -36,7 +36,7 @@ Work strictly top-to-bottom unless blocked by dependencies.
 ### DEBT-101: Lean/Mathlib Version Upgrade
 
 - [x] [DEBT-101] (1/3) Confirm target Lean/Mathlib versions and update debt doc (no code changes)
-- [ ] [DEBT-101] (2/3) Upgrade `formal/lean` toolchain + Mathlib pin; make `lake build` pass locally
+- [x] [DEBT-101] (2/3) Upgrade `formal/lean` toolchain + Mathlib pin; make `lake build` pass locally
 - [ ] [DEBT-101] (3/3) Update fixtures/docs and ensure `test-with-lean` CI job passes
 
 ---
@@ -66,3 +66,4 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - 2026-01-24: [SPEC-034] (2/2) ✅ Implemented `erdos dashboard` CLI UI (Rich). Problem overview table, attempt timeline heatmap, aggregate stats panel. State machine (state.py) for keyboard navigation (q/r/p/a/b). --problem detail view, --recent time filter, --refresh auto-refresh. Non-interactive JSON mode (erdos --json dashboard). 45 unit tests (state.py + render.py + CLI). Refactored dashboard() to pass LOC audit. CI passes (80.69% coverage). Commit: 38c826c.
 - 2026-01-24: [DEBT-100] ✅ Added pytest-dotenv for `.env` loading in local tests. Fixed tests expecting unset vars. Documented in AGENTS.md. CI passes (80.23% coverage). Commit: 8410c4f.
 - 2026-01-24: [DEBT-101] (1/3) ✅ Confirmed target versions: Lean 4.27.0 + Mathlib 4.27.0 (Jan 23-24, 2026). Documented 4 stable Mathlib imports. Decision: keep test fixtures at current versions. CI passes (80.27% coverage). Commit: 8ca56bb.
+- 2026-01-24: [DEBT-101] (2/3) ✅ Upgraded toolchain to Lean v4.27.0 + Mathlib v4.27.0. Fixed import path (`Mathlib.Algebra.BigOperators.Group.Finset` → `Mathlib.Algebra.BigOperators.Group.Finset.Basic`). `lake build` passes (773 jobs). CI passes (80.27% coverage). Commit: 986035f.

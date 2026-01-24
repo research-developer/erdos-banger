@@ -1,6 +1,6 @@
 # DEBT-101: Lean/Mathlib Version Significantly Behind
 
-**Status:** In Progress (Phase 1 complete)
+**Status:** In Progress (Phase 2 complete)
 **Priority:** P2 (Technical debt accumulating)
 **Created:** 2026-01-24
 **Updated:** 2026-01-24
@@ -82,12 +82,15 @@ These are stable, foundational Mathlib modules. Low risk of breaking changes.
 2. [x] Identify all Mathlib imports in `formal/lean/Erdos/` (4 stable modules)
 3. [x] Document test fixture versions (no changes needed)
 
-### Phase 2: Upgrade (in a feature branch)
-1. [ ] Update `formal/lean/lean-toolchain` to `leanprover/lean4:v4.27.0`
-2. [ ] Update `formal/lean/lakefile.lean` Mathlib pin to `"v4.27.0"`
-3. [ ] Run `lake update` to regenerate `lake-manifest.json`
-4. [ ] Fix compilation errors in `Erdos/*.lean` (if any)
-5. [ ] Run `lake build` and verify success
+### Phase 2: Upgrade ✅
+1. [x] Update `formal/lean/lean-toolchain` to `leanprover/lean4:v4.27.0`
+2. [x] Update `formal/lean/lakefile.lean` Mathlib pin to `"v4.27.0"`
+3. [x] Run `lake update` to regenerate `lake-manifest.json`
+4. [x] Fix compilation errors in `Erdos/*.lean` (import path change)
+   - `Mathlib.Algebra.BigOperators.Group.Finset` → `Mathlib.Algebra.BigOperators.Group.Finset.Basic`
+5. [x] Run `lake build` and verify success (773 jobs, no errors)
+
+Commit: 986035f
 
 ### Phase 3: Verification
 1. [ ] Verify `make test` passes (includes `requires_lean` tests)
@@ -122,4 +125,5 @@ These are stable, foundational Mathlib modules. Low risk of breaking changes.
 
 ## Changelog
 
+- 2026-01-24: Phase 2 complete - upgraded toolchain + Mathlib to v4.27.0, fixed import path, `lake build` passes. Commit: 986035f.
 - 2026-01-24: Phase 1 complete - confirmed target versions v4.27.0, documented imports and fixtures
