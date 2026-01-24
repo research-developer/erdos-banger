@@ -39,7 +39,7 @@ Work strictly top-to-bottom unless blocked by dependencies.
 
 ### SPEC-029: Exa Research API Integration
 
-- [ ] [SPEC-029] (1/2) Implement `ExaClient` + caching + unit tests (no network; use `responses`)
+- [x] [SPEC-029] (1/2) Implement `ExaClient` + caching + unit tests (no network; use `responses`)
 - [ ] [SPEC-029] (2/2) Implement `erdos research exa` command + tests (offline); add `requires_network` smoke test (skipped by default)
 
 ### SPEC-030: Semantic Scholar API Integration
@@ -79,3 +79,4 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - 2026-01-24: [SPEC-035] (3/5) ✅ Implemented `erdos sync submodule` + `--check` mode. 31 unit tests + 4 integration tests (requires_network). Fixed DEBT-075 violation (added ERDOS_SUBMODULE_PATH to AppConfig). CI passes (80.55% coverage). Commit: 3d5df70.
 - 2026-01-24: [SPEC-035] (4/5) ✅ Implemented `erdos sync proof <id>` forum extraction. 4 HTML fixtures, 36 unit tests (25 forum.py + 11 proof_cmd.py). Extracts GitHub/GitLab links, author, Lean version hints. Writes links.json to sync cache. CI passes (80.55% coverage). Commit: 26b373a.
 - 2026-01-24: [SPEC-035] (5/5) ✅ Implemented `erdos sync proof <id> --verify` with security guardrails. 25 unit tests (proofs.py) + 18 CLI tests (proof_cmd.py) + 6 integration tests. Clones repos to temp dir, runs `lake build` with timeouts, verifies no-sorries, saves provenance + logs. Added DEBT-092 exemption for LOC. CI passes (80.64% coverage). Commit: 6389c20.
+- 2026-01-24: [SPEC-029] (1/2) ✅ Implemented `ExaClient` + caching + 30 unit tests. Rate limiting (1 req/sec), retry with backoff, 24h cache TTL, arXiv/DOI extraction. Added DEBT-093 exemption for LOC (+18). CI passes (80.76% coverage). Commit: c27848c.
