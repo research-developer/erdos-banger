@@ -284,7 +284,7 @@ def check_no_sorries(
 ) -> tuple[bool, str]:
     """Check a Lean file for sorry statements.
 
-    Uses `lake env lean --no-sorries` to verify no sorry statements exist.
+    Uses `lake env lean --no-sorry` to verify no sorry statements exist.
 
     Args:
         repo_path: Repository root (for lake env)
@@ -294,30 +294,36 @@ def check_no_sorries(
     Returns:
         Tuple of (no_sorries_found, log_content)
     """
-    try:
-        # Use lake env to get proper Lean environment, then check with --no-sorries
-        # Note: --no-sorries was added in Lean 4.x; may not be available in all versions
-        # S603/S607: Intentional - lake is the Lean build tool
-        cmd = ["lake", "env", "lean", "--no-sorries", str(lean_file)]
-        result = subprocess.run(  # noqa: S603
-            cmd,
-            cwd=repo_path,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            env=_sanitize_env(),
-            check=False,
+
+    def _looks_like_unknown_option(combined_output: str, option: str) -> bool:
+        if option not in combined_output:
+            return False
+        return (
+            "unknown option" in combined_output
+            or "unrecognized option" in combined_output
+            or "invalid option" in combined_output
+            or "unknown flag" in combined_output
         )
 
-        # Fallback for older Lean versions that don't support --no-sorries
-        combined = f"{result.stdout}\n{result.stderr}".lower()
-        if (
-            result.returncode != 0
-            and "unknown option" in combined
-            and "--no-sorries" in combined
-        ):
-            cmd = ["lake", "env", "lean", str(lean_file)]
-            result = subprocess.run(  # noqa: S603
+    try:
+        # Use lake env to get proper Lean environment, then check with --no-sorry.
+        #
+        # NOTE: The flag name is `--no-sorry` (singular). Some older/alternate
+        # toolchains may not support it, so we fall back to a plain compile and
+        # detect sorry warnings in output.
+        #
+        # S603/S607: Intentional - lake is the Lean build tool
+        attempts: list[list[str]] = [
+            ["lake", "env", "lean", "--no-sorry", str(lean_file)],
+            ["lake", "env", "lean", "--no-sorries", str(lean_file)],
+            ["lake", "env", "lean", str(lean_file)],
+        ]
+        last_result: subprocess.CompletedProcess[str] | None = None
+        last_cmd: list[str] | None = None
+
+        for cmd in attempts:
+            last_cmd = cmd
+            last_result = subprocess.run(  # noqa: S603
                 cmd,
                 cwd=repo_path,
                 capture_output=True,
@@ -327,13 +333,37 @@ def check_no_sorries(
                 check=False,
             )
 
-        log = f"=== STDOUT ===\n{result.stdout}\n\n=== STDERR ===\n{result.stderr}"
+            combined = f"{last_result.stdout}\n{last_result.stderr}".lower()
+            if "--no-sorry" in cmd and _looks_like_unknown_option(
+                combined, "--no-sorry"
+            ):
+                continue
+            if "--no-sorries" in cmd and _looks_like_unknown_option(
+                combined, "--no-sorries"
+            ):
+                continue
+            break
+
+        if last_result is None or last_cmd is None:
+            return False, "No-sorries check internal error: no attempts executed"
+
+        log = (
+            "=== COMMAND ===\n"
+            + " ".join(last_cmd)
+            + "\n\n=== STDOUT ===\n"
+            + last_result.stdout
+            + "\n\n=== STDERR ===\n"
+            + last_result.stderr
+        )
         log = _truncate_log(log)
 
-        # Check for sorry in output (Lean reports sorries as warnings/errors)
-        has_sorry = "sorry" in result.stderr.lower() or "sorry" in result.stdout.lower()
+        # With --no-sorry, return code is sufficient: sorries become errors.
+        if "--no-sorry" in last_cmd or "--no-sorries" in last_cmd:
+            return last_result.returncode == 0, log
 
-        return result.returncode == 0 and not has_sorry, log
+        # Fallback: detect sorry warnings in output.
+        has_sorry = "sorry" in combined
+        return last_result.returncode == 0 and not has_sorry, log
 
     except subprocess.TimeoutExpired:
         return False, f"No-sorries check timed out after {timeout}s"
