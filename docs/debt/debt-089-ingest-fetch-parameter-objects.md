@@ -2,20 +2,20 @@
 
 **Status:** Identified
 **Created:** 2026-01-23
-**Priority:** HIGH
-**Tracking:** Functions with 9-14 parameters in `core/ingest/fetch.py`
+**Priority:** P1
+**Tracking:** Functions with 8-14 parameters in `core/ingest/fetch.py`
 
 ## Summary
 
-Multiple functions in `core/ingest/fetch.py` have 9-14 keyword parameters. This violates Uncle Bob's "no more than 3 arguments" rule and makes the code hard to use and test.
+Multiple functions in `core/ingest/fetch.py` have 8-14 parameters (mostly keyword-only). This creates cognitive load at call sites and makes signatures harder to evolve.
 
 ## Current State
 
 | Function | Parameters | Severity |
 |----------|------------|----------|
-| `_fetch_with_provider` | 9 | HIGH |
-| `fetch_reference_entry` | 10 | HIGH |
-| `process_single_reference` | 12 | CRITICAL |
+| `_fetch_with_provider` | 8 | HIGH |
+| `fetch_reference_entry` | 11 | HIGH |
+| `process_single_reference` | 13 | CRITICAL |
 | `process_all_references` | 14 | CRITICAL |
 
 ### Example (process_all_references)
@@ -48,6 +48,8 @@ def process_all_references(
 4. **Call Site Noise**: Every call is a wall of `param=value`
 
 ## Recommended Refactor
+
+Note: `core/ingest/app.py` already has an `IngestOptions` dataclass at the application layer. This debt is specifically about the internal `core/ingest/fetch.py` API surface; the refactor should either (a) reuse existing option objects, or (b) introduce smaller, purpose-built config objects for fetch/PDF to reduce signature sprawl.
 
 ### Step 1: Create Configuration Dataclasses
 

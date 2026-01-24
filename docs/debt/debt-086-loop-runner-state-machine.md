@@ -2,18 +2,19 @@
 
 **Status:** Identified
 **Created:** 2026-01-23
+**Priority:** P2
 **Author:** Claude (Uncle Bob analysis)
-**Tracking:** DEBT-065 (exemption)
+**Tracking:** `scripts/audit_code_health.py` exemption (DEBT-086)
 
 ## Summary
 
-`core/loop/runner.py::_run_single_iteration()` is 183 LOC with 11 return points. While the code works and is readable, it violates the Single Responsibility Principle by mixing orchestration, LLM interaction, and patch application concerns.
+`core/loop/runner.py::_run_single_iteration()` is 183 LOC with 12 return points. While the code works and is readable, it violates the Single Responsibility Principle by mixing orchestration, LLM interaction, and patch application concerns.
 
 ## Current State
 
 ```
 src/erdos/core/loop/runner.py:191 _run_single_iteration(): 183 LOC (threshold: 120)
-11 return statements (PLR0911 suppressed)
+12 return statements (PLR0911 suppressed)
 ```
 
 The function currently:
@@ -33,7 +34,7 @@ The function currently:
 
 - **Testing:** To unit test LLM interaction, you must mock the entire iteration
 - **Modification:** Changing LLM behavior requires understanding the full state machine
-- **Readability:** 11 return points make control flow analysis difficult
+- **Readability:** 12 return points make control flow analysis difficult
 
 ## Recommended Refactor
 

@@ -2,12 +2,12 @@
 
 **Status:** Identified
 **Created:** 2026-01-23
-**Priority:** MEDIUM
+**Priority:** P3
 **Tracking:** PLR0911 suppression in `core/ask/llm.py`
 
 ## Summary
 
-`core/ask/llm.py::execute_llm_if_enabled()` has 7 return statements handling 5 exception types plus success/skip paths. While this uses guard clauses (which Uncle Bob approves), the function mixes result dict construction with exception handling.
+`core/ask/llm.py::execute_llm_if_enabled()` has 7 return statements handling 4 exception types plus success/skip paths. While this uses guard clauses (which Uncle Bob approves), the function mixes result dict construction with exception handling.
 
 ## Current State
 
@@ -22,7 +22,7 @@ def execute_llm_if_enabled(...):  # noqa: PLR0911
         answer, exit_code = execute_llm(...)
     except FileNotFoundError:
         return CLIOutput.err(...)  # Return 2
-    except TimeoutExpired:
+    except subprocess.TimeoutExpired:
         return CLIOutput.err(...)  # Return 3
     except OSError:
         return CLIOutput.err(...)  # Return 4
@@ -73,7 +73,7 @@ def execute_llm_if_enabled(...) -> LLMExecutionResult:
 ```python
 _LLM_EXCEPTION_MAP = {
     FileNotFoundError: ("CONFIG_ERROR", "LLM command not found"),
-    TimeoutExpired: ("TIMEOUT", f"LLM command timed out after {TIMEOUT}s"),
+    subprocess.TimeoutExpired: ("TIMEOUT", "LLM command timed out"),
     OSError: ("CONFIG_ERROR", "LLM command error"),
     ValueError: ("CONFIG_ERROR", "Invalid LLM command syntax"),
 }

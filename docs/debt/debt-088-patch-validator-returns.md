@@ -1,13 +1,13 @@
 # DEBT-088: Patch Validator Multiple Returns
 
-**Status:** Identified
+**Status:** Won't Fix (validated)
 **Created:** 2026-01-23
-**Priority:** LOW
+**Priority:** P4
 **Tracking:** PLR0911 suppression in `core/loop/patch_validator.py`
 
 ## Summary
 
-`core/loop/patch_validator.py::validate_patch()` has 8 return statements across a validation pipeline. Unlike DEBT-086 and DEBT-087, this is actually a **reasonable pattern** for validation code.
+`core/loop/patch_validator.py::validate_patch()` has 11 return statements across a validation pipeline. Unlike DEBT-086 and DEBT-087, this is actually a **reasonable pattern** for validation code.
 
 ## Current State
 
@@ -82,10 +82,9 @@ def validate_patch(  # noqa: PLR0911 - validation pipeline with early exits
 ) -> PatchResult:
 ```
 
-## Action Items
+## Optional Improvement (Non-blocking)
 
-- [ ] Add inline comment explaining PLR0911 justification
-- [ ] Close this debt deck as "won't fix" (acceptable pattern)
+- [ ] Add an inline comment explaining why PLR0911 is justified
 
 ## Verdict
 

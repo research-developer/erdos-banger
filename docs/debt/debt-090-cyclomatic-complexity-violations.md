@@ -3,11 +3,11 @@
 **Status:** Identified
 **Created:** 2026-01-23
 **Priority:** P2
-**Found By:** Ruff C901 rule (cyclomatic complexity > 10)
+**Found By:** Ad-hoc `ruff check --select C901` (C901 not enabled in CI)
 
 ## Summary
 
-4 functions exceed Ruff's cyclomatic complexity threshold of 10. High complexity correlates with:
+4 functions exceed Ruff's cyclomatic complexity threshold of 10. Note: C901 is **not** currently selected in `pyproject.toml`, so these do not fail CI today. High complexity correlates with:
 - Harder to test (more paths to cover)
 - Harder to understand (more branches)
 - Higher bug density
@@ -60,8 +60,9 @@ Only 2 functions need new work:
 
 - [ ] Reduce `openalex_to_reference` complexity to ≤10
 - [ ] Reduce `run_logger.query` complexity to ≤10
-- [ ] Add C901 to Ruff config to catch future violations
-- [ ] Existing DEBT-086/088 cover the other 2 violations
+- [ ] If enabling C901 in CI, decide how to handle existing known violations:
+  - `core/loop/patch_validator.py::validate_patch` (see DEBT-088: acceptable pipeline) via `per-file-ignores` for C901
+  - `core/loop/runner.py::_run_single_iteration` (see DEBT-086) via refactor (or temporary ignore until addressed)
 
 ## How to Enable C901 in CI
 
