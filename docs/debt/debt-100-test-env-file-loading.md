@@ -18,8 +18,9 @@ SKIPPED [1] tests/integration/test_exa_integration.py:86: EXA_API_KEY not set
 
 The `.env` file contains:
 ```
-EXA_API_KEY=48f30b90-b5b7-4edf-86db-0c9e8722f0f2
+EXA_API_KEY=<redacted>
 ```
+(Do not commit real keys; value redacted in this deck.)
 
 Test code uses `os.environ.get("EXA_API_KEY")` which only sees shell environment variables, not `.env` contents.
 

@@ -12,7 +12,7 @@ The project uses Lean v4.12.0 and Mathlib v4.12.0, but the latest stable version
 | Component | Current | Latest | Gap |
 |-----------|---------|--------|-----|
 | Lean 4 | v4.12.0 | v4.27.0 | 15 versions |
-| Mathlib4 | v4.12.0 | v4.27.0+ | ~15 versions |
+| Mathlib4 | v4.12.0 | v4.27.0 | 15 versions |
 
 ## Evidence
 
@@ -25,7 +25,7 @@ require mathlib from git
   "https://github.com/leanprover-community/mathlib4.git" @ "v4.12.0"
 ```
 
-Latest stable Lean release: v4.27.0 (January 23, 2025)
+Latest stable Lean release: v4.27.0 (January 23, 2026)
 Source: https://github.com/leanprover/lean4/releases
 
 ## Impact
