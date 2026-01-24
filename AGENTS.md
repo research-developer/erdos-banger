@@ -64,6 +64,28 @@ Use `make` (preferred) or `uv` directly:
 - Coverage target: `--cov-fail-under=80` (see `make cov`).
 - New features should include unit tests and (when appropriate) integration tests using `tests/fixtures/`.
 
+### Testing Gotchas
+
+**ANSI escape codes in CLI output:**
+- Rich/Typer emit ANSI codes in CI (`PY_COLORS=1`)
+- Tests asserting on `--help` output MUST use the `strip_ansi` fixture:
+  ```python
+  def test_help(strip_ansi: Callable[[str], str]) -> None:
+      result = runner.invoke(app, ["cmd", "--help"])
+      assert "--flag" in strip_ansi(result.output)
+  ```
+
+**External repo dependencies:**
+- Tests cloning external repos (e.g., Lean libraries) can break when repos rename
+- Prefer `tests/fixtures/` for deterministic tests
+- Add DEBT reference comments when external repos are unavoidable
+
+**Key fixtures (conftest.py):**
+- `strip_ansi` - Normalize CLI output
+- `sample_problem` - Minimal ProblemRecord
+- `fixtures_dir` - Path to test fixtures
+- `in_memory_db` - SQLite for search tests
+
 ## Commits & Pull Requests
 
 - Commit style: Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`), often with scopes (e.g., `fix(core): ...`).
