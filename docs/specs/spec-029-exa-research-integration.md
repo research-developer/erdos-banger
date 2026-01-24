@@ -75,7 +75,6 @@ erdos research exa 124 "Techniques for graph coloring bounds" --save-leads
 |--------|---------|-------------|
 | `--max-results` | 5 | Maximum number of sources to return |
 | `--save-leads` | false | Auto-create lead records from results |
-| `--output-schema` | default | Custom JSON schema for structured extraction |
 
 **JSON mode:** use the global flag: `erdos --json research exa ...`
 
@@ -97,9 +96,8 @@ Sources (3):
      - DOI: 10.1007/BF02787556
      - Relevance: Probabilistic methods for existence
 
-Synthesis:
-  - Main approaches: density arguments, probabilistic methods, algebraic structure
-  - Open questions: tight bounds for specific group structures
+Answer:
+  - (best-effort) A short Exa-provided answer/summary, when available.
 ```
 
 ### Output (JSON mode)
@@ -124,13 +122,11 @@ Synthesis:
         "relevance": "Density arguments applicable to sum-free sets"
       }
     ],
-    "synthesis": {
-      "approaches": ["density arguments", "probabilistic methods", "algebraic structure"],
-      "open_questions": ["tight bounds for specific group structures"]
-    },
+    "answer": "Exa answer text (if provided by the API; otherwise null)",
     "saved_leads": false,
     "created_lead_ids": [],
-    "cached": false
+    "cached": false,
+    "cache_path": "literature/cache/exa/<query_hash>.json"
   },
   "error": null,
   "timestamp": "2026-01-23T12:00:00Z",
@@ -271,7 +267,7 @@ def test_exa_research_query():
 3. [ ] `ExaClient` implements polite rate limiting and retry/backoff
 4. [ ] `erdos research exa` command works end-to-end
 5. [ ] `--save-leads` creates valid lead records
-6. [ ] `--json` output matches documented schema
+6. [ ] `--json` output matches documented schema (including `answer` being optional)
 7. [ ] Responses are cached for 24 hours
 8. [ ] Missing API key produces clear error message
 9. [ ] Unit tests cover client and integration logic

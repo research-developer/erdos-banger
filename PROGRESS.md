@@ -1,8 +1,8 @@
 # erdos-banger - Ralph Wiggum Progress Tracker
 
-**Last Updated:** 2026-01-23
+**Last Updated:** 2026-01-24
 **Status:** Ready - New spec implementation sprint (v3.2+)
-**Branch:** ralph-wiggum-debt-067
+**Branch:** ralph-wiggum-next
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
 ---
@@ -74,4 +74,4 @@ Work strictly top-to-bottom unless blocked by dependencies.
 
 ## Work Log
 
-- (clear for next sprint)
+- (empty)

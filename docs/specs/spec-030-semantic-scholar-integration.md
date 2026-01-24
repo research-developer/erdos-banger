@@ -56,7 +56,8 @@ This tells us: the citing paper *uses Erdős 1965 as methodology*, not just that
    - `erdos refs s2 citations <doi|arxiv_id|s2_id>` — Citation contexts + intents (incoming)
    - `erdos refs s2 cited-by <doi|arxiv_id|s2_id>` — List citing papers (incoming, no contexts)
    - `erdos refs s2 references <doi|arxiv_id|s2_id>` — List referenced papers (outgoing)
-4. **Integration with leads** — Annotate leads with citation intent
+4. **CLI compatibility** — Preserve existing `erdos refs <problem_id>` behavior while adding `erdos refs s2 ...` subcommands
+5. **Integration with leads** — Annotate leads with citation intent (opt-in)
 
 ### Out of Scope
 
@@ -168,6 +169,38 @@ Citing Papers (10 of 1,234):
 }
 ```
 
+### Cited-By Command (No Context)
+
+List papers that cite the given paper, without fetching context snippets (faster, less data).
+
+```bash
+erdos refs s2 cited-by <identifier> [OPTIONS]
+```
+
+Options:
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--limit` | 10 | Maximum citing papers to return |
+
+**JSON mode:** use the global flag: `erdos --json refs s2 cited-by ...`
+
+### References Command
+
+List papers referenced by the given paper (outgoing citations).
+
+```bash
+erdos refs s2 references <identifier> [OPTIONS]
+```
+
+Options:
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--limit` | 10 | Maximum references to return |
+
+**JSON mode:** use the global flag: `erdos --json refs s2 references ...`
+
 ---
 
 ## Architecture
@@ -180,7 +213,16 @@ src/erdos/core/
     semantic_scholar.py   # HTTP client for S2 API
 src/erdos/commands/
   refs.py                 # `erdos refs <problem_id>` (existing) + `s2` subcommands (new)
+  refs_s2.py              # Registers the `refs s2 ...` subcommands into refs.app
 ```
+
+### CLI Compatibility Notes
+
+`erdos refs` is currently implemented as `erdos refs <problem_id>` with a required argument. To add `erdos refs s2 ...` subcommands without breaking the existing behavior, implementation MUST:
+
+1. Make the callback `problem_id` argument optional, and only require it when no subcommand is invoked.
+2. Check `ctx.invoked_subcommand` in the callback and return early when a subcommand is present.
+3. Keep `erdos refs <problem_id>` working as-is (compat alias), even if a future refactor introduces `erdos refs problem <problem_id>`.
 
 ### Client Implementation
 
@@ -279,6 +321,8 @@ Cache paper metadata and citations:
 literature/cache/s2/
   paper_<s2_id>.json       # Paper metadata
   citations_<s2_id>.json   # Citation contexts
+  cited_by_<s2_id>.json    # Citing papers (no contexts)
+  references_<s2_id>.json  # Outgoing references
 ```
 
 Cache TTL: 7 days (citation contexts change slowly).
@@ -327,12 +371,16 @@ def test_s2_get_citation_contexts():
 
 1. [ ] `SEMANTIC_SCHOLAR_API_KEY` documented in `.env.example`
 2. [ ] `SemanticScholarClient` respects rate limits
-3. [ ] `erdos refs s2 citations` works with DOI and arXiv ID
-4. [ ] Citation intent (background/methodology/result) extracted
-5. [ ] Context snippets included in output
-6. [ ] `--json` output matches documented schema
-7. [ ] Caching reduces redundant API calls
-8. [ ] Graceful degradation without API key (slower, but works)
+3. [ ] Existing `erdos refs <problem_id>` remains functional
+4. [ ] `erdos refs s2 citations` works with DOI and arXiv ID
+5. [ ] `erdos refs s2 cited-by` works with DOI and arXiv ID
+6. [ ] `erdos refs s2 references` works with DOI and arXiv ID
+7. [ ] Citation intent (background/methodology/result) extracted when present
+8. [ ] Context snippets included in `citations` output
+9. [ ] `--json` output matches documented schema (all 3 subcommands)
+10. [ ] Caching reduces redundant API calls
+11. [ ] `erdos research lead add ... --fetch-citations` annotates lead notes (opt-in; best-effort)
+12. [ ] Graceful degradation without API key (slower, but works)
 
 ---
 

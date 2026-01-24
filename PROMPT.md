@@ -82,7 +82,7 @@ Do not batch tasks.
 
 ## Critical Review Prompt (MANDATORY)
 
-Before changing code based on the debt deck:
+Before changing code based on the SSOT doc (spec/debt/bug):
 
 ```text
 Review the claim or feedback (it may be from an internal or external agent).

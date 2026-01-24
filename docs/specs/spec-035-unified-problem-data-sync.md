@@ -110,6 +110,14 @@ Artifacts / outputs
 ### Module Structure
 
 ```text
+src/erdos/commands/
+  sync/
+    __init__.py         # `erdos sync` Typer app entrypoint
+    all_cmd.py          # `erdos sync all`
+    proof_cmd.py        # `erdos sync proof`
+    statements_cmd.py   # `erdos sync statements` (thin wrapper over `erdos lean import`)
+    submodule_cmd.py    # `erdos sync submodule`
+    website_cmd.py      # `erdos sync website`
 src/erdos/core/
   sync/
     __init__.py
@@ -205,6 +213,15 @@ erdos sync all
 erdos sync all --dry-run
 ```
 
+### JSON Output Contract (Global `--json`)
+
+All `erdos sync ...` commands MUST support the global `--json` flag and return `CLIOutput` with deterministic `data` shapes suitable for tests:
+
+- `erdos --json sync submodule`: `{ "checked": bool, "updated": bool, "previous_commit": str | null, "current_commit": str | null, "stale": bool | null }`
+- `erdos --json sync website <id>`: `{ "problem_id": int, "updated": bool, "latex_saved": bool, "cached": bool, "warnings": list[str] }`
+- `erdos --json sync proof <id>`: `{ "problem_id": int, "links": list[{"url": str}], "provenance_path": str, "verification_status": str }`
+- `erdos --json sync all`: `{ "submodule": {...}, "website": {...}, "proofs": {...}, "statements": {...} }`
+
 ---
 
 ## Forum Proof Extraction Strategy
@@ -235,8 +252,8 @@ class ProofSource:
     """Extracted proof link from forum."""
     problem_id: int
     url: str                    # GitHub/GitLab URL
-    author: str                 # Forum username
-    posted_at: datetime
+    author: str | None          # Forum username (best-effort)
+    posted_at: datetime | None  # Best-effort
     lean_version: str | None    # If mentioned
 
 def extract_proof_links(problem_id: int) -> list[ProofSource]:
@@ -293,7 +310,13 @@ class ProofProvenance:
     posted_by: str | None
     posted_at: datetime | None
 
-    verification_status: Literal["unverified", "verified", "failed", "source_unavailable"]
+    verification_status: Literal[
+        "unverified",
+        "verified",
+        "inconclusive",
+        "failed",
+        "source_unavailable",
+    ]
     verification_strength: Literal["none", "build_only", "no_sorries"]  # see Verification section
     verification_error: str | None  # short, user-facing reason (e.g., "toolchain install failed")
     verified_at: datetime | None
@@ -355,8 +378,9 @@ Note: DeepMind statement caching already exists via SPEC-016 (`formal/lean/.upst
 ```bash
 # .env
 ERDOS_DATA_PATH=...                  # Optional: directory containing problems_enriched.yaml
-ERDOS_SYNC_INTERVAL=86400           # Seconds between auto-syncs (default: 24h)
 ```
+
+Note: v3.2 sync is CLI-driven. There is no background daemon/auto-sync process in this spec.
 
 ---
 
@@ -389,7 +413,7 @@ This spec defines two verification strengths:
 
 If we can only reach `build_only` (i.e., `lake build` succeeds but we cannot prove “no sorries for the right file”), we record:
 
-- `verification_status="failed"`
+- `verification_status="inconclusive"`
 - `verification_strength="build_only"`
 - `verification_error` explaining the limiting factor (e.g., “could not identify problem file”, “toolchain install failed”, “no-sorries check unsupported”)
 
@@ -535,8 +559,6 @@ def fetch_problem_page(problem_id: int) -> WebsiteProblemData:
 erdos sync website <problem_id>
 
 # Batch sync all problems (with rate limiting)
-erdos sync website --all --delay 2
-
 # Output example:
 # Problem #275:
 #   Status: PROVED (LEAN)

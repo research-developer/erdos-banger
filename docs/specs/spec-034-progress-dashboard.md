@@ -68,6 +68,7 @@ erdos dashboard --recent 7d        # Last 7 days only
 
 | Option | Default | Description |
 |--------|---------|-------------|
+| `--problem` | — | Start in a single-problem detail view (implies `--problems=<id>`) |
 | `--problems` | all | Comma-separated problem IDs |
 | `--recent` | 30d | Time window (7d, 30d, 90d, all) |
 | `--refresh` | 5 | Auto-refresh interval (seconds, 0 to disable) |
@@ -170,8 +171,27 @@ src/erdos/
     dashboard/
       __init__.py
       data.py           # Data aggregation
+      state.py          # UI state machine (testable key handling)
       render.py         # Rich rendering
       widgets.py        # Reusable UI components
+```
+
+### UI State Machine (Testability)
+
+Interactive keyboard handling MUST be implemented as a small pure state machine so it can be unit-tested without a real terminal:
+
+```python
+# src/erdos/core/dashboard/state.py
+
+@dataclass(frozen=True)
+class DashboardState:
+    view: Literal["overview", "problem_detail", "attempt_detail"]
+    selected_problem_id: int | None
+    selected_attempt_id: str | None
+
+def apply_key(state: DashboardState, key: str) -> DashboardState:
+    """Pure transition function (no I/O)."""
+    ...
 ```
 
 ### Data Aggregation
