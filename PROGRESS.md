@@ -50,7 +50,7 @@ Work strictly top-to-bottom unless blocked by dependencies.
 ### SPEC-031: zbMATH Open API Integration
 
 - [x] [SPEC-031] (1/3) Implement `ZbMathClient` + caching + unit tests (offline)
-- [ ] [SPEC-031] (2/3) Implement `erdos refs zbmath` + tests (offline); add `requires_network` smoke test
+- [x] [SPEC-031] (2/3) Implement `erdos refs zbmath` + tests (offline); add `requires_network` smoke test
 - [ ] [SPEC-031] (3/3) Add `erdos search --msc` mode + tests (offline)
 
 ### SPEC-032: Multi-Model Routing (External Command)
@@ -84,3 +84,4 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - 2026-01-24: [SPEC-030] (1/2) ✅ Implemented `SemanticScholarClient` + caching + 30 unit tests. S2Paper/CitationContext/S2Reference models, rate limiting (3s unauth/1s auth), retry with backoff, 7-day cache TTL. Added DEBT-094 exemption for LOC (+184). CI passes (80.88% coverage). Commit: 1afe110.
 - 2026-01-24: [SPEC-030] (2/2) ✅ Implemented `erdos refs s2 {citations,cited-by,references}` commands + backward compat. Added RefsGroup(TyperGroup) for `erdos refs <id>` compat. 13 unit tests + 6 integration tests. All acceptance criteria met. CI passes (80.64% coverage). Commit: d0bc1da.
 - 2026-01-24: [SPEC-031] (1/3) ✅ Implemented `ZbMathClient` + caching + 36 unit tests. ZbMathEntry/MSCCode models, rate limiting (2s delay), retry with backoff, 30-day cache TTL. DOI/zbl_id/MSC/title search. Added DEBT-095 exemption for LOC (+287). CI passes (80.56% coverage). Commit: 8dd89eb.
+- 2026-01-24: [SPEC-031] (2/3) ✅ Implemented `erdos refs zbmath` commands (lookup by DOI/zbl_id/title + MSC search). 14 unit tests + 7 integration tests. Full JSON/human output support. CI passes (80.91% coverage). Commit: 546d15b.
