@@ -123,6 +123,9 @@ ignore = [
 "src/erdos/core/pdf/*.py" = [
     "TC003",  # Path used at runtime in function signatures
 ]
+"src/erdos/commands/refs.py" = [
+    "TC002",  # click import used at runtime for RefsGroup(TyperGroup) subclass
+]
 "src/erdos/core/batch/*.py" = [
     "TC003",  # Path used at runtime in function signatures
 ]
