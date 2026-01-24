@@ -4,7 +4,7 @@
 **Status:** Fixed
 **Found:** 2026-01-23
 **Fixed:** 2026-01-24
-**Fix Commit:** c5b5d9f
+**Fix Commit:** c5b5d9f, f70613a
 
 ## Summary
 
@@ -27,6 +27,7 @@ This fix restores those constants and wires them into the relevant defaults, rem
   - Search defaults across ports + search services + CLI + MCP
   - RAG defaults across ask/loop + CLI + MCP
   - Lean timeouts in loop config/CLI + Lean runner
+  - Aristotle module timeouts (AristotleConfig, run_aristotle_prove_from_file, prove command)
   - Query-term slicing in ask retrieval
   - UI truncation lengths in CLI output
 - Updated unit tests covering the constants module.
