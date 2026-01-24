@@ -11,8 +11,17 @@ Key modules:
 - merge: Pure merge logic for combining data sources
 - website: Website data extraction (fetch + parse)
 - submodule: Git submodule operations for teorth/erdosproblems
+- forum: Forum proof-link extraction (GitHub/GitLab repo URLs)
 """
 
+from erdos.core.sync.forum import (
+    ForumFetchError,
+    extract_proof_links_from_html,
+    fetch_and_parse_forum,
+    fetch_forum_thread,
+    parse_forum_html,
+    save_proof_links_cache,
+)
 from erdos.core.sync.merge import merge_all_problems, merge_problem_data
 from erdos.core.sync.models import (
     ProofLink,
@@ -50,6 +59,7 @@ from erdos.core.sync.website import (
 
 
 __all__ = [
+    "ForumFetchError",
     "ProofLink",
     "ProofLinksCache",
     "ProofProvenance",
@@ -67,7 +77,10 @@ __all__ = [
     "WebsiteReferenceData",
     "WebsiteSyncStatus",
     "check_submodule_staleness",
+    "extract_proof_links_from_html",
+    "fetch_and_parse_forum",
     "fetch_and_parse_problem",
+    "fetch_forum_thread",
     "fetch_latex_source",
     "fetch_problem_page",
     "get_submodule_commit",
@@ -75,8 +88,10 @@ __all__ = [
     "load_submodule_problems",
     "merge_all_problems",
     "merge_problem_data",
+    "parse_forum_html",
     "parse_problem_html",
     "parse_problems_yaml",
     "save_latex_source",
+    "save_proof_links_cache",
     "update_submodule",
 ]

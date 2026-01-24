@@ -12,6 +12,7 @@ from multiple sources:
 
 import typer
 
+from erdos.commands.sync.proof_cmd import proof
 from erdos.commands.sync.submodule_cmd import submodule
 from erdos.commands.sync.website_cmd import website
 
@@ -24,3 +25,4 @@ app = typer.Typer(
 # Register subcommands
 app.command(name="submodule")(submodule)
 app.command(name="website")(website)
+app.command(name="proof")(proof)
