@@ -9,6 +9,7 @@ from pathlib import Path  # noqa: TC003 - Used at runtime
 
 import requests
 
+from erdos.core.constants import DEFAULT_HTTP_TIMEOUT
 from erdos.core.formal_conjectures.config import FormalConjecturesError
 from erdos.core.formal_conjectures.paths import build_upstream_url, get_cache_path
 from erdos.core.retry import fetch_with_retry
@@ -75,7 +76,7 @@ def fetch_upstream_lean_file(
     # Fetch from network
     logger.debug("Fetching upstream file: %s", url)
     try:
-        response = fetch_with_retry(url, timeout=30)
+        response = fetch_with_retry(url, timeout=DEFAULT_HTTP_TIMEOUT)
     except requests.RequestException as e:
         raise FormalConjecturesError(
             f"Failed to fetch upstream file: {e}",

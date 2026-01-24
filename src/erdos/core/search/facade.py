@@ -51,7 +51,7 @@ class SearchIndex:
     Usage:
         index = SearchIndex.from_default()
         index.index_problem(problem)
-        results = index.search("prime numbers", limit=10)
+        results = index.search("prime numbers", limit=DEFAULT_SEARCH_LIMIT)
     """
 
     SCHEMA_VERSION = 1
