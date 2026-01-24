@@ -89,6 +89,8 @@ class AppConfig:
     aristotle_api_key: str = ""
     aristotle_command: str = DEFAULT_ARISTOTLE_COMMAND
     openalex_api_key: str = ""
+    exa_api_key: str = ""
+    exa_cache_ttl_hours: int = 24
 
     # Network
     http_timeout: float = DEFAULT_HTTP_TIMEOUT
@@ -112,6 +114,8 @@ class AppConfig:
             ARISTOTLE_API_KEY: API key for Aristotle LLM service.
             ERDOS_ARISTOTLE_COMMAND: Path to aristotle CLI binary.
             OPENALEX_API_KEY: API key for OpenAlex polite pool.
+            EXA_API_KEY: API key for Exa Research API.
+            ERDOS_EXA_CACHE_TTL: Cache TTL in hours for Exa API (default: 24).
 
         Returns:
             AppConfig instance with values from environment.
@@ -150,4 +154,17 @@ class AppConfig:
                 "ERDOS_ARISTOTLE_COMMAND", DEFAULT_ARISTOTLE_COMMAND
             ).strip(),
             openalex_api_key=os.environ.get("OPENALEX_API_KEY", "").strip(),
+            exa_api_key=os.environ.get("EXA_API_KEY", "").strip(),
+            exa_cache_ttl_hours=_parse_int_env("ERDOS_EXA_CACHE_TTL", 24),
         )
+
+
+def _parse_int_env(name: str, default: int) -> int:
+    """Parse an integer from environment variable with fallback to default."""
+    value = os.environ.get(name, "").strip()
+    if not value:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        return default
