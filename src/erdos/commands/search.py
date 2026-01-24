@@ -1,5 +1,7 @@
 """erdos search - search problem statements.
 
+# exempt: DEBT-096 (517 LOC; CLI + multiple search modes including MSC/zbMATH)
+
 This module is a thin CLI adapter that parses Typer flags and delegates
 to the core search service (erdos.core.search.service).
 """
@@ -8,11 +10,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Annotated, Any
 
+import requests
 import typer
 from rich.console import Console
 
 from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
+from erdos.core.clients.zbmath import ZbMathClient, ZbMathConfig, ZbMathEntry
 from erdos.core.constants import DEFAULT_SEARCH_LIMIT
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
@@ -39,6 +43,61 @@ app = typer.Typer(
 )
 console = Console()
 err_console = Console(stderr=True)
+
+
+def _format_entry_for_json(entry: ZbMathEntry) -> dict[str, Any]:
+    """Format zbMATH entry for JSON output."""
+    return {
+        "zbl_id": entry.zbl_id,
+        "title": entry.title,
+        "authors": entry.authors,
+        "year": entry.year,
+        "doi": entry.doi,
+        "arxiv_id": entry.arxiv_id,
+        "journal": entry.journal,
+        "msc": [
+            {"code": m.code, "text": m.text, "primary": m.primary} for m in entry.msc
+        ],
+        "keywords": entry.keywords,
+        "review_excerpt": entry.review_excerpt,
+        "zbmath_url": entry.zbmath_url,
+    }
+
+
+def _print_msc_human(data: dict[str, Any]) -> None:
+    """Pretty-print MSC search results from zbMATH."""
+    entries = data.get("entries", [])
+    msc_code = data.get("msc", "")
+    year_min = data.get("year_min")
+    year_max = data.get("year_max")
+
+    # Print header
+    console.print(f"[bold]MSC Search:[/bold] {msc_code}")
+    if year_min or year_max:
+        year_range = f"{year_min or ''}-{year_max or ''}"
+        console.print(f"[bold]Year Range:[/bold] {year_range}")
+    console.print(f"[bold]Results:[/bold] {len(entries)}")
+    console.print()
+
+    if not entries:
+        console.print("No entries found.")
+        return
+
+    for i, entry in enumerate(entries, 1):
+        title = entry.get("title", "Unknown")
+        authors = "; ".join(entry.get("authors", [])[:3])
+        if len(entry.get("authors", [])) > 3:
+            authors += " et al."
+        year = entry.get("year", "")
+        year_str = f" ({year})" if year else ""
+        msc_codes = ", ".join(m.get("code", "") for m in entry.get("msc", [])[:3])
+
+        console.print(f"[bold]{i}.[/bold] {title!r}{year_str}")
+        if authors:
+            console.print(f"    [dim]Authors:[/dim] {authors}")
+        if msc_codes:
+            console.print(f"    [dim]MSC:[/dim] {msc_codes}")
+        console.print()
 
 
 def _print_human(result_data: dict[str, Any]) -> None:
@@ -99,28 +158,99 @@ def _print_human(result_data: dict[str, Any]) -> None:
 
 
 def _validate_mode_flags(
-    semantic: bool, hybrid: bool, bm25_only: bool, alpha: float | None
+    semantic: bool,
+    hybrid: bool,
+    bm25_only: bool,
+    alpha: float | None,
+    msc: str | None = None,
+    build_index_flag: bool = False,
+    build_embeddings_flag: bool = False,
 ) -> CLIOutput | None:
     """Validate mutually exclusive mode flags.
 
     Returns CLIOutput error if validation fails, None if valid.
     """
-    mode_flags = [semantic, hybrid, bm25_only]
-    if sum(mode_flags) > 1:
-        return CLIOutput.err(
-            command="erdos search",
-            error_type="UsageError",
-            message="Flags --semantic, --hybrid, and --bm25-only are mutually exclusive",
-            code=ExitCode.USAGE_ERROR,
+    error_message: str | None = None
+
+    # --msc is incompatible with other search modes and index ops
+    if msc is not None:
+        incompatible_flags = [
+            (semantic, "--semantic"),
+            (hybrid, "--hybrid"),
+            (build_index_flag, "--build-index"),
+            (build_embeddings_flag, "--build-embeddings"),
+        ]
+        for flag_set, flag_name in incompatible_flags:
+            if flag_set:
+                error_message = (
+                    f"--msc is incompatible with {flag_name} "
+                    "(MSC search queries zbMATH API)"
+                )
+                break
+    elif sum([semantic, hybrid, bm25_only]) > 1:
+        error_message = (
+            "Flags --semantic, --hybrid, and --bm25-only are mutually exclusive"
         )
-    if alpha is not None and not hybrid:
+    elif alpha is not None and not hybrid:
+        error_message = "--alpha requires --hybrid mode"
+
+    if error_message:
         return CLIOutput.err(
             command="erdos search",
             error_type="UsageError",
-            message="--alpha requires --hybrid mode",
+            message=error_message,
             code=ExitCode.USAGE_ERROR,
         )
     return None
+
+
+def _execute_msc_search(
+    msc: str,
+    limit: int,
+    year_min: int | None,
+    year_max: int | None,
+) -> CLIOutput:
+    """Execute MSC search via zbMATH API (SPEC-031).
+
+    Args:
+        msc: MSC code to search.
+        limit: Maximum results.
+        year_min: Optional minimum year filter.
+        year_max: Optional maximum year filter.
+
+    Returns:
+        CLIOutput with search results or error.
+    """
+    try:
+        config = ZbMathConfig.from_env()
+        client = ZbMathClient(config)
+
+        entries = client.search_by_msc(
+            msc,
+            limit=limit,
+            year_min=year_min,
+            year_max=year_max,
+        )
+
+        data: dict[str, Any] = {
+            "mode": "msc",
+            "msc": msc,
+            "limit": limit,
+            "year_min": year_min,
+            "year_max": year_max,
+            "entries": [_format_entry_for_json(e) for e in entries],
+            "returned": len(entries),
+        }
+
+        return CLIOutput.ok(command="erdos search", data=data)
+
+    except requests.HTTPError as e:
+        return CLIOutput.err(
+            command="erdos search",
+            error_type="ZbMathError",
+            message=f"zbMATH API error: {e}",
+            code=ExitCode.ERROR,
+        )
 
 
 def _get_search_mode(semantic: bool, hybrid: bool) -> SearchMode:
@@ -202,9 +332,12 @@ def _handle_embeddings_build(
 def search(
     ctx: typer.Context,
     query: Annotated[
-        str,
-        typer.Argument(help="Search query (supports FTS5 syntax when index exists)"),
-    ],
+        str | None,
+        typer.Argument(
+            help="Search query (supports FTS5 syntax when index exists). "
+            "Not required when using --msc."
+        ),
+    ] = None,
     limit: Annotated[
         int,
         typer.Option("--limit", "-n", help="Maximum results to return"),
@@ -258,6 +391,23 @@ def search(
             help="Embedding model name",
         ),
     ] = "sentence-transformers/all-MiniLM-L6-v2",
+    # SPEC-031: MSC search mode
+    msc: Annotated[
+        str | None,
+        typer.Option(
+            "--msc",
+            help="Search zbMATH by MSC code (e.g., '11B05'). "
+            "Incompatible with other search modes.",
+        ),
+    ] = None,
+    year_min: Annotated[
+        int | None,
+        typer.Option("--year-min", help="Minimum publication year (for --msc mode)"),
+    ] = None,
+    year_max: Annotated[
+        int | None,
+        typer.Option("--year-max", help="Maximum publication year (for --msc mode)"),
+    ] = None,
 ) -> None:
     """
     Search problem statements for a query.
@@ -272,10 +422,12 @@ def search(
       --bm25-only  : BM25 keyword search (default)
       --semantic   : Semantic (vector) search
       --hybrid     : Combined BM25 + semantic (use --alpha to adjust weight)
+      --msc CODE   : Search zbMATH by MSC code (SPEC-031)
 
     Example: erdos search "prime"
     Example: erdos search "prime gaps" --semantic
     Example: erdos search "consecutive primes" --hybrid --alpha 0.6
+    Example: erdos search --msc "11B05" --year-min 2000
     """
     json_mode = bool((ctx.obj or {}).get("json"))
     progress_console = err_console if json_mode else console
@@ -285,57 +437,83 @@ def search(
     with measure_time_ms() as duration:
         effective_alpha = 0.5 if alpha is None else alpha
         # Validate mode flags
-        result = _validate_mode_flags(semantic, hybrid, bm25_only, alpha)
+        result = _validate_mode_flags(
+            semantic,
+            hybrid,
+            bm25_only,
+            alpha,
+            msc=msc,
+            build_index_flag=build_index_flag,
+            build_embeddings_flag=build_embeddings_flag,
+        )
 
-        if result is None:
-            app_ctx, app_error = get_app_context(ctx, command="erdos search")
-            if app_error is not None or app_ctx is None:
-                result = app_error
-            else:
-                # Best-effort index: if it can't be opened, fall back to basic search
-                index: SearchIndexProtocol | None
-                try:
-                    index = app_ctx.ensure_index()
-                except SearchIndexError:
-                    index = None
+        # Handle --msc mode (SPEC-031)
+        if result is None and msc is not None:
+            result = _execute_msc_search(msc, limit, year_min, year_max)
 
-                # Build index if requested
-                result = _handle_index_build(
-                    build_index_flag,
-                    index,
-                    progress_console,
-                    repo=app_ctx.problems,
-                    repo_root=app_ctx.config.repo_root,
+        # Normal search mode
+        elif result is None:
+            # Query is required for normal search
+            if query is None or query.strip() == "":
+                result = CLIOutput.err(
+                    command="erdos search",
+                    error_type="UsageError",
+                    message="A search query is required (or use --msc for MSC search)",
+                    code=ExitCode.USAGE_ERROR,
                 )
+            else:
+                app_ctx, app_error = get_app_context(ctx, command="erdos search")
+                if app_error is not None or app_ctx is None:
+                    result = app_error
+                else:
+                    # Best-effort index: if it can't be opened, fallback to basic
+                    index: SearchIndexProtocol | None
+                    try:
+                        index = app_ctx.ensure_index()
+                    except SearchIndexError:
+                        index = None
 
-                # Build embeddings if requested
-                if result is None:
-                    result = _handle_embeddings_build(
-                        build_embeddings_flag,
+                    # Build index if requested
+                    result = _handle_index_build(
+                        build_index_flag,
                         index,
                         progress_console,
-                        embedding_model,
+                        repo=app_ctx.problems,
+                        repo_root=app_ctx.config.repo_root,
                     )
 
-                # Perform the search
-                if result is None:
-                    mode = _get_search_mode(semantic, hybrid)
-                    options = SearchOptions(
-                        query=query,
-                        limit=limit,
-                        problem_id=problem_filter,
-                        build_index=False,
-                        build_embeddings=False,
-                        mode=mode,
-                        alpha=effective_alpha,
-                        embedding_model=embedding_model,
-                    )
-                    result = execute_search(
-                        options,
-                        index=index,
-                        repo=app_ctx.problems,
-                    )
+                    # Build embeddings if requested
+                    if result is None:
+                        result = _handle_embeddings_build(
+                            build_embeddings_flag,
+                            index,
+                            progress_console,
+                            embedding_model,
+                        )
+
+                    # Perform the search
+                    if result is None:
+                        mode = _get_search_mode(semantic, hybrid)
+                        options = SearchOptions(
+                            query=query,
+                            limit=limit,
+                            problem_id=problem_filter,
+                            build_index=False,
+                            build_embeddings=False,
+                            mode=mode,
+                            alpha=effective_alpha,
+                            embedding_model=embedding_model,
+                        )
+                        result = execute_search(
+                            options,
+                            index=index,
+                            repo=app_ctx.problems,
+                        )
 
     if result is not None:
         result.duration_ms = duration[0]
-        exit_with_result(ctx, result, print_human=_print_human)
+        # Use MSC-specific printer for MSC mode
+        if msc is not None:
+            exit_with_result(ctx, result, print_human=_print_msc_human)
+        else:
+            exit_with_result(ctx, result, print_human=_print_human)

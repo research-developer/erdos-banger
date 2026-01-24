@@ -148,3 +148,61 @@ class TestRefsZbMathCLIIntegration:
         payload = json.loads(result.stdout)
         assert payload["success"] is False
         assert payload["error"]["type"] == "NotFound"
+
+
+@pytest.mark.requires_network
+class TestSearchMscCLIIntegration:
+    """Integration tests for `erdos search --msc` CLI with real API (SPEC-031/3)."""
+
+    def test_cli_search_msc_returns_entries(
+        self, tmp_path: Path, sample_problems_yaml: Path
+    ) -> None:
+        """CLI --msc search returns zbMATH entries."""
+        env = _setup_env(tmp_path, sample_problems_yaml)
+
+        result = runner.invoke(
+            app,
+            ["--json", "search", "--msc", "11B05", "--limit", "3"],
+            env=env,
+        )
+
+        assert result.exit_code == 0
+        payload = json.loads(result.stdout)
+
+        assert payload["success"] is True
+        assert payload["command"] == "erdos search"
+        assert payload["data"]["mode"] == "msc"
+        assert payload["data"]["msc"] == "11B05"
+        assert len(payload["data"]["entries"]) > 0
+
+    def test_cli_search_msc_with_year_filter(
+        self, tmp_path: Path, sample_problems_yaml: Path
+    ) -> None:
+        """CLI --msc search with year range filters correctly."""
+        env = _setup_env(tmp_path, sample_problems_yaml)
+
+        result = runner.invoke(
+            app,
+            [
+                "--json",
+                "search",
+                "--msc",
+                "05D10",  # Ramsey theory
+                "--year-min",
+                "2010",
+                "--year-max",
+                "2020",
+                "--limit",
+                "5",
+            ],
+            env=env,
+        )
+
+        assert result.exit_code == 0
+        payload = json.loads(result.stdout)
+
+        assert payload["success"] is True
+        # All entries should be in year range
+        for entry in payload["data"]["entries"]:
+            if entry.get("year"):
+                assert 2010 <= entry["year"] <= 2020

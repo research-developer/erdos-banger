@@ -17,6 +17,10 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
 | DEBT-092 | [Proof verification module LOC violations](./debt-092-proof-verification-loc.md) | P4 | Exempted |
+| DEBT-093 | [Exa client module LOC violation](./debt-093-exa-client-loc.md) | P4 | Exempted |
+| DEBT-094 | [Semantic Scholar client module LOC violation](./debt-094-semantic-scholar-client-loc.md) | P4 | Exempted |
+| DEBT-095 | [zbMATH client module LOC violation](./debt-095-zbmath-client-loc.md) | P4 | Exempted |
+| DEBT-096 | [Search command module LOC violation](./debt-096-search-command-msc-loc.md) | P4 | Exempted |
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -121,7 +125,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-090 | Cyclomatic complexity violations (C901) | P2 | Fixed | 22f14f6 |
 | DEBT-091 | Blind exception catches (BLE001) | P3 | Fixed | 22f14f6 |
 
-**Next Debt ID:** DEBT-093
+**Next Debt ID:** DEBT-097
 
 ### Archived Debt Decks
 
