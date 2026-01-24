@@ -14,14 +14,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-| ID | Title | Priority | Status |
-|----|-------|----------|--------|
-| DEBT-086 | Loop runner state machine refactor | P2 | Identified |
-| DEBT-087 | LLM execute error handling consolidation | P3 | Identified |
-| DEBT-088 | Patch validator multiple returns (acceptable) | P4 | Won't Fix |
-| DEBT-089 | Ingest/fetch long parameter lists | P1 | Identified |
-| DEBT-090 | Cyclomatic complexity violations (C901) | P2 | Identified |
-| DEBT-091 | Blind exception catches (BLE001) | P3 | Identified |
+_No active debt decks._
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -119,6 +112,12 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-083 | Remove internal compatibility shims + wording | P2 | Fixed | 117d510 |
 | DEBT-084 | Finish batch interrupt wiring (SIGINT) | P3 | Fixed | 117d510 |
 | DEBT-085 | Restore and wire removed constants (DEBT-082 regression) | P2 | Fixed | c5b5d9f,f70613a |
+| DEBT-086 | Loop runner state machine refactor | P2 | Fixed | 22f14f6 |
+| DEBT-087 | LLM execute error handling consolidation | P3 | Fixed | 22f14f6 |
+| DEBT-088 | Patch validator multiple returns (acceptable) | P4 | Won't Fix | 22f14f6 |
+| DEBT-089 | Ingest/fetch long parameter lists | P1 | Fixed | 22f14f6 |
+| DEBT-090 | Cyclomatic complexity violations (C901) | P2 | Fixed | 22f14f6 |
+| DEBT-091 | Blind exception catches (BLE001) | P3 | Fixed | 22f14f6 |
 
 **Next Debt ID:** DEBT-092
 
@@ -198,3 +197,9 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-083-backwards-compatibility-shims.md`
 - `docs/_archive/debt/debt-084-unused-ocp-patterns.md`
 - `docs/_archive/debt/debt-085-restore-and-wire-constants.md`
+- `docs/_archive/debt/debt-086-loop-runner-state-machine.md`
+- `docs/_archive/debt/debt-087-llm-execute-error-handling.md`
+- `docs/_archive/debt/debt-088-patch-validator-returns.md`
+- `docs/_archive/debt/debt-089-ingest-fetch-parameter-objects.md`
+- `docs/_archive/debt/debt-090-cyclomatic-complexity-violations.md`
+- `docs/_archive/debt/debt-091-blind-exception-catches.md`
