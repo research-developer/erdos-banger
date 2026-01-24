@@ -68,7 +68,7 @@ Work strictly top-to-bottom unless blocked by dependencies.
 ### SPEC-034: Progress Dashboard
 
 - [x] [SPEC-034] (1/2) Implement dashboard aggregation (`src/erdos/core/dashboard/data.py`) + unit tests (JSON snapshot contract)
-- [ ] [SPEC-034] (2/2) Implement `erdos dashboard` UI (Rich) + tests; ensure `erdos --json dashboard` is non-interactive
+- [x] [SPEC-034] (2/2) Implement `erdos dashboard` UI (Rich) + tests; ensure `erdos --json dashboard` is non-interactive
 
 ---
 
@@ -93,3 +93,4 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - 2026-01-24: [SPEC-033] (2/3) ✅ Implemented `erdos lean copilot serve` with `/generate` endpoint. FastAPI server with tactic suggestions via SPEC-032 router. Tactic parsing (bullets, comments, punctuation cleanup). 44 unit tests (server.py + copilot_cmd.py). CI passes (80.62% coverage). Commit: 718b292.
 - 2026-01-24: [SPEC-033] (3/3) ✅ Implemented `/encode` endpoint with embeddings (SPEC-014) + degraded mode (HTTP 503). Added embeddings.py wrapper with is_embeddings_available(), EmbeddingsNotAvailableError, encode_texts(), model caching. 23 unit tests (test_embeddings.py + test_server.py). CI passes (80.61% coverage). Commit: 2d4f974.
 - 2026-01-24: [SPEC-034] (1/2) ✅ Implemented dashboard aggregation (`src/erdos/core/dashboard/data.py`). DashboardData + ProblemStats dataclasses, aggregate_dashboard_data() with filtering, problem status (new/active/stale), attempt timeline, to_dict() JSON snapshot. 20 unit tests. CI passes (80.82% coverage). Commit: 3a81101.
+- 2026-01-24: [SPEC-034] (2/2) ✅ Implemented `erdos dashboard` CLI UI (Rich). Problem overview table, attempt timeline heatmap, aggregate stats panel. State machine (state.py) for keyboard navigation (q/r/p/a/b). --problem detail view, --recent time filter, --refresh auto-refresh. Non-interactive JSON mode (erdos --json dashboard). 45 unit tests (state.py + render.py + CLI). Refactored dashboard() to pass LOC audit. CI passes (80.69% coverage). Commit: 38c826c.
