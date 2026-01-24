@@ -55,7 +55,7 @@ Work strictly top-to-bottom unless blocked by dependencies.
 
 ### SPEC-032: Multi-Model Routing (External Command)
 
-- [ ] [SPEC-032] (1/3) Add task→LLM-command router (`src/erdos/core/llm/*`) + unit tests (no CLI wiring)
+- [x] [SPEC-032] (1/3) Add task→LLM-command router (`src/erdos/core/llm/*`) + unit tests (no CLI wiring)
 - [ ] [SPEC-032] (2/3) Wire router into `erdos ask` default LLM command selection + tests (preserve `--llm-cmd` override)
 - [ ] [SPEC-032] (3/3) Wire router into `erdos loop run` default LLM command selection + tests (preserve `--llm-cmd` override)
 
@@ -86,3 +86,4 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - 2026-01-24: [SPEC-031] (1/3) ✅ Implemented `ZbMathClient` + caching + 36 unit tests. ZbMathEntry/MSCCode models, rate limiting (2s delay), retry with backoff, 30-day cache TTL. DOI/zbl_id/MSC/title search. Added DEBT-095 exemption for LOC (+287). CI passes (80.56% coverage). Commit: 8dd89eb.
 - 2026-01-24: [SPEC-031] (2/3) ✅ Implemented `erdos refs zbmath` commands (lookup by DOI/zbl_id/title + MSC search). 14 unit tests + 7 integration tests. Full JSON/human output support. CI passes (80.91% coverage). Commit: 546d15b.
 - 2026-01-24: [SPEC-031] (3/3) ✅ Implemented `erdos search --msc` mode for zbMATH MSC code search. Added --year-min/--year-max filters. 13 unit tests + 2 integration tests. Added DEBT-095/096 exemptions. CI passes (81.03% coverage). Commit: 931ec36.
+- 2026-01-24: [SPEC-032] (1/3) ✅ Implemented task→LLM-command router (`src/erdos/core/llm/*`). TaskType enum + get_env_var_chain() + resolve_llm_command() with override support. 22 unit tests covering resolution order, empty/missing env vars, override bypass. Added router.py to DEBT-075 env allowlist. CI passes (81.09% coverage). Commit: 150a549.
