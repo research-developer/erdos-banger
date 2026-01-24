@@ -14,7 +14,14 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-None.
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| DEBT-086 | Loop runner state machine refactor | P2 | Identified |
+| DEBT-087 | LLM execute error handling consolidation | P3 | Identified |
+| DEBT-088 | Patch validator multiple returns (acceptable) | P4 | Won't Fix |
+| DEBT-089 | Ingest/fetch long parameter lists | P1 | Identified |
+| DEBT-090 | Cyclomatic complexity violations (C901) | P2 | Identified |
+| DEBT-091 | Blind exception catches (BLE001) | P3 | Identified |
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -113,7 +120,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-084 | Finish batch interrupt wiring (SIGINT) | P3 | Fixed | 117d510 |
 | DEBT-085 | Restore and wire removed constants (DEBT-082 regression) | P2 | Fixed | c5b5d9f,f70613a |
 
-**Next Debt ID:** DEBT-086
+**Next Debt ID:** DEBT-092
 
 ### Archived Debt Decks
 
