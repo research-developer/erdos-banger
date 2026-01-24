@@ -16,7 +16,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| DEBT-092 | [Proof verification module LOC violations](./debt-092-proof-verification-loc.md) | P4 | Exempted |
+| DEBT-092 | [Proof verification module LOC violations](./debt-092-proof-verification-loc.md) | P3 | Exempted |
 | DEBT-093 | [Exa client infrastructure duplication](./debt-093-exa-client-loc.md) | P2 | Open |
 | DEBT-094 | [Semantic Scholar client module LOC violation](./debt-094-semantic-scholar-client-loc.md) | P3 | Superseded |
 | DEBT-095 | [zbMATH client module LOC violation](./debt-095-zbmath-client-loc.md) | P3 | Superseded |

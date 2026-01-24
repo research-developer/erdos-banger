@@ -1,7 +1,8 @@
 """Proof repository verification (SPEC-035).
 
-# exempt: DEBT-092 (596 LOC; verification pipeline has 6 bounded contexts:
-#   clone, build, no-sorries check, provenance, env sanitization, logs)
+# exempt: DEBT-092 (626 LOC; verification pipeline with 7 bounded contexts:
+#   config, result types, env sanitization, git clone, Lean verification,
+#   main verify, provenance management)
 
 This module handles cloning and verifying Lean proofs from external repositories.
 
