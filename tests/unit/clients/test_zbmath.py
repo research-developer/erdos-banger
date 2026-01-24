@@ -498,6 +498,22 @@ class TestZbMathClient:
         assert entry is None
 
     @responses.activate
+    def test_get_by_doi_404(self) -> None:
+        """Returns None when API returns 404 for DOI lookup."""
+        responses.add(
+            responses.GET,
+            "https://api.zbmath.org/v1/document/_search",
+            json={"error": "Not found"},
+            status=404,
+        )
+
+        config = ZbMathConfig()
+        client = ZbMathClient(config)
+        entry = client.get_by_doi("10.9999/nonexistent.paper", use_cache=False)
+
+        assert entry is None
+
+    @responses.activate
     def test_search_by_msc_success(self) -> None:
         """Searches by MSC code successfully."""
         responses.add(

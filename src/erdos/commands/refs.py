@@ -17,7 +17,7 @@ from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
 from erdos.core.timing import measure_time_ms
 
-from . import refs_s2
+from . import refs_s2, refs_zbmath
 
 
 logger = logging.getLogger(__name__)
@@ -46,12 +46,13 @@ class RefsGroup(TyperGroup):
 
 
 app = typer.Typer(
-    help="List problem references or query Semantic Scholar.",
+    help="List problem references, query Semantic Scholar, or look up zbMATH.",
     cls=RefsGroup,
 )
 
-# Register s2 subcommand FIRST (before the default command)
+# Register subcommands FIRST (before the default command)
 app.add_typer(refs_s2.app, name="s2")
+app.add_typer(refs_zbmath.app, name="zbmath")
 console = Console()
 
 
@@ -135,13 +136,15 @@ def refs_problem(
 @app.callback(invoke_without_command=True)
 def refs_callback(ctx: typer.Context) -> None:
     """
-    List problem references or query Semantic Scholar.
+    List problem references, query Semantic Scholar, or look up zbMATH.
 
     Examples:
         erdos refs 6
         erdos refs problem 6
         erdos refs s2 citations "10.4007/annals.2008.167.481"
         erdos refs s2 cited-by "math/0404188"
+        erdos refs zbmath "10.4007/annals.2008.167.481"
+        erdos refs zbmath --msc "11B05"
     """
     # If a subcommand was invoked, let it handle things
     if ctx.invoked_subcommand is not None:

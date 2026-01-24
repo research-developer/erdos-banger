@@ -671,7 +671,12 @@ class ZbMathClient:
 
             return entry
 
-        except requests.HTTPError:
+        except requests.HTTPError as e:
+            if e.response is not None and e.response.status_code == 404:
+                # Cache the "not found" result
+                if use_cache:
+                    self._save_to_cache("doi", doi, {"entry": None})
+                return None
             raise
 
     def search_by_msc(
