@@ -81,6 +81,7 @@ class AppConfig:
     index_path: Path | None = None
     run_log_path: Path = field(default=DEFAULT_RUN_LOG_PATH)
     repo_root: Path | None = None
+    submodule_path: Path | None = None
 
     # API configuration
     mailto: str = DEFAULT_MAILTO
@@ -104,6 +105,7 @@ class AppConfig:
             ERDOS_INDEX_PATH: Path to SQLite search index file.
             ERDOS_RUN_LOG_PATH: Path to run log JSONL file.
             ERDOS_REPO_ROOT: Repository root directory.
+            ERDOS_SUBMODULE_PATH: Path to teorth/erdosproblems submodule.
             ERDOS_MAILTO: Contact email for API polite pools.
             OPENALEX_EMAIL: Optional alias for ERDOS_MAILTO (used by some OpenAlex tooling).
             ERDOS_LLM_COMMAND: External LLM command for ask/loop.
@@ -119,6 +121,7 @@ class AppConfig:
         index_path_str = os.environ.get("ERDOS_INDEX_PATH")
         run_log_path_str = os.environ.get("ERDOS_RUN_LOG_PATH")
         repo_root_str = os.environ.get("ERDOS_REPO_ROOT")
+        submodule_path_str = os.environ.get("ERDOS_SUBMODULE_PATH")
 
         def _clean_env(value: str | None) -> str | None:
             if value is None:
@@ -139,6 +142,7 @@ class AppConfig:
                 Path(run_log_path_str) if run_log_path_str else DEFAULT_RUN_LOG_PATH
             ),
             repo_root=Path(repo_root_str) if repo_root_str else None,
+            submodule_path=Path(submodule_path_str) if submodule_path_str else None,
             mailto=mailto,
             llm_command=os.environ.get("ERDOS_LLM_COMMAND", ""),
             aristotle_api_key=os.environ.get("ARISTOTLE_API_KEY", "").strip(),
