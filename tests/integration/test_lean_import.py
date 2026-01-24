@@ -96,11 +96,12 @@ def lean_project(tmp_path: Path) -> Path:
 class TestLeanStatusCommand:
     """Tests for erdos lean status command."""
 
-    def test_status_help(self) -> None:
+    def test_status_help(self, strip_ansi) -> None:
         """Verify status command has help text."""
         result = runner.invoke(app, ["lean", "status", "--help"])
         assert result.exit_code == 0
-        assert "status" in result.stdout.lower()
+        output = strip_ansi(result.stdout)
+        assert "status" in output.lower()
 
     def test_status_all_problems(
         self, tmp_path: Path, upstream_yaml: Path, enriched_yaml: Path
@@ -207,13 +208,14 @@ class TestLeanStatusCommand:
 class TestLeanImportCommand:
     """Tests for erdos lean import command."""
 
-    def test_import_help(self) -> None:
+    def test_import_help(self, strip_ansi) -> None:
         """Verify import command has help text."""
         result = runner.invoke(app, ["lean", "import", "--help"])
         # Skip if command not implemented
-        if "No such command" in result.stdout or result.exit_code != 0:
+        output = strip_ansi(result.stdout)
+        if "No such command" in output or result.exit_code != 0:
             pytest.skip("import command not implemented yet")
-        assert "import" in result.stdout.lower()
+        assert "import" in output.lower()
 
     @responses.activate
     def test_import_dry_run(

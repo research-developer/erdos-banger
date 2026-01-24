@@ -23,32 +23,33 @@ runner = CliRunner()
 class TestCopilotCommandRegistration:
     """Tests for copilot command registration."""
 
-    def test_copilot_subcommand_exists(self):
+    def test_copilot_subcommand_exists(self, strip_ansi):
         """The 'erdos lean copilot' subcommand group is registered."""
         result = runner.invoke(app, ["lean", "--help"])
         assert result.exit_code == 0
-        assert "copilot" in result.output
+        assert "copilot" in strip_ansi(result.output)
 
-    def test_copilot_serve_exists(self):
+    def test_copilot_serve_exists(self, strip_ansi):
         """The 'erdos lean copilot serve' command is registered."""
         result = runner.invoke(app, ["lean", "copilot", "--help"])
         assert result.exit_code == 0
-        assert "serve" in result.output
+        assert "serve" in strip_ansi(result.output)
 
-    def test_copilot_serve_help(self):
+    def test_copilot_serve_help(self, strip_ansi):
         """The 'erdos lean copilot serve --help' shows options."""
         result = runner.invoke(app, ["lean", "copilot", "serve", "--help"])
         assert result.exit_code == 0
-        assert "--port" in result.output
-        assert "--host" in result.output
-        assert "--llm-cmd" in result.output
-        assert "--log-level" in result.output
+        output = strip_ansi(result.output)
+        assert "--port" in output
+        assert "--host" in output
+        assert "--llm-cmd" in output
+        assert "--log-level" in output
 
 
 class TestCopilotServeDependencyCheck:
     """Tests for copilot serve dependency checking."""
 
-    def test_serve_without_copilot_extra_fails_human(self, monkeypatch):
+    def test_serve_without_copilot_extra_fails_human(self, monkeypatch, strip_ansi):
         """Serve fails gracefully when copilot extra is not installed (human)."""
         # Mock is_copilot_available to return False
         monkeypatch.setattr(
@@ -60,7 +61,8 @@ class TestCopilotServeDependencyCheck:
 
         # Should fail with informative message
         assert result.exit_code != 0
-        assert "copilot" in result.output.lower()
+        output = strip_ansi(result.output)
+        assert "copilot" in output.lower()
 
     def test_serve_without_copilot_extra_fails_json(self, monkeypatch):
         """Serve fails gracefully when copilot extra is not installed (JSON)."""
@@ -83,12 +85,12 @@ class TestCopilotServeDependencyCheck:
 class TestCopilotServeOptions:
     """Tests for copilot serve command options."""
 
-    def test_default_port(self):
+    def test_default_port(self, strip_ansi):
         """Default port is 8000."""
         result = runner.invoke(app, ["lean", "copilot", "serve", "--help"])
-        assert "8000" in result.output
+        assert "8000" in strip_ansi(result.output)
 
-    def test_default_host(self):
+    def test_default_host(self, strip_ansi):
         """Default host is 127.0.0.1."""
         result = runner.invoke(app, ["lean", "copilot", "serve", "--help"])
-        assert "127.0.0.1" in result.output
+        assert "127.0.0.1" in strip_ansi(result.output)

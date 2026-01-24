@@ -44,9 +44,10 @@ class TestErdosShow:
 
         assert result.returncode == 2  # Usage error
 
-    def test_show_help(self, cli_runner) -> None:
+    def test_show_help(self, cli_runner, strip_ansi) -> None:
         """erdos show --help shows usage."""
         result = cli_runner("show", "--help")
 
-        assert "Problem ID to display" in result.stdout
+        output = strip_ansi(result.stdout)
+        assert "Problem ID to display" in output
         assert result.returncode == 0
