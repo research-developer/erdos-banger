@@ -363,30 +363,11 @@ def test_ingest_internal_error_does_not_truncate_manifest(
     def fake_fetch_reference_entry(
         ref: object,
         *,
-        repo_root: Path,
-        allow_download: bool,
-        allow_network: bool,
-        timeout: float,
-        mailto: str,
-        pdf: bool = False,
-        pdf_converter: str = "marker",
-        pdf_use_llm: bool = False,
-        source: MetadataSource = MetadataSource.OPENALEX,
+        config: object,
         provider: object = None,  # SPEC-022: optional provider
     ) -> ManifestEntry:
         # Unused params required by signature
-        _ = (
-            repo_root,
-            allow_download,
-            allow_network,
-            timeout,
-            mailto,
-            pdf,
-            pdf_converter,
-            pdf_use_llm,
-            source,
-            provider,
-        )
+        _ = (config, provider)
         if getattr(ref, "key", "") == "Boom2026":
             raise Exception("boom")
         return ManifestEntry(
@@ -761,30 +742,11 @@ def test_ingest_updates_manifest_when_content_changes(
     def fake_fetch(
         ref: ReferenceEntry,
         *,
-        repo_root: Path,
-        allow_download: bool,
-        allow_network: bool,
-        timeout: float,
-        mailto: str,
-        pdf: bool = False,
-        pdf_converter: str = "marker",
-        pdf_use_llm: bool = False,
-        source: MetadataSource = MetadataSource.OPENALEX,
+        config: object,
         provider: object = None,  # SPEC-022: optional provider
     ) -> ManifestEntry:
         # Unused params required by signature
-        _ = (
-            repo_root,
-            allow_download,
-            allow_network,
-            timeout,
-            mailto,
-            pdf,
-            pdf_converter,
-            pdf_use_llm,
-            source,
-            provider,
-        )
+        _ = (config, provider)
         call_count[0] += 1
         # Return different title on second call to simulate content change
         title = "First Title" if call_count[0] == 1 else "Updated Title"

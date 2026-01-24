@@ -17,7 +17,12 @@ import math
 from typing import TYPE_CHECKING
 
 from erdos.core.exit_codes import ExitCode
-from erdos.core.lean import LeanRunner, LeanRunnerError, generate_skeleton
+from erdos.core.lean import (
+    FormalizerError,
+    LeanRunner,
+    LeanRunnerError,
+    generate_skeleton,
+)
 from erdos.core.loop.result import LoopResult, LoopStatus
 from erdos.core.loop.runner import run_loop
 from erdos.core.models import CLIOutput
@@ -153,7 +158,7 @@ def execute_proof_loop(
     if not file_path.exists():
         try:
             generate_skeleton(problem, project_path, overwrite=False)
-        except Exception as e:
+        except FormalizerError as e:
             return CLIOutput.err(
                 command="erdos loop",
                 error_type="FormalizerError",

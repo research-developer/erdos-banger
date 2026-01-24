@@ -4,6 +4,7 @@ import logging
 import shlex
 import subprocess
 import time
+from dataclasses import dataclass
 
 from erdos.core.constants import LLM_COMMAND_TIMEOUT
 from erdos.core.exit_codes import ExitCode
@@ -59,12 +60,69 @@ def execute_llm(
     return result.stdout, result.returncode
 
 
-def execute_llm_if_enabled(  # noqa: PLR0911
+@dataclass(frozen=True)
+class LLMExecutionResult:
+    """Result for optional LLM execution (success, skip, or error)."""
+
+    answer: str | None = None
+    llm_exit_code: int | None = None
+    llm_enabled: bool = False
+    llm_command: str | None = None
+    error: CLIOutput | None = None
+
+    @property
+    def ok(self) -> bool:
+        return self.error is None
+
+
+def _handle_llm_exception(
+    *, exc: Exception, command: str, llm_command: str
+) -> CLIOutput:
+    """Map execution exceptions to user-facing CLIOutput errors."""
+    if isinstance(exc, FileNotFoundError):
+        return CLIOutput.err(
+            command=command,
+            error_type="CONFIG_ERROR",
+            message=f"LLM command not found: {llm_command}",
+            code=ExitCode.CONFIG_ERROR,
+        )
+    if isinstance(exc, subprocess.TimeoutExpired):
+        return CLIOutput.err(
+            command=command,
+            error_type="TIMEOUT",
+            message=f"LLM command timed out after {LLM_COMMAND_TIMEOUT}s: {llm_command}",
+            code=ExitCode.ERROR,
+        )
+    if isinstance(exc, ValueError):
+        # shlex.split can raise ValueError for malformed command strings
+        return CLIOutput.err(
+            command=command,
+            error_type="CONFIG_ERROR",
+            message=f"Invalid LLM command syntax: {exc}",
+            code=ExitCode.CONFIG_ERROR,
+        )
+    if isinstance(exc, OSError):
+        return CLIOutput.err(
+            command=command,
+            error_type="CONFIG_ERROR",
+            message=f"LLM command error: {exc}",
+            code=ExitCode.CONFIG_ERROR,
+        )
+    return CLIOutput.err(
+        command=command,
+        error_type="ERROR",
+        message=f"LLM command failed: {exc}",
+        code=ExitCode.ERROR,
+    )
+
+
+def execute_llm_if_enabled(
     *,
     prompt: str,
     enable_llm: bool,
     llm_command: str | None,
-) -> dict[str, str | int | bool | None] | CLIOutput:
+    command: str,
+) -> LLMExecutionResult:
     """
     Execute LLM if enabled and command is available.
 
@@ -74,65 +132,41 @@ def execute_llm_if_enabled(  # noqa: PLR0911
         llm_command: LLM command to execute
 
     Returns:
-        Dict with llm metadata if successful, or CLIOutput error
+        LLMExecutionResult with llm metadata and optional error
     """
-    # Build result dict
-    result: dict[str, str | int | bool | None] = {
-        "answer": None,
-        "llm_exit_code": None,
-        "llm_enabled": False,
-        "llm_command": None,
-    }
-
     # Skip if LLM disabled or no command available
     if not enable_llm or not llm_command:
-        return result
+        return LLMExecutionResult()
 
     # Execute LLM
-    result["llm_enabled"] = True
-    result["llm_command"] = llm_command
-
     try:
         answer, exit_code = execute_llm(llm_command=llm_command, prompt=prompt)
-    except FileNotFoundError:
-        return CLIOutput.err(
-            command="erdos ask",
-            error_type="CONFIG_ERROR",
-            message=f"LLM command not found: {llm_command}",
-            code=ExitCode.CONFIG_ERROR,
-        )
-    except subprocess.TimeoutExpired:
-        return CLIOutput.err(
-            command="erdos ask",
-            error_type="TIMEOUT",
-            message=f"LLM command timed out after {LLM_COMMAND_TIMEOUT}s: {llm_command}",
-            code=ExitCode.ERROR,
-        )
-    except OSError as e:
-        return CLIOutput.err(
-            command="erdos ask",
-            error_type="CONFIG_ERROR",
-            message=f"LLM command error: {e}",
-            code=ExitCode.CONFIG_ERROR,
-        )
-    except ValueError as e:
-        # shlex.split can raise ValueError for malformed command strings
-        return CLIOutput.err(
-            command="erdos ask",
-            error_type="CONFIG_ERROR",
-            message=f"Invalid LLM command syntax: {e}",
-            code=ExitCode.CONFIG_ERROR,
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError, ValueError) as e:
+        return LLMExecutionResult(
+            llm_enabled=True,
+            llm_command=llm_command,
+            error=_handle_llm_exception(
+                exc=e, command=command, llm_command=llm_command
+            ),
         )
 
     # Check exit code
     if exit_code != 0:
-        return CLIOutput.err(
-            command="erdos ask",
-            error_type="ERROR",
-            message=f"LLM command exited with code {exit_code}",
-            code=ExitCode.ERROR,
+        return LLMExecutionResult(
+            llm_enabled=True,
+            llm_command=llm_command,
+            llm_exit_code=exit_code,
+            error=CLIOutput.err(
+                command=command,
+                error_type="ERROR",
+                message=f"LLM command exited with code {exit_code}",
+                code=ExitCode.ERROR,
+            ),
         )
 
-    result["answer"] = answer
-    result["llm_exit_code"] = exit_code
-    return result
+    return LLMExecutionResult(
+        answer=answer,
+        llm_exit_code=exit_code,
+        llm_enabled=True,
+        llm_command=llm_command,
+    )

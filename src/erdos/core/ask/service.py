@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Any
 
-from erdos.core.ask.llm import execute_llm_if_enabled
+from erdos.core.ask.llm import LLMExecutionResult, execute_llm_if_enabled
 from erdos.core.ask.prompt import build_prompt
 from erdos.core.ask.retrieval import retrieve_sources
 from erdos.core.constants import DEFAULT_RAG_LIMIT
@@ -83,14 +83,14 @@ def _build_response_data(
     query: str,
     limit: int,
     used_fts: bool,
-    llm_result: dict[str, str | int | bool | None],
+    llm_result: LLMExecutionResult,
 ) -> dict[str, Any]:
     """Build the response data dictionary."""
     return {
         "problem_id": problem_id,
         "question": question,
         "prompt": prompt,
-        "answer": llm_result["answer"],
+        "answer": llm_result.answer,
         "sources": [
             {
                 "chunk_id": source.chunk_id,
@@ -109,9 +109,9 @@ def _build_response_data(
             "used_fts": used_fts,
         },
         "llm": {
-            "enabled": llm_result["llm_enabled"],
-            "command": llm_result["llm_command"],
-            "exit_code": llm_result["llm_exit_code"],
+            "enabled": llm_result.llm_enabled,
+            "command": llm_result.llm_command,
+            "exit_code": llm_result.llm_exit_code,
         },
     }
 
@@ -181,10 +181,13 @@ def ask_question(
 
     # Execute LLM if enabled
     llm_result = execute_llm_if_enabled(
-        prompt=prompt, enable_llm=enable_llm, llm_command=effective_llm_cmd
+        prompt=prompt,
+        enable_llm=enable_llm,
+        llm_command=effective_llm_cmd,
+        command="erdos ask",
     )
-    if isinstance(llm_result, CLIOutput):
-        return llm_result
+    if llm_result.error is not None:
+        return llm_result.error
 
     # Build response
     data = _build_response_data(

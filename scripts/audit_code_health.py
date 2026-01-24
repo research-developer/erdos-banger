@@ -38,14 +38,10 @@ MODULE_LOC_THRESHOLD_COMMANDS = 400
 MODULE_LOC_THRESHOLD_CORE = 500
 FUNCTION_LOC_THRESHOLD = 120
 
-# Known exemptions paired with debt decks (module -> debt ID)
-# These files are tracked for refactoring and should not trigger CI failures
-# NOTE: Stale entries removed 2026-01-23 - DEBT-049/051/053/054 were fixed in prior refactors
-EXEMPTED_MODULES: dict[str, str] = {
-    # The only module currently over threshold (556 LOC vs 500)
-    # See DEBT-089 for parameter object refactor that would reduce this
-    "src/erdos/core/ingest/fetch.py": "DEBT-050",
-}
+# Known exemptions paired with debt decks (module -> debt ID).
+# These files are tracked for refactoring and should not trigger CI failures.
+# NOTE: Keep this list small. Prefer reducing modules below thresholds.
+EXEMPTED_MODULES: dict[str, str] = {}
 
 # Known exemptions for long functions paired with debt decks
 # Note: Typer command functions are long due to option declarations + docstrings,
@@ -58,8 +54,6 @@ EXEMPTED_FUNCTIONS: dict[tuple[str, str], str] = {
     ("src/erdos/commands/loop.py", "run"): "DEBT-065",  # 145 LOC, ~37 LOC logic
     # LEGITIMATE DEBT: Linear orchestration (acceptable pattern)
     ("src/erdos/core/ingest/service.py", "ingest_problem_references"): "DEBT-050",
-    # LEGITIMATE DEBT: State machine with 11 returns - see DEBT-086 for refactor plan
-    ("src/erdos/core/loop/runner.py", "_run_single_iteration"): "DEBT-086",
 }
 
 

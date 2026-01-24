@@ -246,7 +246,7 @@ def _is_under_erdos_dir(file_path: Path) -> bool:
     return False
 
 
-def validate_patch(  # noqa: PLR0911
+def validate_patch(  # noqa: PLR0911 - validation pipeline with early exits
     response: str, target_file: Path, config: LoopConfig
 ) -> PatchResult:
     """Validate LLM response and return applicable patch or rejection.

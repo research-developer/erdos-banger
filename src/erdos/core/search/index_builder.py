@@ -8,6 +8,7 @@ from erdos.core.ports import (
     SearchIndexReadPort,
     SearchIndexWritePort,
 )
+from erdos.core.search.db import SearchIndexError
 
 
 logger = logging.getLogger(__name__)
@@ -51,6 +52,10 @@ def build_index(
     for problem in loader.iter_problems():
         try:
             index.index_problem(problem)
+        except SearchIndexError:
+            # Fail fast on index-level errors (e.g., missing FTS5) rather than
+            # silently producing a partially-built index.
+            raise
         except Exception as exc:
             logger.error(
                 "Failed to index problem %s: %s",

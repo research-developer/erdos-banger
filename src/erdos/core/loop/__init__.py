@@ -9,12 +9,14 @@ This package provides the loop functionality split into modules:
 - result.py: LoopStatus, IterationRecord, LoopResult
 - logging.py: LoopLogger, generate_run_id, file_hash
 - prompt.py: build_loop_prompt, budget_context
-- runner.py: run_loop, apply_patch
+- iteration_steps.py: apply_patch (public helper)
+- runner.py: run_loop
 - service.py: execute_proof_loop (application-level orchestration)
 """
 
 # Public API re-exports
 from erdos.core.loop.config import LoopConfig
+from erdos.core.loop.iteration_steps import apply_patch
 from erdos.core.loop.logging import LoopLogger, file_hash, generate_run_id
 from erdos.core.loop.patch_validator import (
     MatchResult,
@@ -27,7 +29,7 @@ from erdos.core.loop.patch_validator import (
 )
 from erdos.core.loop.prompt import budget_context, build_loop_prompt
 from erdos.core.loop.result import IterationRecord, LoopResult, LoopStatus
-from erdos.core.loop.runner import apply_patch, run_loop
+from erdos.core.loop.runner import run_loop
 from erdos.core.loop.service import execute_proof_loop
 from erdos.core.loop.verifier import (
     LoopExitCondition,

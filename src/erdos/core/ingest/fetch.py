@@ -16,7 +16,6 @@ import logging
 import tarfile
 import time
 from datetime import UTC, datetime
-from enum import Enum
 from typing import TYPE_CHECKING, assert_never
 
 import defusedxml.ElementTree as ET
@@ -24,6 +23,12 @@ import requests
 
 from erdos.core.clients.openalex import OpenAlexConfig
 from erdos.core.ingest.arxiv_download import download_and_extract_arxiv
+from erdos.core.ingest.config import (
+    FetchConfig,
+    IngestConfig,
+    MetadataSource,
+    PDFConfig,
+)
 from erdos.core.ingest.models import (
     ArxivDownloadResult,
     ProcessAllReferencesResult,
@@ -54,21 +59,16 @@ logger = logging.getLogger(__name__)
 # Public exports for orchestrator consumers (CLI/services)
 __all__ = [
     "ArxivDownloadResult",
+    "FetchConfig",
+    "IngestConfig",
     "MetadataSource",
+    "PDFConfig",
     "build_provider_from_source",
     "download_and_extract_arxiv",
     "fetch_reference_entry",
     "process_all_references",
     "process_single_reference",
 ]
-
-
-class MetadataSource(str, Enum):
-    """Metadata source for reference ingestion."""
-
-    OPENALEX = "openalex"
-    ARXIV = "arxiv"
-    CROSSREF = "crossref"
 
 
 def build_provider_from_source(
@@ -234,21 +234,16 @@ def _fetch_with_provider(
     ref: ReferenceEntry,
     provider: MetadataProvider,
     *,
-    repo_root: Path,
-    allow_download: bool,
-    timeout: float,
-    pdf: bool,
-    pdf_converter: str,
-    pdf_use_llm: bool,
+    fetch: FetchConfig,
+    pdf: PDFConfig,
 ) -> ManifestEntry:
     """Fetch reference metadata using MetadataProvider (SPEC-022).
 
     Args:
         ref: Reference entry with DOI and/or arXiv ID.
         provider: MetadataProvider for fetching metadata.
-        repo_root: Repository root directory.
-        allow_download: Whether to download arXiv source tarballs.
-        timeout: HTTP timeout in seconds.
+        fetch: Fetch configuration (repo root, network/download flags, timeouts).
+        pdf: PDF extraction configuration (SPEC-019).
 
     Returns:
         ManifestEntry with metadata and optional cache info.
@@ -283,22 +278,22 @@ def _fetch_with_provider(
         return _build_manifest_entry_with_arxiv(
             reference,
             arxiv_id,
-            repo_root=repo_root,
-            allow_download=allow_download,
-            timeout=timeout,
+            repo_root=fetch.repo_root,
+            allow_download=fetch.allow_download,
+            timeout=fetch.timeout,
         )
 
     # Optional PDF conversion (SPEC-019): only for non-arXiv references.
-    if allow_download and pdf and reference.pdf_url:
+    if fetch.allow_download and pdf.enabled and reference.pdf_url:
         reference_id = sanitize_reference_id(get_stable_key(reference))
         return _build_manifest_entry_with_pdf(
             reference,
             reference.pdf_url,
-            repo_root=repo_root,
+            repo_root=fetch.repo_root,
             reference_id=reference_id,
-            timeout=timeout,
-            converter=pdf_converter,
-            use_llm=pdf_use_llm,
+            timeout=fetch.timeout,
+            converter=pdf.converter,
+            use_llm=pdf.use_llm,
         )
 
     return ManifestEntry(reference=reference, ingested_at=datetime.now(UTC))
@@ -307,29 +302,17 @@ def _fetch_with_provider(
 def fetch_reference_entry(
     ref: ReferenceEntry,
     *,
-    repo_root: Path,
-    allow_download: bool,
-    allow_network: bool,
-    timeout: float,
-    mailto: str,
-    pdf: bool = False,
-    pdf_converter: str = "marker",
-    pdf_use_llm: bool = False,
-    source: MetadataSource = MetadataSource.OPENALEX,
+    config: IngestConfig,
     provider: MetadataProvider | None = None,
 ) -> ManifestEntry:
     """Fetch metadata and optionally download content for a reference.
 
     Args:
         ref: Reference entry with DOI and/or arXiv ID.
-        repo_root: Repository root directory.
-        allow_download: Whether to download arXiv source tarballs.
-        allow_network: Whether network access is allowed.
-        timeout: HTTP timeout in seconds.
-        mailto: Contact email for API polite pools.
-        source: Metadata source to use (default: OpenAlex). Ignored if provider given.
+        config: Ingest configuration (network/download flags, timeouts, source, pdf).
         provider: Optional MetadataProvider for dependency injection (SPEC-022).
-            When provided, source parameter is ignored.
+            When provided, config.source is ignored and the caller is responsible
+            for including any API key overrides in the provider.
 
     Returns:
         ManifestEntry with metadata and optional cache info.
@@ -338,23 +321,19 @@ def fetch_reference_entry(
         RuntimeError: If network access is required but disabled.
         ValueError: If reference has no identifiers.
     """
-    if not allow_network:
+    if not config.fetch.allow_network:
         raise RuntimeError("Network access disabled but required for fetching")
 
     # Use injected provider or build from source enum
     actual_provider = provider or build_provider_from_source(
-        source, mailto=mailto, timeout=timeout
+        config.source, mailto=config.fetch.mailto, timeout=config.fetch.timeout
     )
 
     return _fetch_with_provider(
         ref,
         actual_provider,
-        repo_root=repo_root,
-        allow_download=allow_download,
-        timeout=timeout,
-        pdf=pdf,
-        pdf_converter=pdf_converter,
-        pdf_use_llm=pdf_use_llm,
+        fetch=config.fetch,
+        pdf=config.pdf,
     )
 
 
@@ -395,16 +374,7 @@ def process_single_reference(
     ref: ReferenceEntry,
     *,
     existing_manifest: ProblemManifest | None,
-    force: bool,
-    repo_root: Path,
-    allow_download: bool,
-    allow_network: bool,
-    timeout: float,
-    mailto: str,
-    pdf: bool = False,
-    pdf_converter: str = "marker",
-    pdf_use_llm: bool = False,
-    source: MetadataSource = MetadataSource.OPENALEX,
+    config: IngestConfig,
     provider: MetadataProvider | None = None,
 ) -> ReferenceProcessResult:
     """Process a single reference, reusing a cached manifest entry unless forced.
@@ -412,20 +382,14 @@ def process_single_reference(
     Args:
         ref: Reference entry to process.
         existing_manifest: Existing manifest for idempotence.
-        force: If True, ignore existing entries.
-        repo_root: Repository root directory.
-        allow_download: Whether to download arXiv tarballs.
-        allow_network: Whether network access is allowed.
-        timeout: HTTP timeout in seconds.
-        mailto: Contact email for API polite pools.
-        source: Metadata source to use (default: OpenAlex). Ignored if provider given.
+        config: Ingest configuration (fetch/pdf settings, force flag, source).
         provider: Optional MetadataProvider for dependency injection (SPEC-022).
 
     Returns:
         ReferenceProcessResult with entry and status.
     """
     if existing_entry := _find_existing_manifest_entry(
-        ref, existing_manifest, force=force
+        ref, existing_manifest, force=config.force
     ):
         return ReferenceProcessResult(
             entry=existing_entry,
@@ -437,15 +401,7 @@ def process_single_reference(
     try:
         entry = fetch_reference_entry(
             ref=ref,
-            repo_root=repo_root,
-            allow_download=allow_download,
-            allow_network=allow_network,
-            timeout=timeout,
-            mailto=mailto,
-            pdf=pdf,
-            pdf_converter=pdf_converter,
-            pdf_use_llm=pdf_use_llm,
-            source=source,
+            config=config,
             provider=provider,
         )
         return _success_result(entry)
@@ -470,17 +426,7 @@ def process_all_references(
     problem: ProblemRecord,
     *,
     existing_manifest: ProblemManifest | None,
-    force: bool,
-    repo_root: Path,
-    allow_download: bool,
-    allow_network: bool,
-    timeout: float,
-    mailto: str,
-    delay: float,
-    pdf: bool = False,
-    pdf_converter: str = "marker",
-    pdf_use_llm: bool = False,
-    source: MetadataSource = MetadataSource.OPENALEX,
+    config: IngestConfig,
     provider: MetadataProvider | None = None,
 ) -> ProcessAllReferencesResult:
     """Process all references for a problem.
@@ -488,14 +434,7 @@ def process_all_references(
     Args:
         problem: Problem record with references.
         existing_manifest: Existing manifest for idempotence.
-        force: If True, ignore existing entries.
-        repo_root: Repository root directory.
-        allow_download: Whether to download arXiv tarballs.
-        allow_network: Whether network access is allowed.
-        timeout: HTTP timeout in seconds.
-        mailto: Contact email for API polite pools.
-        delay: Rate limiting delay between requests.
-        source: Metadata source to use (default: OpenAlex). Ignored if provider given.
+        config: Ingest configuration (fetch/pdf settings, force flag, source).
         provider: Optional MetadataProvider for dependency injection (SPEC-022).
 
     Returns:
@@ -518,16 +457,7 @@ def process_all_references(
         result = process_single_reference(
             ref,
             existing_manifest=existing_manifest,
-            force=force,
-            repo_root=repo_root,
-            allow_download=allow_download,
-            allow_network=allow_network,
-            timeout=timeout,
-            mailto=mailto,
-            pdf=pdf,
-            pdf_converter=pdf_converter,
-            pdf_use_llm=pdf_use_llm,
-            source=source,
+            config=config,
             provider=provider,
         )
 
@@ -543,8 +473,8 @@ def process_all_references(
                 internal_error = result.internal_error
 
         # Rate limiting
-        if delay > 0:
-            time.sleep(delay)
+        if config.fetch.delay > 0:
+            time.sleep(config.fetch.delay)
 
     return ProcessAllReferencesResult(
         entries=entries,

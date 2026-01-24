@@ -10,7 +10,10 @@ from pydantic import TypeAdapter, ValidationError
 from erdos.core.constants import API_RATE_LIMIT_DELAY
 from erdos.core.exit_codes import ExitCode
 from erdos.core.ingest.fetch import (
+    FetchConfig,
+    IngestConfig,
     MetadataSource,
+    PDFConfig,
     build_provider_from_source,
     process_all_references,
 )
@@ -369,20 +372,23 @@ def ingest_problem_references(
         )
 
     # Process all references
+    ingest_config = IngestConfig(
+        fetch=FetchConfig(
+            repo_root=repo_root,
+            allow_download=allow_download,
+            allow_network=allow_network,
+            timeout=timeout,
+            mailto=mailto,
+            delay=delay,
+        ),
+        pdf=PDFConfig(enabled=pdf, converter=pdf_converter, use_llm=pdf_use_llm),
+        force=force,
+        source=source,
+    )
     process_result = process_all_references(
         problem,
         existing_manifest=existing_manifest,
-        force=force,
-        repo_root=repo_root,
-        allow_download=allow_download,
-        allow_network=allow_network,
-        timeout=timeout,
-        mailto=mailto,
-        delay=delay,
-        pdf=pdf,
-        pdf_converter=pdf_converter,
-        pdf_use_llm=pdf_use_llm,
-        source=source,
+        config=ingest_config,
         provider=provider,
     )
 
