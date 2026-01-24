@@ -149,8 +149,10 @@ def _run_verification(
             code=ExitCode.ERROR,
         )
 
-    # Create and save provenance
-    provenance = create_provenance(problem_id, best_link, best_result)
+    # Create and save provenance (use extracted_at from the link extraction step)
+    provenance = create_provenance(problem_id, best_link, best_result).model_copy(
+        update={"extracted_at": cache.extracted_at}
+    )
 
     if not dry_run:
         _ensure_cache_dir()
@@ -238,8 +240,15 @@ def sync_proof_links(
         if verify:
             return _run_verification(problem_id, cache, dry_run, cache_path)
 
-        # Default: just extract links
-        provenance_path = cache_path / str(problem_id) / "links.json"
+        # Default: discover-only (extract links + record provenance)
+        provenance_path = cache_path / str(problem_id) / "provenance.json"
+        if cache.links:
+            provenance = create_provenance(
+                problem_id, cache.links[0], verification=None
+            ).model_copy(update={"extracted_at": cache.extracted_at})
+            if not dry_run:
+                _ensure_cache_dir()
+                save_provenance(provenance, cache_dir=cache_path)
 
         return CLIOutput.ok(
             command="erdos sync proof",

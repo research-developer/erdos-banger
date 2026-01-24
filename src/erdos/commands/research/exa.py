@@ -180,12 +180,10 @@ def exa_search(
     )
     client = ExaClient(config)
 
-    # Check if cache exists BEFORE search (search will create/update cache)
-    cache_path = client.get_cache_path(query)
-    was_cached = cache_path.exists()
-
     try:
-        result = client.search(query, max_results=max_results)
+        result, was_cached = client.search_with_cache_status(
+            query, max_results=max_results
+        )
     except ValueError as e:
         exit_with_result(
             ctx,
@@ -208,6 +206,8 @@ def exa_search(
             ),
         )
         return
+
+    cache_path = client.get_cache_path(query, max_results=max_results)
 
     # Save leads if requested
     created_lead_ids: list[str] = []

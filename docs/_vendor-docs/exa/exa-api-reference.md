@@ -6,8 +6,8 @@
 - Search API: [exa-openapi-spec.yaml](https://raw.githubusercontent.com/exa-labs/openapi-spec/refs/heads/master/exa-openapi-spec.yaml)
 - Websets API: [exa-websets-spec.yaml](https://raw.githubusercontent.com/exa-labs/openapi-spec/refs/heads/master/exa-websets-spec.yaml)
 **Python SDK:** `pip install exa-py` (module: `exa_py`)
-**Last Verified:** 2026-01-13
-**Verified Against:** Official docs via llms.txt, Exa OpenAPI specs, and live API probes where noted
+**Imported into erdos-banger:** 2026-01-24
+**Status:** Reference-only. The **“Erdos-banger integration (SSOT)”** section below is the source of truth for what this repo actually calls.
 
 ---
 
@@ -22,6 +22,35 @@ Exa is "a search engine made for AIs" - optimized for RAG, agentic workflows, an
 - **Find Similar**: Discover semantically related pages
 - **Answer**: LLM-generated answers with citations
 - **Research**: Async deep research with structured output (agentic)
+
+---
+
+## Erdos-banger Integration (SSOT)
+
+erdos-banger currently uses only Exa's **Search** API.
+
+- Code: `src/erdos/core/clients/exa.py` (`ExaClient.search_with_cache_status`)
+- CLI: `src/erdos/commands/research/exa.py` (`erdos research exa search`)
+- Endpoint: `POST https://api.exa.ai/search`
+- Auth header: `x-api-key: <EXA_API_KEY>`
+- Request body (as sent today):
+  - `query` (string)
+  - `numResults` (int; from `--max-results`)
+  - `type` = `"neural"`
+  - `useAutoprompt` = `true`
+  - `contents.text.maxCharacters` = `500`
+- Response fields consumed:
+  - `autopromptString` → `autoprompt`
+  - `summary` → `answer`
+  - `results[]`: `url`, `title`, `author`, `publishedDate`, `text`, `score`
+- Caching:
+  - Directory: `literature/cache/exa/` (override via `ERDOS_EXA_CACHE_PATH`)
+  - TTL hours: `ERDOS_EXA_CACHE_TTL` (default: `24`)
+  - Cache key: `sha256(normalized_query | max_results)`
+- Rate limiting: 1 request/second
+- Tests:
+  - Unit: `tests/unit/clients/test_exa.py` (mocked via `responses`)
+  - Integration: `tests/integration/test_exa_integration.py` (`requires_network` + `EXA_API_KEY`)
 
 ---
 

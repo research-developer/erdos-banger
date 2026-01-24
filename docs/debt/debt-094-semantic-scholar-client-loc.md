@@ -11,7 +11,7 @@ The Semantic Scholar API client (SPEC-030/1) exceeds the LOC threshold:
 
 | Module | LOC | Threshold | Delta |
 |--------|-----|-----------|-------|
-| `src/erdos/core/clients/semantic_scholar.py` | 684 | 500 | +184 |
+| `src/erdos/core/clients/semantic_scholar.py` | 686 | 500 | +186 |
 
 ## Justification for Exemption
 
@@ -31,8 +31,8 @@ The module is cohesive: all types and functions support a single capability (Sem
 
 ## Resolution
 
-Exempted via inline marker:
-- `semantic_scholar.py`: Line 3 `# exempt: DEBT-094`
+Exempted via inline marker near the top of the file:
+- `src/erdos/core/clients/semantic_scholar.py`: `# exempt: DEBT-094`
 
 ## Future Refactoring Opportunities
 

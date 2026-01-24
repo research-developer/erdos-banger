@@ -11,7 +11,7 @@ The search command module (SPEC-031/3 MSC integration) exceeds the LOC threshold
 
 | Module | LOC | Threshold | Delta |
 |--------|-----|-----------|-------|
-| `src/erdos/commands/search.py` | 517 | 400 | +117 |
+| `src/erdos/commands/search.py` | 519 | 400 | +119 |
 
 ## Justification for Exemption
 
@@ -31,8 +31,8 @@ The MSC search mode (+~100 LOC) was added for SPEC-031/3 to enable `erdos search
 
 ## Resolution
 
-Exempted via inline marker:
-- `search.py`: Line 3 `# exempt: DEBT-096`
+Exempted via inline marker near the top of the file:
+- `src/erdos/commands/search.py`: `# exempt: DEBT-096`
 
 ## Future Refactoring Opportunities
 

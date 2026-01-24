@@ -121,12 +121,13 @@ src/erdos/commands/
 src/erdos/core/
   sync/
     __init__.py
+    dataset.py          # Read/write local problems_enriched.yaml (atomic)
+    merge.py            # Pure merge logic for combining sources
     submodule.py        # Git submodule operations (teorth/erdosproblems)
     website.py          # Website extraction (title/statement/refs + optional LaTeX)
     forum.py            # Forum thread fetch + proof link extraction
     proofs.py           # Repo clone + Lean verification (opt-in)
     models.py           # Sync models + provenance records
-    service.py          # Orchestrates all sync operations
   formal_conjectures/   # Existing DeepMind import (SPEC-016; used by `erdos lean import`)
 ```
 
@@ -206,11 +207,14 @@ erdos sync proof 347 --verify
 ### Full Sync
 
 ```bash
-# Run all sync operations
+# Update submodule only (default)
 erdos sync all
 
+# Full sync for specific problems
+erdos sync all --problems 6,347
+
 # Dry-run (report what would change)
-erdos sync all --dry-run
+erdos sync all --problems 6,347 --dry-run
 ```
 
 ### JSON Output Contract (Global `--json`)
@@ -220,7 +224,7 @@ All `erdos sync ...` commands MUST support the global `--json` flag and return `
 - `erdos --json sync submodule`: `{ "checked": bool, "updated": bool, "previous_commit": str | null, "current_commit": str | null, "stale": bool | null }`
 - `erdos --json sync website <id>`: `{ "problem_id": int, "updated": bool, "latex_saved": bool, "cached": bool, "warnings": list[str] }`
 - `erdos --json sync proof <id>`: `{ "problem_id": int, "links": list[{"url": str}], "provenance_path": str, "verification_status": str }`
-- `erdos --json sync all`: `{ "submodule": {...}, "website": {...}, "proofs": {...}, "statements": {...} }`
+- `erdos --json sync all`: `{ "submodule": {...}, "website": {...}, "proof": {...}, "statements": {...} }`
 
 ---
 
@@ -496,7 +500,7 @@ To keep CI reliable, the core of this spec should be testable without network:
 3. [ ] `erdos sync website <id>` updates/creates a valid `data/problems_enriched.yaml` entry (ProblemLoader schema: `id,title,statement,status,prize,tags,references,oeis_ids,notes,formalized`)
 4. [ ] `erdos sync website <id> --latex` saves raw LaTeX source to `data/latex/<id>.tex` (gitignored)
 5. [ ] `erdos sync statements <id>` delegates to `erdos lean import <id>` (SPEC-016) without duplicating the import/cache logic
-6. [ ] `erdos sync proof <id>` extracts proof repo links from the forum thread and writes `data/sync_cache/proofs/<id>/links.json` + `provenance.json`
+6. [ ] `erdos sync proof <id>` extracts proof repo links from the forum thread and writes `data/sync_cache/proofs/<id>/links.json` (+ `provenance.json` when at least one link is found)
 7. [ ] `erdos sync proof <id> --verify` runs `lake build` with timeouts and updates `verification_status` + `verify.log`
 8. [ ] `erdos sync all` orchestrates submodule + website + proofs (+ optional statements) deterministically
 9. [ ] Offline-friendly: cached data is used when network is unavailable; sync steps degrade gracefully with warnings

@@ -8,14 +8,15 @@ from pathlib import Path
 from typing import Annotated, Any
 
 import typer
-import yaml
 from rich.console import Console
 from rich.panel import Panel
 
 from erdos.commands.presenter import exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord
+from erdos.core.sync.dataset import load_enriched_problems, save_enriched_problems
 from erdos.core.sync.merge import merge_problem_data
+from erdos.core.sync.submodule import get_submodule_path, load_submodule_problems
 from erdos.core.sync.website import (
     WebsiteFetchError,
     WebsiteParseError,
@@ -47,43 +48,13 @@ def _ensure_data_dir() -> None:
 
 def _load_existing_problems() -> dict[int, ProblemRecord]:
     """Load existing problems from the enriched YAML file."""
-    if not DEFAULT_DATA_PATH.exists():
-        return {}
-
-    try:
-        with DEFAULT_DATA_PATH.open(encoding="utf-8") as f:
-            data = yaml.safe_load(f)
-        if not isinstance(data, list):
-            return {}
-        problems: dict[int, ProblemRecord] = {}
-        for item in data:
-            if isinstance(item, dict) and "id" in item:
-                try:
-                    record = ProblemRecord.model_validate(item, strict=False)
-                    problems[record.id] = record
-                except Exception:  # noqa: S112
-                    continue
-        return problems
-    except Exception as e:
-        logger.warning("Failed to load existing problems: %s", e)
-        return {}
+    return load_enriched_problems(DEFAULT_DATA_PATH)
 
 
 def _save_problems(problems: dict[int, ProblemRecord]) -> None:
     """Save problems to the enriched YAML file (atomic write)."""
     _ensure_data_dir()
-
-    # Sort by ID for deterministic output
-    sorted_problems = sorted(problems.values(), key=lambda p: p.id)
-    data = [p.model_dump(mode="json") for p in sorted_problems]
-
-    # Atomic write via temp file
-    tmp_path = DEFAULT_DATA_PATH.with_suffix(".yaml.tmp")
-    with tmp_path.open("w", encoding="utf-8") as f:
-        yaml.dump(
-            data, f, default_flow_style=False, allow_unicode=True, sort_keys=False
-        )
-    tmp_path.replace(DEFAULT_DATA_PATH)
+    save_enriched_problems(DEFAULT_DATA_PATH, problems)
 
 
 def _save_sync_status(problem_id: int, status_data: dict[str, Any]) -> None:
@@ -104,18 +75,15 @@ def _save_sync_status(problem_id: int, status_data: dict[str, Any]) -> None:
 def _fetch_website_data(
     problem_id: int,
     html_content: str | None,
-    dry_run: bool,
     warnings: list[str],
-) -> Any:
+) -> tuple[Any, Any | None]:
     """Fetch or parse website data, handling cache/network modes."""
     if html_content is not None:
-        return parse_problem_html(html_content, problem_id)
+        return parse_problem_html(html_content, problem_id), None
 
     website_data, sync_status = fetch_and_parse_problem(problem_id)
     warnings.extend(sync_status.warnings)
-    if not dry_run:
-        _save_sync_status(problem_id, sync_status.model_dump(mode="json"))
-    return website_data
+    return website_data, sync_status
 
 
 def _check_updated(existing: ProblemRecord | None, merged: ProblemRecord) -> bool:
@@ -164,12 +132,28 @@ def sync_website_problem(
     cached = html_content is not None
 
     try:
-        website_data = _fetch_website_data(problem_id, html_content, dry_run, warnings)
+        website_data, sync_status = _fetch_website_data(
+            problem_id, html_content, warnings
+        )
+
+        # Best-effort: merge submodule metadata so website-only runs still get status/prize/tags.
+        submodule_data = None
+        try:
+            submodule_path = get_submodule_path()
+            submodule_problems = load_submodule_problems(submodule_path)
+            submodule_data = submodule_problems.get(problem_id)
+        except Exception as e:
+            logger.debug("Submodule metadata unavailable: %s", e)
 
         existing_problems = _load_existing_problems()
         existing = existing_problems.get(problem_id)
 
-        merged = merge_problem_data(problem_id, website=website_data, existing=existing)
+        merged = merge_problem_data(
+            problem_id,
+            submodule=submodule_data,
+            website=website_data,
+            existing=existing,
+        )
         if merged is None:
             return CLIOutput.err(
                 command="erdos sync website",
@@ -184,6 +168,13 @@ def sync_website_problem(
             _save_problems(existing_problems)
 
         latex_saved = _handle_latex(problem_id, fetch_latex, dry_run, warnings)
+
+        # Record sync status (extended with observed status badge for debugging/drift checks).
+        if sync_status is not None and not dry_run:
+            status_data = sync_status.model_dump(mode="json")
+            status_data["status_badge_text"] = website_data.status_badge_text
+            status_data["warnings"] = warnings
+            _save_sync_status(problem_id, status_data)
 
         return CLIOutput.ok(
             command="erdos sync website",

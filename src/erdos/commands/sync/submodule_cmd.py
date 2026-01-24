@@ -14,6 +14,8 @@ from rich.panel import Panel
 from erdos.commands.presenter import exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
+from erdos.core.sync.dataset import load_enriched_problems, save_enriched_problems
+from erdos.core.sync.merge import merge_problem_data
 from erdos.core.sync.submodule import (
     SubmoduleCheckError,
     SubmoduleFetchError,
@@ -35,6 +37,7 @@ console = Console()
 # =============================================================================
 
 SYNC_CACHE_PATH = Path("data/sync_cache")
+DEFAULT_DATA_PATH = Path("data/problems_enriched.yaml")
 
 
 def _ensure_cache_dir() -> None:
@@ -52,6 +55,60 @@ def _save_sync_status(status_data: dict[str, Any]) -> None:
     tmp_path.replace(status_path)
 
 
+def _merge_submodule_metadata(
+    submodule_path: Path,
+    *,
+    data_path: Path,
+    dry_run: bool,
+) -> dict[str, Any]:
+    """Merge submodule metadata into the local enriched dataset (best-effort).
+
+    This updates only fields that are submodule-authoritative per SPEC-035:
+    status, prize, tags, formalized, oeis_ids.
+    """
+    # Only merge if the dataset exists; we cannot synthesize title/statement.
+    if not data_path.exists():
+        return {"success": True, "skipped": True, "reason": "no_local_dataset"}
+
+    existing = load_enriched_problems(data_path)
+    if not existing:
+        return {"success": True, "skipped": True, "reason": "empty_local_dataset"}
+
+    try:
+        submodule_problems = load_submodule_problems(submodule_path)
+    except Exception as e:
+        logger.warning("Failed to load submodule problems for merge: %s", e)
+        return {"success": False, "error": str(e)}
+
+    updated_records = 0
+    missing_required_fields = 0
+
+    for pid, existing_record in existing.items():
+        sub_data = submodule_problems.get(pid)
+        if sub_data is None:
+            continue
+
+        merged = merge_problem_data(pid, submodule=sub_data, existing=existing_record)
+        if merged is None:
+            missing_required_fields += 1
+            continue
+
+        if merged.model_dump(mode="json") != existing_record.model_dump(mode="json"):
+            existing[pid] = merged
+            updated_records += 1
+
+    if not dry_run and updated_records > 0:
+        save_enriched_problems(data_path, existing)
+
+    return {
+        "success": True,
+        "updated_records": updated_records,
+        "missing_required_fields": missing_required_fields,
+        "dry_run": dry_run,
+        "data_path": str(data_path),
+    }
+
+
 # =============================================================================
 # Core logic
 # =============================================================================
@@ -61,6 +118,8 @@ def sync_submodule(
     *,
     check_only: bool = False,
     submodule_path: Path | None = None,
+    data_path: Path | None = None,
+    dry_run: bool = False,
 ) -> CLIOutput:
     """
     Sync or check the submodule.
@@ -74,6 +133,8 @@ def sync_submodule(
     """
     if submodule_path is None:
         submodule_path = get_submodule_path()
+    if data_path is None:
+        data_path = DEFAULT_DATA_PATH
 
     try:
         # Get current commit before any operation
@@ -99,8 +160,15 @@ def sync_submodule(
         except Exception as e:
             logger.warning("Failed to count problems: %s", e)
 
-        # Save status to cache
-        _save_sync_status(status.model_dump(mode="json"))
+        # Save status to cache (skip in dry-run mode)
+        if not dry_run:
+            _save_sync_status(status.model_dump(mode="json"))
+
+        merge_result: dict[str, Any] | None = None
+        if not check_only:
+            merge_result = _merge_submodule_metadata(
+                submodule_path, data_path=data_path, dry_run=dry_run
+            )
 
         # Build response
         updated = (
@@ -113,11 +181,13 @@ def sync_submodule(
             command="erdos sync submodule",
             data={
                 "checked": check_only,
+                "dry_run": dry_run,
                 "updated": updated,
                 "previous_commit": status.previous_commit_hash,
                 "current_commit": status.commit_hash,
                 "stale": status.stale,
                 "problems_count": problems_count,
+                "merge": merge_result,
             },
         )
 

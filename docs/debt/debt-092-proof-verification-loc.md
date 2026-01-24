@@ -11,8 +11,8 @@ The proof verification implementation (SPEC-035/5) exceeds LOC thresholds:
 
 | Module | LOC | Threshold | Delta |
 |--------|-----|-----------|-------|
-| `src/erdos/core/sync/proofs.py` | 596 | 500 | +96 |
-| `src/erdos/commands/sync/proof_cmd.py` | 429 | 400 | +29 |
+| `src/erdos/core/sync/proofs.py` | 599 | 500 | +99 |
+| `src/erdos/commands/sync/proof_cmd.py` | 441 | 400 | +41 |
 
 ## Justification for Exemption
 
@@ -42,9 +42,9 @@ The marginal violation (+29 LOC) doesn't justify splitting.
 
 ## Resolution
 
-Exempted via inline markers:
-- `proofs.py`: Line 3 `# exempt: DEBT-092`
-- `proof_cmd.py`: Line 3 `# exempt: DEBT-092`
+Exempted via inline markers near the top of each file:
+- `src/erdos/core/sync/proofs.py`: `# exempt: DEBT-092`
+- `src/erdos/commands/sync/proof_cmd.py`: `# exempt: DEBT-092`
 
 ## Future Refactoring Opportunities
 

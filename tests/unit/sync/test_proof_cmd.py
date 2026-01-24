@@ -135,6 +135,25 @@ class TestSyncProofLinks:
         assert data["problem_id"] == 347
         assert len(data["links"]) == 1
 
+    def test_writes_provenance_json(
+        self, html_thread_with_github: str, tmp_path: Path
+    ) -> None:
+        """Discover-only mode records provenance.json (best-effort)."""
+        with patch(
+            "erdos.commands.sync.proof_cmd.DEFAULT_CACHE_PATH", tmp_path / "proofs"
+        ):
+            result = sync_proof_links(347, html_content=html_thread_with_github)
+
+        assert result.success is True
+        provenance_path = tmp_path / "proofs" / "347" / "provenance.json"
+        assert provenance_path.exists()
+
+        provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+        assert provenance["problem_id"] == 347
+        assert (
+            provenance["repo_url"] == "https://github.com/mathprover123/erdos-347-proof"
+        )
+
     def test_json_output_contract(
         self, html_thread_with_github: str, tmp_path: Path
     ) -> None:

@@ -11,7 +11,7 @@ The Exa Research API client (SPEC-029/1) exceeds the LOC threshold:
 
 | Module | LOC | Threshold | Delta |
 |--------|-----|-----------|-------|
-| `src/erdos/core/clients/exa.py` | 518 | 500 | +18 |
+| `src/erdos/core/clients/exa.py` | 539 | 500 | +39 |
 
 ## Justification for Exemption
 
@@ -28,8 +28,8 @@ The marginal violation (+18 LOC) doesn't justify splitting into multiple modules
 
 ## Resolution
 
-Exempted via inline marker:
-- `exa.py`: Line 3 `# exempt: DEBT-093`
+Exempted via inline marker near the top of the file:
+- `src/erdos/core/clients/exa.py`: `# exempt: DEBT-093`
 
 ## Future Refactoring Opportunities
 

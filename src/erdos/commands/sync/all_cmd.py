@@ -1,11 +1,4 @@
-"""erdos sync all - orchestrate all sync operations (SPEC-035).
-
-This command runs all sync operations in the correct order:
-1. submodule - Update teorth/erdosproblems submodule
-2. website - Fetch data from erdosproblems.com
-3. proof - Extract proof repository links
-4. statements - Import Lean statements from DeepMind
-"""
+"""erdos sync all - orchestrate all sync operations (SPEC-035)."""
 
 from __future__ import annotations
 
@@ -18,14 +11,11 @@ from rich.console import Console
 
 from erdos.commands.lean.import_cmd import import_upstream_formalization
 from erdos.commands.presenter import exit_with_result
+from erdos.commands.sync.proof_cmd import sync_proof_links
+from erdos.commands.sync.submodule_cmd import sync_submodule
+from erdos.commands.sync.website_cmd import sync_website_problem
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
-from erdos.core.sync import (
-    SubmoduleSyncStatus,
-    fetch_and_parse_problem,
-    get_submodule_path,
-    update_submodule,
-)
 from erdos.core.timing import measure_time_ms
 
 
@@ -75,10 +65,10 @@ def _print_human(data: dict[str, Any]) -> None:
     console.print("[bold]Sync All Results[/bold]")
     console.print()
 
-    _print_step_result("Submodule", data.get("submodule", {}))
     _print_step_result("Website", data.get("website", {}))
     _print_step_result("Proof", data.get("proof", {}))
     _print_step_result("Statements", data.get("statements", {}))
+    _print_step_result("Submodule", data.get("submodule", {}))
 
     # Summary
     console.print()
@@ -89,24 +79,31 @@ def _print_human(data: dict[str, Any]) -> None:
         console.print("[green]All sync operations completed successfully[/green]")
 
 
-def _sync_submodule(no_network: bool) -> dict[str, Any]:
+def _sync_submodule(no_network: bool, dry_run: bool) -> dict[str, Any]:
     """Run submodule sync."""
     if no_network:
         return {"success": True, "skipped": True, "reason": "no_network"}
 
     try:
-        submodule_path = get_submodule_path()
-        status: SubmoduleSyncStatus = update_submodule(submodule_path)
-        updated = (
-            status.previous_commit_hash is not None
-            and status.previous_commit_hash != status.commit_hash
-        )
+        result = sync_submodule(check_only=dry_run, dry_run=dry_run)
+        if not result.success:
+            error_msg = (
+                (result.error or {}).get("message", "")
+                if isinstance(result.error, dict)
+                else "submodule sync failed"
+            )
+            return {"success": False, "error": error_msg}
+        data = result.data or {}
         return {
             "success": True,
-            "updated": updated,
-            "commit": status.commit_hash or "",
-            "old_commit": status.previous_commit_hash or "",
-            "new_commit": status.commit_hash or "",
+            "updated": bool(data.get("updated", False)),
+            "checked": bool(data.get("checked", False)),
+            "stale": data.get("stale"),
+            "commit": data.get("current_commit", "") or "",
+            "old_commit": data.get("previous_commit", "") or "",
+            "new_commit": data.get("current_commit", "") or "",
+            "merge": data.get("merge"),
+            "dry_run": bool(data.get("dry_run", False)),
         }
     except Exception as e:
         logger.warning("Submodule sync failed: %s", e)
@@ -116,6 +113,7 @@ def _sync_submodule(no_network: bool) -> dict[str, Any]:
 def _sync_website(
     problem_ids: list[int] | None,
     no_network: bool,
+    dry_run: bool,
 ) -> dict[str, Any]:
     """Run website sync for specified problems."""
     if no_network:
@@ -124,11 +122,18 @@ def _sync_website(
         return {"success": True, "skipped": True, "reason": "no_problem_ids"}
 
     fetched = 0
+    updated = 0
     errors: list[str] = []
     for pid in problem_ids:
         try:
-            fetch_and_parse_problem(pid)
+            result = sync_website_problem(pid, dry_run=dry_run)
+            if not result.success:
+                msg = (result.error or {}).get("message", "") if result.error else ""
+                errors.append(f"Problem {pid}: {msg or 'sync failed'}")
+                continue
             fetched += 1
+            if result.data and result.data.get("updated"):
+                updated += 1
         except Exception as e:
             errors.append(f"Problem {pid}: {e}")
             logger.warning("Website sync failed for problem %d: %s", pid, e)
@@ -136,6 +141,40 @@ def _sync_website(
     return {
         "success": len(errors) == 0,
         "fetched": fetched,
+        "updated": updated,
+        "errors": errors,
+    }
+
+
+def _sync_proof(
+    problem_ids: list[int] | None,
+    no_network: bool,
+    dry_run: bool,
+) -> dict[str, Any]:
+    """Run proof link extraction for specified problems (discover-only)."""
+    if no_network:
+        return {"success": True, "skipped": True, "reason": "no_network"}
+    if not problem_ids:
+        return {"success": True, "skipped": True, "reason": "no_problem_ids"}
+
+    proofs_found = 0
+    errors: list[str] = []
+    for pid in problem_ids:
+        try:
+            result = sync_proof_links(pid, dry_run=dry_run, verify=False)
+            if not result.success:
+                msg = (result.error or {}).get("message", "") if result.error else ""
+                errors.append(f"Problem {pid}: {msg or 'sync failed'}")
+                continue
+            if result.data:
+                proofs_found += int(result.data.get("links_count", 0))
+        except Exception as e:
+            errors.append(f"Problem {pid}: {e}")
+            logger.warning("Proof sync failed for problem %d: %s", pid, e)
+
+    return {
+        "success": len(errors) == 0,
+        "proofs_found": proofs_found,
         "errors": errors,
     }
 
@@ -145,6 +184,7 @@ def _sync_statements(
     project_path: Path,
     force: bool,
     no_network: bool,
+    dry_run: bool,
 ) -> dict[str, Any]:
     """Run statement imports for specified problems."""
     if not problem_ids:
@@ -160,6 +200,7 @@ def _sync_statements(
                 pid,
                 project_path,
                 force=force,
+                dry_run=dry_run,
                 no_network=no_network,
             )
             if result.success:
@@ -196,6 +237,7 @@ def _run_sync_pipeline(
     skip_website: bool,
     skip_proof: bool,
     skip_statements: bool,
+    dry_run: bool,
 ) -> dict[str, Any]:
     """Execute the sync pipeline and return results."""
     all_errors: list[str] = []
@@ -205,42 +247,37 @@ def _run_sync_pipeline(
         "reason": "skip_flag",
     }
 
-    # 1. Submodule
-    submodule_result = (
-        skip_result.copy() if skip_submodule else _sync_submodule(no_network)
-    )
-    if not submodule_result.get("success"):
-        all_errors.append(f"submodule: {submodule_result.get('error', '')}")
-
-    # 2. Website
+    # 1. Website (creates/updates dataset entries)
     website_result = (
-        skip_result.copy() if skip_website else _sync_website(pids, no_network)
+        skip_result.copy() if skip_website else _sync_website(pids, no_network, dry_run)
     )
     if not website_result.get("success"):
         all_errors.extend([f"website: {e}" for e in website_result.get("errors", [])])
 
-    # 3. Proof (always deferred to explicit `erdos sync proof` for now)
-    proof_result: dict[str, Any] = (
-        skip_result.copy()
-        if skip_proof
-        else {
-            "success": True,
-            "skipped": True,
-            "reason": "use_erdos_sync_proof",
-            "proofs_found": 0,
-        }
+    # 2. Proof links (discover-only; no verification)
+    proof_result = (
+        skip_result.copy() if skip_proof else _sync_proof(pids, no_network, dry_run)
     )
+    if not proof_result.get("success"):
+        all_errors.extend([f"proof: {e}" for e in proof_result.get("errors", [])])
 
-    # 4. Statements
+    # 3. Statements
     statements_result = (
         skip_result.copy()
         if skip_statements
-        else _sync_statements(pids, lean_path, force, no_network)
+        else _sync_statements(pids, lean_path, force, no_network, dry_run)
     )
     if not statements_result.get("success"):
         all_errors.extend(
             [f"statements: {e}" for e in statements_result.get("errors", [])]
         )
+
+    # 4. Submodule (merge metadata after website writes so new records get status/prize)
+    submodule_result = (
+        skip_result.copy() if skip_submodule else _sync_submodule(no_network, dry_run)
+    )
+    if not submodule_result.get("success"):
+        all_errors.append(f"submodule: {submodule_result.get('error', '')}")
 
     return {
         "submodule": submodule_result,
@@ -249,6 +286,7 @@ def _run_sync_pipeline(
         "statements": statements_result,
         "errors": all_errors,
         "problem_ids": pids,
+        "dry_run": dry_run,
     }
 
 
@@ -272,6 +310,13 @@ def sync_all(
     force: Annotated[
         bool,
         typer.Option("--force", "-f", help="Overwrite local modifications."),
+    ] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run",
+            help="Run without writing to disk (still may read network if enabled).",
+        ),
     ] = False,
     no_network: Annotated[
         bool,
@@ -300,15 +345,16 @@ def sync_all(
     specific problems from website, proof links, and statements.
 
     The operations run in this order:
-    1. submodule - Update teorth/erdosproblems submodule
-    2. website - Fetch data from erdosproblems.com
-    3. proof - Extract proof repository links (not yet in 'all')
-    4. statements - Import Lean statements from DeepMind
+    1. website - Update local dataset entries for selected problems
+    2. proof - Extract proof repository links (discover-only)
+    3. statements - Import Lean statements from DeepMind
+    4. submodule - Update submodule + merge metadata into the local dataset
 
     Examples:
         erdos sync all                      # Update submodule only
         erdos sync all --problems 6,347     # Sync problems 6 and 347
         erdos sync all --skip-statements    # Skip Lean imports
+        erdos sync all --problems 6 --dry-run
     """
     command = "erdos sync all"
 
@@ -340,6 +386,7 @@ def sync_all(
             skip_website,
             skip_proof,
             skip_statements,
+            dry_run,
         )
         result = CLIOutput.ok(command=command, data=output_data)
 

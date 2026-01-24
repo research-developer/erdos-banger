@@ -8,6 +8,7 @@ from typer.testing import CliRunner
 
 from erdos.cli import app
 from erdos.commands.sync.all_cmd import _print_human, _print_step_result
+from erdos.core.models import CLIOutput
 
 
 runner = CliRunner()
@@ -82,6 +83,53 @@ def test_sync_all_shows_lean_path_flag() -> None:
     result = runner.invoke(app, ["sync", "all", "--help"])
     assert result.exit_code == 0
     assert "--lean-path" in result.output
+
+
+def test_sync_all_orchestrates_website_and_proof_steps() -> None:
+    """Verify sync all calls website + proof steps when problems are provided."""
+    with (
+        patch("erdos.commands.sync.all_cmd.sync_website_problem") as mock_website,
+        patch("erdos.commands.sync.all_cmd.sync_proof_links") as mock_proof,
+    ):
+        mock_website.side_effect = [
+            CLIOutput.ok(
+                command="erdos sync website",
+                data={"problem_id": 6, "updated": True},
+            ),
+            CLIOutput.ok(
+                command="erdos sync website",
+                data={"problem_id": 347, "updated": False},
+            ),
+        ]
+        mock_proof.side_effect = [
+            CLIOutput.ok(
+                command="erdos sync proof",
+                data={"problem_id": 6, "links_count": 1},
+            ),
+            CLIOutput.ok(
+                command="erdos sync proof",
+                data={"problem_id": 347, "links_count": 0},
+            ),
+        ]
+
+        result = runner.invoke(
+            app,
+            [
+                "--json",
+                "sync",
+                "all",
+                "--problems",
+                "6,347",
+                "--dry-run",
+                "--skip-submodule",
+                "--skip-statements",
+            ],
+        )
+
+    assert result.exit_code == 0
+    assert '"success": true' in result.output
+    assert mock_website.call_count == 2
+    assert mock_proof.call_count == 2
 
 
 class TestPrintStepResult:

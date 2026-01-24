@@ -229,40 +229,45 @@ class ExaClient:
         self.config = config or ExaConfig.from_env()
         self._rate_limiter = RateLimiter(delay_seconds=1.0)  # 1 req/sec to be polite
 
-    def _cache_key(self, query: str) -> str:
-        """Generate cache key from query.
+    def _cache_key(self, query: str, *, max_results: int) -> str:
+        """Generate cache key from request parameters.
 
         Args:
             query: Search query string.
+            max_results: Requested maximum number of results.
 
         Returns:
-            SHA256 hash of normalized query.
+            SHA256 hash of normalized request parameters.
         """
-        normalized = query.lower().strip()
+        normalized = f"{query.lower().strip()}|max_results={max_results}"
         return hashlib.sha256(normalized.encode()).hexdigest()
 
-    def get_cache_path(self, query: str) -> Path:
+    def get_cache_path(self, query: str, *, max_results: int) -> Path:
         """Get cache file path for a query.
 
         Args:
             query: Search query string.
+            max_results: Requested maximum number of results.
 
         Returns:
             Path to cache file.
         """
-        cache_key = self._cache_key(query)
+        cache_key = self._cache_key(query, max_results=max_results)
         return self.config.cache_path / f"{cache_key}.json"
 
-    def _load_from_cache(self, query: str) -> ExaResearchResult | None:
+    def _load_from_cache(
+        self, query: str, *, max_results: int
+    ) -> ExaResearchResult | None:
         """Load result from cache if valid.
 
         Args:
             query: Search query string.
+            max_results: Requested maximum number of results.
 
         Returns:
             Cached result if valid and not expired, None otherwise.
         """
-        cache_file = self.get_cache_path(query)
+        cache_file = self.get_cache_path(query, max_results=max_results)
         if not cache_file.exists():
             return None
 
@@ -284,13 +289,14 @@ class ExaClient:
             logger.warning("Failed to load cache for query %s: %s", query, e)
             return None
 
-    def _save_to_cache(self, result: ExaResearchResult) -> None:
+    def _save_to_cache(self, result: ExaResearchResult, *, max_results: int) -> None:
         """Save result to cache.
 
         Args:
             result: Search result to cache.
+            max_results: Requested maximum number of results.
         """
-        cache_file = self.get_cache_path(result.query)
+        cache_file = self.get_cache_path(result.query, max_results=max_results)
 
         try:
             cache_file.parent.mkdir(parents=True, exist_ok=True)
@@ -305,38 +311,22 @@ class ExaClient:
         except OSError as e:
             logger.warning("Failed to cache result for query %s: %s", result.query, e)
 
-    def search(
+    def search_with_cache_status(
         self,
         query: str,
         *,
         max_results: int = 5,
         use_cache: bool = True,
-    ) -> ExaResearchResult:
-        """Search for research content.
-
-        Args:
-            query: Natural language search query.
-            max_results: Maximum number of sources to return.
-            use_cache: Whether to use cached results.
-
-        Returns:
-            ExaResearchResult with sources.
-
-        Raises:
-            ValueError: If API key is not set.
-            requests.HTTPError: On HTTP errors.
-            json.JSONDecodeError: If response is invalid JSON.
-        """
+    ) -> tuple[ExaResearchResult, bool]:
+        """Search for research content and return whether it was served from cache."""
         if not self.config.api_key:
             raise ValueError("EXA_API_KEY not set")
 
-        # Check cache first
         if use_cache:
-            cached = self._load_from_cache(query)
+            cached = self._load_from_cache(query, max_results=max_results)
             if cached is not None:
-                return cached
+                return cached, True
 
-        # Make API request
         self._rate_limiter.sleep_if_needed()
 
         url = f"{self.BASE_URL}/search"
@@ -370,10 +360,36 @@ class ExaClient:
 
         result = ExaResearchResult.from_api_response(data, query=query)
 
-        # Cache result
         if use_cache:
-            self._save_to_cache(result)
+            self._save_to_cache(result, max_results=max_results)
 
+        return result, False
+
+    def search(
+        self,
+        query: str,
+        *,
+        max_results: int = 5,
+        use_cache: bool = True,
+    ) -> ExaResearchResult:
+        """Search for research content.
+
+        Args:
+            query: Natural language search query.
+            max_results: Maximum number of sources to return.
+            use_cache: Whether to use cached results.
+
+        Returns:
+            ExaResearchResult with sources.
+
+        Raises:
+            ValueError: If API key is not set.
+            requests.HTTPError: On HTTP errors.
+            json.JSONDecodeError: If response is invalid JSON.
+        """
+        result, _cached = self.search_with_cache_status(
+            query, max_results=max_results, use_cache=use_cache
+        )
         return result
 
     def _post_with_retry(

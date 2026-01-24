@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+import yaml
 
 from erdos.commands.sync.submodule_cmd import sync_submodule
 from erdos.core.sync.models import SubmoduleSyncStatus
@@ -251,6 +252,124 @@ class TestSyncSubmodule:
         assert result.success is True
         status_file = cache_path / "submodule_status.json"
         assert status_file.exists()
+
+    def test_merges_metadata_into_local_dataset(
+        self, mock_submodule_dir: Path, tmp_path: Path
+    ) -> None:
+        """Non-check sync merges submodule metadata into problems_enriched.yaml."""
+        data_path = tmp_path / "problems_enriched.yaml"
+
+        # Existing dataset entries (titles/statements required)
+        existing = [
+            {
+                "id": 1,
+                "title": "Problem 1",
+                "statement": "Statement 1",
+                "status": "open",
+                "prize": 0,
+                "tags": [],
+                "oeis_ids": [],
+                "formalized": False,
+            },
+            {
+                "id": 2,
+                "title": "Problem 2",
+                "statement": "Statement 2",
+                "status": "open",
+                "prize": 0,
+                "tags": [],
+                "oeis_ids": [],
+                "formalized": False,
+            },
+        ]
+        data_path.write_text(yaml.dump(existing), encoding="utf-8")
+
+        with (
+            patch(
+                "erdos.commands.sync.submodule_cmd.get_submodule_commit"
+            ) as mock_commit,
+            patch("erdos.commands.sync.submodule_cmd.update_submodule") as mock_update,
+            patch(
+                "erdos.commands.sync.submodule_cmd.SYNC_CACHE_PATH", tmp_path / "cache"
+            ),
+        ):
+            mock_commit.return_value = "abc123"
+            mock_update.return_value = SubmoduleSyncStatus(
+                commit_hash="abc123",
+                previous_commit_hash="old789",
+                stale=False,
+            )
+            result = sync_submodule(
+                check_only=False,
+                submodule_path=mock_submodule_dir,
+                data_path=data_path,
+            )
+
+        assert result.success is True
+        assert result.data is not None
+        merge = result.data.get("merge") or {}
+        assert merge.get("success") is True
+        assert merge.get("updated_records") == 2
+
+        merged = yaml.safe_load(data_path.read_text(encoding="utf-8"))
+        assert isinstance(merged, list)
+        by_id = {p["id"]: p for p in merged}
+
+        # Problem 1 becomes proved and formalized, prize updated
+        assert by_id[1]["status"] == "proved"
+        assert by_id[1]["prize"] == 500
+        assert by_id[1]["formalized"] is True
+
+        # Problem 2 remains open but picks up tags/oeis
+        assert by_id[2]["status"] == "open"
+        assert by_id[2]["oeis_ids"] == ["A000001"]
+        assert by_id[2]["tags"] == ["combinatorics"]
+
+    def test_dry_run_does_not_write_dataset(
+        self, mock_submodule_dir: Path, tmp_path: Path
+    ) -> None:
+        """dry_run=True returns merge summary without modifying the dataset."""
+        data_path = tmp_path / "problems_enriched.yaml"
+        existing = [
+            {
+                "id": 1,
+                "title": "Problem 1",
+                "statement": "Statement 1",
+                "status": "open",
+            }
+        ]
+        data_path.write_text(yaml.dump(existing), encoding="utf-8")
+
+        with (
+            patch(
+                "erdos.commands.sync.submodule_cmd.get_submodule_commit"
+            ) as mock_commit,
+            patch("erdos.commands.sync.submodule_cmd.update_submodule") as mock_update,
+            patch(
+                "erdos.commands.sync.submodule_cmd.SYNC_CACHE_PATH", tmp_path / "cache"
+            ),
+        ):
+            mock_commit.return_value = "abc123"
+            mock_update.return_value = SubmoduleSyncStatus(
+                commit_hash="abc123",
+                previous_commit_hash="old789",
+                stale=False,
+            )
+            result = sync_submodule(
+                check_only=False,
+                submodule_path=mock_submodule_dir,
+                data_path=data_path,
+                dry_run=True,
+            )
+
+        assert result.success is True
+        assert result.data is not None
+        merge = result.data.get("merge") or {}
+        assert merge.get("dry_run") is True
+
+        # File remains unchanged
+        after = yaml.safe_load(data_path.read_text(encoding="utf-8"))
+        assert after[0]["status"] == "open"
 
 
 # =============================================================================

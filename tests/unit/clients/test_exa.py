@@ -316,12 +316,14 @@ class TestExaClientCaching:
         config = ExaConfig(api_key="test-key")
         client = ExaClient(config)
 
-        key1 = client._cache_key("sum-free sets")
-        key2 = client._cache_key("sum-free sets")
-        key3 = client._cache_key("different query")
+        key1 = client._cache_key("sum-free sets", max_results=5)
+        key2 = client._cache_key("sum-free sets", max_results=5)
+        key3 = client._cache_key("different query", max_results=5)
+        key4 = client._cache_key("sum-free sets", max_results=10)
 
         assert key1 == key2
         assert key1 != key3
+        assert key1 != key4
         # Verify it's a SHA256 hash
         assert len(key1) == 64
 
@@ -330,8 +332,8 @@ class TestExaClientCaching:
         config = ExaConfig(api_key="test-key")
         client = ExaClient(config)
 
-        key1 = client._cache_key("Sum-Free Sets")
-        key2 = client._cache_key("  sum-free sets  ")
+        key1 = client._cache_key("Sum-Free Sets", max_results=5)
+        key2 = client._cache_key("  sum-free sets  ", max_results=5)
 
         assert key1 == key2
 
@@ -353,7 +355,7 @@ class TestExaClientCaching:
         assert result is not None  # Ensure search completed
 
         # Verify cache file exists
-        cache_key = client._cache_key("test query")
+        cache_key = client._cache_key("test query", max_results=5)
         cache_file = cache_path / f"{cache_key}.json"
         assert cache_file.exists()
 
@@ -372,7 +374,7 @@ class TestExaClientCaching:
         client = ExaClient(config)
 
         # Pre-populate cache
-        cache_key = client._cache_key("cached query")
+        cache_key = client._cache_key("cached query", max_results=5)
         cache_path.mkdir(parents=True, exist_ok=True)
         cache_file = cache_path / f"{cache_key}.json"
 
@@ -419,7 +421,7 @@ class TestExaClientCaching:
         client = ExaClient(config)
 
         # Pre-populate cache with old timestamp (2 hours ago)
-        cache_key = client._cache_key("expired query")
+        cache_key = client._cache_key("expired query", max_results=5)
         cache_path.mkdir(parents=True, exist_ok=True)
         cache_file = cache_path / f"{cache_key}.json"
 
@@ -450,7 +452,7 @@ class TestExaClientCaching:
         config = ExaConfig(api_key="test-key", cache_path=cache_path)
         client = ExaClient(config)
 
-        path = client.get_cache_path("test query")
+        path = client.get_cache_path("test query", max_results=5)
 
         assert path.parent == cache_path
         assert path.suffix == ".json"
