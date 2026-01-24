@@ -154,7 +154,8 @@ class TestExaSearchCommand:
         env = {
             "ERDOS_DATA_PATH": str(data_dir),
             "ERDOS_REPO_ROOT": str(tmp_path),
-            # No EXA_API_KEY
+            # Explicitly unset EXA_API_KEY (may be set via .env)
+            "EXA_API_KEY": "",
         }
 
         result = runner.invoke(

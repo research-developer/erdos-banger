@@ -60,6 +60,7 @@ packages = ["src/erdos"]
 dev = [
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
+    "pytest-dotenv>=0.5.2",  # Load .env for integration tests (DEBT-100)
     "pytest-xdist>=3.8.0",
     "pytest-watch>=4.2.0",
     "pytest-sugar>=1.0.0",
@@ -227,6 +228,9 @@ addopts = [
     # panels / missing option text). Let pytest auto-detect color support.
 ]
 testpaths = ["tests"]
+# pytest-dotenv: Load .env if present (for local network tests with API keys).
+# This only affects local runs; CI uses explicit env vars. See DEBT-100.
+env_files = [".env"]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "e2e: end-to-end tests requiring full environment",

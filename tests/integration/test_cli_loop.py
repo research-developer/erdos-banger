@@ -149,7 +149,13 @@ class TestLoopJSONContract:
                 "--path",
                 str(tmp_path / "formal" / "lean"),
             ],
-            env={"ERDOS_REPO_ROOT": str(tmp_path)},
+            env={
+                "ERDOS_REPO_ROOT": str(tmp_path),
+                # Explicitly unset LLM commands (may be set via .env)
+                "ERDOS_LLM_COMMAND": "",
+                "ERDOS_LLM_COMMAND_MATH": "",
+                "ERDOS_LLM_COMMAND_CODE": "",
+            },
         )
 
         assert result.exit_code != 0

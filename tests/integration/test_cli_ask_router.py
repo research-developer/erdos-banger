@@ -170,7 +170,10 @@ class TestAskCommandRouterIntegration:
                 "ERDOS_DATA_PATH": str(data_dir),
                 "ERDOS_INDEX_PATH": str(index_path),
                 "ERDOS_REPO_ROOT": str(tmp_path),
-                # No LLM command configured at all
+                # Explicitly unset LLM commands (may be set via .env)
+                "ERDOS_LLM_COMMAND": "",
+                "ERDOS_LLM_COMMAND_MATH": "",
+                "ERDOS_LLM_COMMAND_CODE": "",
             },
         )
 
@@ -196,6 +199,10 @@ class TestAskCommandRouterIntegration:
                 "ERDOS_DATA_PATH": str(data_dir),
                 "ERDOS_INDEX_PATH": str(index_path),
                 "ERDOS_REPO_ROOT": str(tmp_path),
+                # Explicitly unset LLM commands (may be set via .env)
+                "ERDOS_LLM_COMMAND": "",
+                "ERDOS_LLM_COMMAND_MATH": "",
+                "ERDOS_LLM_COMMAND_CODE": "",
             },
         )
 
