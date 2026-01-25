@@ -29,7 +29,7 @@ This document is a **living record** of guardrails, failure patterns, and “got
 
 ### FP-003: SSOT path drift (specs moved, checklists stale)
 
-- Symptom: protocol/checklist references files that no longer exist (e.g., `docs/specs/spec-010-*.md` after specs are archived).
+- Symptom: protocol/checklist references files that no longer exist (e.g., `docs/debt/README.md` after moving active trackers to `docs/_debt/`).
 - Common cause: reorganizing docs without updating `docs/_ralphwiggum/**`.
 - Mitigation: treat `docs/_ralphwiggum/**` as “operational SSOT” and update it in the same PR whenever docs move.
 

@@ -41,4 +41,4 @@ Core is organized by domain:
 
 ## Code Health Guardrails
 
-The repo enforces LOC/function-size thresholds via `scripts/audit_code_health.py`. Exemptions must be tracked in `docs/debt/`.
+The repo enforces LOC/function-size thresholds via `scripts/audit_code_health.py`. Exemptions must be tracked in `docs/_debt/`.

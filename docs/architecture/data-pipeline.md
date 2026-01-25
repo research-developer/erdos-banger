@@ -11,6 +11,7 @@ Resolution order (see `src/erdos/core/problem_loader.py`):
 1. `ERDOS_DATA_PATH`
 2. `data/problems_enriched.yaml` (local override; gitignored)
 3. Built-in sample dataset in the package (`src/erdos/data/problems_enriched.yaml`)
+4. `data/erdosproblems/data/problems.yaml` (upstream submodule; metadata-only fallback)
 
 ## Literature
 

@@ -83,14 +83,14 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 
 ## Quick Links
 
-- [Adversarial Review 2026-01-21](../_archive/bugs/adversarial-review-2026-01-21.md)
+- [Adversarial Review 2026-01-21](https://github.com/The-Obstacle-Is-The-Way/erdos-banger/blob/main/docs/_archive/bugs/adversarial-review-2026-01-21.md)
   - 2 confirmed bugs (1 P1, 1 P2) - 3 false positives invalidated
   - 7 technical debt items (4 P2, 3 P3)
   - Focus: silent failures, observability gaps, API robustness
-- [Adversarial Review 2026-01-22](../_archive/bugs/adversarial-review-2026-01-22.md)
+- [Adversarial Review 2026-01-22](https://github.com/The-Obstacle-Is-The-Way/erdos-banger/blob/main/docs/_archive/bugs/adversarial-review-2026-01-22.md)
   - No new correctness bugs found under `make ci`
   - 2 active debt items filed (loop + search SRP pressure)
-- [Adversarial Review 2026-01-17](../_archive/bugs/adversarial-review-2026-01-17.md)
+- [Adversarial Review 2026-01-17](https://github.com/The-Obstacle-Is-The-Way/erdos-banger/blob/main/docs/_archive/bugs/adversarial-review-2026-01-17.md)
   - 3 spec drift issues
   - 9 missing test scenarios
   - 2 inappropriate mock patterns

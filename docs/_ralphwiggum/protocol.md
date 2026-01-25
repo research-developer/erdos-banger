@@ -50,8 +50,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 1. **State file** (`PROGRESS.md`) - Tracks what's done/pending
 2. **Prompt file** (`PROMPT.md`) - Instructions for each iteration
-3. **Debt/Bug docs** (`docs/debt/`, `docs/bugs/`) - SSOT for sprint work
-   - Specs (`docs/specs/`) only when approved for new feature work
+3. **Debt/Bug docs** (`docs/_debt/`, `docs/_bugs/`) - SSOT for sprint work
+   - Specs (`docs/_specs/`) only when approved for new feature work
 4. **Git repo** - For atomic commits and history
 
 ---
@@ -91,9 +91,9 @@ erdos-banger/
 ├── docs/
 │   ├── _ralphwiggum/
 │   │   └── protocol.md          # This file
-│   ├── debt/                    # Active debt decks (SSOT for debt sprints)
-│   ├── bugs/                    # Active bug decks (SSOT for bug sprints)
-│   ├── specs/                   # Active specs (v1.2+)
+│   ├── _debt/                   # Active debt decks (SSOT for debt sprints)
+│   ├── _bugs/                   # Active bug decks (SSOT for bug sprints)
+│   ├── _specs/                  # Active specs + master docs
 │   └── _archive/specs/          # Archived specs (implemented SSOT)
 ```
 
@@ -196,7 +196,7 @@ make test-all
 ```
 
 If any tests fail:
-- file a bug deck in `docs/bugs/`
+- file a bug deck in `docs/_bugs/`
 - add a new unchecked item to `PROGRESS.md`
 - do **not** declare the sprint complete
 
@@ -242,11 +242,11 @@ Allowed to change:
 - `tests/**`
 - `formal/lean/**` (Lean project sources; never commit build artifacts)
 - `scripts/**`
-- `docs/specs/**` (active specs only)
-- `docs/bugs/**`, `docs/debt/**`
-- `docs/_vendor-docs/**`
+- `docs/_specs/**` (active specs only)
+- `docs/_bugs/**`, `docs/_debt/**`
+- `docs/vendor-docs/**`
 - `docs/future/**` (design notes; non-normative)
-- `docs/INDEX.md`, `docs/specs/README.md` (indexes)
+- `docs/INDEX.md`, `docs/_specs/README.md` (indexes)
 - `PROMPT.md`, `PROGRESS.md`, `docs/_ralphwiggum/**`
 
 Forbidden to change (treat as immutable SSOT unless a human explicitly authorizes it):
@@ -318,7 +318,7 @@ If pushing is blocked (auth/CI outage), stop the loop and request human interven
 ### Spec → Test → Code Flow
 
 ```
-docs/debt/debt-XXX-*.md                # Read the debt deck (or a spec doc)
+docs/_debt/debt-XXX-*.md               # Read the debt deck (or a spec doc)
     ↓
 tests/unit/test_arxiv_client.py        # Write failing test
     ↓
@@ -585,10 +585,10 @@ ls PROGRESS.md PROMPT.md
 
 # 3. Ensure spec docs exist
 # Debt sprint:
-ls docs/debt/README.md docs/debt/debt-0*.md
+ls docs/_debt/README.md docs/_debt/debt-0*.md
 #
 # Spec work (when approved):
-ls docs/specs/*.md docs/_archive/specs/spec-0*.md
+ls docs/_specs/*.md docs/_archive/specs/spec-0*.md
 
 # 4. Start tmux
 tmux new -s erdos-ralph

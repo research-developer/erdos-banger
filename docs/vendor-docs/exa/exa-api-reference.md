@@ -843,6 +843,7 @@ The Websets API enables programmatic web data discovery and processing at scale.
 
 ## See Also
 
-- [Kalshi API Reference](kalshi-api-reference.md) - Kalshi prediction market API
-- [Architecture](../architecture/overview.md) - How our codebase integrates external APIs
+- [Vendor Docs Index](../README.md) - Vendor integrations overview
+- [Architecture](../../architecture/overview.md) - How the codebase integrates external APIs
+- [Configuration](../../developer/configuration.md) - Relevant env vars and defaults
 - [Exa Pricing](https://exa.ai/pricing) - Current pricing details

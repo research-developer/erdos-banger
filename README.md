@@ -87,7 +87,7 @@ erdos-banger/
 │   └── lean-toolchain   # Pinned Lean version
 ├── literature/          # Reference manifests and cache (cache is gitignored)
 ├── index/               # SQLite search index (gitignored)
-├── docs/specs/          # Design specifications
+├── docs/_specs/         # Specs (current + master docs)
 └── tests/               # Unit and integration tests
 ```
 
@@ -107,13 +107,13 @@ uv run mypy src/
 uv run pytest -m "not requires_lean and not requires_network"
 ```
 
-See `docs/specs/` for detailed design documents and the v1.2+ roadmap.
+See `docs/_specs/` for detailed design documents and the v1.2+ roadmap.
 
 ## Documentation
 
 - [Docs Index](docs/INDEX.md) - Getting started, developer guides, architecture, and project docs
-- [Master Vision](docs/specs/master-vision.md) - Full architecture and roadmap
-- [Specs Index](docs/specs/README.md) - Design specs (mostly archived)
+- [Master Vision](docs/_specs/master-vision.md) - Full architecture and roadmap
+- [Specs Index](docs/_specs/README.md) - Design specs (mostly archived)
 
 ## License
 

@@ -4,7 +4,7 @@
 >
 > **Last Updated:** 2026-01-23
 >
-> This document intentionally avoids factual claims about external products/benchmarks. For implementable, testable work, the SSOT is `docs/specs/README.md`.
+> This document intentionally avoids factual claims about external products/benchmarks. For implementable, testable work, the SSOT is `docs/_specs/README.md`.
 
 ---
 

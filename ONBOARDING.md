@@ -311,9 +311,9 @@ The fancy stuff comes after the plumbing works.
 ## Questions?
 
 - **Start here:** `docs/INDEX.md`
-- **Full architecture:** `docs/specs/master-vision.md`
-- **Design history:** `docs/specs/README.md`
-- **Bugs/debt tracking:** `docs/bugs/README.md`, `docs/debt/README.md`
+- **Full architecture:** `docs/_specs/master-vision.md`
+- **Design history:** `docs/_specs/README.md`
+- **Bugs/debt tracking:** `docs/_bugs/README.md`, `docs/_debt/README.md`
 
 Or just ask in the repo issues.
 
