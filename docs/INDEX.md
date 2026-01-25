@@ -1,29 +1,57 @@
-# Documentation Index
+# Documentation
 
-## Navigation
+This repo uses a **modified Diátaxis** documentation structure:
+
+- **Getting Started** (tutorials) — install, run, and see value fast
+- **How-to / Developer Guides** — accomplish specific tasks (testing, configuration, extending)
+- **Reference** — precise, factual surfaces (CLI flags, env vars, schemas)
+- **Explanation / Architecture** — why the system is structured the way it is
+
+Design history and engineering process docs (specs, ADRs, debt, bugs) are kept, but are **not** the primary onboarding path.
+
+## Getting Started
+
+- [Quickstart](./getting-started/quickstart.md)
+- [Common Usage](./getting-started/usage.md)
+
+## Developer Guides
+
+- [Configuration](./developer/configuration.md) (env vars, paths, caches)
+- [Testing](./developer/testing.md)
+- [CLI Reference (generated)](./developer/cli-reference.md)
+
+## Architecture
+
+- [Overview](./architecture/overview.md)
+- [CLI Design](./architecture/cli.md)
+- [Data Pipeline](./architecture/data-pipeline.md)
+
+## Project & Process Docs
 
 | Category | Index | Next ID |
 |----------|-------|---------|
-| [Specs](./specs/README.md) | Design specifications | SPEC-036 |
+| [Specs](./specs/README.md) | Design specs + roadmap (mostly archived) | SPEC-036 |
 | [ADRs](./adr/README.md) | Architecture decision records | ADR-002 |
-| [Bugs](./bugs/README.md) | Bug reports & reviews | BUG-023 |
-| [Debt](./debt/README.md) | Technical debt tracking | DEBT-097 |
-| [Archive](./_archive/) | Completed specs, bugs & debt | — |
+| [Bugs](./bugs/README.md) | Bug reports & adversarial reviews | BUG-023 |
+| [Debt](./debt/README.md) | Technical debt tracking | DEBT-108 |
+| [Vendor Docs](./_vendor-docs/README.md) | External API notes | — |
+| [Ralph Wiggum Protocol](./_ralphwiggum/protocol.md) | Autonomous sprint loop | — |
+| [Archive](./_archive/) | Completed specs, bugs, debt, and process docs | — |
 
 ## Master Documents
 
-- [Master Vision](./specs/master-vision.md) - Full design & build plan
-- [Master Qualifications](./specs/master-qualifications.md) - Project scope & requirements
+- [Master Vision](./specs/master-vision.md) — long-range architecture and roadmap
+- [Master Qualifications](./specs/master-qualifications.md) — scope and requirements
 
 ## Future / Brainstorming
 
-- [Future Ideations](./future/future-ideations.md) - Living roadmap & integrations
-- [Research State Management (v3)](./future/research-state-management-v3.md) - Implemented research workspace + campaign memory (no sessions)
+- [Future Ideations](./future/future-ideations.md)
+- [Research State Management (v3)](./future/research-state-management-v3.md)
 
-## Numbering Convention
+## Numbering Convention (Process Docs)
 
-- **Specs:** Sequential, permanent (SPEC-001, SPEC-002, ...)
-- **Bugs:** Sequential (BUG-001, BUG-002, ...)
-- **Debt:** Sequential (DEBT-001, DEBT-002, ...)
+- **Specs:** Sequential, permanent (`SPEC-001`, `SPEC-002`, …)
+- **Bugs:** Sequential (`BUG-001`, `BUG-002`, …)
+- **Debt:** Sequential (`DEBT-001`, `DEBT-002`, …)
 
-Numbers are never reused. Each category README is the source of truth for that category.
+Numbers are never reused. Each category README is the SSOT for that category.

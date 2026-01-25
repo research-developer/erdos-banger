@@ -588,7 +588,7 @@ ls PROGRESS.md PROMPT.md
 ls docs/debt/README.md docs/debt/debt-0*.md
 #
 # Spec work (when approved):
-ls docs/specs/spec-0*.md docs/_archive/specs/spec-0*.md
+ls docs/specs/*.md docs/_archive/specs/spec-0*.md
 
 # 4. Start tmux
 tmux new -s erdos-ralph

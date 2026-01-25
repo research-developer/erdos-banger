@@ -4,7 +4,7 @@ CLI-first toolkit for collaborative research on Erdos problems, from literature 
 
 ## What This Is
 
-A research harness for the [1,135 Erdos problems](https://github.com/teorth/erdosproblems) curated by the mathematical community. The goal: provide infrastructure that helps human researchers and AI agents systematically work through these problems.
+A research harness for the Erdős problems dataset curated by the mathematical community (upstream: https://github.com/teorth/erdosproblems). The goal: provide infrastructure that helps human researchers and AI agents systematically work through these problems.
 
 **The pipeline:**
 1. **Problem data** - Load and query problem metadata (status, prizes, tags, references)
@@ -27,9 +27,9 @@ A research harness for the [1,135 Erdos problems](https://github.com/teorth/erdo
 | Search index (SQLite FTS5) | Done | [Spec 006](docs/_archive/specs/spec-006-search-index.md) |
 | Lean integration (init, check, formalize) | Done | [Spec 007](docs/_archive/specs/spec-007-lean-integration.md) |
 | Presenter cleanup | Done | [Spec 009](docs/_archive/specs/spec-009-architecture-cleanup.md) |
-| Ingest command (arXiv + Crossref) | Done | [Spec 010](docs/specs/spec-010-ingest-command.md) |
-| Ask command (RAG + LLM) | Done | [Spec 011](docs/specs/spec-011-ask-command.md) |
-| Loop command (iterative proofs) | Deferred v1.2+ | [Spec 012](docs/specs/spec-012-loop-command.md) |
+| Ingest command (arXiv + Crossref) | Done | [Spec 010](docs/_archive/specs/spec-010-ingest-command.md) |
+| Ask command (RAG + LLM) | Done | [Spec 011](docs/_archive/specs/spec-011-ask-command.md) |
+| Loop command (iterative proofs) | Done | [Spec 012](docs/_archive/specs/spec-012-loop-command.md) |
 
 ## Quickstart
 
@@ -42,8 +42,8 @@ git submodule update --init --recursive
 # Install dependencies (requires uv: https://docs.astral.sh/uv/)
 uv sync
 
-# Optional: enable the [pdf] extra (installs GPL-licensed tooling; deferred to v2.0+)
-# See docs/specs/spec-019-pdf-conversion.md for policy and rationale.
+# Optional: enable the [pdf] extra (installs GPL-licensed tooling; opt-in)
+# See docs/_archive/specs/spec-019-pdf-conversion.md for policy and rationale.
 uv sync --extra pdf
 
 ## Data
@@ -67,7 +67,7 @@ uv run erdos search "prime arithmetic progression"
 # Lean integration (requires elan: https://github.com/leanprover/elan)
 uv run erdos lean init
 uv run erdos lean formalize 6
-uv run erdos lean check Erdos/Problem006.lean
+uv run erdos lean check formal/lean/Erdos/Problem006.lean
 ```
 
 ## Project Structure
@@ -79,7 +79,7 @@ erdos-banger/
 │   ├── commands/        # CLI subcommands
 │   └── core/            # Business logic (models, loader, index, lean runner)
 ├── data/
-│   ├── problems_enriched.yaml   # Enriched problem dataset
+│   ├── problems_enriched.yaml   # Optional local dataset override (gitignored)
 │   └── erdosproblems/           # Upstream submodule (metadata only)
 ├── formal/lean/         # Lean 4 project
 │   ├── Erdos/           # Problem formalizations
@@ -111,13 +111,13 @@ See `docs/specs/` for detailed design documents and the v1.2+ roadmap.
 
 ## Documentation
 
+- [Docs Index](docs/INDEX.md) - Getting started, developer guides, architecture, and project docs
 - [Master Vision](docs/specs/master-vision.md) - Full architecture and roadmap
-- [Specs Index](docs/specs/README.md) - All specifications
-- [Documentation Index](docs/INDEX.md) - Complete docs overview
+- [Specs Index](docs/specs/README.md) - Design specs (mostly archived)
 
 ## License
 
 Apache-2.0 (matching the upstream erdosproblems dataset)
 
 Optional dependencies:
-- The `[pdf]` extra installs `marker-pdf` (GPL-licensed). Installing it locally is opt-in; distributing builds that include it may trigger GPL obligations. See `docs/specs/spec-019-pdf-conversion.md`.
+- The `[pdf]` extra installs `marker-pdf` (GPL-licensed). Installing it locally is opt-in; distributing builds that include it may trigger GPL obligations. See `docs/_archive/specs/spec-019-pdf-conversion.md`.
