@@ -25,7 +25,7 @@ We want the codebase to remain:
 Adopt a **bounded-context** organization under `src/erdos/core/` and a single
 **composition root** for dependency wiring:
 
-1. **Banded core contexts:** group domain logic into subpackages by responsibility
+1. **Bounded core contexts:** group domain logic into subpackages by responsibility
    (e.g., `core/ingest/`, `core/search/`, `core/loop/`, `core/research/`).
 2. **Stable contracts:** define dependency-inversion interfaces as `typing.Protocol`
    ports in `src/erdos/core/ports.py` (prefer narrow ports over monolithic ones).
