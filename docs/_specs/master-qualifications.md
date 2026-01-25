@@ -1,8 +1,8 @@
 # Master Qualifications & Build Decisions
 
-> Companion document to `docs/specs/master-vision.md`. This captures scope decisions, risk mitigations, and concrete choices that guide the actual v1 implementation. The master vision remains the vision; this document is the pragmatic filter.
+> Companion document to `docs/_specs/master-vision.md`. This captures scope decisions, risk mitigations, and concrete choices that guide the actual v1 implementation. The master vision remains the vision; this document is the pragmatic filter.
 
-**Status (2026-01-23):** v1.0 through v2.1 have shipped and the corresponding specs are archived. Treat this document as a record of **v1-era scoping decisions** (the “why”), not as the authoritative current roadmap (the “what”). For current status, use `docs/specs/README.md`.
+**Status (2026-01-23):** v1.0 through v2.1 have shipped and the corresponding specs are archived. Treat this document as a record of **v1-era scoping decisions** (the “why”), not as the authoritative current roadmap (the “what”). For current status, use `docs/_specs/README.md`.
 
 ---
 
@@ -156,7 +156,7 @@ Each data source has ONE job:
 
 ### Dependency Inversion Principle (DIP)
 
-**Implementation status:** Target architecture. The `MetadataProvider` port is tracked as `docs/debt/debt-038-metadata-provider-abstraction.md`.
+**Implementation status:** Target architecture. The `MetadataProvider` port is tracked as `docs/_archive/debt/debt-038-metadata-provider-abstraction.md`.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

@@ -18,7 +18,7 @@ watch -n5 'git log --oneline -5'
 **Key files:**
 - `PROMPT.md` - Loop instructions (read each iteration)
 - `PROGRESS.md` - Task queue with checkboxes (state)
-- `docs/debt/` - Active debt decks (SSOT for work)
+- `docs/_debt/` - Active debt decks (SSOT for work)
 - `logs/ralph/` - Per-iteration logs (gitignored)
 
 **Protocol:** See `docs/_ralphwiggum/protocol.md` for full details.
@@ -56,7 +56,7 @@ Use `make` (preferred) or `uv` directly:
 - Formatting/linting: Ruff (`make format`, `make lint`).
 - Type checking: mypy strict (`make typecheck`).
 - Prefer small, testable “core logic” helpers and thin Typer callbacks.
-- Clean Code expectation: avoid “god files” and mixed responsibilities; if a refactor is too risky for the current PR, write a debt deck in `docs/debt/` instead of piling on.
+- Clean Code expectation: avoid “god files” and mixed responsibilities; if a refactor is too risky for the current PR, write a debt deck in `docs/_debt/` instead of piling on.
 - Follow existing naming patterns (e.g., `list_()` for the reserved keyword).
 
 ## Testing Guidelines

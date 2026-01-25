@@ -27,6 +27,7 @@ Problem data is resolved in this order (see `src/erdos/core/problem_loader.py`):
 1. `ERDOS_DATA_PATH` (file or directory)
 2. `data/problems_enriched.yaml` (local override; **gitignored**)
 3. Built-in sample dataset shipped with the package (`src/erdos/data/problems_enriched.yaml`)
+4. `data/erdosproblems/data/problems.yaml` (upstream submodule; metadata-only fallback)
 
 To create a local, editable dataset override:
 

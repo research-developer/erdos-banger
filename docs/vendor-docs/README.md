@@ -12,7 +12,7 @@ Guidelines:
 
 ## API Source Hierarchy (Target Design)
 
-This diagram describes the intended “ports + adapters” shape. **Current state:** metadata fetching is still wired via concrete clients in `src/erdos/core/ingest/fetch.py` and is tracked as `docs/debt/debt-038-metadata-provider-abstraction.md`.
+This diagram describes the intended “ports + adapters” shape. **Current state:** metadata fetching is still wired via concrete clients in `src/erdos/core/ingest/fetch.py` and is tracked as `docs/_archive/debt/debt-038-metadata-provider-abstraction.md`.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

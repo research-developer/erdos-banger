@@ -2,7 +2,13 @@
 
 This document describes the configuration surface that is expected to be stable over time.
 
-For all env-var reads, the source of truth is `src/erdos/core/config.py` (`AppConfig.from_env()`), plus LLM routing rules in `src/erdos/core/llm/tasks.py`.
+For all **configuration** env-var reads, the source of truth is
+`src/erdos/core/config.py` (`AppConfig.from_env()`), plus LLM routing rules in
+`src/erdos/core/llm/tasks.py`.
+
+Some modules may temporarily read/write non-`ERDOS_*` env vars to integrate
+third-party tools (e.g., `TORCH_DEVICE` for Marker), but those are not treated
+as stable application configuration.
 
 ## Global CLI Flags
 

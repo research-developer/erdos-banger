@@ -15,8 +15,8 @@ Immediately read:
 ```bash
 git status --porcelain=v1
 cat PROGRESS.md
-cat docs/specs/README.md
-cat docs/bugs/README.md
+cat docs/_specs/README.md
+cat docs/_bugs/README.md
 cat docs/adr/README.md
 ```
 
@@ -47,7 +47,7 @@ If `PROGRESS.md` has **no unchecked** items but `git status --porcelain=v1` is *
 
 4. If changes include **production code or tests** that were not committed:
    - stop and request human review (do not guess a commit message)
-   - write a bug deck in `docs/bugs/` describing the incomplete state and how to recover
+   - write a bug deck in `docs/_bugs/` describing the incomplete state and how to recover
    - exit
 
 ---
@@ -59,8 +59,8 @@ If `PROGRESS.md` has **no unchecked** items but `git status --porcelain=v1` is *
 1. Find the **FIRST** unchecked `[ ]` item in `PROGRESS.md`
    - If there are no unchecked items, exit cleanly (do not invent new tasks)
 2. Identify the SSOT doc(s) for the task:
-   - **SPEC-XXX**: read `docs/specs/spec-XXX-*.md` (active) or `docs/_archive/specs/spec-XXX-*.md` (implemented SSOT)
-   - **DEBT-XXX**: read `docs/debt/debt-XXX-*.md` (active) or `docs/_archive/debt/debt-XXX-*.md` (implemented SSOT)
+   - **SPEC-XXX**: read `docs/_specs/SPEC-XXX-*.md` (active) or `docs/_archive/specs/spec-XXX-*.md` (implemented SSOT)
+   - **DEBT-XXX**: read `docs/_debt/debt-XXX-*.md` (active) or `docs/_archive/debt/debt-XXX-*.md` (implemented SSOT)
    - If the task references a filepath, read that file directly
 3. **READ THE ACCEPTANCE CRITERIA** — complete ALL of them
 4. Apply the **Critical Review Prompt** (below) to validate the task against SSOT
@@ -141,7 +141,7 @@ Stop and request human input if:
 4. A required external tool/dep is missing and cannot be installed from the spec (e.g., optional extras not present).
 
 If you stop:
-- write a bug deck in `docs/bugs/`
+- write a bug deck in `docs/_bugs/`
 - add a new unchecked item to `PROGRESS.md`
 - commit and exit
 
@@ -164,7 +164,7 @@ make test-all
 ```
 
 If any tests fail, do **not** declare the sprint complete:
-- write a bug deck in `docs/bugs/`
+- write a bug deck in `docs/_bugs/`
 - add a new unchecked item to `PROGRESS.md`
 - commit and exit
 

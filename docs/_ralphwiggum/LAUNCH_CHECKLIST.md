@@ -29,8 +29,8 @@ git branch --show-current
 - [ ] You will run the loop on a `ralph-wiggum-*` branch (not on `main`/`dev`)
 - [ ] `PROMPT.md` and `PROGRESS.md` exist
 - [ ] SSOT docs exist for the run:
-  - Debt sprint: `docs/debt/README.md` and the referenced `docs/debt/debt-*.md` decks
-  - Spec work (when approved): `docs/specs/` (active) and/or `docs/_archive/specs/` (implemented SSOT)
+  - Debt sprint: `docs/_debt/README.md` and the referenced `docs/_debt/debt-*.md` decks
+  - Spec work (when approved): `docs/_specs/` (active) and/or `docs/_archive/specs/` (implemented SSOT)
 
 Sync and sanity:
 

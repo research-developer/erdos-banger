@@ -1,6 +1,6 @@
 # Erdős Problem Research Harness – Design & Build Plan
 
-> **Status (2026-01-23):** Implementation has shipped through v3.1 (see `docs/specs/README.md`). This document is a long-lived design narrative; treat CLI specifics as illustrative. The SSOT for the CLI is `erdos COMMAND --help`.
+> **Status (2026-01-23):** Implementation has shipped through v3.1 (see `docs/_specs/README.md`). This document is a long-lived design narrative; treat CLI specifics as illustrative. The SSOT for the CLI is `erdos COMMAND --help`.
 >
 > **Note:** The proof loop runner is invoked as `erdos loop run <problem_id>` in the current CLI.
 
@@ -219,7 +219,7 @@ erdos-banger/
 │   ├── adr/
 │   ├── bugs/
 │   ├── debt/
-│   ├── _vendor-docs/
+│   ├── vendor-docs/
 │   ├── _archive/
 │   └── _ralphwiggum/
 ├── data/                         # local + upstream datasets

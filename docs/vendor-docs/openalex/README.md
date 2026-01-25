@@ -45,7 +45,7 @@ Docs: https://docs.openalex.org/how-to-use-the-api/rate-limits-and-authenticatio
 
 ## Configuration in `erdos-banger`
 
-- Client: `src/erdos/core/openalex_client.py`
+- Client: `src/erdos/core/clients/openalex.py`
 - Supported env vars (do not commit secrets):
   - `ERDOS_MAILTO` (recommended)
   - `OPENALEX_EMAIL` (optional alias for email)

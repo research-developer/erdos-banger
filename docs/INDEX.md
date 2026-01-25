@@ -30,18 +30,18 @@ Design history and engineering process docs (specs, ADRs, debt, bugs) are kept, 
 
 | Category | Index | Next ID |
 |----------|-------|---------|
-| [Specs](./specs/README.md) | Design specs + roadmap (mostly archived) | SPEC-036 |
-| [ADRs](./adr/README.md) | Architecture decision records | ADR-002 |
-| [Bugs](./bugs/README.md) | Bug reports & adversarial reviews | BUG-023 |
-| [Debt](./debt/README.md) | Technical debt tracking | DEBT-108 |
-| [Vendor Docs](./_vendor-docs/README.md) | External API notes | — |
+| [Specs](./_specs/README.md) | Design specs + roadmap (mostly archived) | SPEC-036 |
+| [ADRs](./adr/README.md) | Architecture decision records | ADR-004 |
+| [Bugs](./_bugs/README.md) | Bug reports & adversarial reviews | BUG-023 |
+| [Debt](./_debt/README.md) | Technical debt tracking | DEBT-108 |
+| [Vendor Docs](./vendor-docs/README.md) | External API notes | — |
 | [Ralph Wiggum Protocol](./_ralphwiggum/protocol.md) | Autonomous sprint loop | — |
-| [Archive](./_archive/) | Completed specs, bugs, debt, and process docs | — |
+| [Archive](https://github.com/The-Obstacle-Is-The-Way/erdos-banger/tree/main/docs/_archive) | Completed specs, bugs, debt, and process docs | — |
 
 ## Master Documents
 
-- [Master Vision](./specs/master-vision.md) — long-range architecture and roadmap
-- [Master Qualifications](./specs/master-qualifications.md) — scope and requirements
+- [Master Vision](./_specs/master-vision.md) — long-range architecture and roadmap
+- [Master Qualifications](./_specs/master-qualifications.md) — scope and requirements
 
 ## Future / Brainstorming
 

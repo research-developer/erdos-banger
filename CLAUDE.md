@@ -184,7 +184,7 @@ def test_help_shows_flag(strip_ansi: Callable[[str], str]) -> None:
 - ruff for linting/formatting (configured in pyproject.toml)
 - 80% minimum test coverage enforced
 - All CLI output through Rich console or `exit_with_result()`
-- Clean Code / SOLID: keep Typer callbacks thin, move orchestration into `src/erdos/core/`, and avoid growing new "god modules". If a necessary refactor is too large for the current change, create a debt deck in `docs/debt/` with evidence + acceptance criteria.
+- Clean Code / SOLID: keep Typer callbacks thin, move orchestration into `src/erdos/core/`, and avoid growing new "god modules". If a necessary refactor is too large for the current change, create a debt deck in `docs/_debt/` with evidence + acceptance criteria.
 
 ## Code Health Guardrails
 
@@ -199,7 +199,7 @@ CI enforces LOC (lines of code) thresholds to prevent god-file regressions:
 **Existing violations are exempted** if paired with a debt deck. Run `make audit` to check.
 
 **To add an exemption:**
-1. Create a debt deck in `docs/debt/debt-XXX-*.md` documenting the issue
+1. Create a debt deck in `docs/_debt/debt-XXX-*.md` documenting the issue
 2. Add the module/function to `EXEMPTED_MODULES` or `EXEMPTED_FUNCTIONS` in `scripts/audit_code_health.py`
 
 **Inline exemption markers** (alternative to hardcoding):
@@ -240,10 +240,10 @@ CI enforces LOC (lines of code) thresholds to prevent god-file regressions:
 
 ## Technical Debt Status
 
-Track active technical debt in `docs/debt/README.md`. Resolved decks are archived under `docs/_archive/debt/`.
+Track active technical debt in `docs/_debt/README.md`. Resolved decks are archived under `docs/_archive/debt/`.
 
 ## Key Specs
 
-- `docs/specs/master-vision.md` - Full architecture and roadmap
+- `docs/_specs/master-vision.md` - Full architecture and roadmap
 - `docs/_archive/specs/spec-010-ingest-command.md` - Ingest command (arXiv + Crossref)
 - `docs/_archive/specs/spec-011-ask-command.md` - Ask command (RAG + LLM)

@@ -1,0 +1,140 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+
+site_name: Erdős Problem Research CLI
+site_description: CLI toolkit for collaborative research on Erdős problems
+site_url: https://the-obstacle-is-the-way.github.io/erdos-banger/
+repo_url: https://github.com/The-Obstacle-Is-The-Way/erdos-banger
+repo_name: erdos-banger
+edit_uri: edit/main/docs/
+
+docs_dir: docs
+
+# Exclude archived docs from the build (preserved in-repo under docs/_archive/).
+exclude_docs: |
+  _archive/**
+
+# Keep tracker detail pages in the build but hide them from nav.
+not_in_nav: |
+  _bugs/BUG-*.md
+  _bugs/bug-*.md
+  _specs/SPEC-*.md
+  _specs/spec-*.md
+  _debt/DEBT-*.md
+  _debt/debt-*.md
+  vendor-docs/**/SOURCES.md
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - content.code.copy
+    - content.code.annotate
+    - content.action.edit
+    - content.action.view
+    - navigation.tracking
+    - navigation.sections
+    - navigation.expand
+    - navigation.footer
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+
+# Validate links/anchors (pair with `mkdocs build --strict` in CI).
+validation:
+  omitted_files: warn
+  not_found: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Home: INDEX.md
+  - Getting Started:
+      - Quickstart: getting-started/quickstart.md
+      - Usage Guide: getting-started/usage.md
+  - Architecture:
+      - Overview: architecture/overview.md
+      - CLI Design: architecture/cli.md
+      - Data Pipeline: architecture/data-pipeline.md
+  - Developer Guide:
+      - Configuration: developer/configuration.md
+      - Testing: developer/testing.md
+      - CLI Reference: developer/cli-reference.md
+  - Future:
+      - Ideations: future/future-ideations.md
+      - Research State v3: future/research-state-management-v3.md
+  - Vendor APIs:
+      - Index: vendor-docs/README.md
+      - Anthropic: vendor-docs/anthropic/README.md
+      - arXiv: vendor-docs/arxiv/README.md
+      - Crossref: vendor-docs/crossref/README.md
+      - Exa: vendor-docs/exa/exa-api-reference.md
+      - Marker: vendor-docs/marker/README.md
+      - OpenAI: vendor-docs/openai/README.md
+      - OpenAlex: vendor-docs/openalex/README.md
+      - Harmonic Aristotle: vendor-docs/harmonic-aristotle/README.md
+  - Internal:
+      - Specs:
+          - Index: _specs/README.md
+          - Master Vision: _specs/master-vision.md
+          - Master Qualifications: _specs/master-qualifications.md
+      - ADRs:
+          - Index: adr/README.md
+          - ADR-001: adr/adr-001-metadata-provider-orchestration.md
+          - ADR-002: adr/adr-002-bounded-contexts-and-composition-root.md
+          - ADR-003: adr/adr-003-sqlite-fts5-search-index.md
+      - Bug Tracker: _bugs/README.md
+      - Debt Overview: _debt/README.md
+      - Ralph Wiggum Protocol:
+          - Protocol: _ralphwiggum/protocol.md
+          - Guardrails: _ralphwiggum/GUARDRAILS.md
+          - Launch Checklist: _ralphwiggum/LAUNCH_CHECKLIST.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/The-Obstacle-Is-The-Way/erdos-banger

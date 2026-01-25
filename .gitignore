@@ -40,6 +40,8 @@ htmlcov/
 # Project-specific (gitignored data)
 .env
 ralph.log
+# MkDocs build output
+site/
 # Generated literature scratch (local-only; do not commit)
 _literature/
 data/problems_enriched.yaml
