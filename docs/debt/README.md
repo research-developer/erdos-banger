@@ -221,6 +221,9 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-089-ingest-fetch-parameter-objects.md`
 - `docs/_archive/debt/debt-090-cyclomatic-complexity-violations.md`
 - `docs/_archive/debt/debt-091-blind-exception-catches.md`
+- `docs/_archive/debt/debt-093-exa-client-loc.md`
+- `docs/_archive/debt/debt-094-semantic-scholar-client-loc.md`
+- `docs/_archive/debt/debt-095-zbmath-client-loc.md`
 - `docs/_archive/debt/debt-097-test-suite-consistency.md`
 - `docs/_archive/debt/debt-098-std4-repo-rename.md`
 - `docs/_archive/debt/debt-099-lean-fixture-lakefile-syntax.md`

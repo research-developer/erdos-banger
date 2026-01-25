@@ -9,6 +9,11 @@ Key unique data:
 - Math-specific keywords
 
 API Reference: https://api.zbmath.org/
+
+# exempt: DEBT-093 — 602 LOC is ~100 over threshold. Justified per DEBT-093
+# resolution: zbMATH has the most complex API response structure (nested
+# contributors, editorial_contributions, MSC codes). All duplicated
+# infrastructure was extracted to shared modules.
 """
 
 from __future__ import annotations
@@ -500,7 +505,9 @@ class ZbMathClient:
         Raises:
             requests.HTTPError: On HTTP errors.
         """
-        cache_key = make_cache_key("msc", msc_code, f"limit={limit}", f"years={year_min}-{year_max}")
+        cache_key = make_cache_key(
+            "msc", msc_code, f"limit={limit}", f"years={year_min}-{year_max}"
+        )
 
         if use_cache:
             cached = self._cache.get(cache_key, prefix="msc_")
@@ -536,7 +543,9 @@ class ZbMathClient:
 
             if use_cache:
                 self._cache.set(
-                    cache_key, {"entries": [e.to_dict() for e in entries]}, prefix="msc_"
+                    cache_key,
+                    {"entries": [e.to_dict() for e in entries]},
+                    prefix="msc_",
                 )
 
             return entries
@@ -587,7 +596,9 @@ class ZbMathClient:
 
             if use_cache:
                 self._cache.set(
-                    cache_key, {"entries": [e.to_dict() for e in entries]}, prefix="title_"
+                    cache_key,
+                    {"entries": [e.to_dict() for e in entries]},
+                    prefix="title_",
                 )
 
             return entries
