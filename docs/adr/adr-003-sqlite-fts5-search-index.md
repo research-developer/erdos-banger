@@ -32,39 +32,47 @@ Use an on-disk **SQLite FTS5** index as the default, baseline search system.
 
 ### Option A (Chosen): SQLite FTS5
 
-**Pros**
+#### Pros
+
 - Zero external services; works everywhere SQLite works
 - Good enough relevance for technical text (BM25)
 - Deterministic rebuilds from local artifacts
 - Easy test setup (temporary SQLite file or in-memory DB)
 
-**Cons**
+#### Cons
+
 - Not a distributed search system
 - Relevance and ranking are less configurable than dedicated engines
 
 ### Option B: Elasticsearch / OpenSearch
 
-**Pros**
+#### Pros
+
 - Powerful ranking and scaling capabilities
 
-**Cons**
+#### Cons
+
 - Operationally heavy for a CLI-first repo
 - Harder contributor onboarding and testing
 
 ### Option C: Postgres + pgvector
 
-**Pros**
+#### Pros
+
 - Strong relational + vector querying in one system
 
-**Cons**
+#### Cons
+
 - Requires a running DB service; breaks local-first/no-daemon goal
 
 ### Option D: Dedicated Vector DB (Qdrant, Pinecone, etc.)
 
-**Pros**
+#### Pros
+
 - Great vector similarity performance and tooling
 
-**Cons**
+#### Cons
+
 - Adds infrastructure and vendor dependencies
 - Not necessary at current scale; reduces determinism
 

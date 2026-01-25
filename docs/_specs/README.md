@@ -184,7 +184,7 @@ Each spec must be:
 
 Template sections:
 - Scope (in/out)
-- CLI Interface
+- CLI
 - Output Schema (JSON)
 - Implementation (modules to create/modify)
 - Verification (testable claims)

@@ -39,31 +39,37 @@ Adopt a **bounded-context** organization under `src/erdos/core/` and a single
 
 ### Option A (Chosen): Bounded Contexts + Ports + Composition Root
 
-**Pros**
+#### Pros
+
 - Supports SRP: each subpackage has a narrow responsibility
 - Improves DIP: policy depends on ports, not concrete adapters
 - Improves testability: unit tests can inject fakes via ports/context constructors
 - Keeps CLI code thin and consistent
 
-**Cons**
+#### Cons
+
 - Adds a small amount of structure/indirection
 - Requires discipline to avoid re-introducing "core root" module sprawl
 
 ### Option B: Keep Logic in Command Modules
 
-**Pros**
+#### Pros
+
 - Fewer files and layers
 
-**Cons**
+#### Cons
+
 - Tends to produce large, coupled modules over time
 - Forces tests to monkeypatch boundaries instead of injecting dependencies
 
 ### Option C: Service Locator / Global Singletons
 
-**Pros**
+#### Pros
+
 - Easy access to shared dependencies
 
-**Cons**
+#### Cons
+
 - Hidden dependencies, harder tests, and unclear lifecycle
 
 ## Consequences
