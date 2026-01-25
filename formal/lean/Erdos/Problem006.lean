@@ -15,7 +15,7 @@ arithmetic progressions of length $k$ consisting entirely of primes.
 import Erdos.Basic
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Nat.Prime.Basic
-import Mathlib.Algebra.BigOperators.Group.Finset
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 
 namespace Erdos.Problem006
 

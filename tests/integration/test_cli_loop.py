@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from erdos.cli import app
-from tests.cli_runner import make_cli_runner
+from tests.cli_runner import make_cli_runner, unset_env_vars
 
 
 runner = make_cli_runner()
@@ -149,7 +149,15 @@ class TestLoopJSONContract:
                 "--path",
                 str(tmp_path / "formal" / "lean"),
             ],
-            env={"ERDOS_REPO_ROOT": str(tmp_path)},
+            env={
+                "ERDOS_REPO_ROOT": str(tmp_path),
+                # Explicitly unset LLM commands (may be set via .env)
+                **unset_env_vars(
+                    "ERDOS_LLM_COMMAND",
+                    "ERDOS_LLM_COMMAND_MATH",
+                    "ERDOS_LLM_COMMAND_CODE",
+                ),
+            },
         )
 
         assert result.exit_code != 0
@@ -184,7 +192,7 @@ class TestLoopJSONContract:
         output = json.loads(getattr(result, "stdout", None) or result.output)
         assert output["success"] is False
         assert output["error"] is not None
-        assert output["error"]["type"] == "NotFound"
+        assert output["error"]["type"] == "NotFoundError"
         assert "code" in output["error"]
 
     def test_json_error_structure_includes_required_keys(self, tmp_path: Path) -> None:

@@ -25,6 +25,18 @@ def dump_yaml(data: Any) -> str:
 
 
 def load_yaml(path: Path) -> Any:
+    """Load YAML from disk.
+
+    Args:
+        path: Path to YAML file.
+
+    Returns:
+        Parsed YAML content.
+
+    Raises:
+        OSError: If the file cannot be read.
+        ValueError: If the YAML content cannot be parsed.
+    """
     with path.open(encoding="utf-8") as f:
         try:
             return yaml.safe_load(f)
@@ -33,6 +45,18 @@ def load_yaml(path: Path) -> Any:
 
 
 def write_text_atomic(path: Path, content: str) -> None:
+    """Write text to a file atomically.
+
+    Creates parent directories as needed, writes to a temporary file in the same
+    directory, then replaces the target path.
+
+    Args:
+        path: Target file path.
+        content: Text content to write.
+
+    Raises:
+        OSError: If the file cannot be written or replaced.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp_handle, tmp_path_str = tempfile.mkstemp(
         prefix=f".{path.name}.", suffix=".tmp", dir=path.parent

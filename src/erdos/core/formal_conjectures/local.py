@@ -49,7 +49,7 @@ def compute_file_sha256(file_path: Path) -> str:
     if not file_path.exists():
         raise FormalConjecturesError(
             f"File not found: {file_path}",
-            error_type="NotFound",
+            error_type="NotFoundError",
         )
 
     content = file_path.read_bytes()

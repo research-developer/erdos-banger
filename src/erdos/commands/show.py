@@ -6,11 +6,10 @@ import logging
 from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
-from rich.console import Console
 from rich.panel import Panel
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord
 from erdos.core.timing import measure_time_ms
@@ -27,7 +26,6 @@ app = typer.Typer(
     help="Show detailed problem information.",
     context_settings={"allow_interspersed_args": True},
 )
-console = Console()
 
 
 def _print_human(problem_data: dict[str, Any]) -> None:
@@ -70,7 +68,7 @@ def get_problem(problem_id: int, repo: ProblemRepository) -> CLIOutput:
         if problem is None:
             return CLIOutput.err(
                 command="erdos show",
-                error_type="NotFound",
+                error_type="NotFoundError",
                 message=f"Problem {problem_id} not found",
                 code=ExitCode.NOT_FOUND,
             )
@@ -78,11 +76,11 @@ def get_problem(problem_id: int, repo: ProblemRepository) -> CLIOutput:
             command="erdos show",
             data=problem.model_dump(mode="json"),
         )
-    except Exception as e:
+    except Exception as e:  # final safety net; convert unexpected failures to CLIOutput
         logger.exception("Unexpected error in show command")
         return CLIOutput.err(
             command="erdos show",
-            error_type="Error",
+            error_type="UnexpectedError",
             message=str(e),
             code=ExitCode.ERROR,
         )

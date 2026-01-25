@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import Annotated, Any
 
 import requests
 import typer
-from rich.console import Console
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, exit_with_result
 from erdos.core.clients.exa import (
     DEFAULT_CACHE_PATH,
     ExaClient,
@@ -26,7 +26,7 @@ from ._common import load_problem_or_error
 
 
 app = typer.Typer(help="Exa Research API integration.")
-console = Console()
+logger = logging.getLogger(__name__)
 
 
 def _exa_to_leads(
@@ -155,9 +155,10 @@ def _search_with_cli_output(
             command=command,
             error_type="ConfigError",
             message=str(e),
-            code=ExitCode.ERROR,
+            code=ExitCode.CONFIG_ERROR,
         )
-    except Exception as e:
+    except Exception as e:  # final safety net for Exa integration
+        logger.exception("Unexpected error in Exa search")
         return CLIOutput.err(
             command=command,
             error_type="ExaError",
@@ -212,7 +213,7 @@ def exa_search(
                 command=command,
                 error_type="ConfigError",
                 message="EXA_API_KEY not set",
-                code=ExitCode.ERROR,
+                code=ExitCode.CONFIG_ERROR,
             ),
         )
         return

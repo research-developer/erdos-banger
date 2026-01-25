@@ -35,7 +35,7 @@ class TestErdosShow:
 
         data = json.loads(result.stdout)
         assert data["success"] is False
-        assert data["error"]["type"] == "NotFound"
+        assert data["error"]["type"] == "NotFoundError"
         assert data["error"]["code"] == 3
 
     def test_show_invalid_id(self, cli_runner) -> None:

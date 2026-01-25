@@ -52,7 +52,7 @@ def attempt_log(
             lean_file=lean_file,
             loop_log=loop_log,
         )
-    except Exception as e:
+    except Exception as e:  # map store failures to CLIOutput
         exit_with_result(ctx, handle_store_error("erdos research attempt log", e))
         return
 
@@ -91,7 +91,7 @@ def attempt_list(
     store = FSResearchStore(repo_root=app_ctx.config.repo_root)
     try:
         records = store.attempt_list(problem_id, result=result)
-    except Exception as e:
+    except Exception as e:  # map store failures to CLIOutput
         exit_with_result(ctx, handle_store_error("erdos research attempt list", e))
         return
 

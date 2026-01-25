@@ -7,12 +7,11 @@ from typing import TYPE_CHECKING, Annotated, Any, cast
 
 import click
 import typer
-from rich.console import Console
 from rich.table import Table
 from typer.core import TyperGroup
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
 from erdos.core.timing import measure_time_ms
@@ -53,7 +52,6 @@ app = typer.Typer(
 # Register subcommands FIRST (before the default command)
 app.add_typer(refs_s2.app, name="s2")
 app.add_typer(refs_zbmath.app, name="zbmath")
-console = Console()
 
 
 def _print_human(refs_data: dict[str, Any]) -> None:
@@ -83,7 +81,7 @@ def get_refs(problem_id: int, repo: ProblemRepository) -> CLIOutput:
         if problem is None:
             return CLIOutput.err(
                 command="erdos refs",
-                error_type="NotFound",
+                error_type="NotFoundError",
                 message=f"Problem {problem_id} not found",
                 code=ExitCode.NOT_FOUND,
             )
@@ -93,11 +91,11 @@ def get_refs(problem_id: int, repo: ProblemRepository) -> CLIOutput:
             command="erdos refs",
             data={"problem_id": problem_id, "references": refs},
         )
-    except Exception as e:
+    except Exception as e:  # final safety net; convert unexpected failures to CLIOutput
         logger.exception("Unexpected error in refs command")
         return CLIOutput.err(
             command="erdos refs",
-            error_type="Error",
+            error_type="UnexpectedError",
             message=str(e),
             code=ExitCode.ERROR,
         )

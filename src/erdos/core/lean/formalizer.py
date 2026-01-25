@@ -64,7 +64,9 @@ def generate_skeleton(
         )
         output_path.write_text(content, encoding="utf-8")
         _update_root_module(project_path, problem.id)
-    except Exception as exc:
+    except (
+        Exception
+    ) as exc:  # template/render/file failures are surfaced as FormalizerError
         raise FormalizerError(
             f"Failed to generate skeleton for Problem {problem.id}: {exc}"
         ) from exc

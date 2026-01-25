@@ -11,7 +11,7 @@ package erdos where
 -- Pin mathlib to a specific version for reproducibility
 -- Update this version along with lean-toolchain when upgrading
 require mathlib from git
-  "https://github.com/leanprover-community/mathlib4.git" @ "v4.12.0"
+  "https://github.com/leanprover-community/mathlib4.git" @ "v4.27.0"
 
 @[default_target]
 lean_lib Erdos where

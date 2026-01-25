@@ -255,8 +255,12 @@ def aggregate_dashboard_data(
                 1 for h in hypotheses if _is_hypothesis_active(h.status)
             )
             total_open_tasks += sum(1 for t in tasks if _is_task_open(t.status))
-        except Exception:
-            _logger.debug("Skipping problem %d due to invalid records", pid)
+        except Exception:  # dashboard aggregation skips malformed records
+            _logger.debug(
+                "Skipping problem %d due to invalid records",
+                pid,
+                exc_info=True,
+            )
             continue
 
     # Sort problems by last_activity descending (most recent first)

@@ -218,7 +218,7 @@ def fmt(
         rewritten = fmt_problem_workspace(
             problem_id, repo_root=app_ctx.config.repo_root
         )
-    except Exception as e:
+    except Exception as e:  # map store failures to CLIOutput
         exit_with_result(ctx, handle_store_error("erdos research fmt", e))
         return
 
@@ -257,7 +257,7 @@ def validate(
 
     try:
         validate_problem_workspace(problem_id, repo_root=app_ctx.config.repo_root)
-    except Exception as e:
+    except Exception as e:  # map store failures to CLIOutput
         exit_with_result(ctx, handle_store_error("erdos research validate", e))
         return
 
@@ -295,7 +295,7 @@ def synthesize(
 
     try:
         res = synthesize_problem(problem_id, repo_root=app_ctx.config.repo_root)
-    except Exception as e:
+    except Exception as e:  # map store failures to CLIOutput
         exit_with_result(ctx, handle_store_error("erdos research synthesize", e))
         return
 
@@ -314,6 +314,7 @@ def synthesize(
 
 
 def register(app: typer.Typer) -> None:
+    """Register research workspace commands on the app."""
     app.command()(init)
     app.command()(open)
     app.command()(note)

@@ -16,7 +16,7 @@ def measure_time_ms() -> Iterator[list[int]]:
         >>> with measure_time_ms() as duration:
         ...     # do work
         ...     pass
-        >>> print(f"Took {duration[0]}ms")
+        >>> took_ms = duration[0]
 
     Yields:
         A single-element list [0] that will be updated with duration_ms on exit.

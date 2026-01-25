@@ -7,10 +7,9 @@ from pathlib import Path
 from typing import Annotated, Any
 
 import typer
-from rich.console import Console
 
 from erdos.commands.lean.import_cmd import import_upstream_formalization
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, exit_with_result
 from erdos.commands.sync.proof_cmd import sync_proof_links
 from erdos.commands.sync.submodule_cmd import sync_submodule
 from erdos.commands.sync.website_cmd import sync_website_problem
@@ -20,7 +19,6 @@ from erdos.core.timing import measure_time_ms
 
 
 logger = logging.getLogger(__name__)
-console = Console()
 
 
 def _print_step_result(name: str, step_data: dict[str, Any]) -> None:
@@ -111,7 +109,7 @@ def _sync_submodule(no_network: bool, dry_run: bool) -> dict[str, Any]:
             "merge": data.get("merge"),
             "dry_run": bool(data.get("dry_run", False)),
         }
-    except Exception as e:
+    except Exception as e:  # sync pipeline should continue collecting errors
         logger.warning("Submodule sync failed: %s", e)
         return {"success": False, "error": str(e)}
 
@@ -140,7 +138,7 @@ def _sync_website(
             fetched += 1
             if result.data and result.data.get("updated"):
                 updated += 1
-        except Exception as e:
+        except Exception as e:  # continue collecting per-problem failures
             errors.append(f"Problem {pid}: {e}")
             logger.warning("Website sync failed for problem %d: %s", pid, e)
 
@@ -174,7 +172,7 @@ def _sync_proof(
                 continue
             if result.data:
                 proofs_found += int(result.data.get("links_count", 0))
-        except Exception as e:
+        except Exception as e:  # continue collecting per-problem failures
             errors.append(f"Problem {pid}: {e}")
             logger.warning("Proof sync failed for problem %d: %s", pid, e)
 
@@ -222,7 +220,7 @@ def _sync_statements(
                 else:
                     error_msg = result.error.get("message", "") if result.error else ""
                     errors.append(f"Problem {pid}: {error_msg}")
-        except Exception as e:
+        except Exception as e:  # continue collecting per-problem failures
             errors.append(f"Problem {pid}: {e}")
             logger.warning("Statement import failed for problem %d: %s", pid, e)
 

@@ -11,7 +11,7 @@ from erdos.core.exit_codes import ExitCode
 from erdos.core.problem_loader import ProblemLoader
 from erdos.core.search.facade import SearchIndex
 from erdos.core.search.index_builder import build_index
-from tests.cli_runner import make_cli_runner
+from tests.cli_runner import make_cli_runner, unset_env_vars
 
 
 if TYPE_CHECKING:
@@ -170,7 +170,12 @@ class TestAskCommandRouterIntegration:
                 "ERDOS_DATA_PATH": str(data_dir),
                 "ERDOS_INDEX_PATH": str(index_path),
                 "ERDOS_REPO_ROOT": str(tmp_path),
-                # No LLM command configured at all
+                # Explicitly unset LLM commands (may be set via .env)
+                **unset_env_vars(
+                    "ERDOS_LLM_COMMAND",
+                    "ERDOS_LLM_COMMAND_MATH",
+                    "ERDOS_LLM_COMMAND_CODE",
+                ),
             },
         )
 
@@ -196,6 +201,12 @@ class TestAskCommandRouterIntegration:
                 "ERDOS_DATA_PATH": str(data_dir),
                 "ERDOS_INDEX_PATH": str(index_path),
                 "ERDOS_REPO_ROOT": str(tmp_path),
+                # Explicitly unset LLM commands (may be set via .env)
+                **unset_env_vars(
+                    "ERDOS_LLM_COMMAND",
+                    "ERDOS_LLM_COMMAND_MATH",
+                    "ERDOS_LLM_COMMAND_CODE",
+                ),
             },
         )
 

@@ -64,6 +64,21 @@ Use `make` (preferred) or `uv` directly:
 - Coverage target: `--cov-fail-under=80` (see `make cov`).
 - New features should include unit tests and (when appropriate) integration tests using `tests/fixtures/`.
 
+### API Keys for Network Tests
+
+Tests marked `requires_network` may need API keys (e.g., `EXA_API_KEY`, `S2_API_KEY`).
+
+**Local development:** Create a `.env` file in the project root with your keys:
+```bash
+EXA_API_KEY=your-key-here
+S2_API_KEY=your-key-here
+```
+The `.env` file is gitignored and loaded automatically by `pytest-dotenv`.
+
+**CI:** API keys are injected as environment variables by GitHub Actions secrets.
+
+**No key?** Tests skip gracefully with "KEY not set" messages.
+
 ### Testing Gotchas
 
 **ANSI escape codes in CLI output:**

@@ -219,7 +219,7 @@ class TestLeanProveCommandExecution:
         assert result.exit_code == ExitCode.ERROR
         data = json.loads(result.stdout)
         assert data["success"] is False
-        assert data["error"]["type"] == "Timeout"
+        assert data["error"]["type"] == "TimeoutError"
         assert "10" in data["error"]["message"]
 
 

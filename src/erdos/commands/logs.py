@@ -6,10 +6,9 @@ import logging
 from typing import Any
 
 import typer
-from rich.console import Console
 from rich.table import Table
 
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, exit_with_result
 from erdos.core.models import CLIOutput
 from erdos.core.run_logger import RunLogEntry, RunLogger, get_run_logger
 from erdos.core.timing import measure_time_ms
@@ -22,7 +21,6 @@ app = typer.Typer(
     help="Query and summarize run logs.",
     context_settings={"allow_interspersed_args": True},
 )
-console = Console()
 
 
 def _entry_to_dict(entry: RunLogEntry) -> dict[str, Any]:
@@ -175,11 +173,11 @@ def query_logs(
             message=str(e),
             code=2,
         )
-    except Exception as e:
+    except Exception as e:  # final safety net; log querying should never crash CLI
         logger.exception("Error querying logs")
         return CLIOutput.err(
             command="erdos logs",
-            error_type="Error",
+            error_type="UnexpectedError",
             message=str(e),
             code=1,
         )
@@ -220,11 +218,11 @@ def summarize_logs(
             message=str(e),
             code=2,
         )
-    except Exception as e:
+    except Exception as e:  # final safety net; log summarization should never crash CLI
         logger.exception("Error computing log summary")
         return CLIOutput.err(
             command="erdos logs",
-            error_type="Error",
+            error_type="UnexpectedError",
             message=str(e),
             code=1,
         )

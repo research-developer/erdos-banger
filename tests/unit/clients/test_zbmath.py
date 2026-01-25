@@ -13,6 +13,7 @@ import pytest
 import requests
 import responses
 
+from erdos.core.clients.cache import make_cache_key
 from erdos.core.clients.zbmath import (
     MSCCode,
     ZbMathClient,
@@ -501,29 +502,27 @@ class TestZbMathClientCaching:
 
     def test_cache_key_generation(self) -> None:
         """Generates consistent cache keys."""
-        config = ZbMathConfig()
-        client = ZbMathClient(config)
-
-        key1 = client._cache_key("zbl", "5578697")
-        key2 = client._cache_key("zbl", "5578697")
-        key3 = client._cache_key("zbl", "1234567")
-        key4 = client._cache_key("doi", "5578697")
+        key1 = make_cache_key("zbl", "5578697")
+        key2 = make_cache_key("zbl", "5578697")
+        key3 = make_cache_key("zbl", "1234567")
+        key4 = make_cache_key("doi", "5578697")
 
         assert key1 == key2
         assert key1 != key3
         assert key1 != key4  # Different endpoints produce different keys
-        assert len(key1) == 64  # SHA256 hash
+        # Key is a non-empty normalized string
+        assert len(key1) > 0
 
     def test_cache_key_normalized(self) -> None:
         """Cache keys are normalized (lowercase, stripped)."""
-        config = ZbMathConfig()
-        client = ZbMathClient(config)
+        # make_cache_key does basic normalization (lowercase, strip)
+        key1 = make_cache_key("zbl", "5578697")
+        key2 = make_cache_key("zbl", "  5578697  ")
+        key3 = make_cache_key("ZBL", "5578697")
 
-        key1 = client._cache_key("zbl", "Zbl 5578697")
-        key2 = client._cache_key("zbl", "  5578697  ")
-
-        # Both normalize to just the ID
+        # Same content normalizes to same key
         assert key1 == key2
+        assert key1 == key3
 
     @responses.activate
     def test_caches_entry_response(self, tmp_path: Path) -> None:
@@ -542,16 +541,15 @@ class TestZbMathClientCaching:
         entry = client.get_by_zbl_id("5578697")
         assert entry is not None
 
-        # Verify cache file exists
-        cache_key = client._cache_key("zbl", "5578697")
-        cache_file = cache_path / f"zbl_{cache_key}.json"
+        # Verify cache file exists using get_cache_path
+        cache_file = client.get_cache_path("zbl", "5578697")
         assert cache_file.exists()
 
         # Verify cache content
         with cache_file.open() as f:
             cached = json.load(f)
         assert cached["entry"]["zbl_id"] == "1191.11025"
-        assert "cached_at" in cached
+        assert "_cached_at" in cached
 
     @responses.activate
     def test_returns_cached_entry_response(self, tmp_path: Path) -> None:
@@ -560,10 +558,9 @@ class TestZbMathClientCaching:
         config = ZbMathConfig(cache_path=cache_path)
         client = ZbMathClient(config)
 
-        # Pre-populate cache
-        cache_key = client._cache_key("zbl", "cached-id")
-        cache_path.mkdir(parents=True, exist_ok=True)
-        cache_file = cache_path / f"zbl_{cache_key}.json"
+        # Pre-populate cache using get_cache_path
+        cache_file = client.get_cache_path("zbl", "cached-id")
+        cache_file.parent.mkdir(parents=True, exist_ok=True)
 
         cached_data = {
             "entry": {
@@ -580,7 +577,7 @@ class TestZbMathClientCaching:
                 "review_excerpt": None,
                 "zbmath_url": "https://zbmath.org/123",
             },
-            "cached_at": time.time(),
+            "_cached_at": time.time(),
         }
         with cache_file.open("w") as f:
             json.dump(cached_data, f)
@@ -606,9 +603,8 @@ class TestZbMathClientCaching:
         client = ZbMathClient(config)
 
         # Pre-populate cache with old timestamp (2 days ago)
-        cache_key = client._cache_key("zbl", "expired-id")
-        cache_path.mkdir(parents=True, exist_ok=True)
-        cache_file = cache_path / f"zbl_{cache_key}.json"
+        cache_file = client.get_cache_path("zbl", "expired-id")
+        cache_file.parent.mkdir(parents=True, exist_ok=True)
 
         old_time = time.time() - (2 * 24 * 60 * 60)  # 2 days ago
         cached_data = {
@@ -626,7 +622,7 @@ class TestZbMathClientCaching:
                 "review_excerpt": None,
                 "zbmath_url": None,
             },
-            "cached_at": old_time,
+            "_cached_at": old_time,
         }
         with cache_file.open("w") as f:
             json.dump(cached_data, f)

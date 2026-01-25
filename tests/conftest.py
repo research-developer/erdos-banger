@@ -108,3 +108,21 @@ def strip_ansi() -> Callable[[str], str]:
         return _ANSI_ESCAPE_RE.sub("", text)
 
     return _strip
+
+
+@pytest.fixture(autouse=True)
+def _isolate_llm_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Prevent developer env/.env from affecting deterministic tests.
+
+    CLI routing (SPEC-032) reads LLM command configuration from environment
+    variables. Developers often set these locally for interactive use, and
+    pytest-dotenv may also load them. Tests should explicitly set what they
+    need via `monkeypatch` or `CliRunner.invoke(..., env=...)`.
+    """
+    for var_name in (
+        "ERDOS_LLM_COMMAND",
+        "ERDOS_LLM_COMMAND_MATH",
+        "ERDOS_LLM_COMMAND_CODE",
+        "ERDOS_LLM_COMMAND_COPILOT",
+    ):
+        monkeypatch.delenv(var_name, raising=False)

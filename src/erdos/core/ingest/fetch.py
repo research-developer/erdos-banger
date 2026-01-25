@@ -419,7 +419,7 @@ def process_single_reference(
         tarfile.TarError,
     ) as e:
         return _error_result(ref, e, network_failed=False)
-    except Exception as e:
+    except Exception as e:  # defensive catch; unexpected errors should not crash ingest
         # Log unexpected errors with full traceback for debugging
         logger.exception("Unexpected error processing reference %s", ref.key)
         return _error_result(ref, e, network_failed=False, internal_error=e)

@@ -66,7 +66,7 @@ def _load_problem(
     if problem is None:
         return CLIOutput.err(
             command="erdos ask",
-            error_type="NotFound",
+            error_type="NotFoundError",
             message=f"Problem {problem_id} not found",
             code=ExitCode.NOT_FOUND,
         )

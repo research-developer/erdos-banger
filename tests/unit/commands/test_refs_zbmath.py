@@ -197,7 +197,7 @@ class TestRefsZbMathLookup:
         assert result.exit_code != 0
         payload = json.loads(result.stdout)
         assert payload["success"] is False
-        assert payload["error"]["type"] == "NotFound"
+        assert payload["error"]["type"] == "NotFoundError"
 
 
 class TestRefsZbMathMscSearch:

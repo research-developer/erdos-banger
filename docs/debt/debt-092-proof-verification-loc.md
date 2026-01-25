@@ -1,9 +1,9 @@
 # DEBT-092: Proof Verification Module LOC Violations
 
-**Priority:** P4 (Enhancement)
+**Priority:** P3 (Minor; clean up when touching nearby code)
 **Status:** Exempted
 **Found:** 2026-01-24
-**Exempted:** 2026-01-24
+**Exempted:** 2026-01-24 (re-evaluated 2026-01-24)
 
 ## Description
 
@@ -11,46 +11,95 @@ The proof verification implementation (SPEC-035/5) exceeds LOC thresholds:
 
 | Module | LOC | Threshold | Delta |
 |--------|-----|-----------|-------|
-| `src/erdos/core/sync/proofs.py` | 599 | 500 | +99 |
+| `src/erdos/core/sync/proofs.py` | 626 | 500 | +126 |
 | `src/erdos/commands/sync/proof_cmd.py` | 441 | 400 | +41 |
+
+**Note:** The inline exemption markers claim different LOC counts (596 and 429 respectively), which are inaccurate.
+
+## Analysis
+
+### proofs.py (626 LOC)
+
+This module is well-organized with clear section boundaries:
+
+| Section | LOC | Purpose |
+|---------|-----|---------|
+| Module docstring + imports | ~40 | Security warning, dependencies |
+| Configuration constants | ~27 | Timeouts, log limits, env vars |
+| Result types | ~29 | `VerificationResult`, `CloneResult` |
+| Environment sanitization | ~19 | `_sanitize_env()` |
+| Git operations | ~76 | `clone_repository()` |
+| Lean verification | ~155 | `run_lake_build()`, `check_no_sorries()` |
+| Main verification | ~150 | `verify_proof()`, `_verify_problem_files()` |
+| Provenance management | ~121 | `create_provenance()`, `save_*()` |
+
+**Cohesion:** All functions support a single capability (proof verification). The module has clear bounded contexts separated by `# ======` markers.
+
+**Security:** This is security-critical code (runs untrusted `lake build`). Density is justified by the need for explicit guardrails and clear audit trail.
+
+### proof_cmd.py (441 LOC)
+
+This module contains application logic that arguably belongs in `core/`:
+
+| Section | LOC | Location Issue |
+|---------|-----|----------------|
+| Imports + setup | ~38 | Fine |
+| Security warning | ~23 | CLI-specific (fine) |
+| `_run_verification()` | ~115 | **Application service — should be in core/** |
+| `sync_proof_links()` | ~90 | **Application service — should be in core/** |
+| `_print_human()` | ~90 | CLI-specific (fine) |
+| `proof()` Typer callback | ~55 | Thin (correct pattern) |
+
+The DEBT-065 pattern (thick CLI callbacks) was previously fixed for other commands but proof_cmd.py was added after that fix. The orchestration logic (~205 LOC) should live in `core/sync/proof_service.py`.
 
 ## Justification for Exemption
 
-### proofs.py (596 LOC)
+### proofs.py
 
-This module contains a complete security-focused verification pipeline with 6 bounded contexts:
+The module is genuinely cohesive. Splitting options would:
 
-1. **Environment sanitization** — Strips API keys before subprocess execution
-2. **Git clone** — Shallow clone with security guardrails (no hooks, no submodules)
-3. **Lake build** — Runs `lake build` with timeouts and log capture
-4. **No-sorries check** — Verifies Lean files have no `sorry` statements
-5. **Provenance management** — Records verification metadata
-6. **Log handling** — Truncates logs to prevent overflow
+1. **Extract provenance to `core/sync/provenance.py`** (~70 LOC of functions, ~50 LOC of imports/types)
+   - Result: proofs.py → ~555 LOC (still +55 over threshold)
+   - Creates coupling: verification creates provenance records
 
-The module is cohesive: all functions support a single capability (proof verification).
-Splitting would require extracting helpers that have no independent use case.
+2. **Extract git operations to `core/sync/git.py`** (~76 LOC)
+   - Result: proofs.py → ~549 LOC (still +49 over)
+   - Single-use: only verification clones repos
 
-### proof_cmd.py (429 LOC)
+Neither extraction provides meaningful architectural benefit.
 
-This CLI module includes:
-- Typer command with options/docstrings (~50 LOC boilerplate)
-- Security warning panel (Rich output)
-- Human-readable output formatting
-- Verification orchestration logic
+### proof_cmd.py
 
-The marginal violation (+29 LOC) doesn't justify splitting.
+The exemption is weaker here. Extracting application logic would:
+
+1. Move `sync_proof_links()` + `_run_verification()` to `core/sync/proof_service.py` (~205 LOC)
+2. Result: proof_cmd.py → ~236 LOC (well under threshold)
+3. Follows established pattern (thin commands, testable core)
+
+However, the current structure works and the violation is marginal (+41 LOC).
 
 ## Resolution
 
-Exempted via inline markers near the top of each file:
+Exempted via inline markers:
 - `src/erdos/core/sync/proofs.py`: `# exempt: DEBT-092`
 - `src/erdos/commands/sync/proof_cmd.py`: `# exempt: DEBT-092`
 
-## Future Refactoring Opportunities
+## Refactoring Recommendations
 
-If the module grows further:
-1. Extract provenance functions to `sync/provenance.py`
-2. Extract log handling to `sync/log_capture.py`
-3. Use Typer subapp pattern for verification commands
+If this debt is opened:
 
-Currently, the cohesion benefit outweighs the LOC cost.
+1. **For proof_cmd.py (recommended):**
+   - Create `core/sync/proof_service.py` with `sync_proof_links()` and verification orchestration
+   - Keep CLI adapter thin (parse flags → call service → format output)
+
+2. **For proofs.py (optional):**
+   - Extract `save_provenance()` and `save_verification_log()` to `core/sync/provenance.py`
+   - Only worthwhile if provenance is needed elsewhere
+
+## Acceptance Criteria (If Opened)
+
+1. [ ] `proof_cmd.py` reduced to ≤400 LOC via service extraction
+2. [ ] `proofs.py` reduced to ≤500 LOC (or exemption retained with clear justification)
+3. [ ] Application logic (`sync_proof_links()`) lives in `core/sync/`, not `commands/`
+4. [ ] `make ci` passes
+5. [ ] Verification behavior unchanged

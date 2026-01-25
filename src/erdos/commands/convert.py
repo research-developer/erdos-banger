@@ -9,9 +9,8 @@ from pathlib import Path
 from typing import Annotated, Any
 
 import typer
-from rich.console import Console
 
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, err_console, exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
 from erdos.core.pdf.converter import (
@@ -35,8 +34,6 @@ app = typer.Typer(
     help="Convert PDF files to text/markdown.",
     context_settings={"allow_interspersed_args": True},
 )
-console = Console()
-err_console = Console(stderr=True)
 
 
 def _print_human(result_data: dict[str, Any]) -> None:

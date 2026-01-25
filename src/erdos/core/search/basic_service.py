@@ -58,7 +58,7 @@ def search_basic(
             if problem is None:
                 return CLIOutput.err(
                     command="erdos search",
-                    error_type="NotFound",
+                    error_type="NotFoundError",
                     message=f"Problem {problem_id} not found",
                     code=ExitCode.NOT_FOUND,
                 )
@@ -95,11 +95,11 @@ def search_basic(
                 "use_fts": False,
             },
         )
-    except Exception as e:
+    except Exception as e:  # final safety net; convert unexpected failures to CLIOutput
         logger.exception("Unexpected error in basic search")
         return CLIOutput.err(
             command="erdos search",
-            error_type="Error",
+            error_type="UnexpectedError",
             message=str(e),
             code=ExitCode.ERROR,
         )

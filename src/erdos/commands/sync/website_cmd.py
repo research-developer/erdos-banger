@@ -11,10 +11,9 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 import typer
-from rich.console import Console
 from rich.panel import Panel
 
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, exit_with_result
 from erdos.core.config import AppConfig
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord
@@ -38,7 +37,6 @@ from erdos.core.timing import measure_time_ms
 
 
 logger = logging.getLogger(__name__)
-console = Console()
 
 
 def _ensure_data_dir(data_path: Path, *, website_cache_dir: Path) -> None:
@@ -154,7 +152,7 @@ def sync_website_problem(
             submodule_path = get_submodule_path()
             submodule_problems = load_submodule_problems(submodule_path)
             submodule_data = submodule_problems.get(problem_id)
-        except Exception as e:
+        except Exception as e:  # submodule metadata is optional
             logger.debug("Submodule metadata unavailable: %s", e)
 
         existing_problems = _load_existing_problems(data_path)
@@ -220,11 +218,11 @@ def sync_website_problem(
             message=str(e),
             code=ExitCode.ERROR,
         )
-    except Exception as e:
+    except Exception as e:  # unexpected errors should be surfaced as CLIOutput
         logger.exception("Unexpected error in sync website")
         return CLIOutput.err(
             command="erdos sync website",
-            error_type="Error",
+            error_type="UnexpectedError",
             message=str(e),
             code=ExitCode.ERROR,
         )

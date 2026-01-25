@@ -144,4 +144,4 @@ class TestLeanInitExitCodes:
         assert result.exit_code == ExitCode.ERROR
         data = json.loads(result.stdout)
         assert data["success"] is False
-        assert data["error"]["type"] == "Error"
+        assert data["error"]["type"] == "UnexpectedError"

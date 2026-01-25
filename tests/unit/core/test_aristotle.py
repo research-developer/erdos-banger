@@ -218,7 +218,7 @@ class TestRunAristotleProveFromFileValidation:
         with patch("shutil.which", return_value="/usr/bin/aristotle"):
             with pytest.raises(AristotleError) as exc_info:
                 run_aristotle_prove_from_file(input_file, output_file)
-            assert exc_info.value.error_type == "NotFound"
+            assert exc_info.value.error_type == "NotFoundError"
             assert "not found" in str(exc_info.value).lower()
 
     def test_output_equals_input_raises_error(
@@ -327,7 +327,7 @@ class TestRunAristotleProveFromFileExecution:
             pytest.raises(AristotleError) as exc_info,
         ):
             run_aristotle_prove_from_file(input_file, output_file, timeout=10)
-        assert exc_info.value.error_type == "Timeout"
+        assert exc_info.value.error_type == "TimeoutError"
         assert "10" in str(exc_info.value)
 
     def test_custom_timeout_passed_to_subprocess(

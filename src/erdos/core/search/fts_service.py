@@ -96,11 +96,11 @@ def search_fts(
             message=str(e),
             code=ExitCode.ERROR,
         )
-    except Exception as e:
+    except Exception as e:  # final safety net; convert unexpected failures to CLIOutput
         logger.exception("Unexpected error in FTS search")
         return CLIOutput.err(
             command="erdos search",
-            error_type="Error",
+            error_type="UnexpectedError",
             message=str(e),
             code=ExitCode.ERROR,
         )

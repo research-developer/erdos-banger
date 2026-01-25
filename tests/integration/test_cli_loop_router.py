@@ -3,16 +3,20 @@
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 import pytest
 
 from erdos.cli import app
 from erdos.core.exit_codes import ExitCode
-from tests.cli_runner import make_cli_runner
+from tests.cli_runner import make_cli_runner, unset_env_vars
 
 
 runner = make_cli_runner()
+
+# Check if lake is available for skipping tests
+lake_available = shutil.which("lake") is not None
 
 
 def _setup_lean_project(tmp_path: Path) -> Path:
@@ -31,6 +35,7 @@ def _setup_lean_project(tmp_path: Path) -> Path:
     return project_path
 
 
+@pytest.mark.skipif(not lake_available, reason="lake not found (Lean not installed)")
 @pytest.mark.requires_lean
 class TestLoopRunRouterIntegration:
     """Tests for erdos loop run using LLM router (SPEC-032)."""
@@ -185,7 +190,12 @@ class TestLoopRunRouterIntegration:
             ],
             env={
                 "ERDOS_REPO_ROOT": str(tmp_path),
-                # No LLM command configured at all
+                # No LLM command configured at all (router should fail fast)
+                **unset_env_vars(
+                    "ERDOS_LLM_COMMAND",
+                    "ERDOS_LLM_COMMAND_MATH",
+                    "ERDOS_LLM_COMMAND_CODE",
+                ),
             },
         )
 
@@ -216,6 +226,12 @@ class TestLoopRunRouterIntegration:
             ],
             env={
                 "ERDOS_REPO_ROOT": str(tmp_path),
+                # Ensure a developer's shell env doesn't satisfy routing.
+                **unset_env_vars(
+                    "ERDOS_LLM_COMMAND",
+                    "ERDOS_LLM_COMMAND_MATH",
+                    "ERDOS_LLM_COMMAND_CODE",
+                ),
             },
         )
 
@@ -244,6 +260,10 @@ class TestLoopRunRouterIntegration:
                 "ERDOS_REPO_ROOT": str(tmp_path),
                 # Only MATH set - loop needs CODE or global
                 "ERDOS_LLM_COMMAND_MATH": "/path/to/math/llm",
+                **unset_env_vars(
+                    "ERDOS_LLM_COMMAND",
+                    "ERDOS_LLM_COMMAND_CODE",
+                ),
             },
         )
 

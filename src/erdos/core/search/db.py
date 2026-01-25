@@ -128,7 +128,7 @@ class DatabaseManager:
         try:
             yield conn
             conn.commit()
-        except Exception:
+        except Exception:  # always rollback on any exception at this boundary
             conn.rollback()
             raise
         finally:

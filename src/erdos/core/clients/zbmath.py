@@ -1,7 +1,5 @@
 """zbMATH Open API client for math-specific metadata.
 
-# exempt: DEBT-095
-
 zbMATH (https://zbmath.org/) is the Zentralblatt MATH database — the gold
 standard for pure mathematics with 100+ years of coverage.
 
@@ -11,30 +9,28 @@ Key unique data:
 - Math-specific keywords
 
 API Reference: https://api.zbmath.org/
+
+# exempt: DEBT-093 — 602 LOC is ~100 over threshold. Justified per DEBT-093
+# resolution: zbMATH has the most complex API response structure (nested
+# contributors, editorial_contributions, MSC codes). All duplicated
+# infrastructure was extracted to shared modules.
 """
 
 from __future__ import annotations
 
 import contextlib
-import hashlib
-import json
 import logging
-import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import requests
 
+from erdos.core.clients.cache import FileCache, make_cache_key
 from erdos.core.config import AppConfig
-from erdos.core.constants import (
-    DEFAULT_HTTP_TIMEOUT,
-    RETRY_BASE_DELAY,
-    RETRY_MAX_ATTEMPTS,
-    RETRY_MAX_DELAY,
-    RETRYABLE_STATUS_CODES,
-)
+from erdos.core.constants import DEFAULT_HTTP_TIMEOUT, RETRY_MAX_ATTEMPTS
 from erdos.core.rate_limiter import RateLimiter
+from erdos.core.retry import fetch_with_retry
 
 
 logger = logging.getLogger(__name__)
@@ -57,20 +53,8 @@ class ZbMathConfig:
 
     @classmethod
     def from_env(cls) -> ZbMathConfig:
-        """Create config from environment variables via AppConfig.
-
-        Uses centralized AppConfig for environment variable reads (DEBT-075).
-
-        Environment variables:
-            ERDOS_MAILTO: Contact email for polite API access.
-            ERDOS_ZBMATH_CACHE_TTL: Cache TTL in days (default: 30).
-            ERDOS_ZBMATH_CACHE_PATH: Path to cache directory (for testing).
-
-        Returns:
-            ZbMathConfig instance with values from AppConfig.
-        """
+        """Create config from environment variables via AppConfig."""
         app_config = AppConfig.from_env()
-
         return cls(
             mailto=app_config.mailto if app_config.mailto else None,
             timeout=app_config.http_timeout,
@@ -110,6 +94,9 @@ class MSCCode:
             scheme=data.get("scheme", "msc2020"),
             primary=data.get("primary", False),
         )
+
+
+# --- Response extraction helpers ---
 
 
 def _extract_title(data: dict[str, Any]) -> str:
@@ -171,13 +158,13 @@ def _extract_msc_codes(data: dict[str, Any]) -> list[MSCCode]:
     msc_codes: list[MSCCode] = []
     for i, msc_data in enumerate(data.get("msc", []) or []):
         if isinstance(msc_data, dict):
-            code = msc_data.get("code", "")
-            text = msc_data.get("text", "")
-            scheme = msc_data.get("scheme", "msc2020")
-            # First MSC code is typically primary
-            primary = i == 0
             msc_codes.append(
-                MSCCode(code=code, text=text, scheme=scheme, primary=primary)
+                MSCCode(
+                    code=msc_data.get("code", ""),
+                    text=msc_data.get("text", ""),
+                    scheme=msc_data.get("scheme", "msc2020"),
+                    primary=i == 0,  # First MSC code is typically primary
+                )
             )
     return msc_codes
 
@@ -187,9 +174,9 @@ def _extract_review_excerpt(data: dict[str, Any]) -> str | None:
     for contrib in data.get("editorial_contributions", []) or []:
         if isinstance(contrib, dict) and contrib.get("contribution_type") == "review":
             text = contrib.get("text")
-            if text and isinstance(text, str):
-                result: str = text[:500] + "..." if len(text) > 500 else text
-                return result
+            if isinstance(text, str) and text:
+                excerpt: str = text[:500] + "..." if len(text) > 500 else text
+                return excerpt
     return None
 
 
@@ -212,35 +199,20 @@ class ZbMathEntry:
 
     @classmethod
     def from_api_response(cls, data: dict[str, Any]) -> ZbMathEntry:
-        """Parse entry from zbMATH API response.
-
-        Args:
-            data: Raw entry dict from API (the "result" field).
-
-        Returns:
-            ZbMathEntry instance.
-        """
-        title = _extract_title(data)
-        authors = _extract_authors(data)
-        year = _extract_year(data)
+        """Parse entry from zbMATH API response."""
         doi, arxiv_id = _extract_links(data)
-        journal = _extract_journal(data)
-        msc_codes = _extract_msc_codes(data)
-        keywords = [k for k in (data.get("keywords", []) or []) if k is not None]
-        review_excerpt = _extract_review_excerpt(data)
-
         return cls(
             zbl_id=data.get("identifier", ""),
             internal_id=data.get("id", 0),
-            title=title,
-            authors=authors,
-            year=year,
+            title=_extract_title(data),
+            authors=_extract_authors(data),
+            year=_extract_year(data),
             doi=doi,
             arxiv_id=arxiv_id,
-            journal=journal,
-            msc=msc_codes,
-            keywords=keywords,
-            review_excerpt=review_excerpt,
+            journal=_extract_journal(data),
+            msc=_extract_msc_codes(data),
+            keywords=[k for k in (data.get("keywords", []) or []) if k is not None],
+            review_excerpt=_extract_review_excerpt(data),
             zbmath_url=data.get("zbmath_url"),
         )
 
@@ -264,7 +236,6 @@ class ZbMathEntry:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ZbMathEntry:
         """Deserialize from cached dict."""
-        msc_list = [MSCCode.from_dict(m) for m in data.get("msc", [])]
         return cls(
             zbl_id=data.get("zbl_id", ""),
             internal_id=data.get("internal_id", 0),
@@ -274,7 +245,7 @@ class ZbMathEntry:
             doi=data.get("doi"),
             arxiv_id=data.get("arxiv_id"),
             journal=data.get("journal"),
-            msc=msc_list,
+            msc=[MSCCode.from_dict(m) for m in data.get("msc", [])],
             keywords=data.get("keywords", []),
             review_excerpt=data.get("review_excerpt"),
             zbmath_url=data.get("zbmath_url"),
@@ -283,11 +254,7 @@ class ZbMathEntry:
 
 def msc_code_to_json(msc: MSCCode) -> dict[str, Any]:
     """Format an MSCCode for CLI JSON output (stable shape)."""
-    return {
-        "code": msc.code,
-        "text": msc.text,
-        "primary": msc.primary,
-    }
+    return {"code": msc.code, "text": msc.text, "primary": msc.primary}
 
 
 def zbmath_entry_to_json(entry: ZbMathEntry) -> dict[str, Any]:
@@ -319,16 +286,16 @@ class ZbMathClient:
     """
 
     BASE_URL = "https://api.zbmath.org/v1"
+    _CACHE_MISS = object()
 
     def __init__(self, config: ZbMathConfig | None = None):
-        """Initialize client with configuration.
-
-        Args:
-            config: Client configuration. If None, loads from environment.
-        """
+        """Initialize client with configuration."""
         self.config = config or ZbMathConfig.from_env()
-        # Conservative rate limiting: 2s between calls
         self._rate_limiter = RateLimiter(delay_seconds=2.0)
+        self._cache = FileCache(
+            cache_path=self.config.cache_path,
+            ttl_seconds=self.config.cache_ttl_days * 24 * 60 * 60,
+        )
 
     @property
     def rate_limit_delay_seconds(self) -> float:
@@ -336,15 +303,7 @@ class ZbMathClient:
         return self._rate_limiter.delay_seconds
 
     def _normalize_zbl_id(self, zbl_id: str) -> str:
-        """Normalize zbMATH ID.
-
-        Args:
-            zbl_id: Raw zbMATH ID (may have "Zbl " prefix, spaces, etc.)
-
-        Returns:
-            Normalized ID.
-        """
-        # Remove common prefixes and whitespace
+        """Normalize zbMATH ID."""
         normalized = zbl_id.strip()
         if normalized.lower().startswith("zbl "):
             normalized = normalized[4:].strip()
@@ -353,221 +312,47 @@ class ZbMathClient:
         return normalized
 
     def _is_identifier_format(self, zbl_id: str) -> bool:
-        """Check if ID is in identifier format (e.g., '1191.11025').
-
-        Args:
-            zbl_id: Normalized zbMATH ID.
-
-        Returns:
-            True if identifier format, False if numeric internal ID.
-        """
-        # Identifier format contains a dot (e.g., "1191.11025")
-        # Internal IDs are pure numbers (e.g., "5578697")
+        """Check if ID is in identifier format (e.g., '1191.11025')."""
         return "." in zbl_id
 
-    def _cache_key(self, endpoint: str, identifier: str) -> str:
-        """Generate cache key from endpoint and identifier.
-
-        Args:
-            endpoint: API endpoint name (zbl, doi, msc, title).
-            identifier: Search identifier.
-
-        Returns:
-            SHA256 hash for cache filename.
-        """
-        # Normalize the identifier for consistent caching
-        normalized_id = self._normalize_zbl_id(identifier)
-        normalized = f"{endpoint}:{normalized_id.lower().strip()}"
-        return hashlib.sha256(normalized.encode()).hexdigest()
-
     def get_cache_path(self, endpoint: str, identifier: str) -> Path:
-        """Get cache file path for an API call.
+        """Get cache file path for an API call (for testing/debugging)."""
+        normalized_id = self._normalize_zbl_id(identifier)
+        key = make_cache_key(endpoint, normalized_id)
+        return self._cache.get_file_path(key, prefix=f"{endpoint}_")
 
-        Args:
-            endpoint: API endpoint name.
-            identifier: Search identifier.
-
-        Returns:
-            Path to cache file.
-        """
-        cache_key = self._cache_key(endpoint, identifier)
-        return self.config.cache_path / f"{endpoint}_{cache_key}.json"
-
-    def _load_from_cache(self, endpoint: str, identifier: str) -> dict[str, Any] | None:
-        """Load cached response if valid.
-
-        Args:
-            endpoint: API endpoint name.
-            identifier: Search identifier.
-
-        Returns:
-            Cached data if valid and not expired, None otherwise.
-        """
-        cache_file = self.get_cache_path(endpoint, identifier)
-        if not cache_file.exists():
+    def _get_cached_zbl_entry(
+        self, cache_key: str, *, use_cache: bool
+    ) -> ZbMathEntry | None | object:
+        """Return a cached entry, None (cached miss), or sentinel (cache disabled/miss)."""
+        if not use_cache:
+            return self._CACHE_MISS
+        cached = self._cache.get(cache_key, prefix="zbl_")
+        if cached is None:
+            return self._CACHE_MISS
+        entry_data = cached.get("entry")
+        if entry_data is None:
             return None
+        return ZbMathEntry.from_dict(entry_data)
 
-        try:
-            with cache_file.open() as f:
-                data: dict[str, Any] = json.load(f)
-
-            # Check TTL
-            cached_at_raw = data.get("cached_at", 0)
-            try:
-                cached_at = float(cached_at_raw)
-            except (TypeError, ValueError):
-                logger.debug(
-                    "Corrupt cache (invalid cached_at=%r) for %s:%s",
-                    cached_at_raw,
-                    endpoint,
-                    identifier,
-                )
-                return None
-            ttl_seconds = self.config.cache_ttl_days * 24 * 60 * 60
-            if time.time() - cached_at > ttl_seconds:
-                logger.debug("Cache expired for %s:%s", endpoint, identifier)
-                return None
-
-            logger.debug("Cache hit for %s:%s", endpoint, identifier)
-            return data
-
-        except (json.JSONDecodeError, OSError) as e:
-            logger.warning(
-                "Failed to load cache for %s:%s: %s", endpoint, identifier, e
-            )
-            return None
-
-    def _save_to_cache(
-        self, endpoint: str, identifier: str, data: dict[str, Any]
+    def _cache_zbl_entry(
+        self, cache_key: str, entry: ZbMathEntry | None, *, use_cache: bool
     ) -> None:
-        """Save response to cache.
-
-        Args:
-            endpoint: API endpoint name.
-            identifier: Search identifier.
-            data: Data to cache.
-        """
-        cache_file = self.get_cache_path(endpoint, identifier)
-
-        try:
-            cache_file.parent.mkdir(parents=True, exist_ok=True)
-            cache_data = {**data, "cached_at": time.time()}
-
-            with cache_file.open("w") as f:
-                json.dump(cache_data, f, indent=2)
-
-            logger.debug("Cached response for %s:%s", endpoint, identifier)
-
-        except OSError as e:
-            logger.warning(
-                "Failed to cache response for %s:%s: %s", endpoint, identifier, e
-            )
+        """Cache a lookup result (best-effort), including negative caching."""
+        if not use_cache:
+            return
+        self._cache.set(
+            cache_key,
+            {"entry": entry.to_dict() if entry is not None else None},
+            prefix="zbl_",
+        )
 
     def _get_headers(self) -> dict[str, str]:
-        """Get headers for API request.
-
-        Returns:
-            Headers dict with polite identification.
-        """
+        """Get headers for API request."""
         headers = {"Accept": "application/json"}
         if self.config.mailto:
             headers["User-Agent"] = f"erdos-banger/1.0 (mailto:{self.config.mailto})"
         return headers
-
-    def _get_with_retry(self, url: str, params: dict[str, Any]) -> requests.Response:
-        """GET with retry logic for transient failures.
-
-        Args:
-            url: API endpoint URL.
-            params: Query parameters.
-
-        Returns:
-            requests.Response on success.
-
-        Raises:
-            requests.HTTPError: On non-retryable HTTP errors.
-            requests.Timeout: After all retries exhausted.
-        """
-        last_error: Exception | None = None
-        last_response: requests.Response | None = None
-
-        for attempt in range(self.config.max_retries):
-            try:
-                response = requests.get(
-                    url,
-                    params=params,
-                    headers=self._get_headers(),
-                    timeout=self.config.timeout,
-                )
-
-                if response.status_code in RETRYABLE_STATUS_CODES:
-                    last_response = response
-                    if attempt < self.config.max_retries - 1:
-                        delay = self._get_retry_delay(attempt, response)
-                        logger.debug(
-                            "Retry %d/%d for %s: HTTP %d, waiting %.1fs",
-                            attempt + 1,
-                            self.config.max_retries,
-                            url,
-                            response.status_code,
-                            delay,
-                        )
-                        time.sleep(delay)
-                        continue
-                    response.raise_for_status()
-
-                response.raise_for_status()
-                return response
-
-            except (requests.Timeout, requests.ConnectionError) as e:
-                last_error = e
-                if attempt < self.config.max_retries - 1:
-                    delay = self._get_retry_delay(attempt, None)
-                    logger.debug(
-                        "Retry %d/%d for %s: %s, waiting %.1fs",
-                        attempt + 1,
-                        self.config.max_retries,
-                        url,
-                        type(e).__name__,
-                        delay,
-                    )
-                    time.sleep(delay)
-                    continue
-                raise
-
-            except requests.HTTPError:
-                raise
-
-        if last_error is not None:
-            raise last_error
-        if last_response is not None:
-            last_response.raise_for_status()
-        raise requests.RequestException("Max retries exceeded")
-
-    def _get_retry_delay(
-        self, attempt: int, response: requests.Response | None
-    ) -> float:
-        """Calculate retry delay with exponential backoff.
-
-        Args:
-            attempt: Current attempt number (0-indexed).
-            response: HTTP response if available.
-
-        Returns:
-            Delay in seconds.
-        """
-        # Check Retry-After header for 429
-        if response is not None and response.status_code == 429:
-            retry_after = response.headers.get("Retry-After")
-            if retry_after:
-                try:
-                    return min(float(retry_after), RETRY_MAX_DELAY)
-                except ValueError:
-                    pass
-
-        # Exponential backoff: base_delay * 2^attempt
-        delay = RETRY_BASE_DELAY * (2**attempt)
-        return float(min(delay, RETRY_MAX_DELAY))
 
     def get_by_zbl_id(
         self, zbl_id: str, *, use_cache: bool = True
@@ -585,83 +370,75 @@ class ZbMathClient:
             requests.HTTPError: On HTTP errors (except 404).
         """
         normalized_id = self._normalize_zbl_id(zbl_id)
+        cache_key = make_cache_key("zbl", normalized_id)
 
-        # Check cache first
-        if use_cache:
-            cached = self._load_from_cache("zbl", normalized_id)
-            if cached is not None:
-                entry_data = cached.get("entry")
-                if entry_data is not None:
-                    return ZbMathEntry.from_dict(entry_data)
-                return None
+        cached_entry = self._get_cached_zbl_entry(cache_key, use_cache=use_cache)
+        if cached_entry is not self._CACHE_MISS:
+            return cast("ZbMathEntry | None", cached_entry)
 
         # For identifier format (e.g., "1191.11025"), use search endpoint
         if self._is_identifier_format(normalized_id):
-            return self._search_by_identifier(normalized_id, use_cache)
+            return self._search_by_identifier(
+                normalized_id,
+                cache_key=cache_key,
+                use_cache=use_cache,
+            )
 
         # For numeric IDs, use direct lookup
         self._rate_limiter.sleep_if_needed()
-
         url = f"{self.BASE_URL}/document/{normalized_id}"
 
         try:
-            response = self._get_with_retry(url, {})
+            response = fetch_with_retry(
+                url,
+                timeout=self.config.timeout,
+                max_attempts=self.config.max_retries,
+                headers=self._get_headers(),
+            )
             data = response.json()
 
             result = data.get("result")
             if result is None:
-                # Cache the "not found" result
-                if use_cache:
-                    self._save_to_cache("zbl", normalized_id, {"entry": None})
+                self._cache_zbl_entry(cache_key, None, use_cache=use_cache)
                 return None
 
             entry = ZbMathEntry.from_api_response(result)
-
-            # Cache result
-            if use_cache:
-                self._save_to_cache("zbl", normalized_id, {"entry": entry.to_dict()})
+            self._cache_zbl_entry(cache_key, entry, use_cache=use_cache)
 
             return entry
 
         except requests.HTTPError as e:
             if e.response is not None and e.response.status_code == 404:
-                # Cache the "not found" result
-                if use_cache:
-                    self._save_to_cache("zbl", normalized_id, {"entry": None})
+                self._cache_zbl_entry(cache_key, None, use_cache=use_cache)
                 return None
             raise
 
     def _search_by_identifier(
-        self, identifier: str, use_cache: bool
+        self, identifier: str, *, cache_key: str, use_cache: bool
     ) -> ZbMathEntry | None:
-        """Search for entry by zbMATH identifier (e.g., '1191.11025').
-
-        Args:
-            identifier: zbMATH identifier.
-            use_cache: Whether to cache the result.
-
-        Returns:
-            ZbMathEntry if found, None otherwise.
-        """
+        """Search for entry by zbMATH identifier (e.g., '1191.11025')."""
         self._rate_limiter.sleep_if_needed()
 
         url = f"{self.BASE_URL}/document/_search"
-        params = {"search_string": f"an:{identifier}", "results_per_page": 1}
+        params = {"search_string": f"an:{identifier}", "results_per_page": "1"}
 
         try:
-            response = self._get_with_retry(url, params)
+            response = fetch_with_retry(
+                url,
+                timeout=self.config.timeout,
+                max_attempts=self.config.max_retries,
+                params=params,
+                headers=self._get_headers(),
+            )
             data = response.json()
 
             results = data.get("result", [])
             if not results:
-                if use_cache:
-                    self._save_to_cache("zbl", identifier, {"entry": None})
+                self._cache_zbl_entry(cache_key, None, use_cache=use_cache)
                 return None
 
             entry = ZbMathEntry.from_api_response(results[0])
-
-            if use_cache:
-                self._save_to_cache("zbl", identifier, {"entry": entry.to_dict()})
+            self._cache_zbl_entry(cache_key, entry, use_cache=use_cache)
 
             return entry
 
@@ -681,43 +458,46 @@ class ZbMathClient:
         Raises:
             requests.HTTPError: On HTTP errors.
         """
-        # Check cache first
+        cache_key = make_cache_key("doi", doi)
+
         if use_cache:
-            cached = self._load_from_cache("doi", doi)
+            cached = self._cache.get(cache_key, prefix="doi_")
             if cached is not None:
                 entry_data = cached.get("entry")
                 if entry_data is not None:
                     return ZbMathEntry.from_dict(entry_data)
                 return None
 
-        # Search by DOI
         self._rate_limiter.sleep_if_needed()
-
         url = f"{self.BASE_URL}/document/_search"
-        params = {"search_string": f"doi:{doi}", "results_per_page": 1}
+        params = {"search_string": f"doi:{doi}", "results_per_page": "1"}
 
         try:
-            response = self._get_with_retry(url, params)
+            response = fetch_with_retry(
+                url,
+                timeout=self.config.timeout,
+                max_attempts=self.config.max_retries,
+                params=params,
+                headers=self._get_headers(),
+            )
             data = response.json()
 
             results = data.get("result", [])
             if not results:
                 if use_cache:
-                    self._save_to_cache("doi", doi, {"entry": None})
+                    self._cache.set(cache_key, {"entry": None}, prefix="doi_")
                 return None
 
             entry = ZbMathEntry.from_api_response(results[0])
-
             if use_cache:
-                self._save_to_cache("doi", doi, {"entry": entry.to_dict()})
+                self._cache.set(cache_key, {"entry": entry.to_dict()}, prefix="doi_")
 
             return entry
 
         except requests.HTTPError as e:
             if e.response is not None and e.response.status_code == 404:
-                # Cache the "not found" result
                 if use_cache:
-                    self._save_to_cache("doi", doi, {"entry": None})
+                    self._cache.set(cache_key, {"entry": None}, prefix="doi_")
                 return None
             raise
 
@@ -745,11 +525,12 @@ class ZbMathClient:
         Raises:
             requests.HTTPError: On HTTP errors.
         """
-        cache_key = f"{msc_code}:limit={limit}:years={year_min}-{year_max}"
+        cache_key = make_cache_key(
+            "msc", msc_code, f"limit={limit}", f"years={year_min}-{year_max}"
+        )
 
-        # Check cache first
         if use_cache:
-            cached = self._load_from_cache("msc", cache_key)
+            cached = self._cache.get(cache_key, prefix="msc_")
             if cached is not None:
                 entries_data = cached.get("entries", [])
                 return [ZbMathEntry.from_dict(e) for e in entries_data]
@@ -761,23 +542,30 @@ class ZbMathClient:
             query_parts.append(f"py:{year_range}")
 
         self._rate_limiter.sleep_if_needed()
-
         url = f"{self.BASE_URL}/document/_search"
         params = {
             "search_string": " ".join(query_parts),
-            "results_per_page": limit,
+            "results_per_page": str(limit),
         }
 
         try:
-            response = self._get_with_retry(url, params)
+            response = fetch_with_retry(
+                url,
+                timeout=self.config.timeout,
+                max_attempts=self.config.max_retries,
+                params=params,
+                headers=self._get_headers(),
+            )
             data = response.json()
 
             results = data.get("result", []) or []
             entries = [ZbMathEntry.from_api_response(r) for r in results]
 
             if use_cache:
-                self._save_to_cache(
-                    "msc", cache_key, {"entries": [e.to_dict() for e in entries]}
+                self._cache.set(
+                    cache_key,
+                    {"entries": [e.to_dict() for e in entries]},
+                    prefix="msc_",
                 )
 
             return entries
@@ -801,31 +589,36 @@ class ZbMathClient:
         Raises:
             requests.HTTPError: On HTTP errors.
         """
-        cache_key = f"{title}:limit={limit}"
+        cache_key = make_cache_key("title", title, f"limit={limit}")
 
-        # Check cache first
         if use_cache:
-            cached = self._load_from_cache("title", cache_key)
+            cached = self._cache.get(cache_key, prefix="title_")
             if cached is not None:
                 entries_data = cached.get("entries", [])
                 return [ZbMathEntry.from_dict(e) for e in entries_data]
 
         self._rate_limiter.sleep_if_needed()
-
         url = f"{self.BASE_URL}/document/_search"
-        # Use ti: prefix for title search
-        params = {"search_string": f"ti:{title}", "results_per_page": limit}
+        params = {"search_string": f"ti:{title}", "results_per_page": str(limit)}
 
         try:
-            response = self._get_with_retry(url, params)
+            response = fetch_with_retry(
+                url,
+                timeout=self.config.timeout,
+                max_attempts=self.config.max_retries,
+                params=params,
+                headers=self._get_headers(),
+            )
             data = response.json()
 
             results = data.get("result", []) or []
             entries = [ZbMathEntry.from_api_response(r) for r in results]
 
             if use_cache:
-                self._save_to_cache(
-                    "title", cache_key, {"entries": [e.to_dict() for e in entries]}
+                self._cache.set(
+                    cache_key,
+                    {"entries": [e.to_dict() for e in entries]},
+                    prefix="title_",
                 )
 
             return entries

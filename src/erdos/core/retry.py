@@ -1,8 +1,14 @@
 """Retry logic for transient network failures.
 
-This module provides a fetch_with_retry function that wraps requests.get
+This module provides retry-wrapped HTTP functions for GET and POST requests
 with exponential backoff for transient errors (timeouts, connection errors,
 and retryable HTTP status codes like 429 and 5xx).
+
+Functions:
+    fetch_with_retry: GET request with retry
+    post_with_retry: POST request with retry
+    get_retry_delay: Calculate backoff delay (public for testing)
+    is_retryable_status_code: Check if status code warrants retry
 """
 
 import logging
@@ -33,7 +39,7 @@ def is_retryable_status_code(status_code: int) -> bool:
     return status_code in RETRYABLE_STATUS_CODES
 
 
-def _get_retry_delay(attempt: int, response: requests.Response | None) -> float:
+def get_retry_delay(attempt: int, response: requests.Response | None) -> float:
     """Calculate the delay before the next retry attempt.
 
     Uses exponential backoff with a cap. For 429 responses, respects
@@ -107,7 +113,7 @@ def fetch_with_retry(
                 if is_retryable_status_code(response.status_code):
                     last_response = response
                     if attempt < max_attempts - 1:
-                        delay = _get_retry_delay(attempt, response)
+                        delay = get_retry_delay(attempt, response)
                         logger.debug(
                             "Retry %d/%d for %s: HTTP %d, waiting %.1fs",
                             attempt + 1,
@@ -128,9 +134,102 @@ def fetch_with_retry(
         except (requests.Timeout, requests.ConnectionError) as e:
             last_error = e
             if attempt < max_attempts - 1:
-                delay = _get_retry_delay(attempt, None)
+                delay = get_retry_delay(attempt, None)
                 logger.debug(
                     "Retry %d/%d for %s: %s, waiting %.1fs",
+                    attempt + 1,
+                    max_attempts,
+                    url,
+                    type(e).__name__,
+                    delay,
+                )
+                time.sleep(delay)
+                continue
+            raise
+
+        except requests.HTTPError:
+            # Non-retryable HTTP error - don't retry
+            raise
+
+    # Should not reach here, but handle edge case
+    if last_error is not None:
+        raise last_error
+    if last_response is not None:
+        last_response.raise_for_status()
+    raise requests.RequestException("Max retries exceeded")
+
+
+def post_with_retry(
+    url: str,
+    *,
+    timeout: float,
+    json_payload: dict[str, object] | None = None,
+    max_attempts: int = RETRY_MAX_ATTEMPTS,
+    headers: dict[str, str] | None = None,
+) -> requests.Response:
+    """POST to a URL with retry logic for transient failures.
+
+    Retries on:
+    - Timeout errors
+    - Connection errors
+    - HTTP 429 (rate limit) - respects Retry-After header
+    - HTTP 5xx (server errors)
+
+    Does not retry on:
+    - HTTP 4xx (client errors except 429)
+
+    Args:
+        url: URL to POST to.
+        timeout: HTTP timeout in seconds.
+        json_payload: Optional JSON body to send.
+        max_attempts: Maximum number of attempts (default: 3).
+        headers: Optional HTTP headers.
+
+    Returns:
+        requests.Response on success.
+
+    Raises:
+        requests.Timeout: If all retries fail due to timeout.
+        requests.ConnectionError: If all retries fail due to connection error.
+        requests.HTTPError: If request fails with non-retryable status or
+            all retries exhausted.
+    """
+    last_error: Exception | None = None
+    last_response: requests.Response | None = None
+
+    for attempt in range(max_attempts):
+        try:
+            with requests.post(
+                url, json=json_payload, headers=headers, timeout=timeout
+            ) as response:
+                # Check for retryable status codes
+                if is_retryable_status_code(response.status_code):
+                    last_response = response
+                    if attempt < max_attempts - 1:
+                        delay = get_retry_delay(attempt, response)
+                        logger.debug(
+                            "Retry %d/%d for POST %s: HTTP %d, waiting %.1fs",
+                            attempt + 1,
+                            max_attempts,
+                            url,
+                            response.status_code,
+                            delay,
+                        )
+                        time.sleep(delay)
+                        continue
+                    # Last attempt failed - raise HTTPError
+                    response.raise_for_status()
+
+                # Non-retryable status codes (including success)
+                response.raise_for_status()
+                return response
+
+        except (requests.Timeout, requests.ConnectionError) as e:
+            last_error = e
+            if attempt < max_attempts - 1:
+                delay = get_retry_delay(attempt, None)
+                logger.debug(
+                    "Retry %d/%d for POST %s: %s, waiting %.1fs",
                     attempt + 1,
                     max_attempts,
                     url,

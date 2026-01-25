@@ -24,7 +24,7 @@ def enrich_result(
             problem = repo.get_by_id(problem_id)
             if problem:
                 result["title"] = problem.title
-        except Exception:
+        except Exception:  # enrichment is best-effort; never fail search
             logger.debug(
                 "Failed to enrich result for problem %s",
                 problem_id,

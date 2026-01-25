@@ -89,7 +89,7 @@ def _handle_llm_exception(
     if isinstance(exc, subprocess.TimeoutExpired):
         return CLIOutput.err(
             command=command,
-            error_type="Timeout",
+            error_type="TimeoutError",
             message=f"LLM command timed out after {LLM_COMMAND_TIMEOUT}s: {llm_command}",
             code=ExitCode.ERROR,
         )
@@ -110,7 +110,7 @@ def _handle_llm_exception(
         )
     return CLIOutput.err(
         command=command,
-        error_type="Error",
+        error_type="LLMError",
         message=f"LLM command failed: {exc}",
         code=ExitCode.ERROR,
     )
@@ -158,7 +158,7 @@ def execute_llm_if_enabled(
             llm_exit_code=exit_code,
             error=CLIOutput.err(
                 command=command,
-                error_type="Error",
+                error_type="LLMError",
                 message=f"LLM command exited with code {exit_code}",
                 code=ExitCode.ERROR,
             ),

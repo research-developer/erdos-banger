@@ -7,6 +7,18 @@ from datetime import UTC, datetime
 
 
 def utc_now_id_timestamp(now: datetime | None = None) -> str:
+    """Generate a UTC timestamp string for record IDs.
+
+    Args:
+        now: Optional datetime to use instead of the current UTC time. Must be
+            timezone-aware.
+
+    Returns:
+        Timestamp formatted as `YYYYMMDDTHHMMSSZ` (UTC, no microseconds).
+
+    Raises:
+        ValueError: If `now` is provided but is timezone-naive.
+    """
     dt = now if now is not None else datetime.now(UTC)
     if dt.tzinfo is None:
         raise ValueError("now must be timezone-aware (UTC)")

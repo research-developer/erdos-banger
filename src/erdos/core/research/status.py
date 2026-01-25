@@ -29,6 +29,16 @@ def _count_yaml_files(dir_path: Path) -> int:
 def get_problem_status(
     problem_id: int, *, repo_root: Path | None
 ) -> ProblemWorkspaceStatus:
+    """Compute filesystem status for a problem research workspace.
+
+    Args:
+        problem_id: Erdős problem ID.
+        repo_root: Repository root (optional). If None, uses the current working
+            directory.
+
+    Returns:
+        ProblemWorkspaceStatus with file existence flags and YAML record counts.
+    """
     problem_dir = get_problem_dir(repo_root, problem_id)
     files = {
         "meta": (problem_dir / "meta.yaml").exists(),

@@ -1,6 +1,6 @@
 """erdos search - search problem statements.
 
-# exempt: DEBT-096 (517 LOC; CLI + multiple search modes including MSC/zbMATH)
+# exempt: DEBT-096 (509 LOC; CLI + multiple search modes including MSC/zbMATH)
 
 This module is a thin CLI adapter that parses Typer flags and delegates
 to the core search service (erdos.core.search.service).
@@ -12,10 +12,9 @@ from typing import TYPE_CHECKING, Annotated, Any
 
 import requests
 import typer
-from rich.console import Console
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, err_console, exit_with_result
 from erdos.core.clients.zbmath import ZbMathClient, ZbMathConfig, zbmath_entry_to_json
 from erdos.core.constants import DEFAULT_SEARCH_LIMIT
 from erdos.core.exit_codes import ExitCode
@@ -34,6 +33,8 @@ from erdos.core.timing import measure_time_ms
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from rich.console import Console
+
     from erdos.core.ports import ProblemRepository, SearchIndexProtocol
 
 
@@ -41,8 +42,6 @@ app = typer.Typer(
     help="Search problem statements.",
     context_settings={"allow_interspersed_args": True},
 )
-console = Console()
-err_console = Console(stderr=True)
 
 
 def _print_msc_human(data: dict[str, Any]) -> None:

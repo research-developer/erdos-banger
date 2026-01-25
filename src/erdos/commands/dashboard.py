@@ -10,14 +10,13 @@ import time
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import typer
-from rich.console import Console
 from rich.live import Live
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, exit_with_result
 from erdos.core.dashboard.data import (
     DashboardData,
     ProblemStats,
@@ -35,13 +34,15 @@ from erdos.core.research.store_fs import FSResearchStore
 from erdos.core.timing import measure_time_ms
 
 
+if TYPE_CHECKING:
+    from rich.console import Console
+
 logger = logging.getLogger(__name__)
 
 app = typer.Typer(
     help="View research progress dashboard.",
     context_settings={"allow_interspersed_args": True},
 )
-console = Console()
 
 
 def _parse_recent(recent: str) -> timedelta:
@@ -165,7 +166,7 @@ def _run_interactive(
                 except (EOFError, KeyboardInterrupt):
                     break
 
-    except Exception:
+    except Exception:  # interactive dashboard is best-effort
         logger.debug("Interactive mode not available", exc_info=True)
 
 
@@ -177,7 +178,8 @@ def _read_key(*, timeout_seconds: int) -> str | None:
     timeout: float | None = None if timeout_seconds <= 0 else float(timeout_seconds)
     try:
         ready, _, _ = select.select([sys.stdin], [], [], timeout)
-    except Exception:
+    except Exception:  # stdin select can fail in non-interactive or mocked environments
+        logger.debug("stdin select failed", exc_info=True)
         return None
     if not ready:
         return None
@@ -347,7 +349,9 @@ def dashboard(
 
         try:
             data = _aggregate_data(research_path, problem_ids, recent_td)
-        except Exception as e:
+        except (
+            Exception
+        ) as e:  # aggregation is best-effort; surface errors as CLIOutput
             logger.exception("Error aggregating dashboard data")
             exit_with_result(
                 ctx,

@@ -11,10 +11,9 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 import typer
-from rich.console import Console
 from rich.panel import Panel
 
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, exit_with_result
 from erdos.core.config import AppConfig
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
@@ -38,7 +37,6 @@ from erdos.core.timing import measure_time_ms
 
 
 logger = logging.getLogger(__name__)
-console = Console()
 
 
 def _save_sync_status(status_data: dict[str, Any], *, sync_cache_dir: Path) -> Path:
@@ -73,7 +71,7 @@ def _merge_submodule_metadata(
 
     try:
         submodule_problems = load_submodule_problems(submodule_path)
-    except Exception as e:
+    except Exception as e:  # merge is best-effort; don't block sync
         logger.warning("Failed to load submodule problems for merge: %s", e)
         return {"success": False, "error": str(e)}
 
@@ -129,70 +127,18 @@ def sync_submodule(
     Returns:
         CLIOutput with sync result
     """
-    if submodule_path is None:
-        submodule_path = get_submodule_path()
-    if data_path is None:
-        data_path = resolve_enriched_dataset_path(AppConfig.from_env())
-    if sync_cache_dir is None:
-        sync_cache_dir = resolve_sync_cache_dir(data_path)
+    submodule_path = submodule_path or get_submodule_path()
+    data_path = data_path or resolve_enriched_dataset_path(AppConfig.from_env())
+    sync_cache_dir = sync_cache_dir or resolve_sync_cache_dir(data_path)
 
     try:
-        # Get current commit before any operation
-        try:
-            get_submodule_commit(submodule_path)
-        except SubmoduleNotInitializedError as e:
-            return CLIOutput.err(
-                command="erdos sync submodule",
-                error_type="NotInitializedError",
-                message=str(e),
-                code=ExitCode.ERROR,
-            )
-
-        # Perform sync or check
-        status = update_submodule(submodule_path, check_only=check_only)
-
-        # Count problems for status
-        problems_count = 0
-        try:
-            problems = load_submodule_problems(submodule_path)
-            problems_count = len(problems)
-            status = status.model_copy(update={"problems_count": problems_count})
-        except Exception as e:
-            logger.warning("Failed to count problems: %s", e)
-
-        # Save status to cache (skip in dry-run mode)
-        if not dry_run:
-            _save_sync_status(
-                status.model_dump(mode="json"), sync_cache_dir=sync_cache_dir
-            )
-
-        merge_result: dict[str, Any] | None = None
-        if not check_only:
-            merge_result = _merge_submodule_metadata(
-                submodule_path, data_path=data_path, dry_run=dry_run
-            )
-
-        # Build response
-        updated = (
-            status.previous_commit_hash != status.commit_hash
-            if status.previous_commit_hash
-            else False
+        return _sync_submodule_impl(
+            check_only=check_only,
+            submodule_path=submodule_path,
+            data_path=data_path,
+            sync_cache_dir=sync_cache_dir,
+            dry_run=dry_run,
         )
-
-        return CLIOutput.ok(
-            command="erdos sync submodule",
-            data={
-                "checked": check_only,
-                "dry_run": dry_run,
-                "updated": updated,
-                "previous_commit": status.previous_commit_hash,
-                "current_commit": status.commit_hash,
-                "stale": status.stale,
-                "problems_count": problems_count,
-                "merge": merge_result,
-            },
-        )
-
     except SubmoduleFetchError as e:
         return CLIOutput.err(
             command="erdos sync submodule",
@@ -207,14 +153,76 @@ def sync_submodule(
             message=str(e),
             code=ExitCode.NETWORK_ERROR,
         )
-    except Exception as e:
+    except Exception as e:  # unexpected errors should be surfaced as CLIOutput
         logger.exception("Unexpected error in sync submodule")
         return CLIOutput.err(
             command="erdos sync submodule",
-            error_type="Error",
+            error_type="UnexpectedError",
             message=str(e),
             code=ExitCode.ERROR,
         )
+
+
+def _sync_submodule_impl(
+    *,
+    check_only: bool,
+    submodule_path: Path,
+    data_path: Path,
+    sync_cache_dir: Path,
+    dry_run: bool,
+) -> CLIOutput:
+    """Sync or check the submodule (implementation).
+
+    Raises:
+        SubmoduleFetchError: For network failures when updating the submodule.
+        SubmoduleCheckError: For staleness checks that fail due to network issues.
+    """
+    try:
+        get_submodule_commit(submodule_path)
+    except SubmoduleNotInitializedError as e:
+        return CLIOutput.err(
+            command="erdos sync submodule",
+            error_type="NotInitializedError",
+            message=str(e),
+            code=ExitCode.ERROR,
+        )
+
+    status = update_submodule(submodule_path, check_only=check_only)
+
+    problems_count = 0
+    try:
+        problems_count = len(load_submodule_problems(submodule_path))
+        status = status.model_copy(update={"problems_count": problems_count})
+    except Exception as e:  # best-effort metrics; do not fail sync
+        logger.warning("Failed to count problems: %s", e)
+
+    if not dry_run:
+        _save_sync_status(status.model_dump(mode="json"), sync_cache_dir=sync_cache_dir)
+
+    merge_result: dict[str, Any] | None = None
+    if not check_only:
+        merge_result = _merge_submodule_metadata(
+            submodule_path, data_path=data_path, dry_run=dry_run
+        )
+
+    updated = bool(
+        status.previous_commit_hash
+        and status.previous_commit_hash != status.commit_hash
+    )
+
+    return CLIOutput.ok(
+        command="erdos sync submodule",
+        data={
+            "checked": check_only,
+            "dry_run": dry_run,
+            "updated": updated,
+            "previous_commit": status.previous_commit_hash,
+            "current_commit": status.commit_hash,
+            "stale": status.stale,
+            "problems_count": problems_count,
+            "merge": merge_result,
+        },
+    )
 
 
 # =============================================================================

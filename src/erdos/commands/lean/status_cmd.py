@@ -91,7 +91,7 @@ def _get_single_problem_status(
     if problem is None:
         return CLIOutput.err(
             command="erdos lean status",
-            error_type="NotFound",
+            error_type="NotFoundError",
             message=f"Problem {problem_id} not found",
             code=ExitCode.NOT_FOUND,
         )
@@ -197,11 +197,11 @@ def get_formalization_status(
             message=str(e),
             code=ExitCode.ERROR,
         )
-    except Exception as e:
+    except Exception as e:  # final safety net; convert unexpected failures to CLIOutput
         logger.exception("Unexpected error in lean status command")
         return CLIOutput.err(
             command="erdos lean status",
-            error_type="Error",
+            error_type="UnexpectedError",
             message=str(e),
             code=ExitCode.ERROR,
         )
