@@ -59,7 +59,7 @@ class FileCache:
             key: Cache key string (should be normalized by caller).
 
         Returns:
-            40-character hex digest.
+            64-character SHA256 hex digest.
         """
         return hashlib.sha256(key.encode()).hexdigest()
 

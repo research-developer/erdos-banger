@@ -199,31 +199,30 @@ def post_with_retry(
 
     for attempt in range(max_attempts):
         try:
-            response = requests.post(
+            with requests.post(
                 url, json=json_payload, headers=headers, timeout=timeout
-            )
+            ) as response:
+                # Check for retryable status codes
+                if is_retryable_status_code(response.status_code):
+                    last_response = response
+                    if attempt < max_attempts - 1:
+                        delay = get_retry_delay(attempt, response)
+                        logger.debug(
+                            "Retry %d/%d for POST %s: HTTP %d, waiting %.1fs",
+                            attempt + 1,
+                            max_attempts,
+                            url,
+                            response.status_code,
+                            delay,
+                        )
+                        time.sleep(delay)
+                        continue
+                    # Last attempt failed - raise HTTPError
+                    response.raise_for_status()
 
-            # Check for retryable status codes
-            if is_retryable_status_code(response.status_code):
-                last_response = response
-                if attempt < max_attempts - 1:
-                    delay = get_retry_delay(attempt, response)
-                    logger.debug(
-                        "Retry %d/%d for POST %s: HTTP %d, waiting %.1fs",
-                        attempt + 1,
-                        max_attempts,
-                        url,
-                        response.status_code,
-                        delay,
-                    )
-                    time.sleep(delay)
-                    continue
-                # Last attempt failed - raise HTTPError
+                # Non-retryable status codes (including success)
                 response.raise_for_status()
-
-            # Non-retryable status codes (including success)
-            response.raise_for_status()
-            return response
+                return response
 
         except (requests.Timeout, requests.ConnectionError) as e:
             last_error = e

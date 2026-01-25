@@ -13,13 +13,14 @@ Integration tests that require API keys (e.g., `EXA_API_KEY`) skip with "key not
 
 ## Evidence
 
-```
+```text
 SKIPPED [1] tests/integration/test_exa_integration.py:47: EXA_API_KEY not set
 SKIPPED [1] tests/integration/test_exa_integration.py:86: EXA_API_KEY not set
 ```
 
 The `.env` file contains:
-```
+
+```ini
 EXA_API_KEY=<redacted>
 ```
 (Do not commit real keys; value redacted in this deck.)
@@ -34,6 +35,7 @@ Test code uses `os.environ.get("EXA_API_KEY")` which only sees shell environment
 
 ### Option A: pytest-dotenv plugin (Recommended)
 Add `pytest-dotenv` to dev dependencies and configure in `pyproject.toml`:
+
 ```toml
 [tool.pytest.ini_options]
 env_files = [".env"]
@@ -44,6 +46,7 @@ Document that users must run `source .env && pytest ...` for network tests.
 
 ### Option C: conftest.py loading
 Add dotenv loading to `tests/conftest.py`:
+
 ```python
 from dotenv import load_dotenv
 load_dotenv()

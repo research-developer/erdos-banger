@@ -77,7 +77,8 @@ The exemption is appropriate because:
 If the module grows further, consider:
 
 1. **Typer sub-app structure:**
-   ```
+
+   ```text
    commands/search/
    ├── __init__.py     # Typer app composition
    ├── local.py        # BM25/semantic/hybrid modes
@@ -91,6 +92,7 @@ Currently the cognitive overhead of splitting doesn't justify the LOC savings.
 ## Resolution
 
 Exempted via inline marker:
+
 ```python
 # exempt: DEBT-096 (517 LOC; CLI + multiple search modes including MSC/zbMATH)
 ```

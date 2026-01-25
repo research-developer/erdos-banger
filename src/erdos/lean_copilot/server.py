@@ -272,6 +272,8 @@ def generate_tactics(
 def _raise_generate_http_exception(exc: Exception) -> NoReturn:
     from fastapi import HTTPException  # noqa: PLC0415
 
+    if isinstance(exc, HTTPException):
+        raise exc
     if isinstance(exc, LLMRouterError):
         logger.error("LLM router error: %s", exc)
         raise HTTPException(status_code=503, detail=str(exc)) from exc
@@ -302,6 +304,8 @@ def _raise_generate_http_exception(exc: Exception) -> NoReturn:
 def _raise_encode_http_exception(exc: Exception) -> NoReturn:
     from fastapi import HTTPException  # noqa: PLC0415
 
+    if isinstance(exc, HTTPException):
+        raise exc
     from erdos.lean_copilot.embeddings import (  # noqa: PLC0415
         EmbeddingsNotAvailableError,
     )

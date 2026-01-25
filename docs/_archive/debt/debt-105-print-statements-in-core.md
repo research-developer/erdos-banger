@@ -9,15 +9,21 @@
 
 ## Summary
 
-An audit grepping for `print(` under `src/erdos/core/` flagged two occurrences, but both were inside docstring examples (not executable code). Runtime code already uses logging consistently.
+An audit grepping for `print(` under `src/erdos/core/` flagged a few occurrences, but they were inside docstring examples (not executable code). Runtime code already uses logging consistently.
 
 ## Resolution
 
 - Updated docstring examples to avoid `print(...)` so grep-based audits don't report false positives.
 
+## Evidence
+
+- `src/erdos/core/lean/aristotle.py`: replaced docstring example `print(...)` with `logger.info(...)`
+- `src/erdos/core/lean/runner.py`: replaced docstring example `print(error)` with `logger.warning(...)`
+- `src/erdos/core/timing.py`: replaced docstring example `print(...)` with assignment (`took_ms = ...`)
+
 ## Verification
 
-- `rg -n '(^|[^.])\\bprint\\(' src/erdos/core` returns no matches.
+- `rg -n '(^|[^.])\bprint\(' src/erdos/core` returns no matches.
 - `make ci`
 
 ## Acceptance Criteria

@@ -378,7 +378,11 @@ class ZbMathClient:
 
         # For identifier format (e.g., "1191.11025"), use search endpoint
         if self._is_identifier_format(normalized_id):
-            return self._search_by_identifier(normalized_id, use_cache)
+            return self._search_by_identifier(
+                normalized_id,
+                cache_key=cache_key,
+                use_cache=use_cache,
+            )
 
         # For numeric IDs, use direct lookup
         self._rate_limiter.sleep_if_needed()
@@ -410,7 +414,7 @@ class ZbMathClient:
             raise
 
     def _search_by_identifier(
-        self, identifier: str, use_cache: bool
+        self, identifier: str, *, cache_key: str, use_cache: bool
     ) -> ZbMathEntry | None:
         """Search for entry by zbMATH identifier (e.g., '1191.11025')."""
         self._rate_limiter.sleep_if_needed()
@@ -430,15 +434,11 @@ class ZbMathClient:
 
             results = data.get("result", [])
             if not results:
-                if use_cache:
-                    cache_key = make_cache_key("zbl", identifier)
-                    self._cache.set(cache_key, {"entry": None}, prefix="zbl_")
+                self._cache_zbl_entry(cache_key, None, use_cache=use_cache)
                 return None
 
             entry = ZbMathEntry.from_api_response(results[0])
-            if use_cache:
-                cache_key = make_cache_key("zbl", identifier)
-                self._cache.set(cache_key, {"entry": entry.to_dict()}, prefix="zbl_")
+            self._cache_zbl_entry(cache_key, entry, use_cache=use_cache)
 
             return entry
 

@@ -257,7 +257,8 @@ class SemanticScholarClient:
 
     def get_cache_path(self, endpoint: str, identifier: str) -> Path:
         """Get cache file path for an API call (for testing/debugging)."""
-        key = make_cache_key(endpoint, identifier)
+        normalized_id = self._normalize_identifier(identifier)
+        key = make_cache_key(endpoint, normalized_id)
         return self._cache.get_file_path(key, prefix=f"{endpoint}_")
 
     def _get_headers(self) -> dict[str, str]:
@@ -280,7 +281,8 @@ class SemanticScholarClient:
         Raises:
             requests.HTTPError: On HTTP errors (except 404).
         """
-        cache_key = make_cache_key("paper", identifier)
+        normalized_id = self._normalize_identifier(identifier)
+        cache_key = make_cache_key("paper", normalized_id)
 
         if use_cache:
             cached = self._cache.get(cache_key, prefix="paper_")
@@ -292,7 +294,6 @@ class SemanticScholarClient:
 
         self._rate_limiter.sleep_if_needed()
 
-        normalized_id = self._normalize_identifier(identifier)
         url = f"{self.BASE_URL}/paper/{normalized_id}"
 
         try:
@@ -329,7 +330,8 @@ class SemanticScholarClient:
 
         Returns papers that cite the given paper, with intent and context.
         """
-        cache_key = make_cache_key("citations", identifier, f"limit={limit}")
+        normalized_id = self._normalize_identifier(identifier)
+        cache_key = make_cache_key("citations", normalized_id, f"limit={limit}")
 
         if use_cache:
             cached = self._cache.get(cache_key, prefix="citations_")
@@ -339,7 +341,6 @@ class SemanticScholarClient:
 
         self._rate_limiter.sleep_if_needed()
 
-        normalized_id = self._normalize_identifier(identifier)
         url = f"{self.BASE_URL}/paper/{normalized_id}/citations"
         fields = ",".join(
             [
@@ -387,7 +388,8 @@ class SemanticScholarClient:
 
         Returns papers that the given paper cites.
         """
-        cache_key = make_cache_key("references", identifier, f"limit={limit}")
+        normalized_id = self._normalize_identifier(identifier)
+        cache_key = make_cache_key("references", normalized_id, f"limit={limit}")
 
         if use_cache:
             cached = self._cache.get(cache_key, prefix="references_")
@@ -397,7 +399,6 @@ class SemanticScholarClient:
 
         self._rate_limiter.sleep_if_needed()
 
-        normalized_id = self._normalize_identifier(identifier)
         url = f"{self.BASE_URL}/paper/{normalized_id}/references"
         fields = ",".join(
             [

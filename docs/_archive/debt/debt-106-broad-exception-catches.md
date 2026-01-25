@@ -20,7 +20,7 @@ Note: the repo's default Ruff configuration does not enable `BLE001`, and `warn_
 
 ## Verification
 
-- `rg -n 'except Exception(?: as [A-Za-z_][A-Za-z0-9_]*)?:\\s*$' src/erdos` returns no matches (every broad catch has an inline rationale).
+- `rg -n 'except Exception(?: as [A-Za-z_][A-Za-z0-9_]*)?:\s*$' src/erdos` returns no matches (production code only; every broad catch has an inline rationale).
 - `make ci`
 
 ## Acceptance Criteria
