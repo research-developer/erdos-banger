@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-CLI toolkit for collaborative research on Erdős problems (1,135 curated math problems). Pipeline: problem data → literature ingestion → FTS5 search → RAG Q&A → Lean 4 formalization.
+CLI toolkit for collaborative research on Erdős problems (upstream dataset is 1,000+ problems and evolves over time). Pipeline: problem data → literature ingestion → FTS5 search → RAG Q&A → Lean 4 formalization.
+
+## Documentation
+
+Start at `docs/INDEX.md` for getting started, developer guides, and architecture docs.
 
 ## Build & Development Commands
 
@@ -91,6 +95,7 @@ src/erdos/
 ## Data Locations
 
 - `data/problems_enriched.yaml` - Local enriched problem dataset (titles, statements, references) (gitignored)
+- Created/updated by `erdos sync website` / `erdos sync all` (default location; override via `ERDOS_DATA_PATH`)
 - `src/erdos/data/problems_enriched.yaml` - Built-in sample dataset shipped with the package
 - `data/erdosproblems/` - Upstream submodule (metadata only, do not modify)
 - `literature/manifests/` - Reference metadata per problem
@@ -208,7 +213,7 @@ CI enforces LOC (lines of code) thresholds to prevent god-file regressions:
 **Bounded-context subpackages:**
 - `ask/` - RAG Q&A logic (retrieval, prompt, LLM, service)
 - `batch/` - Batch processing (filters, state, runner)
-- `clients/` - HTTP client adapters (arXiv, Crossref, OpenAlex APIs)
+- `clients/` - HTTP client adapters (arXiv, Crossref, OpenAlex, Exa, Semantic Scholar, zbMATH)
 - `formal_conjectures/` - Lean formalization upstream sync (provenance, fetch, local)
 - `ingest/` - Reference ingestion (fetch, manifest models, service)
 - `lean/` - Lean tooling (compilation, skeleton generation, prover wrappers)

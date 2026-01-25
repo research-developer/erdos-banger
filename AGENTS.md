@@ -35,6 +35,7 @@ watch -n5 'git log --oneline -5'
   - `src/erdos/mcp/`: MCP server adapter (optional dependency).
 - `tests/`: pytest suite (`unit/`, `integration/`, `e2e/`) and `tests/fixtures/`.
 - `docs/`: specs, ADRs, bug/debt decks, vendor docs, and process docs.
+- `docs/INDEX.md`: documentation landing page (getting started, developer guides, architecture, process docs).
 - `formal/lean/`: Lean 4 project scaffold used by Lean integration.
 - `scripts/`: helper scripts (e.g., `scripts/smoke-test.sh`, LLM wrappers).
 - `logs/ralph/`: per-iteration Ralph Wiggum logs (gitignored; safe to clear between runs).
@@ -66,12 +67,12 @@ Use `make` (preferred) or `uv` directly:
 
 ### API Keys for Network Tests
 
-Tests marked `requires_network` may need API keys (e.g., `EXA_API_KEY`, `S2_API_KEY`).
+Tests marked `requires_network` may need API keys (e.g., `EXA_API_KEY`, `SEMANTIC_SCHOLAR_API_KEY`).
 
 **Local development:** Create a `.env` file in the project root with your keys:
 ```bash
 EXA_API_KEY=your-key-here
-S2_API_KEY=your-key-here
+SEMANTIC_SCHOLAR_API_KEY=your-key-here
 ```
 The `.env` file is gitignored and loaded automatically by `pytest-dotenv`.
 
