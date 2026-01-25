@@ -21,5 +21,5 @@ class TestGetProblem:
 
         assert not result.success
         assert isinstance(result.error, dict)
-        assert result.error["type"] == "NotFound"
+        assert result.error["type"] == "NotFoundError"
         assert result.error["code"] == 3

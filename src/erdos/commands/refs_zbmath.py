@@ -11,9 +11,8 @@ if TYPE_CHECKING:
 
 import requests
 import typer
-from rich.console import Console
 
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, exit_with_result
 from erdos.core.clients.zbmath import (
     ZbMathClient,
     ZbMathConfig,
@@ -29,7 +28,6 @@ logger = logging.getLogger(__name__)
 
 
 app = typer.Typer(help="zbMATH Open API commands.")
-console = Console()
 
 
 def _get_client() -> ZbMathClient:
@@ -216,7 +214,7 @@ def _run_query(
             return (
                 CLIOutput.err(
                     command=command,
-                    error_type="NotFound",
+                    error_type="NotFoundError",
                     message=f"Entry not found: {search_term}",
                     code=ExitCode.NOT_FOUND,
                 ),

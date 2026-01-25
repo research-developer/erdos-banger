@@ -10,7 +10,7 @@ import pytest
 
 from erdos.cli import app
 from erdos.core.exit_codes import ExitCode
-from tests.cli_runner import make_cli_runner
+from tests.cli_runner import make_cli_runner, unset_env_vars
 
 
 runner = make_cli_runner()
@@ -190,7 +190,12 @@ class TestLoopRunRouterIntegration:
             ],
             env={
                 "ERDOS_REPO_ROOT": str(tmp_path),
-                # No LLM command configured at all
+                # No LLM command configured at all (router should fail fast)
+                **unset_env_vars(
+                    "ERDOS_LLM_COMMAND",
+                    "ERDOS_LLM_COMMAND_MATH",
+                    "ERDOS_LLM_COMMAND_CODE",
+                ),
             },
         )
 
@@ -221,6 +226,12 @@ class TestLoopRunRouterIntegration:
             ],
             env={
                 "ERDOS_REPO_ROOT": str(tmp_path),
+                # Ensure a developer's shell env doesn't satisfy routing.
+                **unset_env_vars(
+                    "ERDOS_LLM_COMMAND",
+                    "ERDOS_LLM_COMMAND_MATH",
+                    "ERDOS_LLM_COMMAND_CODE",
+                ),
             },
         )
 
@@ -249,6 +260,10 @@ class TestLoopRunRouterIntegration:
                 "ERDOS_REPO_ROOT": str(tmp_path),
                 # Only MATH set - loop needs CODE or global
                 "ERDOS_LLM_COMMAND_MATH": "/path/to/math/llm",
+                **unset_env_vars(
+                    "ERDOS_LLM_COMMAND",
+                    "ERDOS_LLM_COMMAND_CODE",
+                ),
             },
         )
 

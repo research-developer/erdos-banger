@@ -10,10 +10,9 @@ from pathlib import Path
 from typing import Annotated, Any
 
 import typer
-from rich.console import Console
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, exit_with_result
 from erdos.core.constants import DEFAULT_RAG_LIMIT, LEAN_COMPILE_TIMEOUT
 from erdos.core.exit_codes import ExitCode
 from erdos.core.llm import LLMRouterError, TaskType, resolve_llm_command
@@ -23,7 +22,6 @@ from erdos.core.timing import measure_time_ms
 
 
 app = typer.Typer(help="Iterative Lean proof loop.")
-console = Console()
 
 
 def _print_human_result(result_data: dict[str, Any]) -> None:

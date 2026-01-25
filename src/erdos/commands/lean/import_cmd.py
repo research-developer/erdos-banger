@@ -226,7 +226,7 @@ def import_upstream_formalization(
     except FormalConjecturesError as e:
         error_type_to_exit_code = {
             "NetworkError": ExitCode.NETWORK_ERROR,
-            "NotFound": ExitCode.NOT_FOUND,
+            "NotFoundError": ExitCode.NOT_FOUND,
             "ConfigError": ExitCode.CONFIG_ERROR,
         }
         exit_code = error_type_to_exit_code.get(e.error_type, ExitCode.ERROR)
@@ -236,11 +236,11 @@ def import_upstream_formalization(
             message=str(e),
             code=exit_code,
         )
-    except Exception as e:
+    except Exception as e:  # final safety net; convert unexpected failures to CLIOutput
         logger.exception("Unexpected error in lean import command")
         return CLIOutput.err(
             command="erdos lean import",
-            error_type="Error",
+            error_type="UnexpectedError",
             message=str(e),
             code=ExitCode.ERROR,
         )

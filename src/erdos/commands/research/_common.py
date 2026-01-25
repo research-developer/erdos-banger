@@ -43,7 +43,7 @@ def load_problem_or_error(
     if problem is None:
         return CLIOutput.err(
             command=command,
-            error_type="NotFound",
+            error_type="NotFoundError",
             message=f"Problem {problem_id} not found",
             code=ExitCode.NOT_FOUND,
         )
@@ -54,7 +54,7 @@ def handle_store_error(command: str, exc: Exception) -> CLIOutput:
     if isinstance(exc, ResearchRecordNotFoundError):
         return CLIOutput.err(
             command=command,
-            error_type="NotFound",
+            error_type="NotFoundError",
             message=str(exc),
             code=ExitCode.NOT_FOUND,
         )

@@ -24,4 +24,4 @@ def test_show_missing_problem(sample_problems_yaml: Path) -> None:
 
     assert not result.success
     assert isinstance(result.error, dict)
-    assert result.error["type"] == "NotFound"
+    assert result.error["type"] == "NotFoundError"

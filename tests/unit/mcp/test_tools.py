@@ -79,7 +79,7 @@ class TestGetProblem:
         result = mcp_get_problem(problem_id=99999, repo=problem_repo)
 
         assert result["success"] is False
-        assert result["error"]["type"] == "NotFound"
+        assert result["error"]["type"] == "NotFoundError"
         assert "99999" in result["error"]["message"]
 
     def test_get_problem_schema_version(self, problem_repo: ProblemRepository) -> None:
@@ -166,7 +166,7 @@ class TestGetReferences:
         result = mcp_get_references(problem_id=99999, repo=problem_repo)
 
         assert result["success"] is False
-        assert result["error"]["type"] == "NotFound"
+        assert result["error"]["type"] == "NotFoundError"
 
 
 class TestSearchIndex:
@@ -245,7 +245,7 @@ class TestLeanCheck:
         result = mcp_lean_check(file="nonexistent.lean", project_path=tmp_path)
 
         assert result["success"] is False
-        assert result["error"]["type"] == "NotFound"
+        assert result["error"]["type"] == "NotFoundError"
 
     def test_lean_check_validates_path_traversal(self, tmp_path: Path) -> None:
         """lean_check rejects path traversal attempts."""
@@ -286,7 +286,7 @@ class TestLeanFormalize:
         )
 
         assert result["success"] is False
-        assert result["error"]["type"] == "NotFound"
+        assert result["error"]["type"] == "NotFoundError"
 
 
 class TestAskQuestion:
@@ -330,7 +330,7 @@ class TestAskQuestion:
         )
 
         assert result["success"] is False
-        assert result["error"]["type"] == "NotFound"
+        assert result["error"]["type"] == "NotFoundError"
 
 
 class TestGetLogs:

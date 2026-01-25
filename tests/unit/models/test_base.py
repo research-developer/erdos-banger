@@ -128,8 +128,10 @@ class TestCLIOutput:
         assert output.error is None
 
     def test_error_output(self) -> None:
-        output = CLIOutput.err("erdos show", "NotFound", "Problem not found", code=3)
+        output = CLIOutput.err(
+            "erdos show", "NotFoundError", "Problem not found", code=3
+        )
         assert not output.success
         assert output.error is not None
-        assert output.error["type"] == "NotFound"
+        assert output.error["type"] == "NotFoundError"
         assert output.error["code"] == 3

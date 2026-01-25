@@ -284,7 +284,7 @@ class BatchRunner:
     ) -> tuple[bool, str]:
         try:
             success = self.process_fn(problem_id)
-        except Exception as e:
+        except Exception as e:  # batch must keep going; mark failure and continue
             logger.exception("Error processing problem %d", problem_id)
             state.mark_failed(problem_id)
             return False, str(e)

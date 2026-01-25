@@ -35,7 +35,7 @@ def load_enriched_problems(path: Path) -> dict[int, ProblemRecord]:
     try:
         with path.open(encoding="utf-8") as f:
             data = yaml.safe_load(f)
-    except Exception as e:
+    except (OSError, yaml.YAMLError) as e:
         logger.warning("Failed to load enriched dataset %s: %s", path, e)
         return {}
 

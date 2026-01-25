@@ -28,6 +28,7 @@ def _setup_env(tmp_path: Path, sample_problems_yaml: Path) -> dict[str, str]:
     return {
         "ERDOS_DATA_PATH": str(data_dir),
         "ERDOS_REPO_ROOT": str(tmp_path),
+        "ERDOS_EXA_CACHE_PATH": str(tmp_path / "exa_cache"),
     }
 
 

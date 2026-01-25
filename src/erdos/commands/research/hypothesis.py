@@ -53,7 +53,7 @@ def hypothesis_add(
             confidence=confidence,
             notes=notes,
         )
-    except Exception as e:
+    except Exception as e:  # map store failures to CLIOutput
         exit_with_result(ctx, handle_store_error("erdos research hypothesis add", e))
         return
 
@@ -94,7 +94,7 @@ def hypothesis_list(
     store = FSResearchStore(repo_root=app_ctx.config.repo_root)
     try:
         records = store.hypothesis_list(problem_id, status=status)
-    except Exception as e:
+    except Exception as e:  # map store failures to CLIOutput
         exit_with_result(ctx, handle_store_error("erdos research hypothesis list", e))
         return
 
@@ -156,7 +156,7 @@ def hypothesis_update(
             confidence=confidence,
             notes=notes,
         )
-    except Exception as e:
+    except Exception as e:  # map store failures to CLIOutput
         exit_with_result(ctx, handle_store_error("erdos research hypothesis update", e))
         return
 

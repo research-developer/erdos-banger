@@ -147,7 +147,7 @@ class TestRefsZbMathCLIIntegration:
         # Should return error, not crash
         payload = json.loads(result.stdout)
         assert payload["success"] is False
-        assert payload["error"]["type"] == "NotFound"
+        assert payload["error"]["type"] == "NotFoundError"
 
 
 @pytest.mark.requires_network

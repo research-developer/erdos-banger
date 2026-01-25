@@ -22,7 +22,7 @@ import contextlib
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import requests
 
@@ -286,6 +286,7 @@ class ZbMathClient:
     """
 
     BASE_URL = "https://api.zbmath.org/v1"
+    _CACHE_MISS = object()
 
     def __init__(self, config: ZbMathConfig | None = None):
         """Initialize client with configuration."""
@@ -320,6 +321,32 @@ class ZbMathClient:
         key = make_cache_key(endpoint, normalized_id)
         return self._cache.get_file_path(key, prefix=f"{endpoint}_")
 
+    def _get_cached_zbl_entry(
+        self, cache_key: str, *, use_cache: bool
+    ) -> ZbMathEntry | None | object:
+        """Return a cached entry, None (cached miss), or sentinel (cache disabled/miss)."""
+        if not use_cache:
+            return self._CACHE_MISS
+        cached = self._cache.get(cache_key, prefix="zbl_")
+        if cached is None:
+            return self._CACHE_MISS
+        entry_data = cached.get("entry")
+        if entry_data is None:
+            return None
+        return ZbMathEntry.from_dict(entry_data)
+
+    def _cache_zbl_entry(
+        self, cache_key: str, entry: ZbMathEntry | None, *, use_cache: bool
+    ) -> None:
+        """Cache a lookup result (best-effort), including negative caching."""
+        if not use_cache:
+            return
+        self._cache.set(
+            cache_key,
+            {"entry": entry.to_dict() if entry is not None else None},
+            prefix="zbl_",
+        )
+
     def _get_headers(self) -> dict[str, str]:
         """Get headers for API request."""
         headers = {"Accept": "application/json"}
@@ -345,13 +372,9 @@ class ZbMathClient:
         normalized_id = self._normalize_zbl_id(zbl_id)
         cache_key = make_cache_key("zbl", normalized_id)
 
-        if use_cache:
-            cached = self._cache.get(cache_key, prefix="zbl_")
-            if cached is not None:
-                entry_data = cached.get("entry")
-                if entry_data is not None:
-                    return ZbMathEntry.from_dict(entry_data)
-                return None
+        cached_entry = self._get_cached_zbl_entry(cache_key, use_cache=use_cache)
+        if cached_entry is not self._CACHE_MISS:
+            return cast("ZbMathEntry | None", cached_entry)
 
         # For identifier format (e.g., "1191.11025"), use search endpoint
         if self._is_identifier_format(normalized_id):
@@ -372,20 +395,17 @@ class ZbMathClient:
 
             result = data.get("result")
             if result is None:
-                if use_cache:
-                    self._cache.set(cache_key, {"entry": None}, prefix="zbl_")
+                self._cache_zbl_entry(cache_key, None, use_cache=use_cache)
                 return None
 
             entry = ZbMathEntry.from_api_response(result)
-            if use_cache:
-                self._cache.set(cache_key, {"entry": entry.to_dict()}, prefix="zbl_")
+            self._cache_zbl_entry(cache_key, entry, use_cache=use_cache)
 
             return entry
 
         except requests.HTTPError as e:
             if e.response is not None and e.response.status_code == 404:
-                if use_cache:
-                    self._cache.set(cache_key, {"entry": None}, prefix="zbl_")
+                self._cache_zbl_entry(cache_key, None, use_cache=use_cache)
                 return None
             raise
 

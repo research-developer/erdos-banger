@@ -15,6 +15,14 @@ if TYPE_CHECKING:
 
 
 def render_lead(record: LeadRecord) -> str:
+    """Render a lead record to deterministic plain text.
+
+    Args:
+        record: Lead record to render.
+
+    Returns:
+        Deterministic plain-text representation of the record.
+    """
     src = record.source
     return (
         "Kind: lead\n"
@@ -30,6 +38,14 @@ def render_lead(record: LeadRecord) -> str:
 
 
 def render_attempt(record: AttemptRecord) -> str:
+    """Render an attempt record to deterministic plain text.
+
+    Args:
+        record: Attempt record to render.
+
+    Returns:
+        Deterministic plain-text representation of the record.
+    """
     a = record.artifacts
     return (
         "Kind: attempt\n"
@@ -46,6 +62,14 @@ def render_attempt(record: AttemptRecord) -> str:
 
 
 def render_hypothesis(record: HypothesisRecord) -> str:
+    """Render a hypothesis record to deterministic plain text.
+
+    Args:
+        record: Hypothesis record to render.
+
+    Returns:
+        Deterministic plain-text representation of the record.
+    """
     evidence = ", ".join(record.evidence)
     return (
         "Kind: hypothesis\n"
@@ -62,6 +86,14 @@ def render_hypothesis(record: HypothesisRecord) -> str:
 
 
 def render_task(record: TaskRecord) -> str:
+    """Render a task record to deterministic plain text.
+
+    Args:
+        record: Task record to render.
+
+    Returns:
+        Deterministic plain-text representation of the record.
+    """
     blocked_on = ", ".join(record.blocked_on)
     links = ", ".join(record.links)
     return (

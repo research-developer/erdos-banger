@@ -5,17 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from rich.console import Console
-
+from erdos.commands.presenter import console
 from erdos.core.models import LeanCheckResult
 
 
 # Default upstream metadata path
 UPSTREAM_METADATA_PATH = Path("data/erdosproblems/data/problems.yaml")
-
-# Console instances for output
-console = Console()
-err_console = Console(stderr=True)
 
 
 def print_human_check_result(result_data: dict[str, Any]) -> None:

@@ -72,7 +72,7 @@ def is_marker_available() -> bool:
         import marker.converters.pdf  # noqa: F401, PLC0415
 
         return True
-    except Exception as e:
+    except Exception as e:  # optional dependency may fail to import for many reasons
         logger.debug("Marker unavailable: %s", e)
         return False
 
@@ -83,7 +83,7 @@ def is_pdfplumber_available() -> bool:
         import pdfplumber  # noqa: F401, PLC0415
 
         return True
-    except Exception as e:
+    except Exception as e:  # optional dependency may fail to import for many reasons
         logger.debug("pdfplumber unavailable: %s", e)
         return False
 
@@ -170,7 +170,7 @@ def convert_with_pdfplumber(pdf_path: Path) -> PDFConversionResult:
                 converter="pdfplumber",
                 metadata={"pages": str(len(pdf.pages))},
             )
-    except Exception as e:
+    except Exception as e:  # conversion backend may raise a variety of errors
         logger.warning("pdfplumber conversion failed for %s: %s", pdf_path, e)
         return PDFConversionResult(
             success=False,
@@ -259,7 +259,7 @@ def convert_with_marker(
                 "llm_service": str(llm_service) if llm_service else "",
             },
         )
-    except Exception as e:
+    except Exception as e:  # conversion backend may raise a variety of errors
         logger.warning("Marker conversion failed for %s: %s", pdf_path, e)
         return PDFConversionResult(
             success=False,

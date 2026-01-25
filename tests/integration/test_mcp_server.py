@@ -144,7 +144,7 @@ class TestMCPToolFunctions:
         data = json.loads(result)
 
         assert data["success"] is False
-        assert data["error"]["type"] == "NotFound"
+        assert data["error"]["type"] == "NotFoundError"
 
     def test_lean_formalize_creates_file(
         self,

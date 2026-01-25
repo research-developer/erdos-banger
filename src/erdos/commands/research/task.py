@@ -47,7 +47,7 @@ def task_add(
             status=status,
             priority=priority,
         )
-    except Exception as e:
+    except Exception as e:  # map store failures to CLIOutput
         exit_with_result(ctx, handle_store_error("erdos research task add", e))
         return
 
@@ -87,7 +87,7 @@ def task_list(
     store = FSResearchStore(repo_root=app_ctx.config.repo_root)
     try:
         records = store.task_list(problem_id, status=status, priority=priority)
-    except Exception as e:
+    except Exception as e:  # map store failures to CLIOutput
         exit_with_result(ctx, handle_store_error("erdos research task list", e))
         return
 
@@ -140,7 +140,7 @@ def task_update(
         record, path = store.task_update(
             problem_id, task_id, status=status, priority=priority
         )
-    except Exception as e:
+    except Exception as e:  # map store failures to CLIOutput
         exit_with_result(ctx, handle_store_error("erdos research task update", e))
         return
 

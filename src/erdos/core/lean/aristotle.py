@@ -10,7 +10,7 @@ Usage:
         output_file=Path("formal/lean/Erdos/Problem006.aristotle.lean"),
     )
     if result.success:
-        print(f"Proof generated at {result.output_file}")
+        logger.info("Proof generated at %s", result.output_file)
 
 Configuration:
     - ARISTOTLE_API_KEY: Required by the vendor CLI (must be set in environment)
@@ -42,7 +42,7 @@ class AristotleError(Exception):
 
         Args:
             message: Error description
-            error_type: Type of error (ConfigError, NotFound, UsageError, Timeout, Error)
+            error_type: Type of error (ConfigError, NotFoundError, UsageError, TimeoutError, Error)
         """
         super().__init__(message)
         self.error_type = error_type
@@ -253,7 +253,7 @@ def run_aristotle_prove_from_file(
     if not input_file.exists():
         raise AristotleError(
             f"Input file not found: {input_file}",
-            error_type="NotFound",
+            error_type="NotFoundError",
         )
 
     # Validate output file is different from input
@@ -285,7 +285,7 @@ def run_aristotle_prove_from_file(
     except subprocess.TimeoutExpired as exc:
         raise AristotleError(
             f"Aristotle timed out after {config.timeout} seconds",
-            error_type="Timeout",
+            error_type="TimeoutError",
         ) from exc
 
     success = result.returncode == 0

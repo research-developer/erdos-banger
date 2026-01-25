@@ -190,7 +190,7 @@ def clone_repository(
         return CloneResult(success=False, error=f"Clone timed out after {timeout}s")
     except FileNotFoundError:
         return CloneResult(success=False, error="git command not found")
-    except Exception as e:
+    except OSError as e:
         return CloneResult(success=False, error=str(e))
 
 
@@ -205,7 +205,7 @@ def _read_toolchain(repo_path: Path) -> str | None:
     if toolchain_path.exists():
         try:
             return toolchain_path.read_text(encoding="utf-8").strip()
-        except Exception:
+        except (OSError, UnicodeDecodeError):
             return None
     return None
 
@@ -252,7 +252,7 @@ def run_lake_build(
         return False, f"Build timed out after {timeout}s"
     except FileNotFoundError:
         return False, "lake command not found (is Lean/elan installed?)"
-    except Exception as e:
+    except OSError as e:
         return False, f"Build error: {e}"
 
 
@@ -348,7 +348,7 @@ def check_no_sorries(
         return False, f"No-sorries check timed out after {timeout}s"
     except FileNotFoundError:
         return False, "lake command not found"
-    except Exception as e:
+    except OSError as e:
         return False, f"Check error: {e}"
 
 
@@ -499,7 +499,7 @@ def verify_proof(
             # S110: Best-effort cleanup of temp directory (non-critical)
             try:
                 shutil.rmtree(work_dir)
-            except Exception:
+            except OSError:
                 logger.debug("Failed to clean up temp directory: %s", work_dir)
 
 

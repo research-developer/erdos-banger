@@ -10,11 +10,10 @@ from pathlib import Path
 from typing import Annotated, Any
 
 import typer
-from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
 from erdos.core.sync.forum import (
@@ -34,7 +33,6 @@ from erdos.core.timing import measure_time_ms
 
 
 logger = logging.getLogger(__name__)
-console = Console()
 
 
 # =============================================================================
@@ -277,11 +275,11 @@ def sync_proof_links(
             message=str(e),
             code=code,
         )
-    except Exception as e:
+    except Exception as e:  # final safety net; convert unexpected failures to CLIOutput
         logger.exception("Unexpected error in sync proof")
         return CLIOutput.err(
             command="erdos sync proof",
-            error_type="Error",
+            error_type="UnexpectedError",
             message=str(e),
             code=ExitCode.ERROR,
         )

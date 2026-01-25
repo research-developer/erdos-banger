@@ -61,7 +61,7 @@ class LeanRunner:
         result = runner.check(Path("Erdos/Problem006.lean"))
         if not result.success:
             for error in result.errors:
-                print(error)
+                logger.warning("%s", error)
     """
 
     def __init__(self, project_path: Path) -> None:
