@@ -19,7 +19,7 @@ import asyncio
 import logging
 import shlex
 import subprocess
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 
 from pydantic import BaseModel, Field
 
@@ -269,6 +269,58 @@ def generate_tactics(
 # =============================================================================
 
 
+def _raise_generate_http_exception(exc: Exception) -> NoReturn:
+    from fastapi import HTTPException  # noqa: PLC0415
+
+    if isinstance(exc, HTTPException):
+        raise exc
+    if isinstance(exc, LLMRouterError):
+        logger.error("LLM router error: %s", exc)
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    if isinstance(exc, LLMExecutionError):
+        logger.error("LLM command failed: %s", exc)
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    if isinstance(exc, FileNotFoundError):
+        logger.error("LLM command not found: %s", exc)
+        raise HTTPException(
+            status_code=503, detail=f"LLM command not found: {exc}"
+        ) from exc
+    if isinstance(exc, subprocess.TimeoutExpired):
+        logger.error("LLM command timed out: %s", exc)
+        raise HTTPException(
+            status_code=504,
+            detail=f"LLM command timed out after {exc.timeout}s",
+        ) from exc
+    if isinstance(exc, (ValueError, OSError)):
+        logger.error("LLM execution error: %s", exc)
+        raise HTTPException(
+            status_code=500, detail=f"LLM execution error: {exc}"
+        ) from exc
+
+    logger.error("Unexpected generate error: %s", exc)
+    raise HTTPException(status_code=500, detail=f"Unexpected error: {exc}") from exc
+
+
+def _raise_encode_http_exception(exc: Exception) -> NoReturn:
+    from fastapi import HTTPException  # noqa: PLC0415
+
+    if isinstance(exc, HTTPException):
+        raise exc
+    from erdos.lean_copilot.embeddings import (  # noqa: PLC0415
+        EmbeddingsNotAvailableError,
+    )
+
+    if isinstance(exc, EmbeddingsNotAvailableError):
+        logger.warning("Embeddings unavailable (degraded mode): %s", exc)
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    if isinstance(exc, ValueError):
+        logger.error("Embedding error: %s", exc)
+        raise HTTPException(status_code=400, detail=f"Invalid request: {exc}") from exc
+
+    logger.error("Unexpected embedding error: %s", exc)
+    raise HTTPException(status_code=500, detail=f"Embedding error: {exc}") from exc
+
+
 def create_app(*, llm_command_override: str | None = None) -> FastAPI:
     """Create FastAPI application for Lean Copilot API.
 
@@ -285,7 +337,7 @@ def create_app(*, llm_command_override: str | None = None) -> FastAPI:
         raise CopilotNotAvailableError()
 
     # Import here to avoid ImportError when copilot extra not installed
-    from fastapi import FastAPI, HTTPException  # noqa: PLC0415
+    from fastapi import FastAPI  # noqa: PLC0415
 
     app = FastAPI(
         title="Erdos Lean Copilot API",
@@ -309,36 +361,8 @@ def create_app(*, llm_command_override: str | None = None) -> FastAPI:
                 llm_command=llm_command_override,
             )
             return GenerateResponse(tactics=tactics)
-        except LLMRouterError as e:
-            logger.error("LLM router error: %s", e)
-            raise HTTPException(
-                status_code=503,
-                detail=str(e),
-            ) from e
-        except LLMExecutionError as e:
-            logger.error("LLM command failed: %s", e)
-            raise HTTPException(
-                status_code=503,
-                detail=str(e),
-            ) from e
-        except FileNotFoundError as e:
-            logger.error("LLM command not found: %s", e)
-            raise HTTPException(
-                status_code=503,
-                detail=f"LLM command not found: {e}",
-            ) from e
-        except subprocess.TimeoutExpired as e:
-            logger.error("LLM command timed out: %s", e)
-            raise HTTPException(
-                status_code=504,
-                detail=f"LLM command timed out after {e.timeout}s",
-            ) from e
-        except (ValueError, OSError) as e:
-            logger.error("LLM execution error: %s", e)
-            raise HTTPException(
-                status_code=500,
-                detail=f"LLM execution error: {e}",
-            ) from e
+        except Exception as e:  # convert execution errors to HTTP responses
+            _raise_generate_http_exception(e)
 
     @app.post("/encode", response_model=EncodeResponse)
     async def encode(request: EncodeRequest) -> EncodeResponse:
@@ -346,31 +370,12 @@ def create_app(*, llm_command_override: str | None = None) -> FastAPI:
 
         Returns HTTP 503 if the 'embeddings' extra is not installed (degraded mode).
         """
-        from erdos.lean_copilot.embeddings import (  # noqa: PLC0415
-            EmbeddingsNotAvailableError,
-            encode_texts,
-        )
-
         try:
+            from erdos.lean_copilot.embeddings import encode_texts  # noqa: PLC0415
+
             embeddings = await asyncio.to_thread(encode_texts, request.texts)
             return EncodeResponse(embeddings=embeddings)
-        except EmbeddingsNotAvailableError as e:
-            logger.warning("Embeddings unavailable (degraded mode): %s", e)
-            raise HTTPException(
-                status_code=503,
-                detail=str(e),
-            ) from e
-        except ValueError as e:
-            logger.error("Embedding error: %s", e)
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid request: {e}",
-            ) from e
-        except Exception as e:
-            logger.error("Unexpected embedding error: %s", e)
-            raise HTTPException(
-                status_code=500,
-                detail=f"Embedding error: {e}",
-            ) from e
+        except Exception as e:  # convert execution errors to HTTP responses
+            _raise_encode_http_exception(e)
 
     return app

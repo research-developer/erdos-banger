@@ -89,7 +89,10 @@ class TestLogsCommand:
         logger.log(CLIOutput.ok(command="erdos show", data={}), args={})
         logger.log(
             CLIOutput.err(
-                command="erdos show", error_type="NotFound", message="Not found", code=2
+                command="erdos show",
+                error_type="NotFoundError",
+                message="Not found",
+                code=2,
             ),
             args={},
         )
@@ -134,7 +137,10 @@ class TestLogsCommand:
         logger.log(CLIOutput.ok(command="erdos show", data={}), args={"problem_id": 6})
         logger.log(
             CLIOutput.err(
-                command="erdos show", error_type="NotFound", message="Not found", code=2
+                command="erdos show",
+                error_type="NotFoundError",
+                message="Not found",
+                code=2,
             ),
             args={"problem_id": 6},
         )

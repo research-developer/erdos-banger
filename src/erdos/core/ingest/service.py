@@ -256,7 +256,7 @@ def _build_ingest_result(
         if internal_error is not None:
             result = CLIOutput.err(
                 command=command,
-                error_type="Error",
+                error_type="IngestError",
                 message=f"Unexpected error during ingestion: {type(internal_error).__name__}: {internal_error}",
                 code=ExitCode.ERROR,
             )

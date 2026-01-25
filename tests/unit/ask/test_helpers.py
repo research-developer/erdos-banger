@@ -264,7 +264,7 @@ def test_execute_llm_if_enabled_timeout():
         assert result.error is not None
         assert result.error.error is not None
         assert "timed out" in result.error.error["message"].lower()
-        assert result.error.error["type"] == "Timeout"
+        assert result.error.error["type"] == "TimeoutError"
 
 
 # Tests for _load_problem
@@ -308,7 +308,7 @@ def test_load_problem_not_found():
     assert isinstance(result, CLIOutput)
     assert not result.success
     assert result.error is not None
-    assert result.error["type"] == "NotFound"
+    assert result.error["type"] == "NotFoundError"
     assert "999" in result.error["message"]
     assert result.error["code"] == ExitCode.NOT_FOUND
 

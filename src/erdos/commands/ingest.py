@@ -11,12 +11,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
-from rich.console import Console
 from rich.table import Table
 
 from erdos.commands.app_context import get_app_context
 from erdos.commands.cli_helpers import print_if_human
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, err_console, exit_with_result
 from erdos.core.constants import API_RATE_LIMIT_DELAY, TITLE_TRUNCATION
 from erdos.core.ingest import (
     IngestOptions,
@@ -36,8 +35,6 @@ app = typer.Typer(
     help="Ingest literature metadata and cache.",
     context_settings={"allow_interspersed_args": True},
 )
-console = Console()
-err_console = Console(stderr=True)
 
 
 def _print_human(result_data: dict[str, Any]) -> None:

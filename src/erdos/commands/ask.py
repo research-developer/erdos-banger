@@ -11,13 +11,12 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
-from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
 
 from erdos.commands.app_context import get_app_context
 from erdos.commands.cli_helpers import print_if_human
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, exit_with_result
 from erdos.core.ask import ask_question
 from erdos.core.constants import DEFAULT_RAG_LIMIT, TEXT_PREVIEW_LENGTH
 from erdos.core.exit_codes import ExitCode
@@ -36,7 +35,6 @@ app = typer.Typer(
     help="Ask questions about Erdős problems using RAG.",
     context_settings={"allow_interspersed_args": True},
 )
-console = Console()
 
 
 @dataclass

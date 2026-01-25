@@ -57,7 +57,7 @@ def build_index(
             # Fail fast on index-level errors (e.g., missing FTS5) rather than
             # silently producing a partially-built index.
             raise
-        except Exception as exc:
+        except Exception as exc:  # per-problem failures are logged and skipped
             logger.error(
                 "Failed to index problem %s: %s",
                 getattr(problem, "id", "<unknown>"),

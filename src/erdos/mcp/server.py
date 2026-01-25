@@ -239,7 +239,7 @@ def mcp_lean_check(
     if not file_path.exists():
         error = CLIOutput.err(
             command="lean_check",
-            error_type="NotFound",
+            error_type="NotFoundError",
             message=f"File not found: {file}",
             code=ExitCode.NOT_FOUND,
         )
@@ -283,7 +283,7 @@ def mcp_lean_formalize(
     if problem is None:
         error = CLIOutput.err(
             command="lean_formalize",
-            error_type="NotFound",
+            error_type="NotFoundError",
             message=f"Problem {problem_id} not found",
             code=ExitCode.NOT_FOUND,
         )

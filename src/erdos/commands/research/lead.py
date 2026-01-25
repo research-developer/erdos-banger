@@ -67,7 +67,7 @@ def _fetch_s2_citation_intent(identifier: str | None) -> str | None:
         )
         return f"[S2 intents: {intent_summary}]"
 
-    except Exception as e:
+    except Exception as e:  # best-effort external metadata lookup
         logger.debug("S2 citation fetch failed: %s", e)
         return None
 
@@ -95,7 +95,7 @@ def _fetch_zbmath_msc(identifier: str | None) -> list[str] | None:
         msc_codes = [m.code for m in entry.msc]
         return msc_codes if msc_codes else None
 
-    except Exception as e:
+    except Exception as e:  # best-effort external metadata lookup
         logger.debug("zbMATH MSC fetch failed: %s", e)
         return None
 
@@ -173,7 +173,7 @@ def lead_add(
             notes=enriched_notes,
             tags=msc_codes,
         )
-    except Exception as e:
+    except Exception as e:  # map store failures to CLIOutput
         exit_with_result(ctx, handle_store_error("erdos research lead add", e))
         return
 
@@ -215,7 +215,7 @@ def lead_list(
     store = FSResearchStore(repo_root=app_ctx.config.repo_root)
     try:
         records = store.lead_list(problem_id, status=status, priority=priority)
-    except Exception as e:
+    except Exception as e:  # map store failures to CLIOutput
         exit_with_result(ctx, handle_store_error("erdos research lead list", e))
         return
 
@@ -269,7 +269,7 @@ def lead_update(
         record, path = store.lead_update(
             problem_id, lead_id, status=status, priority=priority, notes=notes
         )
-    except Exception as e:
+    except Exception as e:  # map store failures to CLIOutput
         exit_with_result(ctx, handle_store_error("erdos research lead update", e))
         return
 

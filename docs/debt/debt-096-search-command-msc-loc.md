@@ -1,44 +1,110 @@
-# DEBT-096: Search Command Module LOC Violation
+# DEBT-096: Search Command Module LOC Violation (Post-MSC Growth)
 
-**Priority:** P4 (Enhancement)
+**Priority:** P3 (Minor; clean up when touching nearby code)
 **Status:** Exempted
 **Found:** 2026-01-24
-**Exempted:** 2026-01-24
+**Exempted:** 2026-01-24 (re-evaluated 2026-01-24)
 
 ## Description
 
-The search command module (SPEC-031/3 MSC integration) exceeds the LOC threshold:
+The search command module exceeds LOC thresholds after MSC search mode was added (SPEC-031/3):
 
 | Module | LOC | Threshold | Delta |
 |--------|-----|-----------|-------|
-| `src/erdos/commands/search.py` | 519 | 400 | +119 |
+| `src/erdos/commands/search.py` | 509 | 400 | +109 |
+
+| Function | LOC | Threshold | Delta |
+|----------|-----|-----------|-------|
+| `search()` (line 322) | 188 | 120 | +68 |
+
+**Note:** The inline exemption marker claims 517 LOC, which is inaccurate.
+
+## History
+
+DEBT-043 previously reduced this module from 791→334 LOC by extracting orchestration logic to `core/search/service.py`. The module has since grown 175 LOC (52% increase) due to MSC search mode (SPEC-031/3):
+
+| Component | Added LOC |
+|-----------|-----------|
+| `_print_msc_human()` | ~35 |
+| `_execute_msc_search()` | ~55 |
+| MSC validation in `_validate_mode_flags()` | ~20 |
+| MSC parameters in `search()` | ~20 |
+| MSC-specific logic in callback | ~20 |
+| **Total MSC addition** | ~150 |
+
+## Analysis
+
+### Function Size (188 LOC)
+
+The `search()` callback appears long but the breakdown reveals:
+- **~80 LOC:** Typer parameter declarations (framework-required boilerplate)
+- **~20 LOC:** Docstring with usage examples
+- **~88 LOC:** Actual orchestration logic
+
+The actual logic is well-delegated to helper functions (`_validate_mode_flags()`, `_execute_msc_search()`, `_handle_index_build()`, `_handle_embeddings_build()`) and the service layer (`execute_search()`).
+
+### Module Size (509 LOC)
+
+Breakdown by responsibility:
+- **Imports/setup:** ~46 LOC
+- **MSC output formatter:** ~35 LOC (`_print_msc_human()`)
+- **General output formatter:** ~56 LOC (`_print_human()`)
+- **Flag validation:** ~48 LOC (`_validate_mode_flags()`)
+- **MSC execution:** ~55 LOC (`_execute_msc_search()`)
+- **Index/embeddings handlers:** ~64 LOC (`_handle_index_build()`, `_handle_embeddings_build()`)
+- **Mode selection:** ~8 LOC (`_get_search_mode()`)
+- **Typer callback:** ~188 LOC (`search()`)
 
 ## Justification for Exemption
 
-This module supports multiple search modes with shared CLI infrastructure:
+The exemption is appropriate because:
 
-1. **BM25 search** — Local FTS5 index search
-2. **Semantic search** — Vector-based similarity search
-3. **Hybrid search** — Combined BM25 + semantic scoring
-4. **MSC search** — zbMATH API search by Mathematics Subject Classification (SPEC-031)
+1. **Typer boilerplate inflation:** ~80 LOC of the function is parameter declarations required by Typer's annotation-based syntax. This is unavoidable framework overhead.
 
-Each mode shares:
-- CLI flag parsing and validation
-- Output formatting (JSON + human)
-- Error handling and exit codes
+2. **Well-delegated logic:** The actual business logic (~88 LOC) is compact and well-organized. All orchestration is delegated to:
+   - Helper functions for CLI-specific concerns
+   - `core/search/service.py` for search orchestration
 
-The MSC search mode (+~100 LOC) was added for SPEC-031/3 to enable `erdos search --msc "11B05"` without requiring a separate command.
+3. **Refactoring ROI is low:** Extracting MSC mode to a submodule would:
+   - Save ~90 LOC in main module (still leaves 419 LOC, over threshold)
+   - Create coupling issues (main callback still dispatches to MSC mode)
+   - Reduce discoverability (`erdos search --help` shows all modes together)
+
+4. **No SRP violation:** Each helper function has single responsibility. The module cohesively handles "search command CLI concerns."
+
+## Refactoring Options (Deferred)
+
+If the module grows further, consider:
+
+1. **Typer sub-app structure:**
+
+   ```text
+   commands/search/
+   ├── __init__.py     # Typer app composition
+   ├── local.py        # BM25/semantic/hybrid modes
+   └── msc.py          # MSC search mode
+   ```
+
+2. **Extract output formatters:** Move `_print_human()` and `_print_msc_human()` to `commands/search_output.py`
+
+Currently the cognitive overhead of splitting doesn't justify the LOC savings.
 
 ## Resolution
 
-Exempted via inline marker near the top of the file:
-- `src/erdos/commands/search.py`: `# exempt: DEBT-096`
+Exempted via inline marker:
 
-## Future Refactoring Opportunities
+```python
+# exempt: DEBT-096 (517 LOC; CLI + multiple search modes including MSC/zbMATH)
+```
 
-If the module grows further:
-1. Extract MSC search logic to a dedicated `search_msc.py` submodule
-2. Extract output formatters to `search_output.py`
-3. Consider a strategy pattern for search mode dispatch
+The function-level violation (188 LOC) is also exempted via the existing DEBT-043 marker in the audit exemptions.
 
-Currently, keeping all search modes together improves discoverability and reduces import complexity.
+## Acceptance Criteria (If Opened)
+
+If this debt is opened for work:
+
+1. [ ] Module reduced to ≤400 LOC
+2. [ ] `search()` function reduced to ≤120 LOC
+3. [ ] All search modes remain accessible via `erdos search --help`
+4. [ ] `make ci` passes
+5. [ ] No functional regression in search behavior

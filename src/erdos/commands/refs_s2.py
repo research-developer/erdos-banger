@@ -7,9 +7,8 @@ from typing import Annotated, Any
 
 import requests
 import typer
-from rich.console import Console
 
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, exit_with_result
 from erdos.core.clients.semantic_scholar import (
     CitationContext,
     S2Config,
@@ -26,7 +25,6 @@ logger = logging.getLogger(__name__)
 
 
 app = typer.Typer(help="Semantic Scholar citation commands.")
-console = Console()
 
 
 def _get_client() -> SemanticScholarClient:
@@ -202,7 +200,7 @@ def citations(
             if paper is None:
                 result = CLIOutput.err(
                     command=command,
-                    error_type="NotFound",
+                    error_type="NotFoundError",
                     message=f"Paper not found: {identifier}",
                     code=ExitCode.NOT_FOUND,
                 )
@@ -267,7 +265,7 @@ def cited_by(
             if paper is None:
                 result = CLIOutput.err(
                     command=command,
-                    error_type="NotFound",
+                    error_type="NotFoundError",
                     message=f"Paper not found: {identifier}",
                     code=ExitCode.NOT_FOUND,
                 )
@@ -342,7 +340,7 @@ def references(
             if paper is None:
                 result = CLIOutput.err(
                     command=command,
-                    error_type="NotFound",
+                    error_type="NotFoundError",
                     message=f"Paper not found: {identifier}",
                     code=ExitCode.NOT_FOUND,
                 )

@@ -7,7 +7,7 @@ from typing import Annotated
 
 import typer
 
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
 
@@ -136,10 +136,6 @@ def serve(
 
 def _print_human(result: CLIOutput) -> None:
     """Print human-readable output for copilot commands."""
-    from rich.console import Console  # noqa: PLC0415
-
-    console = Console()
-
     if result.success:
         console.print("[green]✓[/green] Success")
         if result.data and isinstance(result.data, dict):

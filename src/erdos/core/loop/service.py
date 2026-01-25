@@ -135,7 +135,7 @@ def execute_proof_loop(
     if problem is None:
         return CLIOutput.err(
             command="erdos loop",
-            error_type="NotFound",
+            error_type="NotFoundError",
             message=f"Problem {problem_id} not found",
             code=ExitCode.NOT_FOUND,
         )
@@ -193,11 +193,11 @@ def execute_proof_loop(
             no_apply=no_apply,
             rag_chunks=rag_chunks,
         )
-    except Exception as e:
+    except Exception as e:  # final safety net; convert unexpected failures to CLIOutput
         logger.exception("Loop execution failed")
         return CLIOutput.err(
             command="erdos loop",
-            error_type="Error",
+            error_type="UnexpectedError",
             message=str(e),
             code=ExitCode.ERROR,
         )
@@ -205,7 +205,7 @@ def execute_proof_loop(
     # Write a structured attempt record (best-effort; never block loop result).
     try:
         write_attempt_from_loop_result(problem_id, result, repo_root=repo_root)
-    except Exception as e:
+    except Exception as e:  # best-effort; never block loop result
         logger.warning("Failed to write research attempt record: %s", e)
 
     return _map_loop_result_to_cli_output(result)

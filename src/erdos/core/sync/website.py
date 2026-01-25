@@ -284,7 +284,7 @@ def fetch_and_parse_problem(
             problem_id,
             fetched_at=result.fetched_at,
         )
-    except Exception as e:
+    except Exception as e:  # normalize parser failures to WebsiteParseError
         status = WebsiteSyncStatus(
             problem_id=problem_id,
             fetched_at=result.fetched_at,

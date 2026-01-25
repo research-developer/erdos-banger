@@ -117,7 +117,7 @@ class TestRunLogEntry:
         """Create entry from failed CLIOutput."""
         cli_output = CLIOutput.err(
             command="erdos show",
-            error_type="NotFound",
+            error_type="NotFoundError",
             message="Problem 999 not found",
             code=2,
         )
@@ -127,7 +127,10 @@ class TestRunLogEntry:
         )
         assert entry.command == "erdos show"
         assert entry.success is False
-        assert entry.error == {"type": "NotFound", "message": "Problem 999 not found"}
+        assert entry.error == {
+            "type": "NotFoundError",
+            "message": "Problem 999 not found",
+        }
 
     def test_sanitize_args_redacts_secrets(self) -> None:
         """Args containing secrets should be redacted."""
@@ -255,7 +258,10 @@ class TestRunLogger:
         logger.log(CLIOutput.ok(command="erdos show", data={}), args={})
         logger.log(
             CLIOutput.err(
-                command="erdos show", error_type="NotFound", message="Not found", code=2
+                command="erdos show",
+                error_type="NotFoundError",
+                message="Not found",
+                code=2,
             ),
             args={},
         )

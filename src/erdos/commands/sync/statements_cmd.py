@@ -11,15 +11,13 @@ from pathlib import Path
 from typing import Annotated, Any
 
 import typer
-from rich.console import Console
 
 from erdos.commands.lean.import_cmd import import_upstream_formalization
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, exit_with_result
 from erdos.core.timing import measure_time_ms
 
 
 logger = logging.getLogger(__name__)
-console = Console()
 
 
 def _print_human(data: dict[str, Any]) -> None:

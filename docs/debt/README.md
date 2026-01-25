@@ -16,13 +16,8 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| DEBT-092 | [Proof verification module LOC violations](./debt-092-proof-verification-loc.md) | P4 | Exempted |
-| DEBT-093 | [Exa client module LOC violation](./debt-093-exa-client-loc.md) | P4 | Exempted |
-| DEBT-094 | [Semantic Scholar client module LOC violation](./debt-094-semantic-scholar-client-loc.md) | P4 | Exempted |
-| DEBT-095 | [zbMATH client module LOC violation](./debt-095-zbmath-client-loc.md) | P4 | Exempted |
-| DEBT-096 | [Search command module LOC violation](./debt-096-search-command-msc-loc.md) | P4 | Exempted |
-| DEBT-100 | [Integration tests don't load .env file](./debt-100-test-env-file-loading.md) | P3 | Open |
-| DEBT-101 | [Lean/Mathlib version significantly behind](./debt-101-lean-mathlib-version-upgrade.md) | P2 | Open |
+| DEBT-092 | [Proof verification module LOC violations](./debt-092-proof-verification-loc.md) | P3 | Exempted |
+| DEBT-096 | [Search command module LOC violation](./debt-096-search-command-msc-loc.md) | P3 | Exempted |
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -129,11 +124,28 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-097 | Test suite ANSI handling inconsistency | P2 | Fixed | 3d19c58 |
 | DEBT-098 | Test references deprecated std4 repository | P1 | Fixed | e49696e |
 | DEBT-099 | Lean test fixture lakefile syntax outdated | P2 | Fixed | (this PR) |
+| DEBT-100 | Integration tests don't load .env file | P3 | Fixed | 8410c4f |
+| DEBT-101 | Lean/Mathlib version significantly behind | P2 | Fixed | 986035f,2ebb005 |
+| DEBT-102 | Console instantiation DRY violation | P3 | Fixed | (this PR) |
+| DEBT-103 | Untracked C901 complexity violations | P3 | Fixed | (this PR) |
+| DEBT-104 | Error type naming inconsistency | P4 | Fixed | (this PR) |
+| DEBT-105 | Print statements in core modules | P4 | Resolved | (this PR) |
+| DEBT-106 | Broad exception catches without justification | P3 | Fixed | (this PR) |
+| DEBT-107 | Missing public function docstrings | P4 | Fixed | (this PR) |
+| DEBT-093 | Exa client infrastructure duplication | P2 | Fixed | (this PR) |
+| DEBT-094 | Semantic Scholar client LOC violation | P3 | Fixed | (via DEBT-093) |
+| DEBT-095 | zbMATH client LOC violation | P3 | Fixed | (via DEBT-093) |
 
-**Next Debt ID:** DEBT-102
+**Next Debt ID:** DEBT-108
 
 ### Archived Debt Decks
 
+- `docs/_archive/debt/debt-102-console-dry-violation.md`
+- `docs/_archive/debt/debt-103-c901-complexity-violations.md`
+- `docs/_archive/debt/debt-104-error-type-naming-inconsistency.md`
+- `docs/_archive/debt/debt-105-print-statements-in-core.md`
+- `docs/_archive/debt/debt-106-broad-exception-catches.md`
+- `docs/_archive/debt/debt-107-missing-public-docstrings.md`
 - `docs/_archive/debt/debt-001-spec-005-ssot-drift.md`
 - `docs/_archive/debt/debt-013-spec-010-scope.md`
 - `docs/_archive/debt/debt-011-spec-020-not-implemented.md`
@@ -221,6 +233,11 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-089-ingest-fetch-parameter-objects.md`
 - `docs/_archive/debt/debt-090-cyclomatic-complexity-violations.md`
 - `docs/_archive/debt/debt-091-blind-exception-catches.md`
+- `docs/_archive/debt/debt-093-exa-client-loc.md`
+- `docs/_archive/debt/debt-094-semantic-scholar-client-loc.md`
+- `docs/_archive/debt/debt-095-zbmath-client-loc.md`
 - `docs/_archive/debt/debt-097-test-suite-consistency.md`
 - `docs/_archive/debt/debt-098-std4-repo-rename.md`
 - `docs/_archive/debt/debt-099-lean-fixture-lakefile-syntax.md`
+- `docs/_archive/debt/debt-100-test-env-file-loading.md`
+- `docs/_archive/debt/debt-101-lean-mathlib-version-upgrade.md`

@@ -7,11 +7,10 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
-from rich.console import Console
 from rich.table import Table
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import console, exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord, ProblemStatus
 from erdos.core.timing import measure_time_ms
@@ -44,7 +43,6 @@ app = typer.Typer(
     help="List Erdős problems with optional filters.",
     context_settings={"allow_interspersed_args": True},
 )
-console = Console()
 
 
 def _print_human(problems_data: list[dict[str, Any]]) -> None:
@@ -107,11 +105,11 @@ def _execute_list_query(options: ListOptions, repo: ProblemRepository) -> CLIOut
             command="erdos list",
             data=[p.model_dump(mode="json") for p in problems],
         )
-    except Exception as e:
+    except Exception as e:  # final safety net; convert unexpected failures to CLIOutput
         logger.exception("Unexpected error in list command")
         return CLIOutput.err(
             command="erdos list",
-            error_type="Error",
+            error_type="UnexpectedError",
             message=str(e),
             code=ExitCode.ERROR,
         )

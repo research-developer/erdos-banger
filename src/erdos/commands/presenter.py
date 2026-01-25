@@ -101,7 +101,7 @@ def exit_with_result(
             run_logger = _get_configured_run_logger(ctx)
             args = _get_command_args(ctx)
             run_logger.log(result, args)
-        except Exception as e:
+        except Exception as e:  # logging failures must not break the command
             # Don't fail the command if logging fails
             logger.debug("Failed to log command: %s", e)
 

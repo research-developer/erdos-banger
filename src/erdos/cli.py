@@ -4,7 +4,6 @@ import logging
 from typing import Annotated
 
 import typer
-from rich.console import Console
 
 from erdos import __version__
 from erdos.commands import (
@@ -22,6 +21,7 @@ from erdos.commands import (
     show,
     sync,
 )
+from erdos.commands.presenter import console
 
 
 def _configure_logging(level: str) -> None:
@@ -40,9 +40,6 @@ def _configure_logging(level: str) -> None:
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-
-console = Console()
-err_console = Console(stderr=True)
 
 app = typer.Typer(
     name="erdos",

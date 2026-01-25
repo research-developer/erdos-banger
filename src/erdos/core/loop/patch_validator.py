@@ -246,6 +246,27 @@ def _is_under_erdos_dir(file_path: Path) -> bool:
     return False
 
 
+def _validate_patch_size(replace_text: str, config: LoopConfig) -> str | None:
+    """Validate patch size constraints (bytes and line count).
+
+    Args:
+        replace_text: Replacement block text.
+        config: Loop configuration with patch limits.
+
+    Returns:
+        Rejection message if invalid, otherwise None.
+    """
+    if len(replace_text.encode("utf-8")) > config.max_patch_bytes:
+        return f"Patch exceeds {config.max_patch_bytes} bytes"
+
+    # Use splitlines() to count actual lines (count("\n") gives separators, not lines).
+    line_count = len(replace_text.splitlines()) if replace_text else 0
+    if line_count > config.max_patch_lines:
+        return f"Patch exceeds {config.max_patch_lines} lines"
+
+    return None
+
+
 def validate_patch(  # noqa: PLR0911 - validation pipeline with early exits
     response: str, target_file: Path, config: LoopConfig
 ) -> PatchResult:
@@ -272,15 +293,10 @@ def validate_patch(  # noqa: PLR0911 - validation pipeline with early exits
 
     search_text, replace_text = parsed
 
-    # 3. Size validation (bytes)
-    if len(replace_text.encode("utf-8")) > config.max_patch_bytes:
-        return PatchResult.reject(f"Patch exceeds {config.max_patch_bytes} bytes")
-
-    # 4. Size validation (lines)
-    # Use splitlines() to count actual lines (count("\n") gives separators, not lines)
-    line_count = len(replace_text.splitlines()) if replace_text else 0
-    if line_count > config.max_patch_lines:
-        return PatchResult.reject(f"Patch exceeds {config.max_patch_lines} lines")
+    # 3-4. Size validation (bytes, then lines)
+    size_error = _validate_patch_size(replace_text, config)
+    if size_error:
+        return PatchResult.reject(size_error)
 
     # 5. Path validation (security)
     if not _is_under_erdos_dir(target_file):

@@ -20,12 +20,11 @@ from erdos.commands.lean.batch_formalize import (
     formalize_problem,
 )
 from erdos.commands.lean.common import (
-    err_console,
     print_human,
     print_human_batch_formalize,
 )
 from erdos.commands.lean.import_cmd import import_upstream_formalization
-from erdos.commands.presenter import exit_with_result
+from erdos.commands.presenter import err_console, exit_with_result
 from erdos.core.batch import (
     BatchFilters,
     BatchProgress,

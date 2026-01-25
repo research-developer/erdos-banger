@@ -3,7 +3,7 @@
 
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Nat.Prime.Basic
-import Mathlib.Algebra.BigOperators.Group.Finset
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Combinatorics.SimpleGraph.Basic
 
 -- Mark this as an Erdős problem (for metadata)

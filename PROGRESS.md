@@ -1,8 +1,8 @@
 # erdos-banger - Ralph Wiggum Progress Tracker
 
-**Last Updated:** 2026-01-24
-**Status:** Ready - New spec implementation sprint (v3.2+)
-**Branch:** ralph-wiggum-next
+**Last Updated:** 2026-01-25
+**Status:** Ready - Debt paydown sprint
+**Branch:** ralph-wiggum-debt-100-101
 **Purpose:** State file for Ralph Wiggum loop (see `docs/_ralphwiggum/protocol.md`)
 
 ---
@@ -29,51 +29,21 @@
 
 Work strictly top-to-bottom unless blocked by dependencies.
 
-### SPEC-035: Unified Problem Data Sync
+### DEBT-100: Integration Tests Load `.env` When Present
 
-- [x] [SPEC-035] (1/5) Define sync cache schemas + pure merge logic for `data/problems_enriched.yaml` (submodule + website) + unit tests (no network)
-- [x] [SPEC-035] (2/5) Implement `erdos sync website <id>` using HTML fixtures + unit tests; ensure output stays `ProblemLoader`-compatible
-- [x] [SPEC-035] (3/5) Implement `erdos sync submodule` + offline `--check` mode; add `requires_network` test for remote freshness
-- [x] [SPEC-035] (4/5) Implement forum proof-link extraction + unit tests (HTML fixtures); write `data/sync_cache/proofs/<id>/links.json`
-- [x] [SPEC-035] (5/5) Implement `erdos sync proof <id> --verify` (opt-in) + provenance/log writing + tests (offline fixtures + `requires_network` smoke)
+- [x] [DEBT-100] Load `.env` (if present) for local network tests; document approach; preserve CI determinism
 
-### SPEC-029: Exa Research API Integration
+### DEBT-101: Lean/Mathlib Version Upgrade
 
-- [x] [SPEC-029] (1/2) Implement `ExaClient` + caching + unit tests (no network; use `responses`)
-- [x] [SPEC-029] (2/2) Implement `erdos research exa` command + tests (offline); add `requires_network` smoke test (skipped by default)
-
-### SPEC-030: Semantic Scholar API Integration
-
-- [x] [SPEC-030] (1/2) Implement `SemanticScholarClient` + caching + unit tests (offline)
-- [x] [SPEC-030] (2/2) Implement `erdos refs s2 {citations,cited-by,references}` + tests (offline); add `requires_network` smoke test
-
-### SPEC-031: zbMATH Open API Integration
-
-- [x] [SPEC-031] (1/3) Implement `ZbMathClient` + caching + unit tests (offline)
-- [x] [SPEC-031] (2/3) Implement `erdos refs zbmath` + tests (offline); add `requires_network` smoke test
-- [x] [SPEC-031] (3/3) Add `erdos search --msc` mode + tests (offline)
-
-### SPEC-032: Multi-Model Routing (External Command)
-
-- [x] [SPEC-032] (1/3) Add task→LLM-command router (`src/erdos/core/llm/*`) + unit tests (no CLI wiring)
-- [x] [SPEC-032] (2/3) Wire router into `erdos ask` default LLM command selection + tests (preserve `--llm-cmd` override)
-- [x] [SPEC-032] (3/3) Wire router into `erdos loop run` default LLM command selection + tests (preserve `--llm-cmd` override)
-
-### SPEC-033: Lean Copilot Integration
-
-- [x] [SPEC-033] (1/3) Add optional deps for copilot server (FastAPI/uvicorn) per spec + unit test scaffolding
-- [x] [SPEC-033] (2/3) Implement minimal `erdos lean copilot serve` (`/generate`) using SPEC-032 routing + unit tests (offline)
-- [x] [SPEC-033] (3/3) Implement `/encode` (embeddings) with a clear degraded mode + unit tests
-
-### SPEC-034: Progress Dashboard
-
-- [x] [SPEC-034] (1/2) Implement dashboard aggregation (`src/erdos/core/dashboard/data.py`) + unit tests (JSON snapshot contract)
-- [x] [SPEC-034] (2/2) Implement `erdos dashboard` UI (Rich) + tests; ensure `erdos --json dashboard` is non-interactive
+- [x] [DEBT-101] (1/3) Confirm target Lean/Mathlib versions and update debt doc (no code changes)
+- [x] [DEBT-101] (2/3) Upgrade `formal/lean` toolchain + Mathlib pin; make `lake build` pass locally
+- [x] [DEBT-101] (3/3) Update fixtures/docs and ensure `test-with-lean` CI job passes
 
 ---
 
 ## Work Log
 
+- 2026-01-24: Reset sprint queue for DEBT-100/101 (branch: `ralph-wiggum-debt-100-101`). Previous sprint merged to `main`/`dev` via PR #26 (merge commit ea426d8).
 - 2026-01-24: [SPEC-035] (1/5) ✅ Verified sync cache schemas + merge logic already implemented in `src/erdos/core/sync/{models,merge}.py` with 57 unit tests passing. CI passes (81.55% coverage).
 - 2026-01-24: [SPEC-035] (2/5) ✅ Implemented `erdos sync website <id>` with HTML fixtures (4 files), 37 unit tests (94 total sync tests). JSON output contract validated. ProblemLoader-compatible. CI passes (80.77% coverage). Commit: 0216497.
 - 2026-01-24: [SPEC-035] (3/5) ✅ Implemented `erdos sync submodule` + `--check` mode. 31 unit tests + 4 integration tests (requires_network). Fixed DEBT-075 violation (added ERDOS_SUBMODULE_PATH to AppConfig). CI passes (80.55% coverage). Commit: 3d5df70.
@@ -94,3 +64,7 @@ Work strictly top-to-bottom unless blocked by dependencies.
 - 2026-01-24: [SPEC-033] (3/3) ✅ Implemented `/encode` endpoint with embeddings (SPEC-014) + degraded mode (HTTP 503). Added embeddings.py wrapper with is_embeddings_available(), EmbeddingsNotAvailableError, encode_texts(), model caching. 23 unit tests (test_embeddings.py + test_server.py). CI passes (80.61% coverage). Commit: 2d4f974.
 - 2026-01-24: [SPEC-034] (1/2) ✅ Implemented dashboard aggregation (`src/erdos/core/dashboard/data.py`). DashboardData + ProblemStats dataclasses, aggregate_dashboard_data() with filtering, problem status (new/active/stale), attempt timeline, to_dict() JSON snapshot. 20 unit tests. CI passes (80.82% coverage). Commit: 3a81101.
 - 2026-01-24: [SPEC-034] (2/2) ✅ Implemented `erdos dashboard` CLI UI (Rich). Problem overview table, attempt timeline heatmap, aggregate stats panel. State machine (state.py) for keyboard navigation (q/r/p/a/b). --problem detail view, --recent time filter, --refresh auto-refresh. Non-interactive JSON mode (erdos --json dashboard). 45 unit tests (state.py + render.py + CLI). Refactored dashboard() to pass LOC audit. CI passes (80.69% coverage). Commit: 38c826c.
+- 2026-01-24: [DEBT-100] ✅ Added pytest-dotenv for `.env` loading in local tests. Fixed tests expecting unset vars. Documented in AGENTS.md. CI passes (80.23% coverage). Commit: 8410c4f.
+- 2026-01-24: [DEBT-101] (1/3) ✅ Confirmed target versions: Lean 4.27.0 + Mathlib 4.27.0 (Jan 23-24, 2026). Documented 4 stable Mathlib imports. Decision: keep test fixtures at current versions. CI passes (80.27% coverage). Commit: 8ca56bb.
+- 2026-01-24: [DEBT-101] (2/3) ✅ Upgraded toolchain to Lean v4.27.0 + Mathlib v4.27.0. Fixed import path (`Mathlib.Algebra.BigOperators.Group.Finset` → `Mathlib.Algebra.BigOperators.Group.Finset.Basic`). `lake build` passes (773 jobs). CI passes (80.27% coverage). Commit: 986035f.
+- 2026-01-24: [DEBT-101] (3/3) ✅ Verified `make ci` passes. Fixed missing skip logic in `test_cli_loop_router.py` and `test_loop_research_integration.py`. CLI commands (`erdos lean check/formalize`) work correctly. Archived DEBT-100 and DEBT-101. Commit: 2ebb005.

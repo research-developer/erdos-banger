@@ -35,11 +35,11 @@ def init_lean_project(project_path: Path, *, fetch_mathlib: bool = True) -> CLIO
             message=str(e) or "Lean initialization failed",
             code=ExitCode.LEAN_ERROR,
         )
-    except Exception as e:
+    except Exception as e:  # final safety net; convert unexpected failures to CLIOutput
         logger.exception("Unexpected error in lean init command")
         return CLIOutput.err(
             command="erdos lean init",
-            error_type="Error",
+            error_type="UnexpectedError",
             message=str(e) or "Unexpected error",
             code=ExitCode.ERROR,
         )

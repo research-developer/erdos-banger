@@ -45,15 +45,15 @@ def check_lean_file(file_path: Path, project_path: Path) -> CLIOutput:
     except FileNotFoundError:
         return CLIOutput.err(
             command="erdos lean check",
-            error_type="NotFound",
+            error_type="NotFoundError",
             message=f"File not found: {file_path}",
             code=ExitCode.NOT_FOUND,
         )
-    except Exception as e:
+    except Exception as e:  # final safety net; convert unexpected failures to CLIOutput
         logger.exception("Unexpected error in lean check command")
         return CLIOutput.err(
             command="erdos lean check",
-            error_type="Error",
+            error_type="UnexpectedError",
             message=str(e),
             code=ExitCode.ERROR,
         )

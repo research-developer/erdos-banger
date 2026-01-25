@@ -70,9 +70,9 @@ def prove_with_aristotle(
         # Map error types to exit codes
         error_type_to_exit_code = {
             "ConfigError": ExitCode.CONFIG_ERROR,
-            "NotFound": ExitCode.NOT_FOUND,
+            "NotFoundError": ExitCode.NOT_FOUND,
             "UsageError": ExitCode.USAGE_ERROR,
-            "Timeout": ExitCode.ERROR,
+            "TimeoutError": ExitCode.ERROR,
         }
         exit_code = error_type_to_exit_code.get(e.error_type, ExitCode.ERROR)
         return CLIOutput.err(
@@ -81,11 +81,11 @@ def prove_with_aristotle(
             message=str(e) or f"AristotleError ({e.error_type})",
             code=exit_code,
         )
-    except Exception as e:
+    except Exception as e:  # final safety net; convert unexpected failures to CLIOutput
         logger.exception("Unexpected error in lean prove command")
         return CLIOutput.err(
             command="erdos lean prove",
-            error_type="Error",
+            error_type="UnexpectedError",
             message=str(e) or "Unexpected error",
             code=ExitCode.ERROR,
         )
