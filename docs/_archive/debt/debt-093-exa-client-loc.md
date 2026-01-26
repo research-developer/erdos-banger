@@ -5,6 +5,7 @@
 **Found:** 2026-01-24
 **Re-specified:** 2026-01-24
 **Resolved:** 2026-01-24
+**Resolved In:** 9f10546
 
 ## Resolution
 
@@ -45,7 +46,8 @@ All clients now use the shared `FileCache` class and `fetch_with_retry` / `post_
 
 ### Remaining Work
 
-- `zbmath.py` is at 596 LOC (96 LOC over threshold) — this is acceptable given the significant reduction and the cohesive nature of the remaining code (MSC parsing, zbMATH-specific helpers)
+- At time of resolution, `zbmath.py` was 596 LOC (96 LOC over threshold) — acceptable given the significant reduction and the cohesive nature of the remaining code (MSC parsing, zbMATH-specific helpers).
+- As of 2026-01-26, `zbmath.py` is 627 LOC and remains exempted via `# exempt: DEBT-093` in `src/erdos/core/clients/zbmath.py`.
 
 ## Original Description
 

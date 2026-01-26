@@ -10,7 +10,7 @@ Key unique data:
 
 API Reference: https://api.zbmath.org/
 
-# exempt: DEBT-093 — 602 LOC is ~100 over threshold. Justified per DEBT-093
+# exempt: DEBT-093 — 627 LOC is 127 over threshold. Justified per DEBT-093
 # resolution: zbMATH has the most complex API response structure (nested
 # contributors, editorial_contributions, MSC codes). All duplicated
 # infrastructure was extracted to shared modules.

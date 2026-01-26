@@ -122,18 +122,18 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-096 | Search command module LOC violation (post-MSC growth) | P3 | Fixed | 4a21f0b |
 | DEBT-097 | Test suite ANSI handling inconsistency | P2 | Fixed | 3d19c58 |
 | DEBT-098 | Test references deprecated std4 repository | P1 | Fixed | e49696e |
-| DEBT-099 | Lean test fixture lakefile syntax outdated | P2 | Fixed | (this PR) |
+| DEBT-099 | Lean test fixture lakefile syntax outdated | P2 | Fixed | 1580514 |
 | DEBT-100 | Integration tests don't load .env file | P3 | Fixed | 8410c4f |
 | DEBT-101 | Lean/Mathlib version significantly behind | P2 | Fixed | 986035f,2ebb005 |
-| DEBT-102 | Console instantiation DRY violation | P3 | Fixed | (this PR) |
-| DEBT-103 | Untracked C901 complexity violations | P3 | Fixed | (this PR) |
-| DEBT-104 | Error type naming inconsistency | P4 | Fixed | (this PR) |
-| DEBT-105 | Print statements in core modules | P4 | Resolved | (this PR) |
-| DEBT-106 | Broad exception catches without justification | P3 | Fixed | (this PR) |
-| DEBT-107 | Missing public function docstrings | P4 | Fixed | (this PR) |
-| DEBT-093 | Exa client infrastructure duplication | P2 | Fixed | (this PR) |
-| DEBT-094 | Semantic Scholar client LOC violation | P3 | Fixed | (via DEBT-093) |
-| DEBT-095 | zbMATH client LOC violation | P3 | Fixed | (via DEBT-093) |
+| DEBT-102 | Console instantiation DRY violation | P3 | Fixed | 0200a99 |
+| DEBT-103 | Untracked C901 complexity violations | P3 | Fixed | 0200a99 |
+| DEBT-104 | Error type naming inconsistency | P4 | Fixed | 0200a99 |
+| DEBT-105 | Print statements in core modules | P4 | Resolved | 0200a99 |
+| DEBT-106 | Broad exception catches without justification | P3 | Fixed | 0200a99 |
+| DEBT-107 | Missing public function docstrings | P4 | Fixed | 0200a99 |
+| DEBT-093 | Exa client infrastructure duplication | P2 | Fixed | 9f10546 |
+| DEBT-094 | Semantic Scholar client LOC violation | P3 | Superseded | 9f10546 |
+| DEBT-095 | zbMATH client LOC violation | P3 | Superseded | 9f10546 |
 
 **Next Debt ID:** DEBT-108
 
