@@ -1,15 +1,44 @@
 # Repository Guidelines
 
-## Skills (Codex CLI)
+## Skills (Claude Code / Codex CLI)
 
-This repo includes custom skills in `.codex/skills/`:
+This repo includes custom skills for both Claude Code and Codex CLI:
+
+| Location | Tool | Skills |
+|----------|------|--------|
+| `.claude/skills/` | Claude Code | `/erdos`, `/erdos-prove [id]` |
+| `.codex/skills/` | Codex CLI | `$erdos`, `$erdos-prove` |
 
 | Skill | Invoke | Purpose |
 |-------|--------|---------|
-| `$erdos` | Auto or `/skills` | Complete CLI reference, cost awareness, env config |
-| `$erdos-prove [id]` | `/skills` | Step-by-step workflow to prove a problem using subscription |
+| `erdos` | Auto or `/skills` | Complete CLI reference, cost awareness, env config |
+| `erdos-prove [id]` | `/skills` | Step-by-step workflow to prove a problem using subscription |
 
-**Key insight:** You can often avoid *additional* pay‑as‑you‑go API usage by using Codex CLI directly instead of `erdos loop run` or `erdos ask`, but costs depend on your Codex/ChatGPT plan and billing setup. The `erdos-prove` skill guides you through this “use your coding assistant + local tools” proving workflow.
+**Key insight:** You can often avoid *additional* pay‑as‑you‑go API usage by using Claude Code/Codex CLI directly instead of `erdos loop run` or `erdos ask`, but costs depend on your plan and billing setup. The `erdos-prove` skill guides you through this "use your coding assistant + local tools" proving workflow.
+
+## Literature Pipeline Architecture
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  DISCOVERY (find papers)              │  LOOKUP (enrich metadata)           │
+├───────────────────────────────────────┼─────────────────────────────────────┤
+│  erdos research exa search (PAID)     │  erdos ingest (reads problem.refs)  │
+│  erdos refs zbmath (FREE)             │    └─ FallbackProvider:             │
+│  erdos refs s2 (FREE, rate-limited)   │        OpenAlex → Crossref → arXiv  │
+│  erdos search --semantic (FREE)       │                                     │
+├───────────────────────────────────────┴─────────────────────────────────────┤
+│  STORAGE                                                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  research/problems/XXXX/meta.yaml → leads (from Exa --save-leads)           │
+│  literature/manifests/XXXX.yaml   → enriched refs (from erdos ingest)       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Known gap (Issue #34):** Exa discovers papers with DOIs/arXiv IDs, but there's no command yet to:
+1. Enrich leads via OpenAlex/Crossref lookup
+2. Add enriched leads to the literature manifest with deduplication
+
+**Workaround:** Manually add DOIs to problem references in `data/problems_enriched.yaml`, then run `erdos ingest`.
 
 ---
 
