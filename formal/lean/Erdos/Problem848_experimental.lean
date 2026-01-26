@@ -332,47 +332,215 @@ lemma A18_100 : A₁₈ 100 = {18, 43, 68, 93} := by native_decide
 /-!
 ## Sawhney's Theorem (Research Level)
 
-The following theorem requires formalizing Sawhney's density argument from
-arXiv:2511.16072. The proof uses:
-1. Large sieve inequalities (Montgomery-Vaughan 1973)
-2. Density increment arguments
-3. Möbius function analysis
+This file is intentionally split into:
 
-Key references found via Exa Research:
-- Helfgott, "On the Square-Free Sieve" (arXiv:math/0309109)
-- Granville, "AEC Allows Us to Count Squarefrees" (IMRN 1998)
-- Poonen, "Squarefree Values of Multivariable Polynomials"
+- **Fully formalized core**: definitions, modular-arithmetic lemmas, and finite verification.
+- **Research bridge**: a *statement* of Sawhney's asymptotic theorem (as a `Prop`) plus
+  "glue" lemmas that reduce the full Erdős problem to (1) Sawhney's theorem for large `N`,
+  and (2) a finite check for small `N`.
+
+This avoids leaving `sorry` in the codebase while keeping the formal goalposts honest.
 -/
 
 /-!
-## Sawhney's Theorem (Research Level)
+### The "large N" statement (as a `Prop`)
 
-The following theorem requires formalizing Sawhney's density argument from
-arXiv:2511.16072. The proof uses sieve inequalities to show:
+Sawhney's published proof is a *stability* theorem near the conjectured density `1/25`:
+there exist absolute constants `η > 0` and `N₀` such that any set `A ⊆ [0, N)` with the property
+and `|A| ≥ (1/25 - η)N` is actually contained in a single residue class `±7 (mod 25)`.
 
-1. If A* ≠ ∅ (elements outside A₇ ∪ A₁₈): density ≤ 0.038 < 1/25
-2. If A ⊆ A₇ ∪ A₁₈ but mixes both: density ≤ 0.030 < 1/25
-3. Therefore near-optimal sets must be contained in A₇ OR A₁₈
-
-Key references found via Exa Research:
-- Helfgott, "On the Square-Free Sieve" (arXiv:math/0309109)
-- Granville, "AEC Allows Us to Count Squarefrees" (IMRN 1998)
+We record the statement as a `Prop` so downstream Lean theorems can be proved *conditionally*
+without `sorry`, while the analytic/sieve part is formalized incrementally in a separate effort.
 -/
 
-/-- Sawhney's theorem: For large N, optimal sets are contained in A₇ or A₁₈. -/
-theorem sawhney_main (c : ℝ) (hc : c > 0) :
-    ∃ N₀ : ℕ, ∀ N ≥ N₀, ∀ A : Finset ℕ,
-      A ⊆ Finset.range N →
-      NonSquarefreeProductProp A →
-      (A.card : ℝ) ≥ (1/25 - c) * N →
-      (A ⊆ A₇ N ∨ A ⊆ A₁₈ N) := by
-  sorry  -- Requires Sawhney's density argument (sieve inequalities)
+/-- The exact statement we need from Sawhney (2025), parameterized by constants. -/
+def SawhneyMainAt (η : ℝ) (N₀ : ℕ) : Prop :=
+  0 < η ∧ ∀ N ≥ N₀, ∀ A : Finset ℕ,
+    A ⊆ Finset.range N →
+    NonSquarefreeProductProp A →
+    (A.card : ℝ) ≥ (1/25 - η) * (N : ℝ) →
+    (A ⊆ A₇ N ∨ A ⊆ A₁₈ N)
 
-/-- The main conjecture: A₇ (or A₁₈) achieves the maximum. -/
-theorem problem_848 (N : ℕ) :
-    ∀ A : Finset ℕ, A ⊆ Finset.range N → NonSquarefreeProductProp A →
-      A.card ≤ (A₇ N).card := by
-  sorry
+/-- The paper-level existential version: there exist `η > 0` and `N₀` making `SawhneyMainAt` true. -/
+def SawhneyMain : Prop :=
+  ∃ η : ℝ, ∃ N₀ : ℕ, SawhneyMainAt η N₀
+
+/-- The Erdős #848 statement for a fixed `N` (with our `range N = {0, …, N-1}` convention). -/
+def Problem848Statement (N : ℕ) : Prop :=
+  ∀ A : Finset ℕ, A ⊆ Finset.range N → NonSquarefreeProductProp A →
+    A.card ≤ (A₇ N).card
+
+/-!
+### Glue: `SawhneyMainAt` ⇒ the conjectured upper bound for large `N`
+
+This turns a near-optimal *containment* theorem into the desired *cardinality* bound.
+It is purely combinatorial once `SawhneyMainAt` is available.
+-/
+
+lemma A₇_card (N : ℕ) : (A₇ N).card = (N + 17) / 25 := by
+  classical
+  -- `A₇ N` enumerates numbers `< N` of the form `25*k + 7`.
+  set K : ℕ := (N + 17) / 25
+  -- Bijection `k ↦ 25*k+7` from `range K` to `A₇ N`.
+  have hbij : (A₇ N).card = (Finset.range K).card := by
+    refine (Finset.card_bij (s := Finset.range K) (t := A₇ N)
+      (i := fun k _hk => 25 * k + 7) ?_ ?_ ?_).symm
+    · intro k hk
+      have hk' : k < K := by simpa [Finset.mem_range] using hk
+      have hk1 : k + 1 ≤ K := Nat.succ_le_iff.2 hk'
+      have hmul : 25 * (k + 1) ≤ 25 * K := Nat.mul_le_mul_left 25 hk1
+      have hK : 25 * K ≤ N + 17 := by
+        -- `25 * ((N+17)/25) ≤ N+17`.
+        simpa [K] using Nat.mul_div_le (N + 17) 25
+      have hmul' : 25 * (k + 1) ≤ N + 17 := le_trans hmul hK
+      have hlt : 25 * k + 7 < N := by
+        -- From `25*(k+1) = 25*k+25 ≤ N+17`, deduce `25*k+7 < N`.
+        -- (Because `25*k+7 + 18 = 25*k+25 ≤ N+17`.)
+        omega
+      -- Membership in `A₇ N` means `< N` and `≡ 7 (mod 25)`.
+      simp [A₇, Finset.mem_filter, Finset.mem_range, hlt, Nat.add_mod]
+    · intro k₁ _hk₁ k₂ _hk₂ h
+      -- Injective because `k ↦ 25*k+7` is injective on naturals.
+      have h' : 25 * k₁ = 25 * k₂ := Nat.add_right_cancel h
+      exact Nat.mul_left_cancel (by decide : 0 < 25) h'
+    · intro a ha
+      -- Surjectivity: if `a % 25 = 7`, then `a = 25*(a/25) + 7`.
+      have ha' : a < N ∧ a % 25 = 7 := by
+        simpa [A₇, Finset.mem_filter, Finset.mem_range] using ha
+      have ha_eq : 25 * (a / 25) + 7 = a := by
+        have h := Nat.mod_add_div a 25
+        simpa [ha'.2, Nat.add_comm, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using h
+      refine ⟨a / 25, ?_, ?_⟩
+      · -- Show `a/25 ∈ range K`.
+        have hlt : 25 * (a / 25) + 7 < N := by
+          simpa [ha_eq] using ha'.1
+        have hmul : 25 * ((a / 25) + 1) ≤ N + 17 := by
+          -- `25*(q+1) = (25*q+7) + 18 ≤ (N-1)+18 = N+17`.
+          omega
+        have hle : a / 25 + 1 ≤ K := by
+          have hmul' : (a / 25 + 1) * 25 ≤ N + 17 := by
+            simpa [Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using hmul
+          have := (Nat.le_div_iff_mul_le (k0 := (by decide : 0 < 25))).2 hmul'
+          simpa [K] using this
+        have hltK : a / 25 < K := Nat.lt_of_lt_of_le (Nat.lt_succ_self _) hle
+        simpa [Finset.mem_range] using hltK
+      · exact ha_eq
+  simpa [Finset.card_range, K] using hbij
+
+lemma A₁₈_card (N : ℕ) : (A₁₈ N).card = (N + 6) / 25 := by
+  classical
+  set K : ℕ := (N + 6) / 25
+  have hbij : (A₁₈ N).card = (Finset.range K).card := by
+    refine (Finset.card_bij (s := Finset.range K) (t := A₁₈ N)
+      (i := fun k _hk => 25 * k + 18) ?_ ?_ ?_).symm
+    · intro k hk
+      have hk' : k < K := by simpa [Finset.mem_range] using hk
+      have hk1 : k + 1 ≤ K := Nat.succ_le_iff.2 hk'
+      have hmul : 25 * (k + 1) ≤ 25 * K := Nat.mul_le_mul_left 25 hk1
+      have hK : 25 * K ≤ N + 6 := by
+        simpa [K] using Nat.mul_div_le (N + 6) 25
+      have hmul' : 25 * (k + 1) ≤ N + 6 := le_trans hmul hK
+      have hlt : 25 * k + 18 < N := by
+        omega
+      simp [A₁₈, Finset.mem_filter, Finset.mem_range, hlt, Nat.add_mod]
+    · intro k₁ _hk₁ k₂ _hk₂ h
+      have h' : 25 * k₁ = 25 * k₂ := Nat.add_right_cancel h
+      exact Nat.mul_left_cancel (by decide : 0 < 25) h'
+    · intro a ha
+      have ha' : a < N ∧ a % 25 = 18 := by
+        simpa [A₁₈, Finset.mem_filter, Finset.mem_range] using ha
+      have ha_eq : 25 * (a / 25) + 18 = a := by
+        have h := Nat.mod_add_div a 25
+        simpa [ha'.2, Nat.add_comm, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using h
+      refine ⟨a / 25, ?_, ?_⟩
+      · have hlt : 25 * (a / 25) + 18 < N := by
+          simpa [ha_eq] using ha'.1
+        have hmul : 25 * ((a / 25) + 1) ≤ N + 6 := by
+          omega
+        have hle : a / 25 + 1 ≤ K := by
+          have hmul' : (a / 25 + 1) * 25 ≤ N + 6 := by
+            simpa [Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using hmul
+          have := (Nat.le_div_iff_mul_le (k0 := (by decide : 0 < 25))).2 hmul'
+          simpa [K] using this
+        have hltK : a / 25 < K := Nat.lt_of_lt_of_le (Nat.lt_succ_self _) hle
+        simpa [Finset.mem_range] using hltK
+      · exact ha_eq
+  simpa [Finset.card_range, K] using hbij
+
+lemma A₁₈_card_le_A₇ (N : ℕ) : (A₁₈ N).card ≤ (A₇ N).card := by
+  -- Compare explicit formulas.
+  have h : N + 6 ≤ N + 17 := Nat.add_le_add_left (by decide : 6 ≤ 17) N
+  simpa [A₇_card, A₁₈_card] using Nat.div_le_div_right h
+
+lemma card_gt_A₇_implies_dense {η : ℝ} (hη : 0 < η) {N : ℕ} {A : Finset ℕ}
+    (hgt : (A₇ N).card < A.card) :
+    (A.card : ℝ) ≥ (1/25 - η) * (N : ℝ) := by
+  -- Convert strict inequality of naturals to a real lower bound via `A₇_card`.
+  have hsucc : (A₇ N).card + 1 ≤ A.card := Nat.succ_le_iff.2 hgt
+  have hA : ((A₇ N).card + 1 : ℝ) ≤ (A.card : ℝ) := by
+    exact_mod_cast hsucc
+  have hA7 : ((N + 17 : ℝ) / 25) < ((A₇ N).card + 1 : ℝ) := by
+    -- `q = (N+17)/25` satisfies `q ≤ (N+17)/25 < q+1`.
+    have hq : (25 : ℝ) * ((A₇ N).card + 1 : ℝ) > (N + 17 : ℝ) := by
+      -- Work in `ℕ` then cast.
+      have hq_nat : 25 * ((A₇ N).card + 1) > N + 17 := by
+        -- Since `(A₇ N).card = (N+17)/25`, the division algorithm gives:
+        -- `(N+17) = 25*q + r` with `r < 25`, hence `25*(q+1) > N+17`.
+        have hcard : (A₇ N).card = (N + 17) / 25 := A₇_card N
+        -- Let `q := (N+17)/25` and `r := (N+17)%25`.
+        have hdiv : 25 * ((N + 17) / 25) + (N + 17) % 25 = N + 17 := Nat.div_add_mod (N + 17) 25
+        have hmod : (N + 17) % 25 < 25 := Nat.mod_lt _ (by decide : 0 < 25)
+        -- `25*(q+1) = 25*q + 25 > 25*q + r = N+17`.
+        omega
+      -- Cast to `ℝ`.
+      exact_mod_cast hq_nat
+    nlinarith
+  have hN17 : (N + 17 : ℝ) / 25 ≥ (1 / 25 - η) * (N : ℝ) := by
+    -- `(N+17)/25 = N/25 + 17/25 ≥ N/25 - ηN` since `η > 0`.
+    nlinarith
+  -- Chain the bounds.
+  have : (A.card : ℝ) ≥ (N + 17 : ℝ) / 25 := by
+    -- `(N+17)/25 ≤ (A₇ N).card + 1 ≤ A.card`.
+    have : (N + 17 : ℝ) / 25 ≤ (A.card : ℝ) := le_trans hA7.le hA
+    exact this
+  -- Strengthen from `(N+17)/25` to `(1/25 - η)*N`.
+  exact le_trans hN17 this
+
+/-- If `SawhneyMainAt η N₀` holds, then the conjectured upper bound holds for all `N ≥ N₀`. -/
+theorem problem_848_large_of_sawhney {η : ℝ} {N₀ : ℕ} (h : SawhneyMainAt η N₀) :
+    ∀ N ≥ N₀, Problem848Statement N := by
+  classical
+  rcases h with ⟨hη, hmain⟩
+  intro N hN A hAsub hAprop
+  by_contra hle
+  have hgt : (A₇ N).card < A.card := lt_of_not_ge hle
+  have hdense : (A.card : ℝ) ≥ (1/25 - η) * (N : ℝ) :=
+    card_gt_A₇_implies_dense hη hgt
+  have hstruct := hmain N hN A hAsub hAprop hdense
+  cases hstruct with
+  | inl hsub7 =>
+      exact (not_le_of_gt hgt) (Finset.card_le_card hsub7)
+  | inr hsub18 =>
+      have hcard18 : A.card ≤ (A₁₈ N).card := Finset.card_le_card hsub18
+      have h18le7 : (A₁₈ N).card ≤ (A₇ N).card := A₁₈_card_le_A₇ N
+      exact (not_le_of_gt hgt) (le_trans hcard18 h18le7)
+
+theorem problem_848_resolved_up_to_finite_check_of_sawhney (h : SawhneyMain) :
+    ∃ N₀ : ℕ, ∀ N ≥ N₀, Problem848Statement N := by
+  rcases h with ⟨η, N₀, hηN₀⟩
+  exact ⟨N₀, problem_848_large_of_sawhney hηN₀⟩
+
+/-!
+### What we can prove today
+
+We currently have:
+
+- `Problem848Statement 50` (verified by computation).
+- `problem_848_large_of_sawhney`: a clean bridge from Sawhney's theorem to the main bound.
+
+Formalizing `SawhneyMain` itself (the sieve/density argument) is left for dedicated work on
+analytic number theory in Lean.
+-/
 
 /-!
 ## Verified Cases
