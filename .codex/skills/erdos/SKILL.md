@@ -232,6 +232,7 @@ ERDOS_LLM_COMMAND_CODE=./scripts/llm.sh    # For erdos loop
 # OpenAI (most common)
 OPENAI_API_KEY=sk-your-key-here
 OPENAI_MODEL=gpt-5.2-pro
+OPENAI_REASONING_EFFORT=xhigh
 
 # Anthropic (alternative)
 ANTHROPIC_API_KEY=sk-ant-your-key-here
