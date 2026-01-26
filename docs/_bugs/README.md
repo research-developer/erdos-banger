@@ -21,7 +21,6 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 | ID | Title | Priority | Status | Component |
 |----|-------|----------|--------|-----------|
 | BUG-039 | Ingest cannot discover papers - only fetches pre-defined refs | P1 | Open | `erdos ingest` |
-| BUG-042 | Exa API returns empty titles | P2 | Open | `exa.py` |
 | BUG-044 | Environment variables not auto-loaded in Python scripts | P2 | Open | `config.py` |
 
 ### Invalidated Bugs
@@ -89,6 +88,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-034 | `erdos research exa --save-leads` crashes on empty title | P2 | Fixed | 6f9b423 |
 | BUG-035 | Lean skeleton template uses outdated Mathlib import path | P2 | Fixed | 36d3518 |
 | BUG-040 | Marker PDF conversion broken (marker-pdf API change) | P1 | Fixed | b7ceb6f |
+| BUG-042 | Exa API returns empty titles | P2 | Fixed | 8ba6e32 |
 | BUG-038 | BM25 search doesn't escape FTS5 special characters | P1 | Fixed | 8c55500 |
 | GH-035 | Crossref/S2 clients missing JSONDecodeError handling | P1 | Fixed | (in-tree) |
 | GH-036 | Hardcoded `logs/loop` path breaks outside repo root | P2 | Fixed | (in-tree) |
@@ -146,6 +146,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/bug-038-bm25-fts5-query-not-escaped.md`
 - `docs/_archive/bugs/bug-034-exa-save-leads-empty-title.md`
 - `docs/_archive/bugs/bug-035-lean-skeleton-outdated-import.md`
+- `docs/_archive/bugs/bug-042-exa-empty-titles.md`
 - `docs/_archive/bugs/friction-2026-01-26-cli-maximization-test.md`
 
 ## Bug Priority Definitions

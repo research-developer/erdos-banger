@@ -2,12 +2,13 @@
 
 **Date:** 2026-01-26
 **Severity:** P2 (Medium - degraded UX)
-**Status:** Open
+**Status:** Fixed
+**Commit:** 8ba6e32
 **Component:** `erdos.core.clients.exa`
 
 ## Summary
 
-The Exa client returns results with empty `title` fields, making it hard to identify papers.
+Exa frequently returns results with empty `title` fields (especially for PDFs), making it hard to identify papers in CLI output and downstream workflows.
 
 ## Reproduction
 
@@ -46,8 +47,9 @@ Either:
 - Poor UX when displaying search results
 - Makes programmatic filtering difficult
 
-## Investigation Needed
+## Fix
 
-1. Check raw Exa API response for title field
-2. Compare with Exa documentation for required fields
-3. Check if `contents` parameter affects title extraction
+The Exa API behavior remains (titles may be empty), but our client now provides a stable, non-empty fallback:
+
+- `ExaSource.display_title` returns the first available of: `title`, `DOI …`, `arXiv …`, `url`, `"Untitled"`.
+- `ExaSource.to_dict()` includes `display_title`, and the `erdos research exa search` human output uses it.
