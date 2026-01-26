@@ -1,9 +1,7 @@
 """Erdos CLI - main entry point."""
 
 import logging
-import os
 from enum import Enum
-from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -25,7 +23,7 @@ from erdos.commands import (
     sync,
 )
 from erdos.commands.presenter import console
-from erdos.core.dotenv_loader import load_dotenv_file
+from erdos.core.config import initialize_environment
 
 
 class LogLevel(str, Enum):
@@ -102,22 +100,10 @@ def main(
 
     Run 'erdos COMMAND --help' for command-specific help.
     """
+    initialize_environment()
+
     # Configure logging based on --log-level
     _configure_logging(log_level.value)
-
-    # Load .env for local development ergonomics (no override of existing vars).
-    repo_root = os.environ.get("ERDOS_REPO_ROOT")
-    env_path = (Path(repo_root) if repo_root else Path.cwd()) / ".env"
-    try:
-        loaded = load_dotenv_file(env_path)
-        if loaded:
-            logging.getLogger(__name__).debug(
-                "Loaded %d environment variable(s) from %s",
-                len(loaded),
-                env_path,
-            )
-    except OSError as e:
-        logging.getLogger(__name__).debug("Failed to read %s: %s", env_path, e)
 
     ctx.ensure_object(dict)
     if isinstance(ctx.obj, dict):

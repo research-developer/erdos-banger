@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from erdos.core.constants import DEFAULT_HTTP_TIMEOUT
+from erdos.core.dotenv_loader import load_dotenv_file
 
 
 # Default values (matching existing behavior)
@@ -54,6 +55,41 @@ def build_subprocess_env(overrides: dict[str, str] | None = None) -> dict[str, s
     if overrides:
         env.update(overrides)
     return env
+
+
+_DOTENV_FALSE_VALUES = {"0", "false", "no", "off"}
+
+
+def _load_dotenv_if_enabled() -> None:
+    """Load `.env` into `os.environ` for local CLI ergonomics.
+
+    Controlled by `ERDOS_LOAD_DOTENV` (default: enabled). Values like `0`, `false`,
+    `no`, `off` disable loading.
+
+    Does not override existing environment variables (even empty strings).
+    """
+    raw = os.environ.get("ERDOS_LOAD_DOTENV")
+    if raw is not None and raw.strip().lower() in _DOTENV_FALSE_VALUES:
+        return
+
+    repo_root = os.environ.get("ERDOS_REPO_ROOT")
+    env_path = (Path(repo_root) if repo_root else Path.cwd()) / ".env"
+    parsed = load_dotenv_file(env_path)
+    if not parsed:
+        return
+
+    for key, value in parsed.items():
+        if key in os.environ:
+            continue
+        os.environ[key] = value
+
+
+def initialize_environment() -> None:
+    """Initialize process environment for CLI execution.
+
+    Currently this loads `.env` (unless disabled via `ERDOS_LOAD_DOTENV`).
+    """
+    _load_dotenv_if_enabled()
 
 
 @dataclass(frozen=True)
@@ -109,6 +145,7 @@ class AppConfig:
         configuration. All environment variable names and defaults are defined here.
 
         Environment variables:
+            ERDOS_LOAD_DOTENV: Set to 0/false/no/off to disable auto-loading `.env`.
             ERDOS_DATA_PATH: Path to problems YAML file or directory.
             ERDOS_INDEX_PATH: Path to SQLite search index file.
             ERDOS_RUN_LOG_PATH: Path to run log JSONL file.

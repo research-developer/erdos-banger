@@ -32,7 +32,9 @@ class TestLoopRunCommand:
         # Should fail because problem doesn't exist
         assert result.exit_code != 0
 
-    def test_no_apply_mode_with_path(self, tmp_path: Path) -> None:
+    def test_no_apply_mode_with_path(
+        self, tmp_path: Path, sample_problems_yaml: Path
+    ) -> None:
         """--no-apply mode accepts --path option."""
         project_path = tmp_path / "formal" / "lean"
 
@@ -53,6 +55,7 @@ class TestLoopRunCommand:
                 str(project_path),
             ],
             env={
+                "ERDOS_DATA_PATH": str(sample_problems_yaml),
                 "ERDOS_REPO_ROOT": str(tmp_path),
                 "ERDOS_LLM_COMMAND": str(fake_llm),
             },

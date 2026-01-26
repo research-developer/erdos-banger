@@ -126,3 +126,9 @@ def _isolate_llm_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "ERDOS_LLM_COMMAND_COPILOT",
     ):
         monkeypatch.delenv(var_name, raising=False)
+
+
+@pytest.fixture(autouse=True)
+def _disable_dotenv_autoload(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Prevent local `.env` files from affecting deterministic tests."""
+    monkeypatch.setenv("ERDOS_LOAD_DOTENV", "0")

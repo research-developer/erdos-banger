@@ -145,6 +145,7 @@ class TestExaSearchCommand:
         env = _setup_env(tmp_path, sample_problems_yaml)
         env.pop("EXA_API_KEY", None)
         env["ERDOS_EXA_CACHE_PATH"] = str(tmp_path / "exa_cache")
+        env["ERDOS_LOAD_DOTENV"] = "1"
 
         result = runner.invoke(
             app,

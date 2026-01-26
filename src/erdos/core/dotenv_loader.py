@@ -6,14 +6,10 @@ This intentionally mirrors the behavior of `scripts/lib/load-env.sh`:
 - supports single/double quoted values
 - strips inline comments for unquoted values (everything after '#')
 - does not support multiline values or shell expansion
-
-Unlike many dotenv loaders, this module defaults to **not** overriding existing
-environment variables (including empty-string values).
 """
 
 from __future__ import annotations
 
-import os
 import re
 from typing import TYPE_CHECKING
 
@@ -24,25 +20,9 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-def load_dotenv_file(path: Path, *, override: bool = False) -> dict[str, str]:
-    """Load variables from a .env file into `os.environ`.
-
-    Args:
-        path: Path to the .env file. Missing files are treated as a no-op.
-        override: If True, override existing environment variables.
-
-    Returns:
-        Dict of variables that were set (i.e., applied to os.environ).
-    """
-    if not path.is_file():
-        return {}
-
-    loaded: dict[str, str] = {}
-    try:
-        content = path.read_text(encoding="utf-8")
-    except (OSError, UnicodeError):
-        return {}
-
+def parse_dotenv_content(content: str) -> dict[str, str]:
+    """Parse .env file content to a dictionary."""
+    parsed: dict[str, str] = {}
     for raw_line in content.splitlines():
         line = raw_line.strip()
         if not line or line.startswith("#"):
@@ -68,10 +48,25 @@ def load_dotenv_file(path: Path, *, override: bool = False) -> dict[str, str]:
         else:
             value = value.split("#", 1)[0].strip()
 
-        if not override and key in os.environ:
-            continue
+        parsed[key] = value
 
-        os.environ[key] = value
-        loaded[key] = value
+    return parsed
 
-    return loaded
+
+def load_dotenv_file(path: Path) -> dict[str, str]:
+    """Load and parse variables from a .env file.
+
+    Args:
+        path: Path to the .env file. Missing/unreadable files are treated as a no-op.
+
+    Returns:
+        Dict of parsed variables from the file.
+    """
+    if not path.is_file():
+        return {}
+
+    try:
+        content = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return {}
+    return parse_dotenv_content(content)

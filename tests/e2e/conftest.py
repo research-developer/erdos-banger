@@ -33,6 +33,8 @@ def cli_runner(
         env = os.environ.copy()
         env["UV_PROJECT"] = str(project_root)
         env["ERDOS_DATA_PATH"] = str(data_dir)
+        env["ERDOS_LOAD_DOTENV"] = "0"
+        env.pop("ERDOS_REPO_ROOT", None)
         result = subprocess.run(  # noqa: S603
             [uv_exe, "run", "erdos", *args],
             capture_output=True,
