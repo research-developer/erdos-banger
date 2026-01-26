@@ -6,15 +6,43 @@ Separated from indexing and embedding operations per SRP.
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
-from erdos.core.constants import DEFAULT_SEARCH_LIMIT
+from erdos.core.constants import DEFAULT_SEARCH_LIMIT, MAX_QUERY_TERMS
 from erdos.core.models import ChunkSource
 from erdos.core.search.types import SearchResult
 
 
 if TYPE_CHECKING:
     from erdos.core.search.db import DatabaseManager
+
+
+def safe_fts5_query(query: str) -> str:
+    """Escape a query for safe FTS5 matching.
+
+    FTS5 has special syntax characters (-, AND, OR, NOT, parentheses, etc.)
+    that cause errors when passed raw. This function extracts alphanumeric
+    tokens and quotes them for safe matching.
+
+    Args:
+        query: Raw user query
+
+    Returns:
+        Escaped FTS5 query with quoted tokens joined by OR
+    """
+    tokens = re.findall(r"[a-z0-9]+", query.lower())
+    if not tokens:
+        return '""'  # Empty match returns no results gracefully
+    # Deduplicate while preserving order
+    seen: set[str] = set()
+    unique: list[str] = []
+    for token in tokens:
+        if token not in seen:
+            seen.add(token)
+            unique.append(token)
+    quoted = [f'"{t}"' for t in unique[:MAX_QUERY_TERMS]]
+    return " OR ".join(quoted)
 
 
 class BM25Search:
@@ -56,6 +84,11 @@ class BM25Search:
         if not query.strip():
             return []
 
+        # Escape the query for FTS5 safety (handles hyphens, operators, etc.)
+        escaped_query = safe_fts5_query(query)
+        if escaped_query == '""':
+            return []  # No valid tokens
+
         # Build query with filters
         sql = """
             SELECT
@@ -70,7 +103,7 @@ class BM25Search:
             JOIN chunks c ON chunks_fts.rowid = c._rowid
             WHERE chunks_fts MATCH ?
         """
-        params: list[str | int] = [query]
+        params: list[str | int] = [escaped_query]
 
         if problem_id is not None:
             sql += " AND c.problem_id = ?"

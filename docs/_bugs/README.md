@@ -67,12 +67,13 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 
 *Naming: GH-XXX = also tracked on GitHub Issues. BUG-XXX = local docs only. Both systems maintained in parallel.*
 
-**Next Bug ID:** BUG-038 (or GH-XXX if filing on GitHub)
+**Next Bug ID:** BUG-039 (or GH-XXX if filing on GitHub)
 
 ### Active Bug Decks
 
 - `docs/_bugs/bug-036-json-decode-error-handling.md` (GH-035)
 - `docs/_bugs/bug-037-hardcoded-logs-loop-path.md` (GH-036)
+- `docs/_bugs/bug-038-bm25-fts5-query-not-escaped.md` (BUG-038) - **FIXED**
 
 ### Archived Bug Decks
 
