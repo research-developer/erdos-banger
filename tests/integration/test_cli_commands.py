@@ -112,6 +112,41 @@ def test_cli_refs_not_found_human(tmp_path: Path, sample_problems_yaml: Path) ->
     assert "Error:" in result.stderr
 
 
+def test_cli_refs_add_arxiv_updates_dataset(
+    tmp_path: Path, sample_problems_yaml: Path
+) -> None:
+    data_dir = _data_dir(tmp_path, sample_problems_yaml)
+    env = {"ERDOS_DATA_PATH": str(data_dir)}
+
+    add_result = runner.invoke(
+        app,
+        ["--json", "refs", "add", "6", "--arxiv", "2511.16072"],
+        env=env,
+    )
+
+    assert add_result.exit_code == 0, add_result.stdout
+    add_payload = json.loads(add_result.stdout)
+    assert add_payload["command"] == "erdos refs add"
+    assert add_payload["data"]["problem_id"] == 6
+    assert add_payload["data"]["updated"] is True
+
+    refs_result = runner.invoke(app, ["--json", "refs", "6"], env=env)
+    assert refs_result.exit_code == 0
+    refs_payload = json.loads(refs_result.stdout)
+    refs = refs_payload["data"]["references"]
+    assert any(r.get("arxiv_id") == "2511.16072" for r in refs)
+
+    # Idempotent: adding the same arXiv ID again should be a no-op.
+    add_result_2 = runner.invoke(
+        app,
+        ["--json", "refs", "add", "6", "--arxiv", "2511.16072"],
+        env=env,
+    )
+    assert add_result_2.exit_code == 0
+    add_payload_2 = json.loads(add_result_2.stdout)
+    assert add_payload_2["data"]["updated"] is False
+
+
 def test_cli_search_json(tmp_path: Path, sample_problems_yaml: Path) -> None:
     data_dir = _data_dir(tmp_path, sample_problems_yaml)
     index_path = tmp_path / "index" / "test.sqlite"
