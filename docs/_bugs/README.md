@@ -20,7 +20,9 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 | ID | Title | Priority | Status | Component |
 |----|-------|----------|--------|-----------|
-| BUG-039 | Ingest cannot discover papers - only fetches pre-defined refs | P1 | Partially Fixed | `erdos ingest` |
+| BUG-039 | Ingest cannot discover papers - only fetches pre-defined refs | P2 | Phase 1 Fixed | `erdos ingest` |
+
+**Note:** BUG-039 core workflow (`erdos refs add` + `erdos ingest`) works. Remaining phases (auto-discovery) are feature requests tracked in DEBT-110.
 
 ### Invalidated Bugs
 
@@ -31,22 +33,28 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 | BUG-045 | literature/papers/ not gitignored | FIXED - added to .gitignore |
 | BUG-046 | `erdos lean` command crashes | FALSE POSITIVE - `erdos lean --help` works; real issue is `lake` not on PATH |
 
-### Critical Integration Issues (2026-01-26)
+### Research Workflow Status (2026-01-26)
 
-The research workflow has **one remaining gap**:
+**Core workflow is functional:**
 
-1. **Cannot discover papers** - `erdos ingest` still only fetches pre-defined refs (BUG-039 / DEBT-110)
+```bash
+# Full working pipeline:
+uv run erdos refs add 848 --arxiv 2511.16072   # Add paper to problem
+uv run erdos ingest 848 --force                # Fetch metadata + download source
+ls literature/cache/arxiv/extracted/2511.16072 # LaTeX available
+```
 
 **What Works:**
-- `erdos research exa search` - WORKS (finds papers, creates leads)
-- PDF download - WORKS (can download manually)
-- PDF conversion - WORKS (marker-pdf >= 1.0.0 supported; BUG-040 fixed in `b7ceb6f`)
-- Manual reference add - WORKS (`erdos refs add …`; commit `f9b8441`)
+- ✅ `erdos refs add` - Add arXiv/DOI papers to problems
+- ✅ `erdos ingest` - Fetch metadata + download arXiv source
+- ✅ `erdos research exa search` - Find papers, create leads
+- ✅ PDF download + conversion (marker-pdf >= 1.0.0)
 
-**Fix Priority:**
-1. **DEBT-110 (feature gap)**: Add discovery mode / lead→manifest bridging for problems with incomplete upstream references
+**Feature Requests (not bugs):**
+- DEBT-110 Phase 2/3: Auto-discovery mode (`--discover`, `--search`)
+- SPEC-036: Lead enrichment pipeline (leads → manifest bridging)
 
-**Impact:** Manual ingestion is now possible; discovery is still manual (Exa/S2/zbMATH) until DEBT-110 is implemented.
+**Impact:** Manual workflow is complete. Auto-discovery is a future enhancement.
 
 ## Archived Bugs
 

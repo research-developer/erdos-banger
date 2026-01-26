@@ -1,51 +1,55 @@
 # DEBT-110: Add Paper Discovery Mode to Ingest
 
 **Created:** 2026-01-26
-**Priority:** P1
+**Priority:** P2 (downgraded - Phase 1 complete, remaining is feature work)
 **Tracks:** BUG-039
 
 ## Problem
 
-The research workflow is broken for problems with incomplete reference metadata. There's no way to discover and ingest relevant papers without manual intervention.
+The research workflow was broken for problems with incomplete reference metadata. Phase 1 (manual add) is now complete. Phases 2-3 (automatic discovery) remain as feature work.
 
-## Current State
-
-```
-erdos ingest <id>  →  Only fetches pre-defined references
-erdos refs problem <id>  →  Shows references (often incomplete)
-```
-
-No search/discovery capability.
-
-## Desired State
+## Current State (Phase 1 Complete)
 
 ```bash
-# Add specific paper by arXiv ID
+# ✅ WORKS - Add specific paper by arXiv ID
 erdos refs add 848 --arxiv 2511.16072
 
-# Search and discover related papers
+# ✅ WORKS - Ingest fetches metadata + downloads source
+erdos ingest 848 --force
+
+# ❌ NOT IMPLEMENTED - Automatic discovery
+erdos ingest 848 --discover
+erdos ingest 848 --search "squarefree products Erdos"
+```
+
+## Desired State (Phases 2-3)
+
+```bash
+# Search and discover related papers (Phase 2)
 erdos ingest 848 --discover  # Uses problem statement + Exa/OpenAlex
 erdos ingest 848 --search "squarefree products Erdos"
 
-# Import from bibliography
+# Import from bibliography (Phase 3)
 erdos refs import 848 --bibtex refs.bib
 ```
 
-## Implementation Sketch
+## Implementation Status
 
-### Phase 1: Manual Add (Quick Win)
-1. Add `erdos refs add <id> --arxiv <arxiv_id>` command
-2. Fetches metadata from arXiv API
-3. Appends to `literature/manifests/<id>.yaml`
-4. Downloads source tarball to `literature/cache/`
+### Phase 1: Manual Add ✅ COMPLETE
+1. ✅ `erdos refs add <id> --arxiv <arxiv_id>` command exists
+2. ✅ Updates `data/problems_enriched.yaml` with new reference
+3. ✅ `erdos ingest` fetches metadata via FallbackProvider
+4. ✅ Downloads arXiv source tarball to `literature/cache/arxiv/`
 
-### Phase 2: Search Integration
+**Commit:** `f9b8441` (erdos refs add)
+
+### Phase 2: Search Integration (NOT STARTED)
 1. Add Exa integration for semantic paper search
 2. Use problem statement as initial query
 3. Filter by math.NT, math.CO categories
 4. Present candidates for user selection
 
-### Phase 3: Discovery Mode
+### Phase 3: Discovery Mode (NOT STARTED)
 1. `--discover` flag extracts keywords from problem statement
 2. Searches multiple sources (arXiv, Semantic Scholar, zbMATH)
 3. Deduplicates and ranks by relevance
@@ -53,10 +57,10 @@ erdos refs import 848 --bibtex refs.bib
 
 ## Acceptance Criteria
 
-- [ ] Can add arXiv:2511.16072 to Problem 848 via CLI
-- [ ] Can search for "squarefree products" and see relevant papers
-- [ ] Exa API integrated for semantic search
-- [ ] Discovery mode works on problems with empty references
+- [x] Can add arXiv:2511.16072 to Problem 848 via CLI ✅
+- [ ] Can search for "squarefree products" and see relevant papers (Phase 2)
+- [ ] Exa API integrated for semantic search (Phase 2)
+- [ ] Discovery mode works on problems with empty references (Phase 3)
 
 ## Dependencies
 

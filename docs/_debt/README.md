@@ -17,10 +17,13 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
 | DEBT-108 | End-to-end test coverage is thin | P2 | Open |
-| DEBT-110 | Add paper discovery mode to ingest | P1 | Open |
+| DEBT-110 | Add paper discovery mode to ingest | P2 | Phase 1 Done |
 | DEBT-111 | Skill invocation discipline | P3 | Open |
-| DEBT-112 | Prefer arXiv source over PDF conversion | P2 | Open |
+| DEBT-112 | Prefer arXiv source over PDF conversion | P3 | Mostly Done |
 | DEBT-113 | `erdos ask` does not persist LLM responses | P1 | Open |
+
+**Note:** DEBT-110 Phase 1 (`erdos refs add`) is complete. Phases 2-3 (auto-discovery) are feature work.
+DEBT-112 core workflow works; remaining items are documentation.
 
 Decks:
 

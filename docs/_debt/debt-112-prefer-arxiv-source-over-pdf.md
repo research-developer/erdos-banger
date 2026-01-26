@@ -25,34 +25,30 @@ The LaTeX source is:
 
 ## Current State
 
-1. **BUG-039** blocks adding arXiv papers to problems (`erdos refs add` doesn't exist)
-2. **BUG-040** fixed marker-pdf v1 API integration (PDF conversion is no longer blocked)
-3. `arxiv_download.py` already implements tarball download + LaTeX extraction
-4. But the happy path (arXiv source) is unreachable due to BUG-039
+1. ✅ `erdos refs add` now exists - arXiv papers can be added to problems
+2. ✅ **BUG-040** fixed - marker-pdf v1 API integration works
+3. ✅ `arxiv_download.py` implements tarball download + LaTeX extraction
+4. ✅ Happy path (arXiv source) is now reachable
 
-## Proposed Fix
-
-After BUG-039 is fixed (adding `erdos refs add`), ensure:
-
-1. **Default to source**: When arXiv ID is available, download tarball first
-2. **PDF as fallback**: Only convert PDF if no arXiv source exists
-3. **Document in workflow**: Skills and docs should recommend arXiv source path
-
-## Workaround (Manual)
-
+**Verified workflow:**
 ```bash
-# Download source tarball (matches `src/erdos/core/literature_paths.py`)
-mkdir -p literature/cache/arxiv/2511.16072
-curl -sL "https://arxiv.org/e-print/2511.16072" -o literature/cache/arxiv/2511.16072/source.tar.gz
-
-# Inspect contents (best-effort)
-tar -tf literature/cache/arxiv/2511.16072/source.tar.gz | rg "\\.tex$" | head
+uv run erdos refs add 848 --arxiv 2511.16072  # ✅ Adds reference
+uv run erdos ingest 848 --force               # ✅ Downloads tarball + extracts
+ls literature/cache/arxiv/extracted/2511.16072/*.tex  # ✅ LaTeX available
 ```
+
+## Remaining Work
+
+The pipeline works, but could be improved:
+
+1. **Documentation**: Skills/docs should explicitly recommend arXiv source path over PDF
+2. **CLI hints**: `erdos ingest --help` should mention arXiv source preference
+3. **Verification**: Add test coverage for the arXiv-preferred path
 
 ## Acceptance Criteria
 
-- [ ] BUG-039 fixed: `erdos refs add 848 --arxiv 2511.16072` works
-- [ ] Ingest prefers tarball when arXiv ID present
+- [x] `erdos refs add 848 --arxiv 2511.16072` works ✅
+- [x] Ingest downloads tarball when arXiv ID present ✅
 - [ ] PDF fallback documented in `erdos ingest --help`
 - [ ] Skills updated to recommend arXiv source path
 

@@ -1,18 +1,23 @@
 # BUG-039: Ingest Cannot Discover Papers - Only Fetches Pre-Defined References
 
 **Date:** 2026-01-26
-**Severity:** P1 (High - blocks research workflow)
-**Status:** Partially Fixed
+**Severity:** P2 (downgraded - core workflow fixed, discovery is feature work)
+**Status:** Phase 1 Fixed (manual add works), Phases 2-3 are feature requests
 **Component:** `erdos ingest`, `erdos refs`
 
 ## Summary
 
-The `erdos ingest` command can only fetch papers that are already defined in the problem's reference list with valid identifiers (DOI, arXiv ID). It cannot:
-1. Search for related papers by topic
-2. Add papers discovered via Semantic Scholar, OpenAlex, or Exa
-3. Manually add a specific arXiv paper to a problem
+The `erdos ingest` command originally could only fetch papers already in the problem's reference list. This blocked the research workflow.
 
-This fundamentally breaks the research workflow for problems with incomplete reference metadata.
+**Phase 1 (FIXED):** Manual add now works:
+```bash
+uv run erdos refs add 848 --arxiv 2511.16072  # ✅ WORKS
+uv run erdos ingest 848 --force               # ✅ WORKS
+```
+
+**Phases 2-3 (NOT IMPLEMENTED - feature requests):**
+1. ❌ Search for related papers by topic (`--search`)
+2. ❌ Auto-discover papers via Exa/S2/zbMATH (`--discover`)
 
 ## Reproduction
 
@@ -91,12 +96,14 @@ find literature/cache/arxiv/extracted/2511.16072 -name "*.tex"
 - **Many problems**: Any problem with incomplete upstream references
 - **Research velocity**: Manual paper discovery defeats CLI purpose
 
-## Proposed Fix
+## Implementation Status
 
-1. Add `erdos refs add <problem_id> --arxiv <id>` command
-2. Add `erdos ingest <problem_id> --search "<query>"` for topic-based discovery
-3. Integrate Exa API for semantic paper search
-4. Add `--discover` flag to auto-search based on problem statement keywords
+1. ✅ **DONE:** `erdos refs add <problem_id> --arxiv <id>` command (commit `f9b8441`)
+2. ❌ **NOT STARTED:** `erdos ingest <problem_id> --search "<query>"` for topic-based discovery
+3. ❌ **NOT STARTED:** Exa API integration for semantic paper search
+4. ❌ **NOT STARTED:** `--discover` flag to auto-search based on problem statement keywords
+
+See DEBT-110 for remaining feature work (Phases 2-3).
 
 ## Related
 
