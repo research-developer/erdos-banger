@@ -8,6 +8,8 @@ user-invocable: true
 
 **Target Problem:** $ARGUMENTS
 
+> **Tip:** If no problem ID provided, check `CANDIDATES.md` for the current focus problem (see Decision Log).
+
 This workflow helps you prove Erdos problems in Lean 4 using your Claude Code/Codex subscription instead of paid API calls.
 
 ## Overview

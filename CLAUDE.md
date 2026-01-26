@@ -10,6 +10,13 @@ CLI toolkit for collaborative research on Erdős problems (upstream dataset is 1
 
 Start at `docs/index.md` for getting started, developer guides, and architecture docs.
 
+## Current Focus
+
+See `CANDIDATES.md` for:
+- **Current problem** we're working on (check Decision Log for the active target)
+- Candidate problems being considered (tiered by AI-friendliness)
+- Related solved problems to study first
+
 ## Skills (Claude Code / Codex CLI)
 
 This repo includes custom skills for both Claude Code and Codex CLI:

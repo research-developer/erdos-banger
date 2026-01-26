@@ -7,6 +7,8 @@ description: Complete guide to the Erdos CLI toolkit for mathematical research. 
 
 This skill provides comprehensive knowledge of the `erdos` CLI for collaborative research on Erdos problems.
 
+> **Current Focus:** See `CANDIDATES.md` for the problem we're actively working on (check Decision Log for the active target).
+
 ## Quick Start
 
 ```bash
