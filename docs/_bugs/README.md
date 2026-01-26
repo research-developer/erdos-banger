@@ -20,12 +20,10 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 | ID | Title | Priority | Status | Found |
 |----|-------|----------|--------|-------|
-| BUG-034 | `erdos research exa --save-leads` crashes on empty title | P2 | Fixed | 2026-01-26 |
-| BUG-035 | Lean skeleton template uses outdated Mathlib import path | P2 | Fixed | 2026-01-26 |
 | GH-035 | Crossref/S2 clients missing JSONDecodeError handling | P1 | Open | 2026-01-26 |
 | GH-036 | Hardcoded `logs/loop` path breaks outside repo root | P2 | Open | 2026-01-26 |
 
-*Note: BUG-013 was invalidated as a false positive. BUG-015 and BUG-017 were review findings that were invalidated before standalone bug decks were created.*
+*Note: GH-XXX IDs correspond to GitHub issue numbers. BUG-XXX IDs are legacy local-only tracking.*
 
 ## Archived Bugs
 
@@ -64,13 +62,15 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-031 | `make smoke` fails when Lean installed but mathlib is not | P2 | Fixed | 83bf9f6 |
 | BUG-032 | Batch `--status` accepts invalid values (misclassified as NotFound) | P3 | Fixed | 3ab5c5c |
 | BUG-033 | zbMATH search methods don't handle 404 errors | P2 | Fixed | 05bc9ec |
+| BUG-034 | `erdos research exa --save-leads` crashes on empty title | P2 | Fixed | (in-tree) |
+| BUG-035 | Lean skeleton template uses outdated Mathlib import path | P2 | Fixed | (in-tree) |
 
-**Next Bug ID:** BUG-036
+*Note: GH-XXX bugs are tracked via GitHub Issues. Legacy BUG-XXX series is deprecated.*
 
 ### Active Bug Decks
 
-- `docs/_bugs/bug-034-exa-save-leads-empty-title.md`
-- `docs/_bugs/bug-035-lean-skeleton-outdated-import.md` (FIXED)
+- `docs/_bugs/bug-036-json-decode-error-handling.md` (GH-035)
+- `docs/_bugs/bug-037-hardcoded-logs-loop-path.md` (GH-036)
 
 ### Archived Bug Decks
 
@@ -112,10 +112,8 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/adversarial-review-2026-01-25-status-validation.md`
 - `docs/_archive/bugs/bug-032-batch-status-validation-missing.md`
 - `docs/_archive/bugs/bug-033-zbmath-search-identifier-404-not-handled.md`
-
-### Active Bug Decks
-
-None.
+- `docs/_archive/bugs/bug-034-exa-save-leads-empty-title.md`
+- `docs/_archive/bugs/bug-035-lean-skeleton-outdated-import.md`
 
 ## Bug Priority Definitions
 
