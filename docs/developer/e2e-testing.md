@@ -86,4 +86,3 @@ Prefer generating these in tests (write small YAML/MD files) unless they’re re
 ## Where to Track Work
 
 If E2E coverage is expanded, track it as a debt deck in `docs/_debt/` with concrete acceptance criteria and commit hashes.
-

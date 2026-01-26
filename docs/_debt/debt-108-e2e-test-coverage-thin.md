@@ -63,4 +63,3 @@ Expand E2E coverage with a small set of fast, deterministic scenarios that:
 No fixture gaps were found for unit/integration parsing (arXiv/Crossref/Exa/S2/zbMATH/sync HTML already have deterministic fixtures under `tests/fixtures/`).
 
 E2E expansion should prefer generating minimal filesystem inputs inside the test using `tmp_path` unless the same fixture is reused across multiple E2E modules.
-
