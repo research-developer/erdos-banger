@@ -115,6 +115,8 @@ erdos ingest --all --status open --limit 100  # Execute
 erdos ingest 6 --pdf --pdf-converter marker
 ```
 
+> **Tip:** For papers with arXiv IDs, `erdos ingest` prefers downloading LaTeX source tarballs over PDF conversion. This yields higher quality (clean LaTeX, perfect math) with no ML dependencies. Add arXiv IDs via `erdos refs add <id> --arxiv <arxiv_id>` before ingesting.
+
 ### Lean Formalization
 
 ```bash
@@ -149,6 +151,8 @@ erdos ask 6 "What techniques have been used to approach this problem?"
 # Retrieval only (FREE)
 erdos ask 6 "relevant literature" --no-llm
 ```
+
+> **Tip:** `erdos ask` persists interactions to `logs/ask/problem_{id}.jsonl`. Query them with `erdos logs ask --problem <id> --limit 5`.
 
 ### Proof Loop (Automated Iteration)
 

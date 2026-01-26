@@ -193,6 +193,12 @@ class TestAskSummarizer:
     def test_extracts_llm_enabled(self) -> None:
         """Should extract llm_enabled flag."""
         summarizer = get_summarizer("erdos ask")
+        result = summarizer({"llm": {"enabled": True}, "sources": [], "answer": ""})
+        assert result["llm_enabled"] is True
+
+    def test_extracts_llm_enabled_legacy_key(self) -> None:
+        """Should remain compatible with legacy llm_enabled key."""
+        summarizer = get_summarizer("erdos ask")
         result = summarizer({"llm_enabled": True, "sources": [], "answer": ""})
         assert result["llm_enabled"] is True
 

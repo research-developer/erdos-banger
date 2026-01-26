@@ -28,9 +28,11 @@ uv run python scripts/generate_cli_reference.py
     - `erdos lean status`
   - `erdos list`
   - `erdos logs`
+    - `erdos logs ask`
   - `erdos loop`
     - `erdos loop run`
   - `erdos refs`
+    - `erdos refs add`
     - `erdos refs problem`
     - `erdos refs s2`
       - `erdos refs s2 citations`
@@ -104,7 +106,9 @@ uv run python scripts/generate_cli_reference.py
 │             zbMATH.                                                          │
 │ search      Search problem statements.                                       │
 │ lean        Lean 4 theorem prover commands.                                  │
-│ ingest      Ingest literature metadata and cache.                            │
+│ ingest      Ingest literature metadata and cache. For papers with arXiv IDs, │
+│             prefers downloading LaTeX source tarballs (higher quality) over  │
+│             PDF conversion.                                                  │
 │ ask         Ask questions about Erdős problems using RAG.                    │
 │ logs        Query and summarize run logs.                                    │
 │ loop        Iterative Lean proof loop.                                       │
@@ -206,7 +210,8 @@ uv run python scripts/generate_cli_reference.py
 
  Usage: erdos ingest [OPTIONS] [PROBLEM_ID] COMMAND [ARGS]...
 
- Ingest literature metadata and cache.
+ Ingest literature metadata and cache. For papers with arXiv IDs, prefers
+ downloading LaTeX source tarballs (higher quality) over PDF conversion.
 
 ╭─ Arguments ──────────────────────────────────────────────────────────────────╮
 │   problem_id      [PROBLEM_ID]  Problem ID (omit for batch mode)             │
@@ -545,6 +550,40 @@ uv run python scripts/generate_cli_reference.py
 │ --help        -h                                  Show this message and      │
 │                                                   exit.                      │
 ╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────╮
+│ ask   Query `erdos ask` interaction logs (logs/ask/*.jsonl).                 │
+╰──────────────────────────────────────────────────────────────────────────────╯
+```
+
+### `erdos logs ask`
+
+```text
+
+ Usage: erdos logs [OPTIONS] COMMAND [ARGS]...
+
+ Query and summarize run logs.
+
+╭─ Options ────────────────────────────────────────────────────────────────────╮
+│ --problem-id  -p      INTEGER                     Filter by problem ID.      │
+│ --command             TEXT                        Filter by command name     │
+│                                                   (e.g., 'erdos lean         │
+│                                                   check').                   │
+│ --since               TEXT                        Filter logs after date     │
+│                                                   (e.g., '7d', '2h',         │
+│                                                   '2026-01-15').             │
+│ --status              TEXT                        Filter by 'success' or     │
+│                                                   'failure'.                 │
+│ --limit       -n      INTEGER RANGE [1<=x<=1000]  Max entries to return.     │
+│                                                   [default: 50]              │
+│ --summary                                         Show aggregated summary    │
+│                                                   instead of individual      │
+│                                                   entries.                   │
+│ --help        -h                                  Show this message and      │
+│                                                   exit.                      │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────╮
+│ ask   Query `erdos ask` interaction logs (logs/ask/*.jsonl).                 │
+╰──────────────────────────────────────────────────────────────────────────────╯
 ```
 
 ### `erdos loop`
@@ -648,9 +687,42 @@ uv run python scripts/generate_cli_reference.py
 │ --help  -h        Show this message and exit.                                │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 ╭─ Commands ───────────────────────────────────────────────────────────────────╮
+│ add       Add a reference identifier to a problem in the local dataset.      │
 │ problem   List references for a problem.                                     │
 │ s2        Semantic Scholar citation commands.                                │
 │ zbmath    zbMATH Open API commands.                                          │
+╰──────────────────────────────────────────────────────────────────────────────╯
+```
+
+### `erdos refs add`
+
+```text
+
+ Usage: erdos refs add [OPTIONS] PROBLEM_ID
+
+ Add a reference identifier to a problem in the local dataset.
+
+ This updates the local enriched dataset file (e.g.
+ `data/problems_enriched.yaml`),
+ so subsequent `erdos ingest <id>` runs can fetch metadata and ingest content.
+
+ Examples:
+     erdos refs add 848 --arxiv 2511.16072
+     erdos refs add 848 --doi 10.1000/example
+     erdos refs add 848 --url https://example.com/paper.pdf --key Example2026
+
+╭─ Arguments ──────────────────────────────────────────────────────────────────╮
+│ *    problem_id      INTEGER RANGE  Problem ID to update. [required]         │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────╮
+│ --arxiv,--arxiv-id          TEXT  Add an arXiv ID to the problem references  │
+│                                   (e.g., 2511.16072).                        │
+│ --doi                       TEXT  Add a DOI to the references.               │
+│ --url                       TEXT  Add a URL to the references.               │
+│ --key                       TEXT  Reference key to store in the dataset      │
+│                                   (default derived from identifier).         │
+│ --citation                  TEXT  Citation text to store in the dataset.     │
+│ --help              -h            Show this message and exit.                │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 ```
 

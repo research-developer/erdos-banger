@@ -8,6 +8,7 @@ from typing import Any
 import typer
 from rich.table import Table
 
+from erdos.commands.logs_ask import app as ask_logs_app
 from erdos.commands.presenter import console, exit_with_result
 from erdos.core.models import CLIOutput
 from erdos.core.run_logger import RunLogEntry, RunLogger, get_run_logger
@@ -19,8 +20,11 @@ logger = logging.getLogger(__name__)
 
 app = typer.Typer(
     help="Query and summarize run logs.",
-    context_settings={"allow_interspersed_args": True},
+    # `erdos logs` has subcommands (e.g., `erdos logs ask`). Disallow interspersed
+    # args so group options don't accidentally consume subcommand flags.
+    context_settings={"allow_interspersed_args": False},
 )
+app.add_typer(ask_logs_app, name="ask")
 
 
 def _entry_to_dict(entry: RunLogEntry) -> dict[str, Any]:
@@ -279,6 +283,9 @@ def logs(
         erdos logs --problem-id 6 --command "erdos lean check"
         erdos logs --since 7d --summary
     """
+    if ctx.invoked_subcommand is not None:
+        return
+
     with measure_time_ms() as duration:
         run_logger = get_run_logger()
 

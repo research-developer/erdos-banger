@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
-from erdos.core.ask.logging import log_ask_interaction
+from erdos.core.ask.logging import log_ask_interaction, read_ask_log_entries
 
 
 class TestLogAskInteraction:
@@ -132,3 +133,55 @@ class TestLogAskInteraction:
 
         assert entry["schema_version"] == 1
         assert "timestamp" in entry
+
+    def test_read_entries_missing_file_returns_empty(self, tmp_path: Path) -> None:
+        """Reading a missing log file should return empty results (no error)."""
+        entries, parse_errors, log_path = read_ask_log_entries(123, log_dir=tmp_path)
+        assert entries == []
+        assert parse_errors == 0
+        assert log_path == tmp_path / "problem_123.jsonl"
+
+    def test_read_entries_skips_malformed_lines(self, tmp_path: Path) -> None:
+        """Malformed JSONL lines should be skipped and counted."""
+        log_path = tmp_path / "problem_1.jsonl"
+        log_path.write_text(
+            "\n".join(
+                [
+                    json.dumps(
+                        {
+                            "schema_version": 1,
+                            "timestamp": datetime.now(UTC).isoformat(),
+                            "problem_id": 1,
+                            "question": "Q",
+                            "answer": "A",
+                            "source_count": 0,
+                            "sources": [],
+                            "llm": {"enabled": False},
+                        }
+                    ),
+                    "{not valid json",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        entries, parse_errors, _ = read_ask_log_entries(1, log_dir=tmp_path)
+        assert len(entries) == 1
+        assert parse_errors == 1
+
+    def test_read_entries_respects_limit(self, tmp_path: Path) -> None:
+        """Only the most recent N entries should be returned."""
+        for i in range(5):
+            log_ask_interaction(
+                problem_id=9,
+                question=f"Question {i}",
+                answer=f"Answer {i}",
+                sources=[],
+                llm_enabled=True,
+                log_dir=tmp_path,
+            )
+
+        entries, parse_errors, _ = read_ask_log_entries(9, log_dir=tmp_path, limit=2)
+        assert parse_errors == 0
+        assert [e.question for e in entries] == ["Question 3", "Question 4"]

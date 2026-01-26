@@ -152,6 +152,8 @@ erdos ask 6 "What techniques have been used to approach this problem?"
 erdos ask 6 "relevant literature" --no-llm
 ```
 
+> **Tip:** `erdos ask` persists interactions to `logs/ask/problem_{id}.jsonl`. Query them with `erdos logs ask --problem <id> --limit 5`.
+
 ### Proof Loop (Automated Iteration)
 
 ```bash

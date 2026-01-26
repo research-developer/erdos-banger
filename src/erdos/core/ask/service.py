@@ -1,10 +1,11 @@
 """Ask service: orchestrates RAG Q&A for Erdős problems."""
 
+import logging
 from pathlib import Path
 from typing import Any
 
 from erdos.core.ask.llm import LLMExecutionResult, execute_llm_if_enabled
-from erdos.core.ask.logging import log_ask_interaction
+from erdos.core.ask.logging import get_ask_log_path, log_ask_interaction
 from erdos.core.ask.prompt import build_prompt
 from erdos.core.ask.retrieval import retrieve_sources
 from erdos.core.constants import DEFAULT_RAG_LIMIT
@@ -14,6 +15,9 @@ from erdos.core.ports import ProblemRepository, SearchIndexProtocol
 from erdos.core.problem_loader import ProblemLoaderError
 from erdos.core.search.indexing_service import build_search_index
 from erdos.core.search.types import SearchResult
+
+
+logger = logging.getLogger(__name__)
 
 
 def _ensure_index_ready(
@@ -202,14 +206,20 @@ def ask_question(
     )
 
     # Persist Q&A to detailed log (DEBT-113)
-    log_ask_interaction(
-        problem_id=problem_id,
-        question=question,
-        answer=llm_result.answer,
-        sources=data["sources"],
-        llm_enabled=llm_result.llm_enabled,
-        llm_command=llm_result.llm_command,
-        llm_exit_code=llm_result.llm_exit_code,
-    )
+    log_path = get_ask_log_path(problem_id)
+    try:
+        log_path = log_ask_interaction(
+            problem_id=problem_id,
+            question=question,
+            answer=llm_result.answer,
+            sources=data["sources"],
+            llm_enabled=llm_result.llm_enabled,
+            llm_command=llm_result.llm_command,
+            llm_exit_code=llm_result.llm_exit_code,
+        )
+        data["ask_log"] = {"path": str(log_path), "written": True}
+    except Exception as e:  # logging must not break command success
+        logger.debug("Failed to persist ask log: %s", e)
+        data["ask_log"] = {"path": str(log_path), "written": False, "error": str(e)}
 
     return CLIOutput.ok(command="erdos ask", data=data)
