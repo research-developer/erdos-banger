@@ -19,18 +19,40 @@ if TYPE_CHECKING:
 
 
 def safe_fts5_query(query: str) -> str:
-    """Escape a query for safe FTS5 matching.
+    """Escape a query for safe FTS5 matching while preserving useful syntax.
 
-    FTS5 has special syntax characters (-, AND, OR, NOT, parentheses, etc.)
-    that cause errors when passed raw. This function extracts alphanumeric
-    tokens and quotes them for safe matching.
+    FTS5 has special syntax that can cause errors when passed raw (e.g., hyphens
+    interpreted as NOT operator). This function preserves useful FTS5 features
+    while escaping dangerous constructs.
+
+    Preserved features:
+    - Prefix matching: prim* matches primes, prime, etc.
+    - Phrase matching: "arithmetic progressions" matches exact phrase
+    - Boolean operators: word1 OR word2, word1 AND word2
+
+    Escaped:
+    - Hyphens in words (sum-free -> "sum" OR "free")
+    - Standalone special chars
 
     Args:
         query: Raw user query
 
     Returns:
-        Escaped FTS5 query with quoted tokens joined by OR
+        Safe FTS5 query
     """
+    # Check if query uses explicit FTS5 syntax (phrases, prefix, operators)
+    has_phrase = '"' in query
+    has_prefix = "*" in query
+    has_boolean = bool(re.search(r"\b(AND|OR|NOT)\b", query))
+
+    # If using advanced syntax, do minimal escaping to preserve intent
+    if has_phrase or has_prefix or has_boolean:
+        # Replace hyphens with spaces (to avoid NOT interpretation)
+        # but preserve the rest of the query structure
+        safe_query = re.sub(r"(?<=[a-zA-Z])-(?=[a-zA-Z])", " ", query)
+        return safe_query
+
+    # For plain queries, tokenize and quote for maximum safety
     tokens = re.findall(r"[a-z0-9]+", query.lower())
     if not tokens:
         return '""'  # Empty match returns no results gracefully
