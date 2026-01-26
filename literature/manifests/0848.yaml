@@ -1,5 +1,56 @@
-created_at: '2026-01-26T18:17:01.319370Z'
-entries: []
+created_at: '2026-01-26T20:34:37.808480Z'
+entries:
+- cache_hash: ef5cda4890cdab496b389bd2e1af6c5bc35656e661971018d1edef0f0958b6b8
+  cache_path: literature/cache/arxiv/2511.16072/source.tar.gz
+  cached: true
+  error: null
+  extract_path: literature/extracts/arxiv/2511.16072/fulltext.txt
+  extracted: true
+  ingested_at: '2026-01-26T20:34:34.803374Z'
+  reference:
+    abstract: AI models like GPT-5 are an increasingly valuable tool for scientists,
+      but many remain unaware of the capabilities of frontier AI. We present a collection
+      of short case studies in which GPT-5 produced new, concrete steps in ongoing
+      research across mathematics, physics, astronomy, computer science, biology,
+      and materials science. In these examples, the authors highlight how AI accelerated
+      their work, and where it fell short; where expert time was saved, and where
+      human input was still key. We document the interactions of the human authors
+      with GPT-5, as guiding examples of fruitful collaboration with AI. Of note,
+      this paper includes four new results in mathematics (carefully verified by the
+      human authors), underscoring how GPT-5 can help human mathematicians settle
+      previously unsolved problems. These contributions are modest in scope but profound
+      in implication, given the rate at which frontier AI is progressing.
+    arxiv_id: '2511.16072'
+    authors:
+    - "S\xE9bastien Bubeck"
+    - Christian Coester
+    - Ronen Eldan
+    - Timothy Gowers
+    - Yin Tat Lee
+    - Alexandru Lupsasca
+    - Mehtaab Sawhney
+    - Robert J. Scherrer
+    - Mark Sellke
+    - B. K. Spears
+    - Derya Unutmaz
+    - Kevin Weil
+    - Shuo Yin
+    - Nikita Zhivotovskiy
+    cited_by_count: 0
+    concepts: []
+    doi: 10.48550/arxiv.2511.16072
+    fetched_at: null
+    license: null
+    oa_status: green
+    oa_url: null
+    openalex_id: https://openalex.org/W4416550248
+    pdf_url: https://arxiv.org/pdf/2511.16072
+    semantic_scholar_id: null
+    source: openalex
+    title: Early science acceleration experiments with GPT-5
+    venue: arXiv (Cornell University)
+    year: 2025
+  schema_version: 1
 problem_id: 848
 schema_version: 1
-updated_at: '2026-01-26T18:17:01.319370Z'
+updated_at: '2026-01-26T20:34:37.808480Z'
