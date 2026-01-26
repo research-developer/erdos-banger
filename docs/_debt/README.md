@@ -14,7 +14,13 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-None.
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| DEBT-108 | End-to-end test coverage is thin | P2 | Open |
+
+Decks:
+
+- `docs/_debt/debt-108-e2e-test-coverage-thin.md`
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -135,7 +141,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-094 | Semantic Scholar client LOC violation | P3 | Superseded | 9f10546 |
 | DEBT-095 | zbMATH client LOC violation | P3 | Superseded | 9f10546 |
 
-**Next Debt ID:** DEBT-108
+**Next Debt ID:** DEBT-109
 
 ### Archived Debt Decks
 
