@@ -1,0 +1,10 @@
+schema_version: 1
+problem_id: 848
+id: task_20260126T143835Z_861bb5
+title: Extract lemma dependencies from Sawhney's proof
+status: todo
+priority: medium
+blocked_on: []
+links: []
+created_at: '2026-01-26T14:38:35Z'
+updated_at: '2026-01-26T14:38:35Z'

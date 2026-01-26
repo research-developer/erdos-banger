@@ -2,7 +2,7 @@
 
 Tracking which Erdos problems we're considering working on and why.
 
-Last updated: 2026-01-25
+Last updated: 2026-01-26
 
 ---
 
@@ -12,6 +12,7 @@ Last updated: 2026-01-25
 
 | # | Prize | Topic | Why Consider |
 |---|-------|-------|--------------|
+| **848** | $0 | Number theory, squarefree | Labeled decidable; “effective N₀ + finite check” shape. Modular (±7 mod 25) and certificate-friendly (SAT/DRAT + Lean). |
 | **74** | $500 | Graph theory, chromatic | Constructive, graph algos are AI-friendly. Related solved: #57, #58, #63 |
 | **564** | $500 | Ramsey hypergraphs | Well-studied area, combinatorial. Related solved: #645 (Lean proof available) |
 | **20** | $1,000 | Sunflower lemma | Pure combinatorics, finite structures. Related: #1026 (AI-solved) |
@@ -55,11 +56,15 @@ These are solved problems that share techniques with our candidates:
 - Identified #74, #564, #20 as top candidates
 - Strategy: Study solved relatives before attempting open problems
 
+### 2026-01-26
+- Picked #848 (Erdős–Sárközy) as the first “2026 AI + human collab” target
+- Rationale: explicit-threshold grind + finite verification with checkable certificates
+
 ---
 
 ## Next Steps
 
-1. [ ] Pick one problem to focus on
+1. [x] Pick one problem to focus on (#848)
 2. [ ] Read the related solved proofs
 3. [ ] Understand the Lean formalization
 4. [ ] Attempt partial progress or full proof

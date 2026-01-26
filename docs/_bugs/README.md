@@ -6,6 +6,7 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 | Date | Type | Summary | Status |
 |------|------|---------|--------|
+| 2026-01-26 | Friction Report | CLI maximization test for Problem #848 (1 bug found: BUG-034) | Active |
 | 2026-01-25 | Adversarial Review | Status filter validation audit (1 bug fixed in 3ab5c5c) | Archived |
 | 2026-01-25 | Adversarial Review | Post-refactor CLI stress test (no new bugs; expanded regression tests) | Archived |
 | 2026-01-25 | Adversarial Review | CLI stress test, input validation audit (6 bugs fixed in 92039ca) | Archived |
@@ -16,7 +17,10 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 ## Active Bugs
 
-None.
+| ID | Title | Priority | Status | Found |
+|----|-------|----------|--------|-------|
+| BUG-034 | `erdos research exa --save-leads` crashes on empty title | P2 | Open | 2026-01-26 |
+| BUG-035 | Lean skeleton template uses outdated Mathlib import path | P2 | Fixed | 2026-01-26 |
 
 *Note: BUG-013 was invalidated as a false positive. BUG-015 and BUG-017 were review findings that were invalidated before standalone bug decks were created.*
 
@@ -58,7 +62,12 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-032 | Batch `--status` accepts invalid values (misclassified as NotFound) | P3 | Fixed | 3ab5c5c |
 | BUG-033 | zbMATH search methods don't handle 404 errors | P2 | Fixed | 05bc9ec |
 
-**Next Bug ID:** BUG-034
+**Next Bug ID:** BUG-036
+
+### Active Bug Decks
+
+- `docs/_bugs/bug-034-exa-save-leads-empty-title.md`
+- `docs/_bugs/bug-035-lean-skeleton-outdated-import.md` (FIXED)
 
 ### Archived Bug Decks
 

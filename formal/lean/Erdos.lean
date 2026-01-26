@@ -5,3 +5,4 @@ import Erdos.Basic
 -- Individual problems imported as they're created:
 -- import Erdos.Problem006
 -- import Erdos.Problem067
+import Erdos.Problem848
