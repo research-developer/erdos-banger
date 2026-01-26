@@ -16,9 +16,7 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 ## Active Bugs
 
-| ID | Title | Priority | Status | File |
-|----|-------|----------|--------|------|
-| BUG-033 | zbMATH search methods don't handle 404 errors | P2 | Fixed | `bug-033-zbmath-search-identifier-404-not-handled.md` |
+None.
 
 *Note: BUG-013 was invalidated as a false positive. BUG-015 and BUG-017 were review findings that were invalidated before standalone bug decks were created.*
 
@@ -58,6 +56,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-030 | `erdos ingest` accepts invalid numeric values | P2 | Fixed | 6c7eef2 |
 | BUG-031 | `make smoke` fails when Lean installed but mathlib is not | P2 | Fixed | 83bf9f6 |
 | BUG-032 | Batch `--status` accepts invalid values (misclassified as NotFound) | P3 | Fixed | 3ab5c5c |
+| BUG-033 | zbMATH search methods don't handle 404 errors | P2 | Fixed | 05bc9ec |
 
 **Next Bug ID:** BUG-034
 
@@ -100,10 +99,11 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/bug-031-smoke-test-lean-check-no-mathlib.md`
 - `docs/_archive/bugs/adversarial-review-2026-01-25-status-validation.md`
 - `docs/_archive/bugs/bug-032-batch-status-validation-missing.md`
+- `docs/_archive/bugs/bug-033-zbmath-search-identifier-404-not-handled.md`
 
 ### Active Bug Decks
 
-- `docs/_bugs/bug-033-zbmath-search-identifier-404-not-handled.md`
+None.
 
 ## Bug Priority Definitions
 
