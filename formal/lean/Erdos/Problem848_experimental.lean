@@ -344,45 +344,107 @@ Key references found via Exa Research:
 - Poonen, "Squarefree Values of Multivariable Polynomials"
 -/
 
-/-- Axiom: Sawhney's density bound.
-    For large N, elements outside A₇ ∪ A₁₈ are rare in any set with the property.
-    Specifically: if |A*| > 0 (A* = A \ (A₇ ∪ A₁₈)), then |A|/N ≤ 0.04.
-    This is the core sieve estimate from arXiv:2511.16072, Proposition 5.1. -/
-axiom sawhney_density_bound :
+/-- Axiom: Sawhney's density bound for A* nonempty.
+    For large N, if A has an element outside A₇ ∪ A₁₈, then |A|/N ≤ 0.038.
+    From arXiv:2511.16072: all cases with A* ≠ ∅ give density < 0.04 - 0.002 = 0.038.
+    (Actual bounds: 0.0377, 0.0358, 0.0336 depending on parity of elements) -/
+axiom sawhney_density_bound_Astar :
   ∃ N₀ : ℕ, ∀ N ≥ N₀, ∀ A : Finset ℕ,
     A ⊆ Finset.range N →
     NonSquarefreeProductProp A →
     (∃ x ∈ A, x % 25 ≠ 7 ∧ x % 25 ≠ 18) →
-    (A.card : ℝ) / N ≤ 0.04
+    (A.card : ℝ) / N ≤ 0.038
 
-/-- Sawhney's theorem: For large N, optimal sets are contained in A₇ or A₁₈. -/
-theorem sawhney_main (c : ℝ) (hc : c > 0) :
+/-- Axiom: Sawhney's density bound for mixing A₇ and A₁₈.
+    For large N, if A ⊆ A₇ ∪ A₁₈ but has elements in BOTH classes, then |A|/N ≤ 0.030.
+    From Sawhney's proof: "fixing b ∈ A₇ and b' ∈ A₁₈ ... ≤ 0.0294 < 0.04 - η" -/
+axiom sawhney_density_bound_mixing :
+  ∃ N₀ : ℕ, ∀ N ≥ N₀, ∀ A : Finset ℕ,
+    A ⊆ Finset.range N →
+    NonSquarefreeProductProp A →
+    (∀ x ∈ A, x % 25 = 7 ∨ x % 25 = 18) →
+    (∃ x ∈ A, x % 25 = 7) →
+    (∃ y ∈ A, y % 25 = 18) →
+    (A.card : ℝ) / N ≤ 0.030
+
+/-- Sawhney's theorem: For large N, near-optimal sets are contained in A₇ or A₁₈.
+    Note: c must be < 0.002 (the gap between 1/25=0.04 and the density bounds ≤0.038). -/
+theorem sawhney_main (c : ℝ) (hc : c > 0) (hc_small : c < 0.002) :
     ∃ N₀ : ℕ, ∀ N ≥ N₀, ∀ A : Finset ℕ,
       A ⊆ Finset.range N →
       NonSquarefreeProductProp A →
       (A.card : ℝ) ≥ (1/25 - c) * N →
       (A ⊆ A₇ N ∨ A ⊆ A₁₈ N) := by
-  -- From sawhney_density_bound, get N₀
-  obtain ⟨N₀, h_density⟩ := sawhney_density_bound
-  use N₀
+  -- Get both N₀ bounds
+  obtain ⟨N₁, h_density_star⟩ := sawhney_density_bound_Astar
+  obtain ⟨N₂, h_density_mix⟩ := sawhney_density_bound_mixing
+  use max N₁ N₂
   intro N hNge A hAsub hAprop hSize
-  -- Case 1: All elements are in A₇ ∪ A₁₈
+  have hN1 : N ≥ N₁ := le_of_max_le_left hNge
+  have hN2 : N ≥ N₂ := le_of_max_le_right hNge
+  -- Case 1: Some element is outside A₇ ∪ A₁₈
   by_cases h_all_in_union : ∀ a ∈ A, a % 25 = 7 ∨ a % 25 = 18
-  · -- Use no-mixing argument
-    -- For large N, we need a more general version of containment_small
-    -- This requires showing the no-mixing property holds for all N
-    sorry
-  · -- Case 2: Some element is outside A₇ ∪ A₁₈
+  · -- Case 2: All elements are in A₇ ∪ A₁₈
+    -- Now check if mixing occurs
+    by_cases h_has_7 : ∃ x ∈ A, x % 25 = 7
+    · by_cases h_has_18 : ∃ y ∈ A, y % 25 = 18
+      · -- Both classes present: mixing contradiction
+        have h_mix := h_density_mix N hN2 A hAsub hAprop h_all_in_union h_has_7 h_has_18
+        -- |A|/N ≤ 0.0294 but |A|/N ≥ 1/25 - c = 0.04 - c > 0.03
+        -- Contradiction when c < 0.01
+        exfalso
+        have h_size_bound : (A.card : ℝ) / N ≥ 1/25 - c := by
+          have hN_pos : (0 : ℝ) < N := by
+            by_contra hN_le
+            push_neg at hN_le
+            have : N = 0 := Nat.eq_zero_of_le_zero (Nat.lt_one_iff.mp (Nat.lt_of_le_of_lt (Nat.cast_le.mp hN_le) (by norm_num : (0:ℝ) < 1)))
+            simp [this] at hSize hc
+            linarith
+          exact (div_le_iff hN_pos).mpr hSize
+        have h_contra : (1 : ℝ)/25 - c > 0.0294 := by
+          have : (1 : ℝ)/25 = 0.04 := by norm_num
+          linarith
+        linarith
+      · -- Only A₇ present
+        left
+        intro a ha
+        simp only [A₇, Finset.mem_filter]
+        constructor
+        · exact hAsub ha
+        · have h := h_all_in_union a ha
+          cases h with
+          | inl h7 => exact h7
+          | inr h18 =>
+            exfalso
+            push_neg at h_has_18
+            exact h_has_18 a ha h18
+    · -- No A₇ elements, so all must be A₁₈
+      right
+      intro a ha
+      simp only [A₁₈, Finset.mem_filter]
+      constructor
+      · exact hAsub ha
+      · have h := h_all_in_union a ha
+        cases h with
+        | inl h7 =>
+          exfalso
+          push_neg at h_has_7
+          exact h_has_7 a ha h7
+        | inr h18 => exact h18
+  · -- Case 1: Some element outside A₇ ∪ A₁₈
     push_neg at h_all_in_union
-    -- By density bound, |A|/N ≤ 0.04, which contradicts |A|/N ≥ 1/25 - c
-    have hA_star : ∃ x ∈ A, x % 25 ≠ 7 ∧ x % 25 ≠ 18 := by
-      obtain ⟨x, hx, hx_not⟩ := h_all_in_union
-      use x, hx
-      push_neg at hx_not
-      exact hx_not
-    have h_bound := h_density N hNge A hAsub hAprop hA_star
-    -- 1/25 = 0.04, so 1/25 - c < 0.04 for small c
-    -- This is a contradiction when c is small enough
+    obtain ⟨x, hx, hx_not⟩ := h_all_in_union
+    have hA_star : ∃ x ∈ A, x % 25 ≠ 7 ∧ x % 25 ≠ 18 := ⟨x, hx, hx_not⟩
+    have h_bound := h_density_star N hN1 A hAsub hAprop hA_star
+    -- |A|/N ≤ 0.04 but |A|/N ≥ 1/25 - c = 0.04 - c
+    -- Need to show 0.04 - c > 0.04 is false, but actually 0.04 - c < 0.04
+    -- Wait, the bound is 0.04 and we need |A|/N ≥ 0.04 - c
+    -- This is NOT a contradiction unless c ≤ 0
+    -- The issue: 1/25 = 0.04 exactly, so 1/25 - c < 0.04 when c > 0
+    -- So there's no contradiction here!
+    -- Actually checking the paper: they use η = 0.002 and show density < 0.04 - η
+    -- Our axiom says ≤ 0.04, but we need < 0.04 - c for some c > 0
+    -- Need to strengthen the axiom
     sorry
 
 /-- The main conjecture: A₇ (or A₁₈) achieves the maximum. -/
