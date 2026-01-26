@@ -1,15 +1,11 @@
 /-
 Problem 848: Brute-force finite verification attempt
 
-This file attempts to prove problem_848_N50 by exhaustive checking of all
-19,600 triples using native_decide. May take a long time or timeout.
-
-Run with: lake build Erdos.Problem848_BruteForce
+This file attempts to prove problem_848_N50 by exhaustive checking.
 -/
 
 import Erdos.Basic
 import Mathlib.Data.Finset.Basic
-import Mathlib.Data.Finset.Powerset
 import Mathlib.Data.Nat.Prime.Basic
 import Mathlib.Data.Nat.Squarefree
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
@@ -30,77 +26,81 @@ instance (A : Finset ℕ) : Decidable (NonSquarefreeProductProp A) := by
 def A₇ (N : ℕ) : Finset ℕ :=
   (Finset.range N).filter (fun n => n % 25 = 7)
 
-/-- |A₇(50)| = 2 -/
+/-- |A₇(50)| = 2, so A₇(50) = {7, 32} -/
 lemma A₇_50_card : (A₇ 50).card = 2 := by native_decide
 
-/-- Property is hereditary to subsets -/
-lemma nonSquarefreeProductProp_subset {A B : Finset ℕ} (hAB : A ⊆ B)
-    (hB : NonSquarefreeProductProp B) : NonSquarefreeProductProp A := by
-  intro a ha b hb
-  exact hB a (hAB ha) b (hAB hb)
+/-- A₇(50) = {7, 32} -/
+example : A₇ 50 = {7, 32} := by native_decide
+
+/-- A₇(50) has the property -/
+example : NonSquarefreeProductProp (A₇ 50) := by native_decide
 
 /-!
-## Brute Force Approach
+## Key Insight
 
-Key insight: If any set A with |A| ≥ 3 had the property, then every 3-element
-subset would also have it (by hereditary lemma).
+For N=50, A₇(50) = {7, 32} has only 2 elements.
+Any 3-element subset with the property would need all pairs to give non-squarefree products.
 
-So we need to check: NO 3-element subset of {0,...,49} has the property.
+The question: Does any 3-element subset of {0,...,49} have the property?
 
-That's C(50,3) = 19,600 checks. Each check evaluates 9 squarefree tests
-(3×3 pairs). Total: ~176,400 squarefree computations.
+If all elements are ≡ 7 (mod 25), then yes. But in {0,...,49}, only {7, 32} satisfy this.
+So we need to check if any "mixed" triple works.
 -/
 
-/-- Check that a specific triple does NOT have the property.
-    i.e., at least one of the 9 products ab+1 IS squarefree. -/
-def tripleHasSquarefreePair (a b c : ℕ) : Bool :=
-  Squarefree (a * a + 1) ||
-  Squarefree (a * b + 1) ||
-  Squarefree (a * c + 1) ||
-  Squarefree (b * a + 1) ||
-  Squarefree (b * b + 1) ||
-  Squarefree (b * c + 1) ||
-  Squarefree (c * a + 1) ||
-  Squarefree (c * b + 1) ||
-  Squarefree (c * c + 1)
+/-- Check if a triple {a, b, c} has the property (all 9 products non-squarefree) -/
+def tripleHasProperty (a b c : ℕ) : Bool :=
+  !Squarefree (a * a + 1) &&
+  !Squarefree (a * b + 1) &&
+  !Squarefree (a * c + 1) &&
+  !Squarefree (b * a + 1) &&
+  !Squarefree (b * b + 1) &&
+  !Squarefree (b * c + 1) &&
+  !Squarefree (c * a + 1) &&
+  !Squarefree (c * b + 1) &&
+  !Squarefree (c * c + 1)
 
-/-- Small test: {0, 1, 2} should NOT have the property -/
-example : tripleHasSquarefreePair 0 1 2 = true := by native_decide
+/-- {7, 32} pair works (both products non-squarefree) -/
+example : !Squarefree (7 * 7 + 1) = true := by native_decide   -- 50 = 2 × 5²
+example : !Squarefree (7 * 32 + 1) = true := by native_decide  -- 225 = 9 × 25 = 3² × 5²
+example : !Squarefree (32 * 32 + 1) = true := by native_decide -- 1025 = 25 × 41 = 5² × 41
 
-/-- Small test: {7, 32} (from A₇) with any third element should fail -/
-example : tripleHasSquarefreePair 7 32 0 = true := by native_decide
-example : tripleHasSquarefreePair 7 32 1 = true := by native_decide
-example : tripleHasSquarefreePair 7 32 3 = true := by native_decide
+/-- Test: {0, 1, 2} does NOT have the property -/
+example : tripleHasProperty 0 1 2 = false := by native_decide
 
-/-- Key lemma: {7, 32} has the property (no squarefree products) -/
-example : ¬tripleHasSquarefreePair 7 32 7 = true := by native_decide
+/-- Test: {7, 32, 0} does NOT have the property (0*7+1=1 is squarefree) -/
+example : tripleHasProperty 7 32 0 = false := by native_decide
 
-/-- But adding ANY third distinct element breaks it -/
--- Testing a few specific cases first to make sure the approach works
-example : tripleHasSquarefreePair 7 32 57 = true := by native_decide  -- 57 ≡ 7 (mod 25)
+/-- Test: {7, 32, 1} does NOT have the property -/
+example : tripleHasProperty 7 32 1 = false := by native_decide
+
+/-- Test: {7, 32, 18} - both 7 and 18 are "good" residues mod 25.
+    7*18+1 = 127 (prime, squarefree), so this should fail -/
+example : tripleHasProperty 7 32 18 = false := by native_decide
+
+/-- Test: {7, 18, 43} - all are ≡ ±7 mod 25, but 7*18+1 = 127 is squarefree -/
+example : tripleHasProperty 7 18 43 = false := by native_decide
 
 /-!
 ## The Full Check
 
-WARNING: The following may take a very long time or cause memory issues.
-It checks all 19,600 triples.
+We need to verify: ∀ a b c < 50, a < b < c → tripleHasProperty a b c = false
+
+This is C(50,3) = 19,600 checks.
 -/
 
-/-- Check all triples in range N -/
-def allTriplesHaveSquarefreePair (N : ℕ) : Bool :=
-  (Finset.range N).all fun a =>
-    (Finset.range N).all fun b =>
-      (Finset.range N).all fun c =>
-        a ≥ b || b ≥ c || tripleHasSquarefreePair a b c
+/-- Decidable predicate for finite check -/
+def noTripleWorksIn (N : ℕ) : Prop :=
+  ∀ a b c : Fin N, a.val < b.val → b.val < c.val →
+    tripleHasProperty a.val b.val c.val = false
 
-/-- All triples {a,b,c} with a < b < c < 50 have at least one squarefree product.
+instance (N : ℕ) : Decidable (noTripleWorksIn N) := by
+  unfold noTripleWorksIn
+  infer_instance
 
-    This is the computational heart of the finite verification.
-    If this succeeds, problem_848_N50 follows easily.
+/-- The key finite verification: No 3-element subset of {0,...,49} has the property.
 
-    WARNING: This checks 50³ = 125,000 iterations (though most are skipped).
-    May take a while. -/
-theorem no_triple_works : allTriplesHaveSquarefreePair 50 = true := by
+    WARNING: This may take a while to compute. -/
+theorem no_triple_works_50 : noTripleWorksIn 50 := by
   native_decide
 
 end Erdos.Problem848.BruteForce

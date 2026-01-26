@@ -71,7 +71,7 @@ find literature/cache/arxiv/extracted/2511.16072 -name "*.tex"
 3. Convert with `uv run marker_single <file.pdf> --output_dir /tmp/output`
 4. Update `literature/manifests/0848.yaml` by hand
 
-**Note:** arXiv source is cleaner than PDF→marker conversion. See DEBT-097.
+**Note:** arXiv source is cleaner than PDF→marker conversion. See DEBT-112.
 
 ## Impact
 
