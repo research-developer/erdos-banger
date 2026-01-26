@@ -50,11 +50,28 @@ Research workflow should support:
 
 ## Workaround
 
-Currently none within the CLI. Must manually:
+Currently none within the CLI. Must manually download and extract:
+
+### For arXiv papers (PREFERRED - no PDF conversion needed):
+```bash
+# Download source tarball
+curl -sL "https://arxiv.org/e-print/2511.16072" -o literature/cache/arxiv/2511.16072.tar.gz
+
+# Extract LaTeX source
+mkdir -p literature/cache/arxiv/extracted/2511.16072
+tar -xzf literature/cache/arxiv/2511.16072.tar.gz -C literature/cache/arxiv/extracted/2511.16072
+
+# Find and read .tex files directly
+find literature/cache/arxiv/extracted/2511.16072 -name "*.tex"
+```
+
+### For non-arXiv papers (requires PDF conversion):
 1. Search arXiv/Google Scholar for papers
-2. Download PDFs manually
-3. Add to `literature/papers/0848/`
+2. Download PDFs manually to `literature/papers/0848/`
+3. Convert with `uv run marker_single <file.pdf> --output_dir /tmp/output`
 4. Update `literature/manifests/0848.yaml` by hand
+
+**Note:** arXiv source is cleaner than PDF→marker conversion. See DEBT-097.
 
 ## Impact
 
