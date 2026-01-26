@@ -224,8 +224,9 @@ uv run python scripts/generate_cli_reference.py
 │                                                     [default: openalex]      │
 │ --all                                               Process all problems     │
 │                                                     (batch mode)             │
-│ --status                  [open|proved|disproved|p  Filter by status: open,  │
-│                           artially_solved|unknown]  proved, disproved,       │
+│ --status                  [open|decidable|proved|d  Filter by status: open,  │
+│                           isproved|partially_solve  decidable, proved,       │
+│                           d|unknown]                disproved,               │
 │                                                     partially_solved,        │
 │                                                     unknown                  │
 │ --prize-min               INTEGER                   Minimum prize amount     │
@@ -371,9 +372,10 @@ uv run python scripts/generate_cli_reference.py
 │                                                     --import-upstream)       │
 │ --all                                               Process all problems     │
 │                                                     (batch mode)             │
-│ --status                   [open|proved|disproved|  Filter by status: open,  │
-│                            partially_solved|unknow  proved, disproved,       │
-│                            n]                       partially_solved,        │
+│ --status                   [open|decidable|proved|  Filter by status: open,  │
+│                            disproved|partially_sol  decidable, proved,       │
+│                            ved|unknown]             disproved,               │
+│                                                     partially_solved,        │
 │                                                     unknown                  │
 │ --tag                      TEXT                     Filter by tag (can be    │
 │                                                     repeated)                │
@@ -505,8 +507,8 @@ uv run python scripts/generate_cli_reference.py
 
 ╭─ Options ────────────────────────────────────────────────────────────────────╮
 │ --status     -s      TEXT                        Filter by status: open,     │
-│                                                  proved, disproved,          │
-│                                                  partially_solved            │
+│                                                  decidable, proved,          │
+│                                                  disproved, partially_solved │
 │ --prize-min          INTEGER RANGE [x>=0]        Minimum prize amount in USD │
 │ --prize-max          INTEGER RANGE [x>=0]        Maximum prize amount in USD │
 │ --tag        -t      TEXT                        Filter by tag (can be       │
@@ -1306,15 +1308,18 @@ uv run python scripts/generate_cli_reference.py
 │ --build-index                                       Build/rebuild the search │
 │                                                     index                    │
 │ --semantic          -s                              Use semantic (vector)    │
-│                                                     search                   │
-│ --hybrid                                            Hybrid search            │
+│                                                     search (requires         │
+│                                                     `embeddings` extra).     │
+│ --hybrid                                            Hybrid search (requires  │
+│                                                     `embeddings` extra).     │
 │ --bm25-only                                         Force BM25-only search   │
 │                                                     (no vectors)             │
 │ --alpha                     FLOAT RANGE             Hybrid weight (0.0=BM25  │
 │                             [0.0<=x<=1.0]           only, 1.0=semantic only, │
 │                                                     default: 0.5)            │
 │ --build-embeddings                                  Build/rebuild semantic   │
-│                                                     embeddings               │
+│                                                     embeddings (requires     │
+│                                                     `embeddings` extra).     │
 │ --embedding-model           TEXT                    Embedding model name     │
 │                                                     [default:                │
 │                                                     sentence-transformers/a… │

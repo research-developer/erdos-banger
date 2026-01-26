@@ -18,6 +18,27 @@ These are defined in `src/erdos/cli.py`:
 - `--log-level`: `DEBUG`, `INFO`, `WARN`, `ERROR`
 - `--version`: print version
 
+## `.env` Files (Local Development)
+
+For local convenience, the `erdos` CLI loads a `.env` file if present at:
+
+- `${ERDOS_REPO_ROOT}/.env` (if `ERDOS_REPO_ROOT` is set), otherwise
+- `./.env` (current working directory)
+
+This loader is intentionally minimal:
+
+- Supports simple `KEY=value` lines (with optional `export ` prefix)
+- Supports single/double quoted values
+- Strips inline `# comments` for unquoted values
+- Does **not** support multiline values or shell expansion
+- Does **not** override already-set environment variables
+
+Use the provided template:
+
+```bash
+cp .env.example .env
+```
+
 ## Environment Variables (Core)
 
 | Name | Meaning | Default / Notes |

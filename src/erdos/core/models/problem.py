@@ -15,6 +15,7 @@ class ProblemStatus(str, Enum):
     """Status of an Erdős problem."""
 
     OPEN = "open"
+    DECIDABLE = "decidable"
     PROVED = "proved"
     DISPROVED = "disproved"
     PARTIALLY_SOLVED = "partially_solved"

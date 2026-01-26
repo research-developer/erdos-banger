@@ -40,10 +40,23 @@ def _exa_to_leads(
     """
     lead_ids: list[str] = []
     for source in result.sources:
+        title = (source.title or "").strip()
+        if not title:
+            if source.doi:
+                title = f"[Exa] DOI {source.doi}"
+            elif source.arxiv_id:
+                title = f"[Exa] arXiv {source.arxiv_id}"
+            elif source.url:
+                title = f"[Exa] {source.url}"
+            elif source.relevance:
+                snippet = " ".join(source.relevance.split())[:80].strip()
+                title = f"[Exa] {snippet}" if snippet else "[Exa] Untitled"
+            else:
+                title = "[Exa] Untitled"
         notes = f"[Exa] {source.relevance}" if source.relevance else "[Exa]"
         record, _ = store.lead_add(
             problem_id,
-            title=source.title,
+            title=title,
             doi=source.doi,
             arxiv_id=source.arxiv_id,
             url=source.url,

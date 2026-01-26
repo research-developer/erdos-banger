@@ -10,6 +10,15 @@ uv run erdos show 6
 uv run erdos search "arithmetic progressions" --limit 5
 ```
 
+## Semantic Search (Optional)
+
+Semantic (vector) search requires installing the `embeddings` extra:
+
+```bash
+uv sync --extra embeddings
+uv run erdos search "density increment" --semantic
+```
+
 ## Sync Upstream Data (Optional)
 
 The upstream `teorth/erdosproblems` submodule is **metadata-only**. The `sync` commands pull additional sources and update your local dataset.

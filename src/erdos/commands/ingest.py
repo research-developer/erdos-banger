@@ -192,7 +192,7 @@ def ingest(
         typer.Option(
             "--status",
             click_type=click.Choice(PROBLEM_STATUS_CHOICES, case_sensitive=False),
-            help="Filter by status: open, proved, disproved, partially_solved, unknown",
+            help="Filter by status: open, decidable, proved, disproved, partially_solved, unknown",
         ),
     ] = None,
     prize_min: Annotated[

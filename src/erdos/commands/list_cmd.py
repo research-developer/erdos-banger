@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 
 # Valid status values for user-facing validation
-_VALID_STATUSES = {"open", "proved", "disproved", "partially_solved"}
+_VALID_STATUSES = {"open", "decidable", "proved", "disproved", "partially_solved"}
 
 
 @dataclass
@@ -123,7 +123,7 @@ def list_(
         typer.Option(
             "--status",
             "-s",
-            help="Filter by status: open, proved, disproved, partially_solved",
+            help="Filter by status: open, decidable, proved, disproved, partially_solved",
         ),
     ] = None,
     prize_min: Annotated[

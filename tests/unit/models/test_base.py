@@ -16,6 +16,7 @@ from erdos.core.models import (
 class TestProblemStatus:
     def test_from_string_standard(self) -> None:
         assert ProblemStatus.from_string("open") == ProblemStatus.OPEN
+        assert ProblemStatus.from_string("decidable") == ProblemStatus.DECIDABLE
         assert ProblemStatus.from_string("proved") == ProblemStatus.PROVED
 
     def test_from_string_variants(self) -> None:
