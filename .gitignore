@@ -54,6 +54,7 @@ index/*.sqlite
 logs/ralph/
 logs/ralph_prev_*/
 logs/loop/
+logs/ask/
 logs/*.yaml
 logs/*.json
 logs/*.jsonl

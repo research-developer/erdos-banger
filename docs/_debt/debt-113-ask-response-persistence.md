@@ -95,10 +95,13 @@ def _summarize_ask(data: dict[str, Any]) -> dict[str, Any]:
 
 ## Acceptance Criteria
 
-- [ ] `erdos ask` persists full LLM response somewhere retrievable
+- [x] `erdos ask` persists full LLM response somewhere retrievable
 - [ ] Can query previous responses: `erdos logs ask --problem 848 --limit 5`
-- [ ] Response format matches `erdos loop` pattern for consistency
-- [ ] Tests verify response persistence
+- [x] Response format matches `erdos loop` pattern for consistency
+- [x] Tests verify response persistence
+
+**Status:** Core persistence implemented. Q&A logged to `logs/ask/problem_{id}.jsonl`.
+Query CLI (`erdos logs ask`) is a follow-up enhancement.
 
 ## Test Plan
 

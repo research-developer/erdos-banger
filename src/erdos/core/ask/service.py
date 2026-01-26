@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from erdos.core.ask.llm import LLMExecutionResult, execute_llm_if_enabled
+from erdos.core.ask.logging import log_ask_interaction
 from erdos.core.ask.prompt import build_prompt
 from erdos.core.ask.retrieval import retrieve_sources
 from erdos.core.constants import DEFAULT_RAG_LIMIT
@@ -199,4 +200,16 @@ def ask_question(
         used_fts=used_fts,
         llm_result=llm_result,
     )
+
+    # Persist Q&A to detailed log (DEBT-113)
+    log_ask_interaction(
+        problem_id=problem_id,
+        question=question,
+        answer=llm_result.answer,
+        sources=data["sources"],
+        llm_enabled=llm_result.llm_enabled,
+        llm_command=llm_result.llm_command,
+        llm_exit_code=llm_result.llm_exit_code,
+    )
+
     return CLIOutput.ok(command="erdos ask", data=data)
