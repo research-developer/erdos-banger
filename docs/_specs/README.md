@@ -20,6 +20,7 @@ v3.4 (DONE)     Research APIs: zbMATH integration
 v3.5 (DONE)     Architecture: Multi-model routing
 v4.0 (DONE)     Lean: Lean Copilot integration
 v4.1 (DONE)     UX: Progress dashboard
+v4.2 (PLANNED)  Integration: Lead enrichment pipeline (discovery → manifest)
 ```
 
 ## Active Specs
@@ -158,6 +159,9 @@ v4.0 Lean Enhancement (DONE)
 
 v4.1 UX (DONE)
 └── 034 Progress Dashboard ←── 028 (verified v3 foundation)
+
+v4.2 Integration (PLANNED)
+└── 036 Lead Enrichment Pipeline ←── 022 (FallbackProvider) + 024 (Leads) + 029 (Exa)
 ```
 
 ## Master Documents
