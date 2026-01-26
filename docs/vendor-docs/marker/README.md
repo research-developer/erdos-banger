@@ -9,7 +9,7 @@ Marker converts PDFs into Markdown (and other formats) using local ML models and
 
 ## ⚠️ Breaking Change (marker-pdf >= 1.0.0)
 
-**BUG-040:** The `ConfigParser` API changed in marker 1.0.0+.
+**BUG-040 (fixed in `b7ceb6f`)**: marker-pdf 1.0.0+ changed both the `ConfigParser` and converter construction APIs. Our wrapper now matches Marker’s own `convert_single` entrypoint pattern.
 
 Old API (pre-1.0):
 ```python
@@ -23,7 +23,25 @@ from marker.config.parser import ConfigParser
 config = ConfigParser(cli_options={})  # Requires dict
 ```
 
-Our code at `src/erdos/core/pdf/converter.py:227` needs updating.
+Updated integration example (mirrors upstream):
+```python
+from marker.config.parser import ConfigParser
+from marker.models import create_model_dict
+
+cli_options = {"output_format": "markdown"}
+config_parser = ConfigParser(cli_options=cli_options)
+
+converter_cls = config_parser.get_converter_cls()
+converter = converter_cls(
+    config=config_parser.generate_config_dict(),
+    artifact_dict=create_model_dict(),
+    processor_list=config_parser.get_processors(),
+    renderer=config_parser.get_renderer(),
+    llm_service=config_parser.get_llm_service(),
+)
+rendered = converter(str(pdf_path))
+markdown = getattr(rendered, "markdown", str(rendered))
+```
 
 ## Runtime Settings (Environment Variables)
 
@@ -34,4 +52,4 @@ Marker also documents memory-related knobs (e.g., `INFERENCE_RAM`) — consult t
 ## Testing Guidance
 
 - Unit tests should not depend on Marker being installed.
-- Mock at the converter boundary and assert our CLI/output contract, not Marker internals.
+- We stub `sys.modules` for the `marker.*` package tree and assert our wrapper calls into the v1 API surface (`tests/unit/pdf/test_converter.py`).
