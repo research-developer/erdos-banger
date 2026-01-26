@@ -48,7 +48,7 @@ uv run erdos list --status open --limit 5
 uv run erdos show 6
 
 # Full CI check (run before every commit)
-make ci                    # fast checks (includes lock-check + pre-commit; skips slow/Lean/network tests)
+make ci                    # fast checks (includes lock-check + pre-commit-ci (skips ruff/mypy); skips slow/Lean/network tests)
 make ci-full               # full local CI (includes test-all + smoke)
 
 # Individual checks

@@ -9,7 +9,7 @@ This repo includes custom skills in `.codex/skills/`:
 | `$erdos` | Auto or `/skills` | Complete CLI reference, cost awareness, env config |
 | `$erdos-prove [id]` | `/skills` | Step-by-step workflow to prove a problem using subscription |
 
-**Key insight:** You can bypass API costs by using Codex CLI directly instead of `erdos loop run` or `erdos ask`. The `erdos-prove` skill guides you through this cost-free proving workflow.
+**Key insight:** You can often avoid *additional* pay‑as‑you‑go API usage by using Codex CLI directly instead of `erdos loop run` or `erdos ask`, but costs depend on your Codex/ChatGPT plan and billing setup. The `erdos-prove` skill guides you through this “use your coding assistant + local tools” proving workflow.
 
 ---
 
