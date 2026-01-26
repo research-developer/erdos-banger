@@ -2,7 +2,8 @@
 
 **Date:** 2026-01-26
 **Severity:** P2 (Medium - confusing DX)
-**Status:** Open
+**Status:** Fixed (docs)
+**Commit:** b43c3a7
 **Component:** `erdos.core.config`
 
 ## Summary

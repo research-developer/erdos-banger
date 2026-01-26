@@ -21,7 +21,6 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 | ID | Title | Priority | Status | Component |
 |----|-------|----------|--------|-----------|
 | BUG-039 | Ingest cannot discover papers - only fetches pre-defined refs | P1 | Open | `erdos ingest` |
-| BUG-044 | Environment variables not auto-loaded in Python scripts | P2 | Open | `config.py` |
 
 ### Invalidated Bugs
 
@@ -92,6 +91,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-038 | BM25 search doesn't escape FTS5 special characters | P1 | Fixed | 8c55500 |
 | GH-035 | Crossref/S2 clients missing JSONDecodeError handling | P1 | Fixed | (in-tree) |
 | GH-036 | Hardcoded `logs/loop` path breaks outside repo root | P2 | Fixed | (in-tree) |
+| BUG-044 | Environment variables not auto-loaded in Python scripts | P2 | Fixed | b43c3a7 |
 
 *Naming: GH-XXX = also tracked on GitHub Issues. BUG-XXX = local docs only. Both systems maintained in parallel.*
 
@@ -147,6 +147,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/bug-034-exa-save-leads-empty-title.md`
 - `docs/_archive/bugs/bug-035-lean-skeleton-outdated-import.md`
 - `docs/_archive/bugs/bug-042-exa-empty-titles.md`
+- `docs/_archive/bugs/bug-044-env-not-auto-loaded.md`
 - `docs/_archive/bugs/friction-2026-01-26-cli-maximization-test.md`
 
 ## Bug Priority Definitions
