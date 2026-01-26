@@ -9,11 +9,11 @@ Is the maximum size of a set A ⊆ {1,…,N} such that ab+1 is never squarefree
 (for all a,b ∈ A) achieved by taking those n ≡ 7 (mod 25)?
 
 Resolution (Sawhney 2025):
-For sufficiently large N, if |A| ≥ (1/25 - c)N for some c > 0, then
-A ⊆ {n : n ≡ 7 (mod 25)} or A ⊆ {n : n ≡ 18 (mod 25)}.
+There exist absolute constants η > 0 and N₀ such that for all N ≥ N₀, if
+|A| ≥ (1/25 - η)N then A ⊆ {n : n ≡ 7 (mod 25)} or A ⊆ {n : n ≡ 18 (mod 25)}.
 (Note: 18 ≡ -7 (mod 25), so these are n ≡ ±7 (mod 25).)
 
-Remaining: Effectivize N_0 bound and verify finitely many cases.
+Remaining: make N₀ explicit (track constants) and verify finitely many cases.
 -/
 
 import Erdos.Basic
@@ -329,6 +329,42 @@ lemma A7_100 : A₇ 100 = {7, 32, 57, 82} := by native_decide
 /-- A₁₈(100) = {18, 43, 68, 93} -/
 lemma A18_100 : A₁₈ 100 = {18, 43, 68, 93} := by native_decide
 
+/-- Compute: `DiagonalCandidates(100)` is small (12 elements). -/
+lemma diag_cand_100 :
+    DiagonalCandidates 100 = {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99} := by
+  native_decide
+
+/-- No 5-element subset of `DiagonalCandidates(100)` has the non-squarefree product property. -/
+lemma no_five_in_candidates_100 :
+    ∀ (s : Finset ℕ), s ⊆ {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99} →
+      s.card = 5 → ¬ NonSquarefreeProductProp s := by
+  native_decide
+
+/-- Compute: `|A₇(100)| = 4` -/
+lemma A₇_100_card : (A₇ 100).card = 4 := by native_decide
+
+/-- Verified for N = 100: the conjectured upper bound holds. -/
+theorem problem_848_N100 :
+    ∀ A : Finset ℕ, A ⊆ Finset.range 100 → NonSquarefreeProductProp A →
+      A.card ≤ (A₇ 100).card := by
+  intro A hAsub hAprop
+  rw [A₇_100_card]
+  -- A is contained in DiagonalCandidates(100)
+  have h_sub_cand : A ⊆ DiagonalCandidates 100 :=
+    prop_implies_diag_candidates A 100 hAsub hAprop
+  rw [diag_cand_100] at h_sub_cand
+  -- If A.card ≥ 5, extract a 5-element subset and contradict `no_five_in_candidates_100`.
+  by_contra h
+  push_neg at h
+  have hcard5 : 5 ≤ A.card := h
+  have hex : ∃ s : Finset ℕ, s ⊆ A ∧ s.card = 5 := by
+    exact Finset.exists_subset_card_eq hcard5
+  obtain ⟨s, hs_sub, hs_card⟩ := hex
+  have hs_prop : NonSquarefreeProductProp s := nonSquarefreeProductProp_subset hs_sub hAprop
+  have hs_sub_cand : s ⊆ {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99} :=
+    Finset.Subset.trans hs_sub h_sub_cand
+  exact no_five_in_candidates_100 s hs_sub_cand hs_card hs_prop
+
 /-!
 ## Sawhney's Theorem (Research Level)
 
@@ -535,7 +571,7 @@ theorem problem_848_resolved_up_to_finite_check_of_sawhney (h : SawhneyMain) :
 
 We currently have:
 
-- `Problem848Statement 50` (verified by computation).
+- `Problem848Statement 50` and `Problem848Statement 100` (verified by computation).
 - `problem_848_large_of_sawhney`: a clean bridge from Sawhney's theorem to the main bound.
 
 Formalizing `SawhneyMain` itself (the sieve/density argument) is left for dedicated work on
@@ -545,11 +581,20 @@ analytic number theory in Lean.
 /-!
 ## Verified Cases
 
-We have computationally verified the conjecture for N ≤ 50.
+We have computationally verified the conjecture for specific small `N` (currently `N = 50` and
+`N = 100`).
 Extension to larger N requires either:
 1. More computational power (native_decide scales poorly)
 2. Formalizing Sawhney's density argument
 -/
+
+theorem problem_848_statement_50 : Problem848Statement 50 := by
+  intro A hAsub hAprop
+  exact problem_848_N50 A hAsub hAprop
+
+theorem problem_848_statement_100 : Problem848Statement 100 := by
+  intro A hAsub hAprop
+  exact problem_848_N100 A hAsub hAprop
 
 /-- Verified for N = 50 -/
 theorem problem_848_verified_50 : ∀ A : Finset ℕ, A ⊆ Finset.range 50 →
