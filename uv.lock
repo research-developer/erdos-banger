@@ -525,6 +525,10 @@ embeddings = [
     { name = "numpy" },
     { name = "sentence-transformers" },
 ]
+explore = [
+    { name = "networkx" },
+    { name = "sympy" },
+]
 mcp = [
     { name = "mcp", extra = ["cli"] },
 ]
@@ -563,6 +567,7 @@ requires-dist = [
     { name = "mcp", extras = ["cli"], marker = "extra == 'mcp'", specifier = ">=1.25.0,<2" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6.0" },
     { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.7.0" },
+    { name = "networkx", marker = "extra == 'explore'", specifier = ">=3.4" },
     { name = "numpy", marker = "extra == 'embeddings'", specifier = ">=2.4.1" },
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "pymdown-extensions", marker = "extra == 'docs'", specifier = ">=10.14.0" },
@@ -570,10 +575,11 @@ requires-dist = [
     { name = "requests", specifier = ">=2.32.5" },
     { name = "rich", specifier = ">=14.2.0" },
     { name = "sentence-transformers", marker = "extra == 'embeddings'", specifier = ">=5.2.0" },
+    { name = "sympy", marker = "extra == 'explore'", specifier = ">=1.13" },
     { name = "typer", specifier = ">=0.21.1" },
     { name = "uvicorn", marker = "extra == 'copilot'", specifier = ">=0.32.0" },
 ]
-provides-extras = ["pdf", "embeddings", "mcp", "copilot", "docs"]
+provides-extras = ["pdf", "embeddings", "mcp", "copilot", "docs", "explore"]
 
 [package.metadata.requires-dev]
 dev = [

@@ -58,7 +58,6 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-030 | `erdos ingest` accepts invalid numeric values | P2 | Fixed | 6c7eef2 |
 | BUG-031 | `make smoke` fails when Lean installed but mathlib is not | P2 | Fixed | 83bf9f6 |
 | BUG-032 | Batch `--status` accepts invalid values (misclassified as NotFound) | P3 | Fixed | 3ab5c5c |
-| BUG-033 | zbMATH search methods don't handle 404 errors | P2 | Fixed | (this PR) |
 
 **Next Bug ID:** BUG-034
 
@@ -104,7 +103,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 
 ### Active Bug Decks
 
-None.
+- `docs/_bugs/bug-033-zbmath-search-identifier-404-not-handled.md`
 
 ## Bug Priority Definitions
 
