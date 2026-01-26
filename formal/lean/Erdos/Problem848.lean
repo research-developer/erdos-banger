@@ -71,7 +71,10 @@ def NonSquarefreeProductProp (A : Finset ℕ) : Prop :=
 def A₇ (N : ℕ) : Finset ℕ :=
   (Finset.range N).filter (fun n => n % 25 = 7)
 
-/-- Alternative candidate: {n ∈ {1,…,N} : n ≡ 18 (mod 25)} -/
+/-- Alternative candidate: {n ∈ {0,…,N-1} : n ≡ 18 (mod 25)}
+
+    NOTE: Like A₇, uses `Finset.range N` = {0,...,N-1}.
+    0 % 25 = 0 ≠ 18, so 0 is never included. -/
 def A₁₈ (N : ℕ) : Finset ℕ :=
   (Finset.range N).filter (fun n => n % 25 = 18)
 
@@ -139,6 +142,29 @@ theorem A₁₈_has_property (N : ℕ) : NonSquarefreeProductProp (A₁₈ N) :=
   have hpos : a * b + 1 > 0 := Nat.succ_pos _
   exact not_squarefree_of_dvd_25 hpos hdiv
 
+/-!
+## Decidability for Finite Verification
+
+To prove `problem_848_N50`, we use that `Squarefree` is decidable on ℕ
+(via `Nat.instDecidablePredSquarefree`). This makes `NonSquarefreeProductProp`
+decidable on finite sets, enabling `decide` / `native_decide` proofs.
+-/
+
+/-- NonSquarefreeProductProp is decidable for finite sets.
+
+    Since A is finite, ∀ a ∈ A, ∀ b ∈ A, P a b is decidable when P is decidable.
+    Squarefree is decidable on ℕ, so ¬Squarefree is also decidable. -/
+instance instDecidableNonSquarefreeProductProp (A : Finset ℕ) :
+    Decidable (NonSquarefreeProductProp A) := by
+  unfold NonSquarefreeProductProp
+  infer_instance
+
+/-- The non-squarefree property is hereditary: subsets inherit it. -/
+lemma nonSquarefreeProductProp_subset {A B : Finset ℕ} (hAB : A ⊆ B)
+    (hB : NonSquarefreeProductProp B) : NonSquarefreeProductProp A := by
+  intro a ha b hb
+  exact hB a (hAB ha) b (hAB hb)
+
 /-- The size of A₇(N) is at most N (trivial upper bound). -/
 lemma A₇_card_le_N (N : ℕ) : (A₇ N).card ≤ N := by
   simp only [A₇]
@@ -153,25 +179,46 @@ example : A₇ 50 = {7, 32} := by native_decide
 /-- Compute: |A₇(50)| = 2 -/
 lemma A₇_50_card : (A₇ 50).card = 2 := by native_decide
 
+/-- Computational verification: A₇(50) = {7, 32} has the property.
+
+    7 * 7 + 1 = 50 = 2 × 5², not squarefree ✓
+    7 * 32 + 1 = 225 = 9 × 25 = 3² × 5², not squarefree ✓
+    32 * 32 + 1 = 1025 = 25 × 41 = 5² × 41, not squarefree ✓ -/
+example : NonSquarefreeProductProp (A₇ 50) := by native_decide
+
 /-- Verified: For N = 50, the conjecture holds (A₇(50) has 2 elements: {7, 32}).
 
-    NOTE: Squarefree IS decidable on ℕ (via Nat.instDecidablePredSquarefree).
-    The remaining work is to prove no 3-element set has the property.
+    Strategy: Since |A₇(50)| = 2, we need to show no set of size ≥ 3 works.
+    This requires checking C(50,3) = 19600 triples.
 
-    Strategy: Since |A₇(50)| = 2, we only need to show no set of size 3 works.
-    This requires checking C(50,3) = 19600 triples (NOT 2^50 subsets).
-    For each triple {a,b,c}, at least one of ab+1, ac+1, bc+1 must be squarefree.
+    Approach:
+    1. NonSquarefreeProductProp is decidable (instance above)
+    2. If |A| ≥ 3 and A has the property, any 3-subset would have it too
+    3. Show no 3-subset of {0,...,49} has the property (finite check)
+    4. Contradiction → |A| ≤ 2 = |A₇(50)|
 
-    Implementation options:
-    1. Define `NonSquarefreeProductPropB` as a Bool and use `native_decide`
-    2. Generate SAT certificate externally and verify in Lean
-    3. Use `decide` with explicit Decidable instance -/
+    NOTE: Direct `native_decide` on 19600 triples may timeout.
+    Alternative: generate a SAT certificate externally. -/
 theorem problem_848_N50 :
     ∀ A : Finset ℕ, A ⊆ Finset.range 50 → NonSquarefreeProductProp A →
       A.card ≤ (A₇ 50).card := by
-  -- To prove: max size is 2. Since A₇(50) achieves 2, we need:
-  -- ∀ triple {a,b,c} ⊆ {0,...,49}, ∃ pair with squarefree product.
-  -- This is finite and computable with Nat.instDecidablePredSquarefree.
+  intro A hAsub hAprop
+  -- Goal: A.card ≤ 2
+  -- We know |A₇(50)| = 2, so need A.card ≤ 2
+  have hA₇_card : (A₇ 50).card = 2 := A₇_50_card
+  rw [hA₇_card]
+  -- Strategy: show A.card < 3 by contradiction
+  -- If A.card ≥ 3, pick any 3-element subset; it inherits the property
+  -- But no 3-subset of {0,...,49} should have the property
+  by_contra h
+  push_neg at h
+  -- h : 2 < A.card, so A.card ≥ 3
+  have hcard3 : 3 ≤ A.card := h
+  -- TODO: complete using:
+  -- 1. Extract a 3-element subset s ⊆ A
+  -- 2. By nonSquarefreeProductProp_subset, s has the property
+  -- 3. s ⊆ range 50 (since A ⊆ range 50)
+  -- 4. Finite check: no 3-subset of range 50 has the property
   sorry
 
 /-!
