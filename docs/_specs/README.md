@@ -24,7 +24,9 @@ v4.1 (DONE)     UX: Progress dashboard
 
 ## Active Specs
 
-No active specs — all current specs have been completed and archived.
+| ID | Title | Status | Target | Description |
+|----|-------|--------|--------|-------------|
+| 036 | [Lead Enrichment Pipeline](./spec-036-lead-enrichment-pipeline.md) | Draft | v4.2 | Bridges discovery (Exa/zbMATH/S2) and enrichment (OpenAlex) |
 
 ## Design Documents
 
@@ -85,7 +87,7 @@ Completed specs that are fully implemented.
 | 034 | Progress Dashboard | [archive](https://github.com/The-Obstacle-Is-The-Way/erdos-banger/blob/main/docs/_archive/specs/spec-034-progress-dashboard.md) |
 | 035 | Unified Problem Data Sync | [archive](https://github.com/The-Obstacle-Is-The-Way/erdos-banger/blob/main/docs/_archive/specs/spec-035-unified-problem-data-sync.md) |
 
-**Next Spec ID:** SPEC-036
+**Next Spec ID:** SPEC-037
 
 ## Dependency Graph
 
