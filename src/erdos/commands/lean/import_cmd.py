@@ -21,7 +21,6 @@ from erdos.core.formal_conjectures import (
     fetch_upstream_lean_file,
     get_cache_path,
     get_imported_file_path,
-    get_local_file_path,
     load_provenance,
     save_provenance,
 )
