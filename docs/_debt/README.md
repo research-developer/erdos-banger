@@ -16,7 +16,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| DEBT-108 | End-to-end test coverage is thin | P2 | Open |
+| DEBT-108 | End-to-end test coverage is thin | P2 | Fixed |
 | DEBT-110 | Add paper discovery mode to ingest | P2 | Phase 1 Done |
 | DEBT-111 | Skill invocation discipline | P3 | Open |
 | DEBT-112 | Prefer arXiv source over PDF conversion | P3 | Mostly Done |
