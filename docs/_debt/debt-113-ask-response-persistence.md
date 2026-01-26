@@ -1,7 +1,7 @@
-# DEBT-098: `erdos ask` Does Not Persist LLM Responses
+# DEBT-113: `erdos ask` Does Not Persist LLM Responses
 
 **Created:** 2026-01-26
-**Priority:** High
+**Priority:** P1
 **Component:** `erdos ask`, `erdos.core.ask`, `erdos.core.run_logger_summaries`
 
 ## Summary

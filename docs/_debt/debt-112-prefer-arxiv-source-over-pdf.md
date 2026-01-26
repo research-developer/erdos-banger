@@ -1,7 +1,7 @@
-# DEBT-097: Prefer arXiv Source Over PDF Conversion
+# DEBT-112: Prefer arXiv Source Over PDF Conversion
 
 **Created:** 2026-01-26
-**Priority:** Medium
+**Priority:** P2
 **Component:** `erdos ingest`, `erdos.core.ingest`
 
 ## Summary
@@ -26,7 +26,7 @@ The LaTeX source is:
 ## Current State
 
 1. **BUG-039** blocks adding arXiv papers to problems (`erdos refs add` doesn't exist)
-2. **BUG-040** documents broken marker API (2 changes, 1 fixed)
+2. **BUG-040** fixed marker-pdf v1 API integration (PDF conversion is no longer blocked)
 3. `arxiv_download.py` already implements tarball download + LaTeX extraction
 4. But the happy path (arXiv source) is unreachable due to BUG-039
 
@@ -41,15 +41,12 @@ After BUG-039 is fixed (adding `erdos refs add`), ensure:
 ## Workaround (Manual)
 
 ```bash
-# Download source tarball
-curl -sL "https://arxiv.org/e-print/2511.16072" -o literature/cache/arxiv/2511.16072.tar.gz
+# Download source tarball (matches `src/erdos/core/literature_paths.py`)
+mkdir -p literature/cache/arxiv/2511.16072
+curl -sL "https://arxiv.org/e-print/2511.16072" -o literature/cache/arxiv/2511.16072/source.tar.gz
 
-# Extract
-mkdir -p literature/cache/arxiv/extracted/2511.16072
-tar -xzf literature/cache/arxiv/2511.16072.tar.gz -C literature/cache/arxiv/extracted/2511.16072
-
-# Find relevant .tex files
-find literature/cache/arxiv/extracted/2511.16072 -name "*.tex"
+# Inspect contents (best-effort)
+tar -tf literature/cache/arxiv/2511.16072/source.tar.gz | rg "\\.tex$" | head
 ```
 
 ## Acceptance Criteria
@@ -62,5 +59,5 @@ find literature/cache/arxiv/extracted/2511.16072 -name "*.tex"
 ## Related
 
 - BUG-039: Ingest Cannot Discover Papers
-- BUG-040: Marker PDF Conversion Broken
+- BUG-040: Marker PDF Conversion Broken (fixed)
 - `src/erdos/core/ingest/arxiv_download.py`: Existing tarball logic
