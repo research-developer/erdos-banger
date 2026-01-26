@@ -16,21 +16,13 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| DEBT-108 | End-to-end test coverage is thin | P2 | Fixed |
 | DEBT-110 | Add paper discovery mode to ingest | P2 | Phase 1 Done |
-| DEBT-111 | Skill invocation discipline | P3 | Fixed |
-| DEBT-112 | Prefer arXiv source over PDF conversion | P3 | Fixed |
-| DEBT-113 | `erdos ask` does not persist LLM responses | P1 | Fixed |
 
-**Note:** DEBT-110 Phase 1 (`erdos refs add`) is complete. Phases 2-3 (auto-discovery) are feature work.
+**Note:** DEBT-110 Phase 1 (`erdos refs add`) is complete. Phases 2-3 (auto-discovery) are feature work, not debt.
 
 Decks:
 
-- `docs/_debt/debt-108-e2e-test-coverage-thin.md`
 - `docs/_debt/debt-110-ingest-discovery-mode.md`
-- `docs/_debt/debt-111-skill-invocation-discipline.md`
-- `docs/_debt/debt-112-prefer-arxiv-source-over-pdf.md`
-- `docs/_debt/debt-113-ask-response-persistence.md`
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -147,7 +139,11 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-105 | Print statements in core modules | P4 | Resolved | 0200a99 |
 | DEBT-106 | Broad exception catches without justification | P3 | Fixed | 0200a99 |
 | DEBT-107 | Missing public function docstrings | P4 | Fixed | 0200a99 |
+| DEBT-108 | End-to-end test coverage is thin | P2 | Fixed | PR#38 |
 | DEBT-109 | `erdos ask` prompt lacks budget guardrails | P2 | Fixed | bc0dd70 |
+| DEBT-111 | Skill invocation discipline | P3 | Fixed | PR#38 |
+| DEBT-112 | Prefer arXiv source over PDF conversion | P3 | Fixed | PR#38 |
+| DEBT-113 | `erdos ask` does not persist LLM responses | P1 | Fixed | PR#38 |
 | DEBT-093 | Exa client infrastructure duplication | P2 | Fixed | 9f10546 |
 | DEBT-094 | Semantic Scholar client LOC violation | P3 | Superseded | 9f10546 |
 | DEBT-095 | zbMATH client LOC violation | P3 | Superseded | 9f10546 |
@@ -260,3 +256,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-105-print-statements-in-core.md`
 - `docs/_archive/debt/debt-106-broad-exception-catches.md`
 - `docs/_archive/debt/debt-107-missing-public-docstrings.md`
+- `docs/_archive/debt/debt-108-e2e-test-coverage-thin.md`
+- `docs/_archive/debt/debt-111-skill-invocation-discipline.md`
+- `docs/_archive/debt/debt-112-prefer-arxiv-source-over-pdf.md`
+- `docs/_archive/debt/debt-113-ask-response-persistence.md`
