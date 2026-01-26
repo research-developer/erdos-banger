@@ -20,6 +20,7 @@ from erdos.core.formal_conjectures import (
     ProvenanceEntry,
     fetch_upstream_lean_file,
     get_cache_path,
+    get_imported_file_path,
     get_local_file_path,
     load_provenance,
     save_provenance,
@@ -223,7 +224,7 @@ def import_upstream_formalization(
         fetch_result = fetch_upstream_lean_file(
             project_path, problem_id, source_url=source_url, no_network=no_network
         )
-        local_path = get_local_file_path(project_path, problem_id)
+        local_path = get_imported_file_path(project_path, problem_id)
         cache_path = get_cache_path(project_path, problem_id)
         return _do_import(
             problem_id,

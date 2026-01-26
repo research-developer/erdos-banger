@@ -26,6 +26,7 @@ from erdos.core.formal_conjectures.local import (
 from erdos.core.formal_conjectures.paths import (
     build_upstream_url,
     get_cache_path,
+    get_imported_file_path,
     get_local_file_path,
 )
 from erdos.core.formal_conjectures.provenance import (
@@ -54,6 +55,7 @@ __all__ = [
     "compute_file_sha256",
     "fetch_upstream_lean_file",
     "get_cache_path",
+    "get_imported_file_path",
     "get_local_file_path",
     "has_sorry",
     "load_provenance",

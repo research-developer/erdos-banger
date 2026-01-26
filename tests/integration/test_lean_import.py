@@ -17,7 +17,7 @@ from erdos.core.exit_codes import ExitCode
 from erdos.core.formal_conjectures import (
     FORMAL_CONJECTURES_BASE_URL,
     get_cache_path,
-    get_local_file_path,
+    get_imported_file_path,
 )
 from tests.cli_runner import make_cli_runner
 
@@ -261,8 +261,8 @@ class TestLeanImportCommand:
                 assert data["data"]["written"] is False
 
                 # File should not be written
-                local_path = get_local_file_path(lean_project, 6)
-                assert not local_path.exists()
+                imported_path = get_imported_file_path(lean_project, 6)
+                assert not imported_path.exists()
             finally:
                 os.chdir(old_cwd)
 
@@ -305,9 +305,9 @@ class TestLeanImportCommand:
                 assert data["data"]["written"] is True
 
                 # File should be written
-                local_path = get_local_file_path(lean_project, 6)
-                assert local_path.exists()
-                assert local_path.read_text() == lean_content.decode("utf-8")
+                imported_path = get_imported_file_path(lean_project, 6)
+                assert imported_path.exists()
+                assert imported_path.read_text() == lean_content.decode("utf-8")
             finally:
                 os.chdir(old_cwd)
 
@@ -365,8 +365,9 @@ class TestLeanImportCommand:
         responses.add(responses.GET, url, body=lean_content, status=200)
 
         # Create different local file
-        local_path = get_local_file_path(lean_project, 6)
-        local_path.write_text("-- Different local content")
+        imported_path = get_imported_file_path(lean_project, 6)
+        imported_path.parent.mkdir(parents=True, exist_ok=True)
+        imported_path.write_text("-- Different local content")
 
         with patch.dict(
             os.environ,
@@ -409,8 +410,9 @@ class TestLeanImportCommand:
         responses.add(responses.GET, url, body=lean_content, status=200)
 
         # Create different local file
-        local_path = get_local_file_path(lean_project, 6)
-        local_path.write_text("-- Different local content")
+        imported_path = get_imported_file_path(lean_project, 6)
+        imported_path.parent.mkdir(parents=True, exist_ok=True)
+        imported_path.write_text("-- Different local content")
 
         with patch.dict(
             os.environ,
@@ -438,7 +440,7 @@ class TestLeanImportCommand:
                     pytest.skip("import command not implemented yet")
 
                 assert result.exit_code == 0
-                assert local_path.read_text() == lean_content.decode("utf-8")
+                assert imported_path.read_text() == lean_content.decode("utf-8")
             finally:
                 os.chdir(old_cwd)
 
@@ -511,8 +513,8 @@ class TestLeanImportCommand:
 
                 assert result.exit_code == 0
 
-                local_path = get_local_file_path(lean_project, 6)
-                assert local_path.read_text() == cached_content.decode("utf-8")
+                imported_path = get_imported_file_path(lean_project, 6)
+                assert imported_path.read_text() == cached_content.decode("utf-8")
             finally:
                 os.chdir(old_cwd)
 
@@ -574,8 +576,8 @@ class TestFormalizeImportUpstream:
                 assert data["success"] is True
 
                 # Should have imported content, not skeleton
-                local_path = get_local_file_path(lean_project, 6)
-                content = local_path.read_text()
+                imported_path = get_imported_file_path(lean_project, 6)
+                content = imported_path.read_text()
                 assert "Upstream formalization" in content
             finally:
                 os.chdir(old_cwd)
@@ -660,7 +662,13 @@ class TestProvenanceTracking:
                 assert result.exit_code == 0
 
                 # Check provenance file
-                prov_path = lean_project / "Erdos" / ".provenance.yaml"
+                prov_path = (
+                    lean_project
+                    / "Upstream"
+                    / "FormalConjectures"
+                    / "ErdosProblems"
+                    / ".provenance.yaml"
+                )
                 assert prov_path.exists()
 
                 prov_data = yaml.safe_load(prov_path.read_text())
