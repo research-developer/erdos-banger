@@ -107,7 +107,7 @@ source ~/.elan/env && lake build Erdos.Problem848
 cd formal/lean && source ~/.elan/env && lake build
 ```
 
-> **Note:** The `erdos lean check` CLI command has a bug (AttributeError). Use `lake` directly until fixed.
+If `erdos lean check` reports `lake` not found, source `~/.elan/env` (or use `~/.elan/bin/lake`) so elan-managed tools are available on `PATH`.
 
 **Mathlib Cache:** If `make test-all` fails on `tests/integration/test_lean_runner.py::TestLeanRunnerIntegration::test_check_formal_project_compiles`,
 pre-cache mathlib:

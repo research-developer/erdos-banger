@@ -3,6 +3,7 @@
 **Date:** 2026-01-26
 **Severity:** P3 (Low - repo hygiene)
 **Status:** Fixed
+**Commit:** f5557d7
 **Component:** `.gitignore`
 
 ## Summary
@@ -15,13 +16,10 @@ Downloaded papers in `literature/papers/` are not gitignored, risking accidental
 $ grep literature .gitignore
 literature/cache/
 literature/extracts/
-# Note: literature/papers/ is MISSING
+literature/papers/
 ```
 
-But we have:
-```
-literature/papers/0848/sawhney_problem_848.pdf (351KB)
-```
+This prevents accidentally committing downloaded papers/PDFs.
 
 ## Expected
 
