@@ -31,7 +31,7 @@ This loader is intentionally minimal:
 - Supports single/double quoted values
 - Strips inline `# comments` for unquoted values
 - Does **not** support multiline values or shell expansion
-- Does **not** override already-set environment variables
+- Does **not** override already-set environment variables that have a non-empty value
 
 Disable auto-loading with:
 
@@ -47,7 +47,7 @@ cp .env.example .env
 
 ### Direct Python Usage
 
-If you import `erdos` modules directly in Python (i.e., not via the `erdos` CLI entrypoint), `.env` is **not** loaded automatically.
+If you import `erdos` modules directly in Python (i.e., not via the `erdos` CLI entrypoint), `.env` is **not** loaded automatically at import time.
 
 Call:
 

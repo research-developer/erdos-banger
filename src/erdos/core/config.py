@@ -66,7 +66,7 @@ def _load_dotenv_if_enabled() -> None:
     Controlled by `ERDOS_LOAD_DOTENV` (default: enabled). Values like `0`, `false`,
     `no`, `off` disable loading.
 
-    Does not override existing environment variables (even empty strings).
+    Does not override environment variables that are already set to a non-empty value.
     """
     raw = os.environ.get("ERDOS_LOAD_DOTENV")
     if raw is not None and raw.strip().lower() in _DOTENV_FALSE_VALUES:
@@ -79,7 +79,8 @@ def _load_dotenv_if_enabled() -> None:
         return
 
     for key, value in parsed.items():
-        if key in os.environ:
+        existing = os.environ.get(key)
+        if existing is not None and existing.strip():
             continue
         os.environ[key] = value
 
