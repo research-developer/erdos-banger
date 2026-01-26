@@ -12,7 +12,7 @@ This workflow helps you prove Erdos problems in Lean 4 using your Claude Code/Co
 
 ## Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                    COST-FREE PROVING WORKFLOW                   │
 ├─────────────────────────────────────────────────────────────────┤
@@ -159,7 +159,7 @@ uv run erdos logs --problem-id $ARGUMENTS
 
 ## Example Conversation
 
-```
+```text
 You: /erdos-prove 6
 
 Claude: Let me start the proving workflow for Problem 6.

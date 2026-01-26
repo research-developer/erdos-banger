@@ -24,12 +24,15 @@ This repo includes custom skills for both Claude Code and Codex CLI:
 | `erdos` | Auto or manual | Complete CLI reference, cost awareness, env config |
 | `erdos-prove [id]` | Manual | Step-by-step workflow to prove a problem using subscription |
 
+> **Note:** Skills apply to both tools; use `/skill` for Claude Code and `$skill` for Codex CLI.
+
 **Key insight:** You can bypass API costs by using Claude Code/Codex directly instead of `erdos loop run` or `erdos ask`. The `erdos-prove` skill guides you through this workflow.
 
 **Cost-free proving workflow:**
 1. `erdos lean formalize 6` - Generate Lean skeleton (FREE)
+   - Writes to `formal/lean/Erdos/ProblemXXX.lean` (e.g., Problem006.lean)
 2. Work with Claude Code/Codex to fill in the proof (SUBSCRIPTION)
-3. `erdos lean check <file>` - Verify compilation (FREE)
+3. `erdos lean check formal/lean/Erdos/ProblemXXX.lean` - Verify compilation (FREE)
 4. Iterate with Claude Code/Codex on errors (SUBSCRIPTION)
 
 ## Build & Development Commands

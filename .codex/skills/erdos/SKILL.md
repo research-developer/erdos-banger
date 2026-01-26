@@ -28,6 +28,7 @@ uv run erdos search "prime arithmetic"
 ## Cost Awareness
 
 ### $0 Commands (no paid APIs; some use free/rate-limited network)
+
 | Command | Notes |
 |---------|------|
 | `erdos list`, `erdos show`, `erdos search` | Local dataset/index (semantic search uses local `sentence-transformers`) |
@@ -38,6 +39,7 @@ uv run erdos search "prime arithmetic"
 | `erdos lean init/check/status/formalize/import` | Lean tooling; downloads toolchain/mathlib as needed |
 
 ### Potentially billable commands (depends on your configuration)
+
 | Command | When it can cost money |
 |---------|-------------------------|
 | `erdos ask` | Uses an external LLM unless `--no-llm` (via `ERDOS_LLM_COMMAND`) |
