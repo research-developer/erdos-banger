@@ -1,8 +1,10 @@
 # Bug: Hardcoded `logs/loop` path breaks outside repo root
 
 **Priority:** P2
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-26
+**Fixed:** 2026-01-26
+**Commit:** (in-tree)
 **GitHub Issue:** [#36](https://github.com/The-Obstacle-Is-The-Way/erdos-banger/issues/36)
 
 ## Description
@@ -11,17 +13,24 @@ During architectural audit for SPEC-036/037, found that `loop/runner.py` uses a 
 
 ## Affected Files
 
-### `src/erdos/core/loop/runner.py:94`
+### `src/erdos/core/loop/runner.py`
 
 ```python
+# Before fix
 log_path = Path("logs/loop") / f"{generate_run_id()}.jsonl"
 ```
 
 ## Steps to Reproduce
 
 1. `cd /tmp`
-2. `uv run erdos loop run 6 --max-iter 1`
-3. Observe log written to `/tmp/logs/loop/` instead of `<repo>/logs/loop/`
+2. Run the loop against a real repo/project while setting `ERDOS_REPO_ROOT`:
+
+   ```bash
+   ERDOS_REPO_ROOT=/path/to/repo \
+     uv run erdos loop run 6 --no-apply --path /path/to/repo/formal/lean --max-iter 1
+   ```
+
+3. Before fix: log written to `/tmp/logs/loop/` (relative to cwd) instead of `/path/to/repo/logs/loop/`.
 
 Or:
 
@@ -30,14 +39,11 @@ Or:
 
 ## Expected Behavior
 
-Logs should always be written to `<repo_root>/logs/loop/` regardless of current working directory.
+When `repo_root` is configured (via `ERDOS_REPO_ROOT`), logs should be written to `<repo_root>/logs/loop/` regardless of current working directory.
 
 ## Actual Behavior
 
-Logs are written relative to `cwd`, which may be:
-- `/tmp/logs/loop/` if running from `/tmp`
-- `tests/logs/loop/` if running from tests directory
-- Anywhere the process happens to start
+Before fix: logs were written relative to `cwd`, even when `repo_root` was configured.
 
 ## Root Cause
 
@@ -62,6 +68,13 @@ def run_loop(
     if log_dir is None:
         log_dir = Path("logs/loop")  # fallback, but caller should provide
 ```
+
+## Implementation Notes
+
+- Added `log_dir` parameter to `run_loop(...)` and threaded it through the service layer.
+- The CLI passes `repo_root` (from `ERDOS_REPO_ROOT`) so logs land under `<repo_root>/logs/loop/` in typical usage.
+- Added regression coverage:
+  - `tests/unit/loop/test_runner.py`
 
 ## Impact
 

@@ -1,10 +1,10 @@
 # Bug: Exa to leads conversion crashes on empty title
 
 **Priority:** P2
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-26
-**Fixed:** N/A
-**Commit:** N/A
+**Fixed:** 2026-01-26
+**Commit:** 6f9b423
 
 ## Description
 
@@ -39,15 +39,10 @@ In `src/erdos/commands/research/exa.py:_exa_to_leads()`, the title is taken dire
 
 ## Fix
 
-Option 1 (recommended): In `_exa_to_leads()`, add fallback:
-```python
-title = source.title or f"[Exa] {source.url.split('/')[-1][:50]}"
-```
+Implemented a defensive fallback title in `src/erdos/commands/research/exa.py:_exa_to_leads()`:
 
-Option 2: Truncate relevance text:
-```python
-title = source.title or (source.relevance[:80] + "..." if source.relevance else "Untitled")
-```
+- Prefer the original title when present.
+- Otherwise fall back to (in order): DOI, arXiv ID, URL, a short relevance snippet, or `"Untitled"`.
 
 ## Workaround
 

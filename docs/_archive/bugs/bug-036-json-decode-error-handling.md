@@ -1,8 +1,10 @@
 # Bug: Crossref/Semantic Scholar clients missing JSONDecodeError handling
 
 **Priority:** P1
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-26
+**Fixed:** 2026-01-26
+**Commit:** (in-tree)
 **GitHub Issue:** [#35](https://github.com/The-Obstacle-Is-The-Way/erdos-banger/issues/35)
 
 ## Description
@@ -11,17 +13,17 @@ During architectural audit for SPEC-036/037, found that `crossref.py` and `seman
 
 ## Affected Files
 
-### `src/erdos/core/clients/crossref.py:151`
+### `src/erdos/core/clients/crossref.py`
 
 ```python
-# Current - NO ERROR HANDLING
+# Before fix - NO ERROR HANDLING
 return response.json()  # type: ignore[no-any-return]
 ```
 
-### `src/erdos/core/clients/semantic_scholar.py:307, 360, 418`
+### `src/erdos/core/clients/semantic_scholar.py`
 
 ```python
-# Current - catches HTTPError but not JSONDecodeError
+# Before fix - catches HTTPError but not JSONDecodeError
 try:
     response = fetch_with_retry(url, ...)
     data = response.json()  # Could raise JSONDecodeError
@@ -66,6 +68,16 @@ except (json.JSONDecodeError, requests.exceptions.JSONDecodeError):
     )
     raise
 ```
+
+## Implementation Notes
+
+- Implemented JSON decode handling in:
+  - `src/erdos/core/clients/crossref.py`
+  - `src/erdos/core/clients/semantic_scholar.py`
+- Ensured CLI returns structured errors (no traceback) for invalid JSON:
+  - `src/erdos/commands/refs_s2.py`
+- Added regression coverage:
+  - `tests/unit/commands/test_refs_s2.py`
 
 ## Related
 

@@ -6,8 +6,8 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 | Date | Type | Summary | Status |
 |------|------|---------|--------|
-| 2026-01-26 | Architecture Audit | Full codebase audit for SPEC-036/037 (2 bugs: GH-035, GH-036) | Active |
-| 2026-01-26 | Friction Report | CLI maximization test for Problem #848 (1 bug found: BUG-034) | Active |
+| 2026-01-26 | Architecture Audit | Full codebase audit for SPEC-036/037 (2 bugs: GH-035, GH-036) | Archived |
+| 2026-01-26 | Friction Report | CLI maximization test for Problem #848 (1 bug found: BUG-034) | Archived |
 | 2026-01-25 | Adversarial Review | Status filter validation audit (1 bug fixed in 3ab5c5c) | Archived |
 | 2026-01-25 | Adversarial Review | Post-refactor CLI stress test (no new bugs; expanded regression tests) | Archived |
 | 2026-01-25 | Adversarial Review | CLI stress test, input validation audit (6 bugs fixed in 92039ca) | Archived |
@@ -18,12 +18,7 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 ## Active Bugs
 
-| ID | Title | Priority | Status | Found |
-|----|-------|----------|--------|-------|
-| GH-035 | Crossref/S2 clients missing JSONDecodeError handling | P1 | Open | 2026-01-26 |
-| GH-036 | Hardcoded `logs/loop` path breaks outside repo root | P2 | Open | 2026-01-26 |
-
-*GH-XXX = has GitHub issue. BUG-XXX = local docs only. Both tracked here with full bug decks.*
+None.
 
 ## Archived Bugs
 
@@ -62,8 +57,11 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-031 | `make smoke` fails when Lean installed but mathlib is not | P2 | Fixed | 83bf9f6 |
 | BUG-032 | Batch `--status` accepts invalid values (misclassified as NotFound) | P3 | Fixed | 3ab5c5c |
 | BUG-033 | zbMATH search methods don't handle 404 errors | P2 | Fixed | 05bc9ec |
-| BUG-034 | `erdos research exa --save-leads` crashes on empty title | P2 | Fixed | (in-tree) |
-| BUG-035 | Lean skeleton template uses outdated Mathlib import path | P2 | Fixed | (in-tree) |
+| BUG-034 | `erdos research exa --save-leads` crashes on empty title | P2 | Fixed | 6f9b423 |
+| BUG-035 | Lean skeleton template uses outdated Mathlib import path | P2 | Fixed | 36d3518 |
+| BUG-038 | BM25 search doesn't escape FTS5 special characters | P1 | Fixed | 8c55500 |
+| GH-035 | Crossref/S2 clients missing JSONDecodeError handling | P1 | Fixed | (in-tree) |
+| GH-036 | Hardcoded `logs/loop` path breaks outside repo root | P2 | Fixed | (in-tree) |
 
 *Naming: GH-XXX = also tracked on GitHub Issues. BUG-XXX = local docs only. Both systems maintained in parallel.*
 
@@ -71,9 +69,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 
 ### Active Bug Decks
 
-- `docs/_bugs/bug-036-json-decode-error-handling.md` (GH-035)
-- `docs/_bugs/bug-037-hardcoded-logs-loop-path.md` (GH-036)
-- `docs/_bugs/bug-038-bm25-fts5-query-not-escaped.md` (BUG-038) - **FIXED**
+- None.
 
 ### Archived Bug Decks
 
@@ -115,8 +111,12 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/adversarial-review-2026-01-25-status-validation.md`
 - `docs/_archive/bugs/bug-032-batch-status-validation-missing.md`
 - `docs/_archive/bugs/bug-033-zbmath-search-identifier-404-not-handled.md`
+- `docs/_archive/bugs/bug-036-json-decode-error-handling.md`
+- `docs/_archive/bugs/bug-037-hardcoded-logs-loop-path.md`
+- `docs/_archive/bugs/bug-038-bm25-fts5-query-not-escaped.md`
 - `docs/_archive/bugs/bug-034-exa-save-leads-empty-title.md`
 - `docs/_archive/bugs/bug-035-lean-skeleton-outdated-import.md`
+- `docs/_archive/bugs/friction-2026-01-26-cli-maximization-test.md`
 
 ## Bug Priority Definitions
 

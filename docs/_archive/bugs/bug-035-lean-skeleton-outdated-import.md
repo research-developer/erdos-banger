@@ -4,7 +4,7 @@
 **Status:** Fixed
 **Found:** 2026-01-26
 **Fixed:** 2026-01-26
-**Commit:** (pending)
+**Commit:** 36d3518
 
 ## Description
 

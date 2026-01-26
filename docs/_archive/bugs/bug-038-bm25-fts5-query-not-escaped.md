@@ -4,7 +4,7 @@
 **Status:** Fixed
 **Found:** 2026-01-26
 **Fixed:** 2026-01-26
-**Commit:** (pending)
+**Commit:** 8c55500
 
 ## Description
 
@@ -12,10 +12,10 @@ The `BM25Search.search()` method passes user queries directly to FTS5 without es
 
 ## Affected Files
 
-### `src/erdos/core/search/bm25.py:73`
+### `src/erdos/core/search/bm25.py`
 
 ```python
-# Current - NO ESCAPING
+# Before fix - NO ESCAPING
 params: list[str | int] = [query]  # Raw query passed to FTS5
 ```
 
@@ -48,17 +48,7 @@ OperationalError: no such column: free
 
 ## Root Cause
 
-`BM25Search.search()` passes the raw query to FTS5 without escaping. The `ask/retrieval.py` has proper escaping (lines 45-63), but `bm25.py` doesn't use it.
-
-**Correct pattern from `retrieval.py`:**
-```python
-# Extract alphanumeric tokens
-tokens = re.findall(r"[a-z0-9]+", haystack)
-# Quote each token
-terms = [f'"{t}"' for t in unique if t]
-# Join with OR
-query = " OR ".join(terms[:MAX_QUERY_TERMS])
-```
+`BM25Search.search()` passed raw user input to FTS5 without normalization. At the time of discovery, `erdos ask` already normalized free-text queries; BM25 search did not.
 
 ## Fix
 
@@ -84,14 +74,20 @@ safe_query = safe_fts5_query(query)
 params: list[str | int] = [safe_query]
 ```
 
+## Implementation Notes
+
+- Implemented `safe_fts5_query(...)` and applied it in `BM25Search.search()`.
+- Reused the same escaping utility for `erdos ask` retrieval (programmatic queries use `allow_advanced_syntax=False`).
+- Added regression coverage:
+  - `tests/integration/test_search_index.py`
+
 ## Impact
 
 - **Hybrid search:** Broken for any query with hyphens, parentheses, or FTS5 operators
 - **Direct BM25 search:** Also affected (`erdos search "sum-free"`)
 - **Semantic search:** NOT affected (doesn't use FTS5)
-- **Ask command:** NOT affected (uses its own escaping in `retrieval.py`)
+- **Ask command:** Not affected (uses safe query normalization)
 
 ## Related
 
-- `src/erdos/core/ask/retrieval.py:45-63` - Correct escaping pattern
 - `docs/architecture/rag-system.md` - RAG documentation

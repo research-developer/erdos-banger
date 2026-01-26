@@ -27,6 +27,7 @@ Design history and engineering process docs (specs, ADRs, debt, bugs) are kept, 
 - [Overview](./architecture/overview.md)
 - [CLI Design](./architecture/cli.md)
 - [Data Pipeline](./architecture/data-pipeline.md)
+- [RAG System](./architecture/rag-system.md)
 
 ## Project & Process Docs
 
@@ -34,7 +35,7 @@ Design history and engineering process docs (specs, ADRs, debt, bugs) are kept, 
 |----------|-------|---------|
 | [Specs](./_specs/README.md) | Design specs + roadmap (mostly archived) | SPEC-036 |
 | [ADRs](./adr/README.md) | Architecture decision records | ADR-004 |
-| [Bugs](./_bugs/README.md) | Bug reports & adversarial reviews | BUG-034 |
+| [Bugs](./_bugs/README.md) | Bug reports & adversarial reviews | BUG-039 |
 | [Debt](./_debt/README.md) | Technical debt tracking | DEBT-108 |
 | [Vendor Docs](./vendor-docs/README.md) | External API notes | — |
 | [Ralph Wiggum Protocol](./_ralphwiggum/protocol.md) | Autonomous sprint loop | — |
