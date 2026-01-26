@@ -10,11 +10,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Annotated, Any
 
+import click
 import typer
 from rich.table import Table
 
 from erdos.commands.app_context import get_app_context
-from erdos.commands.cli_helpers import print_if_human
+from erdos.commands.cli_helpers import PROBLEM_STATUS_CHOICES, print_if_human
 from erdos.commands.presenter import console, err_console, exit_with_result
 from erdos.core.constants import API_RATE_LIMIT_DELAY, TITLE_TRUNCATION
 from erdos.core.ingest import (
@@ -146,6 +147,18 @@ def _show_progress_message(problem_id: int | None, json_output: bool) -> None:
     print_if_human("Starting batch ingest...", json_output=json_output)
 
 
+def _validate_timeout(
+    _ctx: typer.Context,
+    _param: Any,
+    value: float | None,
+) -> float | None:
+    if value is None:
+        return None
+    if value <= 0:
+        raise typer.BadParameter("timeout must be > 0")
+    return value
+
+
 @app.callback(invoke_without_command=True)
 def ingest(
     ctx: typer.Context,
@@ -156,8 +169,10 @@ def ingest(
     force: Annotated[bool, typer.Option("--force", "-f")] = False,
     no_download: Annotated[bool, typer.Option("--no-download")] = False,
     no_network: Annotated[bool, typer.Option("--no-network")] = False,
-    timeout: Annotated[float | None, typer.Option("--timeout")] = None,
-    delay: Annotated[float, typer.Option("--delay")] = API_RATE_LIMIT_DELAY,
+    timeout: Annotated[
+        float | None, typer.Option("--timeout", callback=_validate_timeout)
+    ] = None,
+    delay: Annotated[float, typer.Option("--delay", min=0.0)] = API_RATE_LIMIT_DELAY,
     mailto: Annotated[str, typer.Option("--mailto")] = "",
     source: Annotated[
         MetadataSource,
@@ -176,6 +191,7 @@ def ingest(
         str | None,
         typer.Option(
             "--status",
+            click_type=click.Choice(PROBLEM_STATUS_CHOICES, case_sensitive=False),
             help="Filter by status: open, proved, disproved, partially_solved, unknown",
         ),
     ] = None,
@@ -193,11 +209,11 @@ def ingest(
     ] = None,
     limit: Annotated[
         int | None,
-        typer.Option("--limit", help="Max problems to process"),
+        typer.Option("--limit", help="Max problems to process", min=1, max=1000),
     ] = None,
     skip: Annotated[
         int | None,
-        typer.Option("--skip", help="Skip first N problems"),
+        typer.Option("--skip", help="Skip first N problems", min=0),
     ] = None,
     resume: Annotated[
         bool,

@@ -1,20 +1,19 @@
 # DEBT-092: Proof Verification Module LOC Violations
 
 **Priority:** P3 (Minor; clean up when touching nearby code)
-**Status:** Exempted
+**Status:** Fixed
 **Found:** 2026-01-24
-**Exempted:** 2026-01-24 (re-evaluated 2026-01-24)
+**Fixed:** 2026-01-25
+**Fixed In:** 534802f
 
 ## Description
 
-The proof verification implementation (SPEC-035/5) exceeds LOC thresholds:
+At time found, the proof verification implementation (SPEC-035/5) exceeded LOC thresholds:
 
 | Module | LOC | Threshold | Delta |
 |--------|-----|-----------|-------|
 | `src/erdos/core/sync/proofs.py` | 626 | 500 | +126 |
-| `src/erdos/commands/sync/proof_cmd.py` | 441 | 400 | +41 |
-
-**Note:** The inline exemption markers claim different LOC counts (596 and 429 respectively), which are inaccurate.
+| `src/erdos/commands/sync/proof_cmd.py` | 439 | 400 | +39 |
 
 ## Analysis
 
@@ -37,7 +36,7 @@ This module is well-organized with clear section boundaries:
 
 **Security:** This is security-critical code (runs untrusted `lake build`). Density is justified by the need for explicit guardrails and clear audit trail.
 
-### proof_cmd.py (441 LOC)
+### proof_cmd.py (439 LOC)
 
 This module contains application logic that arguably belongs in `core/`:
 
@@ -76,13 +75,17 @@ The exemption is weaker here. Extracting application logic would:
 2. Result: proof_cmd.py → ~236 LOC (well under threshold)
 3. Follows established pattern (thin commands, testable core)
 
-However, the current structure works and the violation is marginal (+41 LOC).
+However, the current structure works and the violation is marginal (+39 LOC).
 
 ## Resolution
 
-Exempted via inline markers:
-- `src/erdos/core/sync/proofs.py`: `# exempt: DEBT-092`
-- `src/erdos/commands/sync/proof_cmd.py`: `# exempt: DEBT-092`
+Fixed in `534802f` by:
+- Extracting orchestration to `src/erdos/core/sync/proof_service.py`
+- Splitting provenance + dataclasses to:
+  - `src/erdos/core/sync/proofs_provenance.py`
+  - `src/erdos/core/sync/proofs_types.py`
+- Keeping `src/erdos/core/sync/proofs.py` under the 500 LOC threshold (currently 482 LOC)
+- Keeping `src/erdos/commands/sync/proof_cmd.py` as a thin CLI adapter (currently 170 LOC)
 
 ## Refactoring Recommendations
 
@@ -98,8 +101,8 @@ If this debt is opened:
 
 ## Acceptance Criteria (If Opened)
 
-1. [ ] `proof_cmd.py` reduced to ≤400 LOC via service extraction
-2. [ ] `proofs.py` reduced to ≤500 LOC (or exemption retained with clear justification)
-3. [ ] Application logic (`sync_proof_links()`) lives in `core/sync/`, not `commands/`
-4. [ ] `make ci` passes
-5. [ ] Verification behavior unchanged
+1. [x] `proof_cmd.py` reduced to ≤400 LOC via service extraction
+2. [x] `proofs.py` reduced to ≤500 LOC
+3. [x] Application logic (`sync_proof_links()`) lives in `core/sync/`, not `commands/`
+4. [x] `make ci` passes
+5. [x] Verification behavior unchanged

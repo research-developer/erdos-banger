@@ -6,13 +6,17 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 | Date | Type | Summary | Status |
 |------|------|---------|--------|
+| 2026-01-25 | Adversarial Review | Status filter validation audit (1 bug fixed in 3ab5c5c) | Archived |
+| 2026-01-25 | Adversarial Review | Post-refactor CLI stress test (no new bugs; expanded regression tests) | Archived |
+| 2026-01-25 | Adversarial Review | CLI stress test, input validation audit (6 bugs fixed in 92039ca) | Archived |
+| 2026-01-25 | Adversarial Review | Follow-up stress test (2 bugs fixed in 6c7eef2) | Archived |
 | 2026-01-22 | Adversarial Review | Post v2.1 architecture audit (loop/search SRP hotspots) | Archived |
 | 2026-01-21 | Adversarial Review | Full codebase audit for bugs, debt, anti-patterns | Archived |
 | 2026-01-17 | Adversarial Review | Full codebase audit covering specs 003-006 | Archived |
 
 ## Active Bugs
 
-*None currently active.*
+None.
 
 *Note: BUG-013 was invalidated as a false positive. BUG-015 and BUG-017 were review findings that were invalidated before standalone bug decks were created.*
 
@@ -42,8 +46,18 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-020 | OpenAlex `get_by_arxiv()` returns None for real arXiv IDs | P1 | Fixed | fe34ca1 |
 | BUG-021 | `erdos ingest` ignores `--mailto`/`--timeout` for OpenAlex requests | P2 | Fixed | 853dde8 |
 | BUG-022 | `erdos ingest --pdf` flags silently ignored | P2 | Fixed | 1c8889e |
+| BUG-023 | `erdos lean import` path duplication causes crash | P1 | Fixed | 92039ca |
+| BUG-024 | `erdos search --limit` crashes with traceback for invalid values | P2 | Fixed | 92039ca |
+| BUG-025 | `erdos ask --limit` accepts invalid values silently | P2 | Fixed | 92039ca |
+| BUG-026 | `erdos refs s2 --limit 0` causes cryptic API error | P2 | Fixed | 92039ca |
+| BUG-027 | `--log-level` accepts invalid values without error | P3 | Fixed | 92039ca |
+| BUG-028 | Batch commands accept negative `--limit` values | P3 | Fixed | 92039ca |
+| BUG-029 | zbMATH commands accept invalid pagination/year ranges | P2 | Fixed | 6c7eef2 |
+| BUG-030 | `erdos ingest` accepts invalid numeric values | P2 | Fixed | 6c7eef2 |
+| BUG-031 | `make smoke` fails when Lean installed but mathlib is not | P2 | Fixed | 83bf9f6 |
+| BUG-032 | Batch `--status` accepts invalid values (misclassified as NotFound) | P3 | Fixed | 3ab5c5c |
 
-**Next Bug ID:** BUG-023
+**Next Bug ID:** BUG-033
 
 ### Archived Bug Decks
 
@@ -60,6 +74,9 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/adversarial-review-2026-01-17.md`
 - `docs/_archive/bugs/adversarial-review-2026-01-21.md`
 - `docs/_archive/bugs/adversarial-review-2026-01-22.md`
+- `docs/_archive/bugs/adversarial-review-2026-01-25.md`
+- `docs/_archive/bugs/adversarial-review-2026-01-25-followup.md`
+- `docs/_archive/bugs/adversarial-review-2026-01-25-post-refactor-stress.md`
 - `docs/_archive/bugs/bug-002-search-build-index-json-stdout.md`
 - `docs/_archive/bugs/bug-003-search-fts-loader-missing.md`
 - `docs/_archive/bugs/bug-004-iter-problems-duplicate-ids.md`
@@ -70,6 +87,21 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/bug-020-openalex-get-by-arxiv-returns-none.md`
 - `docs/_archive/bugs/bug-021-ingest-openalex-mailto-timeout-ignored.md`
 - `docs/_archive/bugs/bug-022-ingest-pdf-flags-silently-ignored.md`
+- `docs/_archive/bugs/bug-023-lean-import-path-duplication.md`
+- `docs/_archive/bugs/bug-024-search-limit-validation-missing.md`
+- `docs/_archive/bugs/bug-025-ask-limit-validation-missing.md`
+- `docs/_archive/bugs/bug-026-refs-s2-limit-validation-missing.md`
+- `docs/_archive/bugs/bug-027-log-level-invalid-values-ignored.md`
+- `docs/_archive/bugs/bug-028-batch-limit-negative-values-accepted.md`
+- `docs/_archive/bugs/bug-029-zbmath-validation-missing.md`
+- `docs/_archive/bugs/bug-030-ingest-numeric-validation-missing.md`
+- `docs/_archive/bugs/bug-031-smoke-test-lean-check-no-mathlib.md`
+- `docs/_archive/bugs/adversarial-review-2026-01-25-status-validation.md`
+- `docs/_archive/bugs/bug-032-batch-status-validation-missing.md`
+
+### Active Bug Decks
+
+None.
 
 ## Bug Priority Definitions
 

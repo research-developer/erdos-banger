@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
+import click
 import typer
 
 
@@ -14,6 +15,7 @@ if TYPE_CHECKING:
     from erdos.core.ports import ProblemRepository
 
 from erdos.commands.app_context import get_app_context
+from erdos.commands.cli_helpers import PROBLEM_STATUS_CHOICES
 from erdos.commands.lean.batch_formalize import (
     batch_formalize,
     batch_result_to_cli_output,
@@ -228,6 +230,7 @@ def register(app: typer.Typer) -> None:
             str | None,
             typer.Option(
                 "--status",
+                click_type=click.Choice(PROBLEM_STATUS_CHOICES, case_sensitive=False),
                 help="Filter by status: open, proved, disproved, partially_solved, unknown",
             ),
         ] = None,
@@ -236,7 +239,8 @@ def register(app: typer.Typer) -> None:
             typer.Option("--tag", help="Filter by tag (can be repeated)"),
         ] = None,
         limit: Annotated[
-            int | None, typer.Option("--limit", help="Max problems to process")
+            int | None,
+            typer.Option("--limit", help="Max problems to process", min=1, max=1000),
         ] = None,
         skip_existing: Annotated[
             bool,

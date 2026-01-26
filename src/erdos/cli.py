@@ -1,6 +1,7 @@
 """Erdos CLI - main entry point."""
 
 import logging
+from enum import Enum
 from typing import Annotated
 
 import typer
@@ -24,13 +25,19 @@ from erdos.commands import (
 from erdos.commands.presenter import console
 
 
+class LogLevel(str, Enum):
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARN = "WARN"
+    ERROR = "ERROR"
+
+
 def _configure_logging(level: str) -> None:
     """Configure Python logging with the specified level."""
     level_map = {
         "DEBUG": logging.DEBUG,
         "INFO": logging.INFO,
         "WARN": logging.WARNING,
-        "WARNING": logging.WARNING,
         "ERROR": logging.ERROR,
     }
     log_level = level_map.get(level.upper(), logging.INFO)
@@ -79,12 +86,13 @@ def main(
         ),
     ] = False,
     log_level: Annotated[
-        str,
+        LogLevel,
         typer.Option(
             "--log-level",
             help="Logging level: DEBUG, INFO, WARN, ERROR.",
+            case_sensitive=False,
         ),
-    ] = "INFO",
+    ] = LogLevel.INFO,
 ) -> None:
     """
     Erdos CLI - toolkit for Erdős problem research.
@@ -92,14 +100,14 @@ def main(
     Run 'erdos COMMAND --help' for command-specific help.
     """
     # Configure logging based on --log-level
-    _configure_logging(log_level)
+    _configure_logging(log_level.value)
 
     ctx.ensure_object(dict)
     if isinstance(ctx.obj, dict):
         ctx.obj.update(
             {
                 "json": json_output,
-                "log_level": log_level,
+                "log_level": log_level.value,
             }
         )
 

@@ -1,27 +1,26 @@
 # DEBT-096: Search Command Module LOC Violation (Post-MSC Growth)
 
 **Priority:** P3 (Minor; clean up when touching nearby code)
-**Status:** Exempted
+**Status:** Fixed
 **Found:** 2026-01-24
-**Exempted:** 2026-01-24 (re-evaluated 2026-01-24)
+**Fixed:** 2026-01-25
+**Fixed In:** 4a21f0b
 
 ## Description
 
-The search command module exceeds LOC thresholds after MSC search mode was added (SPEC-031/3):
+At time found, the search command module exceeded LOC thresholds after MSC search mode was added (SPEC-031/3):
 
 | Module | LOC | Threshold | Delta |
 |--------|-----|-----------|-------|
-| `src/erdos/commands/search.py` | 509 | 400 | +109 |
+| `src/erdos/commands/search.py` | 525 | 400 | +125 |
 
 | Function | LOC | Threshold | Delta |
 |----------|-----|-----------|-------|
-| `search()` (line 322) | 188 | 120 | +68 |
-
-**Note:** The inline exemption marker claims 517 LOC, which is inaccurate.
+| `search()` (line 330) | 196 | 120 | +76 |
 
 ## History
 
-DEBT-043 previously reduced this module from 791→334 LOC by extracting orchestration logic to `core/search/service.py`. The module has since grown 175 LOC (52% increase) due to MSC search mode (SPEC-031/3):
+DEBT-043 previously reduced this module from 791→334 LOC by extracting orchestration logic to `core/search/service.py`. The module has since grown 191 LOC (57% increase) due to MSC search mode (SPEC-031/3):
 
 | Component | Added LOC |
 |-----------|-----------|
@@ -34,7 +33,7 @@ DEBT-043 previously reduced this module from 791→334 LOC by extracting orchest
 
 ## Analysis
 
-### Function Size (188 LOC)
+### Function Size (196 LOC)
 
 The `search()` callback appears long but the breakdown reveals:
 - **~80 LOC:** Typer parameter declarations (framework-required boilerplate)
@@ -43,7 +42,7 @@ The `search()` callback appears long but the breakdown reveals:
 
 The actual logic is well-delegated to helper functions (`_validate_mode_flags()`, `_execute_msc_search()`, `_handle_index_build()`, `_handle_embeddings_build()`) and the service layer (`execute_search()`).
 
-### Module Size (509 LOC)
+### Module Size (525 LOC)
 
 Breakdown by responsibility:
 - **Imports/setup:** ~46 LOC
@@ -53,7 +52,7 @@ Breakdown by responsibility:
 - **MSC execution:** ~55 LOC (`_execute_msc_search()`)
 - **Index/embeddings handlers:** ~64 LOC (`_handle_index_build()`, `_handle_embeddings_build()`)
 - **Mode selection:** ~8 LOC (`_get_search_mode()`)
-- **Typer callback:** ~188 LOC (`search()`)
+- **Typer callback:** ~196 LOC (`search()`)
 
 ## Justification for Exemption
 
@@ -91,20 +90,18 @@ Currently the cognitive overhead of splitting doesn't justify the LOC savings.
 
 ## Resolution
 
-Exempted via inline marker:
-
-```python
-# exempt: DEBT-096 (517 LOC; CLI + multiple search modes including MSC/zbMATH)
-```
-
-The function-level violation (188 LOC) is also exempted via the existing DEBT-043 marker in the audit exemptions.
+Fixed in `4a21f0b` by:
+- Splitting orchestration to `src/erdos/commands/search_impl.py`
+- Splitting human rendering to `src/erdos/commands/search_output.py`
+- Keeping `src/erdos/commands/search.py` as a thin Typer adapter (currently 102 LOC)
+- Removing the audit exemption for `commands/search.py:search`
 
 ## Acceptance Criteria (If Opened)
 
 If this debt is opened for work:
 
-1. [ ] Module reduced to ≤400 LOC
-2. [ ] `search()` function reduced to ≤120 LOC
-3. [ ] All search modes remain accessible via `erdos search --help`
-4. [ ] `make ci` passes
-5. [ ] No functional regression in search behavior
+1. [x] Module reduced to ≤400 LOC
+2. [x] `search()` function reduced to ≤120 LOC
+3. [x] All search modes remain accessible via `erdos search --help`
+4. [x] `make ci` passes
+5. [x] No functional regression in search behavior
