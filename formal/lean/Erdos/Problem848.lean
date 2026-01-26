@@ -218,26 +218,62 @@ instance (N : ℕ) : Decidable (noTripleWorksIn N) := by
     Verified by native_decide in ~2 seconds (19,600 triple checks). -/
 theorem no_triple_works_50 : noTripleWorksIn 50 := by native_decide
 
+/-- The diagonal filter: n is a candidate if n² + 1 is not squarefree.
+
+    Key insight from GPT-5 paper: If A has the property, then every a ∈ A
+    must satisfy a² + 1 not squarefree (from the diagonal condition a*a+1). -/
+def DiagonalCandidates (N : ℕ) : Finset ℕ :=
+  (Finset.range N).filter (fun n => ¬ Squarefree (n * n + 1))
+
+/-- Compute: DiagonalCandidates(50) = {7, 18, 32, 43} -/
+lemma diag_cand_50 : DiagonalCandidates 50 = {7, 18, 32, 43} := by native_decide
+
+/-- Any set with the property is contained in DiagonalCandidates. -/
+lemma prop_implies_diag_candidates (A : Finset ℕ) (N : ℕ) (hAsub : A ⊆ Finset.range N)
+    (hAprop : NonSquarefreeProductProp A) : A ⊆ DiagonalCandidates N := by
+  intro a ha
+  simp only [DiagonalCandidates, Finset.mem_filter]
+  constructor
+  · exact hAsub ha
+  · exact hAprop a ha a ha
+
+/-- Check: No 3-element subset of {7, 18, 32, 43} has the property.
+
+    There are only C(4,3) = 4 triples to check:
+    - {7, 18, 32}: 7*18+1 = 127 (prime, squarefree) ✗
+    - {7, 18, 43}: 7*18+1 = 127 (squarefree) ✗
+    - {7, 32, 43}: 7*43+1 = 302 = 2×151 (squarefree) ✗
+    - {18, 32, 43}: 18*43+1 = 775 = 5²×31 (not squarefree)... but 18*32+1 = 577 (prime) ✗ -/
+lemma no_triple_in_candidates :
+    ∀ (s : Finset ℕ), s ⊆ {7, 18, 32, 43} → s.card = 3 → ¬ NonSquarefreeProductProp s := by
+  native_decide
+
 /-- Verified: For N = 50, the conjecture holds (A₇(50) has 2 elements: {7, 32}).
 
-    Proof: Since no 3-element subset has the property (by no_triple_works_50),
-    any set with the property has at most 2 elements, matching |A₇(50)| = 2. -/
+    Proof using diagonal filter:
+    1. Any set with the property is contained in DiagonalCandidates(50) = {7,18,32,43}
+    2. No 3-element subset of these 4 candidates has the property
+    3. Therefore max size is 2 -/
 theorem problem_848_N50 :
     ∀ A : Finset ℕ, A ⊆ Finset.range 50 → NonSquarefreeProductProp A →
       A.card ≤ (A₇ 50).card := by
   intro A hAsub hAprop
-  have hA₇_card : (A₇ 50).card = 2 := A₇_50_card
-  rw [hA₇_card]
-  -- Prove A.card ≤ 2 by showing A.card < 3
+  rw [A₇_50_card]
+  -- A is contained in DiagonalCandidates(50) = {7,18,32,43}
+  have h_sub_cand : A ⊆ DiagonalCandidates 50 := prop_implies_diag_candidates A 50 hAsub hAprop
+  rw [diag_cand_50] at h_sub_cand
+  -- If A.card ≥ 3, extract a 3-element subset
   by_contra h
   push_neg at h
-  -- h : 2 < A.card, so A.card ≥ 3
-  -- Extract 3 distinct elements from A
   have hcard3 : 3 ≤ A.card := h
-  -- Use no_triple_works_50: no triple in [0,50) has the property
-  -- But if A.card ≥ 3, we can find a triple that should have the property
-  -- This is a contradiction (needs more Mathlib lemmas to complete)
-  sorry
+  -- Get a 3-element subset of A
+  obtain ⟨s, hs_sub, hs_card⟩ := Finset.exists_smaller_set A 3 hcard3
+  -- s inherits the property
+  have hs_prop : NonSquarefreeProductProp s := nonSquarefreeProductProp_subset hs_sub hAprop
+  -- s ⊆ {7,18,32,43} by transitivity
+  have hs_sub_cand : s ⊆ {7, 18, 32, 43} := Finset.Subset.trans hs_sub h_sub_cand
+  -- But no such s can have the property
+  exact no_triple_in_candidates s hs_sub_cand hs_card hs_prop
 
 /-!
 ## Sawhney's Theorem (Research Level)
