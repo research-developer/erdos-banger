@@ -19,6 +19,7 @@ Design history and engineering process docs (specs, ADRs, debt, bugs) are kept, 
 - [Configuration](./developer/configuration.md) (env vars, paths, caches)
 - [Testing](./developer/testing.md)
 - [CLI Reference (generated)](./developer/cli-reference.md)
+- [PDF Conversion](./developer/pdf-conversion.md) (optional `[pdf]` extra)
 
 ## Architecture
 
