@@ -446,17 +446,21 @@ theorem sawhney_main (c : ℝ) (hc : c > 0) (hc_small : c < 0.002) :
     have h_bound := h_density_star N hN1 A hAsub hAprop hA_star
     -- |A|/N ≤ 0.038 but |A|/N ≥ 1/25 - c = 0.04 - c > 0.038 when c < 0.002
     exfalso
-    have h_size_bound : (A.card : ℝ) / N ≥ 1/25 - c := by
-      have hN_pos : (0 : ℝ) < N := by
-        by_contra hN_le
-        push_neg at hN_le
-        have : N = 0 := Nat.eq_zero_of_le_zero (Nat.lt_one_iff.mp (Nat.lt_of_le_of_lt (Nat.cast_le.mp hN_le) (by norm_num : (0:ℝ) < 1)))
-        simp [this] at hSize hc
-        linarith
-      exact (div_le_iff hN_pos).mpr hSize
-    have h_contra : (1 : ℝ)/25 - c > 0.038 := by
-      have : (1 : ℝ)/25 = 0.04 := by norm_num
+    have h_025 : (1 : ℝ) / 25 = 0.04 := by norm_num
+    have h_lower : (1 : ℝ) / 25 - c > 0.038 := by linarith
+    -- A has at least one element (x with hx)
+    have hA_nonempty : A.card > 0 := Finset.card_pos.mpr ⟨x, hx⟩
+    have hN_pos : (N : ℝ) > 0 := by
+      have hA_card_pos : (A.card : ℝ) > 0 := Nat.cast_pos.mpr hA_nonempty
+      by_contra hN_le
+      push_neg at hN_le
+      have hN_nonneg : (N : ℝ) ≥ 0 := Nat.cast_nonneg N
+      have hN_zero : (N : ℝ) = 0 := le_antisymm hN_le hN_nonneg
+      simp [hN_zero] at hSize hc
       linarith
+    have h_size_ratio : (A.card : ℝ) / N ≥ 1/25 - c := by
+      rw [ge_iff_le, div_le_iff hN_pos]
+      linarith [hSize]
     linarith
 
 /-- The main conjecture: A₇ (or A₁₈) achieves the maximum. -/
