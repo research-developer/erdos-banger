@@ -9,6 +9,9 @@ import Mathlib.Data.Nat.Prime.Basic
 import Mathlib.Data.Nat.Squarefree
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Real.Basic
+import Mathlib.Data.ZMod.Basic
+import Mathlib.NumberTheory.LegendreSymbol.Basic
+import Mathlib.Data.Nat.ModEq
 
 namespace Erdos.Problem848.SieveQuery1
 
@@ -28,7 +31,30 @@ instance (n : ℕ) : Decidable (isDiagonalCandidate n) := by
     This is because -1 must be a quadratic residue mod p. -/
 lemma prime_sq_divides_implies_one_mod_four (p n : ℕ) (hp : Nat.Prime p) (hp2 : p > 2)
     (hdiv : p^2 ∣ n^2 + 1) : p % 4 = 1 := by
-  sorry
+  have hp_ne_two : p ≠ 2 := by omega
+  have hp_dvd : p ∣ n ^ 2 + 1 := by
+    -- `p ∣ p^2` and `p^2 ∣ n^2+1` implies `p ∣ n^2+1`.
+    have hp_div_p2 : p ∣ p ^ 2 := by
+      simpa [pow_two] using Nat.dvd_mul_right p p
+    exact Nat.dvd_trans hp_div_p2 hdiv
+
+  -- Work in `ZMod p`: `p ∣ n^2+1` means `n^2 = -1 (mod p)`.
+  haveI : Fact p.Prime := ⟨hp⟩
+  have h0 : ((n ^ 2 + 1 : ℕ) : ZMod p) = 0 := (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) p).2 hp_dvd
+  have hsq : (n : ZMod p) ^ 2 = (-1 : ZMod p) := by
+    have : (n : ZMod p) ^ 2 + 1 = 0 := by
+      simpa [Nat.cast_add, Nat.cast_pow, Nat.cast_one] using h0
+    simpa using (eq_neg_of_add_eq_zero_left this)
+
+  -- `-1` is a square mod `p`, so `p % 4 ≠ 3`.
+  have hne3 : p % 4 ≠ 3 := ZMod.mod_four_ne_three_of_sq_eq_neg_one (p := p) (y := (n : ZMod p)) hsq
+
+  -- For odd primes, `p % 4` is either `1` or `3`; exclude `3`.
+  have hp_mod2 : p % 2 = 1 := (Nat.Prime.mod_two_eq_one_iff_ne_two hp).2 hp_ne_two
+  have hp_mod4 : p % 4 = 1 ∨ p % 4 = 3 := (Nat.odd_mod_four_iff).1 hp_mod2
+  cases hp_mod4 with
+  | inl h1 => exact h1
+  | inr h3 => exact (hne3 h3).elim
 
 /-- For prime p ≡ 1 (mod 4), there are exactly 2 residue classes r mod p²
     such that r² ≡ -1 (mod p²). -/
