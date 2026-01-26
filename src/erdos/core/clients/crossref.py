@@ -6,13 +6,12 @@ REST API.
 API Reference: https://www.crossref.org/documentation/retrieve-metadata/rest-api/
 """
 
-import json
 import logging
 import time
+from typing import cast
 from urllib.parse import quote
 
-import requests
-
+from erdos.core.clients.json_response import response_json_or_raise
 from erdos.core.models import ReferenceRecord
 from erdos.core.retry import fetch_with_retry
 
@@ -151,14 +150,12 @@ def fetch_crossref_work(
         response.status_code,
     )
 
-    try:
-        return response.json()  # type: ignore[no-any-return]
-    except (json.JSONDecodeError, requests.exceptions.JSONDecodeError):
-        snippet = response.text[:200].replace("\n", "\\n")
-        logger.error(
-            "Crossref invalid JSON for %s (status %d): %s",
-            url,
-            response.status_code,
-            snippet,
-        )
-        raise
+    data = response_json_or_raise(
+        response,
+        url=url,
+        service="Crossref",
+        logger=logger,
+    )
+    if not isinstance(data, dict):
+        raise ValueError(f"Crossref invalid JSON response type: {type(data).__name__}")
+    return cast("dict[str, object]", data)

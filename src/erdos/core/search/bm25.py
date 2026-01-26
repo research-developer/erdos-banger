@@ -55,7 +55,7 @@ def safe_fts5_query(query: str, *, allow_advanced_syntax: bool = True) -> str:
     if allow_advanced_syntax and (has_phrase or has_prefix or has_boolean):
         # Replace hyphens with spaces (to avoid NOT interpretation)
         # but preserve the rest of the query structure
-        safe_query = re.sub(r"(?<=[a-zA-Z])-(?=[a-zA-Z])", " ", query)
+        safe_query = re.sub(r"(?<=[A-Za-z0-9])-(?=[A-Za-z0-9])", " ", query)
         return safe_query
 
     # For plain queries, tokenize and quote for maximum safety

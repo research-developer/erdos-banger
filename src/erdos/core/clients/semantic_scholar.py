@@ -8,7 +8,6 @@ API Reference: https://api.semanticscholar.org/api-docs/
 
 from __future__ import annotations
 
-import json
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -17,6 +16,7 @@ from typing import Any
 import requests
 
 from erdos.core.clients.cache import FileCache, make_cache_key
+from erdos.core.clients.json_response import response_json_or_raise
 from erdos.core.config import AppConfig
 from erdos.core.constants import DEFAULT_HTTP_TIMEOUT, RETRY_MAX_ATTEMPTS
 from erdos.core.rate_limiter import RateLimiter
@@ -305,17 +305,12 @@ class SemanticScholarClient:
                 params={"fields": self.PAPER_FIELDS},
                 headers=self._get_headers(),
             )
-            try:
-                data = response.json()
-            except (json.JSONDecodeError, requests.exceptions.JSONDecodeError):
-                snippet = response.text[:200].replace("\n", "\\n")
-                logger.error(
-                    "Semantic Scholar invalid JSON for %s (status %d): %s",
-                    url,
-                    response.status_code,
-                    snippet,
-                )
-                raise
+            data = response_json_or_raise(
+                response,
+                url=url,
+                service="Semantic Scholar",
+                logger=logger,
+            )
             paper = S2Paper.from_api_response(data)
 
             if use_cache:
@@ -368,17 +363,12 @@ class SemanticScholarClient:
                 params={"fields": fields, "limit": str(limit)},
                 headers=self._get_headers(),
             )
-            try:
-                data = response.json()
-            except (json.JSONDecodeError, requests.exceptions.JSONDecodeError):
-                snippet = response.text[:200].replace("\n", "\\n")
-                logger.error(
-                    "Semantic Scholar invalid JSON for %s (status %d): %s",
-                    url,
-                    response.status_code,
-                    snippet,
-                )
-                raise
+            data = response_json_or_raise(
+                response,
+                url=url,
+                service="Semantic Scholar",
+                logger=logger,
+            )
 
             citations = [
                 CitationContext.from_api_response(item) for item in data.get("data", [])
@@ -436,17 +426,12 @@ class SemanticScholarClient:
                 params={"fields": fields, "limit": str(limit)},
                 headers=self._get_headers(),
             )
-            try:
-                data = response.json()
-            except (json.JSONDecodeError, requests.exceptions.JSONDecodeError):
-                snippet = response.text[:200].replace("\n", "\\n")
-                logger.error(
-                    "Semantic Scholar invalid JSON for %s (status %d): %s",
-                    url,
-                    response.status_code,
-                    snippet,
-                )
-                raise
+            data = response_json_or_raise(
+                response,
+                url=url,
+                service="Semantic Scholar",
+                logger=logger,
+            )
 
             references = [
                 S2Reference.from_api_response(item) for item in data.get("data", [])
