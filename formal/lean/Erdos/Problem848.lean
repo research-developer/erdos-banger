@@ -244,41 +244,43 @@ lemma prop_implies_diag_candidates (A : Finset ℕ) (N : ℕ) (hAsub : A ⊆ Fin
   · exact hAsub ha
   · exact hAprop a ha a ha
 
-/-- Check: No 3-element subset of {7, 18, 32, 43} has the property.
+/-- Check: No 3-element subset of {7, 18, 32, 38, 41, 43} has the property.
 
-    There are only C(4,3) = 4 triples to check:
-    - {7, 18, 32}: 7*18+1 = 127 (prime, squarefree) ✗
-    - {7, 18, 43}: 7*18+1 = 127 (squarefree) ✗
-    - {7, 32, 43}: 7*43+1 = 302 = 2×151 (squarefree) ✗
-    - {18, 32, 43}: 18*43+1 = 775 = 5²×31 (not squarefree)... but 18*32+1 = 577 (prime) ✗ -/
+    There are C(6,3) = 20 triples to check. Each fails because at least one
+    product ab+1 is squarefree. Verified by native_decide. -/
 lemma no_triple_in_candidates :
-    ∀ (s : Finset ℕ), s ⊆ {7, 18, 32, 43} → s.card = 3 → ¬ NonSquarefreeProductProp s := by
+    ∀ (s : Finset ℕ), s ⊆ {7, 18, 32, 38, 41, 43} → s.card = 3 → ¬ NonSquarefreeProductProp s := by
   native_decide
 
 /-- Verified: For N = 50, the conjecture holds (A₇(50) has 2 elements: {7, 32}).
 
     Proof using diagonal filter:
-    1. Any set with the property is contained in DiagonalCandidates(50) = {7,18,32,43}
-    2. No 3-element subset of these 4 candidates has the property
+    1. Any set with the property is contained in DiagonalCandidates(50) = {7,18,32,38,41,43}
+    2. No 3-element subset of these 6 candidates has the property (20 checks)
     3. Therefore max size is 2 -/
 theorem problem_848_N50 :
     ∀ A : Finset ℕ, A ⊆ Finset.range 50 → NonSquarefreeProductProp A →
       A.card ≤ (A₇ 50).card := by
   intro A hAsub hAprop
   rw [A₇_50_card]
-  -- A is contained in DiagonalCandidates(50) = {7,18,32,43}
+  -- A is contained in DiagonalCandidates(50)
   have h_sub_cand : A ⊆ DiagonalCandidates 50 := prop_implies_diag_candidates A 50 hAsub hAprop
   rw [diag_cand_50] at h_sub_cand
-  -- If A.card ≥ 3, extract a 3-element subset
+  -- If A.card ≥ 3, we get a contradiction
   by_contra h
   push_neg at h
   have hcard3 : 3 ≤ A.card := h
-  -- Get a 3-element subset of A
-  obtain ⟨s, hs_sub, hs_card⟩ := Finset.exists_smaller_set A 3 hcard3
+  -- A ⊆ {7,18,32,38,41,43} which has 6 elements
+  -- So A.card ≤ 6, but we claimed A.card ≥ 3
+  -- We need: any size-3 subset of A fails the property check
+  -- This requires extracting 3 elements - use Finset.exists_subset_card_eq
+  have hex : ∃ s : Finset ℕ, s ⊆ A ∧ s.card = 3 := by
+    exact Finset.exists_subset_card_eq hcard3
+  obtain ⟨s, hs_sub, hs_card⟩ := hex
   -- s inherits the property
   have hs_prop : NonSquarefreeProductProp s := nonSquarefreeProductProp_subset hs_sub hAprop
-  -- s ⊆ {7,18,32,43} by transitivity
-  have hs_sub_cand : s ⊆ {7, 18, 32, 43} := Finset.Subset.trans hs_sub h_sub_cand
+  -- s ⊆ {7,18,32,38,41,43} by transitivity
+  have hs_sub_cand : s ⊆ {7, 18, 32, 38, 41, 43} := Finset.Subset.trans hs_sub h_sub_cand
   -- But no such s can have the property
   exact no_triple_in_candidates s hs_sub_cand hs_card hs_prop
 
