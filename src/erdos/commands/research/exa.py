@@ -84,7 +84,7 @@ def _format_source_lines(index: int, src: dict[str, Any]) -> list[str]:
     """Format a single source for display."""
     parts: list[str] = []
     author_info = _format_author_info(src.get("authors", []), src.get("year"))
-    title = src.get("title", "Untitled")
+    title = src.get("display_title") or src.get("title") or "Untitled"
 
     header = f"  [bold]{index}.[/bold] {title!r}"
     if author_info:
