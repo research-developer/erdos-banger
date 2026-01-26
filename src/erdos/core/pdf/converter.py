@@ -224,7 +224,7 @@ def convert_with_marker(
         )
 
         # Configure Marker
-        config = ConfigParser()
+        config = ConfigParser(cli_options={})
 
         if use_llm:
             config.use_llm = True

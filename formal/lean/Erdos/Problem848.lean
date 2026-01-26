@@ -63,7 +63,11 @@ def problem : ErdosProblem := {
 def NonSquarefreeProductProp (A : Finset ℕ) : Prop :=
   ∀ a ∈ A, ∀ b ∈ A, ¬ Squarefree (a * b + 1)
 
-/-- The candidate extremal set: {n ∈ {1,…,N} : n ≡ 7 (mod 25)} -/
+/-- The candidate extremal set: {n ∈ {0,…,N-1} : n ≡ 7 (mod 25)}
+
+    NOTE: Uses `Finset.range N` = {0,...,N-1}, not {1,...,N}.
+    This is fine since 0 % 25 = 0 ≠ 7, so 0 is never included.
+    For the problem statement's {1,...,N}, use `Finset.Icc 1 N` instead. -/
 def A₇ (N : ℕ) : Finset ℕ :=
   (Finset.range N).filter (fun n => n % 25 = 7)
 
@@ -150,15 +154,24 @@ example : A₇ 50 = {7, 32} := by native_decide
 lemma A₇_50_card : (A₇ 50).card = 2 := by native_decide
 
 /-- Verified: For N = 50, the conjecture holds (A₇(50) has 2 elements: {7, 32}).
-    NOTE: Full computational verification requires decidability of Squarefree
-    which involves checking all prime divisors. This is left as sorry pending
-    a Decidable instance for NonSquarefreeProductProp. -/
+
+    NOTE: Squarefree IS decidable on ℕ (via Nat.instDecidablePredSquarefree).
+    The remaining work is to prove no 3-element set has the property.
+
+    Strategy: Since |A₇(50)| = 2, we only need to show no set of size 3 works.
+    This requires checking C(50,3) = 19600 triples (NOT 2^50 subsets).
+    For each triple {a,b,c}, at least one of ab+1, ac+1, bc+1 must be squarefree.
+
+    Implementation options:
+    1. Define `NonSquarefreeProductPropB` as a Bool and use `native_decide`
+    2. Generate SAT certificate externally and verify in Lean
+    3. Use `decide` with explicit Decidable instance -/
 theorem problem_848_N50 :
     ∀ A : Finset ℕ, A ⊆ Finset.range 50 → NonSquarefreeProductProp A →
       A.card ≤ (A₇ 50).card := by
-  -- The full proof requires enumerating all 2^50 subsets and checking
-  -- the squarefree condition. This is computationally intensive.
-  -- A SAT/SMT approach would be more practical.
+  -- To prove: max size is 2. Since A₇(50) achieves 2, we need:
+  -- ∀ triple {a,b,c} ⊆ {0,...,49}, ∃ pair with squarefree product.
+  -- This is finite and computable with Nat.instDecidablePredSquarefree.
   sorry
 
 /-!

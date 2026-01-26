@@ -260,7 +260,8 @@ def _budget_prompt(
     question_len = _utf8_len(question) if question else 0
     statement_len = _utf8_len(statement) if statement else 0
     notes_len = min(_utf8_len(notes), _MAX_NOTES_BYTES) if notes_has_content else 0
-    sources_len_total = sum(_utf8_len(source.text) for source in sources)
+    source_lens = [_utf8_len(source.text) for source in sources]
+    sources_len_total = sum(source_lens)
 
     budgets = _allocate_prompt_budgets(
         max_bytes=max_bytes,
@@ -272,7 +273,12 @@ def _budget_prompt(
         notes_has_content=notes_has_content,
         has_sources=bool(sources),
     )
-    source_budgets = _split_even_budget(budgets.sources_total, len(sources))
+    if budgets.sources_total >= sources_len_total:
+        # We have enough total budget to include all sources; keep per-source budgets
+        # large enough to avoid truncation (important for determinism in tests).
+        source_budgets = source_lens
+    else:
+        source_budgets = _split_even_budget(budgets.sources_total, len(sources))
 
     statement_text = _truncate_utf8_bytes(statement, max_bytes=budgets.statement)
     question_text = _truncate_utf8_bytes(question, max_bytes=budgets.question)
