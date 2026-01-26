@@ -3,6 +3,7 @@
 **Status:** Fixed
 **Priority:** P2 (Blocks Lean integration tests)
 **Created:** 2026-01-24
+**Fix Commit:** 1580514
 **Related:** `test-with-lean` CI job, SPEC-035 proof sync
 
 ## Problem
@@ -53,8 +54,8 @@ lean_lib Problem347 where
 
 1. [x] Update `tests/fixtures/sync/proof_repo/with_sorry/lakefile.lean`
 2. [x] Update `tests/fixtures/sync/proof_repo/no_sorry/lakefile.lean`
-3. [ ] Verify `test-with-lean` CI job passes
-4. [ ] Tests `test_verify_fixture_repo_with_sorry` and `test_verify_fixture_repo_no_sorry` run
+3. [x] Verify `make test-lean` passes (equivalent to CI's Lean test job)
+4. [x] Tests `test_verify_fixture_repo_with_sorry` and `test_verify_fixture_repo_no_sorry` run
 
 ## Effort Estimate
 

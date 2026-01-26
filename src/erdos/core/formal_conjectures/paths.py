@@ -56,3 +56,26 @@ def get_local_file_path(project_path: Path, problem_id: int) -> Path:
         Path to local Lean file (e.g., formal/lean/Erdos/Problem006.lean)
     """
     return project_path / "Erdos" / f"Problem{problem_id:03d}.lean"
+
+
+def get_imported_file_path(project_path: Path, problem_id: int) -> Path:
+    """Get path for a tracked copy of an upstream imported Lean file.
+
+    This file is treated as reference material and is intentionally stored
+    *outside* the main `Erdos` Lean library so `lake build` remains stable.
+
+    Args:
+        project_path: Path to Lean project (e.g., formal/lean)
+        problem_id: Problem number
+
+    Returns:
+        Path to imported upstream Lean file
+        (e.g., formal/lean/Upstream/FormalConjectures/ErdosProblems/6.lean)
+    """
+    return (
+        project_path
+        / "Upstream"
+        / "FormalConjectures"
+        / "ErdosProblems"
+        / f"{problem_id}.lean"
+    )

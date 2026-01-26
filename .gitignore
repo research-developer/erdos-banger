@@ -60,3 +60,4 @@ logs/*.jsonl
 formal/lean/build/
 formal/lean/.lake/
 formal/lean/lake-packages/
+formal/lean/.upstream_cache/

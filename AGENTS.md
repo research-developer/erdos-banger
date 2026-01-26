@@ -1,5 +1,18 @@
 # Repository Guidelines
 
+## Skills (Codex CLI)
+
+This repo includes custom skills in `.codex/skills/`:
+
+| Skill | Invoke | Purpose |
+|-------|--------|---------|
+| `$erdos` | Auto or `/skills` | Complete CLI reference, cost awareness, env config |
+| `$erdos-prove [id]` | `/skills` | Step-by-step workflow to prove a problem using subscription |
+
+**Key insight:** You can often avoid *additional* pay‑as‑you‑go API usage by using Codex CLI directly instead of `erdos loop run` or `erdos ask`, but costs depend on your Codex/ChatGPT plan and billing setup. The `erdos-prove` skill guides you through this “use your coding assistant + local tools” proving workflow.
+
+---
+
 ## Ralph Wiggum Loop (Autonomous Development)
 
 This repo uses the **Ralph Wiggum technique** for autonomous AI development sprints.
@@ -45,11 +58,12 @@ watch -n5 'git log --oneline -5'
 Use `make` (preferred) or `uv` directly:
 
 - `make sync`: install dependencies (uses `uv`).
-- `make ci`: fast CI check (format/lint/typecheck/cov/audit). Skips `slow`/Lean/network tests.
+- `make ci`: fast CI check (lock-check + pre-commit-ci (skips ruff/mypy) + format/lint/typecheck/cov/audit). Skips `slow`/Lean/network tests.
 - `make ci-full`: full local CI (includes `make test-all` + `make smoke`).
 - `make test`: run fast tests (skips `slow`/Lean/network).
 - `make test-all`: run all tests (includes `slow`, `requires_lean`, `requires_network`).
 - `make test-integration`, `make test-e2e`, `make test-lean`, `make test-network`: focused test targets.
+- `make pre-commit`: run repo hygiene hooks (EOF fixes, YAML checks, etc.).
 - `make smoke`: run CLI smoke test (`scripts/smoke-test.sh`).
 - Example CLI run: `uv run erdos --help`
 

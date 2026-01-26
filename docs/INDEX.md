@@ -19,6 +19,7 @@ Design history and engineering process docs (specs, ADRs, debt, bugs) are kept, 
 - [Configuration](./developer/configuration.md) (env vars, paths, caches)
 - [Testing](./developer/testing.md)
 - [CLI Reference (generated)](./developer/cli-reference.md)
+- [PDF Conversion](./developer/pdf-conversion.md) (optional `[pdf]` extra)
 
 ## Architecture
 
@@ -32,7 +33,7 @@ Design history and engineering process docs (specs, ADRs, debt, bugs) are kept, 
 |----------|-------|---------|
 | [Specs](./_specs/README.md) | Design specs + roadmap (mostly archived) | SPEC-036 |
 | [ADRs](./adr/README.md) | Architecture decision records | ADR-004 |
-| [Bugs](./_bugs/README.md) | Bug reports & adversarial reviews | BUG-033 |
+| [Bugs](./_bugs/README.md) | Bug reports & adversarial reviews | BUG-034 |
 | [Debt](./_debt/README.md) | Technical debt tracking | DEBT-108 |
 | [Vendor Docs](./vendor-docs/README.md) | External API notes | — |
 | [Ralph Wiggum Protocol](./_ralphwiggum/protocol.md) | Autonomous sprint loop | — |

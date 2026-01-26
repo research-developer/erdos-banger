@@ -19,6 +19,12 @@ make ci         # CI equivalent (format-check + lint + typecheck + coverage + au
 - `requires_lean`: needs Lean tooling available (CI runs this in a container)
 - `slow`, `e2e`: longer-running suites
 
+## End-to-End Tests
+
+E2E tests run the CLI via subprocess and validate filesystem side effects and cross-process behavior.
+
+See `docs/developer/e2e-testing.md` for the recommended scenario plan and principles.
+
 ## Local API Keys
 
 Network tests read keys from your environment. For local convenience, `.env` is loaded automatically by `pytest-dotenv`.

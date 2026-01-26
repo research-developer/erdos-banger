@@ -10,6 +10,31 @@ CLI toolkit for collaborative research on Erdős problems (upstream dataset is 1
 
 Start at `docs/INDEX.md` for getting started, developer guides, and architecture docs.
 
+## Skills (Claude Code / Codex CLI)
+
+This repo includes custom skills for both Claude Code and Codex CLI:
+
+| Location | Tool | Skills |
+|----------|------|--------|
+| `.claude/skills/` | Claude Code | `/erdos`, `/erdos-prove [id]` |
+| `.codex/skills/` | Codex CLI | `$erdos`, `$erdos-prove` |
+
+| Skill | Invoke | Purpose |
+|-------|--------|---------|
+| `erdos` | Auto or manual | Complete CLI reference, cost awareness, env config |
+| `erdos-prove [id]` | Manual | Step-by-step workflow to prove a problem using subscription |
+
+> **Note:** Skills apply to both tools; use `/skill` for Claude Code and `$skill` for Codex CLI.
+
+**Key insight:** You can often avoid *additional* pay‑as‑you‑go API usage by using Claude Code/Codex directly instead of `erdos loop run` or `erdos ask`, but costs depend on your plan and billing setup. The `erdos-prove` skill guides you through this workflow.
+
+**No pay‑as‑you‑go proving workflow (subscription-based):**
+1. `erdos lean formalize 6` - Generate Lean skeleton (FREE)
+   - Writes to `formal/lean/Erdos/ProblemXXX.lean` (e.g., Problem006.lean)
+2. Work with Claude Code/Codex to fill in the proof (SUBSCRIPTION)
+3. `erdos lean check formal/lean/Erdos/ProblemXXX.lean` - Verify compilation (FREE)
+4. Iterate with Claude Code/Codex on errors (SUBSCRIPTION)
+
 ## Build & Development Commands
 
 ```bash
@@ -23,7 +48,7 @@ uv run erdos list --status open --limit 5
 uv run erdos show 6
 
 # Full CI check (run before every commit)
-make ci                    # fast checks (skips slow/Lean/network tests)
+make ci                    # fast checks (includes lock-check + pre-commit-ci (skips ruff/mypy); skips slow/Lean/network tests)
 make ci-full               # full local CI (includes test-all + smoke)
 
 # Individual checks
@@ -38,6 +63,7 @@ make test-lean             # pytest -m "requires_lean"
 make test-network          # pytest -m "requires_network"
 make smoke                 # CLI smoke test
 make audit                 # LOC guardrails check
+make pre-commit            # repo hygiene hooks (EOF fixes, YAML checks, etc.)
 ```
 
 ## Running Tests
