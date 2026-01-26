@@ -20,7 +20,7 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 | ID | Title | Priority | Status | Component |
 |----|-------|----------|--------|-----------|
-| BUG-039 | Ingest cannot discover papers - only fetches pre-defined refs | P1 | Open | `erdos ingest` |
+| BUG-039 | Ingest cannot discover papers - only fetches pre-defined refs | P1 | Partially Fixed | `erdos ingest` |
 
 ### Invalidated Bugs
 
@@ -29,23 +29,24 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 | BUG-041 | Exa not exposed in CLI | FALSE POSITIVE - `erdos research exa search` works |
 | BUG-043 | pdfplumber not installed | FALSE POSITIVE - intentionally optional, graceful degradation |
 | BUG-045 | literature/papers/ not gitignored | FIXED - added to .gitignore |
+| BUG-046 | `erdos lean` command crashes | FALSE POSITIVE - `erdos lean --help` works; real issue is `lake` not on PATH |
 
 ### Critical Integration Issues (2026-01-26)
 
-The research workflow has **one real blocker**:
+The research workflow has **one remaining gap**:
 
-1. **Cannot discover papers** - `erdos ingest` only fetches pre-defined refs (BUG-039)
+1. **Cannot discover papers** - `erdos ingest` still only fetches pre-defined refs (BUG-039 / DEBT-110)
 
 **What Works:**
 - `erdos research exa search` - WORKS (finds papers, creates leads)
 - PDF download - WORKS (can download manually)
 - PDF conversion - WORKS (marker-pdf >= 1.0.0 supported; BUG-040 fixed in `b7ceb6f`)
-- `.env` loading - WORKS via CLI (BUG-044 only affects direct Python use)
+- Manual reference add - WORKS (`erdos refs add …`; commit `f9b8441`)
 
 **Fix Priority:**
-1. **BUG-039 (feature gap)**: Add `erdos refs add --arxiv` or `--url` command
+1. **DEBT-110 (feature gap)**: Add discovery mode / lead→manifest bridging for problems with incomplete upstream references
 
-**Impact:** Once BUG-039 is fixed, we can ingest newly discovered papers without editing the dataset.
+**Impact:** Manual ingestion is now possible; discovery is still manual (Exa/S2/zbMATH) until DEBT-110 is implemented.
 
 ## Archived Bugs
 
@@ -92,10 +93,14 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | GH-035 | Crossref/S2 clients missing JSONDecodeError handling | P1 | Fixed | (in-tree) |
 | GH-036 | Hardcoded `logs/loop` path breaks outside repo root | P2 | Fixed | (in-tree) |
 | BUG-044 | Environment variables not auto-loaded in Python scripts | P2 | Fixed | b43c3a7 |
+| BUG-041 | Exa not exposed in CLI | N/A | Invalidated | f5557d7 |
+| BUG-043 | pdfplumber not installed | N/A | Invalidated | f5557d7 |
+| BUG-045 | literature/papers/ not gitignored | P3 | Fixed | f5557d7 |
+| BUG-046 | `erdos lean` command crashes | N/A | Invalidated | 1ed768b |
 
 *Naming: GH-XXX = also tracked on GitHub Issues. BUG-XXX = local docs only. Both systems maintained in parallel.*
 
-**Next Bug ID:** BUG-046 (or GH-XXX if filing on GitHub)
+**Next Bug ID:** BUG-047 (or GH-XXX if filing on GitHub)
 
 ### Active Bug Decks
 
@@ -148,6 +153,10 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/bug-035-lean-skeleton-outdated-import.md`
 - `docs/_archive/bugs/bug-042-exa-empty-titles.md`
 - `docs/_archive/bugs/bug-044-env-not-auto-loaded.md`
+- `docs/_archive/bugs/bug-041-exa-not-exposed-in-cli.md`
+- `docs/_archive/bugs/bug-043-pdfplumber-not-installed.md`
+- `docs/_archive/bugs/bug-045-literature-papers-not-gitignored.md`
+- `docs/_archive/bugs/bug-046-erdos-lean-command-broken.md`
 - `docs/_archive/bugs/friction-2026-01-26-cli-maximization-test.md`
 
 ## Bug Priority Definitions
