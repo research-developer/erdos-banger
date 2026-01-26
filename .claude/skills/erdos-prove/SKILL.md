@@ -1,8 +1,7 @@
 ---
 name: erdos-prove
-description: Step-by-step workflow for proving an Erdos problem in Lean 4. Uses Claude Code/Codex subscription instead of API calls. Invoke with problem ID.
-argument-hint: "[problem-id]"
-disable-model-invocation: true
+description: Step-by-step workflow for proving an Erdos problem in Lean 4 using Claude Code/Codex (subscription-first). Invoke as /erdos-prove <problem-id>.
+user-invocable: true
 ---
 
 # Erdos Problem Proving Workflow
@@ -31,7 +30,7 @@ This workflow helps you prove Erdos problems in Lean 4 using your Claude Code/Co
 First, let me read the problem statement and understand what we're trying to prove.
 
 **Action:** I will read the problem details using:
-- `data/problems_enriched.yaml` for the full problem statement
+- `data/problems_enriched.yaml` (if present) or `src/erdos/data/problems_enriched.yaml` (built-in sample dataset)
 - `erdos show $ARGUMENTS` output for formatted display
 
 **Questions to answer:**
@@ -44,7 +43,7 @@ First, let me read the problem statement and understand what we're trying to pro
 Gather context from existing references without making API calls.
 
 **Local sources (FREE):**
-- `literature/manifests/problem_$ARGUMENTS.yaml` - Reference metadata
+- `literature/manifests/$(printf '%04d' $ARGUMENTS).yaml` - Reference metadata (IDs are zero-padded, e.g. 6 → 0006.yaml)
 - `literature/cache/` - Downloaded papers and sources
 - Search index: `uv run erdos search "relevant terms" --problem $ARGUMENTS`
 
@@ -60,7 +59,7 @@ Create the formal statement file:
 uv run erdos lean formalize $ARGUMENTS
 ```
 
-This creates: `formal/lean/Erdos/Problem$ARGUMENTS.lean`
+This creates: `formal/lean/Erdos/Problem$(printf '%03d' $ARGUMENTS).lean` (IDs are zero-padded, e.g. 6 → Problem006.lean)
 
 **What this generates:**
 - Import statements for Mathlib
@@ -72,8 +71,7 @@ This creates: `formal/lean/Erdos/Problem$ARGUMENTS.lean`
 Now we work together to fill in the proof. This is where your subscription pays off instead of API calls.
 
 **I will directly edit these files (no copy/paste needed):**
-- `formal/lean/Erdos/Problem$ARGUMENTS.lean` - The main proof file
-- `formal/lean/Erdos/Lemmas/*.lean` - Helper lemmas if needed
+- `formal/lean/Erdos/Problem$(printf '%03d' $ARGUMENTS).lean` - The main proof file
 - `data/problems_enriched.yaml` - Update status when solved
 
 **My workflow:**
@@ -94,7 +92,8 @@ Now we work together to fill in the proof. This is where your subscription pays 
 Check that the proof compiles:
 
 ```bash
-uv run erdos lean check formal/lean/Erdos/Problem$ARGUMENTS.lean
+PROBLEM3=$(printf '%03d' $ARGUMENTS)
+uv run erdos lean check "formal/lean/Erdos/Problem${PROBLEM3}.lean"
 ```
 
 **Possible outcomes:**
@@ -123,7 +122,8 @@ When compilation fails, show me the error output and I'll:
 uv run erdos lean formalize $ARGUMENTS
 
 # Check compilation
-uv run erdos lean check formal/lean/Erdos/Problem$ARGUMENTS.lean
+PROBLEM3=$(printf '%03d' $ARGUMENTS)
+uv run erdos lean check "formal/lean/Erdos/Problem${PROBLEM3}.lean"
 
 # View problem details
 uv run erdos show $ARGUMENTS

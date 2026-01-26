@@ -25,33 +25,24 @@ uv run erdos search "prime arithmetic"
 
 ## Cost Awareness
 
-### FREE Commands (Local Data Only)
-| Command | Purpose |
-|---------|---------|
-| `erdos list` | List problems with filters |
-| `erdos show [id]` | Display problem details |
-| `erdos search [query]` | FTS5 text search (BM25 mode) |
-| `erdos refs problem [id]` | Show local references |
-| `erdos refs zbmath` | Query zbMATH (free API) |
-| `erdos logs` | Query execution logs |
-| `erdos convert` | PDF to markdown |
-| `erdos lean init` | Initialize Lean project |
-| `erdos lean check` | Compile Lean files |
-| `erdos lean status` | Check formalization status |
-| `erdos lean formalize` | Generate Lean skeleton (template only) |
-| `erdos dashboard` | Interactive research dashboard |
+### $0 Commands (no paid APIs; some use free/rate-limited network)
+| Command | Notes |
+|---------|------|
+| `erdos list`, `erdos show`, `erdos search` | Local dataset/index (semantic search uses local `sentence-transformers`) |
+| `erdos refs problem`, `erdos logs`, `erdos dashboard` | Local files (`literature/`, `logs/`, workspace YAML) |
+| `erdos ingest` | Free/rate-limited metadata APIs (OpenAlex/arXiv/Crossref); optional PDF conversion |
+| `erdos refs s2`, `erdos refs zbmath` | Free/rate-limited APIs (Semantic Scholar, zbMATH) |
+| `erdos sync ...` | Network sync/scrape; no paid API |
+| `erdos lean init/check/status/formalize/import` | Lean tooling; downloads toolchain/mathlib as needed |
 
-### PAID Commands (External APIs)
-| Command | API Used | Cost Driver |
-|---------|----------|-------------|
-| `erdos ask` | LLM via `ERDOS_LLM_COMMAND` | Token usage |
-| `erdos loop run` | LLM via `ERDOS_LLM_COMMAND_CODE` | Iterative token usage |
-| `erdos lean prove` | Aristotle API | Per-request |
-| `erdos ingest` | OpenAlex/arXiv/Crossref | Rate-limited, mostly free |
-| `erdos refs s2` | Semantic Scholar | Rate-limited |
-| `erdos search --semantic` | Embedding generation | One-time cost |
-| `erdos research exa` | Exa API | Per-request |
-| `erdos sync website` | Web scraping | Bandwidth |
+### Potentially billable commands (depends on your configuration)
+| Command | When it can cost money |
+|---------|-------------------------|
+| `erdos ask` | Uses an external LLM unless `--no-llm` (via `ERDOS_LLM_COMMAND`) |
+| `erdos loop run` | Uses an external LLM (via `ERDOS_LLM_COMMAND` / `--llm-cmd`) |
+| `erdos convert --use-llm` / `erdos ingest --use-llm` | Marker LLM-enhanced extraction (Gemini/Claude/OpenAI, etc.) |
+| `erdos lean prove` | Aristotle API (`ARISTOTLE_API_KEY`) |
+| `erdos research exa search` | Exa Research API (`EXA_API_KEY`) |
 
 ## The Subscription Workaround
 
@@ -68,6 +59,8 @@ This workflow uses your Claude/Codex subscription instead of per-token API calls
 
 ## Command Reference
 
+**SSOT:** `docs/developer/cli-reference.md` (auto-generated from the CLI). If any example below drifts, trust the CLI reference.
+
 ### Problem Discovery
 
 ```bash
@@ -82,7 +75,7 @@ erdos show 6
 erdos search "prime arithmetic progressions"
 erdos search "chromatic number" --limit 50
 
-# Search (semantic - costs for embedding generation)
+# Search (semantic/hybrid - local embeddings; downloads model weights on first run)
 erdos search "density of primes" --semantic
 erdos search "graph coloring" --hybrid --alpha 0.7
 ```
@@ -96,6 +89,7 @@ erdos refs problem 6
 # Semantic Scholar (API, rate-limited)
 erdos refs s2 citations 10.1234/example --limit 20
 erdos refs s2 cited-by 10.1234/example
+erdos refs s2 references 10.1234/example
 
 # zbMATH (free API)
 erdos refs zbmath --msc 11B05 --year-min 2020 --limit 50
@@ -124,6 +118,9 @@ erdos lean init
 # Generate skeleton
 erdos lean formalize 6  # Creates formal/lean/Erdos/Problem006.lean
 
+# Import upstream formalization (if available)
+erdos lean import 6
+
 # Check compilation
 erdos lean check formal/lean/Erdos/Problem006.lean
 
@@ -132,6 +129,9 @@ erdos lean status 6
 
 # Automated proving (PAID - uses Aristotle API)
 erdos lean prove input.lean --output output.lean
+
+# Copilot server (requires: uv sync --extra copilot)
+erdos lean copilot serve --port 8080
 ```
 
 ### RAG Q&A
@@ -157,18 +157,38 @@ erdos loop run 6 --no-apply
 ### Research Workspace
 
 ```bash
-# Create workspace
-erdos research workspace 6
+# Initialize workspace
+erdos research init 6
+
+# Workspace convenience
+erdos research open 6
+erdos research note 6 "Tried density increment argument; stuck on lemma X"
+erdos research status 6
+erdos research synthesize 6
+
+# Keep records tidy / validated
+erdos research fmt 6
+erdos research validate 6
 
 # Manage leads
 erdos research lead add 6 --title "Green-Tao approach" --doi 10.1234/example
 erdos research lead list 6
+erdos research lead update 6 <lead-id> --status promising --priority high
 
 # Track hypotheses
-erdos research hypothesis add 6 --statement "Density argument works" --confidence 0.7
+erdos research hypothesis add 6 --statement "Density argument works" --confidence high
+erdos research hypothesis list 6 --status active
+erdos research hypothesis update 6 <hyp-id> --status refuted
+
+# Track tasks + attempts
+erdos research task add 6 --title "Read paper X" --status todo --priority medium
+erdos research task list 6 --status todo
+erdos research task update 6 <task-id> --status doing --priority high
+erdos research attempt log 6 --result failed --summary "Could not close gap in step 3" --kind manual
+erdos research attempt list 6 --result failed
 
 # Exa search (PAID)
-erdos research exa "prime gaps density arguments"
+erdos research exa search 6 "prime gaps density arguments" --max-results 10 --save-leads
 ```
 
 ### Data Sync
@@ -179,10 +199,17 @@ erdos sync submodule
 
 # Fetch from website (scraping)
 erdos sync website 6
-erdos sync all --skip-proofs
+
+# Extract proof links / sync Lean statements
+erdos sync proof 6 --dry-run
+erdos sync statements 6 --dry-run
+
+erdos sync all --problems 6 --skip-proof
 ```
 
 ## Environment Configuration
+
+**SSOT:** `.env.example` (and `docs/developer/configuration.md` for deeper details).
 
 Create `.env` from `.env.example`:
 
