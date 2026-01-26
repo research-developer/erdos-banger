@@ -1,12 +1,12 @@
 """Retrieval logic for RAG Q&A."""
 
-import re
 from pathlib import Path
 
-from erdos.core.constants import MAX_QUERY_TERMS, PREVIEW_LENGTH
+from erdos.core.constants import PREVIEW_LENGTH
 from erdos.core.models import ChunkSource, ProblemRecord
 from erdos.core.ports import SearchIndexReadPort
 from erdos.core.research.paths import get_problem_dir
+from erdos.core.search.bm25 import safe_fts5_query
 from erdos.core.search.types import SearchResult
 
 
@@ -41,26 +41,14 @@ def perform_retrieval(
     # Build a safe FTS5 query. Using an exact phrase match for the full question is
     # too strict (it often returns zero results). Instead, extract tokens from the
     # problem title + question and OR them together.
-    haystack = f"{problem.title} {question}".lower()
-    tokens = re.findall(r"[a-z0-9]+", haystack)
-
-    # De-duplicate tokens while preserving order.
-    seen: set[str] = set()
-    unique: list[str] = []
-    for token in tokens:
-        if token in seen:
-            continue
-        seen.add(token)
-        unique.append(token)
-
-    # Quote terms to avoid operators like OR/AND/NOT being interpreted.
-    terms = [f'"{t}"' for t in unique if t]
-
-    # Guard against empty query (no alphanumeric tokens)
-    if not terms:
+    #
+    # NOTE: We explicitly disable advanced syntax preservation here because this
+    # query is programmatically constructed from free text (question). Users may
+    # include stray quotes/operators which should not be treated as FTS5 syntax.
+    haystack = f"{problem.title} {question}"
+    query = safe_fts5_query(haystack, allow_advanced_syntax=False)
+    if query == '""':
         return ([], None)
-
-    query = " OR ".join(terms[:MAX_QUERY_TERMS])
 
     # Search with problem_id filter to bias towards this problem
     results = index.search(

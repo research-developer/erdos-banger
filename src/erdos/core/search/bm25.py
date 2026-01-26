@@ -18,8 +18,8 @@ if TYPE_CHECKING:
     from erdos.core.search.db import DatabaseManager
 
 
-def safe_fts5_query(query: str) -> str:
-    """Escape a query for safe FTS5 matching while preserving useful syntax.
+def safe_fts5_query(query: str, *, allow_advanced_syntax: bool = True) -> str:
+    """Escape a query for safe FTS5 matching while optionally preserving syntax.
 
     FTS5 has special syntax that can cause errors when passed raw (e.g., hyphens
     interpreted as NOT operator). This function preserves useful FTS5 features
@@ -30,12 +30,18 @@ def safe_fts5_query(query: str) -> str:
     - Phrase matching: "arithmetic progressions" matches exact phrase
     - Boolean operators: word1 OR word2, word1 AND word2
 
-    Escaped:
-    - Hyphens in words (sum-free -> "sum" OR "free")
-    - Standalone special chars
+    Normalized:
+    - Hyphens in words are treated as separators to avoid NOT interpretation
+      (e.g., `sum-free` → `sum free` in advanced mode, and → `"sum" OR "free"` in
+      plain mode).
+    - Non-alphanumeric characters are dropped in plain mode.
 
     Args:
         query: Raw user query
+        allow_advanced_syntax: If True, preserve phrase/prefix/boolean syntax in
+            queries that appear to use it. If False, treat the query as plain
+            text and tokenize/quote for maximum safety (recommended for
+            programmatically-constructed queries).
 
     Returns:
         Safe FTS5 query
@@ -46,7 +52,7 @@ def safe_fts5_query(query: str) -> str:
     has_boolean = bool(re.search(r"\b(AND|OR|NOT)\b", query))
 
     # If using advanced syntax, do minimal escaping to preserve intent
-    if has_phrase or has_prefix or has_boolean:
+    if allow_advanced_syntax and (has_phrase or has_prefix or has_boolean):
         # Replace hyphens with spaces (to avoid NOT interpretation)
         # but preserve the rest of the query structure
         safe_query = re.sub(r"(?<=[a-zA-Z])-(?=[a-zA-Z])", " ", query)

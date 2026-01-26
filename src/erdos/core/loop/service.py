@@ -27,7 +27,7 @@ from erdos.core.loop.result import LoopResult, LoopStatus
 from erdos.core.loop.runner import run_loop
 from erdos.core.models import CLIOutput
 from erdos.core.research.loop_integration import write_attempt_from_loop_result
-from erdos.core.research.paths import get_problem_dir
+from erdos.core.research.paths import get_problem_dir, get_repo_root
 
 
 if TYPE_CHECKING:
@@ -184,6 +184,7 @@ def execute_proof_loop(
 
     # Run the loop
     try:
+        log_dir = get_repo_root(repo_root) / "logs" / "loop"
         result = run_loop(
             problem=problem,
             file_path=file_path,
@@ -192,6 +193,7 @@ def execute_proof_loop(
             llm_command=llm_command,
             no_apply=no_apply,
             rag_chunks=rag_chunks,
+            log_dir=log_dir,
         )
     except Exception as e:  # final safety net; convert unexpected failures to CLIOutput
         logger.exception("Loop execution failed")

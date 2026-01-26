@@ -8,6 +8,7 @@ API Reference: https://api.semanticscholar.org/api-docs/
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -304,7 +305,17 @@ class SemanticScholarClient:
                 params={"fields": self.PAPER_FIELDS},
                 headers=self._get_headers(),
             )
-            data = response.json()
+            try:
+                data = response.json()
+            except (json.JSONDecodeError, requests.exceptions.JSONDecodeError):
+                snippet = response.text[:200].replace("\n", "\\n")
+                logger.error(
+                    "Semantic Scholar invalid JSON for %s (status %d): %s",
+                    url,
+                    response.status_code,
+                    snippet,
+                )
+                raise
             paper = S2Paper.from_api_response(data)
 
             if use_cache:
@@ -357,7 +368,17 @@ class SemanticScholarClient:
                 params={"fields": fields, "limit": str(limit)},
                 headers=self._get_headers(),
             )
-            data = response.json()
+            try:
+                data = response.json()
+            except (json.JSONDecodeError, requests.exceptions.JSONDecodeError):
+                snippet = response.text[:200].replace("\n", "\\n")
+                logger.error(
+                    "Semantic Scholar invalid JSON for %s (status %d): %s",
+                    url,
+                    response.status_code,
+                    snippet,
+                )
+                raise
 
             citations = [
                 CitationContext.from_api_response(item) for item in data.get("data", [])
@@ -415,7 +436,17 @@ class SemanticScholarClient:
                 params={"fields": fields, "limit": str(limit)},
                 headers=self._get_headers(),
             )
-            data = response.json()
+            try:
+                data = response.json()
+            except (json.JSONDecodeError, requests.exceptions.JSONDecodeError):
+                snippet = response.text[:200].replace("\n", "\\n")
+                logger.error(
+                    "Semantic Scholar invalid JSON for %s (status %d): %s",
+                    url,
+                    response.status_code,
+                    snippet,
+                )
+                raise
 
             references = [
                 S2Reference.from_api_response(item) for item in data.get("data", [])
