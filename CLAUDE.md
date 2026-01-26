@@ -12,20 +12,25 @@ Start at `docs/INDEX.md` for getting started, developer guides, and architecture
 
 ## Skills (Claude Code / Codex CLI)
 
-This repo includes custom skills for Claude Code and Codex CLI in `.claude/skills/`:
+This repo includes custom skills for both Claude Code and Codex CLI:
+
+| Location | Tool | Skills |
+|----------|------|--------|
+| `.claude/skills/` | Claude Code | `/erdos`, `/erdos-prove [id]` |
+| `.codex/skills/` | Codex CLI | `$erdos`, `$erdos-prove` |
 
 | Skill | Invoke | Purpose |
 |-------|--------|---------|
-| `/erdos` | Auto or manual | Complete CLI reference, cost awareness, env config |
-| `/erdos-prove [id]` | Manual | Step-by-step workflow to prove a problem using subscription |
+| `erdos` | Auto or manual | Complete CLI reference, cost awareness, env config |
+| `erdos-prove [id]` | Manual | Step-by-step workflow to prove a problem using subscription |
 
-**Key insight:** You can bypass API costs by using Claude Code/Codex directly instead of `erdos loop run` or `erdos ask`. The `/erdos-prove` skill guides you through this workflow.
+**Key insight:** You can bypass API costs by using Claude Code/Codex directly instead of `erdos loop run` or `erdos ask`. The `erdos-prove` skill guides you through this workflow.
 
 **Cost-free proving workflow:**
 1. `erdos lean formalize 6` - Generate Lean skeleton (FREE)
-2. Work with Claude Code to fill in the proof (SUBSCRIPTION)
+2. Work with Claude Code/Codex to fill in the proof (SUBSCRIPTION)
 3. `erdos lean check <file>` - Verify compilation (FREE)
-4. Iterate with Claude Code on errors (SUBSCRIPTION)
+4. Iterate with Claude Code/Codex on errors (SUBSCRIPTION)
 
 ## Build & Development Commands
 

@@ -1,5 +1,18 @@
 # Repository Guidelines
 
+## Skills (Codex CLI)
+
+This repo includes custom skills in `.codex/skills/`:
+
+| Skill | Invoke | Purpose |
+|-------|--------|---------|
+| `$erdos` | Auto or `/skills` | Complete CLI reference, cost awareness, env config |
+| `$erdos-prove [id]` | `/skills` | Step-by-step workflow to prove a problem using subscription |
+
+**Key insight:** You can bypass API costs by using Codex CLI directly instead of `erdos loop run` or `erdos ask`. The `erdos-prove` skill guides you through this cost-free proving workflow.
+
+---
+
 ## Ralph Wiggum Loop (Autonomous Development)
 
 This repo uses the **Ralph Wiggum technique** for autonomous AI development sprints.
