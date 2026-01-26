@@ -62,3 +62,6 @@ formal/lean/.lake/
 formal/lean/lake-packages/
 formal/lean/.upstream_cache/
 literature/papers/
+
+# Lean run logs
+formal/lean/logs/
