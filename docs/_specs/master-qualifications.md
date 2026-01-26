@@ -58,6 +58,16 @@ The master draft describes many capabilities. Here's what we're **actually build
 
 **Decision:** We ship when `erdos show 6 && erdos lean init && erdos lean formalize 6 && erdos lean check` works end-to-end. That's the real v1.0 milestone.
 
+### V4.2+ (Lead Enrichment Pipeline)
+
+| Component | Scope | Notes |
+|-----------|-------|-------|
+| `erdos research lead enrich` | Fetch metadata for leads | Uses FallbackProvider (OpenAlex → Crossref) |
+| `erdos research lead ingest` | Add leads to manifest | Deduplication by DOI/arXiv ID |
+| Unified pipeline docs | Architecture diagrams | Full discovery → proof flow documented |
+
+**Gap addressed:** Discovery tools (Exa, zbMATH, S2) find papers and extract DOIs, but those leads weren't connected to the enrichment/manifest pipeline. SPEC-036 bridges this gap.
+
 ---
 
 ## 2) True Vertical Slice (Day 1-3)
