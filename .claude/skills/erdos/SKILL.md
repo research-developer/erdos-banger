@@ -234,22 +234,42 @@ ARISTOTLE_API_KEY=arstl-your-key-here
 
 ## Working with Claude Code Directly
 
-When you want to use your subscription instead of API calls:
+When you want to use your subscription instead of API calls, **I can read AND edit any file in this repo directly.**
+
+### What I Can Edit (Your Subscription = $0 API Cost)
+
+| File Type | Location | What I Can Do |
+|-----------|----------|---------------|
+| **Lean proofs** | `formal/lean/Erdos/*.lean` | Write tactics, fix errors, add lemmas |
+| **Problem data** | `data/problems_enriched.yaml` | Add/edit problem metadata, refs, tags |
+| **Literature manifests** | `literature/manifests/*.yaml` | Add references, update metadata |
+| **Research notes** | `literature/cache/*.md` | Analyze papers, write summaries |
+| **Config files** | `.env`, `pyproject.toml` | Adjust settings, add API keys |
+| **Source code** | `src/erdos/**/*.py` | Fix bugs, add features |
+| **Tests** | `tests/**/*.py` | Write test cases |
 
 ### For Proving Problems
 
 1. **Ask me to read the problem:** "Read Problem 6 and explain the mathematical statement"
 2. **Generate skeleton:** `uv run erdos lean formalize 6`
-3. **Ask me to read and work on the Lean file:** "Help me fill in the proof for formal/lean/Erdos/Problem006.lean"
-4. **I'll edit the file directly** using the Edit tool
+3. **Ask me to work on the Lean file:** "Edit formal/lean/Erdos/Problem006.lean and fill in the proof"
+4. **I'll edit the file directly** - no copy/paste needed
 5. **Check compilation:** `uv run erdos lean check formal/lean/Erdos/Problem006.lean`
-6. **Iterate with me** on any errors
+6. **Iterate with me** - show me errors, I'll edit the file again
 
 ### For Research
 
-1. **Ask me to search the codebase:** "What references do we have for Problem 6?"
+1. **Ask me to search:** "What references do we have for Problem 6?"
 2. **I'll read files directly** from `literature/manifests/` and `data/`
 3. **Ask me to analyze papers:** I can read PDFs and markdown in `literature/cache/`
+4. **Ask me to add references:** "Add this paper to the manifest for Problem 6"
+
+### For Data Management
+
+1. **Edit problem metadata:** "Update Problem 6's status to 'partially_solved'"
+2. **Add tags:** "Add the 'number-theory' tag to Problem 6"
+3. **Manage references:** "Add this DOI to Problem 6's references"
+4. **Rebuild index:** `uv run erdos search --build-index`
 
 ### For Understanding the Codebase
 
@@ -257,17 +277,18 @@ When you want to use your subscription instead of API calls:
 2. **Ask about specific commands:** I can read the command implementations
 3. **Ask about data:** I can query the local YAML files and SQLite index
 
-## File Locations
+## File Locations (All Readable & Editable)
 
-| Path | Contents |
-|------|----------|
-| `data/problems_enriched.yaml` | Problem data (titles, statements, refs) |
-| `data/erdosproblems/` | Upstream submodule (metadata) |
-| `literature/manifests/` | Reference metadata per problem |
-| `literature/cache/` | Downloaded arXiv sources, PDFs |
-| `index/` | SQLite FTS5 search index |
-| `formal/lean/` | Lean 4 project and problem files |
-| `logs/runs.jsonl` | Execution history |
+| Path | Contents | Editable? |
+|------|----------|-----------|
+| `formal/lean/Erdos/*.lean` | Lean proof files | **YES** - I write proofs here |
+| `data/problems_enriched.yaml` | Problem data (titles, statements, refs) | **YES** - I can update metadata |
+| `data/erdosproblems/` | Upstream submodule | NO - sync only, don't edit |
+| `literature/manifests/*.yaml` | Reference metadata per problem | **YES** - I can add refs |
+| `literature/cache/` | Downloaded arXiv sources, PDFs | **YES** - I can add notes |
+| `index/erdos.sqlite` | SQLite FTS5 search index | NO - rebuilt by CLI |
+| `logs/runs.jsonl` | Execution history | NO - append-only log |
+| `.env` | API keys and config | **YES** - I can help configure |
 
 ## Global Options
 

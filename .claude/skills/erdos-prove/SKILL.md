@@ -71,12 +71,17 @@ This creates: `formal/lean/Erdos/Problem$ARGUMENTS.lean`
 
 Now we work together to fill in the proof. This is where your subscription pays off instead of API calls.
 
-**I will:**
+**I will directly edit these files (no copy/paste needed):**
+- `formal/lean/Erdos/Problem$ARGUMENTS.lean` - The main proof file
+- `formal/lean/Erdos/Lemmas/*.lean` - Helper lemmas if needed
+- `data/problems_enriched.yaml` - Update status when solved
+
+**My workflow:**
 1. Read the generated Lean file
 2. Analyze the theorem statement
 3. Propose proof strategies
 4. Write Lean tactics step by step
-5. Edit the file directly using the Edit tool
+5. **Edit the file directly** - you just watch and run `lean check`
 
 **Proof development strategies:**
 - Break into lemmas if complex
