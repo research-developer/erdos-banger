@@ -23,6 +23,8 @@ uv run erdos show 6
 uv run erdos search "prime arithmetic"
 ```
 
+> **Tip:** If `erdos` is installed on your PATH, you can run the same commands without `uv run`.
+
 ## Cost Awareness
 
 ### $0 Commands (no paid APIs; some use free/rate-limited network)
