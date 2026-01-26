@@ -1,14 +1,17 @@
 schema_version: 1
 problem_id: 848
 id: lead_20260126T143808Z_79eb73
-title: Sawhney's 4-page note on density bound
-status: new
+title: "Sawhney's Problem 848 note (standalone PDF)"
+status: investigating
 priority: high
-tags: []
+tags: [density-bound, mod-25, main-result]
 source:
   doi: null
   arxiv_id: null
-  url: null
-notes: ''
+  url: https://www.math.columbia.edu/~msawhney/Problem_848.pdf
+notes: |
+  Sawhney proved: for sufficiently large N, if |A| ≥ (1/25 - c)N for some c>0,
+  then A ⊆ {n ≡ 7 mod 25} or {n ≡ 18 mod 25}.
+  This resolves the conjecture for large N. Need explicit N_0 for finite verification.
 created_at: '2026-01-26T14:38:08Z'
 updated_at: '2026-01-26T14:38:08Z'
