@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-26
 **Severity:** P1 (High - blocks research workflow)
-**Status:** Open
+**Status:** Partially Fixed
 **Component:** `erdos ingest`, `erdos refs`
 
 ## Summary
@@ -50,7 +50,19 @@ Research workflow should support:
 
 ## Workaround
 
-Currently none within the CLI. Must manually download and extract:
+Manual add is now supported in the CLI. Workflow:
+
+```bash
+# 1) Add a discovered identifier to the local dataset
+uv run erdos refs add 848 --arxiv 2511.16072
+
+# 2) Ingest as usual (fetch metadata + download/extract)
+uv run erdos ingest 848 --force
+```
+
+Discovery/search is still manual (Exa/S2/zbMATH), but you no longer need to hand-edit the dataset or manifest.
+
+If you want to bypass the ingest pipeline entirely, you can still manually download and extract:
 
 ### For arXiv papers (PREFERRED - no PDF conversion needed):
 ```bash
