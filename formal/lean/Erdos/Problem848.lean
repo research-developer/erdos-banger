@@ -225,8 +225,15 @@ theorem no_triple_works_50 : noTripleWorksIn 50 := by native_decide
 def DiagonalCandidates (N : ℕ) : Finset ℕ :=
   (Finset.range N).filter (fun n => ¬ Squarefree (n * n + 1))
 
-/-- Compute: DiagonalCandidates(50) = {7, 18, 32, 43} -/
-lemma diag_cand_50 : DiagonalCandidates 50 = {7, 18, 32, 43} := by native_decide
+/-- Compute: DiagonalCandidates(50) = {7, 18, 32, 38, 41, 43}
+
+    - 7² + 1 = 50 = 2 × 5²
+    - 18² + 1 = 325 = 5² × 13
+    - 32² + 1 = 1025 = 5² × 41
+    - 38² + 1 = 1445 = 5 × 17²
+    - 41² + 1 = 1682 = 2 × 29²
+    - 43² + 1 = 1850 = 2 × 5² × 37 -/
+lemma diag_cand_50 : DiagonalCandidates 50 = {7, 18, 32, 38, 41, 43} := by native_decide
 
 /-- Any set with the property is contained in DiagonalCandidates. -/
 lemma prop_implies_diag_candidates (A : Finset ℕ) (N : ℕ) (hAsub : A ⊆ Finset.range N)
