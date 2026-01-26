@@ -49,6 +49,12 @@ docs = [
     "mkdocs-material>=9.7.0",
     "pymdown-extensions>=10.14.0",
 ]
+explore = [
+    # Computational exploration of conjectures before Lean formalization
+    # See: https://github.com/The-Obstacle-Is-The-Way/erdos-banger/issues/32
+    "sympy>=1.13",      # Symbolic math: primes, factorization, number theory
+    "networkx>=3.4",    # Graph theory: chromatic numbers, planarity, etc.
+]
 
 [project.scripts]
 erdos = "erdos.cli:app"
@@ -216,6 +222,14 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "erdos.lean_copilot.*"
 disallow_untyped_decorators = false  # FastAPI decorators lack type annotations
+
+[[tool.mypy.overrides]]
+module = ["sympy", "sympy.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["networkx", "networkx.*"]
+ignore_missing_imports = true
 
 [tool.pydantic-mypy]
 init_forbid_extra = true
