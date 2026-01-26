@@ -19,9 +19,9 @@ This workflow helps you prove Erdos problems in Lean 4 using your Claude Code/Co
 │  1. Understand   → Read problem statement           (FREE)      │
 │  2. Research     → Gather literature context        (FREE)      │
 │  3. Formalize    → Generate Lean skeleton           (FREE)      │
-│  4. Prove        → Work with Claude Code            (SUBSCRIPTION)│
+│  4. Prove        → Work with Claude Code            (SUB)       │
 │  5. Verify       → Check Lean compilation           (FREE)      │
-│  6. Iterate      → Fix errors with Claude Code      (SUBSCRIPTION)│
+│  6. Iterate      → Fix errors with Claude Code      (SUB)       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
