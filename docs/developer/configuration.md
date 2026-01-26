@@ -45,6 +45,19 @@ Use the provided template:
 cp .env.example .env
 ```
 
+### Direct Python Usage
+
+If you import `erdos` modules directly in Python (i.e., not via the `erdos` CLI entrypoint), `.env` is **not** loaded automatically.
+
+Call:
+
+```python
+from erdos.core.config import initialize_environment
+initialize_environment()
+```
+
+before constructing clients/config (e.g., `ExaClient()`, `AppConfig.from_env()`), or set the needed environment variables yourself.
+
 ## Environment Variables (Core)
 
 | Name | Meaning | Default / Notes |
