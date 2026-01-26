@@ -92,7 +92,7 @@ markdown_extensions:
       permalink: true
 
 nav:
-  - Home: INDEX.md
+  - Home: index.md
   - Getting Started:
       - Quickstart: getting-started/quickstart.md
       - Usage Guide: getting-started/usage.md

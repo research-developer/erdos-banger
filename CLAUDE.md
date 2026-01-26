@@ -8,7 +8,7 @@ CLI toolkit for collaborative research on Erdős problems (upstream dataset is 1
 
 ## Documentation
 
-Start at `docs/INDEX.md` for getting started, developer guides, and architecture docs.
+Start at `docs/index.md` for getting started, developer guides, and architecture docs.
 
 ## Skills (Claude Code / Codex CLI)
 

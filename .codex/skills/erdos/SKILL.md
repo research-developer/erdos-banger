@@ -305,7 +305,7 @@ When you want to use your subscription instead of API calls, **I can read AND ed
 
 ### For Understanding the Codebase
 
-1. **Ask about architecture:** I can read `docs/INDEX.md` and explore `src/erdos/`
+1. **Ask about architecture:** I can read `docs/index.md` and explore `src/erdos/`
 2. **Ask about specific commands:** I can read the command implementations
 3. **Ask about data:** I can query the local YAML files and SQLite index
 

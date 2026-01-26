@@ -48,7 +48,7 @@ watch -n5 'git log --oneline -5'
   - `src/erdos/mcp/`: MCP server adapter (optional dependency).
 - `tests/`: pytest suite (`unit/`, `integration/`, `e2e/`) and `tests/fixtures/`.
 - `docs/`: specs, ADRs, bug/debt decks, vendor docs, and process docs.
-- `docs/INDEX.md`: documentation landing page (getting started, developer guides, architecture, process docs).
+- `docs/index.md`: documentation landing page (getting started, developer guides, architecture, process docs).
 - `formal/lean/`: Lean 4 project scaffold used by Lean integration.
 - `scripts/`: helper scripts (e.g., `scripts/smoke-test.sh`, LLM wrappers).
 - `logs/ralph/`: per-iteration Ralph Wiggum logs (gitignored; safe to clear between runs).

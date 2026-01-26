@@ -310,7 +310,7 @@ The fancy stuff comes after the plumbing works.
 
 ## Questions?
 
-- **Start here:** `docs/INDEX.md`
+- **Start here:** `docs/index.md`
 - **Full architecture:** `docs/_specs/master-vision.md`
 - **Design history:** `docs/_specs/README.md`
 - **Bugs/debt tracking:** `docs/_bugs/README.md`, `docs/_debt/README.md`
