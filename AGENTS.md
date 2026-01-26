@@ -86,6 +86,7 @@ watch -n5 'git log --oneline -5'
 - `docs/`: specs, ADRs, bug/debt decks, vendor docs, and process docs.
 - `docs/index.md`: documentation landing page (getting started, developer guides, architecture, process docs).
 - `formal/lean/`: Lean 4 project scaffold used by Lean integration.
+  - **Elan environment:** `lake` command may not be in PATH. Use `source ~/.elan/env && lake build` or `~/.elan/bin/lake` or `uv run erdos lean check`.
 - `scripts/`: helper scripts (e.g., `scripts/smoke-test.sh`, LLM wrappers).
 - `logs/ralph/`: per-iteration Ralph Wiggum logs (gitignored; safe to clear between runs).
 

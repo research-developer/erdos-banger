@@ -94,7 +94,22 @@ uv run pytest -m "requires_lean"
 
 ### Lean Notes
 
-If `make test-all` fails on `tests/integration/test_lean_runner.py::TestLeanRunnerIntegration::test_check_formal_project_compiles`,
+**Elan Environment:** The `lake` command (Lean's build tool) is managed by elan and may not be in PATH by default. Use one of these approaches:
+
+```bash
+# Option 1: Source elan environment first (recommended)
+source ~/.elan/env && lake build Erdos.Problem848
+
+# Option 2: Use full path (works without sourcing)
+~/.elan/bin/lake build Erdos.Problem848
+
+# From the formal/lean directory:
+cd formal/lean && source ~/.elan/env && lake build
+```
+
+> **Note:** The `erdos lean check` CLI command has a bug (AttributeError). Use `lake` directly until fixed.
+
+**Mathlib Cache:** If `make test-all` fails on `tests/integration/test_lean_runner.py::TestLeanRunnerIntegration::test_check_formal_project_compiles`,
 pre-cache mathlib:
 
 ```bash
