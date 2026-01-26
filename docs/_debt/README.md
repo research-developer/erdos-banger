@@ -14,15 +14,17 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
+**None.** All technical debt has been resolved.
+
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| DEBT-110 | Add paper discovery mode to ingest | P2 | Phase 1 Done |
+| DEBT-110 | Add paper discovery mode to ingest | P2 | Superseded by SPEC-036 |
 
-**Note:** DEBT-110 Phase 1 (`erdos refs add`) is complete. Phases 2-3 (auto-discovery) are feature work, not debt.
+**Note:** DEBT-110 Phase 1 (`erdos refs add`) is complete. Phases 2-3 are new feature work fully specified in SPEC-036.
 
 Decks:
 
-- `docs/_debt/debt-110-ingest-discovery-mode.md`
+- `docs/_debt/debt-110-ingest-discovery-mode.md` → See SPEC-036
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
