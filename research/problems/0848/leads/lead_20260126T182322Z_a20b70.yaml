@@ -1,0 +1,20 @@
+schema_version: 1
+problem_id: 848
+id: lead_20260126T182322Z_a20b70
+title: How to detect square free numbers?
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://math.stackexchange.com/questions/4088146/how-to-detect-square-free-numbers
+notes: "[Exa] **Teams**\n\nQ&A for work\n\nConnect and share knowledge within a single\
+  \ location that is structured and easy to search.\n\n[Learn more about Teams] \n\
+  \n# [How to detect square free numbers? \\[closed\\]] \n\n[Ask Question] \n\nAsked4\
+  \ years, 3 months ago\n\nModified [4 years, 3 months ago] \n\nViewed\n906 times\n\
+  \n2\n\n$\\\\begingroup$\n\nThis may seem like a weird question, but how to find\
+  \ the numbers with non-exponential prime factors i.e. numbers which specifically\
+  \ have primes that occur"
+created_at: '2026-01-26T18:23:22Z'
+updated_at: '2026-01-26T18:23:22Z'

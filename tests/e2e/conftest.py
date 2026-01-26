@@ -35,6 +35,14 @@ def cli_runner(
         env["ERDOS_DATA_PATH"] = str(data_dir)
         env["ERDOS_LOAD_DOTENV"] = "0"
         env.pop("ERDOS_REPO_ROOT", None)
+        # E2E tests should be deterministic and avoid paid/network integrations.
+        for key in (
+            "ARISTOTLE_API_KEY",
+            "EXA_API_KEY",
+            "OPENALEX_API_KEY",
+            "SEMANTIC_SCHOLAR_API_KEY",
+        ):
+            env.pop(key, None)
         result = subprocess.run(  # noqa: S603
             [uv_exe, "run", "erdos", *args],
             capture_output=True,

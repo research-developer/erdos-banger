@@ -45,12 +45,16 @@ def test_no_network_workflow_creates_index_research_and_logs(
     noted = cli_runner("--json", "research", "note", "6", "e2e scratchpad entry")
     note_payload = json.loads(noted.stdout)
     assert note_payload["success"] is True
-    assert Path(note_payload["data"]["scratchpad_path"]).exists()
+    scratchpad_path = Path(note_payload["data"]["scratchpad_path"])
+    assert scratchpad_path.exists()
+    assert "e2e scratchpad entry" in scratchpad_path.read_text(encoding="utf-8")
 
     status = cli_runner("--json", "research", "status", "6")
     status_payload = json.loads(status.stdout)
     assert status_payload["success"] is True
-    assert status_payload["data"]["counts"]["scratchpad_entries"] >= 1
+    assert status_payload["data"]["files"]["scratchpad"] is True
+    for key in ("leads", "attempts", "hypotheses", "tasks"):
+        assert key in status_payload["data"]["counts"]
 
     synthesized = cli_runner("--json", "research", "synthesize", "6")
     synth_payload = json.loads(synthesized.stdout)

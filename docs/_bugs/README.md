@@ -18,7 +18,38 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 ## Active Bugs
 
-None.
+| ID | Title | Priority | Status | Component |
+|----|-------|----------|--------|-----------|
+| BUG-039 | Ingest cannot discover papers - only fetches pre-defined refs | P1 | Open | `erdos ingest` |
+| BUG-040 | Marker PDF conversion broken (ConfigParser API change) | P1 | Open | `erdos convert` |
+| BUG-042 | Exa API returns empty titles | P2 | Open | `exa.py` |
+| BUG-044 | Environment variables not auto-loaded in Python scripts | P2 | Open | `config.py` |
+
+### Invalidated Bugs
+
+| ID | Title | Reason |
+|----|-------|--------|
+| BUG-041 | Exa not exposed in CLI | FALSE POSITIVE - `erdos research exa search` works |
+| BUG-043 | pdfplumber not installed | FALSE POSITIVE - intentionally optional, graceful degradation |
+| BUG-045 | literature/papers/ not gitignored | FIXED - added to .gitignore |
+
+### Critical Integration Issues (2026-01-26)
+
+The research workflow has **two real blockers**:
+
+1. **Cannot discover papers** - `erdos ingest` only fetches pre-defined refs (BUG-039)
+2. **Cannot convert PDFs** - Marker API changed, needs 1-line fix (BUG-040)
+
+**What Works:**
+- `erdos research exa search` - WORKS (finds papers, creates leads)
+- PDF download - WORKS (can download manually)
+- `.env` loading - WORKS via CLI (BUG-044 only affects direct Python use)
+
+**Fix Priority:**
+1. **BUG-040 (1-line fix)**: Change `ConfigParser()` → `ConfigParser(cli_options={})`
+2. **BUG-039 (feature gap)**: Add `erdos refs add --arxiv` or `--url` command
+
+**Impact:** Once BUG-040 is fixed, we can convert downloaded PDFs to text for RAG.
 
 ## Archived Bugs
 
@@ -65,7 +96,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 
 *Naming: GH-XXX = also tracked on GitHub Issues. BUG-XXX = local docs only. Both systems maintained in parallel.*
 
-**Next Bug ID:** BUG-039 (or GH-XXX if filing on GitHub)
+**Next Bug ID:** BUG-045 (or GH-XXX if filing on GitHub)
 
 ### Active Bug Decks
 

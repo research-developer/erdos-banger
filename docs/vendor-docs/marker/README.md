@@ -4,8 +4,26 @@ Marker converts PDFs into Markdown (and other formats) using local ML models and
 
 ## Project / Docs
 
-- Repo: https://github.com/datalab-to/marker
-- Quickstart + settings: https://github.com/datalab-to/marker
+- Repo: https://github.com/VikParuchuri/marker
+- PyPI: https://pypi.org/project/marker-pdf/
+
+## ⚠️ Breaking Change (marker-pdf >= 1.0.0)
+
+**BUG-040:** The `ConfigParser` API changed in marker 1.0.0+.
+
+Old API (pre-1.0):
+```python
+from marker.config.parser import ConfigParser
+config = ConfigParser()  # No args
+```
+
+New API (1.0.0+):
+```python
+from marker.config.parser import ConfigParser
+config = ConfigParser(cli_options={})  # Requires dict
+```
+
+Our code at `src/erdos/core/pdf/converter.py:227` needs updating.
 
 ## Runtime Settings (Environment Variables)
 

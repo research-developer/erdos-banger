@@ -1,0 +1,20 @@
+schema_version: 1
+problem_id: 848
+id: lead_20260126T182322Z_feda30
+title: Square-free values of polynomials
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2303.06610'
+  url: https://arxiv.org/abs/2303.06610
+notes: "[Exa] # Mathematics > Number Theory\n\n**arXiv:2303.06610** (math)\n\n\\[Submitted\
+  \ on 12 Mar 2023\\]\n\n# Title:Square-free values of polynomials\n\nAuthors: [Prem\
+  \ Prakash Pandey] \n\nView a PDF of the paper titled Square-free values of polynomials,\
+  \ by Prem Prakash Pandey\n\n[View PDF] \n\n> Abstract:It is conjectured that all\
+  \ separable polynomials with integers coefficients, satisfying some local conditions,\
+  \ take infinitely many square free values on integer arguments. But not a single\
+  \ polynomial of"
+created_at: '2026-01-26T18:23:22Z'
+updated_at: '2026-01-26T18:23:22Z'

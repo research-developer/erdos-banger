@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import codecs
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from erdos.core.constants import ASK_PROMPT_MAX_BYTES
@@ -116,14 +117,17 @@ def _build_sections(
     return sections
 
 
-def _budget_prompt(
-    problem: ProblemRecord,
-    sources: list[SearchResult],
-    question: str,
-    *,
-    max_bytes: int,
-) -> str:
-    # Compute the byte overhead of the fixed prompt scaffold (all variable texts empty).
+@dataclass(frozen=True)
+class _PromptBudgets:
+    statement: int
+    question: int
+    notes: int
+    sources_total: int
+
+
+def _prompt_overhead(
+    problem: ProblemRecord, sources: list[SearchResult]
+) -> tuple[int, list[str], bool]:
     notes_has_content = bool(problem.notes)
     overhead_sections = _build_sections(
         problem=problem,
@@ -134,57 +138,146 @@ def _budget_prompt(
         question_text="",
     )
     overhead_bytes = _utf8_len("\n".join(overhead_sections))
+    return overhead_bytes, overhead_sections, notes_has_content
+
+
+def _top_up_budget(*, available: int, current: int, max_len: int) -> tuple[int, int]:
+    if available <= 0 or current >= max_len:
+        return available, current
+    take = min(available, max_len - current)
+    return available - take, current + take
+
+
+def _ensure_min_statement_budget(
+    budgets: _PromptBudgets,
+    *,
+    statement_len: int,
+) -> _PromptBudgets:
+    if statement_len <= 0:
+        return budgets
+    minimum = min(statement_len, _MIN_STATEMENT_BYTES)
+    if budgets.statement >= minimum:
+        return budgets
+
+    need = minimum - budgets.statement
+
+    take_from_notes = min(need, budgets.notes)
+    need -= take_from_notes
+    notes_budget = budgets.notes - take_from_notes
+    statement_budget = budgets.statement + take_from_notes
+
+    take_from_sources = min(need, budgets.sources_total)
+    statement_budget += take_from_sources
+    sources_budget = budgets.sources_total - take_from_sources
+
+    return _PromptBudgets(
+        statement=statement_budget,
+        question=budgets.question,
+        notes=notes_budget,
+        sources_total=sources_budget,
+    )
+
+
+def _allocate_prompt_budgets(
+    *,
+    max_bytes: int,
+    overhead_bytes: int,
+    question_len: int,
+    statement_len: int,
+    notes_len: int,
+    sources_len_total: int,
+    notes_has_content: bool,
+    has_sources: bool,
+) -> _PromptBudgets:
+    available = max(0, max_bytes - overhead_bytes)
+
+    question_budget = min(question_len, available)
+    available -= question_budget
+
+    notes_budget = 0
+    if notes_has_content and available > 0:
+        notes_target = available // 5  # ~20% of remaining budget
+        notes_budget = min(notes_len, notes_target)
+        available -= notes_budget
+
+    sources_budget_total = 0
+    if has_sources and available > 0:
+        sources_target = available // 2
+        sources_budget_total = min(sources_len_total, sources_target)
+        available -= sources_budget_total
+
+    statement_budget = min(statement_len, available)
+    available -= statement_budget
+
+    available, sources_budget_total = _top_up_budget(
+        available=available, current=sources_budget_total, max_len=sources_len_total
+    )
+    available, notes_budget = _top_up_budget(
+        available=available, current=notes_budget, max_len=notes_len
+    )
+    available, statement_budget = _top_up_budget(
+        available=available, current=statement_budget, max_len=statement_len
+    )
+
+    budgets = _PromptBudgets(
+        statement=statement_budget,
+        question=question_budget,
+        notes=notes_budget,
+        sources_total=sources_budget_total,
+    )
+    return _ensure_min_statement_budget(budgets, statement_len=statement_len)
+
+
+def _split_even_budget(total: int, n: int) -> list[int]:
+    if n <= 0:
+        return []
+    if total <= 0:
+        return [0 for _ in range(n)]
+    base, extra = divmod(total, n)
+    return [base + (1 if i < extra else 0) for i in range(n)]
+
+
+def _budget_prompt(
+    problem: ProblemRecord,
+    sources: list[SearchResult],
+    question: str,
+    *,
+    max_bytes: int,
+) -> str:
+    overhead_bytes, overhead_sections, notes_has_content = _prompt_overhead(
+        problem, sources
+    )
 
     if max_bytes <= overhead_bytes:
         # Extremely small budget: return the scaffold truncated hard (best-effort).
         scaffold = "\n".join(overhead_sections)
         return _truncate_utf8_bytes(scaffold, max_bytes=max_bytes)
 
-    available = max_bytes - overhead_bytes
-
     statement = problem.statement
     notes = problem.notes or ""
 
-    statement_budget = min(_utf8_len(statement), available)
-    available -= statement_budget
-
-    question_budget = min(_utf8_len(question), available)
-    available -= question_budget
-
-    # Ensure statement/question are not accidentally budgeted down to empty when possible.
+    # Effective sizes (note: we cap notes by design to avoid flooding the prompt).
     question_len = _utf8_len(question) if question else 0
     statement_len = _utf8_len(statement) if statement else 0
+    notes_len = min(_utf8_len(notes), _MAX_NOTES_BYTES) if notes_has_content else 0
+    sources_len_total = sum(_utf8_len(source.text) for source in sources)
 
-    if question and question_budget < min(question_len, _MIN_QUESTION_BYTES):
-        need = min(question_len, _MIN_QUESTION_BYTES) - question_budget
-        take = min(need, statement_budget)
-        statement_budget -= take
-        question_budget += take
+    budgets = _allocate_prompt_budgets(
+        max_bytes=max_bytes,
+        overhead_bytes=overhead_bytes,
+        question_len=question_len,
+        statement_len=statement_len,
+        notes_len=notes_len,
+        sources_len_total=sources_len_total,
+        notes_has_content=notes_has_content,
+        has_sources=bool(sources),
+    )
+    source_budgets = _split_even_budget(budgets.sources_total, len(sources))
 
-    if statement and statement_budget < min(statement_len, _MIN_STATEMENT_BYTES):
-        need = min(statement_len, _MIN_STATEMENT_BYTES) - statement_budget
-        take = min(need, question_budget)
-        question_budget -= take
-        statement_budget += take
-
-    notes_budget = 0
-    if notes_has_content and available > 0:
-        notes_budget = min(_utf8_len(notes), available, _MAX_NOTES_BYTES)
-        available -= notes_budget
-
-    source_budgets: list[int] = []
-    if sources and available > 0:
-        base = available // len(sources)
-        extra = available % len(sources)
-        for i in range(len(sources)):
-            source_budgets.append(base + (1 if i < extra else 0))
-    else:
-        source_budgets = [0 for _ in sources]
-
-    statement_text = _truncate_utf8_bytes(statement, max_bytes=statement_budget)
-    question_text = _truncate_utf8_bytes(question, max_bytes=question_budget)
+    statement_text = _truncate_utf8_bytes(statement, max_bytes=budgets.statement)
+    question_text = _truncate_utf8_bytes(question, max_bytes=budgets.question)
     notes_text = (
-        _truncate_utf8_bytes(notes, max_bytes=notes_budget)
+        _truncate_utf8_bytes(notes, max_bytes=budgets.notes)
         if notes_has_content
         else "(none)"
     )
