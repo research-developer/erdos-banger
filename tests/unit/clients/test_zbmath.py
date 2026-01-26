@@ -312,6 +312,27 @@ class TestZbMathClient:
         assert entry is None
 
     @responses.activate
+    def test_get_by_zbl_id_identifier_format_404(self) -> None:
+        """Returns None when identifier-format lookup gets 404 (BUG-033 regression)."""
+        # Identifier format (with ".") uses the search endpoint, not direct document lookup.
+        # The search endpoint can return 404 for non-existent entries.
+        responses.add(
+            responses.GET,
+            "https://api.zbmath.org/v1/document/_search",
+            json={
+                "result": [],
+                "status": {"execution_bool": False, "status_code": 404},
+            },
+            status=404,
+        )
+
+        config = ZbMathConfig()
+        client = ZbMathClient(config)
+        entry = client.get_by_zbl_id("9999.99999", use_cache=False)
+
+        assert entry is None
+
+    @responses.activate
     def test_get_by_doi_success(self) -> None:
         """Gets entry by DOI successfully."""
         responses.add(

@@ -442,7 +442,10 @@ class ZbMathClient:
 
             return entry
 
-        except requests.HTTPError:
+        except requests.HTTPError as e:
+            if e.response is not None and e.response.status_code == 404:
+                self._cache_zbl_entry(cache_key, None, use_cache=use_cache)
+                return None
             raise
 
     def get_by_doi(self, doi: str, *, use_cache: bool = True) -> ZbMathEntry | None:
@@ -570,7 +573,12 @@ class ZbMathClient:
 
             return entries
 
-        except requests.HTTPError:
+        except requests.HTTPError as e:
+            # 404 for search means no results found (invalid MSC code, etc.)
+            if e.response is not None and e.response.status_code == 404:
+                if use_cache:
+                    self._cache.set(cache_key, {"entries": []}, prefix="msc_")
+                return []
             raise
 
     def search_by_title(
@@ -623,5 +631,10 @@ class ZbMathClient:
 
             return entries
 
-        except requests.HTTPError:
+        except requests.HTTPError as e:
+            # 404 for search means no results found
+            if e.response is not None and e.response.status_code == 404:
+                if use_cache:
+                    self._cache.set(cache_key, {"entries": []}, prefix="title_")
+                return []
             raise
