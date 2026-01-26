@@ -285,51 +285,6 @@ theorem problem_848_N50 :
   exact no_triple_in_candidates s hs_sub_cand hs_card hs_prop
 
 /-!
-## Structural Observations
-
-Key facts about cross-products between A₇ and A₁₈:
-- If a ≡ 7 (mod 25) and b ≡ 18 (mod 25), then ab ≡ 126 ≡ 1 (mod 25)
-- So ab + 1 ≡ 2 (mod 25), meaning 25 ∤ (ab + 1)
-- This means cross-products are NOT automatically non-squarefree
-
-IMPORTANT: Mixing A₇ and A₁₈ CAN work for some pairs!
-- {32, 43} has the property: 32×43+1 = 1377 = 3⁴×17 (NOT squarefree)
-- But {7, 18} does NOT: 7×18+1 = 127 (prime, squarefree)
-
-The conjecture is about SIZE, not containment.
--/
-
-/-- When a ≡ 7 and b ≡ 18 (mod 25), ab + 1 ≢ 0 (mod 25). -/
-lemma cross_product_not_div_25 (a b : ℕ) (ha : a % 25 = 7) (hb : b % 25 = 18) :
-    (a * b + 1) % 25 ≠ 0 := by
-  have h1 : a * b % 25 = (a % 25) * (b % 25) % 25 := Nat.mul_mod a b 25
-  rw [ha, hb] at h1
-  have h2 : (7 : ℕ) * 18 % 25 = 1 := by native_decide
-  rw [h2] at h1
-  omega
-
-/-- Key computational fact: 7 × 18 + 1 = 127 is squarefree (it's prime). -/
-lemma seven_times_eighteen_plus_one_squarefree : Squarefree (7 * 18 + 1) := by
-  native_decide
-
-/-- {7, 18} does NOT have the property because 7×18+1=127 is squarefree. -/
-lemma pair_7_18_fails :
-    ¬ NonSquarefreeProductProp ({7, 18} : Finset ℕ) := by
-  native_decide
-
-/-- However, {32, 43} DOES have the property (mixing works for this pair!).
-    32×32+1 = 1025 = 5²×41, 32×43+1 = 1377 = 3⁴×17, 43×43+1 = 1850 = 2×5²×37 -/
-lemma pair_32_43_works :
-    NonSquarefreeProductProp ({32, 43} : Finset ℕ) := by
-  native_decide
-
-/-- A₇(100) = {7, 32, 57, 82} -/
-lemma A7_100 : A₇ 100 = {7, 32, 57, 82} := by native_decide
-
-/-- A₁₈(100) = {18, 43, 68, 93} -/
-lemma A18_100 : A₁₈ 100 = {18, 43, 68, 93} := by native_decide
-
-/-!
 ## Sawhney's Theorem (Research Level)
 
 The following theorem requires formalizing Sawhney's density argument from
@@ -338,22 +293,9 @@ arXiv:2511.16072. The proof uses:
 2. Density increment arguments
 3. Möbius function analysis
 
-Key references found via Exa Research:
-- Helfgott, "On the Square-Free Sieve" (arXiv:math/0309109)
-- Granville, "AEC Allows Us to Count Squarefrees" (IMRN 1998)
-- Poonen, "Squarefree Values of Multivariable Polynomials"
+This is beyond simple tactic automation and requires careful formalization
+of analytic number theory techniques.
 -/
-
-/-- Axiom: Sawhney's density bound.
-    For large N, elements outside A₇ ∪ A₁₈ are rare in any set with the property.
-    Specifically: if |A*| > 0 (A* = A \ (A₇ ∪ A₁₈)), then |A|/N ≤ 0.04.
-    This is the core sieve estimate from arXiv:2511.16072, Proposition 5.1. -/
-axiom sawhney_density_bound :
-  ∃ N₀ : ℕ, ∀ N ≥ N₀, ∀ A : Finset ℕ,
-    A ⊆ Finset.range N →
-    NonSquarefreeProductProp A →
-    (∃ x ∈ A, x % 25 ≠ 7 ∧ x % 25 ≠ 18) →
-    (A.card : ℝ) / N ≤ 0.04
 
 /-- Sawhney's theorem: For large N, optimal sets are contained in A₇ or A₁₈. -/
 theorem sawhney_main (c : ℝ) (hc : c > 0) :
@@ -362,50 +304,12 @@ theorem sawhney_main (c : ℝ) (hc : c > 0) :
       NonSquarefreeProductProp A →
       (A.card : ℝ) ≥ (1/25 - c) * N →
       (A ⊆ A₇ N ∨ A ⊆ A₁₈ N) := by
-  -- From sawhney_density_bound, get N₀
-  obtain ⟨N₀, h_density⟩ := sawhney_density_bound
-  use N₀
-  intro N hNge A hAsub hAprop hSize
-  -- Case 1: All elements are in A₇ ∪ A₁₈
-  by_cases h_all_in_union : ∀ a ∈ A, a % 25 = 7 ∨ a % 25 = 18
-  · -- Use no-mixing argument
-    -- For large N, we need a more general version of containment_small
-    -- This requires showing the no-mixing property holds for all N
-    sorry
-  · -- Case 2: Some element is outside A₇ ∪ A₁₈
-    push_neg at h_all_in_union
-    -- By density bound, |A|/N ≤ 0.04, which contradicts |A|/N ≥ 1/25 - c
-    have hA_star : ∃ x ∈ A, x % 25 ≠ 7 ∧ x % 25 ≠ 18 := by
-      obtain ⟨x, hx, hx_not⟩ := h_all_in_union
-      use x, hx
-      push_neg at hx_not
-      exact hx_not
-    have h_bound := h_density N hNge A hAsub hAprop hA_star
-    -- 1/25 = 0.04, so 1/25 - c < 0.04 for small c
-    -- This is a contradiction when c is small enough
-    sorry
+  sorry  -- Requires Sawhney's density argument
 
 /-- The main conjecture: A₇ (or A₁₈) achieves the maximum. -/
 theorem problem_848 (N : ℕ) :
     ∀ A : Finset ℕ, A ⊆ Finset.range N → NonSquarefreeProductProp A →
       A.card ≤ (A₇ N).card := by
   sorry
-
-/-!
-## Verified Cases
-
-We have computationally verified the conjecture for N ≤ 50.
-Extension to larger N requires either:
-1. More computational power (native_decide scales poorly)
-2. Formalizing Sawhney's density argument
--/
-
-/-- Verified for N = 50 -/
-theorem problem_848_verified_50 : ∀ A : Finset ℕ, A ⊆ Finset.range 50 →
-    NonSquarefreeProductProp A → A.card ≤ 2 := by
-  intro A hAsub hAprop
-  have := problem_848_N50 A hAsub hAprop
-  rw [A₇_50_card] at this
-  exact this
 
 end Erdos.Problem848
