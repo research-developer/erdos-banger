@@ -1,29 +1,28 @@
 ---
 name: erdos-prove
-description: Step-by-step workflow for proving an Erdos problem in Lean 4 using Codex CLI (subscription-first). Invoke with $erdos-prove or /skills to select.
-metadata:
-  short-description: Prove Erdos problems in Lean 4
+description: Step-by-step workflow for proving an Erdos problem in Lean 4 using Claude Code/Codex (subscription-first). Invoke as /erdos-prove <problem-id>.
+user-invocable: true
 ---
 
 # Erdos Problem Proving Workflow
 
 **Target Problem:** $ARGUMENTS
 
-This workflow helps you prove Erdos problems in Lean 4 using your Codex CLI subscription instead of paid API calls.
+This workflow helps you prove Erdos problems in Lean 4 using your Claude Code/Codex subscription instead of paid API calls.
 
 ## Overview
 
-```
-+---------------------------------------------------------------------+
-|                    COST-FREE PROVING WORKFLOW                       |
-+---------------------------------------------------------------------+
-|  1. Understand   -> Read problem statement           (FREE)         |
-|  2. Research     -> Gather literature context        (FREE)         |
-|  3. Formalize    -> Generate Lean skeleton           (FREE)         |
-|  4. Prove        -> Work with Codex                  (SUBSCRIPTION) |
-|  5. Verify       -> Check Lean compilation           (FREE)         |
-|  6. Iterate      -> Fix errors with Codex            (SUBSCRIPTION) |
-+---------------------------------------------------------------------+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                    COST-FREE PROVING WORKFLOW                   │
+├─────────────────────────────────────────────────────────────────┤
+│  1. Understand   → Read problem statement           (FREE)      │
+│  2. Research     → Gather literature context        (FREE)      │
+│  3. Formalize    → Generate Lean skeleton           (FREE)      │
+│  4. Prove        → Work with Claude Code            (SUB)       │
+│  5. Verify       → Check Lean compilation           (FREE)      │
+│  6. Iterate      → Fix errors with Claude Code      (SUB)       │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## Step 1: Understand the Problem
@@ -44,13 +43,18 @@ First, let me read the problem statement and understand what we're trying to pro
 Gather context from existing references without making API calls.
 
 **Local sources (FREE):**
-- `literature/manifests/$(printf '%04d' $ARGUMENTS).yaml` - Reference metadata (IDs are zero-padded, e.g. 6 -> 0006.yaml)
+- `literature/manifests/$(printf '%04d' $ARGUMENTS).yaml` - Reference metadata (IDs are zero-padded, e.g. 6 → 0006.yaml)
 - `literature/cache/` - Downloaded papers and sources
-- Search index: `uv run erdos search "relevant terms" --problem $ARGUMENTS`
+- `research/problems/$(printf '%04d' $ARGUMENTS)/` - Research workspace (leads, hypotheses, tasks)
+- Search index: `uv run erdos search "relevant terms"`
 
 **Optional API sources (rate-limited, mostly free):**
 - `uv run erdos refs zbmath --msc <relevant-code>` - zbMATH (free)
 - `uv run erdos refs s2 citations <doi>` - Semantic Scholar (rate-limited)
+- `uv run erdos ingest $ARGUMENTS --source openalex` - Fetch refs by DOI/arXiv ID (free)
+
+**Optional AI-powered discovery (PAID):**
+- `uv run erdos research exa search $ARGUMENTS "relevant query" --save-leads` - Exa AI search
 
 ## Step 3: Generate Lean Skeleton
 
@@ -60,7 +64,7 @@ Create the formal statement file:
 uv run erdos lean formalize $ARGUMENTS
 ```
 
-This creates: `formal/lean/Erdos/Problem$(printf '%03d' $ARGUMENTS).lean` (IDs are zero-padded, e.g. 6 -> Problem006.lean)
+This creates: `formal/lean/Erdos/Problem$(printf '%03d' $ARGUMENTS).lean` (IDs are zero-padded, e.g. 6 → Problem006.lean)
 
 **What this generates:**
 - Import statements for Mathlib
@@ -160,10 +164,10 @@ uv run erdos logs --problem-id $ARGUMENTS
 
 ## Example Conversation
 
-```
-You: $erdos-prove 6
+```text
+You: /erdos-prove 6
 
-Codex: Let me start the proving workflow for Problem 6.
+Claude: Let me start the proving workflow for Problem 6.
 
 [Step 1] Reading problem statement...
 Problem 6 is about... [explains math]
@@ -186,7 +190,7 @@ Let me edit the file to add the proof...
 
 You: [pastes error output]
 
-Codex: I see the issue - we need to import Data.Nat.Prime.
+Claude: I see the issue - we need to import Data.Nat.Prime.
 Let me fix that...
 [Makes edit]
 
@@ -197,7 +201,7 @@ Try again: uv run erdos lean check formal/lean/Erdos/Problem006.lean
 
 | Traditional Approach | Subscription Approach |
 |---------------------|----------------------|
-| `erdos loop run 6` | Work with Codex CLI |
+| `erdos loop run 6` | Work with Claude Code |
 | ~$0.50-5.00 per run | $0 (subscription) |
 | Automated but costly | Interactive but free |
 | Limited iterations | Unlimited iterations |

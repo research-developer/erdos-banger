@@ -195,6 +195,32 @@ erdos research attempt list 6 --result failed
 erdos research exa search 6 "prime gaps density arguments" --max-results 10 --save-leads
 ```
 
+### Literature Pipeline (Discovery → Enrichment → Manifest)
+
+**Current flow:**
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  DISCOVERY (find papers)              │  LOOKUP (enrich metadata)           │
+├───────────────────────────────────────┼─────────────────────────────────────┤
+│  erdos research exa search (PAID)     │  erdos ingest (reads problem.refs)  │
+│  erdos refs zbmath (FREE)             │    └─ FallbackProvider:             │
+│  erdos refs s2 (FREE, rate-limited)   │        OpenAlex → Crossref → arXiv  │
+│  erdos search --semantic (FREE)       │                                     │
+├───────────────────────────────────────┴─────────────────────────────────────┤
+│  STORAGE                                                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  research/problems/XXXX/meta.yaml → leads (from Exa --save-leads)           │
+│  literature/manifests/XXXX.yaml   → enriched refs (from erdos ingest)       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Known gap (Issue #34):** Exa discovers papers with DOIs/arXiv IDs, but there's no command yet to:
+1. Enrich leads via OpenAlex/Crossref lookup
+2. Add enriched leads to the literature manifest
+
+**Workaround:** Manually add DOIs to problem references in `data/problems_enriched.yaml`, then run `erdos ingest`.
+
 ### Data Sync
 
 ```bash
@@ -209,6 +235,17 @@ erdos sync proof 6 --dry-run
 erdos sync statements 6 --dry-run
 
 erdos sync all --problems 6 --skip-proof
+```
+
+### Dashboard & Status
+
+```bash
+# Overview dashboard
+erdos dashboard
+
+# Problem status
+erdos research status 6
+erdos lean status 6
 ```
 
 ## Environment Configuration

@@ -45,11 +45,16 @@ Gather context from existing references without making API calls.
 **Local sources (FREE):**
 - `literature/manifests/$(printf '%04d' $ARGUMENTS).yaml` - Reference metadata (IDs are zero-padded, e.g. 6 → 0006.yaml)
 - `literature/cache/` - Downloaded papers and sources
-- Search index: `uv run erdos search "relevant terms" --problem $ARGUMENTS`
+- `research/problems/$(printf '%04d' $ARGUMENTS)/` - Research workspace (leads, hypotheses, tasks)
+- Search index: `uv run erdos search "relevant terms"`
 
 **Optional API sources (rate-limited, mostly free):**
 - `uv run erdos refs zbmath --msc <relevant-code>` - zbMATH (free)
 - `uv run erdos refs s2 citations <doi>` - Semantic Scholar (rate-limited)
+- `uv run erdos ingest $ARGUMENTS --source openalex` - Fetch refs by DOI/arXiv ID (free)
+
+**Optional AI-powered discovery (PAID):**
+- `uv run erdos research exa search $ARGUMENTS "relevant query" --save-leads` - Exa AI search
 
 ## Step 3: Generate Lean Skeleton
 
