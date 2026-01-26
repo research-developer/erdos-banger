@@ -10,6 +10,23 @@ CLI toolkit for collaborative research on Erdős problems (upstream dataset is 1
 
 Start at `docs/INDEX.md` for getting started, developer guides, and architecture docs.
 
+## Skills (Claude Code / Codex CLI)
+
+This repo includes custom skills for Claude Code and Codex CLI in `.claude/skills/`:
+
+| Skill | Invoke | Purpose |
+|-------|--------|---------|
+| `/erdos` | Auto or manual | Complete CLI reference, cost awareness, env config |
+| `/erdos-prove [id]` | Manual | Step-by-step workflow to prove a problem using subscription |
+
+**Key insight:** You can bypass API costs by using Claude Code/Codex directly instead of `erdos loop run` or `erdos ask`. The `/erdos-prove` skill guides you through this workflow.
+
+**Cost-free proving workflow:**
+1. `erdos lean formalize 6` - Generate Lean skeleton (FREE)
+2. Work with Claude Code to fill in the proof (SUBSCRIPTION)
+3. `erdos lean check <file>` - Verify compilation (FREE)
+4. Iterate with Claude Code on errors (SUBSCRIPTION)
+
 ## Build & Development Commands
 
 ```bash
