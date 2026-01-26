@@ -28,4 +28,3 @@ The `[pdf]` extra installs `marker-pdf`, which is GPL-licensed.
 - Distributing builds that include GPL components may trigger GPL obligations.
 
 If you cannot or do not want to use the `[pdf]` extra, run ingestion in metadata-only mode (`uv run erdos ingest --no-pdf`) or skip PDF handling entirely (`uv run erdos ingest --no-download` / `--no-network`).
-
