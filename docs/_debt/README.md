@@ -17,12 +17,18 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
 | DEBT-108 | End-to-end test coverage is thin | P2 | Open |
-| DEBT-109 | `erdos ask` prompt lacks budget guardrails | P2 | Open |
+| DEBT-110 | Add paper discovery mode to ingest | P1 | Open |
+| DEBT-111 | Skill invocation discipline | P3 | Open |
+| DEBT-112 | Prefer arXiv source over PDF conversion | P2 | Open |
+| DEBT-113 | `erdos ask` does not persist LLM responses | P1 | Open |
 
 Decks:
 
 - `docs/_debt/debt-108-e2e-test-coverage-thin.md`
-- `docs/_debt/debt-109-ask-rag-prompt-budgeting.md`
+- `docs/_debt/debt-110-ingest-discovery-mode.md`
+- `docs/_debt/debt-111-skill-invocation-discipline.md`
+- `docs/_debt/debt-112-prefer-arxiv-source-over-pdf.md`
+- `docs/_debt/debt-113-ask-response-persistence.md`
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -139,11 +145,12 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-105 | Print statements in core modules | P4 | Resolved | 0200a99 |
 | DEBT-106 | Broad exception catches without justification | P3 | Fixed | 0200a99 |
 | DEBT-107 | Missing public function docstrings | P4 | Fixed | 0200a99 |
+| DEBT-109 | `erdos ask` prompt lacks budget guardrails | P2 | Fixed | bc0dd70 |
 | DEBT-093 | Exa client infrastructure duplication | P2 | Fixed | 9f10546 |
 | DEBT-094 | Semantic Scholar client LOC violation | P3 | Superseded | 9f10546 |
 | DEBT-095 | zbMATH client LOC violation | P3 | Superseded | 9f10546 |
 
-**Next Debt ID:** DEBT-110
+**Next Debt ID:** DEBT-114
 
 ### Archived Debt Decks
 
@@ -241,6 +248,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-096-search-command-msc-loc.md`
 - `docs/_archive/debt/debt-097-test-suite-consistency.md`
 - `docs/_archive/debt/debt-098-std4-repo-rename.md`
+- `docs/_archive/debt/debt-109-ask-rag-prompt-budgeting.md`
 - `docs/_archive/debt/debt-099-lean-fixture-lakefile-syntax.md`
 - `docs/_archive/debt/debt-100-test-env-file-loading.md`
 - `docs/_archive/debt/debt-101-lean-mathlib-version-upgrade.md`

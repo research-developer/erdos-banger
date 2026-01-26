@@ -1,8 +1,10 @@
 # DEBT-109: `erdos ask` prompt lacks budget guardrails
 
 **Priority:** P2 (Material quality gap; should be scheduled soon)
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-26
+**Fixed:** 2026-01-26
+**Commit:** bc0dd70
 
 ## Summary
 
