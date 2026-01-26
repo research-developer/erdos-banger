@@ -116,7 +116,7 @@ The above flow only works when `problem.references[]` has DOIs/arXiv IDs. Many p
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────┐
-│                              FULL RESEARCH PIPELINE                            │
+│                              FULL RESEARCH PIPELINE                           │
 ├───────────────────────────────────────────────────────────────────────────────┤
 │                                                                               │
 │  1. PROBLEM SELECTION                                                         │
@@ -124,41 +124,41 @@ The above flow only works when `problem.references[]` has DOIs/arXiv IDs. Many p
 │                    │                                                          │
 │                    ▼                                                          │
 │  2. DISCOVERY (find related literature)                                       │
-│     ├── erdos research exa search 848 "query" --save-leads  (AI-powered)     │
-│     ├── erdos refs zbmath --msc 11B05                       (math-specific)  │
-│     └── erdos refs s2 citations <doi>                       (citation chain) │
+│     ├── erdos research exa search 848 "query" --save-leads  (AI-powered)      │
+│     ├── erdos refs zbmath --msc 11B05                       (math-specific)   │
+│     └── erdos refs s2 citations <doi>                       (citation chain)  │
 │                    │                                                          │
 │                    ▼ (DOIs/arXiv IDs captured in leads)                       │
 │  3. ENRICHMENT (get full metadata)                                            │
 │     erdos research lead enrich 848                                            │
-│         └── FallbackProvider: OpenAlex → Crossref → arXiv                    │
+│         └── FallbackProvider: OpenAlex → Crossref → arXiv                     │
 │                    │                                                          │
 │                    ▼ (enriched with title, authors, abstract)                 │
 │  4. MANIFEST (deduplicated storage)                                           │
 │     erdos research lead ingest 848                                            │
-│         └── literature/manifests/0848.yaml                                   │
+│         └── literature/manifests/0848.yaml                                    │
 │                    │                                                          │
 │                    ▼                                                          │
 │  5. INDEXING (searchable)                                                     │
 │     erdos search --build-index                                                │
-│         └── index/erdos.sqlite (FTS5 + optional vectors)                     │
+│         └── index/erdos.sqlite (FTS5 + optional vectors)                      │
 │                    │                                                          │
 │                    ▼                                                          │
 │  6. RAG Q&A (understand the problem)                                          │
-│     erdos ask 848 "What techniques have been tried?"                         │
+│     erdos ask 848 "What techniques have been tried?"                          │
 │                    │                                                          │
 │                    ▼                                                          │
 │  7. FORMALIZATION (Lean skeleton)                                             │
 │     erdos lean formalize 848                                                  │
-│         └── formal/lean/Erdos/Problem848.lean                                │
+│         └── formal/lean/Erdos/Problem848.lean                                 │
 │                    │                                                          │
 │                    ▼                                                          │
 │  8. PROVING (iterative)                                                       │
-│     erdos loop run 848  OR  Claude Code / Codex CLI (subscription)           │
+│     erdos loop run 848  OR  Claude Code / Codex CLI (subscription)            │
 │                    │                                                          │
 │                    ▼                                                          │
 │  9. VERIFICATION                                                              │
-│     erdos lean check formal/lean/Erdos/Problem848.lean                       │
+│     erdos lean check formal/lean/Erdos/Problem848.lean                        │
 │                                                                               │
 └───────────────────────────────────────────────────────────────────────────────┘
 ```
