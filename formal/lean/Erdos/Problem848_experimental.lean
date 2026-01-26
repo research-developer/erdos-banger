@@ -436,16 +436,20 @@ theorem sawhney_main (c : ℝ) (hc : c > 0) (hc_small : c < 0.002) :
     obtain ⟨x, hx, hx_not⟩ := h_all_in_union
     have hA_star : ∃ x ∈ A, x % 25 ≠ 7 ∧ x % 25 ≠ 18 := ⟨x, hx, hx_not⟩
     have h_bound := h_density_star N hN1 A hAsub hAprop hA_star
-    -- |A|/N ≤ 0.04 but |A|/N ≥ 1/25 - c = 0.04 - c
-    -- Need to show 0.04 - c > 0.04 is false, but actually 0.04 - c < 0.04
-    -- Wait, the bound is 0.04 and we need |A|/N ≥ 0.04 - c
-    -- This is NOT a contradiction unless c ≤ 0
-    -- The issue: 1/25 = 0.04 exactly, so 1/25 - c < 0.04 when c > 0
-    -- So there's no contradiction here!
-    -- Actually checking the paper: they use η = 0.002 and show density < 0.04 - η
-    -- Our axiom says ≤ 0.04, but we need < 0.04 - c for some c > 0
-    -- Need to strengthen the axiom
-    sorry
+    -- |A|/N ≤ 0.038 but |A|/N ≥ 1/25 - c = 0.04 - c > 0.038 when c < 0.002
+    exfalso
+    have h_size_bound : (A.card : ℝ) / N ≥ 1/25 - c := by
+      have hN_pos : (0 : ℝ) < N := by
+        by_contra hN_le
+        push_neg at hN_le
+        have : N = 0 := Nat.eq_zero_of_le_zero (Nat.lt_one_iff.mp (Nat.lt_of_le_of_lt (Nat.cast_le.mp hN_le) (by norm_num : (0:ℝ) < 1)))
+        simp [this] at hSize hc
+        linarith
+      exact (div_le_iff hN_pos).mpr hSize
+    have h_contra : (1 : ℝ)/25 - c > 0.038 := by
+      have : (1 : ℝ)/25 = 0.04 := by norm_num
+      linarith
+    linarith
 
 /-- The main conjecture: A₇ (or A₁₈) achieves the maximum. -/
 theorem problem_848 (N : ℕ) :
