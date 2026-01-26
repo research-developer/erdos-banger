@@ -207,3 +207,52 @@ def test_prompt_instructions_for_citation():
     # Should include citation instructions
     assert "cite" in prompt.lower() or "[n]" in prompt or "[1]" in prompt.lower()
     assert "Instructions:" in prompt or "instructions:" in prompt.lower()
+
+
+def test_prompt_budgeting_enforces_max_bytes() -> None:
+    """Prompt budgeting should hard-cap output size while preserving key sections."""
+    problem = ProblemRecord(
+        id=6,
+        title="Test",
+        statement="Test statement " * 50,
+        status=ProblemStatus.OPEN,
+        notes="Notes " * 200,
+    )
+    sources = [
+        SearchResult(
+            chunk_id="chunk_1",
+            text="A" * 5000,
+            snippet="...",
+            score=10.0,
+            source_type=ChunkSource.PROBLEM_STATEMENT,
+            problem_id=6,
+            reference_doi=None,
+        ),
+        SearchResult(
+            chunk_id="chunk_2",
+            text="B" * 5000,
+            snippet="...",
+            score=9.0,
+            source_type=ChunkSource.PROBLEM_NOTES,
+            problem_id=6,
+            reference_doi=None,
+        ),
+    ]
+    question = "What is known?"
+    max_bytes = 1200
+
+    prompt = build_prompt(
+        problem=problem,
+        sources=sources,
+        question=question,
+        max_bytes=max_bytes,
+    )
+
+    assert len(prompt.encode("utf-8")) <= max_bytes
+    assert "Statement:" in prompt
+    assert "Sources (cite as [n]):" in prompt
+    assert "Question:" in prompt
+    assert "What is known?" in prompt
+    assert "[1]" in prompt
+    assert "[2]" in prompt
+    assert "truncated" in prompt.lower()

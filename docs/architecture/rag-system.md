@@ -118,6 +118,13 @@ The prompt is deterministic and includes:
 - The user question
 - Explicit instructions to cite sources
 
+#### Prompt Budgeting (Hard Cap)
+
+To avoid downstream LLM context-limit failures when sources contain large blobs (e.g., PDF extractions or long synthesis), `erdos ask` enforces a hard prompt-size cap:
+
+- Constant: `ASK_PROMPT_MAX_BYTES` (`src/erdos/core/constants.py`)
+- Behavior: truncates statement/notes/source texts as needed (UTF‑8 byte budget) and appends `(...truncated...)` when content is cut
+
 ### LLM Execution
 
 Implementation: `src/erdos/core/ask/llm.py`
