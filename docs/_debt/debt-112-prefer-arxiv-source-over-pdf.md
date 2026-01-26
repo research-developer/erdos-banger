@@ -1,7 +1,9 @@
 # DEBT-112: Prefer arXiv Source Over PDF Conversion
 
 **Created:** 2026-01-26
-**Priority:** P2
+**Priority:** P3
+**Status:** Fixed
+**Fixed:** 2026-01-26
 **Component:** `erdos ingest`, `erdos.core.ingest`
 
 ## Summary
@@ -49,8 +51,8 @@ The pipeline works, but could be improved:
 
 - [x] `erdos refs add 848 --arxiv 2511.16072` works ✅
 - [x] Ingest downloads tarball when arXiv ID present ✅
-- [ ] PDF fallback documented in `erdos ingest --help`
-- [ ] Skills updated to recommend arXiv source path
+- [x] PDF fallback documented in `erdos ingest --help` ✅
+- [x] Skills updated to recommend arXiv source path ✅
 
 ## Related
 

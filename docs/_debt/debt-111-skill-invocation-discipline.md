@@ -2,6 +2,8 @@
 
 **Created:** 2026-01-26
 **Priority:** P3
+**Status:** Fixed
+**Fixed:** 2026-01-26
 **Type:** Process/Workflow
 
 ## Problem
@@ -40,6 +42,6 @@ This is a **process/discipline** issue, not a code bug. The skill documentation 
 
 ## Action Items
 
-- [ ] Add CLAUDE.md reminder about invoking skills first
-- [ ] Consider auto-invoking `/erdos` skill when CLI errors occur
-- [ ] Add "did you invoke /erdos?" to troubleshooting checklist
+- [x] Add CLAUDE.md reminder about invoking skills first ✅
+- [ ] Consider auto-invoking `/erdos` skill when CLI errors occur (deferred - requires Claude Code changes)
+- [x] Add "did you invoke /erdos?" to troubleshooting checklist ✅

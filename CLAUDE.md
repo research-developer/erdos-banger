@@ -33,6 +33,8 @@ This repo includes custom skills for both Claude Code and Codex CLI:
 
 > **Note:** Skills apply to both tools; use `/skill` for Claude Code and `$skill` for Codex CLI.
 
+> **Important:** When working with the erdos CLI, invoke `/erdos` first to load the full CLI reference before running commands. This prevents false negatives from incomplete knowledge.
+
 **Key insight:** You can often avoid *additional* pay‑as‑you‑go API usage by using Claude Code/Codex directly instead of `erdos loop run` or `erdos ask`, but costs depend on your plan and billing setup. The `erdos-prove` skill guides you through this workflow.
 
 **No pay‑as‑you‑go proving workflow (subscription-based):**
@@ -229,6 +231,15 @@ def test_help_shows_flag(strip_ansi: Callable[[str], str]) -> None:
 1. Prefer fixture repos under `tests/fixtures/` for deterministic tests
 2. If you must use external repos, add a comment with DEBT ticket reference
 3. Check for both old and new file conventions when asserting
+
+### Troubleshooting Checklist
+
+If you're having trouble with the erdos CLI:
+
+1. **Did you invoke `/erdos`?** The skill has the complete CLI reference
+2. **Check `--help`:** `uv run erdos <command> --help` shows all options
+3. **Check JSON output:** Add `--json` to see structured errors
+4. **Check logs:** `uv run erdos logs --limit 5` shows recent commands
 
 ### Key Test Fixtures (conftest.py)
 
