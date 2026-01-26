@@ -23,7 +23,7 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 | GH-035 | Crossref/S2 clients missing JSONDecodeError handling | P1 | Open | 2026-01-26 |
 | GH-036 | Hardcoded `logs/loop` path breaks outside repo root | P2 | Open | 2026-01-26 |
 
-*Note: GH-XXX IDs correspond to GitHub issue numbers. BUG-XXX IDs are legacy local-only tracking.*
+*GH-XXX = has GitHub issue. BUG-XXX = local docs only. Both tracked here with full bug decks.*
 
 ## Archived Bugs
 
@@ -65,7 +65,9 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-034 | `erdos research exa --save-leads` crashes on empty title | P2 | Fixed | (in-tree) |
 | BUG-035 | Lean skeleton template uses outdated Mathlib import path | P2 | Fixed | (in-tree) |
 
-*Note: GH-XXX bugs are tracked via GitHub Issues. Legacy BUG-XXX series is deprecated.*
+*Naming: GH-XXX = also tracked on GitHub Issues. BUG-XXX = local docs only. Both systems maintained in parallel.*
+
+**Next Bug ID:** BUG-038 (or GH-XXX if filing on GitHub)
 
 ### Active Bug Decks
 
