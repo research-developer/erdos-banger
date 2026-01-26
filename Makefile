@@ -16,7 +16,7 @@ CLEAN_DIRS := .pytest_cache .mypy_cache .ruff_cache .coverage htmlcov dist build
 	lint lint-fix \
 	typecheck \
 	test test-all test-integration test-e2e test-lean test-network cov watch \
-	pre-commit hooks \
+	pre-commit pre-commit-ci hooks \
 	smoke \
 	check fix \
 	security \
@@ -111,6 +111,9 @@ watch: ## 👀 Watch mode - rerun tests on file changes
 pre-commit: ## Run all pre-commit hooks
 	$(RUN) pre-commit run --all-files
 
+pre-commit-ci: ## Run CI pre-commit hooks (skip ruff/mypy)
+	SKIP=ruff-check,ruff-format,mypy $(RUN) pre-commit run --all-files --show-diff-on-failure
+
 hooks: ## Install git hooks (pre-commit)
 	$(RUN) pre-commit install --install-hooks
 
@@ -146,7 +149,7 @@ audit: ## Check code health (LOC guardrails)
 
 ##@ CI
 
-ci: format-check lint typecheck cov audit ## Run CI-equivalent checks
+ci: lock-check pre-commit-ci format-check lint typecheck cov audit ## Run CI-equivalent checks
 	@echo ""
 	@echo "NOTE: 'make ci' skips slow/Lean/network tests."
 	@echo "      Run 'make test-all' (or 'make ci-full') before merging large refactors."

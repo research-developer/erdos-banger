@@ -58,11 +58,12 @@ watch -n5 'git log --oneline -5'
 Use `make` (preferred) or `uv` directly:
 
 - `make sync`: install dependencies (uses `uv`).
-- `make ci`: fast CI check (format/lint/typecheck/cov/audit). Skips `slow`/Lean/network tests.
+- `make ci`: fast CI check (lock-check + pre-commit + format/lint/typecheck/cov/audit). Skips `slow`/Lean/network tests.
 - `make ci-full`: full local CI (includes `make test-all` + `make smoke`).
 - `make test`: run fast tests (skips `slow`/Lean/network).
 - `make test-all`: run all tests (includes `slow`, `requires_lean`, `requires_network`).
 - `make test-integration`, `make test-e2e`, `make test-lean`, `make test-network`: focused test targets.
+- `make pre-commit`: run repo hygiene hooks (EOF fixes, YAML checks, etc.).
 - `make smoke`: run CLI smoke test (`scripts/smoke-test.sh`).
 - Example CLI run: `uv run erdos --help`
 

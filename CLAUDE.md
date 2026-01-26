@@ -48,7 +48,7 @@ uv run erdos list --status open --limit 5
 uv run erdos show 6
 
 # Full CI check (run before every commit)
-make ci                    # fast checks (skips slow/Lean/network tests)
+make ci                    # fast checks (includes lock-check + pre-commit; skips slow/Lean/network tests)
 make ci-full               # full local CI (includes test-all + smoke)
 
 # Individual checks
@@ -63,6 +63,7 @@ make test-lean             # pytest -m "requires_lean"
 make test-network          # pytest -m "requires_network"
 make smoke                 # CLI smoke test
 make audit                 # LOC guardrails check
+make pre-commit            # repo hygiene hooks (EOF fixes, YAML checks, etc.)
 ```
 
 ## Running Tests
