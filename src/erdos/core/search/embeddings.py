@@ -32,13 +32,16 @@ if TYPE_CHECKING:
     from sentence_transformers import SentenceTransformer
 
 # Runtime import with graceful fallback
-try:
-    from sentence_transformers import SentenceTransformer as _SentenceTransformer
+_SentenceTransformer: type | None = None
+EMBEDDING_AVAILABLE = False
 
+try:
+    from sentence_transformers import SentenceTransformer as _ST
+
+    _SentenceTransformer = _ST
     EMBEDDING_AVAILABLE = True
 except ImportError:
-    EMBEDDING_AVAILABLE = False
-    _SentenceTransformer = None  # type: ignore[misc, assignment]
+    pass
 
 
 # =============================================================================
