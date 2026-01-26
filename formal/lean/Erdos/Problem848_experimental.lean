@@ -390,20 +390,28 @@ theorem sawhney_main (c : ℝ) (hc : c > 0) (hc_small : c < 0.002) :
     · by_cases h_has_18 : ∃ y ∈ A, y % 25 = 18
       · -- Both classes present: mixing contradiction
         have h_mix := h_density_mix N hN2 A hAsub hAprop h_all_in_union h_has_7 h_has_18
-        -- |A|/N ≤ 0.0294 but |A|/N ≥ 1/25 - c = 0.04 - c > 0.03
-        -- Contradiction when c < 0.01
+        -- |A|/N ≤ 0.030 but |A|/N ≥ 1/25 - c = 0.04 - c > 0.038 when c < 0.002
         exfalso
-        have h_size_bound : (A.card : ℝ) / N ≥ 1/25 - c := by
-          have hN_pos : (0 : ℝ) < N := by
-            by_contra hN_le
-            push_neg at hN_le
-            have : N = 0 := Nat.eq_zero_of_le_zero (Nat.lt_one_iff.mp (Nat.lt_of_le_of_lt (Nat.cast_le.mp hN_le) (by norm_num : (0:ℝ) < 1)))
-            simp [this] at hSize hc
-            linarith
-          exact (div_le_iff hN_pos).mpr hSize
-        have h_contra : (1 : ℝ)/25 - c > 0.0294 := by
-          have : (1 : ℝ)/25 = 0.04 := by norm_num
+        -- Use the density bound and size assumption to derive contradiction
+        have h_025 : (1 : ℝ) / 25 = 0.04 := by norm_num
+        have h_lower : (1 : ℝ) / 25 - c > 0.030 := by linarith
+        -- We have |A|/N ≤ 0.030 (from mixing bound) and |A| ≥ (1/25 - c) * N (assumption)
+        -- These contradict when N > 0 and 1/25 - c > 0.030
+        -- We'll use the fact that A has at least one element (h_has_7 or h_has_18)
+        obtain ⟨a, ha, _⟩ := h_has_7
+        have hA_nonempty : A.card > 0 := Finset.card_pos.mpr ⟨a, ha⟩
+        have hN_pos : (N : ℝ) > 0 := by
+          have hA_card_pos : (A.card : ℝ) > 0 := Nat.cast_pos.mpr hA_nonempty
+          have := calc (1/25 - c) * N ≤ A.card := hSize
+          by_contra hN_le
+          push_neg at hN_le
+          have hN_nonneg : (N : ℝ) ≥ 0 := Nat.cast_nonneg N
+          have hN_zero : (N : ℝ) = 0 := le_antisymm hN_le hN_nonneg
+          simp [hN_zero] at this hc
           linarith
+        have h_size_ratio : (A.card : ℝ) / N ≥ 1/25 - c := by
+          rw [ge_iff_le, div_le_iff hN_pos]
+          linarith [hSize]
         linarith
       · -- Only A₇ present
         left
