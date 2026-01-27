@@ -136,7 +136,7 @@ uv run erdos lean check "formal/lean/Erdos/Problem${PROBLEM3}.lean"
 uv run erdos show $ARGUMENTS
 
 # Search related literature
-uv run erdos search "relevant terms" --problem $ARGUMENTS
+uv run erdos search "relevant terms" --problem $ARGUMENTS  # omit --problem to search globally
 
 # Check formalization status
 uv run erdos lean status $ARGUMENTS

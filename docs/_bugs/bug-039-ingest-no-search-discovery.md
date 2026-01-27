@@ -44,7 +44,7 @@ Ingesting references for Problem 848...
 The ingest pipeline assumes rich reference metadata exists upstream. For Problem 848:
 - The only reference `Er92b` has no DOI, arXiv ID, URL, or citation text
 - No fallback mechanism to search for papers by problem topic
-- No command to add papers manually
+- Previously there was no command to add papers manually (fixed by `erdos refs add`)
 
 ## Expected Behavior
 
