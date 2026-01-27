@@ -42,9 +42,6 @@ and what remains to complete a paper-level formalization.
 - `formal/lean/Erdos/Problem848_sieve_query3.lean`
   - Proved (by `native_decide`): `problem_848_N200`
 
-- `formal/lean/Erdos/Problem848_sieve_query4.lean`
-  - Proved: `problem_848_N500` **conditional on** `No21InCandidates500` (a `Prop` placeholder).
-
 ## Paper-level target
 
 - `formal/lean/Erdos/Problem848_sawhney_main.lean`
