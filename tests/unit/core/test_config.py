@@ -221,7 +221,7 @@ class TestAppConfigFromEnv:
         repo_root = tmp_path / "repo"
         (repo_root / "src" / "erdos").mkdir(parents=True)
         (repo_root / "pyproject.toml").write_text(
-            "[project]\nname = \"erdos-banger\"\n", encoding="utf-8"
+            '[project]\nname = "erdos-banger"\n', encoding="utf-8"
         )
         (repo_root / ".env").write_text(
             "ARISTOTLE_API_KEY=dotenv-key\n", encoding="utf-8"

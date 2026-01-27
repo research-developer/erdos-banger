@@ -74,11 +74,7 @@ def _load_dotenv_if_enabled() -> None:
         return
 
     repo_root = os.environ.get("ERDOS_REPO_ROOT")
-    root = (
-        Path(repo_root)
-        if repo_root
-        else discover_repo_root() or Path.cwd()
-    )
+    root = Path(repo_root) if repo_root else discover_repo_root() or Path.cwd()
     env_path = root / ".env"
     parsed = load_dotenv_file(env_path)
     if not parsed:

@@ -39,4 +39,3 @@ def resolve_repo_root(repo_root: Path | None) -> Path:
     if repo_root is not None:
         return repo_root.resolve()
     return discover_repo_root() or Path.cwd().resolve()
-

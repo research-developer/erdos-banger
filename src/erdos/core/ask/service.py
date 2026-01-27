@@ -218,7 +218,10 @@ def ask_question(
         llm_exit_code=llm_result.llm_exit_code,
         log_dir=log_dir,
     )
-    ask_log: dict[str, Any] = {"path": str(log_result.path), "written": log_result.written}
+    ask_log: dict[str, Any] = {
+        "path": str(log_result.path),
+        "written": log_result.written,
+    }
     if log_result.error:
         ask_log["error"] = log_result.error
     data["ask_log"] = ask_log

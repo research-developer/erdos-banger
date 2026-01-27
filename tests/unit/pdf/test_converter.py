@@ -373,9 +373,13 @@ class TestMarkerConversion:
         monkeypatch.setitem(sys.modules, "marker.config.parser", marker_parser_mod)
         monkeypatch.setitem(sys.modules, "marker.models", marker_models_mod)
         monkeypatch.setitem(sys.modules, "marker.converters", marker_converters_pkg)
-        monkeypatch.setitem(sys.modules, "marker.converters.pdf", marker_converters_pdf_mod)
+        monkeypatch.setitem(
+            sys.modules, "marker.converters.pdf", marker_converters_pdf_mod
+        )
 
-        monkeypatch.setattr("erdos.core.pdf.converter.is_marker_available", lambda: True)
+        monkeypatch.setattr(
+            "erdos.core.pdf.converter.is_marker_available", lambda: True
+        )
 
         result = convert_with_marker(pdf_path, use_llm=False, force_ocr=True)
 

@@ -169,7 +169,7 @@ class TestLeanProveCommandConfig:
 
             Path("src/erdos").mkdir(parents=True)
             Path("pyproject.toml").write_text(
-                "[project]\nname = \"erdos-banger\"\n", encoding="utf-8"
+                '[project]\nname = "erdos-banger"\n', encoding="utf-8"
             )
             Path(".env").write_text("ARISTOTLE_API_KEY=dotenv-key\n", encoding="utf-8")
 

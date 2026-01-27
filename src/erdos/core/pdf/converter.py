@@ -290,7 +290,9 @@ def convert_with_marker(
             converter="marker",
             metadata={
                 "use_llm": str(use_llm),
-                "llm_service": str(resolved_llm_service) if resolved_llm_service else "",
+                "llm_service": str(resolved_llm_service)
+                if resolved_llm_service
+                else "",
                 "force_ocr": str(force_ocr),
                 "page_count": str(page_count) if page_count is not None else "",
             },
