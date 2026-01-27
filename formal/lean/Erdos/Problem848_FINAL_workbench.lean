@@ -872,6 +872,7 @@ theorem problem_848_resolved_up_to_finite_check_of_sawhney (h : SawhneyMain) :
 -- ============================================================================
 
 open scoped Nat.Prime
+open scoped BigOperators
 open Filter Finset
 
 /-- Cutoff for computing reciprocal-square sums over primes. -/
