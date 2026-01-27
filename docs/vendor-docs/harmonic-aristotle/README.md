@@ -53,3 +53,7 @@ SPEC-021 defines the integration contract and the compatibility policy.
 ## References
 
 See `SOURCES.md` for URLs and retrieval dates.
+
+## Request Tracking
+
+See `REQUESTS.md` for a lightweight log of queued/in-flight Aristotle jobs.
