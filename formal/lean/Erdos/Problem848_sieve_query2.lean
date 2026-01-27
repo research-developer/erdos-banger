@@ -102,4 +102,22 @@ def SquarefreeFractionLowerBoundAt (a : ℕ) (t : ℕ) (N : ℕ) : Prop :=
     let sqfree := B.filter (fun b => Squarefree (a * b + 1))
     (sqfree.card : ℚ) / B.card ≥ 1/2
 
+/-!
+NOTE: The uniform-in-`N` version above is *too strong* to be used as a faithful stand-in for the
+asymptotic sieve statement in Sawhney's paper. The paper proves a `δ - o(1)` lower bound, i.e.
+**there exists** a threshold `N₀` beyond which a fixed positive proportion of values are squarefree.
+
+We therefore also record the asymptotic formulation below, which is the one actually compatible
+with the paper-level argument.
+-/
+
+def SquarefreeFractionLowerBoundAt_asymptotic (a : ℕ) (t : ℕ) : Prop :=
+  a % 25 = 7 →
+    t < 25 →
+    (t ≠ 7 ∧ t ≠ 18) →
+    ∃ N₀ : ℕ, ∀ N ≥ N₀,
+      let B := (Finset.range N).filter (fun b => b % 25 = t)
+      let sqfree := B.filter (fun b => Squarefree (a * b + 1))
+      (sqfree.card : ℚ) / B.card ≥ 1/2
+
 end Erdos.Problem848.SieveQuery2

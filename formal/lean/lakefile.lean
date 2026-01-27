@@ -5,7 +5,7 @@ package erdos where
   -- Package configuration
   leanOptions := #[
     ⟨`autoImplicit, false⟩,  -- Require explicit type annotations
-    ⟨`pp.unicode.fun, true⟩  -- Pretty print with Unicode
+    ⟨`pp.unicode.fun, true⟩,  -- Pretty print with Unicode
   ]
 
 -- Pin mathlib to a specific version for reproducibility

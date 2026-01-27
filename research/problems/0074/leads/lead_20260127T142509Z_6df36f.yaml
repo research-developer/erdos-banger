@@ -1,0 +1,36 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260127T142509Z_6df36f
+title: '[Exa] https://old.renyi.hu/~p_erdos/1977-19.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://old.renyi.hu/~p_erdos/1977-19.pdf
+notes: '[Exa] 8o
+
+  P . Erdős and A . Hajnal , Budapest
+
+  ON SPANNED SUBGRAPHS OF GRAPHS
+
+  The aim of this note is to prove some theorems of the
+
+  following type :
+
+  We assume that C is a class of finite graphs satisfying
+
+  certain assymptotic conditions saying that both c and its
+
+  complement are large . Then we consider a class D of graphs
+
+  and show that for all GEC and , , i is isomorphic to a
+
+  spanned subgraph of c provided the size of c is large enough
+
+  compared to the size of x .
+
+  We have already considered problems of th'
+created_at: '2026-01-27T14:25:09Z'
+updated_at: '2026-01-27T14:25:09Z'

@@ -6,3 +6,4 @@ import Erdos.Basic
 -- import Erdos.Problem006
 -- import Erdos.Problem067
 import Erdos.Problem848
+import Erdos.Problem074

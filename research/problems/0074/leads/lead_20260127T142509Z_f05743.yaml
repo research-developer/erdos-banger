@@ -1,0 +1,20 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260127T142509Z_f05743
+title: '[Exa] https://korandi.org/docs/misc/setsgraphsnumbers/setsgraphsnumbers14.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://korandi.org/docs/misc/setsgraphsnumbers/setsgraphsnumbers14.pdf
+notes: "[Exa] COLLOQUIA MATHEMATICA SOCIETATIS JANOS BOLYAI \n60. SETS, GRAPHS AND\
+  \ NUMBERS, BUDAPEST (HUNGARY), 1991 \nHow Many ‘Edges should be Deleted to Make\
+  \ a \nTriangle-Free Graph Bipartite? \nP. ERDOS, E. GYORI and M. SIMONOVITS! \n\
+  ABSTRACT \nIn this paper we shall prove that if L is an arbitrary 3-chromatic graph\
+  \ \nand Gy is a simple graph on n vertices not containing L, and having at least\
+  \ \n2 \n> - o(n?) \nedges, then it can be made bipartite by throwing away at most\
+  \ \n2 n 2 25 lm) \nedges. This was known for L"
+created_at: '2026-01-27T14:25:09Z'
+updated_at: '2026-01-27T14:25:09Z'

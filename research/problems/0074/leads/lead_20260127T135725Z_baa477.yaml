@@ -1,0 +1,20 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260127T135725Z_baa477
+title: Proof a graph is bipartite if and only if it contains no odd cycles
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://math.stackexchange.com/questions/311665/proof-a-graph-is-bipartite-if-and-only-if-it-contains-no-odd-cycles
+notes: "[Exa] **Teams**\n\nQ&A for work\n\nConnect and share knowledge within a single\
+  \ location that is structured and easy to search.\n\n[Learn more about Teams] \n\
+  \n# [Proof a graph is bipartite if and only if it contains no odd cycles] \n\n[Ask\
+  \ Question] \n\nAsked12 years, 2 months ago\n\nModified [12 months ago] \n\nViewed\n\
+  139k times\n\n76\n\n$\\\\begingroup$\n\nHow can we prove that a graph is bipartite\
+  \ if and only if all of its cycles have even order? Also, does this theorem have\
+  \ a common name?"
+created_at: '2026-01-27T13:57:25Z'
+updated_at: '2026-01-27T13:57:25Z'

@@ -1,0 +1,20 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260127T135725Z_0c5c67
+title: Proving that $ \chi(G) = \omega(G) $ if $ \bar{G} $ is bipartite.
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://math.stackexchange.com/questions/1542037/proving-that-chig-omegag-if-barg-is-bipartite
+notes: "[Exa] **Teams**\n\nQ&A for work\n\nConnect and share knowledge within a single\
+  \ location that is structured and easy to search.\n\n[Learn more about Teams] \n\
+  \n# [Proving that $ \\\\chi(G) = \\\\omega(G) $ if $ \\\\bar{G} $ is bipartite.]\
+  \ \n\n[Ask Question] \n\nAsked9 years, 5 months ago\n\nModified [3 years, 5 months\
+  \ ago] \n\nViewed\n3k times\n\n2\n\n$\\\\begingroup$\n\nI know that $ \\\\chi \\\
+  \\! \\\\left( \\\\bar{G} \\\\right) = 2 $ and that $ \\\\chi(G) \\\\geq \\\\alpha\
+  \ \\\\! \\\\left( \\\\bar{G} \\\\right) $, but how"
+created_at: '2026-01-27T13:57:25Z'
+updated_at: '2026-01-27T13:57:25Z'
