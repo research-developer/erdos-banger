@@ -134,8 +134,13 @@ lemma density_single_prime_of_two_roots (p : ℕ) (hp : Nat.Prime p) (hmod : p %
   -- Bound count by the union of the two residue classes.
   have hsub :
       ((Finset.range N).filter (fun n => (m : ℕ) ∣ n ^ 2 + 1)) ⊆
-        ((Finset.range N).filter (fun n => n % m = r₁.val)) ∪
-          ((Finset.range N).filter (fun n => n % m = r₂.val)) := by
+        ((Finset.range N).filter (fun n => n % m = r₁.val % m)) ∪
+          ((Finset.range N).filter (fun n => n % m = r₂.val % m)) := by
+    have hmpos' : 0 < m := by
+      have : 0 < p := hp.pos
+      have : 0 < p ^ 2 := pow_pos this 2
+      simpa [m] using this
+    haveI : NeZero m := ⟨ne_of_gt hmpos'⟩
     intro n hn
     have hnrange : n ∈ Finset.range N := (Finset.mem_filter.1 hn).1
     have hdiv : m ∣ n ^ 2 + 1 := (Finset.mem_filter.1 hn).2
@@ -150,25 +155,31 @@ lemma density_single_prime_of_two_roots (p : ℕ) (hp : Nat.Prime p) (hmod : p %
       have hmod' : n % m = r₁.val := by
         have := congrArg (fun x : ZMod m => x.val) hnr
         simpa [ZMod.val_natCast] using this
+      have hmod'' : n % m = r₁.val % m := by
+        have hrlt : r₁.val < m := ZMod.val_lt r₁
+        simpa [Nat.mod_eq_of_lt hrlt] using hmod'
       apply Finset.mem_union.2
       left
-      exact Finset.mem_filter.2 ⟨hnrange, hmod'⟩
+      exact Finset.mem_filter.2 ⟨hnrange, hmod''⟩
     ·
       have hmod' : n % m = r₂.val := by
         have := congrArg (fun x : ZMod m => x.val) hnr
         simpa [ZMod.val_natCast] using this
+      have hmod'' : n % m = r₂.val % m := by
+        have hrlt : r₂.val < m := ZMod.val_lt r₂
+        simpa [Nat.mod_eq_of_lt hrlt] using hmod'
       apply Finset.mem_union.2
       right
-      exact Finset.mem_filter.2 ⟨hnrange, hmod'⟩
+      exact Finset.mem_filter.2 ⟨hnrange, hmod''⟩
   have hmpos : 0 < m := by
     have : 0 < p := hp.pos
     have : 0 < p ^ 2 := pow_pos this 2
     simpa [m] using this
   have hcard1 :
-      ((Finset.range N).filter (fun n => n % m = r₁.val)).card ≤ N / m + 1 :=
+      ((Finset.range N).filter (fun n => n % m = r₁.val % m)).card ≤ N / m + 1 :=
     card_filter_modEq_le N m r₁.val hmpos
   have hcard2 :
-      ((Finset.range N).filter (fun n => n % m = r₂.val)).card ≤ N / m + 1 :=
+      ((Finset.range N).filter (fun n => n % m = r₂.val % m)).card ≤ N / m + 1 :=
     card_filter_modEq_le N m r₂.val hmpos
   have hcount_le : ((Finset.range N).filter (fun n => (m : ℕ) ∣ n ^ 2 + 1)).card ≤
       2 * (N / m + 1) := by
@@ -176,10 +187,10 @@ lemma density_single_prime_of_two_roots (p : ℕ) (hp : Nat.Prime p) (hmod : p %
     have := Finset.card_le_card hsub
     -- bound card of union by sum of cards
     have hunion :
-        (((Finset.range N).filter (fun n => n % m = r₁.val)) ∪
-            ((Finset.range N).filter (fun n => n % m = r₂.val))).card ≤
-          ((Finset.range N).filter (fun n => n % m = r₁.val)).card +
-            ((Finset.range N).filter (fun n => n % m = r₂.val)).card :=
+        (((Finset.range N).filter (fun n => n % m = r₁.val % m)) ∪
+            ((Finset.range N).filter (fun n => n % m = r₂.val % m))).card ≤
+          ((Finset.range N).filter (fun n => n % m = r₁.val % m)).card +
+            ((Finset.range N).filter (fun n => n % m = r₂.val % m)).card :=
       Finset.card_union_le _ _
     have := le_trans this (le_trans hunion (add_le_add hcard1 hcard2))
     -- simplify `x+x` to `2*x`
