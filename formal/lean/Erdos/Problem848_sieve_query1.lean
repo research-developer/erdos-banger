@@ -89,7 +89,9 @@ lemma card_filter_modEq_le (N m r : ℕ) (hm : 0 < m) :
       (Finset.range N).filter (fun n => n % m = r0) ⊆
         Finset.image (fun q : ℕ => q * m + r0) (Finset.range (N / m + 1)) := by
     intro n hn
-    have hnlt : n < N := (Finset.mem_filter.1 hn).1
+    have hnlt : n < N := by
+      have : n ∈ Finset.range N := (Finset.mem_filter.1 hn).1
+      simpa [Finset.mem_range] using this
     have hmod : n % m = r0 := (Finset.mem_filter.1 hn).2
     refine Finset.mem_image.2 ?_
     refine ⟨n / m, ?_, ?_⟩
@@ -99,17 +101,22 @@ lemma card_filter_modEq_le (N m r : ℕ) (hm : 0 < m) :
       simpa [Finset.mem_range] using hlt
     · -- Reconstruct `n` from quotient and remainder.
       -- `Nat.div_add_mod` gives `m * (n / m) + n % m = n`.
-      have := Nat.div_add_mod n m
-      -- Rewrite into the desired shape.
-      -- (Note: `q*m` rather than `m*q` is fine by commutativity.)
-      simpa [r0, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc, hmod] using this.symm
-  have hcard :
-      ((Finset.range N).filter (fun n => n % m = r0)).card ≤ (Finset.range (N / m + 1)).card := by
-    -- `filter ⊆ image` and `card(image) ≤ card(range)`.
-    refine le_trans (Finset.card_le_card h_sub) ?_
-    exact (Finset.card_image_le.trans_eq (by rfl))
-  -- Finish by rewriting `card (range k) = k`.
-  simpa [Finset.card_range] using hcard
+      have hdiv : (n / m) * m + n % m = n := by
+        simpa [Nat.mul_comm] using Nat.div_add_mod n m
+      calc
+        (n / m) * m + r0 = (n / m) * m + n % m := by simpa [r0, hmod]
+        _ = n := hdiv
+  have h1 :
+      ((Finset.range N).filter (fun n => n % m = r0)).card ≤
+        (Finset.image (fun q : ℕ => q * m + r0) (Finset.range (N / m + 1))).card :=
+    Finset.card_le_card h_sub
+  have h2 :
+      (Finset.image (fun q : ℕ => q * m + r0) (Finset.range (N / m + 1))).card ≤
+        (Finset.range (N / m + 1)).card :=
+    Finset.card_image_le
+  have hcard : ((Finset.range N).filter (fun n => n % m = r0)).card ≤ (N / m + 1) := by
+    simpa [Finset.card_range] using le_trans h1 h2
+  simpa [r0] using hcard
 
 /-- If there are at most two roots `r` of `r^2 = -1` in `ZMod (p^2)`, then the density of `n < N`
 with `p^2 ∣ n^2+1` is at most `2/p^2` up to a small boundary term. -/
@@ -127,10 +134,10 @@ lemma density_single_prime_of_two_roots (p : ℕ) (hp : Nat.Prime p) (hmod : p %
   -- Bound count by the union of the two residue classes.
   have hsub :
       ((Finset.range N).filter (fun n => (m : ℕ) ∣ n ^ 2 + 1)) ⊆
-        ((Finset.range N).filter (fun n => n % m = (r₁.val % m))) ∪
-          ((Finset.range N).filter (fun n => n % m = (r₂.val % m))) := by
+        ((Finset.range N).filter (fun n => n % m = r₁.val)) ∪
+          ((Finset.range N).filter (fun n => n % m = r₂.val)) := by
     intro n hn
-    have hnlt : n < N := (Finset.mem_filter.1 hn).1
+    have hnrange : n ∈ Finset.range N := (Finset.mem_filter.1 hn).1
     have hdiv : m ∣ n ^ 2 + 1 := (Finset.mem_filter.1 hn).2
     have hz : ((n ^ 2 + 1 : ℕ) : ZMod m) = 0 := (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) m).2 hdiv
     have hsq : (n : ZMod m) ^ 2 = (-1 : ZMod m) := by
@@ -140,38 +147,39 @@ lemma density_single_prime_of_two_roots (p : ℕ) (hp : Nat.Prime p) (hmod : p %
     have hnr : (n : ZMod m) = r₁ ∨ (n : ZMod m) = r₂ := huniq (n : ZMod m) hsq
     rcases hnr with hnr | hnr
     · -- `n ≡ r₁ (mod m)`
-      have : n % m = r₁.val % m := by
-        have := (ZMod.natCast_eq_natCast_iff' n r₁.val m).1 hnr
-        simpa using this
+      have hmod' : n % m = r₁.val := by
+        have := congrArg (fun x : ZMod m => x.val) hnr
+        simpa [ZMod.val_natCast] using this
       apply Finset.mem_union.2
       left
-      exact Finset.mem_filter.2 ⟨hnlt, this⟩
-    · have : n % m = r₂.val % m := by
-        have := (ZMod.natCast_eq_natCast_iff' n r₂.val m).1 hnr
-        simpa using this
+      exact Finset.mem_filter.2 ⟨hnrange, hmod'⟩
+    ·
+      have hmod' : n % m = r₂.val := by
+        have := congrArg (fun x : ZMod m => x.val) hnr
+        simpa [ZMod.val_natCast] using this
       apply Finset.mem_union.2
       right
-      exact Finset.mem_filter.2 ⟨hnlt, this⟩
+      exact Finset.mem_filter.2 ⟨hnrange, hmod'⟩
   have hmpos : 0 < m := by
     have : 0 < p := hp.pos
     have : 0 < p ^ 2 := pow_pos this 2
     simpa [m] using this
   have hcard1 :
-      ((Finset.range N).filter (fun n => n % m = r₁.val % m)).card ≤ N / m + 1 :=
+      ((Finset.range N).filter (fun n => n % m = r₁.val)).card ≤ N / m + 1 :=
     card_filter_modEq_le N m r₁.val hmpos
   have hcard2 :
-      ((Finset.range N).filter (fun n => n % m = r₂.val % m)).card ≤ N / m + 1 :=
+      ((Finset.range N).filter (fun n => n % m = r₂.val)).card ≤ N / m + 1 :=
     card_filter_modEq_le N m r₂.val hmpos
   have hcount_le : ((Finset.range N).filter (fun n => (m : ℕ) ∣ n ^ 2 + 1)).card ≤
       2 * (N / m + 1) := by
     -- Use the subset bound + union cardinality.
-    have := Finset.card_le_of_subset hsub
+    have := Finset.card_le_card hsub
     -- bound card of union by sum of cards
     have hunion :
-        (((Finset.range N).filter (fun n => n % m = r₁.val % m)) ∪
-            ((Finset.range N).filter (fun n => n % m = r₂.val % m))).card ≤
-          ((Finset.range N).filter (fun n => n % m = r₁.val % m)).card +
-            ((Finset.range N).filter (fun n => n % m = r₂.val % m)).card :=
+        (((Finset.range N).filter (fun n => n % m = r₁.val)) ∪
+            ((Finset.range N).filter (fun n => n % m = r₂.val))).card ≤
+          ((Finset.range N).filter (fun n => n % m = r₁.val)).card +
+            ((Finset.range N).filter (fun n => n % m = r₂.val)).card :=
       Finset.card_union_le _ _
     have := le_trans this (le_trans hunion (add_le_add hcard1 hcard2))
     -- simplify `x+x` to `2*x`
