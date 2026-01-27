@@ -99,11 +99,12 @@ uv run pytest -m "requires_lean"
 **Elan Environment:** The `lake` command (Lean's build tool) is managed by elan and may not be in PATH by default. Use one of these approaches:
 
 ```bash
-# Option 1: Source elan environment first (recommended)
-source ~/.elan/env && lake build Erdos.Problem848
+# Recommended: use erdos wrapper (works from repo root)
+uv run erdos lean check formal/lean/Erdos/Problem848.lean
 
-# Option 2: Use full path (works without sourcing)
-~/.elan/bin/lake build Erdos.Problem848
+# If running lake directly, point it at the Lean workspace (formal/lean/)
+source ~/.elan/env && lake -d formal/lean build Erdos.Problem848
+~/.elan/bin/lake -d formal/lean build Erdos.Problem848
 
 # From the formal/lean directory:
 cd formal/lean && source ~/.elan/env && lake build

@@ -41,7 +41,7 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 # Full working pipeline:
 uv run erdos refs add 848 --arxiv 2511.16072   # Add paper to problem
 uv run erdos ingest 848 --force                # Fetch metadata + download source
-ls literature/cache/arxiv/extracted/2511.16072 # LaTeX available
+cat literature/extracts/arxiv/2511.16072/fulltext.txt # Extracted LaTeX
 ```
 
 **What Works:**
@@ -112,7 +112,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 
 ### Active Bug Decks
 
-- None.
+- `docs/_bugs/bug-039-ingest-no-search-discovery.md` (BUG-039)
 
 ### Archived Bug Decks
 

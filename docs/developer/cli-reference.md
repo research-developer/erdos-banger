@@ -513,7 +513,8 @@ uv run python scripts/generate_cli_reference.py
 ╭─ Options ────────────────────────────────────────────────────────────────────╮
 │ --status     -s      TEXT                        Filter by status: open,     │
 │                                                  decidable, proved,          │
-│                                                  disproved, partially_solved │
+│                                                  disproved,                  │
+│                                                  partially_solved, unknown   │
 │ --prize-min          INTEGER RANGE [x>=0]        Minimum prize amount in USD │
 │ --prize-max          INTEGER RANGE [x>=0]        Maximum prize amount in USD │
 │ --tag        -t      TEXT                        Filter by tag (can be       │
@@ -559,30 +560,21 @@ uv run python scripts/generate_cli_reference.py
 
 ```text
 
- Usage: erdos logs [OPTIONS] COMMAND [ARGS]...
+ Usage: erdos logs ask [OPTIONS] COMMAND [ARGS]...
 
- Query and summarize run logs.
+ Query `erdos ask` interaction logs (logs/ask/*.jsonl).
 
 ╭─ Options ────────────────────────────────────────────────────────────────────╮
-│ --problem-id  -p      INTEGER                     Filter by problem ID.      │
-│ --command             TEXT                        Filter by command name     │
-│                                                   (e.g., 'erdos lean         │
-│                                                   check').                   │
-│ --since               TEXT                        Filter logs after date     │
-│                                                   (e.g., '7d', '2h',         │
-│                                                   '2026-01-15').             │
-│ --status              TEXT                        Filter by 'success' or     │
-│                                                   'failure'.                 │
-│ --limit       -n      INTEGER RANGE [1<=x<=1000]  Max entries to return.     │
-│                                                   [default: 50]              │
-│ --summary                                         Show aggregated summary    │
-│                                                   instead of individual      │
-│                                                   entries.                   │
-│ --help        -h                                  Show this message and      │
-│                                                   exit.                      │
-╰──────────────────────────────────────────────────────────────────────────────╯
-╭─ Commands ───────────────────────────────────────────────────────────────────╮
-│ ask   Query `erdos ask` interaction logs (logs/ask/*.jsonl).                 │
+│ *  --problem,--problem…  -p      INTEGER               Problem ID to query.  │
+│                                                        [required]            │
+│    --limit               -n      INTEGER RANGE         Max entries to        │
+│                                  [1<=x<=1000]          return.               │
+│                                                        [default: 50]         │
+│    --since                       TEXT                  Filter logs after     │
+│                                                        date (e.g., '7d',     │
+│                                                        '2h', '2026-01-15').  │
+│    --help                -h                            Show this message and │
+│                                                        exit.                 │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 ```
 
