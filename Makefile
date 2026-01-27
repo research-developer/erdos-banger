@@ -51,6 +51,9 @@ sync: ## Install dependencies
 sync-frozen: ## Install dependencies (frozen)
 	$(UV) sync --frozen
 
+sync-all: ## Install dependencies with all extras and groups
+	$(UV) sync --all-extras --all-groups
+
 lock: ## Update uv.lock
 	$(UV) lock
 

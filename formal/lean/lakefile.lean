@@ -5,7 +5,11 @@ package erdos where
   -- Package configuration
   leanOptions := #[
     ⟨`autoImplicit, false⟩,  -- Require explicit type annotations
-    ⟨`pp.unicode.fun, true⟩  -- Pretty print with Unicode
+    ⟨`pp.unicode.fun, true⟩,  -- Pretty print with Unicode
+    -- Suppress noisy linter warnings (style suggestions, not errors)
+    ⟨`linter.unusedSimpArgs, false⟩,
+    ⟨`linter.unnecessarySimpa, false⟩,
+    ⟨`linter.unnecessarySeqFocus, false⟩
   ]
 
 -- Pin mathlib to a specific version for reproducibility
