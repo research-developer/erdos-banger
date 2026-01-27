@@ -167,12 +167,20 @@ def _ensure_min_statement_budget(
     statement_budget = budgets.statement + take_from_notes
 
     take_from_sources = min(need, budgets.sources_total)
+    need -= take_from_sources
     statement_budget += take_from_sources
     sources_budget = budgets.sources_total - take_from_sources
 
+    question_budget = budgets.question
+    if need > 0 and question_budget > 0:
+        take_from_question = min(need, question_budget)
+        question_budget -= take_from_question
+        statement_budget += take_from_question
+        need -= take_from_question
+
     return _PromptBudgets(
         statement=statement_budget,
-        question=budgets.question,
+        question=question_budget,
         notes=notes_budget,
         sources_total=sources_budget,
     )

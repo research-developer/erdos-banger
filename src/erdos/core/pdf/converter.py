@@ -13,6 +13,7 @@ import os
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 
 logger = logging.getLogger(__name__)
@@ -230,11 +231,22 @@ def convert_with_marker(
 
         config_parser = ConfigParser(cli_options=cli_options)
 
-        converter_cls = config_parser.get_converter_cls()
+        converter_cls: type[Any]
+        if hasattr(config_parser, "get_converter_cls"):
+            converter_cls = config_parser.get_converter_cls()
+        else:
+            # marker-pdf 1.0.x did not expose get_converter_cls() yet.
+            from marker.converters.pdf import PdfConverter  # noqa: PLC0415
+
+            converter_cls = PdfConverter
         config_dict = config_parser.generate_config_dict()
         processors = config_parser.get_processors()
         renderer = config_parser.get_renderer()
-        resolved_llm_service = config_parser.get_llm_service()
+        resolved_llm_service = (
+            config_parser.get_llm_service()
+            if hasattr(config_parser, "get_llm_service")
+            else None
+        )
 
         # Run conversion
         logger.debug(
@@ -245,13 +257,23 @@ def convert_with_marker(
             force_ocr,
         )
 
-        converter = converter_cls(
-            config=config_dict,
-            artifact_dict=create_model_dict(),
-            processor_list=processors,
-            renderer=renderer,
-            llm_service=resolved_llm_service,
-        )
+        converter_kwargs: dict[str, Any] = {
+            "config": config_dict,
+            "artifact_dict": create_model_dict(),
+            "processor_list": processors,
+            "renderer": renderer,
+        }
+        if resolved_llm_service is not None:
+            converter_kwargs["llm_service"] = resolved_llm_service
+        try:
+            converter = converter_cls(**converter_kwargs)
+        except TypeError as exc:
+            # marker-pdf 1.0.x PdfConverter did not accept llm_service.
+            if "llm_service" in converter_kwargs and "llm_service" in str(exc):
+                converter_kwargs.pop("llm_service", None)
+                converter = converter_cls(**converter_kwargs)
+            else:
+                raise
         rendered = converter(str(pdf_path))
 
         markdown = getattr(rendered, "markdown", None)
@@ -268,7 +290,7 @@ def convert_with_marker(
             converter="marker",
             metadata={
                 "use_llm": str(use_llm),
-                "llm_service": str(llm_service) if llm_service else "",
+                "llm_service": str(resolved_llm_service) if resolved_llm_service else "",
                 "force_ocr": str(force_ocr),
                 "page_count": str(page_count) if page_count is not None else "",
             },

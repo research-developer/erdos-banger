@@ -6,6 +6,7 @@ from typing import Any
 
 from erdos.core.ask.llm import LLMExecutionResult, execute_llm_if_enabled
 from erdos.core.ask.logging import get_ask_log_path, log_ask_interaction
+from erdos.core.research.paths import get_repo_root
 from erdos.core.ask.prompt import build_prompt
 from erdos.core.ask.retrieval import retrieve_sources
 from erdos.core.constants import DEFAULT_RAG_LIMIT
@@ -206,7 +207,8 @@ def ask_question(
     )
 
     # Persist Q&A to detailed log (DEBT-113)
-    log_path = get_ask_log_path(problem_id)
+    log_dir = get_repo_root(repo_root) / "logs" / "ask"
+    log_path = get_ask_log_path(problem_id, log_dir=log_dir)
     try:
         log_path = log_ask_interaction(
             problem_id=problem_id,
@@ -216,6 +218,7 @@ def ask_question(
             llm_enabled=llm_result.llm_enabled,
             llm_command=llm_result.llm_command,
             llm_exit_code=llm_result.llm_exit_code,
+            log_dir=log_dir,
         )
         data["ask_log"] = {"path": str(log_path), "written": True}
     except Exception as e:  # logging must not break command success

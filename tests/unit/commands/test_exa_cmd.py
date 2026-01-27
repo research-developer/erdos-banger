@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+import pytest
 import responses
 
 from erdos.cli import app
@@ -129,7 +130,10 @@ class TestExaSearchCommand:
 
     @responses.activate
     def test_search_loads_dotenv(
-        self, tmp_path: Path, sample_problems_yaml: Path, monkeypatch
+        self,
+        tmp_path: Path,
+        sample_problems_yaml: Path,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """CLI should load EXA_API_KEY from repo-root .env when present."""
         responses.add(

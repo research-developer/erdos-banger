@@ -48,7 +48,7 @@ Gather context from existing references without making API calls.
 - `literature/manifests/$(printf '%04d' $ARGUMENTS).yaml` - Reference metadata (IDs are zero-padded, e.g. 6 → 0006.yaml)
 - `literature/cache/` - Downloaded papers and sources
 - `research/problems/$(printf '%04d' $ARGUMENTS)/` - Research workspace (leads, hypotheses, tasks)
-- Search index: `uv run erdos search "relevant terms"`
+- Search index: `uv run erdos search "relevant terms" --problem $ARGUMENTS` (omit `--problem` to search globally)
 
 **Optional API sources (rate-limited, mostly free):**
 - `uv run erdos refs zbmath --msc <relevant-code>` - zbMATH (free)

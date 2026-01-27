@@ -133,6 +133,7 @@ class TestLogAskInteraction:
 
         assert entry["schema_version"] == 1
         assert "timestamp" in entry
+        datetime.fromisoformat(entry["timestamp"])
 
     def test_read_entries_missing_file_returns_empty(self, tmp_path: Path) -> None:
         """Reading a missing log file should return empty results (no error)."""

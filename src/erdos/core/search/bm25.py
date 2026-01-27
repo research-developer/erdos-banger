@@ -49,17 +49,26 @@ def safe_fts5_query(query: str, *, allow_advanced_syntax: bool = True) -> str:
     # Check if query uses explicit FTS5 syntax (phrases, prefix, operators)
     has_phrase = '"' in query
     has_prefix = "*" in query
-    has_boolean = bool(re.search(r"\b(AND|OR|NOT)\b", query))
+    has_boolean = bool(re.search(r"\b(AND|OR|NOT)\b", query, flags=re.IGNORECASE))
 
     # If using advanced syntax, do minimal escaping to preserve intent
     if allow_advanced_syntax and (has_phrase or has_prefix or has_boolean):
         # Replace hyphens with spaces (to avoid NOT interpretation)
         # but preserve the rest of the query structure
         safe_query = re.sub(r"(?<=[A-Za-z0-9])-(?=[A-Za-z0-9])", " ", query)
+        # Normalize boolean operators to uppercase (SQLite requires AND/OR/NOT in caps).
+        if has_boolean:
+            safe_query = re.sub(
+                r"\b(and|or|not)\b",
+                lambda m: m.group(0).upper(),
+                safe_query,
+                flags=re.IGNORECASE,
+            )
         return safe_query
 
     # For plain queries, tokenize and quote for maximum safety
     tokens = re.findall(r"[a-z0-9]+", query.lower())
+    tokens = [t for t in tokens if t not in {"and", "or", "not"}]
     if not tokens:
         return '""'  # Empty match returns no results gracefully
     # Deduplicate while preserving order

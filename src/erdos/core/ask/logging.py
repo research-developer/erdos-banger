@@ -93,7 +93,8 @@ def read_ask_log_entries(
 
     Args:
         problem_id: Problem ID to read.
-        limit: Maximum number of entries to return (most recent).
+        limit: Maximum number of entries to return. When combined with `since`,
+            returns the last `limit` entries that satisfy the timestamp filter.
         since: Optional timestamp filter.
         log_dir: Optional log directory override.
 

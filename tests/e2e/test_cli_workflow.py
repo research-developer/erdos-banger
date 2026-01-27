@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -10,7 +12,7 @@ import pytest
 
 @pytest.mark.e2e
 def test_no_network_workflow_creates_index_research_and_logs(
-    cli_runner, tmp_path: Path
+    cli_runner: Callable[..., subprocess.CompletedProcess[str]], tmp_path: Path
 ) -> None:
     """Run a representative offline workflow across real subprocess invocations."""
     listed = cli_runner("--json", "list", "--limit", "1")
@@ -74,7 +76,9 @@ def test_no_network_workflow_creates_index_research_and_logs(
 
 
 @pytest.mark.e2e
-def test_graceful_failures_without_paid_api_keys(cli_runner, tmp_path: Path) -> None:
+def test_graceful_failures_without_paid_api_keys(
+    cli_runner: Callable[..., subprocess.CompletedProcess[str]], tmp_path: Path
+) -> None:
     """Paid/network integrations should fail with structured errors (no tracebacks)."""
     exa = cli_runner(
         "--json",

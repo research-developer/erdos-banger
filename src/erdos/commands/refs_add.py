@@ -8,7 +8,7 @@ discover and ingest the newly-added references.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 import typer
 from pydantic import ValidationError
@@ -17,35 +17,14 @@ from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord, ReferenceEntry
+from erdos.core.refs import add_reference_to_problem
 from erdos.core.sync.dataset import (
-    load_enriched_problems,
     resolve_enriched_dataset_path,
-    save_enriched_problems,
 )
 from erdos.core.timing import measure_time_ms
 
 
 logger = logging.getLogger(__name__)
-
-if TYPE_CHECKING:
-    from pathlib import Path
-
-
-def _dedupe_key(key: str, existing_keys: set[str]) -> str:
-    if key not in existing_keys:
-        return key
-    suffix = 2
-    while f"{key}-{suffix}" in existing_keys:
-        suffix += 1
-    return f"{key}-{suffix}"
-
-
-def _normalize_identifier(value: str) -> str:
-    return value.strip()
-
-
-def _normalize_doi(value: str) -> str:
-    return value.strip().lower()
 
 
 def _build_reference_entry(
@@ -57,7 +36,13 @@ def _build_reference_entry(
     key: str | None,
     citation: str | None,
 ) -> tuple[ReferenceEntry | None, CLIOutput | None]:
-    identifiers = [v for v in (arxiv_id, doi, url) if v]
+    normalized_arxiv = arxiv_id.strip() if arxiv_id else None
+    normalized_doi = doi.strip().lower() if doi else None
+    normalized_url = url.strip() if url else None
+    normalized_key = key.strip() if key else None
+    normalized_citation = citation.strip() if citation else None
+
+    identifiers = [v for v in (normalized_arxiv, normalized_doi, normalized_url) if v]
     if not identifiers:
         return (
             None,
@@ -69,27 +54,27 @@ def _build_reference_entry(
             ),
         )
 
-    derived_url = url
-    if derived_url is None and arxiv_id:
-        derived_url = f"https://arxiv.org/abs/{arxiv_id.strip()}"
-    if derived_url is None and doi:
-        derived_url = f"https://doi.org/{doi.strip()}"
+    derived_url = normalized_url
+    if derived_url is None and normalized_arxiv:
+        derived_url = f"https://arxiv.org/abs/{normalized_arxiv}"
+    if derived_url is None and normalized_doi:
+        derived_url = f"https://doi.org/{normalized_doi}"
 
-    derived_key = key
+    derived_key = normalized_key
     if derived_key is None:
-        if arxiv_id:
-            derived_key = f"arXiv:{arxiv_id.strip()}"
-        elif doi:
-            derived_key = f"DOI:{doi.strip()}"
+        if normalized_arxiv:
+            derived_key = f"arXiv:{normalized_arxiv}"
+        elif normalized_doi:
+            derived_key = f"DOI:{normalized_doi}"
         else:
             derived_key = "URL"
 
     try:
         reference = ReferenceEntry(
             key=derived_key,
-            citation=citation,
-            doi=doi,
-            arxiv_id=arxiv_id,
+            citation=normalized_citation,
+            doi=normalized_doi,
+            arxiv_id=normalized_arxiv,
             url=derived_url,
         )
     except (ValidationError, ValueError) as e:
@@ -104,59 +89,6 @@ def _build_reference_entry(
         )
 
     return reference, None
-
-
-def add_reference_to_problem(
-    *,
-    problem_id: int,
-    reference: ReferenceEntry,
-    dataset_path: Path,
-) -> tuple[ProblemRecord | None, bool, ReferenceEntry | None, str | None]:
-    """Add a ReferenceEntry to the local enriched dataset.
-
-    Returns:
-        (updated_problem, updated, stored_reference, error_message)
-    """
-    try:
-        problems = load_enriched_problems(dataset_path)
-        problem = problems.get(problem_id)
-        if problem is None:
-            return None, False, None, f"Problem {problem_id} not found in dataset"
-
-        existing_keys = {r.key for r in problem.references}
-        existing_dois: dict[str, ReferenceEntry] = {}
-        existing_arxiv: dict[str, ReferenceEntry] = {}
-        for ref in problem.references:
-            if ref.doi is not None:
-                existing_dois[_normalize_doi(ref.doi)] = ref
-            if ref.arxiv_id is not None:
-                existing_arxiv[_normalize_identifier(ref.arxiv_id)] = ref
-
-        doi = _normalize_doi(reference.doi) if reference.doi else None
-        arxiv_id = (
-            _normalize_identifier(reference.arxiv_id) if reference.arxiv_id else None
-        )
-
-        if doi is not None and doi in existing_dois:
-            return problem, False, existing_dois[doi], None
-        if arxiv_id is not None and arxiv_id in existing_arxiv:
-            return problem, False, existing_arxiv[arxiv_id], None
-
-        key = _dedupe_key(reference.key, existing_keys)
-        ref = (
-            reference
-            if key == reference.key
-            else reference.model_copy(update={"key": key})
-        )
-
-        updated_refs = [*problem.references, ref]
-        updated_problem = problem.model_copy(update={"references": updated_refs})
-        problems[problem_id] = updated_problem
-        save_enriched_problems(dataset_path, problems)
-        return updated_problem, True, ref, None
-    except Exception as e:
-        logger.exception("Failed to update dataset references")
-        return None, False, None, str(e)
 
 
 def refs_add(

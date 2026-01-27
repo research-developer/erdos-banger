@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from typing import Any
 
 import typer
@@ -27,11 +26,7 @@ app = typer.Typer(
 
 
 def _entry_to_dict(entry: AskLogEntry) -> dict[str, Any]:
-    payload = entry.model_dump(mode="json")
-    timestamp = payload.get("timestamp")
-    if isinstance(timestamp, datetime):
-        payload["timestamp"] = timestamp.isoformat()
-    return payload
+    return entry.model_dump(mode="json")
 
 
 def query_ask_logs(

@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 
 class TestConverterDetection:
     """Tests for converter availability detection."""
@@ -199,7 +201,7 @@ class TestMarkerConversion:
         assert "not installed" in error_lower or "not available" in error_lower
 
     def test_convert_with_marker_uses_marker_config_parser(
-        self, monkeypatch, tmp_path: Path
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         """convert_with_marker uses marker's ConfigParser/PdfConverter API (BUG-040)."""
         import sys
@@ -296,9 +298,90 @@ class TestMarkerConversion:
         assert isinstance(captured.get("artifact_dict"), dict)
         assert captured.get("llm_service") is not None
         assert isinstance(captured.get("config"), dict)
-        config = cast("dict[str, Any]", captured["config"])
+        config = cast(dict[str, Any], captured["config"])
         assert config["use_llm"] is True
         assert config["force_ocr"] is True
+
+    def test_convert_with_marker_supports_marker_pdf_v1_api(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """convert_with_marker supports marker-pdf 1.0.x without get_converter_cls()."""
+        import sys
+        import types
+
+        from erdos.core.pdf.converter import convert_with_marker
+
+        pdf_path = tmp_path / "paper.pdf"
+        pdf_path.write_bytes(b"%PDF-1.4\n% dummy\n")
+
+        marker_pkg = types.ModuleType("marker")
+        marker_pkg.__path__ = []
+        marker_config_pkg = types.ModuleType("marker.config")
+        marker_config_pkg.__path__ = []
+        marker_parser_mod = types.ModuleType("marker.config.parser")
+        marker_models_mod = types.ModuleType("marker.models")
+        marker_converters_pkg = types.ModuleType("marker.converters")
+        marker_converters_pkg.__path__ = []
+        marker_converters_pdf_mod = types.ModuleType("marker.converters.pdf")
+
+        captured: dict[str, Any] = {}
+
+        class FakeRendered:
+            def __init__(self, markdown: str) -> None:
+                self.markdown = markdown
+
+        class FakePdfConverterV1:
+            def __init__(
+                self,
+                artifact_dict: dict[str, Any],
+                processor_list: list[str] | None = None,
+                renderer: str | None = None,
+                config=None,
+            ) -> None:
+                captured["artifact_dict"] = artifact_dict
+                captured["processor_list"] = processor_list
+                captured["renderer"] = renderer
+                captured["config"] = config
+                self.page_count = 1
+
+            def __call__(self, filepath: str) -> FakeRendered:
+                assert filepath == str(pdf_path)
+                return FakeRendered("# ok")
+
+        class FakeConfigParserV1:
+            def __init__(self, cli_options: dict[str, object]) -> None:
+                self.cli_options = cli_options
+
+            def generate_config_dict(self) -> dict[str, object]:
+                return {"force_ocr": bool(self.cli_options.get("force_ocr", False))}
+
+            def get_processors(self) -> list[str] | None:
+                return None
+
+            def get_renderer(self) -> str:
+                return "marker.renderers.markdown.MarkdownRenderer"
+
+        def fake_create_model_dict() -> dict[str, Any]:
+            return {"model": "ok"}
+
+        setattr(marker_parser_mod, "ConfigParser", FakeConfigParserV1)
+        setattr(marker_models_mod, "create_model_dict", fake_create_model_dict)
+        setattr(marker_converters_pdf_mod, "PdfConverter", FakePdfConverterV1)
+
+        monkeypatch.setitem(sys.modules, "marker", marker_pkg)
+        monkeypatch.setitem(sys.modules, "marker.config", marker_config_pkg)
+        monkeypatch.setitem(sys.modules, "marker.config.parser", marker_parser_mod)
+        monkeypatch.setitem(sys.modules, "marker.models", marker_models_mod)
+        monkeypatch.setitem(sys.modules, "marker.converters", marker_converters_pkg)
+        monkeypatch.setitem(sys.modules, "marker.converters.pdf", marker_converters_pdf_mod)
+
+        monkeypatch.setattr("erdos.core.pdf.converter.is_marker_available", lambda: True)
+
+        result = convert_with_marker(pdf_path, use_llm=False, force_ocr=True)
+
+        assert result.success is True
+        assert result.text == "# ok"
+        assert captured.get("artifact_dict") == {"model": "ok"}
 
 
 class TestConvertPDF:
@@ -351,7 +434,7 @@ class TestTorchDeviceEnvVar:
     """Tests for TORCH_DEVICE environment variable wiring (DEBT-036)."""
 
     def test_convert_pdf_sets_torch_device_env_var(
-        self, monkeypatch, tmp_path: Path
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         """convert_pdf sets TORCH_DEVICE env var when torch_device is configured."""
         import os

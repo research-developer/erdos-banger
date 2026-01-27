@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from sentence_transformers import SentenceTransformer
 
 # Runtime import with graceful fallback
-_SentenceTransformer: type | None = None
+_SentenceTransformer: type["SentenceTransformer"] | None = None
 EMBEDDING_AVAILABLE = False
 
 try:

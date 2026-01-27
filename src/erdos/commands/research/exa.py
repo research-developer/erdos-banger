@@ -42,17 +42,12 @@ def _exa_to_leads(
     for source in result.sources:
         title = (source.title or "").strip()
         if not title:
-            if source.doi:
-                title = f"[Exa] DOI {source.doi}"
-            elif source.arxiv_id:
-                title = f"[Exa] arXiv {source.arxiv_id}"
-            elif source.url:
-                title = f"[Exa] {source.url}"
-            elif source.relevance:
+            fallback = source.display_title
+            if fallback == "Untitled" and source.relevance:
                 snippet = " ".join(source.relevance.split())[:80].strip()
-                title = f"[Exa] {snippet}" if snippet else "[Exa] Untitled"
-            else:
-                title = "[Exa] Untitled"
+                if snippet:
+                    fallback = snippet
+            title = f"[Exa] {fallback}"
         notes = f"[Exa] {source.relevance}" if source.relevance else "[Exa]"
         record, _ = store.lead_add(
             problem_id,

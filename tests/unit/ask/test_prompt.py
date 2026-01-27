@@ -256,3 +256,28 @@ def test_prompt_budgeting_enforces_max_bytes() -> None:
     assert "[1]" in prompt
     assert "[2]" in prompt
     assert "truncated" in prompt.lower()
+
+
+def test_prompt_budgeting_preserves_statement_when_question_exceeds_budget() -> None:
+    """Even huge questions should not crowd out the problem statement entirely."""
+    statement_prefix = "STATEMENT_START: "
+    problem = ProblemRecord(
+        id=6,
+        title="Test",
+        statement=statement_prefix + ("A" * 5000),
+        status=ProblemStatus.OPEN,
+        notes=None,
+    )
+    sources: list[SearchResult] = []
+    question = "Q" * 10000
+    max_bytes = 800
+
+    prompt = build_prompt(
+        problem=problem,
+        sources=sources,
+        question=question,
+        max_bytes=max_bytes,
+    )
+
+    assert len(prompt.encode("utf-8")) <= max_bytes
+    assert statement_prefix in prompt
