@@ -44,6 +44,8 @@ import Mathlib.Data.ZMod.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.NumberTheory.LegendreSymbol.Basic
 import Mathlib.Data.Nat.ModEq
+import Mathlib.NumberTheory.Chebyshev
+import Mathlib.Analysis.PSeries
 
 
 namespace Erdos.Problem848_workbench
@@ -341,6 +343,43 @@ lemma cross_residue_not_div_25 (a b : ℕ) (ha : a % 25 = 7)
     simpa [Nat.mod_eq_of_lt (by decide : 7 < 25)] using hb'
   exact hb.1 hbmod
 
+/-- If a ≡ 18 (mod 25) and b ≢ 7,18 (mod 25), then 25 ∤ (ab + 1). -/
+lemma cross_residue_not_div_25_18 (a b : ℕ) (ha : a % 25 = 18)
+    (hb : b % 25 ≠ 7 ∧ b % 25 ≠ 18) : ¬ (25 ∣ a * b + 1) := by
+  intro hdiv
+  have h0 : ((a * b + 1 : ℕ) : ZMod 25) = 0 :=
+    (ZMod.natCast_eq_zero_iff (a * b + 1) 25).2 hdiv
+  have haZ : (a : ZMod 25) = 18 := by
+    have : a % 25 = 18 % 25 := by
+      simpa [Nat.mod_eq_of_lt (by decide : 18 < 25)] using ha
+    exact (ZMod.natCast_eq_natCast_iff' a 18 25).2 this
+  have h1 : (18 : ZMod 25) * (b : ZMod 25) + 1 = 0 := by
+    have : (a : ZMod 25) * (b : ZMod 25) + 1 = 0 := by
+      simpa [Nat.cast_add, Nat.cast_mul, Nat.cast_one] using h0
+    simpa [haZ] using this
+  have h2 : (18 : ZMod 25) * (b : ZMod 25) = (-1 : ZMod 25) := by
+    simpa using (eq_neg_of_add_eq_zero_left h1)
+  have h718 : (7 : ZMod 25) * (18 : ZMod 25) = 1 := by native_decide
+  have hbZ : (b : ZMod 25) = (18 : ZMod 25) := by
+    have hmul : (7 : ZMod 25) * ((18 : ZMod 25) * (b : ZMod 25)) =
+        (7 : ZMod 25) * (-1 : ZMod 25) := by
+      simpa [mul_assoc] using congrArg (fun x => (7 : ZMod 25) * x) h2
+    have hb' : (b : ZMod 25) = (7 : ZMod 25) * (-1 : ZMod 25) := by
+      have hmul' : ((7 : ZMod 25) * (18 : ZMod 25)) * (b : ZMod 25) =
+          (7 : ZMod 25) * (-1 : ZMod 25) := by
+        calc
+          ((7 : ZMod 25) * (18 : ZMod 25)) * (b : ZMod 25) =
+              (7 : ZMod 25) * ((18 : ZMod 25) * (b : ZMod 25)) := mul_assoc _ _ _
+          _ = (7 : ZMod 25) * (-1 : ZMod 25) := hmul
+      have : (1 : ZMod 25) * (b : ZMod 25) = (7 : ZMod 25) * (-1 : ZMod 25) := by
+        simpa [h718] using hmul'
+      simpa using this
+    exact hb'.trans (by native_decide : (7 : ZMod 25) * (-1 : ZMod 25) = (18 : ZMod 25))
+  have hbmod : b % 25 = 18 := by
+    have hb' : b % 25 = 18 % 25 := (ZMod.natCast_eq_natCast_iff' b 18 25).1 hbZ
+    simpa [Nat.mod_eq_of_lt (by decide : 18 < 25)] using hb'
+  exact hb.2 hbmod
+
 /-- If b ≢ 7, 18 (mod 25), ab+1 not squarefree implies p² | ab+1 for some p ≠ 5. -/
 lemma must_have_other_prime_square (a b : ℕ) (ha : a % 25 = 7)
     (hb : b % 25 ≠ 7 ∧ b % 25 ≠ 18) (hnsq : ¬ Squarefree (a * b + 1)) :
@@ -352,6 +391,24 @@ lemma must_have_other_prime_square (a b : ℕ) (ha : a % 25 = 7)
   push_neg at hnot
   rcases hnot with ⟨p, hp, hpp⟩
   have h25 : ¬ (25 ∣ a * b + 1) := cross_residue_not_div_25 a b ha hb
+  have hp2 : p ^ 2 ∣ a * b + 1 := by simpa [pow_two] using hpp
+  refine ⟨p, hp, ?_, hp2⟩
+  intro hp5
+  subst hp5
+  have : 25 ∣ a * b + 1 := by simpa [pow_two] using hp2
+  exact (h25 this).elim
+
+/-- If b ≢ 7, 18 (mod 25), ab+1 not squarefree implies p² | ab+1 for some p ≠ 5 (18-version). -/
+lemma must_have_other_prime_square_18 (a b : ℕ) (ha : a % 25 = 18)
+    (hb : b % 25 ≠ 7 ∧ b % 25 ≠ 18) (hnsq : ¬ Squarefree (a * b + 1)) :
+    ∃ p : ℕ, Nat.Prime p ∧ p ≠ 5 ∧ p ^ 2 ∣ a * b + 1 := by
+  classical
+  have hnot : ¬ ∀ p : ℕ, Nat.Prime p → ¬p * p ∣ a * b + 1 := by
+    intro hall
+    exact hnsq ((Nat.squarefree_iff_prime_squarefree).2 hall)
+  push_neg at hnot
+  rcases hnot with ⟨p, hp, hpp⟩
+  have h25 : ¬ (25 ∣ a * b + 1) := cross_residue_not_div_25_18 a b ha hb
   have hp2 : p ^ 2 ∣ a * b + 1 := by simpa [pow_two] using hpp
   refine ⟨p, hp, ?_, hp2⟩
   intro hp5
