@@ -77,7 +77,7 @@ def _check_problem_794() -> None:
     for a in part_a:
         for b in part_b:
             for c in part_c:
-                edges.add(tuple(sorted((a, b, c))))
+                edges.add((a, b, c))
     edges.add((1, 2, 3))
     _require(len(edges) == 28, f"Expected 28 edges, got {len(edges)}")
 
