@@ -1,0 +1,38 @@
+created_at: '2026-01-27T13:57:42.644983Z'
+entries:
+- cache_hash: null
+  cache_path: null
+  cached: false
+  error: null
+  extract_path: null
+  extracted: false
+  ingested_at: '2026-01-27T13:57:39.642271Z'
+  reference:
+    abstract: null
+    arxiv_id: null
+    authors:
+    - "Paul Erd\u0151s"
+    - A. Hajnal
+    cited_by_count: 23
+    concepts:
+    - Mathematics
+    - Combinatorics
+    - Undecidable problem
+    - Chromatic scale
+    - Discrete mathematics
+    doi: 10.1016/0012-365x(85)90148-7
+    fetched_at: null
+    license: null
+    oa_status: closed
+    oa_url: null
+    openalex_id: https://openalex.org/W2063135663
+    pdf_url: null
+    semantic_scholar_id: null
+    source: openalex
+    title: Chromatic number of finite and infinite graphs and hypergraphs
+    venue: Discrete Mathematics
+    year: 1985
+  schema_version: 1
+problem_id: 74
+schema_version: 1
+updated_at: '2026-01-27T13:57:42.644983Z'

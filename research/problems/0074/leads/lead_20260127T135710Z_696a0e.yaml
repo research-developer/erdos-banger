@@ -1,0 +1,33 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260127T135710Z_696a0e
+title: '[Exa] https://users.renyi.hu/~p_erdos/1966-07.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://users.renyi.hu/~p_erdos/1966-07.pdf
+notes: '[Exa] ON CHROMATIC NUMBER OF GRAPHS
+
+  AND SET-SYSTEMS
+
+  By
+
+  P. ERDŐS (Budapest), member of the Academy and A . HAJNAL (Budapest)
+
+  Professors R . PÉTER and L. KALMÁR on their 60th birthday
+
+  § 1 . Introduction''
+
+  Let a be a cardinal number . A graph V is said to have chromatic number a
+
+  if x is the least cardinal such that, the set of vertices of ~ is the union of a
+  sets, where
+
+  no two elements of the same set are connected by an edge in ~§ .
+
+  A graph 16~ is said to have colouring-number a, if a is the least cardin'
+created_at: '2026-01-27T13:57:10Z'
+updated_at: '2026-01-27T13:57:10Z'

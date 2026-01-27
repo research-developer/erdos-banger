@@ -1,0 +1,59 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260127T135725Z_88e0ed
+title: '[Exa] https://www.cs.toronto.edu/~stacho/cs137/cs137-lec4.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.cs.toronto.edu/~stacho/cs137/cs137-lec4.pdf
+notes: '[Exa] CS 137 - Graph Theory - Lectures 4-5
+
+  February 21, 2012
+
+  (further reading Rosen K. H.: Discrete Mathematics and its Applications, 5th ed.,
+  chapters 8.7, 8.8)
+
+  1.1. Summary
+
+  – Bipartite graphs
+
+  – Colouring vertices and edges
+
+  – Planar graphs
+
+  1.2. Graph substructures
+
+  subgraph = G
+
+  ′
+
+  is a subgraph of G if V(G
+
+  ′
+
+  ) ⊆ V(G) and E(G
+
+  ′
+
+  ) ⊆ E(G)
+
+  independent set of G = set of pairwise non-adjacent vertices in G
+
+  clique of G = set of pairwise adjacent vertices in G
+
+  complete graph Kn
+
+  cycle Cn
+
+  K5
+
+  C4 C5 C6
+
+  K4
+
+  2. Bipar'
+created_at: '2026-01-27T13:57:25Z'
+updated_at: '2026-01-27T13:57:25Z'

@@ -97,11 +97,27 @@ These are solved problems that share techniques with our candidates:
 - Added "Counterexample Candidates" section with 5 disproved problems (#399, #649, #231, #794, #645)
 - Strategy shift: "disproved by finite counterexample" problems are ideal for Lean because they avoid asymptotics and heavy theorems
 
+### 2026-01-27
+
+- **Selected #74 (Chromatic Number)** as the next problem after #848
+- Rationale:
+  - Most detailed Lean formalization (139 LOC) with supporting definitions and lemmas
+  - Graph theory is AI-friendly: constructive, algorithmic approaches
+  - $500 prize (meaningful but not overwhelming)
+  - Related solved problems (#57, #58, #63) share techniques
+- Setup completed:
+  - Research workspace: `research/problems/0074/`
+  - Literature ingested: 1985 Erdős-Hajnal chromatic paper (DOI:10.1016/0012-365x(85)90148-7)
+  - 15 leads saved from Exa search
+  - Lean formalization imported with supporting lemmas already proved
+
 ---
 
 ## Next Steps
 
 1. [x] Pick one problem to focus on (#848)
-2. [ ] Read the related solved proofs
-3. [ ] Understand the Lean formalization
-4. [ ] Attempt partial progress or full proof
+2. [x] Pick second problem (#74)
+3. [ ] Complete #848 formalization work in progress
+4. [ ] Study #74 supporting lemmas in `formal/lean/Upstream/FormalConjectures/ErdosProblems/74.lean`
+5. [ ] Research #74: synthesize literature, understand Erdős-Hajnal-Szemerédi 1982 approach
+6. [ ] Attempt #74 proof using Claude Code subscription workflow

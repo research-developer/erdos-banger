@@ -1,0 +1,33 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260127T135725Z_b2108a
+title: '[Exa] https://courses.csail.mit.edu/6.042/past-devel/archive/spring05/notes/graphs/graphs2.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://courses.csail.mit.edu/6.042/past-devel/archive/spring05/notes/graphs/graphs2.pdf
+notes: '[Exa] 6.042/18.062J Mathematics for Computer Science March 3, 2005
+
+  Srini Devadas and Eric Lehman Lecture Notes
+
+  Graph Theory II
+
+  1 Coloring Graphs
+
+  Each term, the MIT Schedules Office must assign a time slot for each final exam.
+  This is
+
+  not easy, because some students are taking several classes with finals, and a student
+  can
+
+  take only one test during a particular time slot. The Schedules Office wants to
+  avoid all
+
+  conflicts, but to make the exam period as short as possible.
+
+  We can recast this scheduling p'
+created_at: '2026-01-27T13:57:25Z'
+updated_at: '2026-01-27T13:57:25Z'
