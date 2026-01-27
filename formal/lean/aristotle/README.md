@@ -29,6 +29,10 @@ current project. Use them as a hint bank to port ideas/lemmas into the in-tree f
   - Takeaway: the squarefree-fraction claim should be stated in an **asymptotic / ∃N₀** form and
     must include the right congruence hypotheses (see `formal/lean/Erdos/Problem848_sieve_query2.lean`).
 
+- `formal/lean/aristotle/Problem848_combined_failure_output.lean`
+  - Mathlib-only “combined” submission stub (inlined definitions) where Aristotle left
+    `sawhney_main` as `sorry` (i.e., did not find a proof).
+
 ## “SSOT” in-tree code
 
 The current sorry-free working development lives in:

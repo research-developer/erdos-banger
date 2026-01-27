@@ -1,4 +1,4 @@
-created_at: '2026-01-27T13:57:42.644983Z'
+created_at: '2026-01-27T14:26:04.160193Z'
 entries:
 - cache_hash: null
   cache_path: null
@@ -6,7 +6,7 @@ entries:
   error: null
   extract_path: null
   extracted: false
-  ingested_at: '2026-01-27T13:57:39.642271Z'
+  ingested_at: '2026-01-27T14:25:47.856613Z'
   reference:
     abstract: null
     arxiv_id: null
@@ -33,6 +33,168 @@ entries:
     venue: Discrete Mathematics
     year: 1985
   schema_version: 1
+- cache_hash: 10025bffb641bbe6ba9a0545d07c88bbddcdae6d60a5d7910df9c50bd556e87c
+  cache_path: literature/cache/arxiv/1902.08177/source.tar.gz
+  cached: true
+  error: null
+  extract_path: literature/extracts/arxiv/1902.08177/fulltext.txt
+  extracted: true
+  ingested_at: '2026-01-27T14:25:51.428765Z'
+  reference:
+    abstract: null
+    arxiv_id: '1902.08177'
+    authors:
+    - "Chris Lambie\u2010Hanson"
+    cited_by_count: 0
+    concepts:
+    - Uncountable set
+    - Combinatorics
+    - Chromatic scale
+    - Graph
+    - Mathematics
+    doi: 10.1016/j.aim.2020.107176
+    fetched_at: null
+    license: null
+    oa_status: green
+    oa_url: null
+    openalex_id: https://openalex.org/W2915160394
+    pdf_url: https://arxiv.org/pdf/1902.08177
+    semantic_scholar_id: null
+    source: openalex
+    title: On the growth rate of chromatic numbers of finite subgraphs
+    venue: Advances in Mathematics
+    year: 2020
+  schema_version: 1
+- cache_hash: 98b5321e4f849218d56be66502dcbe62e707e1e829a7a7dc5a5c1b7429b14a73
+  cache_path: literature/cache/arxiv/1306.5167/source.tar.gz
+  cached: true
+  error: null
+  extract_path: literature/extracts/arxiv/1306.5167/fulltext.txt
+  extracted: true
+  ingested_at: '2026-01-27T14:25:54.667072Z'
+  reference:
+    abstract: This paper is a survey on Extremal Graph Theory, primarily focusing
+      on the case when one of the excluded graphs is bipartite. On one hand we give
+      an introduction to this field and also describe many important results, methods,
+      problems, and constructions.
+    arxiv_id: '1306.5167'
+    authors:
+    - "Zolt\xE1n F\xFCredi"
+    - "Mikl\xF3s Simonovits"
+    cited_by_count: 0
+    concepts:
+    - Bipartite graph
+    - Degenerate energy levels
+    - Combinatorics
+    - Mathematics
+    - Graph
+    doi: 10.48550/arxiv.1306.5167
+    fetched_at: null
+    license: null
+    oa_status: green
+    oa_url: null
+    openalex_id: https://openalex.org/W4292596933
+    pdf_url: https://arxiv.org/pdf/1306.5167
+    semantic_scholar_id: null
+    source: openalex
+    title: The history of degenerate (bipartite) extremal graph problems
+    venue: arXiv (Cornell University)
+    year: 2013
+  schema_version: 1
+- cache_hash: 2b7b019ce49bf78bfdb82681c22937f73d861eb449b3054f08a6d12c65fd7358
+  cache_path: literature/cache/arxiv/2012.10409/source.tar.gz
+  cached: true
+  error: 'Extraction failed: file could not be opened successfully:
+
+    - method gz: ReadError(''invalid header'')
+
+    - method bz2: ReadError(''not a bzip2 file'')
+
+    - method xz: ReadError(''not an lzma file'')
+
+    - method tar: ReadError(''invalid header'')'
+  extract_path: null
+  extracted: false
+  ingested_at: '2026-01-27T14:25:57.938818Z'
+  reference:
+    abstract: "In 1973, Erd\u0151s and Simonovits asked whether every $n$-vertex triangle-free\
+      \ graph with minimum degree greater than $1/3 \\cdot n$ is 3-colourable. This\
+      \ question initiated the study of the chromatic profile of triangle-free graphs:\
+      \ for each $k$, what minimum degree guarantees that a triangle-free graph is\
+      \ $k$-colourable. This problem has a rich history which culminated in its complete\
+      \ solution by Brandt and Thomass\xE9. Much less is known about the chromatic\
+      \ profile of $H$-free graphs for general $H$. Triangle-free graphs are exactly\
+      \ those in which each neighbourhood is one-colourable. Locally bipartite graphs,\
+      \ first mentioned by Luczak and Thomass\xE9, are the natural variant of triangle-free\
+      \ graphs in which each neighbourhood is bipartite. Here we study the chromatic\
+      \ profile of locally bipartite graphs. We show that every $n$-vertex locally\
+      \ bipartite graph with minimum degree greater than $4/7 \\cdot n$ is 3-colourable\
+      \ ($4/7$ is tight) and with minimum degree greater than $6/11 \\cdot n$ is 4-colourable.\
+      \ Although the chromatic profiles of locally bipartite and triangle-free graphs\
+      \ bear some similarities, we will see there are striking differences."
+    arxiv_id: '2012.10409'
+    authors:
+    - Freddie Illingworth
+    cited_by_count: 0
+    concepts:
+    - Combinatorics
+    - Bipartite graph
+    - Neighbourhood (mathematics)
+    - Mathematics
+    - Vertex (graph theory)
+    doi: 10.48550/arxiv.2012.10409
+    fetched_at: null
+    license: null
+    oa_status: green
+    oa_url: null
+    openalex_id: https://openalex.org/W4287550844
+    pdf_url: null
+    semantic_scholar_id: null
+    source: openalex
+    title: The chromatic profile of locally bipartite graphs
+    venue: arXiv (Cornell University)
+    year: 2020
+  schema_version: 1
+- cache_hash: 2df88b7d35da7aab3f8d7717abfd3669d65d5d0cc0e159308fb33f6cea426338
+  cache_path: literature/cache/arxiv/2203.13833/source.tar.gz
+  cached: true
+  error: null
+  extract_path: literature/extracts/arxiv/2203.13833/fulltext.txt
+  extracted: true
+  ingested_at: '2026-01-27T14:26:01.155083Z'
+  reference:
+    abstract: How large must the chromatic number of a graph be, in terms of the graph's
+      maximum degree, to ensure that the most efficient way to reduce the chromatic
+      number by removing vertices is to remove an independent set? By a reduction
+      to a powerful, known stability form of Brooks' theorem, we answer this question
+      precisely, determining the threshold to within two values (and indeed sometimes
+      a unique value) for graphs of sufficiently large maximum degree.
+    arxiv_id: '2203.13833'
+    authors:
+    - Stijn Cambie
+    - John Haslegrave
+    - Ross J. Kang
+    cited_by_count: 1
+    concepts:
+    - Chromatic scale
+    - Graph
+    - Degree (music)
+    - Mathematics
+    - Independent set
+    doi: 10.48550/arxiv.2203.13833
+    fetched_at: null
+    license: null
+    oa_status: green
+    oa_url: null
+    openalex_id: https://openalex.org/W4221167785
+    pdf_url: https://arxiv.org/pdf/2203.13833
+    semantic_scholar_id: null
+    source: openalex
+    title: When removing an independent set is optimal for reducing the chromatic
+      number
+    venue: arXiv (Cornell University)
+    year: 2022
+  schema_version: 1
 problem_id: 74
 schema_version: 1
-updated_at: '2026-01-27T13:57:42.644983Z'
+updated_at: '2026-01-27T14:26:04.160193Z'
