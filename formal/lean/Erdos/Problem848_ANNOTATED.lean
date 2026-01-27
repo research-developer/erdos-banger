@@ -25,6 +25,8 @@ import Mathlib.Data.ZMod.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.NumberTheory.LegendreSymbol.Basic
 import Mathlib.Data.Nat.ModEq
+import Mathlib.NumberTheory.Chebyshev
+import Mathlib.Analysis.PSeries
 
 namespace Erdos.Problem848
 
@@ -355,6 +357,30 @@ lemma card_filter_mod_eq_le (N m r : ℕ) :
     simp_all +decide [Nat.ModEq]
     exact ⟨n / m, Nat.div_le_div_right hn.1.le, by linarith [Nat.mod_add_div n m]⟩
   exact le_trans (Finset.card_le_card h_set) (Finset.card_image_le.trans (by norm_num))
+
+/-- If `m` and `n` are coprime, then the conjunction of two congruences is contained in a single
+residue class modulo `m*n`, hence has cardinality `≤ N/(m*n) + 1` inside `range N`. -/
+lemma card_filter_modEq_and_modEq_le (N m n a b : ℕ) (hmn : m.Coprime n) :
+    ((Finset.range N).filter (fun x => x ≡ a [MOD m] ∧ x ≡ b [MOD n])).card ≤ N / (m * n) + 1 := by
+  classical
+  let k : ℕ := Nat.chineseRemainder hmn a b
+  have hsubset :
+      (Finset.range N).filter (fun x => x ≡ a [MOD m] ∧ x ≡ b [MOD n]) ⊆
+        (Finset.range N).filter (fun x => x ≡ k [MOD m * n]) := by
+    intro x hx
+    have hx' : x < N ∧ x ≡ a [MOD m] ∧ x ≡ b [MOD n] := by
+      simpa [Finset.mem_filter, Finset.mem_range, and_assoc, and_left_comm, and_comm] using hx
+    refine Finset.mem_filter.2 ?_
+    refine ⟨by simpa [Finset.mem_range] using hx'.1, ?_⟩
+    -- `k` is the CRT solution mod `m*n`.
+    have : x ≡ Nat.chineseRemainder hmn a b [MOD m * n] :=
+      Nat.chineseRemainder_modEq_unique hmn hx'.2.1 hx'.2.2
+    simpa [k] using this
+  have hcard :
+      ((Finset.range N).filter (fun x => x ≡ a [MOD m] ∧ x ≡ b [MOD n])).card ≤
+        ((Finset.range N).filter (fun x => x ≡ k [MOD m * n])).card :=
+    Finset.card_le_card hsubset
+  exact le_trans hcard (card_filter_mod_eq_le N (m * n) k)
 
 /-- Number of integers < N congruent to r1 or r2 mod m is at most 2N/m + 1. -/
 lemma card_filter_mod_pair_le (N m r1 r2 : ℕ) (hm : m > 0) (h_sum : r1 + r2 = m) (h_r1_pos : 0 < r1)
@@ -957,6 +983,94 @@ axiom case3_A_bound {N : ℕ} {A : Finset ℕ} (hAsub : A ⊆ Finset.range N)
     (hAprop : NonSquarefreeProductProp A) (hAstar_empty : ∀ b ∈ A, b % 25 = 7 ∨ b % 25 = 18)
     (hA7 : ∃ b ∈ A, b % 25 = 7) (hA18 : ∃ b ∈ A, b % 25 = 18) :
     (A.card : ℝ) ≤ (917 / 31250 : ℝ) * (N : ℝ)
+
+/-!
+### (Work-in-progress) infrastructure to replace the axioms above
+
+To remove the `axiom` declarations, we will need two quantitative ingredients:
+
+1. Explicit bounds for finite prime-square sums `∑ 1/p^2` (computed up to a cutoff and with a
+   `∑_{k>B} 1/k^2 ≤ 1/B` tail estimate).
+2. A linear upper bound on `Nat.primeCounting N` for large `N` (from Chebyshev), to control the
+   rounding terms coming from `N/m + 1` in residue-class counting.
+
+This section records the helper computations/lemmas; the remaining work is to thread them into
+the three case-contradiction lemmas so that the axioms can be deleted.
+-/
+
+open scoped BigOperators Real
+
+def primeCutoff_coarse : ℕ := 2000
+
+def diagPrimeSet_coarse : Finset ℕ :=
+  (Finset.range (primeCutoff_coarse + 1)).filter (fun p => Nat.Prime p ∧ p % 4 = 1 ∧ 13 ≤ p)
+
+def diagPrimeSum_coarse : ℚ :=
+  ∑ p ∈ diagPrimeSet_coarse, (1 : ℚ) / ((p ^ 2 : ℕ) : ℚ)
+
+def offPrimeSet_coarse : Finset ℕ :=
+  (Finset.range (primeCutoff_coarse + 1)).filter (fun p => Nat.Prime p ∧ p ≠ 2 ∧ p ≠ 5)
+
+def offPrimeSum_coarse : ℚ :=
+  ∑ p ∈ offPrimeSet_coarse, (1 : ℚ) / ((p ^ 2 : ℕ) : ℚ)
+
+def no5PrimeSet_coarse : Finset ℕ :=
+  (Finset.range (primeCutoff_coarse + 1)).filter (fun p => Nat.Prime p ∧ p ≠ 5)
+
+def no5PrimeSum_coarse : ℚ :=
+  ∑ p ∈ no5PrimeSet_coarse, (1 : ℚ) / ((p ^ 2 : ℕ) : ℚ)
+
+lemma diagPrimeSum_coarse_le : diagPrimeSum_coarse ≤ (7 / 500 : ℚ) := by native_decide
+lemma offPrimeSum_coarse_le : offPrimeSum_coarse ≤ (163 / 1000 : ℚ) := by native_decide
+lemma no5PrimeSum_coarse_le : no5PrimeSum_coarse ≤ (413 / 1000 : ℚ) := by native_decide
+
+lemma sum_Ioc_inv_sq_le_inv_coarse {B N : ℕ} (hB : B ≠ 0) (hBN : B ≤ N) :
+    (∑ i ∈ Finset.Ioc B N, ((i : ℚ) ^ 2)⁻¹) ≤ (B : ℚ)⁻¹ := by
+  have h :=
+    sum_Ioc_inv_sq_le_sub (α := ℚ) (k := B) (n := N) hB hBN
+  have h' : (B : ℚ)⁻¹ - (N : ℚ)⁻¹ ≤ (B : ℚ)⁻¹ := by
+    simpa [sub_le_self_iff, inv_nonneg] using (show 0 ≤ (N : ℚ)⁻¹ from by positivity)
+  exact le_trans h (by simpa using h')
+
+lemma eventually_primeCounting_le_linear_coarse :
+    (∀ᶠ N : ℕ in Filter.atTop, (Nat.primeCounting N : ℝ) ≤ (1 / 1000000 : ℝ) * (N : ℝ)) := by
+  have hcheb : ∀ᶠ x : ℝ in Filter.atTop,
+      (Nat.primeCounting ⌊x⌋₊ : ℝ) ≤ (Real.log 4 + (1 : ℝ)) * x / Real.log x :=
+    Chebyshev.eventually_primeCounting_le (ε := (1 : ℝ)) (by norm_num)
+  have hchebN : ∀ᶠ N : ℕ in Filter.atTop,
+      (Nat.primeCounting N : ℝ) ≤ (Real.log 4 + (1 : ℝ)) * (N : ℝ) / Real.log (N : ℝ) := by
+    have : ∀ᶠ N : ℕ in Filter.atTop,
+        (Nat.primeCounting (⌊(N : ℝ)⌋₊) : ℝ) ≤
+          (Real.log 4 + (1 : ℝ)) * (N : ℝ) / Real.log (N : ℝ) :=
+      (tendsto_natCast_atTop_atTop.eventually hcheb)
+    filter_upwards [this] with N hN
+    simpa using hN
+  have hlog : ∀ᶠ N : ℕ in Filter.atTop,
+      (Real.log 4 + (1 : ℝ)) / Real.log (N : ℝ) ≤ (1 / 1000000 : ℝ) := by
+    have ht : Filter.Tendsto (fun N : ℕ => Real.log (N : ℝ)) Filter.atTop Filter.atTop :=
+      Real.tendsto_log_atTop.comp tendsto_natCast_atTop_atTop
+    have hge : ∀ᶠ N : ℕ in Filter.atTop,
+        (Real.log 4 + (1 : ℝ)) * (1000000 : ℝ) ≤ Real.log (N : ℝ) :=
+      ht.eventually (Filter.eventually_ge_atTop ((Real.log 4 + (1 : ℝ)) * (1000000 : ℝ)))
+    filter_upwards [hge] with N hN
+    have hlogpos : 0 < Real.log (N : ℝ) := lt_of_lt_of_le (by positivity) hN
+    have h1 : (Real.log 4 + (1 : ℝ)) ≤ (Real.log (N : ℝ)) / (1000000 : ℝ) := by
+      exact (le_div_iff₀ (by positivity : (0 : ℝ) < (1000000 : ℝ))).2 hN
+    have h2 :
+        (Real.log 4 + (1 : ℝ)) / Real.log (N : ℝ) ≤
+          (Real.log (N : ℝ) / (1000000 : ℝ)) / Real.log (N : ℝ) :=
+      div_le_div_of_nonneg_right h1 (le_of_lt hlogpos)
+    have hlogne : Real.log (N : ℝ) ≠ 0 := ne_of_gt hlogpos
+    simpa [div_div, hlogne, div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm] using h2
+  filter_upwards [hchebN, hlog] with N hN hlogN
+  have hNnonneg : 0 ≤ (N : ℝ) := by exact_mod_cast (Nat.zero_le N)
+  have hmul :
+      ((Real.log 4 + (1 : ℝ)) / Real.log (N : ℝ)) * (N : ℝ) ≤ (1 / 1000000 : ℝ) * (N : ℝ) :=
+    mul_le_mul_of_nonneg_right hlogN hNnonneg
+  have :
+      (Real.log 4 + (1 : ℝ)) * (N : ℝ) / Real.log (N : ℝ) ≤ (1 / 1000000 : ℝ) * (N : ℝ) := by
+    simpa [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm] using hmul
+  exact le_trans hN this
 
 /-- Proposition 1, Case 1: if `A*` contains an even element (i.e. an element not `7` or `18`
 mod `25`), then the density condition `|A| ≥ (1/25 - η)N` fails for `η = 1/500` (i.e. `0.002`). -/
