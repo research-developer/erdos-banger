@@ -41,7 +41,7 @@ lemma prime_sq_divides_implies_one_mod_four (p n : ℕ) (hp : Nat.Prime p) (hp2 
   have hp_ne_two : p ≠ 2 := by omega
   have hp_dvd : p ∣ n ^ 2 + 1 := by
     have hp_div_p2 : p ∣ p ^ 2 := by
-      simpa [pow_two] using Nat.dvd_mul_right p p
+      simp [pow_two]
     exact Nat.dvd_trans hp_div_p2 hdiv
 
   haveI : Fact p.Prime := ⟨hp⟩
@@ -98,7 +98,7 @@ lemma two_roots_mod_p_squared (p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) :
                   norm_cast at this
                   have := Nat.le_of_dvd (by norm_num) this
                   interval_cases p <;> trivial⟩
-          exact?  -- Aristotle: proof search in old environment
+          exact Int.mod_coprime h_inv
         exact ⟨y * -k, by simpa [mul_assoc] using hy.mul_right (-k)⟩
       use Int.natAbs (x + y * p)
       rw [Int.modEq_iff_dvd] at *
@@ -131,7 +131,7 @@ lemma two_roots_mod_p_squared (p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) :
       rw [← ZMod.natCast_eq_zero_iff] at h_r1_zero
       aesop
     norm_num [h_r1_zero] at hr₁
-    rcases p with (_ | _ | _ | p) <;> cases hr₁ <;> contradiction
+    rcases p with (_ | _ | _ | p); cases hr₁; contradiction
   · have h_solutions : ∀ r : ZMod (p ^ 2), r ^ 2 = -1 → r = r₁ ∨ r = -r₁ := by
       intro r hr
       have h_eq : (r - r₁) * (r + r₁) = 0 := by
@@ -176,7 +176,7 @@ noncomputable section AristotleLemmas
 /-
 The number of integers less than N congruent to r mod m is at most N/m + 1.
 -/
-lemma card_filter_mod_eq_le (N m r : ℕ) (hm : m > 0) :
+lemma card_filter_mod_eq_le (N m r : ℕ) :
     ((Finset.range N).filter (fun n => n ≡ r [MOD m])).card ≤ N / m + 1 := by
   have h_set :
       Finset.filter (fun n => n ≡ r [MOD m]) (Finset.range N) ⊆
@@ -215,19 +215,19 @@ lemma card_filter_mod_pair_le (N m r1 r2 : ℕ) (hm : m > 0) (h_sum : r1 + r2 = 
                 [Nat.mod_eq_of_lt (show r1 < m from by linarith),
                   Nat.mod_eq_of_lt (show r2 < m from by linarith)] using hn.2⟩,
             by linarith [Nat.mod_add_div n m]⟩
-      · cases hn.2 <;> simp_all +decide [Nat.mod_eq_of_lt]
+      · cases hn.2 <;> simp_all +decide
         · obtain ⟨k, hk⟩ : ∃ k, n = q * m + k ∧ k < s := by
             exact ⟨n - q * m, by rw [Nat.add_sub_cancel' h_case], by
               rw [tsub_lt_iff_left h_case]
               linarith⟩
-          simp_all +decide [Nat.add_mod, Nat.mod_eq_of_lt]
+          simp_all +decide [Nat.add_mod]
           rw [Nat.mod_eq_of_lt, Nat.mod_eq_of_lt] at * <;> first | linarith | aesop
         · obtain ⟨r, hr⟩ : ∃ r, n = q * m + r ∧ r < s := by
             exact ⟨n - q * m, by rw [Nat.add_sub_cancel' h_case], by
               rw [tsub_lt_iff_left h_case]
               linarith⟩
           simp_all +decide [Nat.mod_eq_of_lt (by linarith : r1 < m), Nat.mod_eq_of_lt (by linarith : r2 < m)]
-          split_ifs <;> simp_all +decide [Nat.mod_eq_of_lt]
+          split_ifs <;> simp_all +decide
           · exact Or.inr <| Or.inr <| by
               linarith [Nat.mod_eq_of_lt (by linarith : r < m)]
           · linarith [Nat.mod_eq_of_lt (by linarith : r < m)]
@@ -321,7 +321,7 @@ lemma density_single_prime (p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) (N : 
               grind
             have h_char : (2 : ZMod (p ^ 2)) ≠ 0 := by
               intro h
-              rcases p with (_ | _ | _ | p) <;> cases h <;> trivial
+              rcases p with (_ | _ | _ | p); cases h; trivial
             grind
           exact h_sum
         simp_all +decide [← ZMod.natCast_eq_natCast_iff]
@@ -360,7 +360,7 @@ lemma density_single_prime (p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) (N : 
     calc
       ((2 * (N : ℚ)) / (p ^ 2 : ℚ) + 1) / (N : ℚ) =
           ((2 * (N : ℚ)) / (p ^ 2 : ℚ)) / (N : ℚ) + 1 / (N : ℚ) := by
-            simpa [add_div]
+            simp [add_div]
       _ = (2 * (N : ℚ)) / ((p ^ 2 : ℚ) * (N : ℚ)) + 1 / (N : ℚ) := by
             simp [div_div]
       _ = (2 : ℚ) / (p ^ 2 : ℚ) + 1 / (N : ℚ) := by
@@ -368,7 +368,7 @@ lemma density_single_prime (p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) (N : 
                 (2 * (N : ℚ)) / ((p ^ 2 : ℚ) * (N : ℚ)) = (2 : ℚ) / (p ^ 2 : ℚ) := by
               simpa [mul_assoc, mul_left_comm, mul_comm] using
                 (mul_div_mul_right (a := (2 : ℚ)) (b := (p ^ 2 : ℚ)) (c := (N : ℚ)) hN0)
-            simpa [this]
+            simp [this]
 
   have := (show
       (((Finset.range N).filter (fun n => (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card : ℚ) / N ≤

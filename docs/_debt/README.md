@@ -14,17 +14,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 ## Active Debt
 
-**None.** All technical debt has been resolved.
-
-| ID | Title | Priority | Status |
-|----|-------|----------|--------|
-| DEBT-110 | Add paper discovery mode to ingest | P2 | Superseded by SPEC-036 |
-
-**Note:** DEBT-110 Phase 1 (`erdos refs add`) is complete. Phases 2-3 are new feature work fully specified in SPEC-036.
-
-Decks:
-
-- `docs/_debt/debt-110-ingest-discovery-mode.md` → See SPEC-036
+**None.** All technical debt has been resolved or archived.
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
@@ -149,6 +139,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-093 | Exa client infrastructure duplication | P2 | Fixed | 9f10546 |
 | DEBT-094 | Semantic Scholar client LOC violation | P3 | Superseded | 9f10546 |
 | DEBT-095 | zbMATH client LOC violation | P3 | Superseded | 9f10546 |
+| DEBT-110 | Add paper discovery mode to ingest | P2 | Superseded | SPEC-036 |
 
 **Next Debt ID:** DEBT-114
 
@@ -262,3 +253,4 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 - `docs/_archive/debt/debt-111-skill-invocation-discipline.md`
 - `docs/_archive/debt/debt-112-prefer-arxiv-source-over-pdf.md`
 - `docs/_archive/debt/debt-113-ask-response-persistence.md`
+- `docs/_archive/debt/debt-110-ingest-discovery-mode.md`

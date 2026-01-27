@@ -98,8 +98,8 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-040 | Marker PDF conversion broken (marker-pdf API change) | P1 | Fixed | b7ceb6f |
 | BUG-042 | Exa API returns empty titles | P2 | Fixed | 8ba6e32 |
 | BUG-038 | BM25 search doesn't escape FTS5 special characters | P1 | Fixed | 8c55500 |
-| GH-035 | Crossref/S2 clients missing JSONDecodeError handling | P1 | Fixed | (in-tree) |
-| GH-036 | Hardcoded `logs/loop` path breaks outside repo root | P2 | Fixed | (in-tree) |
+| GH-035 | Crossref/S2 clients missing JSONDecodeError handling | P1 | Fixed | json_response.py |
+| GH-036 | Hardcoded `logs/loop` path breaks outside repo root | P2 | Open | GH#36 |
 | BUG-044 | Environment variables not auto-loaded in Python scripts | P2 | Fixed | b43c3a7 |
 | BUG-041 | Exa not exposed in CLI | N/A | Invalidated | f5557d7 |
 | BUG-043 | pdfplumber not installed | N/A | Invalidated | f5557d7 |
@@ -166,6 +166,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/bug-045-literature-papers-not-gitignored.md`
 - `docs/_archive/bugs/bug-046-erdos-lean-command-broken.md`
 - `docs/_archive/bugs/friction-2026-01-26-cli-maximization-test.md`
+- `docs/_archive/bugs/friction-2026-01-26-aristotle-onboarding.md`
 
 ## Bug Priority Definitions
 
