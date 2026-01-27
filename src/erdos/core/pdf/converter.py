@@ -13,7 +13,7 @@ import os
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 
 logger = logging.getLogger(__name__)
@@ -65,6 +65,106 @@ class PDFConversionResult:
     converter: str
     error: str | None = None
     metadata: dict[str, str] = field(default_factory=dict)
+
+
+def _marker_cli_options(
+    *,
+    use_llm: bool,
+    llm_service: LLMService | None,
+    force_ocr: bool,
+) -> dict[str, object]:
+    cli_options: dict[str, object] = {"output_format": "markdown"}
+    if use_llm:
+        cli_options["use_llm"] = True
+        if llm_service is not None:
+            cli_options["llm_service"] = llm_service.get_marker_class()
+    if force_ocr:
+        cli_options["force_ocr"] = True
+    return cli_options
+
+
+def _marker_get_converter_cls(config_parser: Any) -> type[Any]:
+    if hasattr(config_parser, "get_converter_cls"):
+        return cast("type[Any]", config_parser.get_converter_cls())
+
+    # marker-pdf 1.0.x did not expose get_converter_cls() yet.
+    from marker.converters.pdf import PdfConverter  # noqa: PLC0415
+
+    return cast("type[Any]", PdfConverter)
+
+
+def _marker_get_llm_service(config_parser: Any) -> Any | None:
+    if hasattr(config_parser, "get_llm_service"):
+        return config_parser.get_llm_service()
+    return None
+
+
+def _marker_create_converter(converter_cls: type[Any], kwargs: dict[str, Any]) -> Any:
+    try:
+        return converter_cls(**kwargs)
+    except TypeError as exc:
+        # marker-pdf 1.0.x PdfConverter did not accept llm_service.
+        if "llm_service" in kwargs and "llm_service" in str(exc):
+            without_llm = dict(kwargs)
+            without_llm.pop("llm_service", None)
+            return converter_cls(**without_llm)
+        raise
+
+
+def _convert_with_marker_success(
+    pdf_path: Path,
+    *,
+    use_llm: bool,
+    llm_service: LLMService | None,
+    force_ocr: bool,
+) -> PDFConversionResult:
+    # Import Marker components (optional GPL dependency)
+    from marker.config.parser import ConfigParser  # noqa: PLC0415
+    from marker.models import create_model_dict  # noqa: PLC0415
+
+    config_parser = ConfigParser(
+        cli_options=_marker_cli_options(
+            use_llm=use_llm,
+            llm_service=llm_service,
+            force_ocr=force_ocr,
+        )
+    )
+    converter_cls = _marker_get_converter_cls(config_parser)
+
+    config_dict = config_parser.generate_config_dict()
+    processors = config_parser.get_processors()
+    renderer = config_parser.get_renderer()
+    resolved_llm_service = _marker_get_llm_service(config_parser)
+
+    converter_kwargs: dict[str, Any] = {
+        "config": config_dict,
+        "artifact_dict": create_model_dict(),
+        "processor_list": processors,
+        "renderer": renderer,
+    }
+    if resolved_llm_service is not None:
+        converter_kwargs["llm_service"] = resolved_llm_service
+
+    converter = _marker_create_converter(converter_cls, converter_kwargs)
+    rendered = converter(str(pdf_path))
+
+    markdown = getattr(rendered, "markdown", None)
+    markdown_text = markdown if isinstance(markdown, str) else str(rendered)
+
+    page_count = getattr(converter, "page_count", None)
+    logger.debug("Marker extracted %d characters from %s", len(markdown_text), pdf_path)
+
+    return PDFConversionResult(
+        success=True,
+        text=markdown_text,
+        converter="marker",
+        metadata={
+            "use_llm": str(use_llm),
+            "llm_service": str(resolved_llm_service) if resolved_llm_service else "",
+            "force_ocr": str(force_ocr),
+            "page_count": str(page_count) if page_count is not None else "",
+        },
+    )
 
 
 def is_marker_available() -> bool:
@@ -216,39 +316,6 @@ def convert_with_marker(
         )
 
     try:
-        # Import Marker components (optional GPL dependency)
-        from marker.config.parser import ConfigParser  # noqa: PLC0415
-        from marker.models import create_model_dict  # noqa: PLC0415
-
-        # Build CLI-style options for marker's ConfigParser (marker-pdf >= 1.0.0).
-        cli_options: dict[str, object] = {"output_format": "markdown"}
-        if use_llm:
-            cli_options["use_llm"] = True
-            if llm_service is not None:
-                cli_options["llm_service"] = llm_service.get_marker_class()
-        if force_ocr:
-            cli_options["force_ocr"] = True
-
-        config_parser = ConfigParser(cli_options=cli_options)
-
-        converter_cls: type[Any]
-        if hasattr(config_parser, "get_converter_cls"):
-            converter_cls = config_parser.get_converter_cls()
-        else:
-            # marker-pdf 1.0.x did not expose get_converter_cls() yet.
-            from marker.converters.pdf import PdfConverter  # noqa: PLC0415
-
-            converter_cls = PdfConverter
-        config_dict = config_parser.generate_config_dict()
-        processors = config_parser.get_processors()
-        renderer = config_parser.get_renderer()
-        resolved_llm_service = (
-            config_parser.get_llm_service()
-            if hasattr(config_parser, "get_llm_service")
-            else None
-        )
-
-        # Run conversion
         logger.debug(
             "Converting %s with Marker (use_llm=%s, llm_service=%s, force_ocr=%s)",
             pdf_path,
@@ -256,46 +323,11 @@ def convert_with_marker(
             llm_service,
             force_ocr,
         )
-
-        converter_kwargs: dict[str, Any] = {
-            "config": config_dict,
-            "artifact_dict": create_model_dict(),
-            "processor_list": processors,
-            "renderer": renderer,
-        }
-        if resolved_llm_service is not None:
-            converter_kwargs["llm_service"] = resolved_llm_service
-        try:
-            converter = converter_cls(**converter_kwargs)
-        except TypeError as exc:
-            # marker-pdf 1.0.x PdfConverter did not accept llm_service.
-            if "llm_service" in converter_kwargs and "llm_service" in str(exc):
-                converter_kwargs.pop("llm_service", None)
-                converter = converter_cls(**converter_kwargs)
-            else:
-                raise
-        rendered = converter(str(pdf_path))
-
-        markdown = getattr(rendered, "markdown", None)
-        markdown_text = markdown if isinstance(markdown, str) else str(rendered)
-
-        page_count = getattr(converter, "page_count", None)
-        logger.debug(
-            "Marker extracted %d characters from %s", len(markdown_text), pdf_path
-        )
-
-        return PDFConversionResult(
-            success=True,
-            text=markdown_text,
-            converter="marker",
-            metadata={
-                "use_llm": str(use_llm),
-                "llm_service": str(resolved_llm_service)
-                if resolved_llm_service
-                else "",
-                "force_ocr": str(force_ocr),
-                "page_count": str(page_count) if page_count is not None else "",
-            },
+        return _convert_with_marker_success(
+            pdf_path,
+            use_llm=use_llm,
+            llm_service=llm_service,
+            force_ocr=force_ocr,
         )
     except Exception as e:  # conversion backend may raise a variety of errors
         logger.warning("Marker conversion failed for %s: %s", pdf_path, e)

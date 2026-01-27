@@ -23,6 +23,7 @@ not_in_nav: |
   _debt/DEBT-*.md
   _debt/debt-*.md
   vendor-docs/**/SOURCES.md
+  vendor-docs/**/REQUESTS.md
 
 theme:
   name: material

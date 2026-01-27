@@ -122,13 +122,8 @@ def refs_add(
 ) -> None:
     """Add a reference identifier to a problem in the local dataset.
 
-    This updates the local enriched dataset file (e.g. `data/problems_enriched.yaml`),
-    so subsequent `erdos ingest <id>` runs can fetch metadata and ingest content.
-
-    Examples:
-        erdos refs add 848 --arxiv 2511.16072
-        erdos refs add 848 --doi 10.1000/example
-        erdos refs add 848 --url https://example.com/paper.pdf --key Example2026
+    Updates `data/problems_enriched.yaml` so subsequent `erdos ingest <id>` runs can
+    fetch metadata and ingest content.
     """
     command = "erdos refs add"
     with measure_time_ms() as duration:
@@ -147,7 +142,6 @@ def refs_add(
                 ),
             )
             return
-
         dataset_path = resolve_enriched_dataset_path(app_ctx.config)
 
         reference, reference_error = _build_reference_entry(

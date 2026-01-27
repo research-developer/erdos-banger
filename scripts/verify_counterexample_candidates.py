@@ -16,18 +16,27 @@ import math
 import sys
 
 
+class CheckFailed(RuntimeError):
+    pass
+
+
+def _require(condition: bool, message: str) -> None:
+    if not condition:
+        raise CheckFailed(message)
+
+
 def _check_problem_399() -> None:
     """Erdős Problem #399: 10! = 48^4 - 36^4."""
     lhs = math.factorial(10)
     rhs = 48**4 - 36**4
-    assert lhs == rhs, f"Expected 10! == 48^4 - 36^4, got {lhs} != {rhs}"
+    _require(lhs == rhs, f"Expected 10! == 48^4 - 36^4, got {lhs} != {rhs}")
 
 
 def _check_problem_649() -> None:
     """Erdős Problem #649 obstruction: 2^k ≢ -1 (mod 7) for all k."""
     # 2 has order 3 mod 7 => residues are {1,2,4}; never 6 (-1 mod 7).
     residues = {pow(2, k, 7) for k in range(0, 21)}
-    assert 6 not in residues, f"Unexpected residue 6 in {sorted(residues)}"
+    _require(6 not in residues, f"Unexpected residue 6 in {sorted(residues)}")
 
 
 def _has_abelian_square(word: str) -> bool:
@@ -52,9 +61,9 @@ def _has_abelian_square(word: str) -> bool:
 def _check_problem_231() -> None:
     """Erdős Problem #231: k=4 counterexample word of length 2^4-1 = 15."""
     word = "121312141213121"
-    assert len(word) == 15, f"Expected length 15, got {len(word)}"
-    assert set(word) <= {"1", "2", "3", "4"}, f"Unexpected alphabet: {set(word)}"
-    assert not _has_abelian_square(word), "Word contains an abelian square"
+    _require(len(word) == 15, f"Expected length 15, got {len(word)}")
+    _require(set(word) <= {"1", "2", "3", "4"}, f"Unexpected alphabet: {set(word)}")
+    _require(not _has_abelian_square(word), "Word contains an abelian square")
 
 
 def _check_problem_794() -> None:
@@ -70,7 +79,7 @@ def _check_problem_794() -> None:
             for c in part_c:
                 edges.add(tuple(sorted((a, b, c))))
     edges.add((1, 2, 3))
-    assert len(edges) == 28, f"Expected 28 edges, got {len(edges)}"
+    _require(len(edges) == 28, f"Expected 28 edges, got {len(edges)}")
 
     def induced_edge_count(subset: tuple[int, ...]) -> int:
         s = set(subset)
@@ -79,9 +88,9 @@ def _check_problem_794() -> None:
     # Forbidden configurations: a 4-vertex induced subhypergraph with >=3 edges,
     # or a 5-vertex induced subhypergraph with >=7 edges.
     for subset in itertools.combinations(vertices, 4):
-        assert induced_edge_count(subset) < 3, f"Bad 4-set: {subset}"
+        _require(induced_edge_count(subset) < 3, f"Bad 4-set: {subset}")
     for subset in itertools.combinations(vertices, 5):
-        assert induced_edge_count(subset) < 7, f"Bad 5-set: {subset}"
+        _require(induced_edge_count(subset) < 7, f"Bad 5-set: {subset}")
 
 
 def main() -> int:
@@ -96,8 +105,10 @@ def main() -> int:
     for name, fn in checks:
         try:
             fn()
-        except AssertionError as exc:
+        except CheckFailed as exc:
             failures.append(f"{name}: {exc}")
+        except Exception as exc:
+            failures.append(f"{name}: Unexpected {type(exc).__name__}: {exc}")
 
     if failures:
         for failure in failures:
@@ -110,4 +121,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
