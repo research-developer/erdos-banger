@@ -80,4 +80,114 @@ def DensitySinglePrime (p : ℕ) : Prop :=
       let count := ((Finset.range N).filter (fun n => (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card
       (count : ℚ) / N ≤ 2 / p ^ 2 + 1 / N
 
+/-- Trivial counting bound: in `range N`, a single residue class mod `m` appears at most `N/m + 1` times. -/
+lemma card_filter_modEq_le (N m r : ℕ) (hm : 0 < m) :
+    ((Finset.range N).filter (fun n => n % m = r % m)).card ≤ N / m + 1 := by
+  classical
+  set r0 : ℕ := r % m
+  have h_sub :
+      (Finset.range N).filter (fun n => n % m = r0) ⊆
+        Finset.image (fun q : ℕ => q * m + r0) (Finset.range (N / m + 1)) := by
+    intro n hn
+    have hnlt : n < N := (Finset.mem_filter.1 hn).1
+    have hmod : n % m = r0 := (Finset.mem_filter.1 hn).2
+    refine Finset.mem_image.2 ?_
+    refine ⟨n / m, ?_, ?_⟩
+    · -- `n / m < N / m + 1` since `n < N`.
+      have hle : n / m ≤ N / m := Nat.div_le_div_right (Nat.le_of_lt hnlt)
+      have hlt : n / m < N / m + 1 := Nat.lt_succ_iff.2 hle
+      simpa [Finset.mem_range] using hlt
+    · -- Reconstruct `n` from quotient and remainder.
+      -- `Nat.div_add_mod` gives `m * (n / m) + n % m = n`.
+      have := Nat.div_add_mod n m
+      -- Rewrite into the desired shape.
+      -- (Note: `q*m` rather than `m*q` is fine by commutativity.)
+      simpa [r0, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc, hmod] using this.symm
+  have hcard :
+      ((Finset.range N).filter (fun n => n % m = r0)).card ≤ (Finset.range (N / m + 1)).card := by
+    -- `filter ⊆ image` and `card(image) ≤ card(range)`.
+    refine le_trans (Finset.card_le_card h_sub) ?_
+    exact (Finset.card_image_le.trans_eq (by rfl))
+  -- Finish by rewriting `card (range k) = k`.
+  simpa [Finset.card_range] using hcard
+
+/-- If there are at most two roots `r` of `r^2 = -1` in `ZMod (p^2)`, then the density of `n < N`
+with `p^2 ∣ n^2+1` is at most `2/p^2` up to a small boundary term. -/
+lemma density_single_prime_of_two_roots (p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1)
+    (hroots : TwoRootsModPSquared p) :
+    ∀ N : ℕ, N > 0 →
+      let count := ((Finset.range N).filter (fun n => (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card
+      (count : ℚ) / N ≤ 2 / p ^ 2 + 2 / N := by
+  intro N hN
+  classical
+  set m : ℕ := p ^ 2
+  -- Every `n` with `p^2 ∣ n^2+1` corresponds to a root of `r^2 = -1` in `ZMod m`.
+  -- Using `hroots`, there are at most two residue classes mod `m` to consider.
+  rcases hroots hp hmod with ⟨r₁, r₂, hr₁₂, hr₁, hr₂, huniq⟩
+  -- Bound count by the union of the two residue classes.
+  have hsub :
+      ((Finset.range N).filter (fun n => (m : ℕ) ∣ n ^ 2 + 1)) ⊆
+        ((Finset.range N).filter (fun n => n % m = (r₁.val % m))) ∪
+          ((Finset.range N).filter (fun n => n % m = (r₂.val % m))) := by
+    intro n hn
+    have hnlt : n < N := (Finset.mem_filter.1 hn).1
+    have hdiv : m ∣ n ^ 2 + 1 := (Finset.mem_filter.1 hn).2
+    have hz : ((n ^ 2 + 1 : ℕ) : ZMod m) = 0 := (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) m).2 hdiv
+    have hsq : (n : ZMod m) ^ 2 = (-1 : ZMod m) := by
+      have : (n : ZMod m) ^ 2 + 1 = 0 := by
+        simpa [Nat.cast_add, Nat.cast_pow, Nat.cast_one] using hz
+      simpa using (eq_neg_of_add_eq_zero_left this)
+    have hnr : (n : ZMod m) = r₁ ∨ (n : ZMod m) = r₂ := huniq (n : ZMod m) hsq
+    rcases hnr with hnr | hnr
+    · -- `n ≡ r₁ (mod m)`
+      have : n % m = r₁.val % m := by
+        have := (ZMod.natCast_eq_natCast_iff' n r₁.val m).1 hnr
+        simpa using this
+      apply Finset.mem_union.2
+      left
+      exact Finset.mem_filter.2 ⟨hnlt, this⟩
+    · have : n % m = r₂.val % m := by
+        have := (ZMod.natCast_eq_natCast_iff' n r₂.val m).1 hnr
+        simpa using this
+      apply Finset.mem_union.2
+      right
+      exact Finset.mem_filter.2 ⟨hnlt, this⟩
+  have hmpos : 0 < m := by
+    have : 0 < p := hp.pos
+    have : 0 < p ^ 2 := pow_pos this 2
+    simpa [m] using this
+  have hcard1 :
+      ((Finset.range N).filter (fun n => n % m = r₁.val % m)).card ≤ N / m + 1 :=
+    card_filter_modEq_le N m r₁.val hmpos
+  have hcard2 :
+      ((Finset.range N).filter (fun n => n % m = r₂.val % m)).card ≤ N / m + 1 :=
+    card_filter_modEq_le N m r₂.val hmpos
+  have hcount_le : ((Finset.range N).filter (fun n => (m : ℕ) ∣ n ^ 2 + 1)).card ≤
+      2 * (N / m + 1) := by
+    -- Use the subset bound + union cardinality.
+    have := Finset.card_le_of_subset hsub
+    -- bound card of union by sum of cards
+    have hunion :
+        (((Finset.range N).filter (fun n => n % m = r₁.val % m)) ∪
+            ((Finset.range N).filter (fun n => n % m = r₂.val % m))).card ≤
+          ((Finset.range N).filter (fun n => n % m = r₁.val % m)).card +
+            ((Finset.range N).filter (fun n => n % m = r₂.val % m)).card :=
+      Finset.card_union_le _ _
+    have := le_trans this (le_trans hunion (add_le_add hcard1 hcard2))
+    -- simplify `x+x` to `2*x`
+    nlinarith
+  -- Divide by `N` to get density. Use a slightly slack `2/N` boundary term.
+  have hNq : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have : (( ((Finset.range N).filter (fun n => (m : ℕ) ∣ n ^ 2 + 1)).card) : ℚ) / N ≤
+      (2 * (N / m + 1) : ℕ) / N := by
+    exact div_le_div_of_nonneg_right (by exact_mod_cast hcount_le) (by exact_mod_cast (Nat.zero_le N))
+  -- Now show `(2*(N/m+1))/N ≤ 2/m + 2/N` (in ℚ).
+  have hrat :
+      ((2 * (N / m + 1) : ℕ) : ℚ) / N ≤ (2 : ℚ) / m + 2 / N := by
+    -- Expand and bound using `N/m ≤ N/m` and algebra.
+    -- `((2*(N/m+1))/N) = 2*(N/m)/N + 2/N ≤ 2/m + 2/N`.
+    nlinarith [Nat.cast_nonneg (N / m)]
+  -- Combine.
+  simpa [m] using le_trans this hrat
+
 end Erdos.Problem848.SieveQuery1

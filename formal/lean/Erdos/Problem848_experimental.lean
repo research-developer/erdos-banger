@@ -391,11 +391,12 @@ without `sorry`, while the analytic/sieve part is formalized incrementally in a 
 
 /-- The exact statement we need from Sawhney (2025), parameterized by constants. -/
 def SawhneyMainAt (η : ℝ) (N₀ : ℕ) : Prop :=
-  0 < η ∧ ∀ N ≥ N₀, ∀ A : Finset ℕ,
-    A ⊆ Finset.range N →
-    NonSquarefreeProductProp A →
-    (A.card : ℝ) ≥ (1/25 - η) * (N : ℝ) →
-    (A ⊆ A₇ N ∨ A ⊆ A₁₈ N)
+  0 < η ∧ η < (1 / 25 : ℝ) ∧
+    ∀ N ≥ N₀, ∀ A : Finset ℕ,
+      A ⊆ Finset.range N →
+      NonSquarefreeProductProp A →
+      (A.card : ℝ) ≥ (1/25 - η) * (N : ℝ) →
+      (A ⊆ A₇ N ∨ A ⊆ A₁₈ N)
 
 /-- The paper-level existential version: there exist `η > 0` and `N₀` making `SawhneyMainAt` true. -/
 def SawhneyMain : Prop :=
@@ -546,7 +547,7 @@ lemma card_gt_A₇_implies_dense {η : ℝ} (hη : 0 < η) {N : ℕ} {A : Finset
 theorem problem_848_large_of_sawhney {η : ℝ} {N₀ : ℕ} (h : SawhneyMainAt η N₀) :
     ∀ N ≥ N₀, Problem848Statement N := by
   classical
-  rcases h with ⟨hη, hmain⟩
+  rcases h with ⟨hη, _hηsmall, hmain⟩
   intro N hN A hAsub hAprop
   by_contra hle
   have hgt : (A₇ N).card < A.card := lt_of_not_ge hle
