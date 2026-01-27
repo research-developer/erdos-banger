@@ -1,15 +1,34 @@
 /-
-Problem 848: Erdős Problem #848 (Erdős-Sárközy) — ANNOTATED FOR ARISTOTLE
+This file was edited by Aristotle.
 
-This file is a copy of Problem848_COMPLETE.lean with DETAILED COMMENTS from
-the paper: Sawhney-Sellke (arXiv:2511.16072), Section 09-SawhneySellke.tex
+Lean version: leanprover/lean4:v4.24.0
+Mathlib version: f897ebcf72cd16f89ab4577d0c826cd14afaafc7
+This project request had uuid: 52f745ae-57a7-4b1c-a763-e105defc1ad3
 
-The paper's proof structure:
-  - Lemma 5 (lem:sieve-1): Sieve bound for residue classes
-  - Lemma 6 (lem:sf-AP): Squarefree density in arithmetic progressions
-  - Proposition 1 (prop:main): The main theorem with casework
+To cite Aristotle, tag @Aristotle-Harmonic on GitHub PRs/issues, and add as co-author to commits:
+Co-authored-by: Aristotle (Harmonic) <aristotle-harmonic@harmonic.fun>
+-/
 
-SOURCE: literature/cache/arxiv/extracted/2511.16072/content/09-SawhneySellke.tex
+/-
+Problem 848: Erdős Problem #848 (Erdős-Sárközy) — COMPLETE SELF-CONTAINED FILE
+
+This is THE canonical file for Problem 848. It contains EVERYTHING:
+- All definitions
+- All proved lemmas (mod 25, sieve basics, density bounds, finite verification)
+- All research-level statements (as Props, not sorrys)
+- The final blocking theorem `SawhneyMain`
+
+Status: DECIDABLE (resolved up to finite check + Sawhney's stability theorem)
+
+To submit to Aristotle: Use this file directly. It has NO local imports.
+
+Statement:
+Is the maximum size of a set A ⊆ {1,…,N} such that ab+1 is never squarefree
+(for all a,b ∈ A) achieved by taking those n ≡ 7 (mod 25)?
+
+Resolution (Sawhney 2025):
+There exist absolute constants η > 0 and N₀ such that for all N ≥ N₀, if
+|A| ≥ (1/25 - η)N then A ⊆ {n : n ≡ 7 (mod 25)} or A ⊆ {n : n ≡ 18 (mod 25)}.
 -/
 
 -- ============================================================================
@@ -25,8 +44,7 @@ import Mathlib.Data.ZMod.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.NumberTheory.LegendreSymbol.Basic
 import Mathlib.Data.Nat.ModEq
-import Mathlib.NumberTheory.Chebyshev
-import Mathlib.Analysis.PSeries
+
 
 namespace Erdos.Problem848
 
@@ -358,30 +376,6 @@ lemma card_filter_mod_eq_le (N m r : ℕ) :
     exact ⟨n / m, Nat.div_le_div_right hn.1.le, by linarith [Nat.mod_add_div n m]⟩
   exact le_trans (Finset.card_le_card h_set) (Finset.card_image_le.trans (by norm_num))
 
-/-- If `m` and `n` are coprime, then the conjunction of two congruences is contained in a single
-residue class modulo `m*n`, hence has cardinality `≤ N/(m*n) + 1` inside `range N`. -/
-lemma card_filter_modEq_and_modEq_le (N m n a b : ℕ) (hmn : m.Coprime n) :
-    ((Finset.range N).filter (fun x => x ≡ a [MOD m] ∧ x ≡ b [MOD n])).card ≤ N / (m * n) + 1 := by
-  classical
-  let k : ℕ := Nat.chineseRemainder hmn a b
-  have hsubset :
-      (Finset.range N).filter (fun x => x ≡ a [MOD m] ∧ x ≡ b [MOD n]) ⊆
-        (Finset.range N).filter (fun x => x ≡ k [MOD m * n]) := by
-    intro x hx
-    have hx' : x < N ∧ x ≡ a [MOD m] ∧ x ≡ b [MOD n] := by
-      simpa [Finset.mem_filter, Finset.mem_range, and_assoc, and_left_comm, and_comm] using hx
-    refine Finset.mem_filter.2 ?_
-    refine ⟨by simpa [Finset.mem_range] using hx'.1, ?_⟩
-    -- `k` is the CRT solution mod `m*n`.
-    have : x ≡ Nat.chineseRemainder hmn a b [MOD m * n] :=
-      Nat.chineseRemainder_modEq_unique hmn hx'.2.1 hx'.2.2
-    simpa [k] using this
-  have hcard :
-      ((Finset.range N).filter (fun x => x ≡ a [MOD m] ∧ x ≡ b [MOD n])).card ≤
-        ((Finset.range N).filter (fun x => x ≡ k [MOD m * n])).card :=
-    Finset.card_le_card hsubset
-  exact le_trans hcard (card_filter_mod_eq_le N (m * n) k)
-
 /-- Number of integers < N congruent to r1 or r2 mod m is at most 2N/m + 1. -/
 lemma card_filter_mod_pair_le (N m r1 r2 : ℕ) (hm : m > 0) (h_sum : r1 + r2 = m) (h_r1_pos : 0 < r1)
     (h_r2_pos : 0 < r2) (h_ne : r1 ≠ r2) :
@@ -600,10 +594,13 @@ instance (N : ℕ) : Decidable (noTripleWorksIn N) := by unfold noTripleWorksIn;
 
 -- Computed values
 lemma A₇_50_card : (A₇ 50).card = 2 := by native_decide
+
 lemma A₇_100_card : (A₇ 100).card = 4 := by native_decide
+
 lemma A₇_200_card : (A₇ 200).card = 8 := by native_decide
 
 lemma diag_cand_50 : DiagonalCandidates 50 = {7, 18, 32, 38, 41, 43} := by native_decide
+
 lemma diag_cand_100 : DiagonalCandidates 100 = {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99} := by native_decide
 
 -- Key finite checks
@@ -796,497 +793,29 @@ theorem problem_848_resolved_up_to_finite_check_of_sawhney (h : SawhneyMain) :
   rcases h with ⟨η, N₀, hηN₀⟩
   exact ⟨N₀, problem_848_large_of_sawhney hηN₀⟩
 
+/- Aristotle failed to find a proof. -/
 -- ============================================================================
--- SECTION 10: THE BLOCKING THEOREM — PAPER PROOF ANNOTATIONS
--- ============================================================================
-
-/-!
-## Paper Source: Sawhney-Sellke, arXiv:2511.16072, Section 09
-
-### Lemma 5 (lem:sieve-1) from Paper:
-
-Let P be a subset of primes with max P ≤ N^{1/2} and let q be a positive integer.
-For each p ∈ P, define R_p to denote a set of residue classes modulo p² with |R_p| ≤ 2
-and R_p = ∅ if (p,q) ≠ 1. Then:
-
-|{n ∈ [N] : n ≡ t (mod q)} ∩ ⋃_{p∈P} {n (mod p²) ∈ R_p}| - (N/q)(1 - ∏_{p∈P}(1 - |R_p|/p²))|
-  ≤ O(N(log N)^{-1/2})
-
-**Proof sketch:**
-- Let T = ⌊√(log N)⌋
-- Large primes (T ≤ p ≤ N^{1/2}) contribute O(N/T) by union bound
-- Small primes (p ≤ T) handled by inclusion-exclusion
-- Product ∏_{p≤T} p² ≤ N^{o(1)}, so error is N^{o(1)}
-
-### Lemma 6 (lem:sf-AP) from Paper:
-
-Fix N, residue class t (mod q) with q a perfect square, and integer b with 1 ≤ b ≤ N.
-Suppose there is no prime p with p²|q and p²|(bt+1). Then:
-
-|{a ∈ [N] : a ≡ t (mod q) ∧ μ(ab+1) = 0}| - (N/q)(1 - ∏_{(p,qb)=1}(1 - 1/p²))|
-  ≤ O(N/√(log N))
-
-**Proof sketch:**
-- ab+1 ≤ N²+1, so if μ(ab+1)=0, ∃ prime p with p²|(ab+1)
-- (p,qb) = 1: if p|b then p∤ab+1; if p|q then ab+1 ≡ bt+1 ≢ 0 (mod p²)
-- Use T = ⌊√(log N)⌋, handle p ≤ T via Lemma 5
-
-### Proposition 1 (prop:main) from Paper:
-
-Let η = 0.002 and N sufficiently large. If |A| ≥ (1/25 - η)N then A ⊆ A₇ or A ⊆ A₁₈.
-
-**Proof structure (CASEWORK):**
-
-Define:
-- A₇ = {a ∈ A : a ≡ 7 (mod 25)}
-- A₁₈ = {a ∈ A : a ≡ 18 (mod 25)}
-- A* = A \ (A₇ ∪ A₁₈)
-
-**Case 1: A* contains an even element b**
-For x ∈ A*, need p ≡ 1 (mod 4), p ≥ 13 with p²|x²+1.
-By Lemma 5: |A*|/N ≤ (23/25)(1 - ∏_{p≡1(4), p≥13}(1-2/p²)) ≤ 0.0252
-
-For a ∈ A₇ ∪ A₁₈, need p ≠ 2,5 with p²|ab+1.
-By Lemma 6: |A₇ ∪ A₁₈|/N ≤ (2/25)(1 - ∏_{p≠2,5}(1-1/p²)) ≤ 0.0125
-
-Total: |A|/N ≤ 0.0252 + 0.0125 = 0.0377 < 0.04 - η. Contradiction!
-
-**Case 2: A* is non-empty but all odd**
-|A*|/N ≤ (1/2)(23/25)(1 - ∏_{p≡1(4), p≥13}(1-2/p²)) ≤ 0.0126
-
-Subcase 2a: A₇ ∪ A₁₈ has no even elements
-By Lemma 6 on mod 100 classes:
-|A₇ ∪ A₁₈|/N ≤ 1/50 + (1/50)(1 - ∏_{p≠2,5}(1-1/p²)) ≤ 0.0200 + 0.0032 = 0.0232
-Total: 0.0126 + 0.0232 = 0.0358 < 0.04 - η. Contradiction!
-
-Subcase 2b: A₇ has even element b'
-|A₇|/N ≤ (1/25)(1 - ∏_{p≠5}(1-1/p²)) ≤ 0.0147
-|A₁₈|/N ≤ (1/25)(1 - ∏_{p≠2,5}(1-1/p²)) ≤ 0.0063
-Total: 0.0126 + 0.0147 + 0.0063 = 0.0336 < 0.04 - η. Contradiction!
-
-**Case 3: A* = ∅, but both A₇ and A₁₈ are non-empty**
-Fix b ∈ A₇, b' ∈ A₁₈.
-|A|/N ≤ (2/25)(1 - ∏_{p≠5}(1-1/p²)) ≤ 0.0294 < 0.04 - η. Contradiction!
-
-**Conclusion:** A ⊆ A₇ or A ⊆ A₁₈.
-
-### Numerical Constants (from paper):
-- ∏_p(1-1/p²) = 6/π² ≥ 0.6079, so 1 - 6/π² ≤ 0.3921
-- ∏_{p≠5}(1-1/p²) = 25/(4π²) ≥ 0.6332, so 1 - 25/(4π²) ≤ 0.3668
-- ∏_{p≠2,5}(1-1/p²) = 25/(3π²) ≥ 0.8443, so 1 - 25/(3π²) ≤ 0.1557
-- 1 - ∏_{p≡1(4), p≥13}(1-2/p²) ≤ 0.0274
--/
-
-/- THE GOAL: Prove SawhneyMain to complete the formalization.
-
-This requires translating the paper's Lemmas 5, 6 and Proposition 1 above into Lean.
-
-The key steps are:
-1. Formalize the sieve bound (Lemma 5) - counting in residue classes
-2. Formalize the squarefree density bound (Lemma 6) - off-diagonal constraint
-3. Implement the casework from Proposition 1:
-   - Case 1: A* has even element → density contradiction
-   - Case 2: A* non-empty, all odd → density contradiction (two subcases)
-   - Case 3: A* = ∅, mixing → density contradiction
-   - Conclusion: A ⊆ A₇ or A ⊆ A₁₈
-
-The numerical computations are explicit in the paper. Use η = 0.002.
--/
-
--- ============================================================================
--- SECTION 10B: PAPER-LEVEL ANALYTIC INPUTS (placeholders)
+-- SECTION 10: THE BLOCKING THEOREM (TO BE PROVED)
 -- ============================================================================
 
-/-
-The remaining gap between this file and a `sorry`-free proof is the analytic number theory
-in Lemmas 5 and 6 of the paper, plus the numerical inequalities used in the three cases of
-Proposition 1.  These are recorded below as helper lemmas.
+/-- THE GOAL: Prove SawhneyMain to complete the formalization.
 
-Each lemma should ultimately be proved from:
-- a formalized version of Lemma 5 (a sieve bound in residue classes),
-- a formalized version of Lemma 6 (squarefree density in arithmetic progressions),
-- and the explicit numerical constants listed at the end of the paper section.
+This is the only `sorry` in the entire file. Everything else is proved.
+
+To prove this, one needs:
+1. Sieve bounds: The density of {n < N : ∃ p ≥ 7, p² | n²+1} is small
+2. Cross-term analysis: Mixed residue classes produce squarefree products
+3. Density argument: Sets with the property and density ≥ 1/25 - η must be structured
 -/
-
-/-- Split `A` into the `7/18 (mod 25)` part and its complement, at the level of cardinalities. -/
-lemma card_partition_mod25 (A : Finset ℕ) :
-    (A.card : ℝ) =
-      ((A.filter (fun a => a % 25 = 7 ∨ a % 25 = 18)).card : ℝ) +
-        ((A.filter (fun a => a % 25 ≠ 7 ∧ a % 25 ≠ 18)).card : ℝ) := by
-  classical
-  let p : ℕ → Prop := fun a => a % 25 = 7 ∨ a % 25 = 18
-  have hdis : Disjoint (A.filter p) (A.filter fun a => ¬p a) :=
-    Finset.disjoint_filter_filter_not (s := A) (t := A) (p := p)
-  have hunion : A.filter p ∪ A.filter (fun a => ¬p a) = A := by
-    simpa using (Finset.filter_union_filter_not_eq (p := p) (s := A))
-  have hnat : A.card = (A.filter p).card + (A.filter (fun a => ¬p a)).card := by
-    simpa [hunion] using Finset.card_union_of_disjoint hdis
-  have hAstar : A.filter (fun a => ¬p a) = A.filter (fun a => a % 25 ≠ 7 ∧ a % 25 ≠ 18) := by
-    ext a
-    simp [p, not_or]
-  have hreal : (A.card : ℝ) = ((A.filter p).card : ℝ) + ((A.filter (fun a => ¬p a)).card : ℝ) := by
-    have :
-        ((A.card : ℕ) : ℝ) =
-          (((A.filter p).card : ℕ) : ℝ) + (((A.filter (fun a => ¬p a)).card : ℕ) : ℝ) := by
-      exact_mod_cast hnat
-    simpa using this
-  simpa [p, hAstar] using hreal
-
-/-!
-## Analytic inputs (axiomatized)
-
-The remaining ingredients are the quantitative bounds from Proposition 1 of the paper, i.e. the
-outputs of Lemmas 5 and 6 together with the numerical constants (paper lines 306–313), after
-absorbing the `o(1)` errors.
-
-These should ultimately be discharged by a formalization of the sieve/squarefree density estimates.
--/
-
-/-- Case 1 diagonal bound: `|A*|/N ≤ (23/25) * 0.0274`.  Here `0.0274 = 137/5000`, so the coefficient
-is `23/25 * 137/5000 = 3151/125000`. -/
-axiom case1_Astar_bound {N : ℕ} {A : Finset ℕ} (hAsub : A ⊆ Finset.range N)
-    (hAprop : NonSquarefreeProductProp A)
-    (heven : ∃ b ∈ A, b % 25 ≠ 7 ∧ b % 25 ≠ 18 ∧ 2 ∣ b) :
-    ((A.filter (fun a => a % 25 ≠ 7 ∧ a % 25 ≠ 18)).card : ℝ) ≤ (3151 / 125000 : ℝ) * (N : ℝ)
-
-/-- Case 1 off-diagonal bound: `|A₇ ∪ A₁₈|/N ≤ (2/25) * 0.1557`.  Here `0.1557 = 1557/10000`, so the
-coefficient is `2/25 * 1557/10000 = 1557/125000`. -/
-axiom case1_A78_bound {N : ℕ} {A : Finset ℕ} (hAsub : A ⊆ Finset.range N)
-    (hAprop : NonSquarefreeProductProp A)
-    (heven : ∃ b ∈ A, b % 25 ≠ 7 ∧ b % 25 ≠ 18 ∧ 2 ∣ b) :
-    ((A.filter (fun a => a % 25 = 7 ∨ a % 25 = 18)).card : ℝ) ≤ (1557 / 125000 : ℝ) * (N : ℝ)
-
-/-- Case 2 diagonal bound: `|A*|/N ≤ (1/2) * (23/25) * 0.0274 = 3151/250000`. -/
-axiom case2_Astar_bound {N : ℕ} {A : Finset ℕ} (hAsub : A ⊆ Finset.range N)
-    (hAprop : NonSquarefreeProductProp A) (hnonempty : ∃ b ∈ A, b % 25 ≠ 7 ∧ b % 25 ≠ 18)
-    (hall_odd : ∀ b ∈ A, b % 25 ≠ 7 ∧ b % 25 ≠ 18 → ¬ 2 ∣ b) :
-    ((A.filter (fun a => a % 25 ≠ 7 ∧ a % 25 ≠ 18)).card : ℝ) ≤ (3151 / 250000 : ℝ) * (N : ℝ)
-
-/-- Case 2a off-diagonal bound (no even element in `A₇ ∪ A₁₈`): `|A₇ ∪ A₁₈|/N ≤ 1/50 + (1/50)*0.1557
-= 11557/500000`. -/
-axiom case2_A78_bound_no_even {N : ℕ} {A : Finset ℕ} (hAsub : A ⊆ Finset.range N)
-    (hAprop : NonSquarefreeProductProp A) (hnonempty : ∃ b ∈ A, b % 25 ≠ 7 ∧ b % 25 ≠ 18)
-    (hall_odd : ∀ b ∈ A, b % 25 ≠ 7 ∧ b % 25 ≠ 18 → ¬ 2 ∣ b)
-    (hno_even : ∀ b ∈ A, (b % 25 = 7 ∨ b % 25 = 18) → ¬ 2 ∣ b) :
-    ((A.filter (fun a => a % 25 = 7 ∨ a % 25 = 18)).card : ℝ) ≤ (11557 / 500000 : ℝ) * (N : ℝ)
-
-/-- Case 2b off-diagonal bound (an even element occurs in `A₇ ∪ A₁₈`): `|A₇ ∪ A₁₈|/N ≤ 0.0210`.
-With the paper's constants this can be taken as `(1/25)*0.3668 + (1/25)*0.1557 = 5225/250000`. -/
-axiom case2_A78_bound_with_even {N : ℕ} {A : Finset ℕ} (hAsub : A ⊆ Finset.range N)
-    (hAprop : NonSquarefreeProductProp A) (hnonempty : ∃ b ∈ A, b % 25 ≠ 7 ∧ b % 25 ≠ 18)
-    (hall_odd : ∀ b ∈ A, b % 25 ≠ 7 ∧ b % 25 ≠ 18 → ¬ 2 ∣ b)
-    (heven78 : ∃ b ∈ A, (b % 25 = 7 ∨ b % 25 = 18) ∧ 2 ∣ b) :
-    ((A.filter (fun a => a % 25 = 7 ∨ a % 25 = 18)).card : ℝ) ≤ (5225 / 250000 : ℝ) * (N : ℝ)
-
-/-- Case 3 bound: if `A* = ∅` and both residues occur, then `|A|/N ≤ (2/25)*0.3668 = 917/31250`. -/
-axiom case3_A_bound {N : ℕ} {A : Finset ℕ} (hAsub : A ⊆ Finset.range N)
-    (hAprop : NonSquarefreeProductProp A) (hAstar_empty : ∀ b ∈ A, b % 25 = 7 ∨ b % 25 = 18)
-    (hA7 : ∃ b ∈ A, b % 25 = 7) (hA18 : ∃ b ∈ A, b % 25 = 18) :
-    (A.card : ℝ) ≤ (917 / 31250 : ℝ) * (N : ℝ)
-
-/-!
-### (Work-in-progress) infrastructure to replace the axioms above
-
-To remove the `axiom` declarations, we will need two quantitative ingredients:
-
-1. Explicit bounds for finite prime-square sums `∑ 1/p^2` (computed up to a cutoff and with a
-   `∑_{k>B} 1/k^2 ≤ 1/B` tail estimate).
-2. A linear upper bound on `Nat.primeCounting N` for large `N` (from Chebyshev), to control the
-   rounding terms coming from `N/m + 1` in residue-class counting.
-
-This section records the helper computations/lemmas; the remaining work is to thread them into
-the three case-contradiction lemmas so that the axioms can be deleted.
--/
-
-open scoped BigOperators Real
-
-def primeCutoff_coarse : ℕ := 2000
-
-def diagPrimeSet_coarse : Finset ℕ :=
-  (Finset.range (primeCutoff_coarse + 1)).filter (fun p => Nat.Prime p ∧ p % 4 = 1 ∧ 13 ≤ p)
-
-def diagPrimeSum_coarse : ℚ :=
-  ∑ p ∈ diagPrimeSet_coarse, (1 : ℚ) / ((p ^ 2 : ℕ) : ℚ)
-
-def offPrimeSet_coarse : Finset ℕ :=
-  (Finset.range (primeCutoff_coarse + 1)).filter (fun p => Nat.Prime p ∧ p ≠ 2 ∧ p ≠ 5)
-
-def offPrimeSum_coarse : ℚ :=
-  ∑ p ∈ offPrimeSet_coarse, (1 : ℚ) / ((p ^ 2 : ℕ) : ℚ)
-
-def no5PrimeSet_coarse : Finset ℕ :=
-  (Finset.range (primeCutoff_coarse + 1)).filter (fun p => Nat.Prime p ∧ p ≠ 5)
-
-def no5PrimeSum_coarse : ℚ :=
-  ∑ p ∈ no5PrimeSet_coarse, (1 : ℚ) / ((p ^ 2 : ℕ) : ℚ)
-
-lemma diagPrimeSum_coarse_le : diagPrimeSum_coarse ≤ (7 / 500 : ℚ) := by native_decide
-lemma offPrimeSum_coarse_le : offPrimeSum_coarse ≤ (163 / 1000 : ℚ) := by native_decide
-lemma no5PrimeSum_coarse_le : no5PrimeSum_coarse ≤ (413 / 1000 : ℚ) := by native_decide
-
-lemma sum_Ioc_inv_sq_le_inv_coarse {B N : ℕ} (hB : B ≠ 0) (hBN : B ≤ N) :
-    (∑ i ∈ Finset.Ioc B N, ((i : ℚ) ^ 2)⁻¹) ≤ (B : ℚ)⁻¹ := by
-  have h :=
-    sum_Ioc_inv_sq_le_sub (α := ℚ) (k := B) (n := N) hB hBN
-  have h' : (B : ℚ)⁻¹ - (N : ℚ)⁻¹ ≤ (B : ℚ)⁻¹ := by
-    simpa [sub_le_self_iff, inv_nonneg] using (show 0 ≤ (N : ℚ)⁻¹ from by positivity)
-  exact le_trans h (by simpa using h')
-
-lemma eventually_primeCounting_le_linear_coarse :
-    (∀ᶠ N : ℕ in Filter.atTop, (Nat.primeCounting N : ℝ) ≤ (1 / 1000000 : ℝ) * (N : ℝ)) := by
-  have hcheb : ∀ᶠ x : ℝ in Filter.atTop,
-      (Nat.primeCounting ⌊x⌋₊ : ℝ) ≤ (Real.log 4 + (1 : ℝ)) * x / Real.log x :=
-    Chebyshev.eventually_primeCounting_le (ε := (1 : ℝ)) (by norm_num)
-  have hchebN : ∀ᶠ N : ℕ in Filter.atTop,
-      (Nat.primeCounting N : ℝ) ≤ (Real.log 4 + (1 : ℝ)) * (N : ℝ) / Real.log (N : ℝ) := by
-    have : ∀ᶠ N : ℕ in Filter.atTop,
-        (Nat.primeCounting (⌊(N : ℝ)⌋₊) : ℝ) ≤
-          (Real.log 4 + (1 : ℝ)) * (N : ℝ) / Real.log (N : ℝ) :=
-      (tendsto_natCast_atTop_atTop.eventually hcheb)
-    filter_upwards [this] with N hN
-    simpa using hN
-  have hlog : ∀ᶠ N : ℕ in Filter.atTop,
-      (Real.log 4 + (1 : ℝ)) / Real.log (N : ℝ) ≤ (1 / 1000000 : ℝ) := by
-    have ht : Filter.Tendsto (fun N : ℕ => Real.log (N : ℝ)) Filter.atTop Filter.atTop :=
-      Real.tendsto_log_atTop.comp tendsto_natCast_atTop_atTop
-    have hge : ∀ᶠ N : ℕ in Filter.atTop,
-        (Real.log 4 + (1 : ℝ)) * (1000000 : ℝ) ≤ Real.log (N : ℝ) :=
-      ht.eventually (Filter.eventually_ge_atTop ((Real.log 4 + (1 : ℝ)) * (1000000 : ℝ)))
-    filter_upwards [hge] with N hN
-    have hlogpos : 0 < Real.log (N : ℝ) := lt_of_lt_of_le (by positivity) hN
-    have h1 : (Real.log 4 + (1 : ℝ)) ≤ (Real.log (N : ℝ)) / (1000000 : ℝ) := by
-      exact (le_div_iff₀ (by positivity : (0 : ℝ) < (1000000 : ℝ))).2 hN
-    have h2 :
-        (Real.log 4 + (1 : ℝ)) / Real.log (N : ℝ) ≤
-          (Real.log (N : ℝ) / (1000000 : ℝ)) / Real.log (N : ℝ) :=
-      div_le_div_of_nonneg_right h1 (le_of_lt hlogpos)
-    have hlogne : Real.log (N : ℝ) ≠ 0 := ne_of_gt hlogpos
-    simpa [div_div, hlogne, div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm] using h2
-  filter_upwards [hchebN, hlog] with N hN hlogN
-  have hNnonneg : 0 ≤ (N : ℝ) := by exact_mod_cast (Nat.zero_le N)
-  have hmul :
-      ((Real.log 4 + (1 : ℝ)) / Real.log (N : ℝ)) * (N : ℝ) ≤ (1 / 1000000 : ℝ) * (N : ℝ) :=
-    mul_le_mul_of_nonneg_right hlogN hNnonneg
-  have :
-      (Real.log 4 + (1 : ℝ)) * (N : ℝ) / Real.log (N : ℝ) ≤ (1 / 1000000 : ℝ) * (N : ℝ) := by
-    simpa [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm] using hmul
-  exact le_trans hN this
-
-/-- Proposition 1, Case 1: if `A*` contains an even element (i.e. an element not `7` or `18`
-mod `25`), then the density condition `|A| ≥ (1/25 - η)N` fails for `η = 1/500` (i.e. `0.002`). -/
-lemma case1_even_in_Astar_contradiction {N : ℕ} {A : Finset ℕ}
-    (hAsub : A ⊆ Finset.range N) (hAprop : NonSquarefreeProductProp A)
-    (heven : ∃ b ∈ A, b % 25 ≠ 7 ∧ b % 25 ≠ 18 ∧ 2 ∣ b) :
-    (A.card : ℝ) < (1 / 25 - (1 / 500 : ℝ)) * (N : ℝ) := by
-  -- Paper: Proposition 1, Case 1 (even element in A*)
-  classical
-  have heven' := heven
-  rcases heven with ⟨b, hbA, -, -, -⟩
-  have hbRange : b ∈ Finset.range N := hAsub hbA
-  have hbLt : b < N := by simpa [Finset.mem_range] using hbRange
-  have hNpos : 0 < N := Nat.pos_of_ne_zero (by
-    intro hN0
-    subst hN0
-    exact (Nat.not_lt_zero b) hbLt)
-  have hNposR : (0 : ℝ) < (N : ℝ) := by exact_mod_cast hNpos
-
-  have hpartition := card_partition_mod25 A
-  have hAstar_le := case1_Astar_bound (N := N) (A := A) hAsub hAprop heven'
-  have hA78_le := case1_A78_bound (N := N) (A := A) hAsub hAprop heven'
-
-  have hAle : (A.card : ℝ) ≤ (1177 / 31250 : ℝ) * (N : ℝ) := by
-    calc
-      (A.card : ℝ) =
-          ((A.filter (fun a => a % 25 = 7 ∨ a % 25 = 18)).card : ℝ) +
-            ((A.filter (fun a => a % 25 ≠ 7 ∧ a % 25 ≠ 18)).card : ℝ) := hpartition
-      _ ≤ (1557 / 125000 : ℝ) * (N : ℝ) + (3151 / 125000 : ℝ) * (N : ℝ) := by
-            exact add_le_add hA78_le hAstar_le
-      _ = (1177 / 31250 : ℝ) * (N : ℝ) := by
-            nlinarith
-
-  have hcoeff : (1177 / 31250 : ℝ) < (1 / 25 - (1 / 500 : ℝ)) := by norm_num
-  have hlt :
-      (1177 / 31250 : ℝ) * (N : ℝ) < (1 / 25 - (1 / 500 : ℝ)) * (N : ℝ) :=
-    mul_lt_mul_of_pos_right hcoeff hNposR
-  exact lt_of_le_of_lt hAle hlt
-
-/-- Proposition 1, Case 2: if `A*` is nonempty and consists only of odd elements, then the
-same density condition fails (again for `η = 1/500`). -/
-lemma case2_all_odd_Astar_contradiction {N : ℕ} {A : Finset ℕ}
-    (hAsub : A ⊆ Finset.range N) (hAprop : NonSquarefreeProductProp A)
-    (hnonempty : ∃ b ∈ A, b % 25 ≠ 7 ∧ b % 25 ≠ 18)
-    (hall_odd : ∀ b ∈ A, b % 25 ≠ 7 ∧ b % 25 ≠ 18 → ¬ 2 ∣ b) :
-    (A.card : ℝ) < (1 / 25 - (1 / 500 : ℝ)) * (N : ℝ) := by
-  -- Paper: Proposition 1, Case 2 (A* nonempty, all odd), including both subcases 2a and 2b.
-  classical
-  have hnonempty' := hnonempty
-  rcases hnonempty with ⟨b, hbA, -, -⟩
-  have hbRange : b ∈ Finset.range N := hAsub hbA
-  have hbLt : b < N := by simpa [Finset.mem_range] using hbRange
-  have hNpos : 0 < N := Nat.pos_of_ne_zero (by
-    intro hN0
-    subst hN0
-    exact (Nat.not_lt_zero b) hbLt)
-  have hNposR : (0 : ℝ) < (N : ℝ) := by exact_mod_cast hNpos
-
-  have hpartition := card_partition_mod25 A
-  have hAstar_le := case2_Astar_bound (N := N) (A := A) hAsub hAprop hnonempty' hall_odd
-
-  by_cases heven78 : ∃ b ∈ A, (b % 25 = 7 ∨ b % 25 = 18) ∧ 2 ∣ b
-  · have hA78_le :=
-      case2_A78_bound_with_even (N := N) (A := A) hAsub hAprop hnonempty' hall_odd heven78
-    have hAle : (A.card : ℝ) ≤ (1047 / 31250 : ℝ) * (N : ℝ) := by
-      calc
-        (A.card : ℝ) =
-            ((A.filter (fun a => a % 25 = 7 ∨ a % 25 = 18)).card : ℝ) +
-              ((A.filter (fun a => a % 25 ≠ 7 ∧ a % 25 ≠ 18)).card : ℝ) := hpartition
-        _ ≤ (5225 / 250000 : ℝ) * (N : ℝ) + (3151 / 250000 : ℝ) * (N : ℝ) := by
-              exact add_le_add hA78_le hAstar_le
-        _ = (1047 / 31250 : ℝ) * (N : ℝ) := by
-              nlinarith
-    have hcoeff : (1047 / 31250 : ℝ) < (1 / 25 - (1 / 500 : ℝ)) := by norm_num
-    have hlt :
-        (1047 / 31250 : ℝ) * (N : ℝ) < (1 / 25 - (1 / 500 : ℝ)) * (N : ℝ) :=
-      mul_lt_mul_of_pos_right hcoeff hNposR
-    exact lt_of_le_of_lt hAle hlt
-  · have hno_even : ∀ b ∈ A, (b % 25 = 7 ∨ b % 25 = 18) → ¬ 2 ∣ b := by
-        intro b hbA hbmod hbEven
-        exact heven78 ⟨b, hbA, hbmod, hbEven⟩
-    have hA78_le :=
-      case2_A78_bound_no_even (N := N) (A := A) hAsub hAprop hnonempty' hall_odd hno_even
-    have hAle : (A.card : ℝ) ≤ (17859 / 500000 : ℝ) * (N : ℝ) := by
-      calc
-        (A.card : ℝ) =
-            ((A.filter (fun a => a % 25 = 7 ∨ a % 25 = 18)).card : ℝ) +
-              ((A.filter (fun a => a % 25 ≠ 7 ∧ a % 25 ≠ 18)).card : ℝ) := hpartition
-        _ ≤ (11557 / 500000 : ℝ) * (N : ℝ) + (3151 / 250000 : ℝ) * (N : ℝ) := by
-              exact add_le_add hA78_le hAstar_le
-        _ = (17859 / 500000 : ℝ) * (N : ℝ) := by
-              nlinarith
-    have hcoeff : (17859 / 500000 : ℝ) < (1 / 25 - (1 / 500 : ℝ)) := by norm_num
-    have hlt :
-        (17859 / 500000 : ℝ) * (N : ℝ) < (1 / 25 - (1 / 500 : ℝ)) * (N : ℝ) :=
-      mul_lt_mul_of_pos_right hcoeff hNposR
-    exact lt_of_le_of_lt hAle hlt
-
-/-- Proposition 1, Case 3: if `A* = ∅` but both residues `7` and `18` occur in `A`, then the
-same density condition fails (again for `η = 1/500`). -/
-lemma case3_mixed_A7_A18_contradiction {N : ℕ} {A : Finset ℕ}
-    (hAsub : A ⊆ Finset.range N) (hAprop : NonSquarefreeProductProp A)
-    (hAstar_empty : ∀ b ∈ A, b % 25 = 7 ∨ b % 25 = 18)
-    (hA7 : ∃ b ∈ A, b % 25 = 7) (hA18 : ∃ b ∈ A, b % 25 = 18) :
-    (A.card : ℝ) < (1 / 25 - (1 / 500 : ℝ)) * (N : ℝ) := by
-  -- Paper: Proposition 1, Case 3 (A* empty, both A7 and A18 nonempty).
-  classical
-  have hA7' := hA7
-  rcases hA7 with ⟨b, hbA, -⟩
-  have hbRange : b ∈ Finset.range N := hAsub hbA
-  have hbLt : b < N := by simpa [Finset.mem_range] using hbRange
-  have hNpos : 0 < N := Nat.pos_of_ne_zero (by
-    intro hN0
-    subst hN0
-    exact (Nat.not_lt_zero b) hbLt)
-  have hNposR : (0 : ℝ) < (N : ℝ) := by exact_mod_cast hNpos
-
-  have hAle : (A.card : ℝ) ≤ (917 / 31250 : ℝ) * (N : ℝ) :=
-    case3_A_bound (N := N) (A := A) hAsub hAprop hAstar_empty hA7' hA18
-
-  have hcoeff : (917 / 31250 : ℝ) < (1 / 25 - (1 / 500 : ℝ)) := by norm_num
-  have hlt :
-      (917 / 31250 : ℝ) * (N : ℝ) < (1 / 25 - (1 / 500 : ℝ)) * (N : ℝ) :=
-    mul_lt_mul_of_pos_right hcoeff hNposR
-  exact lt_of_le_of_lt hAle hlt
-
 theorem sawhney_main : SawhneyMain := by
-  -- The paper proves this with η = 0.002 and some N₀
-  -- Need to translate Lemmas 5, 6 and the casework from Proposition 1
-  classical
-  -- We take η = 0.002 = 1/500, and any sufficiently large N₀ (here we take N₀ = 1).
-  refine ⟨(1 / 500 : ℝ), 1, ?_⟩
-  refine ⟨by norm_num, ?_, ?_⟩
-  · -- 1/500 < 1/25
-    norm_num
-  · intro N hN A hAsub hAprop hDense
-    -- Let A* be the elements not congruent to 7 or 18 mod 25.
-    set Astar : Finset ℕ := A.filter (fun a => a % 25 ≠ 7 ∧ a % 25 ≠ 18)
-    have hNpos : 0 < N := lt_of_lt_of_le (by decide : 0 < 1) hN
-    by_cases hAstar : Astar = ∅
-    · -- A* is empty: all elements are ≡ 7 or 18 (mod 25)
-      have hAstar_empty' : ∀ b ∈ A, b % 25 = 7 ∨ b % 25 = 18 := by
-        intro b hbA
-        by_contra hcontra
-        have hbAstar : b ∈ Astar := by
-          have : b % 25 ≠ 7 ∧ b % 25 ≠ 18 := by
-            simpa [not_or] using hcontra
-          simpa [Astar, Finset.mem_filter, hbA, this]
-        have : Astar.Nonempty := ⟨b, hbAstar⟩
-        simpa [hAstar] using this
-      -- If both residues occur, Case 3 contradicts density.
-      by_cases hsub7 : A ⊆ A₇ N
-      · exact Or.inl hsub7
-      by_cases hsub18 : A ⊆ A₁₈ N
-      · exact Or.inr hsub18
-      -- Otherwise both residues occur (since every element is 7 or 18 mod 25).
-      have hA7 : ∃ b ∈ A, b % 25 = 7 := by
-        classical
-        have : ∃ b, b ∈ A ∧ b ∉ A₁₈ N := by
-          simpa [Finset.not_subset] using hsub18
-        rcases this with ⟨b, hbA, hbNot⟩
-        refine ⟨b, hbA, ?_⟩
-        have hbmod : b % 25 = 7 ∨ b % 25 = 18 := hAstar_empty' b hbA
-        cases hbmod with
-        | inl h7 => exact h7
-        | inr h18 =>
-            exfalso
-            apply hbNot
-            -- b ∈ A implies b < N, so membership in A₁₈ N is equivalent to b % 25 = 18.
-            have hbRange : b ∈ Finset.range N := hAsub hbA
-            have hbLt : b < N := by simpa [Finset.mem_range] using hbRange
-            simp [A₁₈, hbLt, h18]
-      have hA18 : ∃ b ∈ A, b % 25 = 18 := by
-        classical
-        have : ∃ b, b ∈ A ∧ b ∉ A₇ N := by
-          simpa [Finset.not_subset] using hsub7
-        rcases this with ⟨b, hbA, hbNot⟩
-        refine ⟨b, hbA, ?_⟩
-        have hbmod : b % 25 = 7 ∨ b % 25 = 18 := hAstar_empty' b hbA
-        cases hbmod with
-        | inr h18 => exact h18
-        | inl h7 =>
-            exfalso
-            apply hbNot
-            have hbRange : b ∈ Finset.range N := hAsub hbA
-            have hbLt : b < N := by simpa [Finset.mem_range] using hbRange
-            simp [A₇, hbLt, h7]
-      have hlt : (A.card : ℝ) < (1 / 25 - (1 / 500 : ℝ)) * (N : ℝ) :=
-        case3_mixed_A7_A18_contradiction (N := N) (A := A) hAsub hAprop hAstar_empty' hA7 hA18
-      exact (False.elim ((not_lt_of_ge hDense) hlt))
-    · -- A* is nonempty: split into Cases 1 and 2 by parity.
-      have hAstar_nonempty : ∃ b ∈ A, b % 25 ≠ 7 ∧ b % 25 ≠ 18 := by
-        rcases (Finset.nonempty_iff_ne_empty.2 hAstar) with ⟨b, hbAstar⟩
-        have hbA : b ∈ A := (Finset.mem_filter.1 hbAstar).1
-        have hbmod : b % 25 ≠ 7 ∧ b % 25 ≠ 18 := (Finset.mem_filter.1 hbAstar).2
-        exact ⟨b, hbA, hbmod.1, hbmod.2⟩
-      by_cases heven : ∃ b ∈ A, b % 25 ≠ 7 ∧ b % 25 ≠ 18 ∧ 2 ∣ b
-      · -- Case 1: there is an even element in A*
-        have hlt : (A.card : ℝ) < (1 / 25 - (1 / 500 : ℝ)) * (N : ℝ) :=
-          case1_even_in_Astar_contradiction (N := N) (A := A) hAsub hAprop heven
-        exact (False.elim ((not_lt_of_ge hDense) hlt))
-      · -- Case 2: all elements of A* are odd
-        have hall_odd : ∀ b ∈ A, b % 25 ≠ 7 ∧ b % 25 ≠ 18 → ¬ 2 ∣ b := by
-          intro b hbA hbmod
-          intro hbEven
-          apply heven
-          exact ⟨b, hbA, hbmod.1, hbmod.2, hbEven⟩
-        have hlt : (A.card : ℝ) < (1 / 25 - (1 / 500 : ℝ)) * (N : ℝ) :=
-          case2_all_odd_Astar_contradiction (N := N) (A := A) hAsub hAprop hAstar_nonempty hall_odd
-        exact (False.elim ((not_lt_of_ge hDense) hlt))
+  sorry
 
 -- ============================================================================
 -- SECTION 11: FINAL STATEMENTS (conditional on sawhney_main)
 -- ============================================================================
 
 theorem problem_848_statement_50 : Problem848Statement 50 := problem_848_N50
+
 theorem problem_848_statement_100 : Problem848Statement 100 := problem_848_N100
 
 /-- The full resolution (assuming SawhneyMain). -/
