@@ -48,7 +48,8 @@ def add_reference_to_problem(
         problems = load_enriched_problems(dataset_path)
         problem = problems.get(problem_id)
         if problem is None:
-            return None, False, None, f"Problem {problem_id} not found in dataset"
+            # Not an I/O failure; callers should treat this as a normal NotFound case.
+            return None, False, None, None
 
         existing_keys = {r.key for r in problem.references}
         existing_dois: dict[str, ReferenceEntry] = {}

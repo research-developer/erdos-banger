@@ -169,6 +169,10 @@ class TestLogAskInteraction:
         assert result.path == tmp_path / "problem_2.jsonl"
         assert "Failed to write ask log" in caplog.text
 
+
+class TestReadAskLogEntries:
+    """Tests for read_ask_log_entries helper."""
+
     def test_read_entries_missing_file_returns_empty(self, tmp_path: Path) -> None:
         """Reading a missing log file should return empty results (no error)."""
         entries, parse_errors, log_path = read_ask_log_entries(123, log_dir=tmp_path)

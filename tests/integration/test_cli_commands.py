@@ -147,6 +147,25 @@ def test_cli_refs_add_arxiv_updates_dataset(
     assert add_payload_2["data"]["updated"] is False
 
 
+def test_cli_refs_add_not_found_returns_not_found(
+    tmp_path: Path, sample_problems_yaml: Path
+) -> None:
+    data_dir = _data_dir(tmp_path, sample_problems_yaml)
+    env = {"ERDOS_DATA_PATH": str(data_dir)}
+
+    result = runner.invoke(
+        app,
+        ["--json", "refs", "add", "99999", "--arxiv", "2511.16072"],
+        env=env,
+    )
+
+    assert result.exit_code == 3
+    payload = json.loads(result.stdout)
+    assert payload["success"] is False
+    assert payload["error"]["type"] == "NotFoundError"
+    assert "not found" in payload["error"]["message"].lower()
+
+
 def test_cli_search_json(tmp_path: Path, sample_problems_yaml: Path) -> None:
     data_dir = _data_dir(tmp_path, sample_problems_yaml)
     index_path = tmp_path / "index" / "test.sqlite"

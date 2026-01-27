@@ -2,7 +2,7 @@
 
 Tracking which Erdos problems we're considering working on and why.
 
-Last updated: 2026-01-26
+Last updated: 2026-01-27
 
 ---
 
@@ -42,6 +42,8 @@ These are **disproved** problems where the proof is a finite counterexample. Ide
 - Pure computation + exhaustive verification
 - `norm_num`/`decide`/`native_decide` friendly
 
+Local verification: `uv run python scripts/verify_counterexample_candidates.py`
+
 ### Tier A: Single Counterexample (Easiest)
 
 | # | Status | Topic | Counterexample | Lean Feasibility |
@@ -53,14 +55,14 @@ These are **disproved** problems where the proof is a finite counterexample. Ide
 
 | # | Status | Topic | Counterexample | Lean Feasibility |
 |---|--------|-------|----------------|------------------|
-| **231** | disproved | abelian squares | 15-char string on 4 symbols (e.g., `121312141213121`) | ⭐⭐ Need ~50 LOC infrastructure for Parikh vectors |
-| **794** | disproved | hypergraphs | 9-vertex, 28-edge 3-uniform hypergraph | ⭐⭐ Exhaustive check over 126+126 subsets |
+| **231** | disproved | abelian squares | 15-char string on 4 symbols: `121312141213121` | ⭐⭐ Need ~50 LOC infrastructure for Parikh vectors |
+| **794** | disproved | hypergraphs | 9 vertices; 28 edges: all triples with one vertex in each of `{1,2,3}`, `{4,5,6}`, `{7,8,9}` plus `{1,2,3}` | ⭐⭐ Exhaustive check over 126+126 subsets |
 
 ### Tier C: Already Formalized (Study Template)
 
 | # | Status | Topic | Why Study |
 |---|--------|-------|-----------|
-| **645** | proved (Lean) | Ramsey, AP | Discrete forcing argument, good pattern for combinatorial proofs |
+| **645** | proved (Lean) | Ramsey, AP | Discrete forcing argument, good pattern for combinatorial proofs (`formal/lean/Upstream/FormalConjectures/ErdosProblems/645.lean`) |
 
 ---
 
@@ -82,12 +84,14 @@ These are solved problems that share techniques with our candidates:
 ## Decision Log
 
 ### 2026-01-25
+
 - Synced 33 problems to local database
 - Imported 26 Lean formalizations
 - Identified #74, #564, #20 as top candidates
 - Strategy: Study solved relatives before attempting open problems
 
 ### 2026-01-26
+
 - Picked #848 (Erdős–Sárközy) as the first "2026 AI + human collab" target
 - Rationale: explicit-threshold grind + finite verification with checkable certificates
 - Added "Counterexample Candidates" section with 5 disproved problems (#399, #649, #231, #794, #645)
