@@ -122,36 +122,35 @@ theorem SimpleGraph.subgraphEdgeDistsToBipartite_bddAbove (G : SimpleGraph V) (n
   simp
 
 /-!
-## Main Theorems (OPEN - need proof)
+## Main Conjectures (OPEN)
 
-These are the statements we're trying to prove or disprove.
+Problem 74 is open (as of 2026). We record its statement as a `Prop` (rather than a `theorem`
+with `sorry`) so this file remains warning-free and the goalposts stay honest.
 -/
 
 /--
-**Main Conjecture (Problem 74)**
+**Main Conjecture (Problem 74)**.
 
-Let $f(n)\to \infty$ possibly very slowly.
-Is there a graph of infinite chromatic number such that every finite subgraph on $n$
-vertices can be made bipartite by deleting at most $f(n)$ edges?
-
-The `answer(...)` wrapper indicates whether the answer is True or False.
+Let `f(n) → ∞` (possibly very slowly).
+Is there a graph of infinite chromatic number such that every finite subgraph on `n` vertices
+can be made bipartite by deleting at most `f(n)` edges?
 -/
-theorem erdos_74 : ∀ f : ℕ → ℕ, Tendsto f atTop atTop →
-    (∃ (V : Type u) (G : SimpleGraph V), G.chromaticNumber = ⊤ ∧
-    ∀ n, SimpleGraph.maxSubgraphEdgeDistToBipartite G n ≤ f n) := by
-  sorry
+def erdos_74 : Prop :=
+  ∀ f : ℕ → ℕ, Tendsto f atTop atTop →
+    (∃ (W : Type u) (G : SimpleGraph W), G.chromaticNumber = ⊤ ∧
+      ∀ n, SimpleGraph.maxSubgraphEdgeDistToBipartite G n ≤ f n)
 
 /--
-**Variant: Square Root Bound**
+**Variant: Square Root Bound**.
 
-Is there a graph of infinite chromatic number such that every finite subgraph on $n$
-vertices can be made bipartite by deleting at most $\sqrt{n}$ edges?
+Is there a graph of infinite chromatic number such that every finite subgraph on `n` vertices
+can be made bipartite by deleting at most `√n` edges?
 
-This is a specific case that remains open even though $\sqrt{n} \to \infty$.
+This remains open even though `Nat.sqrt n → ∞`.
 -/
-theorem erdos_74_sqrt : ∃ (V : Type u) (G : SimpleGraph V), G.chromaticNumber = ⊤ ∧
-    ∀ n, SimpleGraph.maxSubgraphEdgeDistToBipartite G n ≤ Nat.sqrt n := by
-  sorry
+def erdos_74_sqrt : Prop :=
+  ∃ (W : Type u) (G : SimpleGraph W), G.chromaticNumber = ⊤ ∧
+    ∀ n, SimpleGraph.maxSubgraphEdgeDistToBipartite G n ≤ Nat.sqrt n
 
 /-!
 ## Research Notes
