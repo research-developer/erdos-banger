@@ -214,6 +214,28 @@ class TestAppConfigFromEnv:
             config = AppConfig.from_env()
             assert config.aristotle_api_key == "dotenv-key"
 
+    def test_initialize_environment_loads_dotenv_from_project_root_when_run_from_subdir(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """`.env` is discovered from the repo root when running in subdirectories."""
+        repo_root = tmp_path / "repo"
+        (repo_root / "src" / "erdos").mkdir(parents=True)
+        (repo_root / "pyproject.toml").write_text(
+            "[project]\nname = \"erdos-banger\"\n", encoding="utf-8"
+        )
+        (repo_root / ".env").write_text(
+            "ARISTOTLE_API_KEY=dotenv-key\n", encoding="utf-8"
+        )
+        subdir = repo_root / "formal" / "lean"
+        subdir.mkdir(parents=True)
+
+        env = {"ERDOS_LOAD_DOTENV": "1"}
+        with patch.dict(os.environ, env, clear=True):
+            monkeypatch.chdir(subdir)
+            initialize_environment()
+            config = AppConfig.from_env()
+            assert config.aristotle_api_key == "dotenv-key"
+
 
 class TestAppContextFromConfig:
     """Test AppContext.from_config() for testability."""

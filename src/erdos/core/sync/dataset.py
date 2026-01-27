@@ -16,6 +16,7 @@ import yaml
 from pydantic import ValidationError
 
 from erdos.core.models import ProblemRecord
+from erdos.core.repo_root import resolve_repo_root
 
 
 if TYPE_CHECKING:
@@ -95,7 +96,7 @@ def resolve_enriched_dataset_path(config: AppConfig) -> Path:
     - Otherwise, default to <repo_root>/data/problems_enriched.yaml when
       ERDOS_REPO_ROOT is set, or ./data/problems_enriched.yaml when not.
     """
-    base_dir = config.repo_root or Path.cwd()
+    base_dir = resolve_repo_root(config.repo_root)
 
     if config.data_path is None:
         return base_dir / "data" / "problems_enriched.yaml"

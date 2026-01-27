@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import logging
 from collections import deque
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,7 @@ from typing import Any
 from pydantic import ConfigDict, Field, ValidationError
 
 from erdos.core.models.base import ErdosBaseModel
+from erdos.core.repo_root import resolve_repo_root
 from erdos.core.run_logger import sanitize_secrets
 
 
@@ -71,9 +73,18 @@ class AskLogEntry(ErdosBaseModel):
     llm: AskLogLLM = Field(default_factory=AskLogLLM)
 
 
+@dataclass(frozen=True)
+class AskLogWriteResult:
+    """Result of attempting to append an interaction to the JSONL log."""
+
+    path: Path
+    written: bool
+    error: str | None = None
+
+
 def _get_default_log_dir() -> Path:
     """Get default ask log directory (logs/ask/)."""
-    return Path("logs/ask")
+    return resolve_repo_root(None) / "logs" / "ask"
 
 
 def get_ask_log_path(problem_id: int, *, log_dir: Path | None = None) -> Path:
@@ -146,7 +157,7 @@ def log_ask_interaction(
     llm_command: str | None = None,
     llm_exit_code: int | None = None,
     log_dir: Path | None = None,
-) -> Path:
+) -> AskLogWriteResult:
     """Log an ask Q&A interaction to per-problem JSONL file.
 
     Args:
@@ -160,13 +171,10 @@ def log_ask_interaction(
         log_dir: Optional log directory override.
 
     Returns:
-        Path to the log file where the interaction was written.
+        Result describing whether the interaction was written.
     """
     log_dir = log_dir or _get_default_log_dir()
     log_path = get_ask_log_path(problem_id, log_dir=log_dir)
-
-    # Ensure directory exists
-    log_dir.mkdir(parents=True, exist_ok=True)
 
     # Build log entry
     entry = {
@@ -194,9 +202,20 @@ def log_ask_interaction(
     }
     entry = sanitize_secrets(entry)
 
-    # Append to file
-    with log_path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(entry) + "\n")
-        f.flush()
+    try:
+        # Ensure directory exists
+        log_dir.mkdir(parents=True, exist_ok=True)
 
-    return log_path
+        # Append to file
+        with log_path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+            f.flush()
+        return AskLogWriteResult(path=log_path, written=True)
+    except Exception as exc:  # best-effort side effect
+        logger.warning(
+            "Failed to write ask log to %s: %s",
+            log_path,
+            exc,
+            exc_info=True,
+        )
+        return AskLogWriteResult(path=log_path, written=False, error=str(exc))

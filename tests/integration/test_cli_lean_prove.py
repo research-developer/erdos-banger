@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
@@ -145,6 +146,58 @@ class TestLeanProveCommandConfig:
                         str(output),
                     ],
                 )
+
+        assert result.exit_code == ExitCode.SUCCESS
+        call_kwargs = mock_run.call_args[1]
+        assert call_kwargs["env"]["ARISTOTLE_API_KEY"] == "dotenv-key"
+
+    def test_dotenv_api_key_is_loaded_from_repo_root_when_run_from_subdir(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        """Running from a subdirectory should still discover repo-root `.env`."""
+        monkeypatch.setenv("ERDOS_LOAD_DOTENV", "1")
+        monkeypatch.delenv("ERDOS_REPO_ROOT", raising=False)
+        monkeypatch.delenv("ARISTOTLE_API_KEY", raising=False)
+
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_result.stdout = ""
+        mock_result.stderr = ""
+
+        with runner.isolated_filesystem():
+            from pathlib import Path
+
+            Path("src/erdos").mkdir(parents=True)
+            Path("pyproject.toml").write_text(
+                "[project]\nname = \"erdos-banger\"\n", encoding="utf-8"
+            )
+            Path(".env").write_text("ARISTOTLE_API_KEY=dotenv-key\n", encoding="utf-8")
+
+            Path("formal/lean").mkdir(parents=True)
+            input_file = Path("formal/lean/input.lean")
+            input_file.write_text("-- test", encoding="utf-8")
+            output_file = Path("formal/lean/output.lean")
+
+            old_cwd = os.getcwd()
+            os.chdir(Path("formal/lean"))
+            try:
+                with (
+                    patch("shutil.which", return_value="/usr/bin/aristotle"),
+                    patch("subprocess.run", return_value=mock_result) as mock_run,
+                ):
+                    result = runner.invoke(
+                        app,
+                        [
+                            "--json",
+                            "lean",
+                            "prove",
+                            str(Path("input.lean")),
+                            "--output",
+                            str(Path("output.lean")),
+                        ],
+                    )
+            finally:
+                os.chdir(old_cwd)
 
         assert result.exit_code == ExitCode.SUCCESS
         call_kwargs = mock_run.call_args[1]

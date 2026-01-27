@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import UTC, datetime
 from pathlib import Path
+
+import pytest
 
 from erdos.core.ask.logging import log_ask_interaction, read_ask_log_entries
 
@@ -14,7 +17,7 @@ class TestLogAskInteraction:
 
     def test_creates_log_file(self, tmp_path: Path) -> None:
         """Verify log file is created in expected location."""
-        log_path = log_ask_interaction(
+        result = log_ask_interaction(
             problem_id=848,
             question="What is known?",
             answer="Several partial results exist.",
@@ -23,9 +26,10 @@ class TestLogAskInteraction:
             log_dir=tmp_path,
         )
 
-        assert log_path.exists()
-        assert log_path.name == "problem_848.jsonl"
-        assert log_path.parent == tmp_path
+        assert result.written is True
+        assert result.path.exists()
+        assert result.path.name == "problem_848.jsonl"
+        assert result.path.parent == tmp_path
 
     def test_persists_full_answer(self, tmp_path: Path) -> None:
         """Verify full LLM answer is persisted, not just length."""
@@ -134,6 +138,33 @@ class TestLogAskInteraction:
         assert entry["schema_version"] == 1
         assert "timestamp" in entry
         datetime.fromisoformat(entry["timestamp"])
+
+    def test_logging_io_errors_are_non_fatal(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """I/O errors during logging should not crash the main ask flow."""
+
+        def raise_oserror(self: Path, *args: object, **kwargs: object) -> None:
+            raise OSError("read-only filesystem")
+
+        monkeypatch.setattr(Path, "mkdir", raise_oserror)
+
+        with caplog.at_level(logging.WARNING):
+            result = log_ask_interaction(
+                problem_id=2,
+                question="Q",
+                answer="A",
+                sources=[],
+                llm_enabled=True,
+                log_dir=tmp_path,
+            )
+
+        assert result.written is False
+        assert result.path == tmp_path / "problem_2.jsonl"
+        assert "Failed to write ask log" in caplog.text
 
     def test_read_entries_missing_file_returns_empty(self, tmp_path: Path) -> None:
         """Reading a missing log file should return empty results (no error)."""

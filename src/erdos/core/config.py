@@ -25,6 +25,7 @@ from pathlib import Path
 
 from erdos.core.constants import DEFAULT_HTTP_TIMEOUT
 from erdos.core.dotenv_loader import load_dotenv_file
+from erdos.core.repo_root import discover_repo_root
 
 
 # Default values (matching existing behavior)
@@ -73,7 +74,12 @@ def _load_dotenv_if_enabled() -> None:
         return
 
     repo_root = os.environ.get("ERDOS_REPO_ROOT")
-    env_path = (Path(repo_root) if repo_root else Path.cwd()) / ".env"
+    root = (
+        Path(repo_root)
+        if repo_root
+        else discover_repo_root() or Path.cwd()
+    )
+    env_path = root / ".env"
     parsed = load_dotenv_file(env_path)
     if not parsed:
         return
