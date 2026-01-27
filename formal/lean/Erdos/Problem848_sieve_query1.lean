@@ -131,7 +131,7 @@ lemma two_roots_mod_p_squared (p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) :
       rw [← ZMod.natCast_eq_zero_iff] at h_r1_zero
       aesop
     norm_num [h_r1_zero] at hr₁
-    rcases p with (_ | _ | _ | p); cases hr₁; contradiction
+    rcases p with (_ | _ | _ | p) <;> (cases hr₁; contradiction)
   · have h_solutions : ∀ r : ZMod (p ^ 2), r ^ 2 = -1 → r = r₁ ∨ r = -r₁ := by
       intro r hr
       have h_eq : (r - r₁) * (r + r₁) = 0 := by
@@ -321,7 +321,7 @@ lemma density_single_prime (p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) (N : 
               grind
             have h_char : (2 : ZMod (p ^ 2)) ≠ 0 := by
               intro h
-              rcases p with (_ | _ | _ | p); cases h; trivial
+              rcases p with (_ | _ | _ | p) <;> (cases h; trivial)
             grind
           exact h_sum
         simp_all +decide [← ZMod.natCast_eq_natCast_iff]
