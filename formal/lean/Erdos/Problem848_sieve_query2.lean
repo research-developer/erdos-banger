@@ -10,6 +10,7 @@ import Mathlib.Data.Nat.Squarefree
 import Mathlib.Data.Finset.Basic
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Data.ZMod.Basic
+import Erdos.Problem848_sieve_basics
 
 namespace Erdos.Problem848.SieveQuery2
 
@@ -79,13 +80,26 @@ lemma must_have_other_prime_square (a b : ℕ) (ha : a % 25 = 7)
     simpa [pow_two] using hp2
   exact (h25 this).elim
 
-/-- The fraction of b in a residue class (mod 25) for which ab+1 is squarefree
-    is at least ∏_{p≠5}(1 - 1/p²) = 25/(4π²) ≈ 0.633. -/
-lemma squarefree_fraction_lower_bound (a : ℕ) (t : ℕ) (ht : t < 25)
-    (hcross : t ≠ 7 ∧ t ≠ 18) (N : ℕ) (hN : N ≥ 100) :
+/--
+Research-level sieve/density claim used in Sawhney's argument (not proved here).
+
+Intuition: for `b` in a fixed residue class mod `25` *outside* `±7`, the values `a*b+1` (with
+`a ≡ 7 (mod 25)`) are never divisible by `25`, and heuristically behave like a random integer
+conditioned on that fact, so a positive fraction should be squarefree.
+
+Important: without a hypothesis like `a % 25 = 7` (or, more generally, `25 ∤ (a*t+1)`), the naive
+statement can be false (e.g. `a=1, t=24` makes `a*b+1` always divisible by `25`).
+
+We record the version relevant to the Erdős–Sárközy setting (with `a ≡ 7 (mod 25)`) as a `Prop` so
+downstream results can be proved *conditionally* without introducing `sorry`.
+-/
+def SquarefreeFractionLowerBoundAt (a : ℕ) (t : ℕ) (N : ℕ) : Prop :=
+  a % 25 = 7 →
+    t < 25 →
+    (t ≠ 7 ∧ t ≠ 18) →
+    N ≥ 100 →
     let B := (Finset.range N).filter (fun b => b % 25 = t)
     let sqfree := B.filter (fun b => Squarefree (a * b + 1))
-    (sqfree.card : ℚ) / B.card ≥ 1/2 := by
-  sorry
+    (sqfree.card : ℚ) / B.card ≥ 1/2
 
 end Erdos.Problem848.SieveQuery2

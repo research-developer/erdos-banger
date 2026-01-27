@@ -35,7 +35,7 @@ lemma prime_sq_divides_implies_one_mod_four (p n : ℕ) (hp : Nat.Prime p) (hp2 
   have hp_dvd : p ∣ n ^ 2 + 1 := by
     -- `p ∣ p^2` and `p^2 ∣ n^2+1` implies `p ∣ n^2+1`.
     have hp_div_p2 : p ∣ p ^ 2 := by
-      simpa [pow_two] using Nat.dvd_mul_right p p
+      simp [pow_two]
     exact Nat.dvd_trans hp_div_p2 hdiv
 
   -- Work in `ZMod p`: `p ∣ n^2+1` means `n^2 = -1 (mod p)`.
@@ -56,17 +56,28 @@ lemma prime_sq_divides_implies_one_mod_four (p n : ℕ) (hp : Nat.Prime p) (hp2 
   | inl h1 => exact h1
   | inr h3 => exact (hne3 h3).elim
 
-/-- For prime p ≡ 1 (mod 4), there are exactly 2 residue classes r mod p²
-    such that r² ≡ -1 (mod p²). -/
-lemma two_roots_mod_p_squared (p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) :
-    ∃ r₁ r₂ : ZMod (p^2), r₁ ≠ r₂ ∧ r₁^2 = -1 ∧ r₂^2 = -1 ∧
-    ∀ r : ZMod (p^2), r^2 = -1 → r = r₁ ∨ r = r₂ := by
-  sorry
+/--
+Research statement (not proved here): for prime `p ≡ 1 (mod 4)`, the congruence `r^2 = -1` has
+exactly two solutions in `ZMod (p^2)`.
 
-/-- The density of integers n where p² | n²+1 is 2/p² for each prime p ≡ 1 (mod 4). -/
-lemma density_single_prime (p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) (N : ℕ) (hN : N > 0) :
-    let count := ((Finset.range N).filter (fun n => (p^2 : ℕ) ∣ n^2 + 1)).card
-    (count : ℚ) / N ≤ 2 / p^2 + 1 / N := by
-  sorry
+We keep this as a `Prop` so the file stays `sorry`-free while the Hensel-lifting argument is
+formalized separately.
+-/
+def TwoRootsModPSquared (p : ℕ) : Prop :=
+  Nat.Prime p →
+    p % 4 = 1 →
+    ∃ r₁ r₂ : ZMod (p ^ 2), r₁ ≠ r₂ ∧ r₁ ^ 2 = -1 ∧ r₂ ^ 2 = -1 ∧
+      ∀ r : ZMod (p ^ 2), r ^ 2 = -1 → r = r₁ ∨ r = r₂
+
+/--
+Research statement (not proved here): for prime `p ≡ 1 (mod 4)`, the set
+`{n < N : p^2 ∣ n^2+1}` has density at most `2/p^2` up to a small boundary error.
+-/
+def DensitySinglePrime (p : ℕ) : Prop :=
+  Nat.Prime p →
+    p % 4 = 1 →
+    ∀ N : ℕ, N > 0 →
+      let count := ((Finset.range N).filter (fun n => (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card
+      (count : ℚ) / N ≤ 2 / p ^ 2 + 1 / N
 
 end Erdos.Problem848.SieveQuery1
