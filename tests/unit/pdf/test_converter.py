@@ -366,9 +366,13 @@ class TestMarkerConversion:
         def fake_create_model_dict() -> dict[str, Any]:
             return {"model": "ok"}
 
-        marker_parser_mod.ConfigParser = FakeConfigParserV1
-        marker_models_mod.create_model_dict = fake_create_model_dict
-        marker_converters_pdf_mod.PdfConverter = FakePdfConverterV1
+        config_parser_attr = "ConfigParser"
+        create_model_dict_attr = "create_model_dict"
+        pdf_converter_attr = "PdfConverter"
+
+        setattr(marker_parser_mod, config_parser_attr, FakeConfigParserV1)
+        setattr(marker_models_mod, create_model_dict_attr, fake_create_model_dict)
+        setattr(marker_converters_pdf_mod, pdf_converter_attr, FakePdfConverterV1)
 
         monkeypatch.setitem(sys.modules, "marker", marker_pkg)
         monkeypatch.setitem(sys.modules, "marker.config", marker_config_pkg)

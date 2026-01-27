@@ -17,7 +17,6 @@ import requests
 if TYPE_CHECKING:
     import logging
 
-
 def response_json_or_raise(
     response: requests.Response,
     *,

@@ -137,6 +137,15 @@ def refs_add(
             exit_with_result(ctx, app_error)
             return
         if app_ctx is None:
+            exit_with_result(
+                ctx,
+                CLIOutput.err(
+                    command=command,
+                    error_type="UnexpectedError",
+                    message=f"Unexpected missing app context for command {command}",
+                    code=ExitCode.ERROR,
+                ),
+            )
             return
 
         dataset_path = resolve_enriched_dataset_path(app_ctx.config)

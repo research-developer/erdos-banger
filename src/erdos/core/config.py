@@ -42,6 +42,7 @@ __all__ = [
     "DEFAULT_RUN_LOG_PATH",
     "AppConfig",
     "build_subprocess_env",
+    "initialize_environment",
 ]
 
 
