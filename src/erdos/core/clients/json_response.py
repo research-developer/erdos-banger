@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 import requests
 
+
 if TYPE_CHECKING:
     import logging
 
