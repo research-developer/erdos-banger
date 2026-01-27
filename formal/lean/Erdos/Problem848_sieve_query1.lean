@@ -7,6 +7,7 @@ This is a key lemma from Sawhney 2025.
 
 import Mathlib.Data.Nat.Prime.Basic
 import Mathlib.Data.Nat.Squarefree
+import Mathlib.Data.Nat.Cast.Order.Field
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.ZMod.Basic
@@ -203,9 +204,29 @@ lemma density_single_prime_of_two_roots (p : ℕ) (hp : Nat.Prime p) (hmod : p %
   -- Now show `(2*(N/m+1))/N ≤ 2/m + 2/N` (in ℚ).
   have hrat :
       ((2 * (N / m + 1) : ℕ) : ℚ) / N ≤ (2 : ℚ) / m + 2 / N := by
-    -- Expand and bound using `N/m ≤ N/m` and algebra.
-    -- `((2*(N/m+1))/N) = 2*(N/m)/N + 2/N ≤ 2/m + 2/N`.
-    nlinarith [Nat.cast_nonneg (N / m)]
+    have hN0 : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+    have hm0 : (0 : ℚ) < (m : ℚ) := by
+      have : 0 < m := by
+        have : 0 < p := hp.pos
+        have : 0 < p ^ 2 := pow_pos this 2
+        simpa [m] using this
+      exact_mod_cast this
+    -- Use `Nat.cast_div_le` to compare floor-division with exact division in `ℚ`.
+    have hdiv : ((N / m : ℕ) : ℚ) ≤ (N : ℚ) / (m : ℚ) := by
+      simpa [m] using (Nat.cast_div_le (m := N) (n := m) (α := ℚ))
+    -- Now do the algebra:
+    -- (2*(⌊N/m⌋+1))/N = 2*(⌊N/m⌋)/N + 2/N ≤ 2*(N/m)/N + 2/N = 2/m + 2/N.
+    calc
+      ((2 * (N / m + 1) : ℕ) : ℚ) / N
+          = ((2 : ℚ) * ((N / m : ℕ) : ℚ) + 2) / (N : ℚ) := by
+              -- expand `2*(q+1)` in `ℚ`
+              simp [two_mul, add_assoc, add_left_comm, add_comm, mul_add, Nat.cast_add, Nat.cast_mul]
+      _ = (2 : ℚ) * ((N / m : ℕ) : ℚ) / (N : ℚ) + (2 : ℚ) / (N : ℚ) := by
+              field_simp [hN0.ne']
+      _ ≤ (2 : ℚ) * ((N : ℚ) / (m : ℚ)) / (N : ℚ) + (2 : ℚ) / (N : ℚ) := by
+              gcongr
+      _ = (2 : ℚ) / (m : ℚ) + (2 : ℚ) / (N : ℚ) := by
+              field_simp [hN0.ne', hm0.ne']
   -- Combine.
   simpa [m] using le_trans this hrat
 
