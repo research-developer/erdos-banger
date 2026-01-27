@@ -20,11 +20,16 @@ v3.4 (DONE)     Research APIs: zbMATH integration
 v3.5 (DONE)     Architecture: Multi-model routing
 v4.0 (DONE)     Lean: Lean Copilot integration
 v4.1 (DONE)     UX: Progress dashboard
+v4.2 (PLANNED)  Integration: Lead enrichment pipeline (discovery → manifest)
+v4.3 (PLANNED)  Exploration: Math CLI (SymPy/NetworkX computational tools)
 ```
 
 ## Active Specs
 
-No active specs — all current specs have been completed and archived.
+| ID | Title | Status | Target | Description |
+|----|-------|--------|--------|-------------|
+| 036 | [Lead Enrichment Pipeline](./spec-036-lead-enrichment-pipeline.md) | Draft | v4.2 | Bridges discovery (Exa/zbMATH/S2) and enrichment (OpenAlex) |
+| 037 | [Math Exploration CLI](./spec-037-math-exploration-cli.md) | Draft | v4.3 | SymPy/NetworkX CLI for computational exploration |
 
 ## Design Documents
 
@@ -85,7 +90,7 @@ Completed specs that are fully implemented.
 | 034 | Progress Dashboard | [archive](https://github.com/The-Obstacle-Is-The-Way/erdos-banger/blob/main/docs/_archive/specs/spec-034-progress-dashboard.md) |
 | 035 | Unified Problem Data Sync | [archive](https://github.com/The-Obstacle-Is-The-Way/erdos-banger/blob/main/docs/_archive/specs/spec-035-unified-problem-data-sync.md) |
 
-**Next Spec ID:** SPEC-036
+**Next Spec ID:** SPEC-038
 
 ## Dependency Graph
 
@@ -156,6 +161,12 @@ v4.0 Lean Enhancement (DONE)
 
 v4.1 UX (DONE)
 └── 034 Progress Dashboard ←── 028 (verified v3 foundation)
+
+v4.2 Integration (PLANNED)
+└── 036 Lead Enrichment Pipeline ←── 022 (FallbackProvider) + 024 (Leads) + 029 (Exa)
+
+v4.3 Exploration (PLANNED)
+└── 037 Math Exploration CLI ←── Issue #32 (SymPy/NetworkX extras)
 ```
 
 ## Master Documents

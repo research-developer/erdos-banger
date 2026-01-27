@@ -40,10 +40,18 @@ def _exa_to_leads(
     """
     lead_ids: list[str] = []
     for source in result.sources:
+        title = (source.title or "").strip()
+        if not title:
+            fallback = source.display_title
+            if fallback == "Untitled" and source.relevance:
+                snippet = " ".join(source.relevance.split())[:80].strip()
+                if snippet:
+                    fallback = snippet
+            title = f"[Exa] {fallback}"
         notes = f"[Exa] {source.relevance}" if source.relevance else "[Exa]"
         record, _ = store.lead_add(
             problem_id,
-            title=source.title,
+            title=title,
             doi=source.doi,
             arxiv_id=source.arxiv_id,
             url=source.url,
@@ -71,7 +79,7 @@ def _format_source_lines(index: int, src: dict[str, Any]) -> list[str]:
     """Format a single source for display."""
     parts: list[str] = []
     author_info = _format_author_info(src.get("authors", []), src.get("year"))
-    title = src.get("title", "Untitled")
+    title = src.get("display_title") or src.get("title") or "Untitled"
 
     header = f"  [bold]{index}.[/bold] {title!r}"
     if author_info:

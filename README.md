@@ -131,6 +131,7 @@ make ci-full
 ### Optional extras
 
 - `uv sync --extra pdf` installs PDF conversion tooling (opt-in; includes GPL-licensed components). See `docs/developer/pdf-conversion.md`.
+- `uv sync --extra embeddings` installs semantic search dependencies (Sentence Transformers) for `erdos search --semantic` / `--hybrid`.
 - `uv sync --extra mcp` installs optional MCP server dependencies
 
 ## Documentation

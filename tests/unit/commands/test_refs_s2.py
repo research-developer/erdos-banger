@@ -10,6 +10,7 @@ from typing import Any
 import responses
 
 from erdos.cli import app
+from erdos.core.exit_codes import ExitCode
 from tests.cli_runner import make_cli_runner
 
 
@@ -244,6 +245,32 @@ class TestRefsS2Citations:
         payload = json.loads(result.stdout)
         assert payload["success"] is False
         assert payload["error"]["type"] == "NotFoundError"
+
+    @responses.activate
+    def test_citations_invalid_json_returns_error(
+        self, tmp_path: Path, sample_problems_yaml: Path
+    ) -> None:
+        """Invalid JSON responses return structured error (no traceback)."""
+        responses.add(
+            responses.GET,
+            "https://api.semanticscholar.org/graph/v1/paper/10.1234/badjson",
+            body="not json",
+            status=200,
+            content_type="application/json",
+        )
+
+        env = _setup_env(tmp_path, sample_problems_yaml)
+
+        result = runner.invoke(
+            app,
+            ["--json", "refs", "s2", "citations", "10.1234/badjson"],
+            env=env,
+        )
+
+        assert result.exit_code == ExitCode.NETWORK_ERROR
+        payload = json.loads(result.stdout)
+        assert payload["success"] is False
+        assert payload["error"]["type"] == "S2Error"
 
 
 class TestRefsS2CitedBy:

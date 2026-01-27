@@ -33,7 +33,11 @@ if TYPE_CHECKING:
 
 
 app = typer.Typer(
-    help="Ingest literature metadata and cache.",
+    help=(
+        "Ingest literature metadata and cache. "
+        "For papers with arXiv IDs, prefers downloading LaTeX source tarballs "
+        "(higher quality) over PDF conversion."
+    ),
     context_settings={"allow_interspersed_args": True},
 )
 
@@ -192,7 +196,7 @@ def ingest(
         typer.Option(
             "--status",
             click_type=click.Choice(PROBLEM_STATUS_CHOICES, case_sensitive=False),
-            help="Filter by status: open, proved, disproved, partially_solved, unknown",
+            help="Filter by status: open, decidable, proved, disproved, partially_solved, unknown",
         ),
     ] = None,
     prize_min: Annotated[

@@ -23,6 +23,7 @@ from erdos.commands import (
     sync,
 )
 from erdos.commands.presenter import console
+from erdos.core.config import initialize_environment
 
 
 class LogLevel(str, Enum):
@@ -99,6 +100,8 @@ def main(
 
     Run 'erdos COMMAND --help' for command-specific help.
     """
+    initialize_environment()
+
     # Configure logging based on --log-level
     _configure_logging(log_level.value)
 

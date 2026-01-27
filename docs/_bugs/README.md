@@ -6,6 +6,8 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 | Date | Type | Summary | Status |
 |------|------|---------|--------|
+| 2026-01-26 | Architecture Audit | Full codebase audit for SPEC-036/037 (2 bugs: GH-035, GH-036) | Archived |
+| 2026-01-26 | Friction Report | CLI maximization test for Problem #848 (1 bug found: BUG-034) | Archived |
 | 2026-01-25 | Adversarial Review | Status filter validation audit (1 bug fixed in 3ab5c5c) | Archived |
 | 2026-01-25 | Adversarial Review | Post-refactor CLI stress test (no new bugs; expanded regression tests) | Archived |
 | 2026-01-25 | Adversarial Review | CLI stress test, input validation audit (6 bugs fixed in 92039ca) | Archived |
@@ -16,9 +18,43 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 
 ## Active Bugs
 
-None.
+| ID | Title | Priority | Status | Component |
+|----|-------|----------|--------|-----------|
+| BUG-039 | Ingest cannot discover papers - only fetches pre-defined refs | P2 | Phase 1 Fixed | `erdos ingest` |
 
-*Note: BUG-013 was invalidated as a false positive. BUG-015 and BUG-017 were review findings that were invalidated before standalone bug decks were created.*
+**Note:** BUG-039 core workflow (`erdos refs add` + `erdos ingest`) works. Remaining phases (auto-discovery) are feature requests tracked in DEBT-110.
+
+### Invalidated Bugs
+
+| ID | Title | Reason |
+|----|-------|--------|
+| BUG-041 | Exa not exposed in CLI | FALSE POSITIVE - `erdos research exa search` works |
+| BUG-043 | pdfplumber not installed | FALSE POSITIVE - intentionally optional, graceful degradation |
+| BUG-045 | literature/papers/ not gitignored | FIXED - added to .gitignore |
+| BUG-046 | `erdos lean` command crashes | FALSE POSITIVE - `erdos lean --help` works; real issue is `lake` not on PATH |
+
+### Research Workflow Status (2026-01-26)
+
+**Core workflow is functional:**
+
+```bash
+# Full working pipeline:
+uv run erdos refs add 848 --arxiv 2511.16072   # Add paper to problem
+uv run erdos ingest 848 --force                # Fetch metadata + download source
+cat literature/extracts/arxiv/2511.16072/fulltext.txt # Extracted LaTeX
+```
+
+**What Works:**
+- ✅ `erdos refs add` - Add arXiv/DOI papers to problems
+- ✅ `erdos ingest` - Fetch metadata + download arXiv source
+- ✅ `erdos research exa search` - Find papers, create leads
+- ✅ PDF download + conversion (marker-pdf >= 1.0.0)
+
+**Feature Requests (not bugs):**
+- DEBT-110 Phase 2/3: Auto-discovery mode (`--discover`, `--search`)
+- SPEC-036: Lead enrichment pipeline (leads → manifest bridging)
+
+**Impact:** Manual workflow is complete. Auto-discovery is a future enhancement.
 
 ## Archived Bugs
 
@@ -57,8 +93,26 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-031 | `make smoke` fails when Lean installed but mathlib is not | P2 | Fixed | 83bf9f6 |
 | BUG-032 | Batch `--status` accepts invalid values (misclassified as NotFound) | P3 | Fixed | 3ab5c5c |
 | BUG-033 | zbMATH search methods don't handle 404 errors | P2 | Fixed | 05bc9ec |
+| BUG-034 | `erdos research exa --save-leads` crashes on empty title | P2 | Fixed | 6f9b423 |
+| BUG-035 | Lean skeleton template uses outdated Mathlib import path | P2 | Fixed | 36d3518 |
+| BUG-040 | Marker PDF conversion broken (marker-pdf API change) | P1 | Fixed | b7ceb6f |
+| BUG-042 | Exa API returns empty titles | P2 | Fixed | 8ba6e32 |
+| BUG-038 | BM25 search doesn't escape FTS5 special characters | P1 | Fixed | 8c55500 |
+| GH-035 | Crossref/S2 clients missing JSONDecodeError handling | P1 | Fixed | (in-tree) |
+| GH-036 | Hardcoded `logs/loop` path breaks outside repo root | P2 | Fixed | (in-tree) |
+| BUG-044 | Environment variables not auto-loaded in Python scripts | P2 | Fixed | b43c3a7 |
+| BUG-041 | Exa not exposed in CLI | N/A | Invalidated | f5557d7 |
+| BUG-043 | pdfplumber not installed | N/A | Invalidated | f5557d7 |
+| BUG-045 | literature/papers/ not gitignored | P3 | Fixed | f5557d7 |
+| BUG-046 | `erdos lean` command crashes | N/A | Invalidated | 1ed768b |
 
-**Next Bug ID:** BUG-034
+*Naming: GH-XXX = also tracked on GitHub Issues. BUG-XXX = local docs only. Both systems maintained in parallel.*
+
+**Next Bug ID:** BUG-047 (or GH-XXX if filing on GitHub)
+
+### Active Bug Decks
+
+- `docs/_bugs/bug-039-ingest-no-search-discovery.md` (BUG-039)
 
 ### Archived Bug Decks
 
@@ -100,10 +154,18 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/adversarial-review-2026-01-25-status-validation.md`
 - `docs/_archive/bugs/bug-032-batch-status-validation-missing.md`
 - `docs/_archive/bugs/bug-033-zbmath-search-identifier-404-not-handled.md`
-
-### Active Bug Decks
-
-None.
+- `docs/_archive/bugs/bug-036-json-decode-error-handling.md`
+- `docs/_archive/bugs/bug-037-hardcoded-logs-loop-path.md`
+- `docs/_archive/bugs/bug-038-bm25-fts5-query-not-escaped.md`
+- `docs/_archive/bugs/bug-034-exa-save-leads-empty-title.md`
+- `docs/_archive/bugs/bug-035-lean-skeleton-outdated-import.md`
+- `docs/_archive/bugs/bug-042-exa-empty-titles.md`
+- `docs/_archive/bugs/bug-044-env-not-auto-loaded.md`
+- `docs/_archive/bugs/bug-041-exa-not-exposed-in-cli.md`
+- `docs/_archive/bugs/bug-043-pdfplumber-not-installed.md`
+- `docs/_archive/bugs/bug-045-literature-papers-not-gitignored.md`
+- `docs/_archive/bugs/bug-046-erdos-lean-command-broken.md`
+- `docs/_archive/bugs/friction-2026-01-26-cli-maximization-test.md`
 
 ## Bug Priority Definitions
 

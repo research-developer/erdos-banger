@@ -18,6 +18,46 @@ These are defined in `src/erdos/cli.py`:
 - `--log-level`: `DEBUG`, `INFO`, `WARN`, `ERROR`
 - `--version`: print version
 
+## `.env` Files (Local Development)
+
+For local convenience, the `erdos` CLI loads a `.env` file if present at:
+
+- `${ERDOS_REPO_ROOT}/.env` (if `ERDOS_REPO_ROOT` is set), otherwise
+- `./.env` (current working directory)
+
+This loader is intentionally minimal:
+
+- Supports simple `KEY=value` lines (with optional `export ` prefix)
+- Supports single/double quoted values
+- Strips inline `# comments` for unquoted values
+- Does **not** support multiline values or shell expansion
+- Does **not** override already-set environment variables that have a non-empty value
+
+Disable auto-loading with:
+
+```bash
+ERDOS_LOAD_DOTENV=0
+```
+
+Use the provided template:
+
+```bash
+cp .env.example .env
+```
+
+### Direct Python Usage
+
+If you import `erdos` modules directly in Python (i.e., not via the `erdos` CLI entrypoint), `.env` is **not** loaded automatically at import time.
+
+Call:
+
+```python
+from erdos.core.config import initialize_environment
+initialize_environment()
+```
+
+before constructing clients/config (e.g., `ExaClient()`, `AppConfig.from_env()`), or set the needed environment variables yourself.
+
 ## Environment Variables (Core)
 
 | Name | Meaning | Default / Notes |
@@ -29,6 +69,7 @@ These are defined in `src/erdos/cli.py`:
 | `ERDOS_SUBMODULE_PATH` | Path to `teorth/erdosproblems` submodule | Defaults to `data/erdosproblems`. |
 | `ERDOS_MAILTO` / `OPENALEX_EMAIL` | Contact email for polite pools | Used for OpenAlex and other APIs. |
 | `ERDOS_LLM_COMMAND` | Global external LLM command | Used as fallback for all LLM tasks. |
+| `ERDOS_LOAD_DOTENV` | Enable/disable auto `.env` loading | Default enabled; set to `0` to disable. |
 | `ERDOS_ARISTOTLE_COMMAND` | Path to `aristotle` CLI | Defaults to `aristotle`. |
 | `ARISTOTLE_API_KEY` | Aristotle API key | Used by `erdos lean prove`. |
 | `OPENALEX_API_KEY` | OpenAlex API key | Optional (some OpenAlex endpoints work without). |

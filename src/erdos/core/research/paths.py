@@ -2,15 +2,20 @@
 
 All paths are derived from:
 - repo_root (if provided, from AppConfig.repo_root), else
-- Path.cwd() (assumed to be repo root)
+- the discovered repo root (or Path.cwd() as fallback)
 """
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
+
+from erdos.core.repo_root import resolve_repo_root
 
 
 WORKSPACE_VERSION = 1
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def get_workspace_version() -> int:
@@ -22,14 +27,12 @@ def get_repo_root(repo_root: Path | None) -> Path:
     """Resolve the repository root path.
 
     Args:
-        repo_root: Optional repository root. If None, uses the current working
-            directory.
+        repo_root: Optional repository root override.
 
     Returns:
         Absolute, resolved repository root path.
     """
-    root = repo_root if repo_root is not None else Path.cwd()
-    return root.resolve()
+    return resolve_repo_root(repo_root)
 
 
 def get_research_root(repo_root: Path | None) -> Path:

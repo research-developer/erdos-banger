@@ -132,7 +132,8 @@ def validate_aristotle_config(
         if not effective_api_key:
             raise AristotleError(
                 "ARISTOTLE_API_KEY environment variable is not set or empty. "
-                "Please set it in your .env file.",
+                "Set it in your environment or in `.env` (auto-loaded by the `erdos` CLI "
+                "unless `ERDOS_LOAD_DOTENV` is set to 0/false/no/off).",
                 error_type="ConfigError",
             )
 

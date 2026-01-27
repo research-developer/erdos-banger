@@ -25,19 +25,23 @@ logger = logging.getLogger(__name__)
 # Conditional Imports (optional deps)
 # =============================================================================
 
-# Try importing optional dependency sentence-transformers.
-try:
-    from sentence_transformers import SentenceTransformer
-
-    EMBEDDING_AVAILABLE = True
-except ImportError:
-    EMBEDDING_AVAILABLE = False
-    # Type stubs for when deps are unavailable
-    SentenceTransformer = None
-
-
+# Conditional imports for optional dependencies.
+# sentence-transformers is only required for embedding functionality.
 if TYPE_CHECKING:
     from numpy.typing import NDArray
+    from sentence_transformers import SentenceTransformer
+
+# Runtime import with graceful fallback
+_SentenceTransformer: type[SentenceTransformer] | None = None
+EMBEDDING_AVAILABLE = False
+
+try:
+    from sentence_transformers import SentenceTransformer as _ST
+
+    _SentenceTransformer = _ST
+    EMBEDDING_AVAILABLE = True
+except ImportError:
+    pass
 
 
 # =============================================================================
@@ -116,9 +120,13 @@ class EmbeddingModel:
         self._config = config or EmbeddingConfig()
         self._model_name = self._config.model_name
 
-        # Load the model
+        # Load the model (EMBEDDING_AVAILABLE guarantees _SentenceTransformer is not None)
         logger.debug("Loading embedding model: %s", self._model_name)
-        self._model: SentenceTransformer = SentenceTransformer(self._model_name)
+        if (
+            _SentenceTransformer is None
+        ):  # pragma: no cover (unreachable due to guard above)
+            raise EmbeddingNotAvailableError()
+        self._model: SentenceTransformer = _SentenceTransformer(self._model_name)
 
         # Validate dimension
         actual_dim = self._model.get_sentence_embedding_dimension()

@@ -44,9 +44,16 @@ def search(
     ] = False,
     semantic: Annotated[
         bool,
-        typer.Option("--semantic", "-s", help="Use semantic (vector) search"),
+        typer.Option(
+            "--semantic",
+            "-s",
+            help="Use semantic (vector) search (requires `embeddings` extra).",
+        ),
     ] = False,
-    hybrid: Annotated[bool, typer.Option("--hybrid", help="Hybrid search")] = False,
+    hybrid: Annotated[
+        bool,
+        typer.Option("--hybrid", help="Hybrid search (requires `embeddings` extra)."),
+    ] = False,
     bm25_only: Annotated[
         bool,
         typer.Option("--bm25-only", help="Force BM25-only search (no vectors)"),
@@ -63,7 +70,10 @@ def search(
     ] = None,
     build_embeddings_flag: Annotated[
         bool,
-        typer.Option("--build-embeddings", help="Build/rebuild semantic embeddings"),
+        typer.Option(
+            "--build-embeddings",
+            help="Build/rebuild semantic embeddings (requires `embeddings` extra).",
+        ),
     ] = False,
     embedding_model: Annotated[
         str,

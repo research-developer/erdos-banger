@@ -337,6 +337,34 @@ class TestRunLoop:
         assert result.status == LoopStatus.LLM_REQUIRED
         assert result.iterations_completed == 0
 
+    def test_log_dir_override_is_used(
+        self,
+        tmp_path: Path,
+        mock_lean_runner: MagicMock,
+        sample_problem: ProblemRecord,
+    ) -> None:
+        """run_loop should respect a provided log_dir (GH-036)."""
+        erdos_dir = tmp_path / "formal" / "lean" / "Erdos"
+        erdos_dir.mkdir(parents=True)
+        lean_file = erdos_dir / "Problem006.lean"
+        lean_file.write_text("theorem foo : True := sorry\n", encoding="utf-8")
+
+        config = LoopConfig(max_iterations=1)
+        log_dir = tmp_path / "custom" / "logs" / "loop"
+        result = run_loop(
+            problem=sample_problem,
+            file_path=lean_file,
+            config=config,
+            lean_runner=mock_lean_runner,
+            llm_command=None,
+            no_apply=True,
+            log_dir=log_dir,
+        )
+
+        assert result.run_log_path is not None
+        assert result.run_log_path.parent == log_dir
+        assert result.run_log_path.exists()
+
     def test_applies_patch_and_checks(
         self,
         tmp_path: Path,

@@ -64,10 +64,16 @@ def _summarize_ingest(data: dict[str, Any]) -> dict[str, Any]:
 def _summarize_ask(data: dict[str, Any]) -> dict[str, Any]:
     """Summarize 'erdos ask' command result."""
     sources = data.get("sources", [])
-    answer = data.get("answer", "")
+    answer = data.get("answer")
+    llm = data.get("llm")
+    llm_enabled = (
+        bool(llm.get("enabled"))
+        if isinstance(llm, dict)
+        else bool(data.get("llm_enabled", False))
+    )
     return {
         "sources_retrieved": len(sources) if isinstance(sources, list) else 0,
-        "llm_enabled": data.get("llm_enabled", False),
+        "llm_enabled": llm_enabled,
         "answer_length": len(answer) if isinstance(answer, str) else 0,
     }
 

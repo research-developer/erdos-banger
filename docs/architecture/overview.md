@@ -26,7 +26,8 @@ src/erdos/
 Core is organized by domain:
 
 - `core/problem_loader.py` — load enriched problem datasets
-- `core/search/` — SQLite FTS search + indexing
+- `core/search/` — SQLite FTS search + indexing + embeddings
+- `core/ask/` — RAG Q&A (retrieval, prompt, LLM) — see [RAG System](./rag-system.md)
 - `core/ingest/` — literature ingestion and persistence
 - `core/clients/` — HTTP clients (arXiv, Crossref, OpenAlex, Exa, Semantic Scholar, zbMATH)
 - `core/research/` — filesystem research workspace (records, synthesis, status)

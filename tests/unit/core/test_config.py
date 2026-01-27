@@ -6,7 +6,9 @@ Tests verify that:
 3. AppContext.from_config() allows tests to bypass env reads entirely.
 """
 
+import os
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -15,6 +17,7 @@ from erdos.core.config import (
     DEFAULT_MAILTO,
     DEFAULT_RUN_LOG_PATH,
     AppConfig,
+    initialize_environment,
 )
 from erdos.core.context import AppContext
 
@@ -164,6 +167,74 @@ class TestAppConfigFromEnv:
         monkeypatch.setenv("OPENALEX_EMAIL", "   ")
         config = AppConfig.from_env()
         assert config.mailto == DEFAULT_MAILTO
+
+    def test_initialize_environment_loads_dotenv_when_enabled(
+        self, tmp_path: Path
+    ) -> None:
+        """initialize_environment() loads `.env` when enabled."""
+        (tmp_path / ".env").write_text(
+            "ARISTOTLE_API_KEY=dotenv-key\n", encoding="utf-8"
+        )
+
+        env = {"ERDOS_LOAD_DOTENV": "1", "ERDOS_REPO_ROOT": str(tmp_path)}
+        with patch.dict(os.environ, env, clear=True):
+            initialize_environment()
+            config = AppConfig.from_env()
+            assert config.aristotle_api_key == "dotenv-key"
+
+    def test_dotenv_does_not_override_non_empty_env_var(self, tmp_path: Path) -> None:
+        """Non-empty env vars win over `.env` defaults."""
+        (tmp_path / ".env").write_text(
+            "ARISTOTLE_API_KEY=from-dotenv\n", encoding="utf-8"
+        )
+
+        env = {
+            "ERDOS_LOAD_DOTENV": "1",
+            "ERDOS_REPO_ROOT": str(tmp_path),
+            "ARISTOTLE_API_KEY": "from-env",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            initialize_environment()
+            config = AppConfig.from_env()
+            assert config.aristotle_api_key == "from-env"
+
+    def test_dotenv_overrides_empty_env_var(self, tmp_path: Path) -> None:
+        """Empty/whitespace env vars are treated as unset when loading `.env`."""
+        (tmp_path / ".env").write_text(
+            "ARISTOTLE_API_KEY=dotenv-key\n", encoding="utf-8"
+        )
+
+        env = {
+            "ERDOS_LOAD_DOTENV": "1",
+            "ERDOS_REPO_ROOT": str(tmp_path),
+            "ARISTOTLE_API_KEY": "   ",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            initialize_environment()
+            config = AppConfig.from_env()
+            assert config.aristotle_api_key == "dotenv-key"
+
+    def test_initialize_environment_loads_dotenv_from_project_root_when_run_from_subdir(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """`.env` is discovered from the repo root when running in subdirectories."""
+        repo_root = tmp_path / "repo"
+        (repo_root / "src" / "erdos").mkdir(parents=True)
+        (repo_root / "pyproject.toml").write_text(
+            '[project]\nname = "erdos-banger"\n', encoding="utf-8"
+        )
+        (repo_root / ".env").write_text(
+            "ARISTOTLE_API_KEY=dotenv-key\n", encoding="utf-8"
+        )
+        subdir = repo_root / "formal" / "lean"
+        subdir.mkdir(parents=True)
+
+        env = {"ERDOS_LOAD_DOTENV": "1"}
+        with patch.dict(os.environ, env, clear=True):
+            monkeypatch.chdir(subdir)
+            initialize_environment()
+            config = AppConfig.from_env()
+            assert config.aristotle_api_key == "dotenv-key"
 
 
 class TestAppContextFromConfig:

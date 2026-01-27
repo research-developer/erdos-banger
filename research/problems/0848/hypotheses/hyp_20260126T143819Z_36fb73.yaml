@@ -1,0 +1,10 @@
+schema_version: 1
+problem_id: 848
+id: hyp_20260126T143819Z_36fb73
+statement: Finite check via SAT/DRAT after effectivizing N_0
+status: active
+confidence: high
+evidence: []
+notes: ''
+created_at: '2026-01-26T14:38:19Z'
+updated_at: '2026-01-26T14:38:19Z'

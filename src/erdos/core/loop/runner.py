@@ -83,6 +83,7 @@ def run_loop(
     no_apply: bool = False,
     rag_chunks: list[Any] | None = None,
     llm_execute: LLMExecute | None = None,
+    log_dir: Path | None = None,
 ) -> LoopResult:
     """Run the iterative proof loop per spec-012-loop-command.md execution model."""
     if rag_chunks is None:
@@ -91,7 +92,8 @@ def run_loop(
         llm_execute = default_execute_llm
 
     # Set up logging
-    log_path = Path("logs/loop") / f"{generate_run_id()}.jsonl"
+    effective_log_dir = log_dir if log_dir is not None else Path("logs/loop")
+    log_path = effective_log_dir / f"{generate_run_id()}.jsonl"
     with LoopLogger(log_path) as loop_logger:
         iterations: list[IterationRecord] = []
         last_check: LeanCheckResult | None = None

@@ -11,6 +11,9 @@ git submodule update --init --recursive
 
 # Requires uv: https://docs.astral.sh/uv/
 uv sync
+
+# Optional: configure API keys (gitignored)
+cp .env.example .env
 ```
 
 ## Run

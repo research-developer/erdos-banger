@@ -10,6 +10,13 @@ CLI toolkit for collaborative research on Erdős problems (upstream dataset is 1
 
 Start at `docs/index.md` for getting started, developer guides, and architecture docs.
 
+## Current Focus
+
+See `CANDIDATES.md` for:
+- **Current problem** we're working on (check Decision Log for the active target)
+- Candidate problems being considered (tiered by AI-friendliness)
+- Related solved problems to study first
+
 ## Skills (Claude Code / Codex CLI)
 
 This repo includes custom skills for both Claude Code and Codex CLI:
@@ -25,6 +32,8 @@ This repo includes custom skills for both Claude Code and Codex CLI:
 | `erdos-prove [id]` | Manual | Step-by-step workflow to prove a problem using subscription |
 
 > **Note:** Skills apply to both tools; use `/skill` for Claude Code and `$skill` for Codex CLI.
+
+> **Important:** When working with the erdos CLI, invoke `/erdos` first to load the full CLI reference before running commands. This prevents false negatives from incomplete knowledge.
 
 **Key insight:** You can often avoid *additional* pay‑as‑you‑go API usage by using Claude Code/Codex directly instead of `erdos loop run` or `erdos ask`, but costs depend on your plan and billing setup. The `erdos-prove` skill guides you through this workflow.
 
@@ -87,7 +96,23 @@ uv run pytest -m "requires_lean"
 
 ### Lean Notes
 
-If `make test-all` fails on `tests/integration/test_lean_runner.py::TestLeanRunnerIntegration::test_check_formal_project_compiles`,
+**Elan Environment:** The `lake` command (Lean's build tool) is managed by elan and may not be in PATH by default. Use one of these approaches:
+
+```bash
+# Recommended: use erdos wrapper (works from repo root)
+uv run erdos lean check formal/lean/Erdos/Problem848.lean
+
+# If running lake directly, point it at the Lean workspace (formal/lean/)
+source ~/.elan/env && lake -d formal/lean build Erdos.Problem848
+~/.elan/bin/lake -d formal/lean build Erdos.Problem848
+
+# From the formal/lean directory:
+cd formal/lean && source ~/.elan/env && lake build
+```
+
+If `erdos lean check` reports `lake` not found, source `~/.elan/env` (or use `~/.elan/bin/lake`) so elan-managed tools are available on `PATH`.
+
+**Mathlib Cache:** If `make test-all` fails on `tests/integration/test_lean_runner.py::TestLeanRunnerIntegration::test_check_formal_project_compiles`,
 pre-cache mathlib:
 
 ```bash
@@ -207,6 +232,15 @@ def test_help_shows_flag(strip_ansi: Callable[[str], str]) -> None:
 1. Prefer fixture repos under `tests/fixtures/` for deterministic tests
 2. If you must use external repos, add a comment with DEBT ticket reference
 3. Check for both old and new file conventions when asserting
+
+### Troubleshooting Checklist
+
+If you're having trouble with the erdos CLI:
+
+1. **Did you invoke `/erdos`?** The skill has the complete CLI reference
+2. **Check `--help`:** `uv run erdos <command> --help` shows all options
+3. **Check JSON output:** Add `--json` to see structured errors
+4. **Check logs:** `uv run erdos logs --limit 5` shows recent commands
 
 ### Key Test Fixtures (conftest.py)
 

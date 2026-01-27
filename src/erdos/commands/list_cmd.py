@@ -10,6 +10,7 @@ import typer
 from rich.table import Table
 
 from erdos.commands.app_context import get_app_context
+from erdos.commands.cli_helpers import PROBLEM_STATUS_CHOICES
 from erdos.commands.presenter import console, exit_with_result
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord, ProblemStatus
@@ -25,7 +26,7 @@ if TYPE_CHECKING:
 
 
 # Valid status values for user-facing validation
-_VALID_STATUSES = {"open", "proved", "disproved", "partially_solved"}
+_VALID_STATUSES = set(PROBLEM_STATUS_CHOICES)
 
 
 @dataclass
@@ -123,7 +124,7 @@ def list_(
         typer.Option(
             "--status",
             "-s",
-            help="Filter by status: open, proved, disproved, partially_solved",
+            help="Filter by status: open, decidable, proved, disproved, partially_solved, unknown",
         ),
     ] = None,
     prize_min: Annotated[

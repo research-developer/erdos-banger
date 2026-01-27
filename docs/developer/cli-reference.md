@@ -28,9 +28,11 @@ uv run python scripts/generate_cli_reference.py
     - `erdos lean status`
   - `erdos list`
   - `erdos logs`
+    - `erdos logs ask`
   - `erdos loop`
     - `erdos loop run`
   - `erdos refs`
+    - `erdos refs add`
     - `erdos refs problem`
     - `erdos refs s2`
       - `erdos refs s2 citations`
@@ -104,7 +106,9 @@ uv run python scripts/generate_cli_reference.py
 │             zbMATH.                                                          │
 │ search      Search problem statements.                                       │
 │ lean        Lean 4 theorem prover commands.                                  │
-│ ingest      Ingest literature metadata and cache.                            │
+│ ingest      Ingest literature metadata and cache. For papers with arXiv IDs, │
+│             prefers downloading LaTeX source tarballs (higher quality) over  │
+│             PDF conversion.                                                  │
 │ ask         Ask questions about Erdős problems using RAG.                    │
 │ logs        Query and summarize run logs.                                    │
 │ loop        Iterative Lean proof loop.                                       │
@@ -206,7 +210,8 @@ uv run python scripts/generate_cli_reference.py
 
  Usage: erdos ingest [OPTIONS] [PROBLEM_ID] COMMAND [ARGS]...
 
- Ingest literature metadata and cache.
+ Ingest literature metadata and cache. For papers with arXiv IDs, prefers
+ downloading LaTeX source tarballs (higher quality) over PDF conversion.
 
 ╭─ Arguments ──────────────────────────────────────────────────────────────────╮
 │   problem_id      [PROBLEM_ID]  Problem ID (omit for batch mode)             │
@@ -224,8 +229,9 @@ uv run python scripts/generate_cli_reference.py
 │                                                     [default: openalex]      │
 │ --all                                               Process all problems     │
 │                                                     (batch mode)             │
-│ --status                  [open|proved|disproved|p  Filter by status: open,  │
-│                           artially_solved|unknown]  proved, disproved,       │
+│ --status                  [open|decidable|proved|d  Filter by status: open,  │
+│                           isproved|partially_solve  decidable, proved,       │
+│                           d|unknown]                disproved,               │
 │                                                     partially_solved,        │
 │                                                     unknown                  │
 │ --prize-min               INTEGER                   Minimum prize amount     │
@@ -371,9 +377,10 @@ uv run python scripts/generate_cli_reference.py
 │                                                     --import-upstream)       │
 │ --all                                               Process all problems     │
 │                                                     (batch mode)             │
-│ --status                   [open|proved|disproved|  Filter by status: open,  │
-│                            partially_solved|unknow  proved, disproved,       │
-│                            n]                       partially_solved,        │
+│ --status                   [open|decidable|proved|  Filter by status: open,  │
+│                            disproved|partially_sol  decidable, proved,       │
+│                            ved|unknown]             disproved,               │
+│                                                     partially_solved,        │
 │                                                     unknown                  │
 │ --tag                      TEXT                     Filter by tag (can be    │
 │                                                     repeated)                │
@@ -505,8 +512,9 @@ uv run python scripts/generate_cli_reference.py
 
 ╭─ Options ────────────────────────────────────────────────────────────────────╮
 │ --status     -s      TEXT                        Filter by status: open,     │
-│                                                  proved, disproved,          │
-│                                                  partially_solved            │
+│                                                  decidable, proved,          │
+│                                                  disproved,                  │
+│                                                  partially_solved, unknown   │
 │ --prize-min          INTEGER RANGE [x>=0]        Minimum prize amount in USD │
 │ --prize-max          INTEGER RANGE [x>=0]        Maximum prize amount in USD │
 │ --tag        -t      TEXT                        Filter by tag (can be       │
@@ -542,6 +550,31 @@ uv run python scripts/generate_cli_reference.py
 │                                                   entries.                   │
 │ --help        -h                                  Show this message and      │
 │                                                   exit.                      │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────╮
+│ ask   Query `erdos ask` interaction logs (logs/ask/*.jsonl).                 │
+╰──────────────────────────────────────────────────────────────────────────────╯
+```
+
+### `erdos logs ask`
+
+```text
+
+ Usage: erdos logs ask [OPTIONS] COMMAND [ARGS]...
+
+ Query `erdos ask` interaction logs (logs/ask/*.jsonl).
+
+╭─ Options ────────────────────────────────────────────────────────────────────╮
+│ *  --problem,--problem…  -p      INTEGER               Problem ID to query.  │
+│                                                        [required]            │
+│    --limit               -n      INTEGER RANGE         Max entries to        │
+│                                  [1<=x<=1000]          return.               │
+│                                                        [default: 50]         │
+│    --since                       TEXT                  Filter logs after     │
+│                                                        date (e.g., '7d',     │
+│                                                        '2h', '2026-01-15').  │
+│    --help                -h                            Show this message and │
+│                                                        exit.                 │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 ```
 
@@ -646,9 +679,42 @@ uv run python scripts/generate_cli_reference.py
 │ --help  -h        Show this message and exit.                                │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 ╭─ Commands ───────────────────────────────────────────────────────────────────╮
+│ add       Add a reference identifier to a problem in the local dataset.      │
 │ problem   List references for a problem.                                     │
 │ s2        Semantic Scholar citation commands.                                │
 │ zbmath    zbMATH Open API commands.                                          │
+╰──────────────────────────────────────────────────────────────────────────────╯
+```
+
+### `erdos refs add`
+
+```text
+
+ Usage: erdos refs add [OPTIONS] PROBLEM_ID
+
+ Add a reference identifier to a problem in the local dataset.
+
+ This updates the local enriched dataset file (e.g.
+ `data/problems_enriched.yaml`),
+ so subsequent `erdos ingest <id>` runs can fetch metadata and ingest content.
+
+ Examples:
+     erdos refs add 848 --arxiv 2511.16072
+     erdos refs add 848 --doi 10.1000/example
+     erdos refs add 848 --url https://example.com/paper.pdf --key Example2026
+
+╭─ Arguments ──────────────────────────────────────────────────────────────────╮
+│ *    problem_id      INTEGER RANGE  Problem ID to update. [required]         │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────╮
+│ --arxiv,--arxiv-id          TEXT  Add an arXiv ID to the problem references  │
+│                                   (e.g., 2511.16072).                        │
+│ --doi                       TEXT  Add a DOI to the references.               │
+│ --url                       TEXT  Add a URL to the references.               │
+│ --key                       TEXT  Reference key to store in the dataset      │
+│                                   (default derived from identifier).         │
+│ --citation                  TEXT  Citation text to store in the dataset.     │
+│ --help              -h            Show this message and exit.                │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 ```
 
@@ -1306,15 +1372,18 @@ uv run python scripts/generate_cli_reference.py
 │ --build-index                                       Build/rebuild the search │
 │                                                     index                    │
 │ --semantic          -s                              Use semantic (vector)    │
-│                                                     search                   │
-│ --hybrid                                            Hybrid search            │
+│                                                     search (requires         │
+│                                                     `embeddings` extra).     │
+│ --hybrid                                            Hybrid search (requires  │
+│                                                     `embeddings` extra).     │
 │ --bm25-only                                         Force BM25-only search   │
 │                                                     (no vectors)             │
 │ --alpha                     FLOAT RANGE             Hybrid weight (0.0=BM25  │
 │                             [0.0<=x<=1.0]           only, 1.0=semantic only, │
 │                                                     default: 0.5)            │
 │ --build-embeddings                                  Build/rebuild semantic   │
-│                                                     embeddings               │
+│                                                     embeddings (requires     │
+│                                                     `embeddings` extra).     │
 │ --embedding-model           TEXT                    Embedding model name     │
 │                                                     [default:                │
 │                                                     sentence-transformers/a… │

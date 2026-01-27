@@ -26,6 +26,7 @@ from erdos.core.exit_codes import ExitCode
 from erdos.core.ingest.fetch import MetadataSource
 from erdos.core.ingest.service import ingest_problem_references
 from erdos.core.models import CLIOutput
+from erdos.core.repo_root import discover_repo_root
 
 
 if TYPE_CHECKING:
@@ -73,11 +74,11 @@ def get_repo_root(*, repo_root: Path | None = None) -> Path:
         Repository root path.
     """
     if repo_root is not None:
-        return repo_root
+        return repo_root.resolve()
     config_repo_root = AppConfig.from_env().repo_root
     if config_repo_root is not None:
-        return config_repo_root
-    return Path.cwd()
+        return config_repo_root.resolve()
+    return discover_repo_root() or Path.cwd().resolve()
 
 
 def prepare_mailto(mailto: str, *, default: str | None = None) -> str:

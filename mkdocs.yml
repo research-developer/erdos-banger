@@ -17,11 +17,13 @@ exclude_docs: |
 not_in_nav: |
   _bugs/BUG-*.md
   _bugs/bug-*.md
+  _bugs/friction-*.md
   _specs/SPEC-*.md
   _specs/spec-*.md
   _debt/DEBT-*.md
   _debt/debt-*.md
   vendor-docs/**/SOURCES.md
+  vendor-docs/**/REQUESTS.md
 
 theme:
   name: material
@@ -100,6 +102,7 @@ nav:
       - Overview: architecture/overview.md
       - CLI Design: architecture/cli.md
       - Data Pipeline: architecture/data-pipeline.md
+      - RAG System: architecture/rag-system.md
   - Developer Guide:
       - Configuration: developer/configuration.md
       - Testing: developer/testing.md

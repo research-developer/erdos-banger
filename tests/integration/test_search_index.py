@@ -71,6 +71,12 @@ def test_fts5_prefix_search_integration(populated_index) -> None:
     assert isinstance(results, list)
 
 
+def test_fts5_hyphenated_query_does_not_crash(populated_index) -> None:
+    """Hyphenated user queries should not crash the FTS5 parser (BUG-038)."""
+    results = populated_index.search("sum-free sets")
+    assert isinstance(results, list)
+
+
 def test_search_returns_search_result_objects(populated_index) -> None:
     """Search returns SearchResult objects with correct fields."""
     results = populated_index.search("test")

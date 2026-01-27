@@ -1,8 +1,9 @@
 # DEBT-108: End-to-End Test Coverage Is Thin
 
 **Priority:** P2 (Material quality gap; should be scheduled soon)
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-26
+**Fixed:** 2026-01-26
 
 ## Summary
 
@@ -45,18 +46,18 @@ Expand E2E coverage with a small set of fast, deterministic scenarios that:
 
 ## Acceptance Criteria
 
-1. [ ] Add E2E coverage for the core “no-network” workflow:
-   - `erdos list` (JSON contract)
-   - `erdos search --build-index` (creates `index/erdos.sqlite`)
-   - `erdos ask --no-llm` (answer is null; sources present after index build)
-   - `erdos research init/note/status/synthesize` (filesystem persistence across invocations)
-   - `erdos logs` (logs written after a command; readable in JSON)
-2. [ ] Add E2E “graceful failure” checks for missing paid/network configuration:
-   - `erdos research exa search` without `EXA_API_KEY` returns ConfigError (no traceback)
-   - `erdos lean prove` without `ARISTOTLE_API_KEY` returns ConfigError (no traceback)
-3. [ ] Keep E2E runtime reasonable under `make ci` (avoid slow/Lean/network by default).
-4. [ ] Ensure new E2E tests use `strip_ansi` when asserting on help output.
-5. [ ] `make ci` passes after adding tests.
+1. [x] Add E2E coverage for the core "no-network" workflow:
+   - `erdos list` (JSON contract) ✅ `test_cli_list.py`
+   - `erdos search --build-index` (creates `index/erdos.sqlite`) ✅ existing `test_persistent_workflow.py`
+   - `erdos ask --no-llm` (answer is null; sources present after index build) ✅ `test_cli_ask.py`
+   - `erdos research init/note/status/synthesize` (filesystem persistence across invocations) ✅ `test_research_workflow.py`
+   - `erdos logs` (logs written after a command; readable in JSON) ✅ `test_cli_logs.py`
+2. [x] Add E2E "graceful failure" checks for missing paid/network configuration:
+   - `erdos research exa search` without `EXA_API_KEY` returns ConfigError (no traceback) ✅ `test_graceful_failures.py`
+   - `erdos lean prove` without `ARISTOTLE_API_KEY` returns ConfigError (no traceback) ✅ `test_graceful_failures.py`
+3. [x] Keep E2E runtime reasonable under `make ci` (avoid slow/Lean/network by default).
+4. [x] Ensure new E2E tests use `strip_ansi` when asserting on help output.
+5. [x] `make ci` passes after adding tests.
 
 ## Notes on Fixtures
 

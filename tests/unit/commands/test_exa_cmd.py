@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import responses
 
@@ -15,6 +15,9 @@ from tests.cli_runner import make_cli_runner
 
 runner = make_cli_runner()
 
+if TYPE_CHECKING:
+    import pytest
+
 
 # Sample Exa API response for mocking
 SAMPLE_EXA_RESPONSE: dict[str, Any] = {
@@ -23,6 +26,31 @@ SAMPLE_EXA_RESPONSE: dict[str, Any] = {
         {
             "url": "https://arxiv.org/abs/math/0404188",
             "title": "The primes contain arbitrarily long arithmetic progressions",
+            "author": "Ben Green, Terence Tao",
+            "publishedDate": "2008-04-01",
+            "text": "This paper proves that the prime numbers contain...",
+            "score": 0.95,
+            "id": "result-1",
+        },
+        {
+            "url": "https://doi.org/10.1007/s00222-016-0678-7",
+            "title": "Sum-free sets in abelian groups",
+            "author": "Sean Eberhard",
+            "publishedDate": "2016-07-15",
+            "text": "We study sum-free sets in abelian groups...",
+            "score": 0.88,
+            "id": "result-2",
+        },
+    ],
+    "summary": "Several approaches have been tried for sum-free sets...",
+}
+
+SAMPLE_EXA_RESPONSE_EMPTY_TITLE: dict[str, Any] = {
+    "autopromptString": "Research on sum-free sets approaches",
+    "results": [
+        {
+            "url": "https://arxiv.org/abs/math/0404188",
+            "title": "",
             "author": "Ben Green, Terence Tao",
             "publishedDate": "2008-04-01",
             "text": "This paper proves that the prime numbers contain...",
@@ -101,6 +129,44 @@ class TestExaSearchCommand:
         assert payload["data"]["answer"] == (
             "Several approaches have been tried for sum-free sets..."
         )
+
+    @responses.activate
+    def test_search_loads_dotenv(
+        self,
+        tmp_path: Path,
+        sample_problems_yaml: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """CLI should load EXA_API_KEY from repo-root .env when present."""
+        responses.add(
+            responses.POST,
+            "https://api.exa.ai/search",
+            json=SAMPLE_EXA_RESPONSE,
+            status=200,
+        )
+
+        monkeypatch.delenv("EXA_API_KEY", raising=False)
+        (tmp_path / ".env").write_text("EXA_API_KEY=test-api-key\n", encoding="utf-8")
+
+        env = _setup_env(tmp_path, sample_problems_yaml)
+        env.pop("EXA_API_KEY", None)
+        env["ERDOS_EXA_CACHE_PATH"] = str(tmp_path / "exa_cache")
+        env["ERDOS_LOAD_DOTENV"] = "1"
+
+        result = runner.invoke(
+            app,
+            [
+                "--json",
+                "research",
+                "exa",
+                "search",
+                "6",
+                "sum-free sets approaches",
+            ],
+            env=env,
+        )
+
+        assert result.exit_code == 0, result.stdout
 
     @responses.activate
     def test_search_with_max_results(
@@ -274,6 +340,56 @@ class TestExaSaveLeads:
             "The primes contain arbitrarily long arithmetic progressions" in lead_titles
         )
         assert "Sum-free sets in abelian groups" in lead_titles
+
+    @responses.activate
+    def test_save_leads_empty_title_uses_fallback(
+        self, tmp_path: Path, sample_problems_yaml: Path
+    ) -> None:
+        """Empty source titles should not crash lead creation."""
+        responses.add(
+            responses.POST,
+            "https://api.exa.ai/search",
+            json=SAMPLE_EXA_RESPONSE_EMPTY_TITLE,
+            status=200,
+        )
+
+        env = _setup_env(tmp_path, sample_problems_yaml)
+        env["ERDOS_EXA_CACHE_PATH"] = str(tmp_path / "exa_cache")
+
+        # Initialize workspace first
+        init_result = runner.invoke(
+            app,
+            ["--json", "research", "init", "6"],
+            env=env,
+        )
+        assert init_result.exit_code == 0
+
+        result = runner.invoke(
+            app,
+            [
+                "--json",
+                "research",
+                "exa",
+                "search",
+                "6",
+                "sum-free sets",
+                "--save-leads",
+            ],
+            env=env,
+        )
+
+        assert result.exit_code == 0, result.stdout
+
+        leads_result = runner.invoke(
+            app,
+            ["--json", "research", "lead", "list", "6"],
+            env=env,
+        )
+        assert leads_result.exit_code == 0
+        leads_payload = json.loads(leads_result.stdout)
+        lead_titles = [r["title"] for r in leads_payload["data"]["records"]]
+        assert "[Exa] arXiv math/0404188" in lead_titles
+        assert all(t.strip() for t in lead_titles)
 
     @responses.activate
     def test_save_leads_false_by_default(

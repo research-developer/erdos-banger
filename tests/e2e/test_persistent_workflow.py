@@ -27,6 +27,8 @@ def test_search_index_persists_across_process_restart(fixtures_dir: Path) -> Non
         env = os.environ.copy()
         env.pop("ERDOS_DATA_PATH", None)
         env.pop("ERDOS_INDEX_PATH", None)
+        env["ERDOS_LOAD_DOTENV"] = "0"
+        env.pop("ERDOS_REPO_ROOT", None)
 
         build_cmd = [
             sys.executable,

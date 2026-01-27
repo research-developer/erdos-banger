@@ -17,6 +17,7 @@ from erdos.core.models import CLIOutput
 from erdos.core.timing import measure_time_ms
 
 from . import refs_s2, refs_zbmath
+from .refs_add import refs_add
 
 
 logger = logging.getLogger(__name__)
@@ -52,6 +53,7 @@ app = typer.Typer(
 # Register subcommands FIRST (before the default command)
 app.add_typer(refs_s2.app, name="s2")
 app.add_typer(refs_zbmath.app, name="zbmath")
+app.command("add")(refs_add)
 
 
 def _print_human(refs_data: dict[str, Any]) -> None:

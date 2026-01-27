@@ -1,0 +1,20 @@
+schema_version: 1
+problem_id: 848
+id: lead_20260126T143810Z_4e08c2
+title: "Erdős Problems Forum Thread #848"
+status: investigating
+priority: high
+tags: [forum, computational, density-bounds]
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.erdosproblems.com/forum/thread/848
+notes: |
+  Contributors: van Doorn, Alexeev, Weisenberg, StijnC, msawhney, TerenceTao.
+  Key results:
+  - van Doorn: |A| ≤ (0.108+o(1))N upper bound
+  - Weisenberg: refined to ~0.105 via inclusion-exclusion
+  - StijnC: verified computationally for N up to several hundred
+  - Tao: recommended Montgomery-Vaughan "The large sieve" for explicit bounds
+created_at: '2026-01-26T14:38:10Z'
+updated_at: '2026-01-26T14:38:10Z'

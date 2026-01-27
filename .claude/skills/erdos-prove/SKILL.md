@@ -8,6 +8,8 @@ user-invocable: true
 
 **Target Problem:** $ARGUMENTS
 
+> **Tip:** If no problem ID provided, check `CANDIDATES.md` for the current focus problem (see Decision Log).
+
 This workflow helps you prove Erdos problems in Lean 4 using your Claude Code/Codex subscription instead of paid API calls.
 
 ## Overview
@@ -45,11 +47,16 @@ Gather context from existing references without making API calls.
 **Local sources (FREE):**
 - `literature/manifests/$(printf '%04d' $ARGUMENTS).yaml` - Reference metadata (IDs are zero-padded, e.g. 6 → 0006.yaml)
 - `literature/cache/` - Downloaded papers and sources
-- Search index: `uv run erdos search "relevant terms" --problem $ARGUMENTS`
+- `research/problems/$(printf '%04d' $ARGUMENTS)/` - Research workspace (leads, hypotheses, tasks)
+- Search index: `uv run erdos search "relevant terms" --problem $ARGUMENTS` (omit `--problem` to search globally)
 
 **Optional API sources (rate-limited, mostly free):**
 - `uv run erdos refs zbmath --msc <relevant-code>` - zbMATH (free)
 - `uv run erdos refs s2 citations <doi>` - Semantic Scholar (rate-limited)
+- `uv run erdos ingest $ARGUMENTS --source openalex` - Fetch refs by DOI/arXiv ID (free)
+
+**Optional AI-powered discovery (PAID):**
+- `uv run erdos research exa search $ARGUMENTS "relevant query" --save-leads` - Exa AI search
 
 ## Step 3: Generate Lean Skeleton
 
@@ -129,7 +136,7 @@ uv run erdos lean check "formal/lean/Erdos/Problem${PROBLEM3}.lean"
 uv run erdos show $ARGUMENTS
 
 # Search related literature
-uv run erdos search "relevant terms" --problem $ARGUMENTS
+uv run erdos search "relevant terms" --problem $ARGUMENTS  # omit --problem to search globally
 
 # Check formalization status
 uv run erdos lean status $ARGUMENTS

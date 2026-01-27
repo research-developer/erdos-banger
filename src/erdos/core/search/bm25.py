@@ -6,15 +6,80 @@ Separated from indexing and embedding operations per SRP.
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
-from erdos.core.constants import DEFAULT_SEARCH_LIMIT
+from erdos.core.constants import DEFAULT_SEARCH_LIMIT, MAX_QUERY_TERMS
 from erdos.core.models import ChunkSource
 from erdos.core.search.types import SearchResult
 
 
 if TYPE_CHECKING:
     from erdos.core.search.db import DatabaseManager
+
+
+def safe_fts5_query(query: str, *, allow_advanced_syntax: bool = True) -> str:
+    """Escape a query for safe FTS5 matching while optionally preserving syntax.
+
+    FTS5 has special syntax that can cause errors when passed raw (e.g., hyphens
+    interpreted as NOT operator). This function preserves useful FTS5 features
+    while escaping dangerous constructs.
+
+    Preserved features:
+    - Prefix matching: prim* matches primes, prime, etc.
+    - Phrase matching: "arithmetic progressions" matches exact phrase
+    - Boolean operators: word1 OR word2, word1 AND word2
+
+    Normalized:
+    - Hyphens in words are treated as separators to avoid NOT interpretation
+      (e.g., `sum-free` → `sum free` in advanced mode, and → `"sum" OR "free"` in
+      plain mode).
+    - Non-alphanumeric characters are dropped in plain mode.
+
+    Args:
+        query: Raw user query
+        allow_advanced_syntax: If True, preserve phrase/prefix/boolean syntax in
+            queries that appear to use it. If False, treat the query as plain
+            text and tokenize/quote for maximum safety (recommended for
+            programmatically-constructed queries).
+
+    Returns:
+        Safe FTS5 query
+    """
+    # Check if query uses explicit FTS5 syntax (phrases, prefix, operators)
+    has_phrase = '"' in query
+    has_prefix = "*" in query
+    has_boolean = bool(re.search(r"\b(AND|OR|NOT)\b", query, flags=re.IGNORECASE))
+
+    # If using advanced syntax, do minimal escaping to preserve intent
+    if allow_advanced_syntax and (has_phrase or has_prefix or has_boolean):
+        # Replace hyphens with spaces (to avoid NOT interpretation)
+        # but preserve the rest of the query structure
+        safe_query = re.sub(r"(?<=[A-Za-z0-9])-(?=[A-Za-z0-9])", " ", query)
+        # Normalize boolean operators to uppercase (SQLite requires AND/OR/NOT in caps).
+        if has_boolean:
+            safe_query = re.sub(
+                r"\b(and|or|not)\b",
+                lambda m: m.group(0).upper(),
+                safe_query,
+                flags=re.IGNORECASE,
+            )
+        return safe_query
+
+    # For plain queries, tokenize and quote for maximum safety
+    tokens = re.findall(r"[a-z0-9]+", query.lower())
+    tokens = [t for t in tokens if t not in {"and", "or", "not"}]
+    if not tokens:
+        return '""'  # Empty match returns no results gracefully
+    # Deduplicate while preserving order
+    seen: set[str] = set()
+    unique: list[str] = []
+    for token in tokens:
+        if token not in seen:
+            seen.add(token)
+            unique.append(token)
+    quoted = [f'"{t}"' for t in unique[:MAX_QUERY_TERMS]]
+    return " OR ".join(quoted)
 
 
 class BM25Search:
@@ -56,6 +121,11 @@ class BM25Search:
         if not query.strip():
             return []
 
+        # Escape the query for FTS5 safety (handles hyphens, operators, etc.)
+        escaped_query = safe_fts5_query(query)
+        if escaped_query == '""':
+            return []  # No valid tokens
+
         # Build query with filters
         sql = """
             SELECT
@@ -70,7 +140,7 @@ class BM25Search:
             JOIN chunks c ON chunks_fts.rowid = c._rowid
             WHERE chunks_fts MATCH ?
         """
-        params: list[str | int] = [query]
+        params: list[str | int] = [escaped_query]
 
         if problem_id is not None:
             sql += " AND c.problem_id = ?"

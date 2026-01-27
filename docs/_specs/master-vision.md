@@ -62,11 +62,11 @@ OpenAlex handles deduplication internally via fingerprinting algorithms that mat
 
 **We avoid heavy custom deduplication logic** if we use OpenAlex as the primary metadata source. OpenAlex often aggregates and deduplicates metadata across sources (Crossref/arXiv/PubMed/etc.). We still enforce stable keys and duplicate guards within our own manifests/datasets to avoid accidental overwrites or churn.
 
-**Ingest Flow (v1.2+):**
+**Ingest Flow (v1.2+) - Problem References:**
 ```
 erdos ingest <id>
     │
-    ├─► For each reference:
+    ├─► For each reference in problem.references[]:
     │   │
     │   ├─► Query OpenAlex (unified, deduped metadata)
     │   │   └─► If found: use OpenAlex record
@@ -78,6 +78,89 @@ erdos ingest <id>
     │   └─► Write manifest entry
     │
     └─► Return CLIOutput with manifest
+```
+
+### Unified Literature Pipeline (v4.2+)
+
+The above flow only works when `problem.references[]` has DOIs/arXiv IDs. Many problems (like #848) have references with only citation keys (`Er92b`) and no machine-readable identifiers.
+
+**The Lead Enrichment Pipeline (SPEC-036)** bridges discovery tools and the manifest:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         UNIFIED LITERATURE PIPELINE                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐   │
+│  │  DISCOVERY  │───▶│    LEADS    │───▶│  ENRICHMENT │───▶│  MANIFEST   │   │
+│  │             │    │             │    │             │    │             │   │
+│  │ Exa Search  │    │ DOI/arXiv   │    │ OpenAlex    │    │ Deduplicated│   │
+│  │ zbMATH      │    │ extracted   │    │ Crossref    │    │ references  │   │
+│  │ S2          │    │ from URLs   │    │ arXiv       │    │ with cache  │   │
+│  │ Manual add  │    │             │    │ (Fallback)  │    │             │   │
+│  └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘   │
+│                                                                             │
+│  Commands:                                                                  │
+│  erdos research exa search 848 "query" --save-leads     (discovery)         │
+│  erdos research lead ingest 848                         (add to manifest)   │
+│                                                                             │
+│  Deduplication:                                                             │
+│  - Primary key: DOI (normalized lowercase)                                  │
+│  - Secondary key: arXiv ID (if no DOI)                                      │
+│  - Leads without identifiers: skipped with warning                          │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Complete Data Flow (Discovery → Proof):**
+
+```
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                              FULL RESEARCH PIPELINE                           │
+├───────────────────────────────────────────────────────────────────────────────┤
+│                                                                               │
+│  1. PROBLEM SELECTION                                                         │
+│     erdos list --status open → erdos show 848                                 │
+│                    │                                                          │
+│                    ▼                                                          │
+│  2. DISCOVERY (find related literature)                                       │
+│     ├── erdos research exa search 848 "query" --save-leads  (AI-powered)      │
+│     ├── erdos refs zbmath --msc 11B05                       (math-specific)   │
+│     └── erdos refs s2 citations <doi>                       (citation chain)  │
+│                    │                                                          │
+│                    ▼ (DOIs/arXiv IDs captured in leads)                       │
+│  3. ENRICHMENT (get full metadata)                                            │
+│     erdos research lead enrich 848                                            │
+│         └── FallbackProvider: OpenAlex → Crossref → arXiv                     │
+│                    │                                                          │
+│                    ▼ (enriched with title, authors, abstract)                 │
+│  4. MANIFEST (deduplicated storage)                                           │
+│     erdos research lead ingest 848                                            │
+│         └── literature/manifests/0848.yaml                                    │
+│                    │                                                          │
+│                    ▼                                                          │
+│  5. INDEXING (searchable)                                                     │
+│     erdos search --build-index                                                │
+│         └── index/erdos.sqlite (FTS5 + optional vectors)                      │
+│                    │                                                          │
+│                    ▼                                                          │
+│  6. RAG Q&A (understand the problem)                                          │
+│     erdos ask 848 "What techniques have been tried?"                          │
+│                    │                                                          │
+│                    ▼                                                          │
+│  7. FORMALIZATION (Lean skeleton)                                             │
+│     erdos lean formalize 848                                                  │
+│         └── formal/lean/Erdos/Problem848.lean                                 │
+│                    │                                                          │
+│                    ▼                                                          │
+│  8. PROVING (iterative)                                                       │
+│     erdos loop run 848  OR  Claude Code / Codex CLI (subscription)            │
+│                    │                                                          │
+│                    ▼                                                          │
+│  9. VERIFICATION                                                              │
+│     erdos lean check formal/lean/Erdos/Problem848.lean                        │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Storage Layer (Metadata + Cache)

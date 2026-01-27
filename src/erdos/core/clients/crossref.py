@@ -8,8 +8,10 @@ API Reference: https://www.crossref.org/documentation/retrieve-metadata/rest-api
 
 import logging
 import time
+from typing import cast
 from urllib.parse import quote
 
+from erdos.core.clients.json_response import response_json_or_raise
 from erdos.core.models import ReferenceRecord
 from erdos.core.retry import fetch_with_retry
 
@@ -148,4 +150,12 @@ def fetch_crossref_work(
         response.status_code,
     )
 
-    return response.json()  # type: ignore[no-any-return]
+    data = response_json_or_raise(
+        response,
+        url=url,
+        service="Crossref",
+        logger=logger,
+    )
+    if not isinstance(data, dict):
+        raise ValueError(f"Crossref invalid JSON response type: {type(data).__name__}")
+    return cast("dict[str, object]", data)

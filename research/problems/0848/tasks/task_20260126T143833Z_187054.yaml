@@ -1,0 +1,10 @@
+schema_version: 1
+problem_id: 848
+id: task_20260126T143833Z_187054
+title: Reproduce Tao's computational patterns up to N=10^4
+status: todo
+priority: medium
+blocked_on: []
+links: []
+created_at: '2026-01-26T14:38:33Z'
+updated_at: '2026-01-26T14:38:33Z'

@@ -57,6 +57,13 @@ MAX_QUERY_TERMS = 25
 
 # --- Size limits ---
 
+ASK_PROMPT_MAX_BYTES = 32_000
+"""Maximum UTF-8 byte size for `erdos ask` prompts.
+
+This is a hard cap to prevent downstream LLM context-limit failures and timeouts
+when sources contain large blobs (e.g., PDF extractions or long synthesis).
+"""
+
 MAX_TEX_FILE_SIZE = 2 * 1024 * 1024
 """Maximum LaTeX file size to process (2 MiB)."""
 

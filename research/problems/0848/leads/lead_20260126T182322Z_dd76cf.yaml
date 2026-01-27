@@ -1,0 +1,31 @@
+schema_version: 1
+problem_id: 848
+id: lead_20260126T182322Z_dd76cf
+title: '[Exa] https://www.math.columbia.edu/~msawhney/Problem_848.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.math.columbia.edu/~msawhney/Problem_848.pdf
+notes: '[Exa] ON A ⊆ [N] SUCH THAT ab + 1 IS NEVER SQUAREFREE FOR a, b ∈ A
+
+  MEHTAAB SAWHNEY
+
+  1. Statement of result
+
+  In this short note, we address the following question of Erdős [2]. We remark that
+  substantial progress
+
+  towards this problem was made by van Doorn, Weisenberg and Cambie [1].
+
+  Proposition 1.1. There exists an integer N0 such that if N ≥ N0 then the following
+  holds. Let A ⊆ [N]
+
+  with the property that if a, b ∈ A then ab + 1 is not squarefree. Then |A| ≤ |{n
+  ∈ [N] : n ≡ 7 mod 25}|.
+
+  Remark. Equality i'
+created_at: '2026-01-26T18:23:22Z'
+updated_at: '2026-01-26T18:23:22Z'

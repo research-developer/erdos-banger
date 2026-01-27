@@ -1,0 +1,27 @@
+schema_version: 1
+problem_id: 848
+id: lead_20260126T182322Z_b8a583
+title: Square-free integer
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://en.wikipedia.org/wiki/Square-free_integer
+notes: '[Exa] # Square-free integer
+
+
+  Number without repeated prime factors
+
+
+
+  In [mathematics], a square-free integer (or squarefree integer) is an [integer]
+  that is [divisible] by no [square number] other than 1. That is, its [prime factorization]
+  has exactly one factor for each prime that appears in it. For example, is square-free,
+  but is not, because 18 is divisible by . The smallest positive square-free numbers
+  are
+
+  1, 2, 3, 5, 6, 7, 10, 11, 13, 14, 15, 17,'
+created_at: '2026-01-26T18:23:22Z'
+updated_at: '2026-01-26T18:23:22Z'

@@ -1,13 +1,13 @@
 ---
 name: erdos
 description: Complete guide to the Erdos CLI toolkit for mathematical research. Use when discussing Erdos problems, Lean formalization, literature search, or when the user asks about CLI commands, API costs, or environment configuration.
-metadata:
-  short-description: Erdos CLI reference & cost guide
 ---
 
 # Erdos CLI Toolkit Reference
 
 This skill provides comprehensive knowledge of the `erdos` CLI for collaborative research on Erdos problems.
+
+> **Current Focus:** See `CANDIDATES.md` for the problem we're actively working on (check Decision Log for the active target).
 
 ## Quick Start
 
@@ -24,6 +24,8 @@ uv run erdos show 6
 # Search problems
 uv run erdos search "prime arithmetic"
 ```
+
+> **Tip:** If `erdos` is installed on your PATH, you can run the same commands without `uv run`.
 
 ## Cost Awareness
 
@@ -55,7 +57,7 @@ uv run erdos search "prime arithmetic"
 Instead of running `erdos loop run` (which calls LLM APIs), you can:
 
 1. **Generate skeleton (FREE):** `erdos lean formalize 6`
-2. **Work with Codex (SUBSCRIPTION):** Ask me to help write/edit the proof
+2. **Work with Claude Code (SUBSCRIPTION):** Ask me to help write/edit the proof
 3. **Check compilation (FREE):** `erdos lean check formal/lean/Erdos/Problem006.lean`
 4. **Iterate with me (SUBSCRIPTION):** Show errors, I fix them
 
@@ -113,6 +115,8 @@ erdos ingest --all --status open --limit 100  # Execute
 erdos ingest 6 --pdf --pdf-converter marker
 ```
 
+> **Tip:** For papers with arXiv IDs, `erdos ingest` prefers downloading LaTeX source tarballs over PDF conversion. This yields higher quality (clean LaTeX, perfect math) with no ML dependencies. Add arXiv IDs via `erdos refs add <id> --arxiv <arxiv_id>` before ingesting.
+
 ### Lean Formalization
 
 ```bash
@@ -147,6 +151,8 @@ erdos ask 6 "What techniques have been used to approach this problem?"
 # Retrieval only (FREE)
 erdos ask 6 "relevant literature" --no-llm
 ```
+
+> **Tip:** `erdos ask` persists interactions to `logs/ask/problem_{id}.jsonl`. Query them with `erdos logs ask --problem <id> --limit 5`.
 
 ### Proof Loop (Automated Iteration)
 
@@ -195,6 +201,32 @@ erdos research attempt list 6 --result failed
 erdos research exa search 6 "prime gaps density arguments" --max-results 10 --save-leads
 ```
 
+### Literature Pipeline (Discovery → Enrichment → Manifest)
+
+**Current flow:**
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  DISCOVERY (find papers)              │  LOOKUP (enrich metadata)           │
+├───────────────────────────────────────┼─────────────────────────────────────┤
+│  erdos research exa search (PAID)     │  erdos ingest (reads problem.refs)  │
+│  erdos refs zbmath (FREE)             │    └─ FallbackProvider:             │
+│  erdos refs s2 (FREE, rate-limited)   │        OpenAlex → Crossref → arXiv  │
+│  erdos search --semantic (FREE)       │                                     │
+├───────────────────────────────────────┴─────────────────────────────────────┤
+│  STORAGE                                                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  research/problems/XXXX/meta.yaml → leads (from Exa --save-leads)           │
+│  literature/manifests/XXXX.yaml   → enriched refs (from erdos ingest)       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Known gap (Issue #34):** Exa discovers papers with DOIs/arXiv IDs, but there's no command yet to:
+1. Enrich leads via OpenAlex/Crossref lookup
+2. Add enriched leads to the literature manifest
+
+**Workaround:** Manually add DOIs to problem references in `data/problems_enriched.yaml`, then run `erdos ingest`.
+
 ### Data Sync
 
 ```bash
@@ -209,6 +241,17 @@ erdos sync proof 6 --dry-run
 erdos sync statements 6 --dry-run
 
 erdos sync all --problems 6 --skip-proof
+```
+
+### Dashboard & Status
+
+```bash
+# Overview dashboard
+erdos dashboard
+
+# Problem status
+erdos research status 6
+erdos lean status 6
 ```
 
 ## Environment Configuration
@@ -264,7 +307,7 @@ EXA_API_KEY=your-key-here
 ARISTOTLE_API_KEY=arstl-your-key-here
 ```
 
-## Working with Codex CLI Directly
+## Working with Claude Code Directly
 
 When you want to use your subscription instead of API calls, **I can read AND edit any file in this repo directly.**
 

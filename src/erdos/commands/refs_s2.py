@@ -228,6 +228,13 @@ def citations(
                 message=f"Semantic Scholar API error: {e}",
                 code=ExitCode.ERROR,
             )
+        except requests.RequestException as e:
+            result = CLIOutput.err(
+                command=command,
+                error_type="S2Error",
+                message=f"Semantic Scholar request error: {e}",
+                code=ExitCode.NETWORK_ERROR,
+            )
 
     result.duration_ms = duration[0]
     exit_with_result(ctx, result, print_human=_print_citations_human)
@@ -305,6 +312,13 @@ def cited_by(
                 message=f"Semantic Scholar API error: {e}",
                 code=ExitCode.ERROR,
             )
+        except requests.RequestException as e:
+            result = CLIOutput.err(
+                command=command,
+                error_type="S2Error",
+                message=f"Semantic Scholar request error: {e}",
+                code=ExitCode.NETWORK_ERROR,
+            )
 
     result.duration_ms = duration[0]
     exit_with_result(ctx, result, print_human=_print_cited_by_human)
@@ -368,6 +382,13 @@ def references(
                 error_type="S2Error",
                 message=f"Semantic Scholar API error: {e}",
                 code=ExitCode.ERROR,
+            )
+        except requests.RequestException as e:
+            result = CLIOutput.err(
+                command=command,
+                error_type="S2Error",
+                message=f"Semantic Scholar request error: {e}",
+                code=ExitCode.NETWORK_ERROR,
             )
 
     result.duration_ms = duration[0]

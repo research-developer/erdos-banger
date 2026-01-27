@@ -79,6 +79,24 @@ class ExaSource:
     relevance: str | None = None
     score: float | None = None
 
+    @property
+    def display_title(self) -> str:
+        """Best-effort non-empty title for display/UX.
+
+        Exa frequently returns empty titles for PDF sources; this provides a
+        stable fallback so UIs don't need to special-case empty strings.
+        """
+        title = self.title.strip()
+        if title:
+            return title
+        if self.doi:
+            return f"DOI {self.doi}"
+        if self.arxiv_id:
+            return f"arXiv {self.arxiv_id}"
+        if self.url:
+            return self.url
+        return "Untitled"
+
     @classmethod
     def from_api_response(cls, data: dict[str, Any]) -> ExaSource:
         """Parse source from Exa API response."""
@@ -114,6 +132,7 @@ class ExaSource:
         """Serialize to dict for caching."""
         return {
             "title": self.title,
+            "display_title": self.display_title,
             "url": self.url,
             "authors": self.authors,
             "year": self.year,
