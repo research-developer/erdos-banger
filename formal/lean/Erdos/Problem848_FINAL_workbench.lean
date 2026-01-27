@@ -433,6 +433,23 @@ lemma card_filter_mod_eq_le (N m r : ℕ) :
     exact ⟨n / m, Nat.div_le_div_right hn.1.le, by linarith [Nat.mod_add_div n m]⟩
   exact le_trans (Finset.card_le_card h_set) (Finset.card_image_le.trans (by norm_num))
 
+/-- CRT counting: numbers `< N` satisfying two coprime congruences lie in one residue class mod `m*n`. -/
+lemma card_filter_modEq_and_modEq_le (N m n a b : ℕ) (hcop : Nat.Coprime m n) :
+    ((Finset.range N).filter (fun x => x ≡ a [MOD m] ∧ x ≡ b [MOD n])).card ≤ N / (m * n) + 1 := by
+  classical
+  have hsub :
+      (Finset.range N).filter (fun x => x ≡ a [MOD m] ∧ x ≡ b [MOD n]) ⊆
+        (Finset.range N).filter (fun x => x ≡ Nat.chineseRemainder hcop a b [MOD m * n]) := by
+    intro x hx
+    simp [Finset.mem_filter, Finset.mem_range] at hx ⊢
+    refine ⟨hx.1, ?_⟩
+    exact Nat.chineseRemainder_modEq_unique (co := hcop) hx.2.1 hx.2.2
+  have hcard :
+      ((Finset.range N).filter (fun x => x ≡ a [MOD m] ∧ x ≡ b [MOD n])).card ≤
+        ((Finset.range N).filter (fun x => x ≡ Nat.chineseRemainder hcop a b [MOD m * n])).card :=
+    Finset.card_le_card hsub
+  exact le_trans hcard (card_filter_mod_eq_le N (m * n) (Nat.chineseRemainder hcop a b))
+
 /-- Number of integers < N congruent to r1 or r2 mod m is at most 2N/m + 1. -/
 lemma card_filter_mod_pair_le (N m r1 r2 : ℕ) (hm : m > 0) (h_sum : r1 + r2 = m) (h_r1_pos : 0 < r1)
     (h_r2_pos : 0 < r2) (h_ne : r1 ≠ r2) :
@@ -849,6 +866,251 @@ theorem problem_848_resolved_up_to_finite_check_of_sawhney (h : SawhneyMain) :
     ∃ N₀ : ℕ, ∀ N ≥ N₀, Problem848Statement N := by
   rcases h with ⟨η, N₀, hηN₀⟩
   exact ⟨N₀, problem_848_large_of_sawhney hηN₀⟩
+
+-- ============================================================================
+-- SECTION 9.5: QUANTITATIVE BOUNDS (finite prime sums + tails)
+-- ============================================================================
+
+open scoped Nat.Prime
+open Filter Finset
+
+/-- Cutoff for computing reciprocal-square sums over primes. -/
+def primeCutoff : ℕ := 2000
+
+/-- Finite set of primes `p ≤ B`. -/
+def primesUpTo (B : ℕ) : Finset ℕ :=
+  (Finset.range (B + 1)).filter Nat.Prime
+
+def diagPrimesCoarse : Finset ℕ :=
+  (primesUpTo primeCutoff).filter (fun p => p % 4 = 1 ∧ 13 ≤ p)
+
+def offPrimesCoarse : Finset ℕ :=
+  (primesUpTo primeCutoff).filter (fun p => p ≠ 2 ∧ p ≠ 5)
+
+def no5PrimesCoarse : Finset ℕ :=
+  (primesUpTo primeCutoff).filter (fun p => p ≠ 5)
+
+def diagPrimeSumCoarse : ℚ :=
+  ∑ p in diagPrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)
+
+def offPrimeSumCoarse : ℚ :=
+  ∑ p in offPrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)
+
+def no5PrimeSumCoarse : ℚ :=
+  ∑ p in no5PrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)
+
+/-!
+We bound the *infinite* reciprocal-square sums by:
+1) computing primes up to `primeCutoff` exactly (via `native_decide` on `ℚ`),
+2) bounding the tail by `∑_{i > B} 1/i^2 ≤ 1/B`.
+-/
+
+lemma diagPrimeSumCoarse_bound :
+    diagPrimeSumCoarse + (1 : ℚ) / primeCutoff ≤ (1 : ℚ) / 70 := by
+  native_decide
+
+lemma offPrimeSumCoarse_bound :
+    offPrimeSumCoarse + (1 : ℚ) / primeCutoff ≤ (163 : ℚ) / 1000 := by
+  native_decide
+
+lemma no5PrimeSumCoarse_bound :
+    no5PrimeSumCoarse + (1 : ℚ) / primeCutoff ≤ (413 : ℚ) / 1000 := by
+  native_decide
+
+lemma sum_Ioc_inv_sq_le_inv (B N : ℕ) (hB : B ≠ 0) :
+    (∑ i ∈ Finset.Ioc B N, (1 : ℚ) / (i ^ 2 : ℚ)) ≤ (1 : ℚ) / B := by
+  by_cases hBN : B < N
+  · have hle : B ≤ N := Nat.le_of_lt hBN
+    have hsub := sum_Ioc_inv_sq_le_sub (α := ℚ) (k := B) (n := N) hB hle
+    have hnonneg : 0 ≤ (N : ℚ)⁻¹ := by positivity
+    -- `B⁻¹ - N⁻¹ ≤ B⁻¹`
+    have hsub' : (B : ℚ)⁻¹ - (N : ℚ)⁻¹ ≤ (B : ℚ)⁻¹ := sub_le_self _ hnonneg
+    -- rewrite inverses as `1 / _`
+    simpa [one_div] using hsub.trans hsub'
+  · have hIoc : (Finset.Ioc B N) = ∅ := by
+      apply Finset.Ioc_eq_empty
+      exact not_lt.2 (Nat.le_of_not_gt hBN)
+    simp [hIoc, hB, one_div]
+
+def diagPrimesUpTo (N : ℕ) : Finset ℕ :=
+  (primesUpTo N).filter (fun p => p % 4 = 1 ∧ 13 ≤ p)
+
+def offPrimesUpTo (N : ℕ) : Finset ℕ :=
+  (primesUpTo N).filter (fun p => p ≠ 2 ∧ p ≠ 5)
+
+def no5PrimesUpTo (N : ℕ) : Finset ℕ :=
+  (primesUpTo N).filter (fun p => p ≠ 5)
+
+lemma sum_diagPrimesUpTo_le (N : ℕ) :
+    (∑ p in diagPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ)) ≤ (1 : ℚ) / 70 := by
+  classical
+  -- split primes into `≤ primeCutoff` and `> primeCutoff`
+  have hsplit :
+      diagPrimesUpTo N =
+        (diagPrimesUpTo N).filter (fun p => p ≤ primeCutoff) ∪
+          (diagPrimesUpTo N).filter (fun p => ¬ p ≤ primeCutoff) := by
+    simpa [Finset.filter_union_filter_not_eq] using
+      (Finset.filter_union_filter_not_eq (s := diagPrimesUpTo N) (p := fun p => p ≤ primeCutoff))
+  have hdisj :
+      Disjoint ((diagPrimesUpTo N).filter (fun p => p ≤ primeCutoff))
+        ((diagPrimesUpTo N).filter (fun p => ¬ p ≤ primeCutoff)) := by
+    simpa using
+      (Finset.disjoint_filter_filter_not (s := diagPrimesUpTo N) (t := diagPrimesUpTo N)
+        (p := fun p => p ≤ primeCutoff))
+  -- sum over `≤ primeCutoff` is bounded by the coarse computation
+  have hsmall :
+      (∑ p in (diagPrimesUpTo N).filter (fun p => p ≤ primeCutoff), (1 : ℚ) / (p ^ 2 : ℚ)) ≤
+        diagPrimeSumCoarse := by
+    refine Finset.sum_le_sum_of_subset_of_nonneg ?_ (by intro; positivity)
+    intro p hp
+    have hp' : p ∈ diagPrimesUpTo primeCutoff := by
+      rcases (Finset.mem_filter.1 hp) with ⟨hpN, hpCut⟩
+      have hp_le : p ≤ primeCutoff := hpCut
+      refine Finset.mem_filter.2 ?_
+      refine ⟨?_, hpN⟩
+      -- p is prime and ≤ primeCutoff
+      have : p < primeCutoff + 1 := Nat.lt_succ_iff.2 hp_le
+      exact Finset.mem_filter.2 ⟨by simpa [primesUpTo, Finset.mem_filter, Finset.mem_range] using hpN.1, hpN⟩
+    simpa [diagPrimesUpTo, diagPrimesCoarse, diagPrimeSumCoarse] using hp'
+  -- sum over `> primeCutoff` is bounded by the tail `≤ 1/primeCutoff`
+  have htail :
+      (∑ p in (diagPrimesUpTo N).filter (fun p => ¬ p ≤ primeCutoff), (1 : ℚ) / (p ^ 2 : ℚ)) ≤
+        (1 : ℚ) / primeCutoff := by
+    have hsubset :
+        (diagPrimesUpTo N).filter (fun p => ¬ p ≤ primeCutoff) ⊆ Finset.Ioc primeCutoff N := by
+      intro p hp
+      have hpN : p ∈ diagPrimesUpTo N := (Finset.mem_filter.1 hp).1
+      have hp_gt : primeCutoff < p := Nat.lt_of_not_ge (Finset.mem_filter.1 hp).2
+      have hp_leN : p ≤ N := by
+        have hp' : p ∈ primesUpTo N := (Finset.mem_filter.1 hpN).1
+        have hp_lt : p < N + 1 := (Finset.mem_range.1 (Finset.mem_filter.1 hp').1)
+        exact Nat.le_of_lt_succ hp_lt
+      exact Finset.mem_Ioc.2 ⟨hp_gt, hp_leN⟩
+    refine le_trans (Finset.sum_le_sum_of_subset_of_nonneg hsubset (by intro; positivity)) ?_
+    have hB : primeCutoff ≠ 0 := by decide
+    exact sum_Ioc_inv_sq_le_inv primeCutoff N hB
+  -- combine
+  have hsum :
+      (∑ p in diagPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ)) ≤
+        diagPrimeSumCoarse + (1 : ℚ) / primeCutoff := by
+    -- expand using the split
+    have := congrArg (fun s : Finset ℕ => ∑ p in s, (1 : ℚ) / (p ^ 2 : ℚ)) hsplit
+    -- `simp` turns the sum of a union into a sum of sums using disjointness
+    simp [Finset.sum_union hdisj, this, add_assoc, add_left_comm, add_comm] at this
+    -- now apply bounds to each part
+    exact (le_trans (by simpa using le_of_eq this) (add_le_add hsmall htail))
+  exact le_trans hsum diagPrimeSumCoarse_bound
+
+-- Placeholders for the remaining prime-sum bounds; used in the final casework.
+lemma sum_offPrimesUpTo_le (N : ℕ) :
+    (∑ p in offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ)) ≤ (163 : ℚ) / 1000 := by
+  -- analogous to `sum_diagPrimesUpTo_le`
+  classical
+  -- split into `≤ primeCutoff` and `> primeCutoff`
+  have hsplit :
+      offPrimesUpTo N =
+        (offPrimesUpTo N).filter (fun p => p ≤ primeCutoff) ∪
+          (offPrimesUpTo N).filter (fun p => ¬ p ≤ primeCutoff) := by
+    simpa [Finset.filter_union_filter_not_eq] using
+      (Finset.filter_union_filter_not_eq (s := offPrimesUpTo N) (p := fun p => p ≤ primeCutoff))
+  have hdisj :
+      Disjoint ((offPrimesUpTo N).filter (fun p => p ≤ primeCutoff))
+        ((offPrimesUpTo N).filter (fun p => ¬ p ≤ primeCutoff)) := by
+    simpa using
+      (Finset.disjoint_filter_filter_not (s := offPrimesUpTo N) (t := offPrimesUpTo N)
+        (p := fun p => p ≤ primeCutoff))
+  have hsmall :
+      (∑ p in (offPrimesUpTo N).filter (fun p => p ≤ primeCutoff), (1 : ℚ) / (p ^ 2 : ℚ)) ≤
+        offPrimeSumCoarse := by
+    refine Finset.sum_le_sum_of_subset_of_nonneg ?_ (by intro; positivity)
+    intro p hp
+    have hpN : p ∈ offPrimesUpTo N := (Finset.mem_filter.1 hp).1
+    have hp_le : p ≤ primeCutoff := (Finset.mem_filter.1 hp).2
+    have hp' : p ∈ offPrimesCoarse := by
+      have hp_pr : p ∈ primesUpTo primeCutoff := by
+        have hp_prN : p ∈ primesUpTo N := (Finset.mem_filter.1 hpN).1
+        have hp_prime : Nat.Prime p := (Finset.mem_filter.1 hp_prN).2
+        have : p < primeCutoff + 1 := Nat.lt_succ_iff.2 hp_le
+        exact Finset.mem_filter.2 ⟨by simpa [Finset.mem_range] using this, hp_prime⟩
+      exact Finset.mem_filter.2 ⟨hp_pr, (Finset.mem_filter.1 hpN).2⟩
+    simpa [offPrimesUpTo, offPrimesCoarse, offPrimeSumCoarse] using hp'
+  have htail :
+      (∑ p in (offPrimesUpTo N).filter (fun p => ¬ p ≤ primeCutoff), (1 : ℚ) / (p ^ 2 : ℚ)) ≤
+        (1 : ℚ) / primeCutoff := by
+    have hsubset :
+        (offPrimesUpTo N).filter (fun p => ¬ p ≤ primeCutoff) ⊆ Finset.Ioc primeCutoff N := by
+      intro p hp
+      have hpN : p ∈ offPrimesUpTo N := (Finset.mem_filter.1 hp).1
+      have hp_gt : primeCutoff < p := Nat.lt_of_not_ge (Finset.mem_filter.1 hp).2
+      have hp_leN : p ≤ N := by
+        have hp' : p ∈ primesUpTo N := (Finset.mem_filter.1 hpN).1
+        have hp_lt : p < N + 1 := (Finset.mem_range.1 (Finset.mem_filter.1 hp').1)
+        exact Nat.le_of_lt_succ hp_lt
+      exact Finset.mem_Ioc.2 ⟨hp_gt, hp_leN⟩
+    refine le_trans (Finset.sum_le_sum_of_subset_of_nonneg hsubset (by intro; positivity)) ?_
+    have hB : primeCutoff ≠ 0 := by decide
+    exact sum_Ioc_inv_sq_le_inv primeCutoff N hB
+  have hsum :
+      (∑ p in offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ)) ≤
+        offPrimeSumCoarse + (1 : ℚ) / primeCutoff := by
+    have := congrArg (fun s : Finset ℕ => ∑ p in s, (1 : ℚ) / (p ^ 2 : ℚ)) hsplit
+    simp [Finset.sum_union hdisj, this, add_assoc, add_left_comm, add_comm] at this
+    exact (le_trans (by simpa using le_of_eq this) (add_le_add hsmall htail))
+  exact le_trans hsum offPrimeSumCoarse_bound
+
+lemma sum_no5PrimesUpTo_le (N : ℕ) :
+    (∑ p in no5PrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ)) ≤ (413 : ℚ) / 1000 := by
+  classical
+  have hsplit :
+      no5PrimesUpTo N =
+        (no5PrimesUpTo N).filter (fun p => p ≤ primeCutoff) ∪
+          (no5PrimesUpTo N).filter (fun p => ¬ p ≤ primeCutoff) := by
+    simpa [Finset.filter_union_filter_not_eq] using
+      (Finset.filter_union_filter_not_eq (s := no5PrimesUpTo N) (p := fun p => p ≤ primeCutoff))
+  have hdisj :
+      Disjoint ((no5PrimesUpTo N).filter (fun p => p ≤ primeCutoff))
+        ((no5PrimesUpTo N).filter (fun p => ¬ p ≤ primeCutoff)) := by
+    simpa using
+      (Finset.disjoint_filter_filter_not (s := no5PrimesUpTo N) (t := no5PrimesUpTo N)
+        (p := fun p => p ≤ primeCutoff))
+  have hsmall :
+      (∑ p in (no5PrimesUpTo N).filter (fun p => p ≤ primeCutoff), (1 : ℚ) / (p ^ 2 : ℚ)) ≤
+        no5PrimeSumCoarse := by
+    refine Finset.sum_le_sum_of_subset_of_nonneg ?_ (by intro; positivity)
+    intro p hp
+    have hpN : p ∈ no5PrimesUpTo N := (Finset.mem_filter.1 hp).1
+    have hp_le : p ≤ primeCutoff := (Finset.mem_filter.1 hp).2
+    have hp' : p ∈ no5PrimesCoarse := by
+      have hp_pr : p ∈ primesUpTo primeCutoff := by
+        have hp_prN : p ∈ primesUpTo N := (Finset.mem_filter.1 hpN).1
+        have hp_prime : Nat.Prime p := (Finset.mem_filter.1 hp_prN).2
+        have : p < primeCutoff + 1 := Nat.lt_succ_iff.2 hp_le
+        exact Finset.mem_filter.2 ⟨by simpa [Finset.mem_range] using this, hp_prime⟩
+      exact Finset.mem_filter.2 ⟨hp_pr, (Finset.mem_filter.1 hpN).2⟩
+    simpa [no5PrimesUpTo, no5PrimesCoarse, no5PrimeSumCoarse] using hp'
+  have htail :
+      (∑ p in (no5PrimesUpTo N).filter (fun p => ¬ p ≤ primeCutoff), (1 : ℚ) / (p ^ 2 : ℚ)) ≤
+        (1 : ℚ) / primeCutoff := by
+    have hsubset :
+        (no5PrimesUpTo N).filter (fun p => ¬ p ≤ primeCutoff) ⊆ Finset.Ioc primeCutoff N := by
+      intro p hp
+      have hpN : p ∈ no5PrimesUpTo N := (Finset.mem_filter.1 hp).1
+      have hp_gt : primeCutoff < p := Nat.lt_of_not_ge (Finset.mem_filter.1 hp).2
+      have hp_leN : p ≤ N := by
+        have hp' : p ∈ primesUpTo N := (Finset.mem_filter.1 hpN).1
+        have hp_lt : p < N + 1 := (Finset.mem_range.1 (Finset.mem_filter.1 hp').1)
+        exact Nat.le_of_lt_succ hp_lt
+      exact Finset.mem_Ioc.2 ⟨hp_gt, hp_leN⟩
+    refine le_trans (Finset.sum_le_sum_of_subset_of_nonneg hsubset (by intro; positivity)) ?_
+    have hB : primeCutoff ≠ 0 := by decide
+    exact sum_Ioc_inv_sq_le_inv primeCutoff N hB
+  have hsum :
+      (∑ p in no5PrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ)) ≤
+        no5PrimeSumCoarse + (1 : ℚ) / primeCutoff := by
+    have := congrArg (fun s : Finset ℕ => ∑ p in s, (1 : ℚ) / (p ^ 2 : ℚ)) hsplit
+    simp [Finset.sum_union hdisj, this, add_assoc, add_left_comm, add_comm] at this
+    exact (le_trans (by simpa using le_of_eq this) (add_le_add hsmall htail))
+  exact le_trans hsum no5PrimeSumCoarse_bound
 
 /- Aristotle failed to find a proof. -/
 -- ============================================================================
