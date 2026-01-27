@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from erdos.core.models import ProblemRecord, ReferenceEntry
 from erdos.core.sync.dataset import load_enriched_problems, save_enriched_problems
 
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from erdos.core.models import ProblemRecord, ReferenceEntry
 
 
 def _dedupe_key(key: str, existing_keys: set[str]) -> str:

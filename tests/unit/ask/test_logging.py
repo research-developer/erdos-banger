@@ -6,8 +6,10 @@ import json
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-import pytest
+if TYPE_CHECKING:
+    import pytest
 
 from erdos.core.ask.logging import log_ask_interaction, read_ask_log_entries
 

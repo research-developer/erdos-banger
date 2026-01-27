@@ -9,10 +9,12 @@ Centralizes the common pattern:
 from __future__ import annotations
 
 import json
-import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import requests
+
+if TYPE_CHECKING:
+    import logging
 
 
 def response_json_or_raise(

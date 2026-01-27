@@ -5,9 +5,8 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import pytest
 import responses
 
 from erdos.cli import app
@@ -15,6 +14,9 @@ from tests.cli_runner import make_cli_runner
 
 
 runner = make_cli_runner()
+
+if TYPE_CHECKING:
+    import pytest
 
 
 # Sample Exa API response for mocking

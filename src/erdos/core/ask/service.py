@@ -6,7 +6,6 @@ from typing import Any
 
 from erdos.core.ask.llm import LLMExecutionResult, execute_llm_if_enabled
 from erdos.core.ask.logging import log_ask_interaction
-from erdos.core.research.paths import get_repo_root
 from erdos.core.ask.prompt import build_prompt
 from erdos.core.ask.retrieval import retrieve_sources
 from erdos.core.constants import DEFAULT_RAG_LIMIT
@@ -14,6 +13,7 @@ from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput, ProblemRecord
 from erdos.core.ports import ProblemRepository, SearchIndexProtocol
 from erdos.core.problem_loader import ProblemLoaderError
+from erdos.core.research.paths import get_repo_root
 from erdos.core.search.indexing_service import build_search_index
 from erdos.core.search.types import SearchResult
 

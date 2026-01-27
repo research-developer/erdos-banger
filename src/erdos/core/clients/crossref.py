@@ -158,4 +158,4 @@ def fetch_crossref_work(
     )
     if not isinstance(data, dict):
         raise ValueError(f"Crossref invalid JSON response type: {type(data).__name__}")
-    return cast(dict[str, object], data)
+    return cast("dict[str, object]", data)

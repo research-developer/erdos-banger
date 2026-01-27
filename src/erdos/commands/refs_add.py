@@ -16,7 +16,7 @@ from pydantic import ValidationError
 from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import exit_with_result
 from erdos.core.exit_codes import ExitCode
-from erdos.core.models import CLIOutput, ProblemRecord, ReferenceEntry
+from erdos.core.models import CLIOutput, ReferenceEntry
 from erdos.core.refs import add_reference_to_problem
 from erdos.core.sync.dataset import (
     resolve_enriched_dataset_path,

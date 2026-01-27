@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import MagicMock, patch
 
-import pytest
+if TYPE_CHECKING:
+    import pytest
 
 
 class TestConverterDetection:
@@ -298,7 +299,7 @@ class TestMarkerConversion:
         assert isinstance(captured.get("artifact_dict"), dict)
         assert captured.get("llm_service") is not None
         assert isinstance(captured.get("config"), dict)
-        config = cast(dict[str, Any], captured["config"])
+        config = cast("dict[str, Any]", captured["config"])
         assert config["use_llm"] is True
         assert config["force_ocr"] is True
 
@@ -364,9 +365,9 @@ class TestMarkerConversion:
         def fake_create_model_dict() -> dict[str, Any]:
             return {"model": "ok"}
 
-        setattr(marker_parser_mod, "ConfigParser", FakeConfigParserV1)
-        setattr(marker_models_mod, "create_model_dict", fake_create_model_dict)
-        setattr(marker_converters_pdf_mod, "PdfConverter", FakePdfConverterV1)
+        marker_parser_mod.ConfigParser = FakeConfigParserV1
+        marker_models_mod.create_model_dict = fake_create_model_dict
+        marker_converters_pdf_mod.PdfConverter = FakePdfConverterV1
 
         monkeypatch.setitem(sys.modules, "marker", marker_pkg)
         monkeypatch.setitem(sys.modules, "marker.config", marker_config_pkg)

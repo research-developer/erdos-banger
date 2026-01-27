@@ -9,7 +9,6 @@ They are intentionally small and deterministic so sync commands can share them.
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import yaml
@@ -20,6 +19,8 @@ from erdos.core.repo_root import resolve_repo_root
 
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from erdos.core.config import AppConfig
 
 logger = logging.getLogger(__name__)

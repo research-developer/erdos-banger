@@ -7,12 +7,15 @@ All paths are derived from:
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from erdos.core.repo_root import resolve_repo_root
 
 
 WORKSPACE_VERSION = 1
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def get_workspace_version() -> int:

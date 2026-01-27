@@ -11,8 +11,7 @@ import logging
 from collections import deque
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import ConfigDict, Field, ValidationError
 
@@ -22,6 +21,9 @@ from erdos.core.run_logger import sanitize_secrets
 
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class AskLogSource(ErdosBaseModel):

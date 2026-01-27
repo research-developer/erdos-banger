@@ -9,7 +9,6 @@ import sys
 import time
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import typer
@@ -30,12 +29,14 @@ from erdos.core.dashboard.render import (
 from erdos.core.dashboard.state import DashboardView, apply_key, initial_state
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
-from erdos.core.research.store_fs import FSResearchStore
 from erdos.core.repo_root import resolve_repo_root
+from erdos.core.research.store_fs import FSResearchStore
 from erdos.core.timing import measure_time_ms
 
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from rich.console import Console
 
 logger = logging.getLogger(__name__)
