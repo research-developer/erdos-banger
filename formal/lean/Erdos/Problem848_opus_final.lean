@@ -1,18 +1,16 @@
 /-
 Erdős Problem #848 — COMPLETE LEAN 4 FORMALIZATION
 
-Contributors:
-- Raymond Jung (@the-obstacle-is-the-way) — Human orchestrator
-- Claude Opus 4.5 (Anthropic) — Primary proof development
-- GPT-5.2 Pro Extended Thinking (OpenAI) — Mathematical reasoning
-- GPT-5.2 xHigh (OpenAI) — Proof assistance
-- Gemini 3.0 (Google) — Verification support
-- Aristotle (Harmonic) — Initial skeleton generation
+Contributors (collaborative effort):
+- Raymond Jung (@the-obstacle-is-the-way)
+- Claude Opus 4.5 (Anthropic)
+- GPT-5.2 Pro Extended Thinking (OpenAI)
+- GPT-5.2 xHigh (OpenAI)
+- Gemini 3.0 (Google)
+- Aristotle (Harmonic)
 
 Lean version: leanprover/lean4:v4.27.0
 Mathlib version: mathlib4 (2024)
-
-Co-authored-by: Aristotle (Harmonic) <aristotle-harmonic@harmonic.fun>
 -/
 
 /-
