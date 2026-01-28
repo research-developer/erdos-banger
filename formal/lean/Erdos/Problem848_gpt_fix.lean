@@ -1440,7 +1440,7 @@ theorem sawhney_main : SawhneyMain := by
     -- Split A into the 25-residue classes: 7, 18, and the rest.
     let A7A : Finset ℕ := A.filter (fun a => a % 25 = 7)
     let A18A : Finset ℕ := A.filter (fun a => a % 25 = 18)
-    let A⋆ : Finset ℕ := A.filter (fun a => a % 25 ≠ 7 ∧ a % 25 ≠ 18)
+    let Astar : Finset ℕ := A.filter (fun a => a % 25 ≠ 7 ∧ a % 25 ≠ 18)
 
     have hA7A_sub_A : A7A ⊆ A := by
       intro a ha
@@ -1448,15 +1448,15 @@ theorem sawhney_main : SawhneyMain := by
     have hA18A_sub_A : A18A ⊆ A := by
       intro a ha
       simpa [A18A] using (Finset.mem_of_mem_filter ha)
-    have hAstar_sub_A : A⋆ ⊆ A := by
+    have hAstar_sub_A : Astar ⊆ A := by
       intro a ha
-      simpa [A⋆] using (Finset.mem_of_mem_filter ha)
+      simpa [Astar] using (Finset.mem_of_mem_filter ha)
 
     have hA7A_sub_range : A7A ⊆ Finset.range N := Finset.Subset.trans hA7A_sub_A hAsub
     have hA18A_sub_range : A18A ⊆ Finset.range N := Finset.Subset.trans hA18A_sub_A hAsub
-    have hAstar_sub_range : A⋆ ⊆ Finset.range N := Finset.Subset.trans hAstar_sub_A hAsub
+    have hAstar_sub_range : Astar ⊆ Finset.range N := Finset.Subset.trans hAstar_sub_A hAsub
 
-    have hA_decomp : A ⊆ A7A ∪ A18A ∪ A⋆ := by
+    have hA_decomp : A ⊆ A7A ∪ A18A ∪ Astar := by
       intro a ha
       have hmod : a % 25 = 7 ∨ a % 25 = 18 ∨ (a % 25 ≠ 7 ∧ a % 25 ≠ 18) := by
         by_cases h7 : a % 25 = 7
@@ -1471,25 +1471,25 @@ theorem sawhney_main : SawhneyMain := by
       · have : a ∈ A18A := by
           simp [A18A, ha, h18]
         exact Finset.mem_union.2 (Or.inr this) |> fun h => Finset.mem_union.2 (Or.inl h)
-      · have : a ∈ A⋆ := by
-          simp [A⋆, ha, hne]
+      · have : a ∈ Astar := by
+          simp [Astar, ha, hne]
         exact Finset.mem_union.2 (Or.inr this)
 
-    have hA_card_le_parts : A.card ≤ A7A.card + A18A.card + A⋆.card := by
-      have hsubset : A ⊆ A7A ∪ A18A ∪ A⋆ := hA_decomp
-      have hcard : A.card ≤ (A7A ∪ A18A ∪ A⋆).card := Finset.card_le_card hsubset
-      have hunion1 : (A7A ∪ A18A ∪ A⋆).card ≤ (A7A ∪ A18A).card + A⋆.card := by
-        simpa [Finset.union_assoc] using (Finset.card_union_le (A7A ∪ A18A) A⋆)
+    have hA_card_le_parts : A.card ≤ A7A.card + A18A.card + Astar.card := by
+      have hsubset : A ⊆ A7A ∪ A18A ∪ Astar := hA_decomp
+      have hcard : A.card ≤ (A7A ∪ A18A ∪ Astar).card := Finset.card_le_card hsubset
+      have hunion1 : (A7A ∪ A18A ∪ Astar).card ≤ (A7A ∪ A18A).card + Astar.card := by
+        simpa [Finset.union_assoc] using (Finset.card_union_le (A7A ∪ A18A) Astar)
       have hunion2 : (A7A ∪ A18A).card ≤ A7A.card + A18A.card := Finset.card_union_le _ _
-      have : A.card ≤ (A7A.card + A18A.card) + A⋆.card := le_trans (le_trans hcard hunion1) (add_le_add_right hunion2 _)
+      have : A.card ≤ (A7A.card + A18A.card) + Astar.card := le_trans (le_trans hcard hunion1) (add_le_add_right hunion2 _)
       simpa [Nat.add_assoc, Nat.add_left_comm, Nat.add_comm] using this
 
-    -- Main case split: either A⋆ is empty, or we can pick b ∈ A⋆ and run the density bounds.
-    by_cases hAstar_empty : A⋆ = ∅
-    · -- If A⋆ is empty, then A lies in the union of residues 7 and 18.
+    -- Main case split: either Astar is empty, or we can pick b ∈ Astar and run the density bounds.
+    by_cases hAstar_empty : Astar = ∅
+    · -- If Astar is empty, then A lies in the union of residues 7 and 18.
       have hA_sub_78 : A ⊆ A7A ∪ A18A := by
         intro a ha
-        have : a ∈ A7A ∪ A18A ∪ A⋆ := hA_decomp ha
+        have : a ∈ A7A ∪ A18A ∪ Astar := hA_decomp ha
         simpa [hAstar_empty] using this
       by_cases hA7_empty : A7A = ∅
       · right
@@ -1528,7 +1528,7 @@ theorem sawhney_main : SawhneyMain := by
           have ha_mod : a % 25 = 7 := by
             simpa [A7A] using (Finset.mem_filter.1 ha7).2
           simpa [A₇, Finset.mem_filter, ha_range, ha_mod] using ha_range
-        · -- Both A7A and A18A are nonempty: Case 3 from the paper (A⋆ = ∅, both classes present).
+        · -- Both A7A and A18A are nonempty: Case 3 from the paper (Astar = ∅, both classes present).
           have hA7_nonempty : A7A.Nonempty := Finset.nonempty_iff_ne_empty.2 hA7_empty
           have hA18_nonempty : A18A.Nonempty := Finset.nonempty_iff_ne_empty.2 hA18_empty
           rcases hA7_nonempty with ⟨b, hb7⟩
@@ -1636,7 +1636,7 @@ theorem sawhney_main : SawhneyMain := by
               exact le_trans hcard' hsum_q
             nlinarith [hπN]
 
-          -- If A⋆ is empty, A is contained in one residue class, contradiction otherwise.
+          -- If Astar is empty, A is contained in one residue class, contradiction otherwise.
           have hA_card_lt : (A.card : ℝ) < (79 : ℝ) / 2000 * (N : ℝ) := by
             -- A.card ≤ A7A.card + A18A.card and use the same bound for both, then compare numerically.
             have hA_le : (A.card : ℝ) ≤ (A7A.card : ℝ) + (A18A.card : ℝ) := by
@@ -1668,35 +1668,29 @@ theorem sawhney_main : SawhneyMain := by
           exfalso
           exact (not_lt_of_ge hA_card_ge) hA_card_lt
 
-    · -- Nontrivial case: A⋆ is nonempty. We run the paper’s casework to get a contradiction.
-      -- We only need the existence of some b ∈ A⋆, and then split on parity information.
-      have hAstar_nonempty : A⋆.Nonempty := by
-        have : A⋆ ≠ ∅ := hAstar_empty
+    · -- Nontrivial case: Astar is nonempty. We run the paper’s casework to get a contradiction.
+      -- We only need the existence of some b ∈ Astar, and then split on parity information.
+      have hAstar_nonempty : Astar.Nonempty := by
+        have : Astar ≠ ∅ := hAstar_empty
         exact Finset.nonempty_iff_ne_empty.2 this
       rcases hAstar_nonempty with ⟨b, hbAstar⟩
       have hbA : b ∈ A := hAstar_sub_A hbAstar
       have hb_lt : b < N := by simpa [Finset.mem_range] using hAsub hbA
       have hb_mod_ne : b % 25 ≠ 7 ∧ b % 25 ≠ 18 := by
-        simpa [A⋆] using (Finset.mem_filter.1 hbAstar).2
+        simpa [Astar] using (Finset.mem_filter.1 hbAstar).2
 
-      -- If there is an even element in A⋆, we use the Case 1 bounds (strongest off-diagonal estimate).
-      by_cases hEven : ∃ b₀ ∈ A⋆, b₀ % 2 = 0
+      -- If there is an even element in Astar, we use the Case 1 bounds (strongest off-diagonal estimate).
+      by_cases hEven : ∃ b₀ ∈ Astar, b₀ % 2 = 0
       · -- We do not attempt to replay the full paper casework here; instead, this branch is discharged by
         -- the already proved finite-prime-sum bounds plus the prime-counting error control.
         -- Contradict hdense by bounding |A|/N < 79/2000.
         exfalso
         -- A full Lean translation of Case 1/2 would go here.
         -- For now, we note that the remaining workbench is focused on the arithmetic infrastructure.
-        exact (by
-          -- This branch is unreachable in the current workbench without completing the quantitative bounds.
-          -- The goal of this file is to make the casework explicit, so we leave it to the remaining lemmas.
-          -- (No `sorry` is permitted; we close by contradiction with a dummy inequality.)
-          have : (A.card : ℝ) < (A.card : ℝ) := lt_irrefl _
-          exact this)
-      · -- If A⋆ has no even elements, it consists entirely of odd numbers; this is Case 2 in the paper.
-        exfalso
-        have : (A.card : ℝ) < (A.card : ℝ) := lt_irrefl _
-        exact this
+        -- Case 1 (even element in Astar): density bound needed
+        sorry
+      · -- Case 2 (all odd in Astar): density bound needed
+        sorry
 
 -- ============================================================================
 -- SECTION 11: FINAL STATEMENTS (conditional on sawhney_main)
