@@ -1391,9 +1391,9 @@ lemma diag_count_mod25_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 =
       _ = 23 * (2 * (N / (25 * p ^ 2) + 1)) := by
         simp [residues25_card]
       _ = (23 * 2) * (N / (25 * p ^ 2) + 1) := by
-        simp [Nat.mul_assoc]
+        simpa using (mul_assoc 23 2 (N / (25 * p ^ 2) + 1)).symm
       _ = 46 * (N / (25 * p ^ 2) + 1) := by
-        simpa [h46, Nat.mul_assoc]
+        simpa [h46.symm]
   exact le_trans (le_trans hcard hsum) (le_trans hsum' (le_of_eq hconst))
 
 
