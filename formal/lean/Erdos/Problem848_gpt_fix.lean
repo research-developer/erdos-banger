@@ -1115,11 +1115,73 @@ lemma diagPrimeSumCoarse_bound :
 
 lemma offPrimeSumCoarse_bound :
     offPrimeSumCoarse + (1 : ℚ) / primeCutoff ≤ (163 : ℚ) / 1000 := by
-  native_decide
+  have hfast : offPrimeSumCoarse_fast + (1 : ℚ) / primeCutoff ≤ (163 : ℚ) / 1000 := by
+    let D := offPrimeDen
+    let B := primeCutoff
+    let a := offPrimeNum * B + D
+    let c := D * B
+    have hNat : 1000 * (offPrimeNum * B + D) ≤ 163 * (D * B) := by native_decide
+    have h1000_pos : 0 < (1000 : ℚ) := by norm_num
+    have hdenB_pos : 0 < (D : ℚ) * (B : ℚ) := by positivity
+    have hNatQ : ((a : ℕ) : ℚ) ≤ (163 * (c : ℕ) : ℚ) / 1000 := by
+      exact (div_le_iff h1000_pos).2 (by exact_mod_cast hNat)
+    have hprod :
+        (offPrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) =
+          ((a : ℕ) : ℚ) := by
+      let hden_ne := (ne_of_gt offPrimeDen_pos : (D : ℚ) ≠ 0)
+      let hB_ne := (ne_of_gt (by norm_num [primeCutoff]) : (B : ℚ) ≠ 0)
+      calc
+        (offPrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) =
+            (offPrimeSumCoarse_fast + (1 : ℚ) / B) * ((D : ℚ) * (B : ℚ)) := by simp [mul_assoc]
+        _ = offPrimeSumCoarse_fast * (D : ℚ) * (B : ℚ) + (1 : ℚ) / B * (D : ℚ) * (B : ℚ) := by simp [mul_add, mul_assoc]
+        _ = (offPrimeNum : ℚ) * (B : ℚ) + (D : ℚ) := by
+          have h1 : offPrimeSumCoarse_fast * (D : ℚ) = (offPrimeNum : ℚ) := by
+            field_simp [hden_ne]
+          have h2 : (1 : ℚ) / B * (B : ℚ) = 1 := by
+            field_simp [hB_ne]
+          simp [h1, h2, mul_comm]
+        _ = ((a : ℕ) : ℚ) := by simp [Nat.cast_mul, Nat.cast_add]
+    have hcast : ((c : ℕ) : ℚ) = (D : ℚ) * (B : ℚ) := by simp [Nat.cast_mul]
+    have hcalc :
+        (offPrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) ≤ (163 * (D : ℚ) * (B : ℚ)) / 1000 := by
+      simpa [hcast, mul_comm] using hNatQ
+    exact (div_le_iff hdenB_pos).2 hcalc
+  simpa [offPrimeSumCoarse_eq_fast] using hfast
 
 lemma no5PrimeSumCoarse_bound :
     no5PrimeSumCoarse + (1 : ℚ) / primeCutoff ≤ (413 : ℚ) / 1000 := by
-  native_decide
+  have hfast : no5PrimeSumCoarse_fast + (1 : ℚ) / primeCutoff ≤ (413 : ℚ) / 1000 := by
+    let D := no5PrimeDen
+    let B := primeCutoff
+    let a := no5PrimeNum * B + D
+    let c := D * B
+    have hNat : 1000 * (no5PrimeNum * B + D) ≤ 413 * (D * B) := by native_decide
+    have h1000_pos : 0 < (1000 : ℚ) := by norm_num
+    have hdenB_pos : 0 < (D : ℚ) * (B : ℚ) := by positivity
+    have hNatQ : ((a : ℕ) : ℚ) ≤ (413 * (c : ℕ) : ℚ) / 1000 := by
+      exact (div_le_iff h1000_pos).2 (by exact_mod_cast hNat)
+    have hprod :
+        (no5PrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) =
+          ((a : ℕ) : ℚ) := by
+      let hden_ne := (ne_of_gt no5PrimeDen_pos : (D : ℚ) ≠ 0)
+      let hB_ne := (ne_of_gt (by norm_num [primeCutoff]) : (B : ℚ) ≠ 0)
+      calc
+        (no5PrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) =
+            (no5PrimeSumCoarse_fast + (1 : ℚ) / B) * ((D : ℚ) * (B : ℚ)) := by simp [mul_assoc]
+        _ = no5PrimeSumCoarse_fast * (D : ℚ) * (B : ℚ) + (1 : ℚ) / B * (D : ℚ) * (B : ℚ) := by simp [mul_add, mul_assoc]
+        _ = (no5PrimeNum : ℚ) * (B : ℚ) + (D : ℚ) := by
+          have h1 : no5PrimeSumCoarse_fast * (D : ℚ) = (no5PrimeNum : ℚ) := by
+            field_simp [hden_ne]
+          have h2 : (1 : ℚ) / B * (B : ℚ) = 1 := by
+            field_simp [hB_ne]
+          simp [h1, h2, mul_comm]
+        _ = ((a : ℕ) : ℚ) := by simp [Nat.cast_mul, Nat.cast_add]
+    have hcast : ((c : ℕ) : ℚ) = (D : ℚ) * (B : ℚ) := by simp [Nat.cast_mul]
+    have hcalc :
+        (no5PrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) ≤ (413 * (D : ℚ) * (B : ℚ)) / 1000 := by
+      simpa [hcast, mul_comm] using hNatQ
+    exact (div_le_iff hdenB_pos).2 hcalc
+  simpa [no5PrimeSumCoarse_eq_fast] using hfast
 
 lemma sum_Ioc_inv_sq_le_inv (B N : ℕ) (hB : B ≠ 0) :
     (∑ i ∈ Finset.Ioc B N, (1 : ℚ) / (i ^ 2 : ℚ)) ≤ (1 : ℚ) / B := by
