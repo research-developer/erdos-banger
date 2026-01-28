@@ -933,8 +933,10 @@ lemma diagPrimeSumCoarse_eq_fast : diagPrimeSumCoarse = diagPrimeSumCoarse_fast 
         ( (∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) * (diagPrimeDen : ℚ)⁻¹ := by
     simp [div_eq_mul_inv, Finset.sum_mul]
   calc
-    diagPrimeSumCoarse = _ := hsum
-    _ = ( (∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) * (diagPrimeDen : ℚ)⁻¹ := hsum'
+    diagPrimeSumCoarse =
+        ∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ) / (diagPrimeDen : ℚ) := hsum
+    _ =
+        ( (∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) * (diagPrimeDen : ℚ)⁻¹ := hsum'
     _ = ((∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) / (diagPrimeDen : ℚ) := by
       simp [div_eq_mul_inv]
     _ = diagPrimeSumCoarse_fast := by simp [diagPrimeSumCoarse_fast, diagPrimeNum]
@@ -972,7 +974,8 @@ lemma offPrimeSumCoarse_eq_fast : offPrimeSumCoarse = offPrimeSumCoarse_fast := 
         ((∑ p ∈ offPrimesCoarse, ((offPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) / (offPrimeDen : ℚ) := by
     simp [div_eq_mul_inv, Finset.sum_mul]
   calc
-    offPrimeSumCoarse = _ := hsum
+    offPrimeSumCoarse =
+        ∑ p ∈ offPrimesCoarse, ((offPrimeDen / p ^ 2 : ℕ) : ℚ) / (offPrimeDen : ℚ) := hsum
     _ = ((∑ p ∈ offPrimesCoarse, ((offPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) / (offPrimeDen : ℚ) := hsum'
     _ = offPrimeSumCoarse_fast := by simp [offPrimeSumCoarse_fast, offPrimeNum]
 
@@ -1009,7 +1012,8 @@ lemma no5PrimeSumCoarse_eq_fast : no5PrimeSumCoarse = no5PrimeSumCoarse_fast := 
         ((∑ p ∈ no5PrimesCoarse, ((no5PrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) / (no5PrimeDen : ℚ) := by
     simp [div_eq_mul_inv, Finset.sum_mul]
   calc
-    no5PrimeSumCoarse = _ := hsum
+    no5PrimeSumCoarse =
+        ∑ p ∈ no5PrimesCoarse, ((no5PrimeDen / p ^ 2 : ℕ) : ℚ) / (no5PrimeDen : ℚ) := hsum
     _ = ((∑ p ∈ no5PrimesCoarse, ((no5PrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) / (no5PrimeDen : ℚ) := hsum'
     _ = no5PrimeSumCoarse_fast := by simp [no5PrimeSumCoarse_fast, no5PrimeNum]
 
