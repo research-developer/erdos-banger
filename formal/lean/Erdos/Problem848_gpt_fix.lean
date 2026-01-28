@@ -1080,7 +1080,38 @@ We bound the *infinite* reciprocal-square sums by:
 
 lemma diagPrimeSumCoarse_bound :
     diagPrimeSumCoarse + (1 : ℚ) / primeCutoff ≤ (1 : ℚ) / 70 := by
-  native_decide
+  have hfast : diagPrimeSumCoarse_fast + (1 : ℚ) / primeCutoff ≤ (1 : ℚ) / 70 := by
+    let D := diagPrimeDen
+    let B := primeCutoff
+    let a := diagPrimeNum * B + D
+    let c := D * B
+    have hNat : 70 * (diagPrimeNum * B + D) ≤ D * B := by native_decide
+    have h70_pos : 0 < (70 : ℚ) := by norm_num
+    have hdenB_pos : 0 < (D : ℚ) * (B : ℚ) := by positivity
+    have hNatQ : ((a : ℕ) : ℚ) ≤ ((c : ℕ) : ℚ) / 70 := by
+      exact (div_le_iff h70_pos).2 (by exact_mod_cast hNat)
+    have hprod :
+        (diagPrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) =
+          ((a : ℕ) : ℚ) := by
+      let hden_ne := (ne_of_gt diagPrimeDen_pos : (D : ℚ) ≠ 0)
+      let hB_ne := (ne_of_gt (by norm_num [primeCutoff]) : (B : ℚ) ≠ 0)
+      calc
+        (diagPrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) =
+            (diagPrimeSumCoarse_fast + (1 : ℚ) / B) * ((D : ℚ) * (B : ℚ)) := by simp [mul_assoc]
+        _ = diagPrimeSumCoarse_fast * (D : ℚ) * (B : ℚ) + (1 : ℚ) / B * (D : ℚ) * (B : ℚ) := by simp [mul_add, mul_assoc]
+        _ = (diagPrimeNum : ℚ) * (B : ℚ) + (D : ℚ) := by
+          have h1 : diagPrimeSumCoarse_fast * (D : ℚ) = (diagPrimeNum : ℚ) := by
+            field_simp [hden_ne]
+          have h2 : (1 : ℚ) / B * (B : ℚ) = 1 := by
+            field_simp [hB_ne]
+          simp [h1, h2, mul_comm]
+        _ = ((a : ℕ) : ℚ) := by simp [Nat.cast_mul, Nat.cast_add]
+    have hcast : ((c : ℕ) : ℚ) = (D : ℚ) * (B : ℚ) := by simp [Nat.cast_mul]
+    have hcalc :
+        (diagPrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) ≤ (D : ℚ) * (B : ℚ) / 70 := by
+      simpa [hcast] using hNatQ
+    exact (div_le_iff hdenB_pos).2 hcalc
+  simpa [diagPrimeSumCoarse_eq_fast] using hfast
 
 lemma offPrimeSumCoarse_bound :
     offPrimeSumCoarse + (1 : ℚ) / primeCutoff ≤ (163 : ℚ) / 1000 := by
