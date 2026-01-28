@@ -3840,7 +3840,11 @@ theorem sawhney_main : SawhneyMain := by
                   ≤ (N : ℝ) / 50 + 2 + 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := hA78_bound
                 _ ≤ (N : ℝ) / 50 + 2 + (2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ)) := by linarith [h2]
                 _ = (N : ℝ) / 50 + 2 + 2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by ring
-            nlinarith [hA_le_parts, hAstar_explicit, hA78_explicit, hNpos]
+            -- The +2 from hA78_explicit is absorbed: 2 ≤ 2δN since N ≥ 10^7 and δ = 10^(-7)
+            have h2_small : (2 : ℝ) ≤ 2 * δ * (N : ℝ) := by
+              have hN' : (10000000 : ℝ) ≤ (N : ℝ) := by exact_mod_cast hNbig
+              nlinarith [hN']
+            nlinarith [hA_le_parts, hAstar_explicit, hA78_explicit, hNpos, h2_small]
           exact (not_lt_of_ge hdense) hA_lt
 
 -- ============================================================================
