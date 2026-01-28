@@ -3400,14 +3400,14 @@ theorem sawhney_main : SawhneyMain := by
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
                       have hba_le : b * a ≤ (N - 1) * (N - 1) := Nat.mul_le_mul hb_le ha_le
                       have : b * a + 1 ≤ (N - 1) ^ 2 + 1 := by simpa [pow_two] using Nat.add_le_add_right hba_le 1
-                      have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by nlinarith
+                      have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
                       omega
                     have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hba_lt
                     nlinarith [sq_nonneg p, sq_nonneg N]
                   have hp_mem : p ∈ offPrimesUpTo N := by
                     simp only [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range]
                     exact ⟨⟨Nat.lt_succ_of_le hp_le, hp_prime⟩, hp_ne2, hp_ne5⟩
-                  exact Finset.mem_biUnion.2 ⟨p, hp_mem, by simp [Finset.mem_filter, ha_lt, ha25, ha4, hp2_dvd]⟩
+                  refine Finset.mem_biUnion.2 ⟨p, hp_mem, Finset.mem_filter.2 ⟨Finset.mem_range.2 ha_lt, ?_, ?_, hp2_dvd⟩⟩ <;> simp [Nat.ModEq, ha25, ha4]
                 have hcard : (A7A.filter (·%100=57)).card ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
                   calc (A7A.filter (·%100=57)).card
                       ≤ ((offPrimesUpTo N).biUnion (fun p =>
@@ -3479,14 +3479,14 @@ theorem sawhney_main : SawhneyMain := by
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
                       have hba_le : b * a ≤ (N - 1) * (N - 1) := Nat.mul_le_mul hb_le ha_le
                       have : b * a + 1 ≤ (N - 1) ^ 2 + 1 := by simpa [pow_two] using Nat.add_le_add_right hba_le 1
-                      have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by nlinarith
+                      have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
                       omega
                     have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hba_lt
                     nlinarith [sq_nonneg p, sq_nonneg N]
                   have hp_mem : p ∈ offPrimesUpTo N := by
                     simp only [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range]
                     exact ⟨⟨Nat.lt_succ_of_le hp_le, hp_prime⟩, hp_ne2, hp_ne5⟩
-                  exact Finset.mem_biUnion.2 ⟨p, hp_mem, by simp [Finset.mem_filter, ha_lt, ha25, ha4, hp2_dvd]⟩
+                  refine Finset.mem_biUnion.2 ⟨p, hp_mem, Finset.mem_filter.2 ⟨Finset.mem_range.2 ha_lt, ?_, ?_, hp2_dvd⟩⟩ <;> simp [Nat.ModEq, ha25, ha4]
                 have hcard : (A18A.filter (·%100=93)).card ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
                   calc (A18A.filter (·%100=93)).card
                       ≤ ((offPrimesUpTo N).biUnion (fun p =>
@@ -3563,7 +3563,11 @@ theorem sawhney_main : SawhneyMain := by
                   calc ((A7A.filter (·%100=57)).card : ℝ)
                       ≤ (S57.card : ℝ) := by exact_mod_cast Finset.card_le_card hsub
                     _ ≤ (N / 100 + 1 : ℕ) := by exact_mod_cast hS57_card
-                    _ ≤ (N : ℝ) / 100 + 1 := by linarith [Nat.cast_div_le (a := N) (b := 100)]
+                    _ ≤ (N : ℝ) / 100 + 1 := by
+                        have : ((N / 100 + 1 : ℕ) : ℝ) = ((N / 100 : ℕ) : ℝ) + 1 := by simp
+                        rw [this]
+                        have hdiv : ((N / 100 : ℕ) : ℝ) ≤ (N : ℝ) / 100 := Nat.cast_div_le
+                        linarith
                     _ ≤ (N : ℝ) / 100 := by nlinarith [hNpos]
                 have h93_le : ((A18A.filter (·%100=93)).card : ℝ) ≤ (N : ℝ) / 100 := by
                   have hS93_card : S93.card ≤ N / 100 + 1 := card_filter_mod_eq_le N 100 93
@@ -3571,7 +3575,11 @@ theorem sawhney_main : SawhneyMain := by
                   calc ((A18A.filter (·%100=93)).card : ℝ)
                       ≤ (S93.card : ℝ) := by exact_mod_cast Finset.card_le_card hsub
                     _ ≤ (N / 100 + 1 : ℕ) := by exact_mod_cast hS93_card
-                    _ ≤ (N : ℝ) / 100 + 1 := by linarith [Nat.cast_div_le (a := N) (b := 100)]
+                    _ ≤ (N : ℝ) / 100 + 1 := by
+                        have : ((N / 100 + 1 : ℕ) : ℝ) = ((N / 100 : ℕ) : ℝ) + 1 := by simp
+                        rw [this]
+                        have hdiv : ((N / 100 : ℕ) : ℝ) ≤ (N : ℝ) / 100 := Nat.cast_div_le
+                        linarith
                     _ ≤ (N : ℝ) / 100 := by nlinarith [hNpos]
                 linarith [h57_le, h93_le]
               -- Bound sieve classes (7 and 43 mod 100)
@@ -3614,14 +3622,14 @@ theorem sawhney_main : SawhneyMain := by
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
                       have hba_le : b * a ≤ (N - 1) * (N - 1) := Nat.mul_le_mul hb_le ha_le
                       have : b * a + 1 ≤ (N - 1) ^ 2 + 1 := by simpa [pow_two] using Nat.add_le_add_right hba_le 1
-                      have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by nlinarith
+                      have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
                       omega
                     have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hba_lt
                     nlinarith [sq_nonneg p, sq_nonneg N]
                   have hp_mem : p ∈ offPrimesUpTo N := by
                     simp only [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range]
                     exact ⟨⟨Nat.lt_succ_of_le hp_le, hp_prime⟩, hp_ne2, hp_ne5⟩
-                  exact Finset.mem_biUnion.2 ⟨p, hp_mem, by simp [Finset.mem_filter, ha_lt, ha25, ha4, hp2_dvd]⟩
+                  refine Finset.mem_biUnion.2 ⟨p, hp_mem, Finset.mem_filter.2 ⟨Finset.mem_range.2 ha_lt, ?_, ?_, hp2_dvd⟩⟩ <;> simp [Nat.ModEq, ha25, ha4]
                 have hcard : (A7A.filter (·%100=7)).card ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
                   calc (A7A.filter (·%100=7)).card
                       ≤ ((offPrimesUpTo N).biUnion (fun p =>
@@ -3688,14 +3696,14 @@ theorem sawhney_main : SawhneyMain := by
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
                       have hba_le : b * a ≤ (N - 1) * (N - 1) := Nat.mul_le_mul hb_le ha_le
                       have : b * a + 1 ≤ (N - 1) ^ 2 + 1 := by simpa [pow_two] using Nat.add_le_add_right hba_le 1
-                      have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by nlinarith
+                      have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
                       omega
                     have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hba_lt
                     nlinarith [sq_nonneg p, sq_nonneg N]
                   have hp_mem : p ∈ offPrimesUpTo N := by
                     simp only [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range]
                     exact ⟨⟨Nat.lt_succ_of_le hp_le, hp_prime⟩, hp_ne2, hp_ne5⟩
-                  exact Finset.mem_biUnion.2 ⟨p, hp_mem, by simp [Finset.mem_filter, ha_lt, ha25, ha4, hp2_dvd]⟩
+                  refine Finset.mem_biUnion.2 ⟨p, hp_mem, Finset.mem_filter.2 ⟨Finset.mem_range.2 ha_lt, ?_, ?_, hp2_dvd⟩⟩ <;> simp [Nat.ModEq, ha25, ha4]
                 have hcard : (A18A.filter (·%100=43)).card ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
                   calc (A18A.filter (·%100=43)).card
                       ≤ ((offPrimesUpTo N).biUnion (fun p =>
