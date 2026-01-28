@@ -916,7 +916,8 @@ by
   sorry
 
 lemma diagPrimeSumCoarse_eq_fast : diagPrimeSumCoarse = diagPrimeSumCoarse_fast := by
-  have hden_ne : (diagPrimeDen : ℚ) ≠ 0 := (ne_of_gt diagPrimeDen_pos : _)
+  have hden_ne : (diagPrimeDen : ℚ) ≠ 0 := by
+    exact Nat.cast_ne_zero.2 (ne_of_gt diagPrimeDen_pos)
   have hterm :
       ∀ p ∈ diagPrimesCoarse,
         (1 : ℚ) / (p ^ 2 : ℚ) = ((diagPrimeDen / p ^ 2 : ℕ) : ℚ) / (diagPrimeDen : ℚ) := by
@@ -963,7 +964,8 @@ by
   sorry
 
 lemma offPrimeSumCoarse_eq_fast : offPrimeSumCoarse = offPrimeSumCoarse_fast := by
-  have hden_ne : (offPrimeDen : ℚ) ≠ 0 := (ne_of_gt offPrimeDen_pos : _)
+  have hden_ne : (offPrimeDen : ℚ) ≠ 0 := by
+    exact Nat.cast_ne_zero.2 (ne_of_gt offPrimeDen_pos)
   have hterm :
       ∀ p ∈ offPrimesCoarse,
         (1 : ℚ) / (p ^ 2 : ℚ) = ((offPrimeDen / p ^ 2 : ℕ) : ℚ) / (offPrimeDen : ℚ) := by
@@ -1006,7 +1008,8 @@ by
   sorry
 
 lemma no5PrimeSumCoarse_eq_fast : no5PrimeSumCoarse = no5PrimeSumCoarse_fast := by
-  have hden_ne : (no5PrimeDen : ℚ) ≠ 0 := (ne_of_gt no5PrimeDen_pos : _)
+  have hden_ne : (no5PrimeDen : ℚ) ≠ 0 := by
+    exact Nat.cast_ne_zero.2 (ne_of_gt no5PrimeDen_pos)
   have hterm :
       ∀ p ∈ no5PrimesCoarse,
         (1 : ℚ) / (p ^ 2 : ℚ) = ((no5PrimeDen / p ^ 2 : ℕ) : ℚ) / (no5PrimeDen : ℚ) := by
@@ -1052,11 +1055,11 @@ lemma diagPrimeSumCoarse_bound :
     have h70_pos : 0 < (70 : ℚ) := by norm_num
     have hdenB_pos : 0 < (D : ℚ) * (B : ℚ) := by positivity
     have hNatQ : ((a : ℕ) : ℚ) ≤ ((c : ℕ) : ℚ) / 70 := by
-      exact (div_le_iff h70_pos).2 (by exact_mod_cast hNat)
+      exact (le_div_iff₀ h70_pos).2 (by exact_mod_cast hNat)
     have hprod :
         (diagPrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) =
           ((a : ℕ) : ℚ) := by
-      let hden_ne := (ne_of_gt diagPrimeDen_pos : (D : ℚ) ≠ 0)
+      let hden_ne : (D : ℚ) ≠ 0 := Nat.cast_ne_zero.2 (ne_of_gt diagPrimeDen_pos)
       let hB_ne := (ne_of_gt (by norm_num [primeCutoff]) : (B : ℚ) ≠ 0)
       calc
         (diagPrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) =
@@ -1072,8 +1075,17 @@ lemma diagPrimeSumCoarse_bound :
     have hcast : ((c : ℕ) : ℚ) = (D : ℚ) * (B : ℚ) := by simp [Nat.cast_mul]
     have hcalc :
         (diagPrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) ≤ (D : ℚ) * (B : ℚ) / 70 := by
-      simpa [hcast] using hNatQ
-    exact (div_le_iff hdenB_pos).2 hcalc
+      -- Convert the Nat inequality (on `a`) to the target product inequality (on the rational sum).
+      have : (diagPrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) ≤ ((a : ℕ) : ℚ) := by
+        exact le_of_eq hprod
+      -- `hprod` is an equality, so we can rewrite directly.
+      simpa [hprod, hcast] using hNatQ
+    -- Cancel the positive factor `(D : ℚ) * (B : ℚ)` on the right.
+    have hcalc' :
+        (diagPrimeSumCoarse_fast + (1 : ℚ) / B) * ((D : ℚ) * (B : ℚ)) ≤
+          ((1 : ℚ) / 70) * ((D : ℚ) * (B : ℚ)) := by
+      simpa [mul_assoc, div_eq_mul_inv, mul_comm, mul_left_comm, mul_right_comm] using hcalc
+    exact le_of_mul_le_mul_right hcalc' hdenB_pos
   simpa [diagPrimeSumCoarse_eq_fast] using hfast
 
 lemma offPrimeSumCoarse_bound :
@@ -1087,11 +1099,11 @@ lemma offPrimeSumCoarse_bound :
     have h1000_pos : 0 < (1000 : ℚ) := by norm_num
     have hdenB_pos : 0 < (D : ℚ) * (B : ℚ) := by positivity
     have hNatQ : ((a : ℕ) : ℚ) ≤ (163 * (c : ℕ) : ℚ) / 1000 := by
-      exact (div_le_iff h1000_pos).2 (by exact_mod_cast hNat)
+      exact (le_div_iff₀ h1000_pos).2 (by exact_mod_cast hNat)
     have hprod :
         (offPrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) =
           ((a : ℕ) : ℚ) := by
-      let hden_ne := (ne_of_gt offPrimeDen_pos : (D : ℚ) ≠ 0)
+      let hden_ne : (D : ℚ) ≠ 0 := Nat.cast_ne_zero.2 (ne_of_gt offPrimeDen_pos)
       let hB_ne := (ne_of_gt (by norm_num [primeCutoff]) : (B : ℚ) ≠ 0)
       calc
         (offPrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) =
@@ -1107,8 +1119,16 @@ lemma offPrimeSumCoarse_bound :
     have hcast : ((c : ℕ) : ℚ) = (D : ℚ) * (B : ℚ) := by simp [Nat.cast_mul]
     have hcalc :
         (offPrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) ≤ (163 * (D : ℚ) * (B : ℚ)) / 1000 := by
-      simpa [hcast, mul_comm] using hNatQ
-    exact (div_le_iff hdenB_pos).2 hcalc
+      simpa [hprod, hcast, mul_comm, mul_left_comm, mul_right_comm] using hNatQ
+    have hcalc' :
+        (offPrimeSumCoarse_fast + (1 : ℚ) / B) * ((D : ℚ) * (B : ℚ)) ≤
+          ((163 : ℚ) / 1000) * ((D : ℚ) * (B : ℚ)) := by
+      -- rewrite the right side into the exact form needed for cancellation
+      have : (163 * (D : ℚ) * (B : ℚ)) / 1000 = ((163 : ℚ) / 1000) * ((D : ℚ) * (B : ℚ)) := by
+        ring
+      -- combine and reassociate
+      simpa [mul_assoc, div_eq_mul_inv, this, mul_comm, mul_left_comm, mul_right_comm] using hcalc
+    exact le_of_mul_le_mul_right hcalc' hdenB_pos
   simpa [offPrimeSumCoarse_eq_fast] using hfast
 
 lemma no5PrimeSumCoarse_bound :
@@ -1122,11 +1142,11 @@ lemma no5PrimeSumCoarse_bound :
     have h1000_pos : 0 < (1000 : ℚ) := by norm_num
     have hdenB_pos : 0 < (D : ℚ) * (B : ℚ) := by positivity
     have hNatQ : ((a : ℕ) : ℚ) ≤ (413 * (c : ℕ) : ℚ) / 1000 := by
-      exact (div_le_iff h1000_pos).2 (by exact_mod_cast hNat)
+      exact (le_div_iff₀ h1000_pos).2 (by exact_mod_cast hNat)
     have hprod :
         (no5PrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) =
           ((a : ℕ) : ℚ) := by
-      let hden_ne := (ne_of_gt no5PrimeDen_pos : (D : ℚ) ≠ 0)
+      let hden_ne : (D : ℚ) ≠ 0 := Nat.cast_ne_zero.2 (ne_of_gt no5PrimeDen_pos)
       let hB_ne := (ne_of_gt (by norm_num [primeCutoff]) : (B : ℚ) ≠ 0)
       calc
         (no5PrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) =
@@ -1142,8 +1162,14 @@ lemma no5PrimeSumCoarse_bound :
     have hcast : ((c : ℕ) : ℚ) = (D : ℚ) * (B : ℚ) := by simp [Nat.cast_mul]
     have hcalc :
         (no5PrimeSumCoarse_fast + (1 : ℚ) / B) * (D : ℚ) * (B : ℚ) ≤ (413 * (D : ℚ) * (B : ℚ)) / 1000 := by
-      simpa [hcast, mul_comm] using hNatQ
-    exact (div_le_iff hdenB_pos).2 hcalc
+      simpa [hprod, hcast, mul_comm, mul_left_comm, mul_right_comm] using hNatQ
+    have hcalc' :
+        (no5PrimeSumCoarse_fast + (1 : ℚ) / B) * ((D : ℚ) * (B : ℚ)) ≤
+          ((413 : ℚ) / 1000) * ((D : ℚ) * (B : ℚ)) := by
+      have : (413 * (D : ℚ) * (B : ℚ)) / 1000 = ((413 : ℚ) / 1000) * ((D : ℚ) * (B : ℚ)) := by
+        ring
+      simpa [mul_assoc, div_eq_mul_inv, this, mul_comm, mul_left_comm, mul_right_comm] using hcalc
+    exact le_of_mul_le_mul_right hcalc' hdenB_pos
   simpa [no5PrimeSumCoarse_eq_fast] using hfast
 
 lemma sum_Ioc_inv_sq_le_inv (B N : ℕ) (hB : B ≠ 0) :
