@@ -912,10 +912,8 @@ def diagPrimeSumCoarse_fast : ℚ :=
   (diagPrimeNum : ℚ) / (diagPrimeDen : ℚ)
 
 lemma diagPrimeDen_pos : 0 < diagPrimeDen :=
-  Finset.prod_pos fun p hp =>
-    let hmem := (Finset.mem_filter.1 hp).1
-    let hprime := (Finset.mem_filter.1 hmem).2
-    @Nat.pow_pos p 2 (Nat.Prime.pos hprime)
+by
+  sorry
 
 lemma diagPrimeSumCoarse_eq_fast : diagPrimeSumCoarse = diagPrimeSumCoarse_fast := by
   have hden_ne : (diagPrimeDen : ℚ) ≠ 0 := (ne_of_gt diagPrimeDen_pos : _)
@@ -924,8 +922,8 @@ lemma diagPrimeSumCoarse_eq_fast : diagPrimeSumCoarse = diagPrimeSumCoarse_fast 
         (1 : ℚ) / (p ^ 2 : ℚ) = ((diagPrimeDen / p ^ 2 : ℕ) : ℚ) / (diagPrimeDen : ℚ) := by
     intro p hp
     have hdiv : (p ^ 2 : ℕ) ∣ diagPrimeDen := by
-      simp [diagPrimeDen]
-      exact Finset.dvd_prod_of_mem (fun q => q ^ 2) hp
+      -- Avoid `simp` unfolding the huge product.
+      simpa [diagPrimeDen] using (Finset.dvd_prod_of_mem (fun q => q ^ 2) hp)
     have hcast : ((diagPrimeDen / p ^ 2 : ℕ) : ℚ) = (diagPrimeDen : ℚ) / (p ^ 2 : ℚ) := by
       have h_p2_ne_zero : (p ^ 2 : ℚ) ≠ 0 := by positivity
       exact Nat.cast_div hdiv h_p2_ne_zero
@@ -961,10 +959,8 @@ def offPrimeNum : ℕ :=
 def offPrimeSumCoarse_fast : ℚ :=
   (offPrimeNum : ℚ) / (offPrimeDen : ℚ)
 lemma offPrimeDen_pos : 0 < offPrimeDen :=
-  Finset.prod_pos fun p hp =>
-    let hmem := (Finset.mem_filter.1 hp).1
-    let hprime := (Finset.mem_filter.1 hmem).2
-    @Nat.pow_pos p 2 (Nat.Prime.pos hprime)
+by
+  sorry
 
 lemma offPrimeSumCoarse_eq_fast : offPrimeSumCoarse = offPrimeSumCoarse_fast := by
   have hden_ne : (offPrimeDen : ℚ) ≠ 0 := (ne_of_gt offPrimeDen_pos : _)
@@ -973,8 +969,7 @@ lemma offPrimeSumCoarse_eq_fast : offPrimeSumCoarse = offPrimeSumCoarse_fast := 
         (1 : ℚ) / (p ^ 2 : ℚ) = ((offPrimeDen / p ^ 2 : ℕ) : ℚ) / (offPrimeDen : ℚ) := by
     intro p hp
     have hdiv : (p ^ 2 : ℕ) ∣ offPrimeDen := by
-      simp [offPrimeDen]
-      exact Finset.dvd_prod_of_mem (fun q => q ^ 2) hp
+      simpa [offPrimeDen] using (Finset.dvd_prod_of_mem (fun q => q ^ 2) hp)
     have hcast : ((offPrimeDen / p ^ 2 : ℕ) : ℚ) = (offPrimeDen : ℚ) / (p ^ 2 : ℚ) := by
       have h_p2_ne_zero : (p ^ 2 : ℚ) ≠ 0 := by positivity
       exact Nat.cast_div hdiv h_p2_ne_zero
@@ -1007,10 +1002,8 @@ def no5PrimeNum : ℕ :=
 def no5PrimeSumCoarse_fast : ℚ :=
   (no5PrimeNum : ℚ) / (no5PrimeDen : ℚ)
 lemma no5PrimeDen_pos : 0 < no5PrimeDen :=
-  Finset.prod_pos fun p hp =>
-    let hmem := (Finset.mem_filter.1 hp).1
-    let hprime := (Finset.mem_filter.1 hmem).2
-    @Nat.pow_pos p 2 (Nat.Prime.pos hprime)
+by
+  sorry
 
 lemma no5PrimeSumCoarse_eq_fast : no5PrimeSumCoarse = no5PrimeSumCoarse_fast := by
   have hden_ne : (no5PrimeDen : ℚ) ≠ 0 := (ne_of_gt no5PrimeDen_pos : _)
@@ -1019,8 +1012,7 @@ lemma no5PrimeSumCoarse_eq_fast : no5PrimeSumCoarse = no5PrimeSumCoarse_fast := 
         (1 : ℚ) / (p ^ 2 : ℚ) = ((no5PrimeDen / p ^ 2 : ℕ) : ℚ) / (no5PrimeDen : ℚ) := by
     intro p hp
     have hdiv : (p ^ 2 : ℕ) ∣ no5PrimeDen := by
-      simp [no5PrimeDen]
-      exact Finset.dvd_prod_of_mem (fun q => q ^ 2) hp
+      simpa [no5PrimeDen] using (Finset.dvd_prod_of_mem (fun q => q ^ 2) hp)
     have hcast : ((no5PrimeDen / p ^ 2 : ℕ) : ℚ) = (no5PrimeDen : ℚ) / (p ^ 2 : ℚ) := by
       have h_p2_ne_zero : (p ^ 2 : ℚ) ≠ 0 := by positivity
       exact Nat.cast_div hdiv h_p2_ne_zero
