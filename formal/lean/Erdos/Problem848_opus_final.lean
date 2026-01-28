@@ -3277,7 +3277,7 @@ theorem sawhney_main : SawhneyMain := by
           -- whether 4 | b*a+1 depends on the mod 4 residues. Half the residue classes have 4 | b*a+1,
           -- which forces the existence of a prime square divisor from offPrimesUpTo.
           have hA78_bound : (A7A.card : ℝ) + (A18A.card : ℝ) ≤ (N : ℝ) / 50 +
-              (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by
+              2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by
             -- Since ¬hEven78, all elements of A7A and A18A are odd.
             push_neg at hEven78
             have hA7_all_odd : ∀ a ∈ A7A, a % 2 = 1 := fun a ha => by
@@ -3366,7 +3366,7 @@ theorem sawhney_main : SawhneyMain := by
                   -- 4 ∤ ba+1 since b ≡ 1 mod 4 and a ≡ 1 mod 4
                   have h4_ndvd : ¬ (4 ∣ b * a + 1) := by
                     intro hdvd
-                    have hba_mod4 : (b * a) % 4 = 1 := by omega
+                    have hba_mod4 : (b * a) % 4 = 1 := by rw [Nat.mul_mod]; omega
                     have h1_mod4 : (b * a + 1) % 4 = 2 := by omega
                     have h0_mod4 : (b * a + 1) % 4 = 0 := Nat.dvd_iff_mod_eq_zero.1 hdvd
                     omega
@@ -3448,7 +3448,7 @@ theorem sawhney_main : SawhneyMain := by
                     simpa [mul_comm] using this
                   have h4_ndvd : ¬ (4 ∣ b * a + 1) := by
                     intro hdvd
-                    have hba_mod4 : (b * a) % 4 = 1 := by omega
+                    have hba_mod4 : (b * a) % 4 = 1 := by rw [Nat.mul_mod]; omega
                     have h1_mod4 : (b * a + 1) % 4 = 2 := by omega
                     have h0_mod4 : (b * a + 1) % 4 = 0 := Nat.dvd_iff_mod_eq_zero.1 hdvd
                     omega
@@ -3548,10 +3548,6 @@ theorem sawhney_main : SawhneyMain := by
                 _ ≤ (N : ℝ) / 50 + ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) +
                     ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by linarith [hsieve7_bound, hsieve18_bound]
                 _ = (N : ℝ) / 50 + 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by ring
-                _ ≤ (N : ℝ) / 50 + (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by
-                    have hsum_nonneg : 0 ≤ (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) := by
-                      apply Finset.sum_nonneg; intro p _; positivity
-                    nlinarith [hNpos, hsum_nonneg]
             · -- Case b ≡ 3 mod 4: Free = {57, 93}, Sieve = {7, 43}
               -- Symmetric to the b ≡ 1 case
               have hfree_bound : (((A7A.filter (·%100=57)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ)) ≤ (N : ℝ) / 50 := by
@@ -3589,7 +3585,7 @@ theorem sawhney_main : SawhneyMain := by
                   -- b ≡ 3 mod 4 and a ≡ 3 mod 4, so ba ≡ 1 mod 4, ba+1 ≡ 2 mod 4
                   have h4_ndvd : ¬ (4 ∣ b * a + 1) := by
                     intro hdvd
-                    have hba_mod4 : (b * a) % 4 = 1 := by omega
+                    have hba_mod4 : (b * a) % 4 = 1 := by rw [Nat.mul_mod]; omega
                     have h_mod4 : (b * a + 1) % 4 = 2 := by omega
                     have h0_mod4 : (b * a + 1) % 4 = 0 := Nat.dvd_iff_mod_eq_zero.1 hdvd
                     omega
@@ -3662,7 +3658,7 @@ theorem sawhney_main : SawhneyMain := by
                     have := hAprop b hbA a haA; simpa [mul_comm] using this
                   have h4_ndvd : ¬ (4 ∣ b * a + 1) := by
                     intro hdvd
-                    have hba_mod4 : (b * a) % 4 = 1 := by omega
+                    have hba_mod4 : (b * a) % 4 = 1 := by rw [Nat.mul_mod]; omega
                     have h_mod4 : (b * a + 1) % 4 = 2 := by omega
                     have h0_mod4 : (b * a + 1) % 4 = 0 := Nat.dvd_iff_mod_eq_zero.1 hdvd
                     omega
@@ -3756,10 +3752,6 @@ theorem sawhney_main : SawhneyMain := by
                 _ ≤ (N : ℝ) / 50 + ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) +
                     ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by linarith [hsieve7_bound, hsieve18_bound]
                 _ = (N : ℝ) / 50 + 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by ring
-                _ ≤ (N : ℝ) / 50 + (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by
-                    have hsum_nonneg : 0 ≤ (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) := by
-                      apply Finset.sum_nonneg; intro p _; positivity
-                    nlinarith [hNpos, hsum_nonneg]
           -- Final numerical contradiction.
           have hA_le_parts : (A.card : ℝ) ≤ (A7A.card : ℝ) + (A18A.card : ℝ) + (Astar.card : ℝ) := by
             exact_mod_cast hA_card_le_parts_nat
@@ -3806,14 +3798,20 @@ theorem sawhney_main : SawhneyMain := by
                         (N : ℝ) / 3500 + δ * (N : ℝ) := add_le_add hNdiag hπN'
               exact le_trans hAstar_bound (mul_le_mul_of_nonneg_left h2 (by positivity))
             -- Explicit A78 bound
-            have hA78_explicit : (A7A.card : ℝ) + (A18A.card : ℝ) ≤ (N : ℝ) / 50 + (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by
+            have hA78_explicit : (A7A.card : ℝ) + (A18A.card : ℝ) ≤ (N : ℝ) / 50 + 2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by
               have hπN2 : 2 * (N.primeCounting : ℝ) ≤ 2 * δ * (N : ℝ) := by nlinarith [hπN']
-              have h2 : (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) ≤
-                        (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := add_le_add hNoff100 hπN2
+              have h2 : 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) ≤
+                        2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by
+                have hmul : (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) ≤ (N : ℝ) * (163 / 100000) := hNoff100
+                have h2mul := mul_le_mul_of_nonneg_left hmul (show (0 : ℝ) ≤ 2 by norm_num)
+                calc 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ)
+                    = 2 * ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2))) + 2 * (N.primeCounting : ℝ) := by ring
+                  _ ≤ 2 * ((N : ℝ) * (163 / 100000)) + 2 * δ * (N : ℝ) := by linarith [h2mul, hπN2]
+                  _ = 2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by ring
               calc (A7A.card : ℝ) + (A18A.card : ℝ)
-                  ≤ (N : ℝ) / 50 + (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := hA78_bound
-                _ ≤ (N : ℝ) / 50 + ((N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ)) := by linarith [h2]
-                _ = (N : ℝ) / 50 + (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by ring
+                  ≤ (N : ℝ) / 50 + 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := hA78_bound
+                _ ≤ (N : ℝ) / 50 + (2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ)) := by linarith [h2]
+                _ = (N : ℝ) / 50 + 2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by ring
             nlinarith [hA_le_parts, hAstar_explicit, hA78_explicit, hNpos]
           exact (not_lt_of_ge hdense) hA_lt
 
