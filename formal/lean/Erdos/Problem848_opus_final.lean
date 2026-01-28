@@ -2492,9 +2492,9 @@ theorem sawhney_main : SawhneyMain := by
           have hoffQ : (∑ p ∈ offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) ≤ (163 : ℚ) / 1000 :=
             sum_offPrimesUpTo_le N
           have hcast : ((∑ p ∈ offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ) ≤ (163 : ℝ) / 1000 := by
-                have := Rat.cast_le (K := ℝ).mpr hoffQ
-                simp only [Rat.cast_sum, Rat.cast_div, Rat.cast_one, Rat.cast_pow, Rat.cast_natCast] at this
-                exact this
+                have h := Rat.cast_le (K := ℝ).mpr hoffQ
+                convert h using 2
+                simp only [Rat.cast_div, Rat.cast_natCast]
           have : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) =
               (1 / 25 : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
             simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
