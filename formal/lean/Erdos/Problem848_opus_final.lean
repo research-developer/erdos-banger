@@ -3277,7 +3277,7 @@ theorem sawhney_main : SawhneyMain := by
           -- whether 4 | b*a+1 depends on the mod 4 residues. Half the residue classes have 4 | b*a+1,
           -- which forces the existence of a prime square divisor from offPrimesUpTo.
           set_option maxHeartbeats 1600000 in
-          have hA78_bound : (A7A.card : ℝ) + (A18A.card : ℝ) ≤ (N : ℝ) / 50 +
+          have hA78_bound : (A7A.card : ℝ) + (A18A.card : ℝ) ≤ (N : ℝ) / 50 + 2 +
               2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by
             -- Since ¬hEven78, all elements of A7A and A18A are odd.
             push_neg at hEven78
@@ -3525,7 +3525,9 @@ theorem sawhney_main : SawhneyMain := by
                     have hmod : a % 100 = 7 ∨ a % 100 = 57 := by omega
                     rcases hmod with h | h <;> [left; right] <;> exact ⟨ha, h⟩
                   · intro ha; rcases ha with ⟨h, _⟩ | ⟨h, _⟩ <;> exact h
-                rw [h_union]
+                have hcard_eq : A7A.card = (A7A.filter (·%100=7) ∪ A7A.filter (·%100=57)).card := by
+                  conv_lhs => rw [h_union]
+                rw [hcard_eq]
                 exact Finset.card_union_le (A7A.filter (· % 100 = 7)) (A7A.filter (· % 100 = 57))
               have hA18_split : A18A.card ≤ (A18A.filter (·%100=43)).card + (A18A.filter (·%100=93)).card := by
                 have h_union : A18A = A18A.filter (·%100=43) ∪ A18A.filter (·%100=93) := by
@@ -3537,7 +3539,9 @@ theorem sawhney_main : SawhneyMain := by
                     have hmod : a % 100 = 43 ∨ a % 100 = 93 := by omega
                     rcases hmod with h | h <;> [left; right] <;> exact ⟨ha, h⟩
                   · intro ha; rcases ha with ⟨h, _⟩ | ⟨h, _⟩ <;> exact h
-                rw [h_union]
+                have hcard_eq : A18A.card = (A18A.filter (·%100=43) ∪ A18A.filter (·%100=93)).card := by
+                  conv_lhs => rw [h_union]
+                rw [hcard_eq]
                 exact Finset.card_union_le (A18A.filter (· % 100 = 43)) (A18A.filter (· % 100 = 93))
               -- Final calculation
               have hA7_real : (A7A.card : ℝ) ≤ ((A7A.filter (·%100=7)).card : ℝ) + ((A7A.filter (·%100=57)).card : ℝ) := by
@@ -3549,14 +3553,14 @@ theorem sawhney_main : SawhneyMain := by
                     (((A18A.filter (·%100=43)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ)) := by linarith
                 _ = (((A7A.filter (·%100=7)).card : ℝ) + ((A18A.filter (·%100=43)).card : ℝ)) +
                     (((A7A.filter (·%100=57)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ)) := by ring
-                _ ≤ (N : ℝ) / 50 + (((A7A.filter (·%100=57)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ)) := by linarith [hfree_bound]
-                _ ≤ (N : ℝ) / 50 + ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) +
+                _ ≤ ((N : ℝ) / 50 + 2) + (((A7A.filter (·%100=57)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ)) := by linarith [hfree_bound]
+                _ ≤ ((N : ℝ) / 50 + 2) + ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) +
                     ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by linarith [hsieve7_bound, hsieve18_bound]
-                _ = (N : ℝ) / 50 + 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by ring
+                _ = (N : ℝ) / 50 + 2 + 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by ring
             · -- Case b ≡ 3 mod 4: Free = {57, 93}, Sieve = {7, 43}
               -- Symmetric to the b ≡ 1 case
-              have hfree_bound : (((A7A.filter (·%100=57)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ)) ≤ (N : ℝ) / 50 := by
-                have h57_le : ((A7A.filter (·%100=57)).card : ℝ) ≤ (N : ℝ) / 100 := by
+              have hfree_bound : (((A7A.filter (·%100=57)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ)) ≤ (N : ℝ) / 50 + 2 := by
+                have h57_le : ((A7A.filter (·%100=57)).card : ℝ) ≤ (N : ℝ) / 100 + 1 := by
                   have hS57_card : S57.card ≤ N / 100 + 1 := card_filter_mod_eq_le N 100 57
                   have hsub : A7A.filter (·%100=57) ⊆ S57 := Finset.filter_subset_filter _ (fun _ h => hA7A_sub_range h)
                   calc ((A7A.filter (·%100=57)).card : ℝ)
@@ -3567,8 +3571,7 @@ theorem sawhney_main : SawhneyMain := by
                         rw [this]
                         have hdiv : ((N / 100 : ℕ) : ℝ) ≤ (N : ℝ) / 100 := Nat.cast_div_le
                         linarith
-                    _ ≤ (N : ℝ) / 100 := by nlinarith [hNpos]
-                have h93_le : ((A18A.filter (·%100=93)).card : ℝ) ≤ (N : ℝ) / 100 := by
+                have h93_le : ((A18A.filter (·%100=93)).card : ℝ) ≤ (N : ℝ) / 100 + 1 := by
                   have hS93_card : S93.card ≤ N / 100 + 1 := card_filter_mod_eq_le N 100 93
                   have hsub : A18A.filter (·%100=93) ⊆ S93 := Finset.filter_subset_filter _ (fun _ h => hA18A_sub_range h)
                   calc ((A18A.filter (·%100=93)).card : ℝ)
@@ -3579,7 +3582,6 @@ theorem sawhney_main : SawhneyMain := by
                         rw [this]
                         have hdiv : ((N / 100 : ℕ) : ℝ) ≤ (N : ℝ) / 100 := Nat.cast_div_le
                         linarith
-                    _ ≤ (N : ℝ) / 100 := by nlinarith [hNpos]
                 linarith [h57_le, h93_le]
               -- Bound sieve classes (7 and 43 mod 100)
               have hsieve7_bound : ((A7A.filter (·%100=7)).card : ℝ) ≤
