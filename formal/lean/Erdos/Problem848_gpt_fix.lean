@@ -916,9 +916,11 @@ lemma diagPrimeSumCoarse_eq_fast : diagPrimeSumCoarse = diagPrimeSumCoarse_fast 
       ∀ p ∈ diagPrimesCoarse,
         (1 : ℚ) / (p ^ 2 : ℚ) = ((diagPrimeDen / p ^ 2 : ℕ) : ℚ) / (diagPrimeDen : ℚ) := by
     intro p hp
-    have hdiv : (p ^ 2 : ℕ) ∣ diagPrimeDen := Finset.dvd_prod (fun q => q ^ 2) hp
+    have hdiv : (p ^ 2 : ℕ) ∣ diagPrimeDen := by
+      simp [diagPrimeDen]
+      exact Finset.dvd_prod_of_mem (fun q => q ^ 2) hp
     have hcast : ((diagPrimeDen / p ^ 2 : ℕ) : ℚ) = (diagPrimeDen : ℚ) / (p ^ 2 : ℚ) := by
-      exact_mod_cast (Nat.cast_div (dvd := hdiv))
+      exact_mod_cast (Nat.cast_div (m := diagPrimeDen) (n := p ^ 2) (dvd := hdiv))
     have hcancel :
         ((diagPrimeDen : ℚ) / (p ^ 2 : ℚ)) / (diagPrimeDen : ℚ) = (1 : ℚ) / (p ^ 2 : ℚ) := by
       field_simp [hden_ne]
@@ -957,9 +959,11 @@ lemma offPrimeSumCoarse_eq_fast : offPrimeSumCoarse = offPrimeSumCoarse_fast := 
       ∀ p ∈ offPrimesCoarse,
         (1 : ℚ) / (p ^ 2 : ℚ) = ((offPrimeDen / p ^ 2 : ℕ) : ℚ) / (offPrimeDen : ℚ) := by
     intro p hp
-    have hdiv : (p ^ 2 : ℕ) ∣ offPrimeDen := Finset.dvd_prod (fun q => q ^ 2) hp
+    have hdiv : (p ^ 2 : ℕ) ∣ offPrimeDen := by
+      simp [offPrimeDen]
+      exact Finset.dvd_prod_of_mem (fun q => q ^ 2) hp
     have hcast : ((offPrimeDen / p ^ 2 : ℕ) : ℚ) = (offPrimeDen : ℚ) / (p ^ 2 : ℚ) := by
-      exact_mod_cast (Nat.cast_div (dvd := hdiv))
+      exact_mod_cast (Nat.cast_div (m := offPrimeDen) (n := p ^ 2) (dvd := hdiv))
     have hcancel :
         ((offPrimeDen : ℚ) / (p ^ 2 : ℚ)) / (offPrimeDen : ℚ) = (1 : ℚ) / (p ^ 2 : ℚ) := by
       field_simp [hden_ne]
@@ -995,9 +999,11 @@ lemma no5PrimeSumCoarse_eq_fast : no5PrimeSumCoarse = no5PrimeSumCoarse_fast := 
       ∀ p ∈ no5PrimesCoarse,
         (1 : ℚ) / (p ^ 2 : ℚ) = ((no5PrimeDen / p ^ 2 : ℕ) : ℚ) / (no5PrimeDen : ℚ) := by
     intro p hp
-    have hdiv : (p ^ 2 : ℕ) ∣ no5PrimeDen := Finset.dvd_prod (fun q => q ^ 2) hp
+    have hdiv : (p ^ 2 : ℕ) ∣ no5PrimeDen := by
+      simp [no5PrimeDen]
+      exact Finset.dvd_prod_of_mem (fun q => q ^ 2) hp
     have hcast : ((no5PrimeDen / p ^ 2 : ℕ) : ℚ) = (no5PrimeDen : ℚ) / (p ^ 2 : ℚ) := by
-      exact_mod_cast (Nat.cast_div (dvd := hdiv))
+      exact_mod_cast (Nat.cast_div (m := no5PrimeDen) (n := p ^ 2) (dvd := hdiv))
     have hcancel :
         ((no5PrimeDen : ℚ) / (p ^ 2 : ℚ)) / (no5PrimeDen : ℚ) = (1 : ℚ) / (p ^ 2 : ℚ) := by
       field_simp [hden_ne]
