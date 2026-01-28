@@ -3854,7 +3854,7 @@ theorem sawhney_main : SawhneyMain := by
                 calc (N : ℝ) / 50 + 2 + 2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ)
                     = ((N : ℝ) / 50 + 2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ)) + 2 := by ring
                   _ ≤ ((N : ℝ) / 50 + 2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ)) + (2 * δ * (N : ℝ)) :=
-                      add_le_add_right h2_small _
+                      add_le_add_left h2_small _
                   _ = (N : ℝ) / 50 + (2 * δ * (N : ℝ)) + 2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by ring
               exact le_trans hA78_explicit hstep
             nlinarith [hA_le_parts, hAstar_explicit, hA78_explicit', hNpos]
