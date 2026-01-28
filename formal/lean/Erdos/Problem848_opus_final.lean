@@ -3852,7 +3852,7 @@ theorem sawhney_main : SawhneyMain := by
               have hstep : (N : ℝ) / 50 + 2 + 2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) ≤
                            (N : ℝ) / 50 + (2 * δ * (N : ℝ)) + 2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by
                 have hle : (2 : ℝ) ≤ 2 * δ * (N : ℝ) := h2_small
-                linarith
+                nlinarith
               exact le_trans hA78_explicit hstep
             nlinarith [hA_le_parts, hAstar_explicit, hA78_explicit', hNpos]
           exact (not_lt_of_ge hdense) hA_lt
