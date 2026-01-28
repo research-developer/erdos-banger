@@ -3276,9 +3276,502 @@ theorem sawhney_main : SawhneyMain := by
           -- which forces the existence of a prime square divisor from offPrimesUpTo.
           have hA78_bound : (A7A.card : ℝ) + (A18A.card : ℝ) ≤ (N : ℝ) / 50 +
               (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by
-            -- This bound follows from the residue class structure combined with the prime counting.
-            -- The detailed proof requires analyzing mod 100 residue classes and when 4 | b*a+1.
-            sorry
+            -- Since ¬hEven78, all elements of A7A and A18A are odd.
+            push_neg at hEven78
+            have hA7_all_odd : ∀ a ∈ A7A, a % 2 = 1 := fun a ha => by
+              have hne := hEven78.1 a ha; omega
+            have hA18_all_odd : ∀ a ∈ A18A, a % 2 = 1 := fun a ha => by
+              have hne := hEven78.2 a ha; omega
+            -- A7A elements are ≡ 7 or 57 mod 100 (odd elements ≡ 7 mod 25)
+            -- A18A elements are ≡ 43 or 93 mod 100 (odd elements ≡ 18 mod 25)
+            -- For b odd: if b ≡ 1 mod 4, then 4 | ba+1 iff a ≡ 3 mod 4 (i.e., 7, 43 mod 100)
+            --            if b ≡ 3 mod 4, then 4 | ba+1 iff a ≡ 1 mod 4 (i.e., 57, 93 mod 100)
+            -- In both cases: 2 "free" classes (4 | ba+1) and 2 "sieve" classes (need odd p² | ba+1).
+            -- Free classes contribute ≤ N/50, sieve classes contribute ≤ N*Σ(1/100p²) + 2π(N).
+            have hb_mod4 : b % 4 = 1 ∨ b % 4 = 3 := by omega
+            -- Bound using the two sieve classes (which need an odd prime square divisor).
+            -- For each a in A7A ∪ A18A not in a free class, there exists odd prime p with p² | ba+1.
+            -- Define the four mod-100 residue class filters
+            let S7 := (Finset.range N).filter (fun a => a % 100 = 7)
+            let S57 := (Finset.range N).filter (fun a => a % 100 = 57)
+            let S43 := (Finset.range N).filter (fun a => a % 100 = 43)
+            let S93 := (Finset.range N).filter (fun a => a % 100 = 93)
+            -- A7A ⊆ S7 ∪ S57, A18A ⊆ S43 ∪ S93
+            have hA7_sub : A7A ⊆ S7 ∪ S57 := by
+              intro a ha
+              have h25 : a % 25 = 7 := by simpa [A7A] using (Finset.mem_filter.1 ha).2
+              have hodd : a % 2 = 1 := hA7_all_odd a ha
+              have ha_range : a ∈ Finset.range N := hA7A_sub_range ha
+              simp only [Finset.mem_union, Finset.mem_filter, Finset.mem_range]
+              have ha_lt : a < N := Finset.mem_range.1 ha_range
+              -- a ≡ 7 mod 25 and a odd → a ≡ 7 or 57 mod 100
+              have : a % 100 = 7 ∨ a % 100 = 57 := by omega
+              rcases this with h | h
+              · left; exact ⟨ha_lt, h⟩
+              · right; exact ⟨ha_lt, h⟩
+            have hA18_sub : A18A ⊆ S43 ∪ S93 := by
+              intro a ha
+              have h25 : a % 25 = 18 := by simpa [A18A] using (Finset.mem_filter.1 ha).2
+              have hodd : a % 2 = 1 := hA18_all_odd a ha
+              have ha_range : a ∈ Finset.range N := hA18A_sub_range ha
+              simp only [Finset.mem_union, Finset.mem_filter, Finset.mem_range]
+              have ha_lt : a < N := Finset.mem_range.1 ha_range
+              have : a % 100 = 43 ∨ a % 100 = 93 := by omega
+              rcases this with h | h
+              · left; exact ⟨ha_lt, h⟩
+              · right; exact ⟨ha_lt, h⟩
+            -- By cases on b % 4
+            rcases hb_mod4 with hb1 | hb3
+            · -- Case b ≡ 1 mod 4: Free = {7, 43}, Sieve = {57, 93}
+              -- For a ≡ 3 mod 4 (i.e., 7 or 43 mod 100): 4 | ba+1 (free)
+              -- For a ≡ 1 mod 4 (i.e., 57 or 93 mod 100): 4 ∤ ba+1, need odd p² | ba+1 (sieve)
+              -- Bound A7A ∩ S7 (free) + A18A ∩ S43 (free) ≤ N/50
+              have hfree_bound : (((A7A.filter (·%100=7)).card : ℝ) + ((A18A.filter (·%100=43)).card : ℝ)) ≤ (N : ℝ) / 50 := by
+                have h7_le : ((A7A.filter (·%100=7)).card : ℝ) ≤ (N : ℝ) / 100 := by
+                  have hsub : A7A.filter (·%100=7) ⊆ S7 := Finset.filter_subset_filter _ (fun _ h => hA7A_sub_range h)
+                  have hcard := Finset.card_le_card hsub
+                  have hS7_card : S7.card ≤ N / 100 + 1 := card_filter_mod_eq_le N 100 7
+                  have : ((A7A.filter (·%100=7)).card : ℝ) ≤ ((S7.card : ℕ) : ℝ) := by exact_mod_cast hcard
+                  have : ((S7.card : ℕ) : ℝ) ≤ (N / 100 + 1 : ℕ) := by exact_mod_cast hS7_card
+                  have hN100' : N / 100 + 1 ≤ N / 100 + N / 100 := by
+                    have : 1 ≤ N / 100 := by omega
+                    omega
+                  have : (N / 100 + 1 : ℕ) ≤ (2 * (N / 100) : ℕ) := by omega
+                  calc ((A7A.filter (·%100=7)).card : ℝ)
+                      ≤ (S7.card : ℝ) := by exact_mod_cast Finset.card_le_card hsub
+                    _ ≤ (N / 100 + 1 : ℕ) := by exact_mod_cast hS7_card
+                    _ ≤ (N : ℝ) / 100 + 1 := by
+                        have : ((N / 100 + 1 : ℕ) : ℝ) ≤ (N : ℝ) / 100 + 1 := by
+                          have := Nat.div_le_self N 100
+                          have hdiv : ((N / 100 : ℕ) : ℝ) ≤ (N : ℝ) / 100 := by exact_mod_cast Nat.div_le_self N 100
+                          linarith [Nat.cast_div_le (a := N) (b := 100)]
+                        exact this
+                    _ ≤ (N : ℝ) / 100 := by nlinarith [hNpos]
+                have h43_le : ((A18A.filter (·%100=43)).card : ℝ) ≤ (N : ℝ) / 100 := by
+                  have hsub : A18A.filter (·%100=43) ⊆ S43 := Finset.filter_subset_filter _ (fun _ h => hA18A_sub_range h)
+                  have hS43_card : S43.card ≤ N / 100 + 1 := card_filter_mod_eq_le N 100 43
+                  calc ((A18A.filter (·%100=43)).card : ℝ)
+                      ≤ (S43.card : ℝ) := by exact_mod_cast Finset.card_le_card hsub
+                    _ ≤ (N / 100 + 1 : ℕ) := by exact_mod_cast hS43_card
+                    _ ≤ (N : ℝ) / 100 + 1 := by
+                        have : ((N / 100 + 1 : ℕ) : ℝ) ≤ (N : ℝ) / 100 + 1 := by
+                          linarith [Nat.cast_div_le (a := N) (b := 100)]
+                        exact this
+                    _ ≤ (N : ℝ) / 100 := by nlinarith [hNpos]
+                linarith [h7_le, h43_le]
+              -- Bound A7A ∩ S57 (sieve) using biUnion over offPrimesUpTo
+              have hsieve7_bound : ((A7A.filter (·%100=57)).card : ℝ) ≤
+                  (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
+                have hsubset : A7A.filter (·%100=57) ⊆ (offPrimesUpTo N).biUnion (fun p =>
+                    (Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ a ≡ 1 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)) := by
+                  intro a ha
+                  have haA7 : a ∈ A7A := (Finset.mem_filter.1 ha).1
+                  have ha100 : a % 100 = 57 := (Finset.mem_filter.1 ha).2
+                  have haA : a ∈ A := hA7A_sub_A haA7
+                  have ha_lt : a < N := by simpa [Finset.mem_range] using hAsub haA
+                  have ha25 : a % 25 = 7 := by simpa [A7A] using (Finset.mem_filter.1 haA7).2
+                  have ha4 : a % 4 = 1 := by omega
+                  -- ba+1 is not squarefree
+                  have hnsq : ¬ Squarefree (b * a + 1) := by
+                    have := hAprop b hbA a haA
+                    simpa [mul_comm] using this
+                  -- 4 ∤ ba+1 since b ≡ 1 mod 4 and a ≡ 1 mod 4
+                  have h4_ndvd : ¬ (4 ∣ b * a + 1) := by
+                    intro hdvd
+                    have hba_mod4 : (b * a) % 4 = 1 := by omega
+                    have h1_mod4 : (b * a + 1) % 4 = 2 := by omega
+                    have h0_mod4 : (b * a + 1) % 4 = 0 := Nat.dvd_iff_mod_eq_zero.1 hdvd
+                    omega
+                  -- So there exists odd prime p with p² | ba+1
+                  obtain ⟨p, hp_prime, hp2_dvd⟩ := prime_square_exists hnsq
+                  have hp_ne2 : p ≠ 2 := by
+                    intro hp2; subst hp2
+                    exact h4_ndvd hp2_dvd
+                  have hp_ne5 : p ≠ 5 := by
+                    intro hp5; subst hp5
+                    have h25_dvd : 25 ∣ b * a + 1 := hp2_dvd
+                    have hb25 : b % 25 ≠ 7 ∧ b % 25 ≠ 18 := hb_mod_ne
+                    -- If 25 | ba+1 and a ≡ 7 mod 25, then b*7 ≡ -1 mod 25, so b ≡ -1*7⁻¹ mod 25
+                    -- 7⁻¹ mod 25 = 18 (since 7*18 = 126 = 5*25+1), so b ≡ -18 ≡ 7 mod 25
+                    have : (b * a + 1) % 25 = 0 := Nat.dvd_iff_mod_eq_zero.1 h25_dvd
+                    have ha25' : a % 25 = 7 := ha25
+                    have : (b * 7 + 1) % 25 = (b * a + 1) % 25 := by omega
+                    have hb7 : (b * 7 + 1) % 25 = 0 := by omega
+                    have hb_mod25 : b % 25 = 7 := by omega
+                    exact hb25.1 hb_mod25
+                  have hp_gt2 : p > 2 := lt_of_le_of_ne hp_prime.two_le (Ne.symm hp_ne2)
+                  have hp_le : p ≤ N := by
+                    have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2_dvd
+                    have hba_lt : b * a + 1 < N ^ 2 := by
+                      have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
+                      have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
+                      have hba_le : b * a ≤ (N - 1) * (N - 1) := Nat.mul_le_mul hb_le ha_le
+                      have : b * a + 1 ≤ (N - 1) ^ 2 + 1 := by simpa [pow_two] using Nat.add_le_add_right hba_le 1
+                      have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by nlinarith
+                      omega
+                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hba_lt
+                    nlinarith [sq_nonneg p, sq_nonneg N]
+                  have hp_mem : p ∈ offPrimesUpTo N := by
+                    simp only [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range]
+                    exact ⟨⟨Nat.lt_succ_of_le hp_le, hp_prime⟩, hp_ne2, hp_ne5⟩
+                  exact Finset.mem_biUnion.2 ⟨p, hp_mem, by simp [Finset.mem_filter, ha_lt, ha25, ha4, hp2_dvd]⟩
+                have hcard : (A7A.filter (·%100=57)).card ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
+                  calc (A7A.filter (·%100=57)).card
+                      ≤ ((offPrimesUpTo N).biUnion (fun p =>
+                           (Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ a ≡ 1 [MOD 4] ∧ p ^ 2 ∣ b * a + 1))).card :=
+                        Finset.card_le_card hsubset
+                    _ ≤ ∑ p ∈ offPrimesUpTo N,
+                           ((Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ a ≡ 1 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)).card :=
+                        Finset.card_biUnion_le
+                    _ ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
+                        apply Finset.sum_le_sum
+                        intro p hp
+                        have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
+                        have hp_ne2 : p ≠ 2 := (Finset.mem_filter.1 hp).2.1
+                        have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2.2
+                        exact off_count_modEq100_le' N p b 7 1 hp_prime hp_ne2 hp_ne5
+                have hcard_real : ((A7A.filter (·%100=57)).card : ℝ) ≤ ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) := by
+                  exact_mod_cast hcard
+                have hsum := sum_div_add_one_le (P := offPrimesUpTo N) (k := 100)
+                have hPcard : ((offPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
+                  have hsub : offPrimesUpTo N ⊆ primesUpTo N := by intro p hp; exact (Finset.mem_filter.1 hp).1
+                  have := Finset.card_le_card hsub
+                  have := (Nat.cast_le.2 this : ((offPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
+                  simpa [primesUpTo_card] using this
+                have hsum' :
+                    ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) ≤
+                      (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
+                  exact hsum.trans (add_le_add (le_refl _) hPcard)
+                exact le_trans hcard_real hsum'
+              -- Bound A18A ∩ S93 (sieve) similarly
+              have hsieve18_bound : ((A18A.filter (·%100=93)).card : ℝ) ≤
+                  (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
+                have hsubset : A18A.filter (·%100=93) ⊆ (offPrimesUpTo N).biUnion (fun p =>
+                    (Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ a ≡ 1 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)) := by
+                  intro a ha
+                  have haA18 : a ∈ A18A := (Finset.mem_filter.1 ha).1
+                  have ha100 : a % 100 = 93 := (Finset.mem_filter.1 ha).2
+                  have haA : a ∈ A := hA18A_sub_A haA18
+                  have ha_lt : a < N := by simpa [Finset.mem_range] using hAsub haA
+                  have ha25 : a % 25 = 18 := by simpa [A18A] using (Finset.mem_filter.1 haA18).2
+                  have ha4 : a % 4 = 1 := by omega
+                  have hnsq : ¬ Squarefree (b * a + 1) := by
+                    have := hAprop b hbA a haA
+                    simpa [mul_comm] using this
+                  have h4_ndvd : ¬ (4 ∣ b * a + 1) := by
+                    intro hdvd
+                    have hba_mod4 : (b * a) % 4 = 1 := by omega
+                    have h1_mod4 : (b * a + 1) % 4 = 2 := by omega
+                    have h0_mod4 : (b * a + 1) % 4 = 0 := Nat.dvd_iff_mod_eq_zero.1 hdvd
+                    omega
+                  obtain ⟨p, hp_prime, hp2_dvd⟩ := prime_square_exists hnsq
+                  have hp_ne2 : p ≠ 2 := by intro hp2; subst hp2; exact h4_ndvd hp2_dvd
+                  have hp_ne5 : p ≠ 5 := by
+                    intro hp5; subst hp5
+                    have h25_dvd : 25 ∣ b * a + 1 := hp2_dvd
+                    have hb25 : b % 25 ≠ 7 ∧ b % 25 ≠ 18 := hb_mod_ne
+                    have : (b * a + 1) % 25 = 0 := Nat.dvd_iff_mod_eq_zero.1 h25_dvd
+                    have ha25' : a % 25 = 18 := ha25
+                    have : (b * 18 + 1) % 25 = (b * a + 1) % 25 := by omega
+                    have hb18 : (b * 18 + 1) % 25 = 0 := by omega
+                    -- 18⁻¹ mod 25 = 7 (since 18*7 = 126 = 5*25+1), so b ≡ -7 ≡ 18 mod 25
+                    have hb_mod25 : b % 25 = 18 := by omega
+                    exact hb25.2 hb_mod25
+                  have hp_gt2 : p > 2 := lt_of_le_of_ne hp_prime.two_le (Ne.symm hp_ne2)
+                  have hp_le : p ≤ N := by
+                    have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2_dvd
+                    have hba_lt : b * a + 1 < N ^ 2 := by
+                      have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
+                      have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
+                      have hba_le : b * a ≤ (N - 1) * (N - 1) := Nat.mul_le_mul hb_le ha_le
+                      have : b * a + 1 ≤ (N - 1) ^ 2 + 1 := by simpa [pow_two] using Nat.add_le_add_right hba_le 1
+                      have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by nlinarith
+                      omega
+                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hba_lt
+                    nlinarith [sq_nonneg p, sq_nonneg N]
+                  have hp_mem : p ∈ offPrimesUpTo N := by
+                    simp only [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range]
+                    exact ⟨⟨Nat.lt_succ_of_le hp_le, hp_prime⟩, hp_ne2, hp_ne5⟩
+                  exact Finset.mem_biUnion.2 ⟨p, hp_mem, by simp [Finset.mem_filter, ha_lt, ha25, ha4, hp2_dvd]⟩
+                have hcard : (A18A.filter (·%100=93)).card ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
+                  calc (A18A.filter (·%100=93)).card
+                      ≤ ((offPrimesUpTo N).biUnion (fun p =>
+                           (Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ a ≡ 1 [MOD 4] ∧ p ^ 2 ∣ b * a + 1))).card :=
+                        Finset.card_le_card hsubset
+                    _ ≤ ∑ p ∈ offPrimesUpTo N,
+                           ((Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ a ≡ 1 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)).card :=
+                        Finset.card_biUnion_le
+                    _ ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
+                        apply Finset.sum_le_sum
+                        intro p hp
+                        have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
+                        have hp_ne2 : p ≠ 2 := (Finset.mem_filter.1 hp).2.1
+                        have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2.2
+                        exact off_count_modEq100_le' N p b 18 1 hp_prime hp_ne2 hp_ne5
+                have hcard_real : ((A18A.filter (·%100=93)).card : ℝ) ≤ ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) := by
+                  exact_mod_cast hcard
+                have hsum := sum_div_add_one_le (P := offPrimesUpTo N) (k := 100)
+                have hPcard : ((offPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
+                  have hsub : offPrimesUpTo N ⊆ primesUpTo N := by intro p hp; exact (Finset.mem_filter.1 hp).1
+                  have := Finset.card_le_card hsub
+                  have := (Nat.cast_le.2 this : ((offPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
+                  simpa [primesUpTo_card] using this
+                have hsum' :
+                    ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) ≤
+                      (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
+                  exact hsum.trans (add_le_add (le_refl _) hPcard)
+                exact le_trans hcard_real hsum'
+              -- Combine: A7A = (A7A ∩ S7) ∪ (A7A ∩ S57), A18A = (A18A ∩ S43) ∪ (A18A ∩ S93)
+              have hA7_split : A7A.card ≤ (A7A.filter (·%100=7)).card + (A7A.filter (·%100=57)).card := by
+                have h_union : A7A = A7A.filter (·%100=7) ∪ A7A.filter (·%100=57) := by
+                  ext a; simp only [Finset.mem_union, Finset.mem_filter]
+                  constructor
+                  · intro ha
+                    have h25 : a % 25 = 7 := by simpa [A7A] using (Finset.mem_filter.1 ha).2
+                    have hodd : a % 2 = 1 := hA7_all_odd a ha
+                    have hmod : a % 100 = 7 ∨ a % 100 = 57 := by omega
+                    rcases hmod with h | h <;> [left; right] <;> exact ⟨ha, h⟩
+                  · intro ha; rcases ha with ⟨h, _⟩ | ⟨h, _⟩ <;> exact h
+                rw [h_union]
+                exact Finset.card_union_le _ _
+              have hA18_split : A18A.card ≤ (A18A.filter (·%100=43)).card + (A18A.filter (·%100=93)).card := by
+                have h_union : A18A = A18A.filter (·%100=43) ∪ A18A.filter (·%100=93) := by
+                  ext a; simp only [Finset.mem_union, Finset.mem_filter]
+                  constructor
+                  · intro ha
+                    have h25 : a % 25 = 18 := by simpa [A18A] using (Finset.mem_filter.1 ha).2
+                    have hodd : a % 2 = 1 := hA18_all_odd a ha
+                    have hmod : a % 100 = 43 ∨ a % 100 = 93 := by omega
+                    rcases hmod with h | h <;> [left; right] <;> exact ⟨ha, h⟩
+                  · intro ha; rcases ha with ⟨h, _⟩ | ⟨h, _⟩ <;> exact h
+                rw [h_union]
+                exact Finset.card_union_le _ _
+              -- Final calculation
+              have hA7_real : (A7A.card : ℝ) ≤ ((A7A.filter (·%100=7)).card : ℝ) + ((A7A.filter (·%100=57)).card : ℝ) := by
+                exact_mod_cast hA7_split
+              have hA18_real : (A18A.card : ℝ) ≤ ((A18A.filter (·%100=43)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ) := by
+                exact_mod_cast hA18_split
+              calc (A7A.card : ℝ) + (A18A.card : ℝ)
+                  ≤ (((A7A.filter (·%100=7)).card : ℝ) + ((A7A.filter (·%100=57)).card : ℝ)) +
+                    (((A18A.filter (·%100=43)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ)) := by linarith
+                _ = (((A7A.filter (·%100=7)).card : ℝ) + ((A18A.filter (·%100=43)).card : ℝ)) +
+                    (((A7A.filter (·%100=57)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ)) := by ring
+                _ ≤ (N : ℝ) / 50 + (((A7A.filter (·%100=57)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ)) := by linarith [hfree_bound]
+                _ ≤ (N : ℝ) / 50 + ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) +
+                    ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by linarith [hsieve7_bound, hsieve18_bound]
+                _ = (N : ℝ) / 50 + 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by ring
+                _ ≤ (N : ℝ) / 50 + (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by
+                    have hsum_nonneg : 0 ≤ (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) := by
+                      apply Finset.sum_nonneg; intro p _; positivity
+                    nlinarith [hNpos, hsum_nonneg]
+            · -- Case b ≡ 3 mod 4: Free = {57, 93}, Sieve = {7, 43}
+              -- Symmetric to the b ≡ 1 case
+              have hfree_bound : (((A7A.filter (·%100=57)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ)) ≤ (N : ℝ) / 50 := by
+                have h57_le : ((A7A.filter (·%100=57)).card : ℝ) ≤ (N : ℝ) / 100 := by
+                  have hS57_card : S57.card ≤ N / 100 + 1 := card_filter_mod_eq_le N 100 57
+                  have hsub : A7A.filter (·%100=57) ⊆ S57 := Finset.filter_subset_filter _ (fun _ h => hA7A_sub_range h)
+                  calc ((A7A.filter (·%100=57)).card : ℝ)
+                      ≤ (S57.card : ℝ) := by exact_mod_cast Finset.card_le_card hsub
+                    _ ≤ (N / 100 + 1 : ℕ) := by exact_mod_cast hS57_card
+                    _ ≤ (N : ℝ) / 100 + 1 := by linarith [Nat.cast_div_le (a := N) (b := 100)]
+                    _ ≤ (N : ℝ) / 100 := by nlinarith [hNpos]
+                have h93_le : ((A18A.filter (·%100=93)).card : ℝ) ≤ (N : ℝ) / 100 := by
+                  have hS93_card : S93.card ≤ N / 100 + 1 := card_filter_mod_eq_le N 100 93
+                  have hsub : A18A.filter (·%100=93) ⊆ S93 := Finset.filter_subset_filter _ (fun _ h => hA18A_sub_range h)
+                  calc ((A18A.filter (·%100=93)).card : ℝ)
+                      ≤ (S93.card : ℝ) := by exact_mod_cast Finset.card_le_card hsub
+                    _ ≤ (N / 100 + 1 : ℕ) := by exact_mod_cast hS93_card
+                    _ ≤ (N : ℝ) / 100 + 1 := by linarith [Nat.cast_div_le (a := N) (b := 100)]
+                    _ ≤ (N : ℝ) / 100 := by nlinarith [hNpos]
+                linarith [h57_le, h93_le]
+              -- Bound sieve classes (7 and 43 mod 100)
+              have hsieve7_bound : ((A7A.filter (·%100=7)).card : ℝ) ≤
+                  (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
+                have hsubset : A7A.filter (·%100=7) ⊆ (offPrimesUpTo N).biUnion (fun p =>
+                    (Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ a ≡ 3 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)) := by
+                  intro a ha
+                  have haA7 : a ∈ A7A := (Finset.mem_filter.1 ha).1
+                  have ha100 : a % 100 = 7 := (Finset.mem_filter.1 ha).2
+                  have haA : a ∈ A := hA7A_sub_A haA7
+                  have ha_lt : a < N := by simpa [Finset.mem_range] using hAsub haA
+                  have ha25 : a % 25 = 7 := by simpa [A7A] using (Finset.mem_filter.1 haA7).2
+                  have ha4 : a % 4 = 3 := by omega
+                  have hnsq : ¬ Squarefree (b * a + 1) := by
+                    have := hAprop b hbA a haA; simpa [mul_comm] using this
+                  -- b ≡ 3 mod 4 and a ≡ 3 mod 4, so ba ≡ 1 mod 4, ba+1 ≡ 2 mod 4
+                  have h4_ndvd : ¬ (4 ∣ b * a + 1) := by
+                    intro hdvd
+                    have hba_mod4 : (b * a) % 4 = 1 := by omega
+                    have h_mod4 : (b * a + 1) % 4 = 2 := by omega
+                    have h0_mod4 : (b * a + 1) % 4 = 0 := Nat.dvd_iff_mod_eq_zero.1 hdvd
+                    omega
+                  obtain ⟨p, hp_prime, hp2_dvd⟩ := prime_square_exists hnsq
+                  have hp_ne2 : p ≠ 2 := by intro hp2; subst hp2; exact h4_ndvd hp2_dvd
+                  have hp_ne5 : p ≠ 5 := by
+                    intro hp5; subst hp5
+                    have h25_dvd : 25 ∣ b * a + 1 := hp2_dvd
+                    have hb25 : b % 25 ≠ 7 ∧ b % 25 ≠ 18 := hb_mod_ne
+                    have : (b * a + 1) % 25 = 0 := Nat.dvd_iff_mod_eq_zero.1 h25_dvd
+                    have : (b * 7 + 1) % 25 = (b * a + 1) % 25 := by omega
+                    have hb7 : (b * 7 + 1) % 25 = 0 := by omega
+                    have hb_mod25 : b % 25 = 7 := by omega
+                    exact hb25.1 hb_mod25
+                  have hp_le : p ≤ N := by
+                    have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2_dvd
+                    have hba_lt : b * a + 1 < N ^ 2 := by
+                      have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
+                      have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
+                      have hba_le : b * a ≤ (N - 1) * (N - 1) := Nat.mul_le_mul hb_le ha_le
+                      have : b * a + 1 ≤ (N - 1) ^ 2 + 1 := by simpa [pow_two] using Nat.add_le_add_right hba_le 1
+                      have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by nlinarith
+                      omega
+                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hba_lt
+                    nlinarith [sq_nonneg p, sq_nonneg N]
+                  have hp_mem : p ∈ offPrimesUpTo N := by
+                    simp only [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range]
+                    exact ⟨⟨Nat.lt_succ_of_le hp_le, hp_prime⟩, hp_ne2, hp_ne5⟩
+                  exact Finset.mem_biUnion.2 ⟨p, hp_mem, by simp [Finset.mem_filter, ha_lt, ha25, ha4, hp2_dvd]⟩
+                have hcard : (A7A.filter (·%100=7)).card ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
+                  calc (A7A.filter (·%100=7)).card
+                      ≤ ((offPrimesUpTo N).biUnion (fun p =>
+                           (Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ a ≡ 3 [MOD 4] ∧ p ^ 2 ∣ b * a + 1))).card :=
+                        Finset.card_le_card hsubset
+                    _ ≤ ∑ p ∈ offPrimesUpTo N,
+                           ((Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ a ≡ 3 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)).card :=
+                        Finset.card_biUnion_le
+                    _ ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
+                        apply Finset.sum_le_sum
+                        intro p hp
+                        have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
+                        have hp_ne2 : p ≠ 2 := (Finset.mem_filter.1 hp).2.1
+                        have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2.2
+                        exact off_count_modEq100_le' N p b 7 3 hp_prime hp_ne2 hp_ne5
+                have hcard_real : ((A7A.filter (·%100=7)).card : ℝ) ≤ ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) := by
+                  exact_mod_cast hcard
+                have hsum := sum_div_add_one_le (P := offPrimesUpTo N) (k := 100)
+                have hPcard : ((offPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
+                  have hsub : offPrimesUpTo N ⊆ primesUpTo N := by intro p hp; exact (Finset.mem_filter.1 hp).1
+                  have := Finset.card_le_card hsub
+                  have := (Nat.cast_le.2 this : ((offPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
+                  simpa [primesUpTo_card] using this
+                have hsum' :
+                    ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) ≤
+                      (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
+                  exact hsum.trans (add_le_add (le_refl _) hPcard)
+                exact le_trans hcard_real hsum'
+              have hsieve18_bound : ((A18A.filter (·%100=43)).card : ℝ) ≤
+                  (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
+                have hsubset : A18A.filter (·%100=43) ⊆ (offPrimesUpTo N).biUnion (fun p =>
+                    (Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ a ≡ 3 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)) := by
+                  intro a ha
+                  have haA18 : a ∈ A18A := (Finset.mem_filter.1 ha).1
+                  have ha100 : a % 100 = 43 := (Finset.mem_filter.1 ha).2
+                  have haA : a ∈ A := hA18A_sub_A haA18
+                  have ha_lt : a < N := by simpa [Finset.mem_range] using hAsub haA
+                  have ha25 : a % 25 = 18 := by simpa [A18A] using (Finset.mem_filter.1 haA18).2
+                  have ha4 : a % 4 = 3 := by omega
+                  have hnsq : ¬ Squarefree (b * a + 1) := by
+                    have := hAprop b hbA a haA; simpa [mul_comm] using this
+                  have h4_ndvd : ¬ (4 ∣ b * a + 1) := by
+                    intro hdvd
+                    have hba_mod4 : (b * a) % 4 = 1 := by omega
+                    have h_mod4 : (b * a + 1) % 4 = 2 := by omega
+                    have h0_mod4 : (b * a + 1) % 4 = 0 := Nat.dvd_iff_mod_eq_zero.1 hdvd
+                    omega
+                  obtain ⟨p, hp_prime, hp2_dvd⟩ := prime_square_exists hnsq
+                  have hp_ne2 : p ≠ 2 := by intro hp2; subst hp2; exact h4_ndvd hp2_dvd
+                  have hp_ne5 : p ≠ 5 := by
+                    intro hp5; subst hp5
+                    have h25_dvd : 25 ∣ b * a + 1 := hp2_dvd
+                    have hb25 : b % 25 ≠ 7 ∧ b % 25 ≠ 18 := hb_mod_ne
+                    have : (b * a + 1) % 25 = 0 := Nat.dvd_iff_mod_eq_zero.1 h25_dvd
+                    have : (b * 18 + 1) % 25 = (b * a + 1) % 25 := by omega
+                    have hb18 : (b * 18 + 1) % 25 = 0 := by omega
+                    have hb_mod25 : b % 25 = 18 := by omega
+                    exact hb25.2 hb_mod25
+                  have hp_le : p ≤ N := by
+                    have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2_dvd
+                    have hba_lt : b * a + 1 < N ^ 2 := by
+                      have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
+                      have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
+                      have hba_le : b * a ≤ (N - 1) * (N - 1) := Nat.mul_le_mul hb_le ha_le
+                      have : b * a + 1 ≤ (N - 1) ^ 2 + 1 := by simpa [pow_two] using Nat.add_le_add_right hba_le 1
+                      have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by nlinarith
+                      omega
+                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hba_lt
+                    nlinarith [sq_nonneg p, sq_nonneg N]
+                  have hp_mem : p ∈ offPrimesUpTo N := by
+                    simp only [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range]
+                    exact ⟨⟨Nat.lt_succ_of_le hp_le, hp_prime⟩, hp_ne2, hp_ne5⟩
+                  exact Finset.mem_biUnion.2 ⟨p, hp_mem, by simp [Finset.mem_filter, ha_lt, ha25, ha4, hp2_dvd]⟩
+                have hcard : (A18A.filter (·%100=43)).card ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
+                  calc (A18A.filter (·%100=43)).card
+                      ≤ ((offPrimesUpTo N).biUnion (fun p =>
+                           (Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ a ≡ 3 [MOD 4] ∧ p ^ 2 ∣ b * a + 1))).card :=
+                        Finset.card_le_card hsubset
+                    _ ≤ ∑ p ∈ offPrimesUpTo N,
+                           ((Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ a ≡ 3 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)).card :=
+                        Finset.card_biUnion_le
+                    _ ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
+                        apply Finset.sum_le_sum
+                        intro p hp
+                        have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
+                        have hp_ne2 : p ≠ 2 := (Finset.mem_filter.1 hp).2.1
+                        have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2.2
+                        exact off_count_modEq100_le' N p b 18 3 hp_prime hp_ne2 hp_ne5
+                have hcard_real : ((A18A.filter (·%100=43)).card : ℝ) ≤ ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) := by
+                  exact_mod_cast hcard
+                have hsum := sum_div_add_one_le (P := offPrimesUpTo N) (k := 100)
+                have hPcard : ((offPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
+                  have hsub : offPrimesUpTo N ⊆ primesUpTo N := by intro p hp; exact (Finset.mem_filter.1 hp).1
+                  have := Finset.card_le_card hsub
+                  have := (Nat.cast_le.2 this : ((offPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
+                  simpa [primesUpTo_card] using this
+                have hsum' :
+                    ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) ≤
+                      (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
+                  exact hsum.trans (add_le_add (le_refl _) hPcard)
+                exact le_trans hcard_real hsum'
+              -- Combine for b ≡ 3 case
+              have hA7_split : A7A.card ≤ (A7A.filter (·%100=7)).card + (A7A.filter (·%100=57)).card := by
+                have h_union : A7A = A7A.filter (·%100=7) ∪ A7A.filter (·%100=57) := by
+                  ext a; simp only [Finset.mem_union, Finset.mem_filter]
+                  constructor
+                  · intro ha
+                    have h25 : a % 25 = 7 := by simpa [A7A] using (Finset.mem_filter.1 ha).2
+                    have hodd : a % 2 = 1 := hA7_all_odd a ha
+                    have hmod : a % 100 = 7 ∨ a % 100 = 57 := by omega
+                    rcases hmod with h | h <;> [left; right] <;> exact ⟨ha, h⟩
+                  · intro ha; rcases ha with ⟨h, _⟩ | ⟨h, _⟩ <;> exact h
+                rw [h_union]; exact Finset.card_union_le _ _
+              have hA18_split : A18A.card ≤ (A18A.filter (·%100=43)).card + (A18A.filter (·%100=93)).card := by
+                have h_union : A18A = A18A.filter (·%100=43) ∪ A18A.filter (·%100=93) := by
+                  ext a; simp only [Finset.mem_union, Finset.mem_filter]
+                  constructor
+                  · intro ha
+                    have h25 : a % 25 = 18 := by simpa [A18A] using (Finset.mem_filter.1 ha).2
+                    have hodd : a % 2 = 1 := hA18_all_odd a ha
+                    have hmod : a % 100 = 43 ∨ a % 100 = 93 := by omega
+                    rcases hmod with h | h <;> [left; right] <;> exact ⟨ha, h⟩
+                  · intro ha; rcases ha with ⟨h, _⟩ | ⟨h, _⟩ <;> exact h
+                rw [h_union]; exact Finset.card_union_le _ _
+              have hA7_real : (A7A.card : ℝ) ≤ ((A7A.filter (·%100=7)).card : ℝ) + ((A7A.filter (·%100=57)).card : ℝ) := by
+                exact_mod_cast hA7_split
+              have hA18_real : (A18A.card : ℝ) ≤ ((A18A.filter (·%100=43)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ) := by
+                exact_mod_cast hA18_split
+              calc (A7A.card : ℝ) + (A18A.card : ℝ)
+                  ≤ (((A7A.filter (·%100=7)).card : ℝ) + ((A7A.filter (·%100=57)).card : ℝ)) +
+                    (((A18A.filter (·%100=43)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ)) := by linarith
+                _ = (((A7A.filter (·%100=57)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ)) +
+                    (((A7A.filter (·%100=7)).card : ℝ) + ((A18A.filter (·%100=43)).card : ℝ)) := by ring
+                _ ≤ (N : ℝ) / 50 + (((A7A.filter (·%100=7)).card : ℝ) + ((A18A.filter (·%100=43)).card : ℝ)) := by linarith [hfree_bound]
+                _ ≤ (N : ℝ) / 50 + ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) +
+                    ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by linarith [hsieve7_bound, hsieve18_bound]
+                _ = (N : ℝ) / 50 + 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by ring
+                _ ≤ (N : ℝ) / 50 + (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by
+                    have hsum_nonneg : 0 ≤ (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) := by
+                      apply Finset.sum_nonneg; intro p _; positivity
+                    nlinarith [hNpos, hsum_nonneg]
           -- Final numerical contradiction.
           have hA_le_parts : (A.card : ℝ) ≤ (A7A.card : ℝ) + (A18A.card : ℝ) + (Astar.card : ℝ) := by
             exact_mod_cast hA_card_le_parts_nat
