@@ -3844,7 +3844,10 @@ theorem sawhney_main : SawhneyMain := by
             have h2_small : (2 : ℝ) ≤ 2 * δ * (N : ℝ) := by
               have hN' : (10000000 : ℝ) ≤ (N : ℝ) := by exact_mod_cast hNbig
               nlinarith [hN']
-            nlinarith [hA_le_parts, hAstar_explicit, hA78_explicit, hNpos, h2_small]
+            -- Absorb +2 into δ term
+            have hA78_explicit' : (A7A.card : ℝ) + (A18A.card : ℝ) ≤ (N : ℝ) / 50 + 2 * (N : ℝ) * (163 / 100000) + 4 * δ * (N : ℝ) := by
+              linarith [hA78_explicit, h2_small]
+            nlinarith [hA_le_parts, hAstar_explicit, hA78_explicit', hNpos]
           exact (not_lt_of_ge hdense) hA_lt
 
 -- ============================================================================
