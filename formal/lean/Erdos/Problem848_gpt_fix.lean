@@ -1481,6 +1481,63 @@ lemma diag_count_modEq25_le (N p t : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) 
     le_trans (le_trans hcard hunion) (add_le_add hS₁ hS₂)
   simpa [S, two_mul] using this
 
+lemma diag_count_modEq50_le (N p t : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) (hp2 : p ≠ 2) (hp5 : p ≠ 5) :
+    ((Finset.range N).filter (fun n => n ≡ t [MOD 50] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card ≤
+      2 * (N / (50 * p ^ 2) + 1) := by
+  classical
+  have hcop : Nat.Coprime 50 (p ^ 2) := coprime_50_pow_two_of_prime_ne2_ne5 p hp hp2 hp5
+  obtain ⟨r₁, r₂, hr⟩ :
+      ∃ r₁ r₂ : ZMod (p ^ 2),
+        r₁ ≠ r₂ ∧ r₁ ^ 2 = -1 ∧ r₂ ^ 2 = -1 ∧ ∀ r : ZMod (p ^ 2), r ^ 2 = -1 → r = r₁ ∨ r = r₂ := by
+    simpa using two_roots_mod_p_squared p hp hmod
+  let S : Finset ℕ :=
+    (Finset.range N).filter (fun n => n ≡ t [MOD 50] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)
+  let S₁ : Finset ℕ :=
+    (Finset.range N).filter (fun n => n ≡ t [MOD 50] ∧ n ≡ r₁.val [MOD p ^ 2])
+  let S₂ : Finset ℕ :=
+    (Finset.range N).filter (fun n => n ≡ t [MOD 50] ∧ n ≡ r₂.val [MOD p ^ 2])
+  have hsubset : S ⊆ S₁ ∪ S₂ := by
+    intro n hn
+    simp [S, S₁, S₂, Finset.mem_filter, Finset.mem_range] at hn ⊢
+    have hdiv : (p ^ 2 : ℕ) ∣ n ^ 2 + 1 := hn.2.2
+    have h0 : ((n ^ 2 + 1 : ℕ) : ZMod (p ^ 2)) = 0 :=
+      (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) (p ^ 2)).2 hdiv
+    have hsq : (n : ZMod (p ^ 2)) ^ 2 = (-1 : ZMod (p ^ 2)) := by
+      have : (n : ZMod (p ^ 2)) ^ 2 + 1 = 0 := by
+        simpa [Nat.cast_add, Nat.cast_pow, Nat.cast_one] using h0
+      simpa using (eq_neg_of_add_eq_zero_left this)
+    have hcases : (n : ZMod (p ^ 2)) = r₁ ∨ (n : ZMod (p ^ 2)) = r₂ := hr.2.2.2 _ hsq
+    cases hcases with
+    | inl hn1 =>
+        refine Or.inl ?_
+        refine ⟨hn.1, hn.2.1, ?_⟩
+        haveI : NeZero (p ^ 2) := ⟨pow_ne_zero 2 hp.ne_zero⟩
+        have hcast : (n : ZMod (p ^ 2)) = (r₁.val : ZMod (p ^ 2)) := by
+          calc
+            (n : ZMod (p ^ 2)) = r₁ := hn1
+            _ = (r₁.val : ZMod (p ^ 2)) := by simpa using (ZMod.natCast_zmod_val r₁).symm
+        exact (ZMod.natCast_eq_natCast_iff n r₁.val (p ^ 2)).1 hcast
+    | inr hn2 =>
+        refine Or.inr ?_
+        refine ⟨hn.1, hn.2.1, ?_⟩
+        haveI : NeZero (p ^ 2) := ⟨pow_ne_zero 2 hp.ne_zero⟩
+        have hcast : (n : ZMod (p ^ 2)) = (r₂.val : ZMod (p ^ 2)) := by
+          calc
+            (n : ZMod (p ^ 2)) = r₂ := hn2
+            _ = (r₂.val : ZMod (p ^ 2)) := by simpa using (ZMod.natCast_zmod_val r₂).symm
+        exact (ZMod.natCast_eq_natCast_iff n r₂.val (p ^ 2)).1 hcast
+  have hcard : S.card ≤ (S₁ ∪ S₂).card := Finset.card_le_card hsubset
+  have hunion : (S₁ ∪ S₂).card ≤ S₁.card + S₂.card := Finset.card_union_le _ _
+  have hS₁ : S₁.card ≤ N / (50 * p ^ 2) + 1 := by
+    simpa [S₁, Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm] using
+      (card_filter_modEq_and_modEq_le N 50 (p ^ 2) t r₁.val hcop)
+  have hS₂ : S₂.card ≤ N / (50 * p ^ 2) + 1 := by
+    simpa [S₂, Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm] using
+      (card_filter_modEq_and_modEq_le N 50 (p ^ 2) t r₂.val hcop)
+  have : S.card ≤ (N / (50 * p ^ 2) + 1) + (N / (50 * p ^ 2) + 1) :=
+    le_trans (le_trans hcard hunion) (add_le_add hS₁ hS₂)
+  simpa [S, two_mul] using this
+
 lemma diag_count_mod25_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) (hp5 : p ≠ 5) :
     ((Finset.range N).filter (fun n => n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card ≤
       46 * (N / (25 * p ^ 2) + 1) := by
@@ -1537,6 +1594,74 @@ lemma diag_count_mod25_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 =
       _ = (23 * 2) * (N / (25 * p ^ 2) + 1) := by
         simpa using (mul_assoc 23 2 (N / (25 * p ^ 2) + 1)).symm
       _ = 46 * (N / (25 * p ^ 2) + 1) := by
+        simpa [h46.symm]
+  exact le_trans (le_trans hcard hsum) (le_trans hsum' (le_of_eq hconst))
+
+lemma diag_count_mod50odd_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) (hp2 : p ≠ 2) (hp5 : p ≠ 5) :
+    ((Finset.range N).filter (fun n => n % 2 = 1 ∧ n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card ≤
+      46 * (N / (50 * p ^ 2) + 1) := by
+  classical
+  let S : Finset ℕ :=
+    (Finset.range N).filter (fun n => n % 2 = 1 ∧ n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)
+  have hsubset :
+      S ⊆ residues50odd.biUnion (fun t =>
+        (Finset.range N).filter (fun n => n ≡ t [MOD 50] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)) := by
+    intro n hn
+    simp [S, Finset.mem_filter, Finset.mem_range] at hn
+    set t : ℕ := n % 50
+    have ht : t ∈ residues50odd := by
+      have htlt : t < 50 := Nat.mod_lt n (by decide : 0 < 50)
+      have htodd : t % 2 = 1 := by
+        have : (n % 50) % 2 = n % 2 := by
+          simpa [show 50 = 25 * 2 by native_decide] using Nat.mod_mul_left_mod n 25 2
+        simpa [t, this] using hn.2.1
+      have htne7 : t % 25 ≠ 7 := by
+        have : (n % 50) % 25 = n % 25 := by
+          simpa [show 50 = 25 * 2 by native_decide] using Nat.mod_mul_right_mod n 25 2
+        have hnne7 : n % 25 ≠ 7 := hn.2.2.1
+        simpa [t, this] using hnne7
+      have htne18 : t % 25 ≠ 18 := by
+        have : (n % 50) % 25 = n % 25 := by
+          simpa [show 50 = 25 * 2 by native_decide] using Nat.mod_mul_right_mod n 25 2
+        have hnne18 : n % 25 ≠ 18 := hn.2.2.2.1
+        simpa [t, this] using hnne18
+      simp [residues50odd, Finset.mem_filter, Finset.mem_range, t, htlt, htodd, htne7, htne18]
+    refine (Finset.mem_biUnion).2 ?_
+    refine ⟨t, ht, ?_⟩
+    simp [Finset.mem_filter, Finset.mem_range, hn.1, hn.2.2.2.2]
+    simpa [t] using (Nat.mod_modEq n 50).symm
+  have hcard : S.card ≤ (residues50odd.biUnion fun t =>
+        (Finset.range N).filter (fun n => n ≡ t [MOD 50] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card :=
+    Finset.card_le_card hsubset
+  have hsum :
+      (residues50odd.biUnion fun t =>
+        (Finset.range N).filter (fun n => n ≡ t [MOD 50] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card ≤
+        ∑ t ∈ residues50odd,
+          ((Finset.range N).filter (fun n => n ≡ t [MOD 50] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card :=
+    Finset.card_biUnion_le
+  have hper :
+      ∀ t ∈ residues50odd,
+        ((Finset.range N).filter (fun n => n ≡ t [MOD 50] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card ≤
+          2 * (N / (50 * p ^ 2) + 1) := by
+    intro t ht
+    exact diag_count_modEq50_le N p t hp hmod hp2 hp5
+  have hsum' :
+      (∑ t ∈ residues50odd,
+          ((Finset.range N).filter (fun n => n ≡ t [MOD 50] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card) ≤
+        ∑ _t ∈ residues50odd, 2 * (N / (50 * p ^ 2) + 1) :=
+    Finset.sum_le_sum fun t ht => hper t ht
+  have hconst :
+      (∑ _t ∈ residues50odd, 2 * (N / (50 * p ^ 2) + 1)) = 46 * (N / (50 * p ^ 2) + 1) := by
+    classical
+    have h46 : (46 : ℕ) = 23 * 2 := by native_decide
+    calc
+      (∑ _t ∈ residues50odd, 2 * (N / (50 * p ^ 2) + 1)) = residues50odd.card * (2 * (N / (50 * p ^ 2) + 1)) := by
+        simp
+      _ = 23 * (2 * (N / (50 * p ^ 2) + 1)) := by
+        simp [residues50odd_card]
+      _ = (23 * 2) * (N / (50 * p ^ 2) + 1) := by
+        simpa using (mul_assoc 23 2 (N / (50 * p ^ 2) + 1)).symm
+      _ = 46 * (N / (50 * p ^ 2) + 1) := by
         simpa [h46.symm]
   exact le_trans (le_trans hcard hsum) (le_trans hsum' (le_of_eq hconst))
 
