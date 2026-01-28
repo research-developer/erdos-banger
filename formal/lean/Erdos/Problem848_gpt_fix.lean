@@ -1347,16 +1347,20 @@ lemma diag_count_mod25_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 =
       S ⊆ residues25.biUnion (fun t =>
         (Finset.range N).filter (fun n => n ≡ t [MOD 25] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)) := by
     intro n hn
-    simp [S, residues25, Finset.mem_filter, Finset.mem_range] at hn ⊢
+    simp [S, Finset.mem_filter, Finset.mem_range] at hn
     set t : ℕ := n % 25
     have ht : t ∈ residues25 := by
       have htlt : t < 25 := Nat.mod_lt n (by decide : 0 < 25)
-      have htne : t ≠ 7 ∧ t ≠ 18 := by simpa [t] using hn.2.1
+      have htne : t ≠ 7 ∧ t ≠ 18 := by
+        refine ⟨?_, ?_⟩
+        · simpa [t] using hn.2.1
+        · simpa [t] using hn.2.2.1
       simp [residues25, Finset.mem_filter, Finset.mem_range, t, htlt, htne]
+    refine (Finset.mem_biUnion).2 ?_
     refine ⟨t, ht, ?_⟩
-    refine ⟨hn.1, ?_, hn.2.2⟩
+    simp [Finset.mem_filter, Finset.mem_range, hn.1, hn.2.2.2]
     -- `n ≡ n % 25 [MOD 25]`
-    simpa [t, Nat.ModEq] using (Nat.mod_modEq n 25)
+    simpa [t] using (Nat.mod_modEq n 25).symm
   have hcard : S.card ≤ (residues25.biUnion fun t =>
         (Finset.range N).filter (fun n => n ≡ t [MOD 25] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card :=
     Finset.card_le_card hsubset
@@ -1380,7 +1384,16 @@ lemma diag_count_mod25_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 =
   have hconst :
       (∑ _t ∈ residues25, 2 * (N / (25 * p ^ 2) + 1)) = 46 * (N / (25 * p ^ 2) + 1) := by
     classical
-    simp [residues25_card, Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm]
+    have h46 : (46 : ℕ) = 23 * 2 := by native_decide
+    calc
+      (∑ _t ∈ residues25, 2 * (N / (25 * p ^ 2) + 1)) = residues25.card * (2 * (N / (25 * p ^ 2) + 1)) := by
+        simp
+      _ = 23 * (2 * (N / (25 * p ^ 2) + 1)) := by
+        simp [residues25_card]
+      _ = (23 * 2) * (N / (25 * p ^ 2) + 1) := by
+        simp [Nat.mul_assoc]
+      _ = 46 * (N / (25 * p ^ 2) + 1) := by
+        simpa [h46, Nat.mul_assoc]
   exact le_trans (le_trans hcard hsum) (le_trans hsum' (le_of_eq hconst))
 
 
