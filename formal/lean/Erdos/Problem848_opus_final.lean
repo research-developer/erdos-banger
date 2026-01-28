@@ -2118,8 +2118,19 @@ theorem sawhney_main : SawhneyMain := by
                 simp [Finset.mem_filter, Finset.mem_range, ha_lt, Nat.ModEq, ha_mod18, hp2div]
               exact this
             have hcard : A18A.card ≤ (∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1)) := by
-              have := Finset.card_le_card hsubset
-              exact le_trans this Finset.card_biUnion_le
+              calc A18A.card
+                  ≤ ((no5PrimesUpTo N).biUnion (fun p =>
+                       (Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ p ^ 2 ∣ b7 * a + 1))).card :=
+                    Finset.card_le_card hsubset
+                _ ≤ ∑ p ∈ no5PrimesUpTo N,
+                       ((Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ p ^ 2 ∣ b7 * a + 1)).card :=
+                    Finset.card_biUnion_le
+                _ ≤ ∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) := by
+                    apply Finset.sum_le_sum
+                    intro p hp
+                    have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
+                    have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2
+                    exact off_count_modEq25_le' N p b7 18 hp_prime hp_ne5
             have hcard_real : (A18A.card : ℝ) ≤ ((∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) := by
               exact_mod_cast hcard
             have hsum :=
