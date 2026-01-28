@@ -3846,7 +3846,10 @@ theorem sawhney_main : SawhneyMain := by
               nlinarith [hN']
             -- Absorb +2 into δ term
             have hA78_explicit' : (A7A.card : ℝ) + (A18A.card : ℝ) ≤ (N : ℝ) / 50 + 2 * (N : ℝ) * (163 / 100000) + 4 * δ * (N : ℝ) := by
-              nlinarith [hA78_explicit, h2_small]
+              calc (A7A.card : ℝ) + (A18A.card : ℝ)
+                  ≤ (N : ℝ) / 50 + 2 + 2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := hA78_explicit
+                _ ≤ (N : ℝ) / 50 + (2 * δ * (N : ℝ)) + 2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by linarith
+                _ = (N : ℝ) / 50 + 2 * (N : ℝ) * (163 / 100000) + 4 * δ * (N : ℝ) := by ring
             nlinarith [hA_le_parts, hAstar_explicit, hA78_explicit', hNpos]
           exact (not_lt_of_ge hdense) hA_lt
 
