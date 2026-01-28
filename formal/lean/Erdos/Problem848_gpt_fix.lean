@@ -1095,16 +1095,12 @@ lemma cross_residue_7_18_not_div_25 (a b : ℕ) (ha : a % 25 = 7) (hb : b % 25 =
     have : b % 25 = 18 % 25 := by
       simpa [Nat.mod_eq_of_lt (by decide : 18 < 25)] using hb
     exact (ZMod.natCast_eq_natCast_iff' b 18 25).2 this
-  have : (7 : ZMod 25) * (18 : ZMod 25) + 1 = 0 := by
+  have hab : (7 : ZMod 25) * (18 : ZMod 25) + 1 = 0 := by
     have : (a : ZMod 25) * (b : ZMod 25) + 1 = 0 := by
       simpa [Nat.cast_add, Nat.cast_mul, Nat.cast_one] using h0
     simpa [haZ, hbZ] using this
-  have : (2 : ZMod 25) = 0 := by
-    -- Evaluate 7*18+1 mod 25
-    simpa using this
-  -- contradiction
-  have : (2 : ZMod 25) ≠ 0 := by native_decide
-  exact (this (by simpa using this)).elim
+  have hneq : (7 : ZMod 25) * (18 : ZMod 25) + 1 ≠ 0 := by native_decide
+  exact (hneq hab).elim
 
 lemma cross_residue_18_7_not_div_25 (a b : ℕ) (ha : a % 25 = 18) (hb : b % 25 = 7) :
     ¬ (25 ∣ a * b + 1) := by
@@ -1150,7 +1146,7 @@ lemma off_count_modEq100_le (N p b t25 t4 : ℕ) (hp : Nat.Prime p) (hb : ¬ p �
         (Finset.range N).filter (fun a => a ≡ Nat.chineseRemainder hcop25_4 t25 t4 [MOD 100] ∧ p ^ 2 ∣ b * a + 1) := by
     intro a ha
     simp [Finset.mem_filter, Finset.mem_range] at ha ⊢
-    refine ⟨ha.1, ?_, ha.2.2⟩
+    refine ⟨ha.1, ?_, ha.2.2.2⟩
     exact Nat.chineseRemainder_modEq_unique (co := hcop25_4) ha.2.1 ha.2.2.1
   have hcard :
       ((Finset.range N).filter (fun a => a ≡ t25 [MOD 25] ∧ a ≡ t4 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)).card ≤
