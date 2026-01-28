@@ -1186,6 +1186,204 @@ lemma off_count_modEq100_le (N p b t25 t4 : ℕ) (hp : Nat.Prime p) (hb : ¬ p �
       (card_filter_modEq_and_modEq_le N 100 (p ^ 2) (Nat.chineseRemainder hcop25_4 t25 t4) r hcop)
   exact le_trans (le_trans hcard hcard2) hfinal
 
+-- =========================================================================
+-- SECTION 9.9: SMALL MODULAR FACTS (proved by computation)
+-- =========================================================================
+
+lemma zmod25_sq_eq_neg_one_iff :
+    ∀ x : ZMod 25, x ^ 2 = (-1 : ZMod 25) ↔ x = (7 : ZMod 25) ∨ x = (18 : ZMod 25) := by
+  native_decide
+
+lemma mod25_eq_7_or_18_of_dvd_sq_add_one {n : ℕ} (h : 25 ∣ n ^ 2 + 1) :
+    n % 25 = 7 ∨ n % 25 = 18 := by
+  have h0 : ((n ^ 2 + 1 : ℕ) : ZMod 25) = 0 :=
+    (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) 25).2 h
+  have hsq : (n : ZMod 25) ^ 2 = (-1 : ZMod 25) := by
+    have : (n : ZMod 25) ^ 2 + 1 = 0 := by
+      simpa [Nat.cast_add, Nat.cast_pow, Nat.cast_one] using h0
+    simpa using (eq_neg_of_add_eq_zero_left this)
+  have hx : (n : ZMod 25) = (7 : ZMod 25) ∨ (n : ZMod 25) = (18 : ZMod 25) :=
+    (zmod25_sq_eq_neg_one_iff (n : ZMod 25)).1 hsq
+  cases hx with
+  | inl h7 =>
+      left
+      have hn : n % 25 = 7 % 25 := (ZMod.natCast_eq_natCast_iff' n 7 25).1 h7
+      simpa [Nat.mod_eq_of_lt (by decide : 7 < 25)] using hn
+  | inr h18 =>
+      right
+      have hn : n % 25 = 18 % 25 := (ZMod.natCast_eq_natCast_iff' n 18 25).1 h18
+      simpa [Nat.mod_eq_of_lt (by decide : 18 < 25)] using hn
+
+lemma not_dvd_25_sq_add_one_of_mod_ne (n : ℕ) (h : n % 25 ≠ 7 ∧ n % 25 ≠ 18) :
+    ¬ (25 ∣ n ^ 2 + 1) := by
+  intro h25
+  have := mod25_eq_7_or_18_of_dvd_sq_add_one (n := n) h25
+  cases this with
+  | inl h7 => exact h.1 h7
+  | inr h18 => exact h.2 h18
+
+lemma not_dvd_four_sq_add_one (n : ℕ) : ¬ (4 ∣ n ^ 2 + 1) := by
+  intro h4
+  have hmod : (n ^ 2 + 1) % 4 = 0 := Nat.mod_eq_zero_of_dvd h4
+  have hrewrite : (n ^ 2 + 1) % 4 = ((n % 4) ^ 2 + 1) % 4 := by
+    -- reduce everything to `n % 4`
+    calc
+      (n ^ 2 + 1) % 4 = (n ^ 2 % 4 + 1 % 4) % 4 := by
+        simpa [Nat.add_mod] using (Nat.add_mod (n ^ 2) 1 4).symm
+      _ = (((n % 4) ^ 2 % 4) + 1) % 4 := by
+        simp [Nat.pow_mod]
+      _ = ((n % 4) ^ 2 + 1) % 4 := by
+        simp [Nat.add_mod]
+  have hmod' : ((n % 4) ^ 2 + 1) % 4 = 0 := by simpa [hrewrite] using hmod
+  have hn4 : n % 4 ≤ 3 := by
+    have hn4lt : n % 4 < 4 := Nat.mod_lt n (by decide : 0 < 4)
+    have : n % 4 < 3 + 1 := by simpa using hn4lt
+    exact (Nat.lt_succ_iff).1 this
+  interval_cases hcase : n % 4 <;> simp [hcase] at hmod'
+
+lemma prime_ge_13_of_mod4_one_ne5 (p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) (hp5 : p ≠ 5) :
+    13 ≤ p := by
+  have hp_ge2 : 2 ≤ p := hp.two_le
+  by_contra h
+  have hp_le12 : p ≤ 12 := by
+    have hp_lt13 : p < 13 := lt_of_not_ge h
+    have : p < 12 + 1 := by simpa using hp_lt13
+    exact (Nat.lt_succ_iff).1 this
+  interval_cases p <;> simp_all +decide
+
+lemma prime_not_dvd_left_of_sq_dvd_mul_add_one {p a b : ℕ} (hp : Nat.Prime p) (h : p ^ 2 ∣ a * b + 1) :
+    ¬ p ∣ a := by
+  intro hpa
+  have hp_dvd_ab : p ∣ a * b := dvd_mul_of_dvd_left hpa b
+  have hp_dvd_ab1 : p ∣ a * b + 1 := by
+    have hp_dvd_p2 : p ∣ p ^ 2 := by simp [pow_two]
+    exact Nat.dvd_trans hp_dvd_p2 h
+  have : p ∣ (a * b + 1) - (a * b) := Nat.dvd_sub hp_dvd_ab1 hp_dvd_ab
+  have : p ∣ 1 := by simpa using this
+  exact hp.not_dvd_one this
+
+lemma coprime_50_pow_two_of_prime_ne2_ne5 (p : ℕ) (hp : Nat.Prime p) (hp2 : p ≠ 2) (hp5 : p ≠ 5) :
+    Nat.Coprime 50 (p ^ 2) := by
+  have hnot : ¬ p ∣ 50 := by
+    intro h
+    have hmul : p ∣ 2 * 25 := by
+      have : 2 * 25 = 50 := by native_decide
+      simpa [this] using h
+    have hdiv : p ∣ 2 ∨ p ∣ 25 := hp.dvd_mul.1 hmul
+    cases hdiv with
+    | inl h2 => exact hp2 (prime_eq_of_dvd_2 p hp h2)
+    | inr h25 =>
+        have hpow : p ∣ 5 ^ 2 := by
+          have : (5 ^ 2 : ℕ) = 25 := by native_decide
+          simpa [this] using h25
+        have h5 : p ∣ 5 := hp.dvd_of_dvd_pow hpow
+        exact hp5 (prime_eq_of_dvd_5 p hp h5)
+  simpa [Nat.coprime_comm] using hp.coprime_pow_of_not_dvd (a := 50) (m := 2) hnot
+
+lemma diag_count_modEq25_le (N p t : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) (hp5 : p ≠ 5) :
+    ((Finset.range N).filter (fun n => n ≡ t [MOD 25] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card ≤
+      2 * (N / (25 * p ^ 2) + 1) := by
+  classical
+  have hcop : Nat.Coprime 25 (p ^ 2) := coprime_25_pow_two_of_prime_ne5 p hp hp5
+  obtain ⟨r₁, r₂, hr⟩ :
+      ∃ r₁ r₂ : ZMod (p ^ 2),
+        r₁ ≠ r₂ ∧ r₁ ^ 2 = -1 ∧ r₂ ^ 2 = -1 ∧ ∀ r : ZMod (p ^ 2), r ^ 2 = -1 → r = r₁ ∨ r = r₂ := by
+    simpa using two_roots_mod_p_squared p hp hmod
+  let S : Finset ℕ :=
+    (Finset.range N).filter (fun n => n ≡ t [MOD 25] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)
+  let S₁ : Finset ℕ :=
+    (Finset.range N).filter (fun n => n ≡ t [MOD 25] ∧ n ≡ r₁.val [MOD p ^ 2])
+  let S₂ : Finset ℕ :=
+    (Finset.range N).filter (fun n => n ≡ t [MOD 25] ∧ n ≡ r₂.val [MOD p ^ 2])
+  have hsubset : S ⊆ S₁ ∪ S₂ := by
+    intro n hn
+    simp [S, S₁, S₂, Finset.mem_filter, Finset.mem_range] at hn ⊢
+    have hdiv : (p ^ 2 : ℕ) ∣ n ^ 2 + 1 := hn.2.2
+    have h0 : ((n ^ 2 + 1 : ℕ) : ZMod (p ^ 2)) = 0 :=
+      (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) (p ^ 2)).2 hdiv
+    have hsq : (n : ZMod (p ^ 2)) ^ 2 = (-1 : ZMod (p ^ 2)) := by
+      have : (n : ZMod (p ^ 2)) ^ 2 + 1 = 0 := by
+        simpa [Nat.cast_add, Nat.cast_pow, Nat.cast_one] using h0
+      simpa using (eq_neg_of_add_eq_zero_left this)
+    have hcases : (n : ZMod (p ^ 2)) = r₁ ∨ (n : ZMod (p ^ 2)) = r₂ := hr.2.2.2 _ hsq
+    cases hcases with
+    | inl hn1 =>
+        refine Or.inl ?_
+        refine ⟨hn.1, hn.2.1, ?_⟩
+        haveI : NeZero (p ^ 2) := ⟨pow_ne_zero 2 hp.ne_zero⟩
+        have hcast : (n : ZMod (p ^ 2)) = (r₁.val : ZMod (p ^ 2)) := by
+          calc
+            (n : ZMod (p ^ 2)) = r₁ := hn1
+            _ = (r₁.val : ZMod (p ^ 2)) := by simpa using (ZMod.natCast_zmod_val r₁).symm
+        exact (ZMod.natCast_eq_natCast_iff n r₁.val (p ^ 2)).1 hcast
+    | inr hn2 =>
+        refine Or.inr ?_
+        refine ⟨hn.1, hn.2.1, ?_⟩
+        haveI : NeZero (p ^ 2) := ⟨pow_ne_zero 2 hp.ne_zero⟩
+        have hcast : (n : ZMod (p ^ 2)) = (r₂.val : ZMod (p ^ 2)) := by
+          calc
+            (n : ZMod (p ^ 2)) = r₂ := hn2
+            _ = (r₂.val : ZMod (p ^ 2)) := by simpa using (ZMod.natCast_zmod_val r₂).symm
+        exact (ZMod.natCast_eq_natCast_iff n r₂.val (p ^ 2)).1 hcast
+  have hcard : S.card ≤ (S₁ ∪ S₂).card := Finset.card_le_card hsubset
+  have hunion : (S₁ ∪ S₂).card ≤ S₁.card + S₂.card := Finset.card_union_le _ _
+  have hS₁ : S₁.card ≤ N / (25 * p ^ 2) + 1 := by
+    simpa [S₁, Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm] using
+      (card_filter_modEq_and_modEq_le N 25 (p ^ 2) t r₁.val hcop)
+  have hS₂ : S₂.card ≤ N / (25 * p ^ 2) + 1 := by
+    simpa [S₂, Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm] using
+      (card_filter_modEq_and_modEq_le N 25 (p ^ 2) t r₂.val hcop)
+  have : S.card ≤ (N / (25 * p ^ 2) + 1) + (N / (25 * p ^ 2) + 1) :=
+    le_trans (le_trans hcard hunion) (add_le_add hS₁ hS₂)
+  simpa [S, two_mul] using this
+
+lemma diag_count_mod25_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) (hp5 : p ≠ 5) :
+    ((Finset.range N).filter (fun n => n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card ≤
+      46 * (N / (25 * p ^ 2) + 1) := by
+  classical
+  let S : Finset ℕ :=
+    (Finset.range N).filter (fun n => n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)
+  have hsubset :
+      S ⊆ residues25.biUnion (fun t =>
+        (Finset.range N).filter (fun n => n ≡ t [MOD 25] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)) := by
+    intro n hn
+    simp [S, residues25, Finset.mem_filter, Finset.mem_range] at hn ⊢
+    set t : ℕ := n % 25
+    have ht : t ∈ residues25 := by
+      have htlt : t < 25 := Nat.mod_lt n (by decide : 0 < 25)
+      have htne : t ≠ 7 ∧ t ≠ 18 := by simpa [t] using hn.2.1
+      simp [residues25, Finset.mem_filter, Finset.mem_range, t, htlt, htne]
+    refine ⟨t, ht, ?_⟩
+    refine ⟨hn.1, ?_, hn.2.2⟩
+    -- `n ≡ n % 25 [MOD 25]`
+    simpa [t, Nat.ModEq] using (Nat.mod_modEq n 25)
+  have hcard : S.card ≤ (residues25.biUnion fun t =>
+        (Finset.range N).filter (fun n => n ≡ t [MOD 25] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card :=
+    Finset.card_le_card hsubset
+  have hsum :
+      (residues25.biUnion fun t =>
+        (Finset.range N).filter (fun n => n ≡ t [MOD 25] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card ≤
+        ∑ t ∈ residues25,
+          ((Finset.range N).filter (fun n => n ≡ t [MOD 25] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card :=
+    Finset.card_biUnion_le
+  have hper :
+      ∀ t ∈ residues25,
+        ((Finset.range N).filter (fun n => n ≡ t [MOD 25] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card ≤
+          2 * (N / (25 * p ^ 2) + 1) := by
+    intro t ht
+    exact diag_count_modEq25_le N p t hp hmod hp5
+  have hsum' :
+      (∑ t ∈ residues25,
+          ((Finset.range N).filter (fun n => n ≡ t [MOD 25] ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card) ≤
+        ∑ _t ∈ residues25, 2 * (N / (25 * p ^ 2) + 1) :=
+    Finset.sum_le_sum fun t ht => hper t ht
+  have hconst :
+      (∑ _t ∈ residues25, 2 * (N / (25 * p ^ 2) + 1)) = 46 * (N / (25 * p ^ 2) + 1) := by
+    classical
+    simp [residues25_card, Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm]
+  exact le_trans (le_trans hcard hsum) (le_trans hsum' (le_of_eq hconst))
+
+
 /- Aristotle failed to find a proof. -/
 -- ============================================================================
 -- SECTION 10: THE BLOCKING THEOREM (TO BE PROVED)
