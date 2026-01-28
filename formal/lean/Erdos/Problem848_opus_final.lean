@@ -3276,6 +3276,7 @@ theorem sawhney_main : SawhneyMain := by
           -- The key insight from the paper is that for each pair (b, a) with b odd from A*,
           -- whether 4 | b*a+1 depends on the mod 4 residues. Half the residue classes have 4 | b*a+1,
           -- which forces the existence of a prime square divisor from offPrimesUpTo.
+          set_option maxHeartbeats 1600000 in
           have hA78_bound : (A7A.card : ℝ) + (A18A.card : ℝ) ≤ (N : ℝ) / 50 +
               2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by
             -- Since ¬hEven78, all elements of A7A and A18A are odd.
@@ -3370,7 +3371,7 @@ theorem sawhney_main : SawhneyMain := by
                   -- 4 ∤ ba+1 since b ≡ 1 mod 4 and a ≡ 1 mod 4
                   have h4_ndvd : ¬ (4 ∣ b * a + 1) := by
                     intro hdvd
-                    have hba_mod4 : (b * a) % 4 = 1 := by rw [Nat.mul_mod]; omega
+                    have hba_mod4 : (b * a) % 4 = 1 := by simp only [Nat.mul_mod, *]
                     have h1_mod4 : (b * a + 1) % 4 = 2 := by omega
                     have h0_mod4 : (b * a + 1) % 4 = 0 := Nat.dvd_iff_mod_eq_zero.1 hdvd
                     omega
@@ -3387,9 +3388,10 @@ theorem sawhney_main : SawhneyMain := by
                     -- 7⁻¹ mod 25 = 18 (since 7*18 = 126 = 5*25+1), so b ≡ -18 ≡ 7 mod 25
                     have h0 : (b * a + 1) % 25 = 0 := Nat.dvd_iff_mod_eq_zero.1 h25_dvd
                     have ha25' : a % 25 = 7 := ha25
-                    have heq : (b * 7 + 1) % 25 = (b * a + 1) % 25 := by
-                      simp only [Nat.add_mod, Nat.mul_mod, ha25']
-                    have hb7 : (b * 7 + 1) % 25 = 0 := heq.trans h0
+                    have heq : (b * a) % 25 = (b * 7) % 25 := by
+                      conv_lhs => rw [Nat.mul_mod, ha25', ← Nat.mul_mod]
+                    have hb7 : (b * 7 + 1) % 25 = 0 := by
+                      rw [Nat.add_mod, ← heq, ← Nat.add_mod]; exact h0
                     have hb_mod25 : b % 25 = 7 := by omega
                     exact hb25.1 hb_mod25
                   have hp_gt2 : p > 2 := lt_of_le_of_ne hp_prime.two_le (Ne.symm hp_ne2)
@@ -3453,7 +3455,7 @@ theorem sawhney_main : SawhneyMain := by
                     simpa [mul_comm] using this
                   have h4_ndvd : ¬ (4 ∣ b * a + 1) := by
                     intro hdvd
-                    have hba_mod4 : (b * a) % 4 = 1 := by rw [Nat.mul_mod]; omega
+                    have hba_mod4 : (b * a) % 4 = 1 := by simp only [Nat.mul_mod, *]
                     have h1_mod4 : (b * a + 1) % 4 = 2 := by omega
                     have h0_mod4 : (b * a + 1) % 4 = 0 := Nat.dvd_iff_mod_eq_zero.1 hdvd
                     omega
@@ -3465,9 +3467,10 @@ theorem sawhney_main : SawhneyMain := by
                     have hb25 : b % 25 ≠ 7 ∧ b % 25 ≠ 18 := hb_mod_ne
                     have h0 : (b * a + 1) % 25 = 0 := Nat.dvd_iff_mod_eq_zero.1 h25_dvd
                     have ha25' : a % 25 = 18 := ha25
-                    have heq : (b * 18 + 1) % 25 = (b * a + 1) % 25 := by
-                      simp only [Nat.add_mod, Nat.mul_mod, ha25']
-                    have hb18 : (b * 18 + 1) % 25 = 0 := heq.trans h0
+                    have heq : (b * a) % 25 = (b * 18) % 25 := by
+                      conv_lhs => rw [Nat.mul_mod, ha25', ← Nat.mul_mod]
+                    have hb18 : (b * 18 + 1) % 25 = 0 := by
+                      rw [Nat.add_mod, ← heq, ← Nat.add_mod]; exact h0
                     -- 18⁻¹ mod 25 = 7 (since 18*7 = 126 = 5*25+1), so b ≡ -7 ≡ 18 mod 25
                     have hb_mod25 : b % 25 = 18 := by omega
                     exact hb25.2 hb_mod25
@@ -3599,7 +3602,7 @@ theorem sawhney_main : SawhneyMain := by
                   -- b ≡ 3 mod 4 and a ≡ 3 mod 4, so ba ≡ 1 mod 4, ba+1 ≡ 2 mod 4
                   have h4_ndvd : ¬ (4 ∣ b * a + 1) := by
                     intro hdvd
-                    have hba_mod4 : (b * a) % 4 = 1 := by rw [Nat.mul_mod]; omega
+                    have hba_mod4 : (b * a) % 4 = 1 := by simp only [Nat.mul_mod, *]
                     have h_mod4 : (b * a + 1) % 4 = 2 := by omega
                     have h0_mod4 : (b * a + 1) % 4 = 0 := Nat.dvd_iff_mod_eq_zero.1 hdvd
                     omega
@@ -3610,9 +3613,10 @@ theorem sawhney_main : SawhneyMain := by
                     have h25_dvd : 25 ∣ b * a + 1 := hp2_dvd
                     have hb25 : b % 25 ≠ 7 ∧ b % 25 ≠ 18 := hb_mod_ne
                     have h0 : (b * a + 1) % 25 = 0 := Nat.dvd_iff_mod_eq_zero.1 h25_dvd
-                    have heq : (b * 7 + 1) % 25 = (b * a + 1) % 25 := by
-                      simp only [Nat.add_mod, Nat.mul_mod, ha25]
-                    have hb7 : (b * 7 + 1) % 25 = 0 := heq.trans h0
+                    have heq : (b * a) % 25 = (b * 7) % 25 := by
+                      conv_lhs => rw [Nat.mul_mod, ha25, ← Nat.mul_mod]
+                    have hb7 : (b * 7 + 1) % 25 = 0 := by
+                      rw [Nat.add_mod, ← heq, ← Nat.add_mod]; exact h0
                     have hb_mod25 : b % 25 = 7 := by omega
                     exact hb25.1 hb_mod25
                   have hp_le : p ≤ N := by
@@ -3673,7 +3677,7 @@ theorem sawhney_main : SawhneyMain := by
                     have := hAprop b hbA a haA; simpa [mul_comm] using this
                   have h4_ndvd : ¬ (4 ∣ b * a + 1) := by
                     intro hdvd
-                    have hba_mod4 : (b * a) % 4 = 1 := by rw [Nat.mul_mod]; omega
+                    have hba_mod4 : (b * a) % 4 = 1 := by simp only [Nat.mul_mod, *]
                     have h_mod4 : (b * a + 1) % 4 = 2 := by omega
                     have h0_mod4 : (b * a + 1) % 4 = 0 := Nat.dvd_iff_mod_eq_zero.1 hdvd
                     omega
