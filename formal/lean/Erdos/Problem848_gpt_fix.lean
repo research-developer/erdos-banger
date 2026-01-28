@@ -910,6 +910,38 @@ def diagPrimeNum : ℕ :=
 def diagPrimeSumCoarse_fast : ℚ :=
   (diagPrimeNum : ℚ) / (diagPrimeDen : ℚ)
 
+lemma diagPrimeSumCoarse_eq_fast : diagPrimeSumCoarse = diagPrimeSumCoarse_fast := by
+  have hden_ne : (diagPrimeDen : ℚ) ≠ 0 := (ne_of_gt diagPrimeDen_pos : _)
+  have hterm :
+      ∀ p ∈ diagPrimesCoarse,
+        (1 : ℚ) / (p ^ 2 : ℚ) = ((diagPrimeDen / p ^ 2 : ℕ) : ℚ) / (diagPrimeDen : ℚ) := by
+    intro p hp
+    have hdiv : (p ^ 2 : ℕ) ∣ diagPrimeDen := Finset.dvd_prod (fun q => q ^ 2) hp
+    have hcast : ((diagPrimeDen / p ^ 2 : ℕ) : ℚ) = (diagPrimeDen : ℚ) / (p ^ 2 : ℚ) := by
+      exact_mod_cast (Nat.cast_div (dvd := hdiv))
+    have hcancel :
+        ((diagPrimeDen : ℚ) / (p ^ 2 : ℚ)) / (diagPrimeDen : ℚ) = (1 : ℚ) / (p ^ 2 : ℚ) := by
+      field_simp [hden_ne]
+    simpa [hcast] using hcancel
+  have hsum :
+      diagPrimeSumCoarse =
+        ∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ) / (diagPrimeDen : ℚ) := by
+    simp [diagPrimeSumCoarse]
+    apply Finset.sum_congr rfl
+    intro p hp
+    exact (hterm p hp).symm
+  have hsum' :
+      ∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ) / (diagPrimeDen : ℚ) =
+        ((∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) / (diagPrimeDen : ℚ) := by
+    have hden' : (diagPrimeDen : ℚ) ≠ 0 := hden_ne
+    simp [div_eq_mul_inv, Finset.sum_mul, mul_comm, mul_left_comm, mul_comm]
+    simpa using (Finset.sum_mul (diagPrimesCoarse) fun p => ((diagPrimeDen / p ^ 2 : ℕ) : ℚ))
+  calc
+    diagPrimeSumCoarse = _ := hsum
+    _ = ((∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) / (diagPrimeDen : ℚ) := hsum'.trans
+      (Eq.refl _)
+    _ = diagPrimeSumCoarse_fast := by simp [diagPrimeSumCoarse_fast, diagPrimeNum]
+
 def offPrimeDen : ℕ :=
   ∏ p ∈ offPrimesCoarse, p ^ 2
 
