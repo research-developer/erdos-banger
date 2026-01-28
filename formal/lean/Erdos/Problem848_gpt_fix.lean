@@ -910,64 +910,11 @@ def diagPrimeNum : ℕ :=
 def diagPrimeSumCoarse_fast : ℚ :=
   (diagPrimeNum : ℚ) / (diagPrimeDen : ℚ)
 
-lemma diagPrimesCoarse_nonempty : diagPrimesCoarse.Nonempty := by
-  have hprime : Nat.Prime 13 := by decide
-  have hlt : 13 < primeCutoff + 1 := by norm_num [primeCutoff]
-  have hmem : 13 ∈ primesUpTo primeCutoff := by
-    simp [primesUpTo, hlt, hprime]
-  have hmod : 13 % 4 = 1 := by norm_num
-  have hge : 13 ≥ 13 := by norm_num
-  have hdiag_sel : 13 ∈ diagPrimesCoarse := by
-    simp [diagPrimesCoarse, hmem, hmod, hge]
-  exact ⟨13, hdiag_sel⟩
-
-lemma offPrimesCoarse_nonempty : offPrimesCoarse.Nonempty := by
-  have hprime : Nat.Prime 3 := by decide
-  have hlt : 3 < primeCutoff + 1 := by norm_num [primeCutoff]
-  have hmem : 3 ∈ primesUpTo primeCutoff := by
-    simp [primesUpTo, hlt, hprime]
-  have hne2 : 3 ≠ 2 := by norm_num
-  have hne5 : 3 ≠ 5 := by norm_num
-  have hoff_sel : 3 ∈ offPrimesCoarse := by
-    simp [offPrimesCoarse, hmem, hne2, hne5]
-  exact ⟨3, hoff_sel⟩
-
-lemma no5PrimesCoarse_nonempty : no5PrimesCoarse.Nonempty := by
-  have hprime : Nat.Prime 2 := by decide
-  have hlt : 2 < primeCutoff + 1 := by norm_num [primeCutoff]
-  have hmem : 2 ∈ primesUpTo primeCutoff := by
-    simp [primesUpTo, hlt, hprime]
-  have hne5 : 2 ≠ 5 := by norm_num
-  have hno5_sel : 2 ∈ no5PrimesCoarse := by
-    simp [no5PrimesCoarse, hmem, hne5]
-  exact ⟨2, hno5_sel⟩
-
-lemma diagPrimeDen_pos : 0 < diagPrimeDen := by
-  have hnonempty := diagPrimesCoarse_nonempty
-  have hf : ∀ p ∈ diagPrimesCoarse, 0 < p ^ 2 := by
-    intro p hp
-    have hmem := (Finset.mem_filter.1 hp).1
-    have hprime := (Finset.mem_filter.1 hmem).2
-    exact @Nat.pow_pos p 2 (Nat.Prime.pos hprime)
-  exact Finset.prod_pos hnonempty hf
-
-lemma offPrimeDen_pos : 0 < offPrimeDen := by
-  have hnonempty := offPrimesCoarse_nonempty
-  have hf : ∀ p ∈ offPrimesCoarse, 0 < p ^ 2 := by
-    intro p hp
-    have hmem := (Finset.mem_filter.1 hp).1
-    have hprime := (Finset.mem_filter.1 hmem).2
-    exact @Nat.pow_pos p 2 (Nat.Prime.pos hprime)
-  exact Finset.prod_pos hnonempty hf
-
-lemma no5PrimeDen_pos : 0 < no5PrimeDen := by
-  have hnonempty := no5PrimesCoarse_nonempty
-  have hf : ∀ p ∈ no5PrimesCoarse, 0 < p ^ 2 := by
-    intro p hp
-    have hmem := (Finset.mem_filter.1 hp).1
-    have hprime := (Finset.mem_filter.1 hmem).2
-    exact @Nat.pow_pos p 2 (Nat.Prime.pos hprime)
-  exact Finset.prod_pos hnonempty hf
+lemma diagPrimeDen_pos : 0 < diagPrimeDen :=
+  Finset.prod_pos fun p hp =>
+    let hmem := (Finset.mem_filter.1 hp).1
+    let hprime := (Finset.mem_filter.1 hmem).2
+    @Nat.pow_pos p 2 (Nat.Prime.pos hprime)
 
 lemma diagPrimeSumCoarse_eq_fast : diagPrimeSumCoarse = diagPrimeSumCoarse_fast := by
   have hden_ne : (diagPrimeDen : ℚ) ≠ 0 := (ne_of_gt diagPrimeDen_pos : _)
@@ -1012,6 +959,11 @@ def offPrimeNum : ℕ :=
 
 def offPrimeSumCoarse_fast : ℚ :=
   (offPrimeNum : ℚ) / (offPrimeDen : ℚ)
+lemma offPrimeDen_pos : 0 < offPrimeDen :=
+  Finset.prod_pos fun p hp =>
+    let hmem := (Finset.mem_filter.1 hp).1
+    let hprime := (Finset.mem_filter.1 hmem).2
+    @Nat.pow_pos p 2 (Nat.Prime.pos hprime)
 
 lemma offPrimeSumCoarse_eq_fast : offPrimeSumCoarse = offPrimeSumCoarse_fast := by
   have hden_ne : (offPrimeDen : ℚ) ≠ 0 := (ne_of_gt offPrimeDen_pos : _)
@@ -1053,6 +1005,25 @@ def no5PrimeNum : ℕ :=
 
 def no5PrimeSumCoarse_fast : ℚ :=
   (no5PrimeNum : ℚ) / (no5PrimeDen : ℚ)
+
+lemma no5PrimesCoarse_nonempty : no5PrimesCoarse.Nonempty := by
+  have hprime : Nat.Prime 2 := by decide
+  have hlt : 2 < primeCutoff + 1 := by norm_num [primeCutoff]
+  have hmem : 2 ∈ primesUpTo primeCutoff := by
+    simp [primesUpTo, hlt, hprime]
+  have hne5 : 2 ≠ 5 := by norm_num
+  have hno5_sel : 2 ∈ no5PrimesCoarse := by
+    simp [no5PrimesCoarse, hmem, hne5]
+  exact ⟨2, hno5_sel⟩
+
+lemma no5PrimeDen_pos : 0 < no5PrimeDen := by
+  have hnonempty := no5PrimesCoarse_nonempty
+  have hf : ∀ p ∈ no5PrimesCoarse, 0 < p ^ 2 := by
+    intro p hp
+    have hmem := (Finset.mem_filter.1 hp).1
+    have hprime := (Finset.mem_filter.1 hmem).2
+    exact @Nat.pow_pos p 2 (Nat.Prime.pos hprime)
+  exact Finset.prod_pos hnonempty hf
 
 lemma no5PrimeSumCoarse_eq_fast : no5PrimeSumCoarse = no5PrimeSumCoarse_fast := by
   have hden_ne : (no5PrimeDen : ℚ) ≠ 0 := (ne_of_gt no5PrimeDen_pos : _)
