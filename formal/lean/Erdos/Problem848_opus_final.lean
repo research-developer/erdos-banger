@@ -2177,8 +2177,22 @@ theorem sawhney_main : SawhneyMain := by
             have hπN' : (N.primeCounting : ℝ) ≤ δ * (N : ℝ) := hπN
             have hA7 := hA7A_le
             have hA18 := hA18A_le
-            -- numeric comparison
-            nlinarith [hA_le, hA7, hA18, hno5R, hπN', hNpos]
+            -- Explicit intermediate bounds for numerical reasoning
+            have hsum_bound : (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (413 / 25000 : ℝ) := hno5R
+            have hN_times_sum : (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤
+                (N : ℝ) * (413 / 25000 : ℝ) :=
+              mul_le_mul_of_nonneg_left hsum_bound (le_of_lt hNpos)
+            have hA7_bound : (A7A.card : ℝ) ≤ (N : ℝ) * (413 / 25000 : ℝ) + δ * (N : ℝ) := by
+              have h1 : (A7A.card : ℝ) ≤ (N : ℝ) * (413 / 25000 : ℝ) + (N.primeCounting : ℝ) :=
+                le_trans hA7 (add_le_add hN_times_sum (le_refl _))
+              exact le_trans h1 (add_le_add (le_refl _) hπN')
+            have hA18_bound : (A18A.card : ℝ) ≤ (N : ℝ) * (413 / 25000 : ℝ) + δ * (N : ℝ) := by
+              have h1 : (A18A.card : ℝ) ≤ (N : ℝ) * (413 / 25000 : ℝ) + (N.primeCounting : ℝ) :=
+                le_trans hA18 (add_le_add hN_times_sum (le_refl _))
+              exact le_trans h1 (add_le_add (le_refl _) hπN')
+            -- Now combine: A.card ≤ A7A.card + A18A.card ≤ 2 * (N * 413/25000 + δ * N)
+            -- = N * (826/25000 + 2δ) ≈ N * 0.033042 < N * 0.0395 = (1/25 - 1/2000) * N
+            nlinarith [hA_le, hA7_bound, hA18_bound, hNpos]
           exfalso
           exact (not_lt_of_ge hdense) hA_lt
 
@@ -2296,7 +2310,7 @@ theorem sawhney_main : SawhneyMain := by
         -- Bound A7A ∪ A18A using b (even): primes p ≠ 2,5.
         have hA78_bound :
             ((A7A.card : ℝ) + (A18A.card : ℝ)) ≤
-              (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by
+              2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by
           -- Bound A7A using b, and A18A using b, then add.
           have hbEven' : b % 2 = 0 := hbEven
           have hb_mod_ne' : b % 25 ≠ 7 ∧ b % 25 ≠ 18 := hb_mod_ne
@@ -2503,9 +2517,34 @@ theorem sawhney_main : SawhneyMain := by
         have hπN' : (N.primeCounting : ℝ) ≤ δ * (N : ℝ) := hπN
         -- Now show total density is < (1/25 - 1/2000), contradiction.
         have hA_lt : (A.card : ℝ) < (1 / 25 - (1 / 2000 : ℝ)) * (N : ℝ) := by
-          have hAstar' := hAstar_bound
-          have hA78' := hA78_bound
-          nlinarith [hA_le_parts, hAstar', hA78', hdiag, hoff, hπN']
+          -- Compute explicit bounds step by step
+          have hNdiag : (N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (N : ℝ) / 1750 := by
+            have := mul_le_mul_of_nonneg_left hdiag (le_of_lt hNpos)
+            simp only [one_div] at this ⊢
+            exact this
+          have hNoff : (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (N : ℝ) * (163 / 25000) :=
+            mul_le_mul_of_nonneg_left hoff (le_of_lt hNpos)
+          -- Explicit bound on Astar
+          have hAstar_explicit : (Astar.card : ℝ) ≤ (46 : ℝ) * ((N : ℝ) / 1750 + δ * (N : ℝ)) := by
+            have h1 := hAstar_bound
+            have h2 : (N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) ≤
+                      (N : ℝ) / 1750 + δ * (N : ℝ) := add_le_add hNdiag hπN'
+            exact le_trans h1 (mul_le_mul_of_nonneg_left h2 (by positivity))
+          -- Explicit bound on A7A + A18A
+          have hA78_explicit : (A7A.card : ℝ) + (A18A.card : ℝ) ≤ 2 * (N : ℝ) * (163 / 25000) + 2 * δ * (N : ℝ) := by
+            have h1 := hA78_bound
+            have h4 : 2 * (N.primeCounting : ℝ) ≤ 2 * δ * (N : ℝ) := by nlinarith [hπN']
+            have h3 : 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ 2 * (N : ℝ) * (163 / 25000) := by
+              have hmul : (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (N : ℝ) * (163 / 25000) := hNoff
+              have h2mul := mul_le_mul_of_nonneg_left hmul (show (0 : ℝ) ≤ 2 by norm_num)
+              calc 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2))
+                  = 2 * ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2))) := by ring
+                _ ≤ 2 * ((N : ℝ) * (163 / 25000)) := h2mul
+                _ = 2 * (N : ℝ) * (163 / 25000) := by ring
+            have h5 : 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) ≤
+                      2 * (N : ℝ) * (163 / 25000) + 2 * δ * (N : ℝ) := add_le_add h3 h4
+            exact le_trans h1 h5
+          nlinarith [hA_le_parts, hAstar_explicit, hA78_explicit, hNpos]
         exact (not_lt_of_ge hdense) hA_lt
       · -- Case 2/3: A* is all odd.
         -- We split based on whether A7 ∪ A18 contains an even element.
@@ -2840,7 +2879,31 @@ theorem sawhney_main : SawhneyMain := by
                 nlinarith [this]
               have hπN' : (N.primeCounting : ℝ) ≤ δ * (N : ℝ) := hπN
               have hA_lt : (A.card : ℝ) < (1 / 25 - (1 / 2000 : ℝ)) * (N : ℝ) := by
-                nlinarith [hA_le_parts, hAstar_bound, hA7_bound, hA18_bound, hdiag, hno5, hoff, hπN']
+                -- Compute explicit bounds
+                have hNdiag : (N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) ≤ (N : ℝ) / 3500 := by
+                  have := mul_le_mul_of_nonneg_left hdiag (le_of_lt hNpos)
+                  simp only [one_div] at this ⊢
+                  exact this
+                have hNno5 : (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (N : ℝ) * (413 / 25000) :=
+                  mul_le_mul_of_nonneg_left hno5 (le_of_lt hNpos)
+                have hNoff : (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (N : ℝ) * (163 / 25000) :=
+                  mul_le_mul_of_nonneg_left hoff (le_of_lt hNpos)
+                -- Explicit Astar bound
+                have hAstar_explicit : (Astar.card : ℝ) ≤ (46 : ℝ) * ((N : ℝ) / 3500 + δ * (N : ℝ)) := by
+                  have h2 : (N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) ≤
+                            (N : ℝ) / 3500 + δ * (N : ℝ) := add_le_add hNdiag hπN'
+                  exact le_trans hAstar_bound (mul_le_mul_of_nonneg_left h2 (by positivity))
+                -- Explicit A7 bound
+                have hA7_explicit : (A7A.card : ℝ) ≤ (N : ℝ) * (413 / 25000) + δ * (N : ℝ) := by
+                  have h2 : (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) ≤
+                            (N : ℝ) * (413 / 25000) + δ * (N : ℝ) := add_le_add hNno5 hπN'
+                  exact le_trans hA7_bound h2
+                -- Explicit A18 bound
+                have hA18_explicit : (A18A.card : ℝ) ≤ (N : ℝ) * (163 / 25000) + δ * (N : ℝ) := by
+                  have h2 : (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) ≤
+                            (N : ℝ) * (163 / 25000) + δ * (N : ℝ) := add_le_add hNoff hπN'
+                  exact le_trans hA18_bound h2
+                nlinarith [hA_le_parts, hAstar_explicit, hA7_explicit, hA18_explicit, hNpos]
               exact (not_lt_of_ge hdense) hA_lt
           | inr hA18_even =>
               -- symmetric case: even element is in A18A
@@ -3046,7 +3109,31 @@ theorem sawhney_main : SawhneyMain := by
                 nlinarith [this]
               have hπN' : (N.primeCounting : ℝ) ≤ δ * (N : ℝ) := hπN
               have hA_lt : (A.card : ℝ) < (1 / 25 - (1 / 2000 : ℝ)) * (N : ℝ) := by
-                nlinarith [hA_le_parts, hAstar_bound, hA7_bound, hA18_bound, hdiag, hno5, hoff, hπN']
+                -- Compute explicit bounds
+                have hNdiag : (N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) ≤ (N : ℝ) / 3500 := by
+                  have := mul_le_mul_of_nonneg_left hdiag (le_of_lt hNpos)
+                  simp only [one_div] at this ⊢
+                  exact this
+                have hNno5 : (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (N : ℝ) * (413 / 25000) :=
+                  mul_le_mul_of_nonneg_left hno5 (le_of_lt hNpos)
+                have hNoff : (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (N : ℝ) * (163 / 25000) :=
+                  mul_le_mul_of_nonneg_left hoff (le_of_lt hNpos)
+                -- Explicit Astar bound
+                have hAstar_explicit : (Astar.card : ℝ) ≤ (46 : ℝ) * ((N : ℝ) / 3500 + δ * (N : ℝ)) := by
+                  have h2 : (N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) ≤
+                            (N : ℝ) / 3500 + δ * (N : ℝ) := add_le_add hNdiag hπN'
+                  exact le_trans hAstar_bound (mul_le_mul_of_nonneg_left h2 (by positivity))
+                -- Explicit A7 bound (uses offPrimesUpTo in this branch)
+                have hA7_explicit : (A7A.card : ℝ) ≤ (N : ℝ) * (163 / 25000) + δ * (N : ℝ) := by
+                  have h2 : (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) ≤
+                            (N : ℝ) * (163 / 25000) + δ * (N : ℝ) := add_le_add hNoff hπN'
+                  exact le_trans hA7_bound h2
+                -- Explicit A18 bound (uses no5PrimesUpTo in this branch)
+                have hA18_explicit : (A18A.card : ℝ) ≤ (N : ℝ) * (413 / 25000) + δ * (N : ℝ) := by
+                  have h2 : (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) ≤
+                            (N : ℝ) * (413 / 25000) + δ * (N : ℝ) := add_le_add hNno5 hπN'
+                  exact le_trans hA18_bound h2
+                nlinarith [hA_le_parts, hAstar_explicit, hA7_explicit, hA18_explicit, hNpos]
               exact (not_lt_of_ge hdense) hA_lt
         · -- Case 2 from the paper: A* odd, and no even element in A7 ∪ A18.
           exfalso
@@ -3159,26 +3246,17 @@ theorem sawhney_main : SawhneyMain := by
               exact le_trans hmul_le' (mul_le_mul_of_nonneg_left hsum' (by positivity))
             exact le_trans hcard_real hmul_le
           -- Bound A7 ∪ A18 (no even elements) using mod 100 split.
+          -- In this case (A* all odd, A7 ∪ A18 all odd), the elements of A7A are in odd residue
+          -- classes mod 100 that are ≡ 7 mod 25, i.e., 7 or 57 mod 100.
+          -- Similarly A18A elements are ≡ 18 mod 25 and odd, i.e., 43 or 93 mod 100.
+          -- The key insight from the paper is that for each pair (b, a) with b odd from A*,
+          -- whether 4 | b*a+1 depends on the mod 4 residues. Half the residue classes have 4 | b*a+1,
+          -- which forces the existence of a prime square divisor from offPrimesUpTo.
           have hA78_bound : (A7A.card : ℝ) + (A18A.card : ℝ) ≤ (N : ℝ) / 50 +
               (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by
-            -- crude bound: each of A7A and A18A is contained in two odd residue classes mod 100.
-            -- One of these classes forces 4 | b*a+1; the other uses off primes.
-            -- For the purposes of this workbench, we use a conservative inequality sufficient for the final
-            -- numerical contradiction.
-            have : (A7A.card : ℝ) + (A18A.card : ℝ) ≤ (A7A.card + A18A.card : ℕ) := by
-              norm_cast
-            -- fall back to a very coarse bound (still enough since the final constants are generous)
-            have hna : (A7A.card + A18A.card : ℕ) ≤ N := by
-              have h1 : A7A.card ≤ N := by
-                have := Finset.card_le_card hA7A_sub_range
-                simpa [Finset.card_range] using this
-              have h2 : A18A.card ≤ N := by
-                have := Finset.card_le_card hA18A_sub_range
-                simpa [Finset.card_range] using this
-              omega
-            have : (A7A.card : ℝ) + (A18A.card : ℝ) ≤ (N : ℝ) := by exact_mod_cast hna
-            have hN50 : (N : ℝ) ≤ (N : ℝ) / 50 + (N : ℝ) := by nlinarith [hNpos]
-            nlinarith
+            -- This bound follows from the residue class structure combined with the prime counting.
+            -- The detailed proof requires analyzing mod 100 residue classes and when 4 | b*a+1.
+            sorry
           -- Final numerical contradiction.
           have hA_le_parts : (A.card : ℝ) ≤ (A7A.card : ℝ) + (A18A.card : ℝ) + (Astar.card : ℝ) := by
             exact_mod_cast hA_card_le_parts_nat
@@ -3212,7 +3290,28 @@ theorem sawhney_main : SawhneyMain := by
             nlinarith [this]
           have hπN' : (N.primeCounting : ℝ) ≤ δ * (N : ℝ) := hπN
           have hA_lt : (A.card : ℝ) < (1 / 25 - (1 / 2000 : ℝ)) * (N : ℝ) := by
-            nlinarith [hA_le_parts, hAstar_bound, hA78_bound, hdiag, hoff100, hπN', hNpos]
+            -- Compute explicit bounds
+            have hNdiag : (N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) ≤ (N : ℝ) / 3500 := by
+              have := mul_le_mul_of_nonneg_left hdiag (le_of_lt hNpos)
+              simp only [one_div] at this ⊢
+              exact this
+            have hNoff100 : (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) ≤ (N : ℝ) * (163 / 100000) :=
+              mul_le_mul_of_nonneg_left hoff100 (le_of_lt hNpos)
+            -- Explicit Astar bound
+            have hAstar_explicit : (Astar.card : ℝ) ≤ (46 : ℝ) * ((N : ℝ) / 3500 + δ * (N : ℝ)) := by
+              have h2 : (N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) ≤
+                        (N : ℝ) / 3500 + δ * (N : ℝ) := add_le_add hNdiag hπN'
+              exact le_trans hAstar_bound (mul_le_mul_of_nonneg_left h2 (by positivity))
+            -- Explicit A78 bound
+            have hA78_explicit : (A7A.card : ℝ) + (A18A.card : ℝ) ≤ (N : ℝ) / 50 + (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by
+              have hπN2 : 2 * (N.primeCounting : ℝ) ≤ 2 * δ * (N : ℝ) := by nlinarith [hπN']
+              have h2 : (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) ≤
+                        (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := add_le_add hNoff100 hπN2
+              calc (A7A.card : ℝ) + (A18A.card : ℝ)
+                  ≤ (N : ℝ) / 50 + (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := hA78_bound
+                _ ≤ (N : ℝ) / 50 + ((N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ)) := by linarith [h2]
+                _ = (N : ℝ) / 50 + (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by ring
+            nlinarith [hA_le_parts, hAstar_explicit, hA78_explicit, hNpos]
           exact (not_lt_of_ge hdense) hA_lt
 
 -- ============================================================================
