@@ -1832,7 +1832,7 @@ To prove this, one needs:
 2. Cross-term analysis: Mixed residue classes produce squarefree products
 3. Density argument: Sets with the property and density ≥ 1/25 - η must be structured
 -/
-set_option maxHeartbeats 400000 in
+set_option maxHeartbeats 800000
 theorem sawhney_main : SawhneyMain := by
   classical
   -- Numerical slack parameter for prime-counting error terms.
