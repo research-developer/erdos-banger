@@ -996,7 +996,7 @@ lemma sum_diagPrimesUpTo_le (N : ℕ) :
     simpa [f] using sum_Ioc_inv_sq_le_inv primeCutoff N (by simp [primeCutoff])
   have hsum_le' :
       (∑ p ∈ diagPrimesUpTo N, f p) ≤ diagPrimeSumCoarse + (1 : ℚ) / primeCutoff := by
-    exact hsum_le.trans (add_le_add_left htail _)
+    exact hsum_le.trans (add_le_add_left htail diagPrimeSumCoarse)
   exact hsum_le'.trans diagPrimeSumCoarse_bound
 
 -- Placeholders for the remaining prime-sum bounds; used in the final casework.
@@ -1054,7 +1054,7 @@ lemma sum_offPrimesUpTo_le (N : ℕ) :
     simpa [f] using sum_Ioc_inv_sq_le_inv primeCutoff N (by simp [primeCutoff])
   have hsum_le' :
       (∑ p ∈ offPrimesUpTo N, f p) ≤ offPrimeSumCoarse + (1 : ℚ) / primeCutoff := by
-    exact hsum_le.trans (add_le_add_left htail _)
+    exact hsum_le.trans (add_le_add_left htail offPrimeSumCoarse)
   exact hsum_le'.trans offPrimeSumCoarse_bound
 
 lemma sum_no5PrimesUpTo_le (N : ℕ) :
@@ -1111,7 +1111,7 @@ lemma sum_no5PrimesUpTo_le (N : ℕ) :
     simpa [f] using sum_Ioc_inv_sq_le_inv primeCutoff N (by simp [primeCutoff])
   have hsum_le' :
       (∑ p ∈ no5PrimesUpTo N, f p) ≤ no5PrimeSumCoarse + (1 : ℚ) / primeCutoff := by
-    exact hsum_le.trans (add_le_add_left htail _)
+    exact hsum_le.trans (add_le_add_left htail no5PrimeSumCoarse)
   exact hsum_le'.trans no5PrimeSumCoarse_bound
 
 -- =========================================================================
