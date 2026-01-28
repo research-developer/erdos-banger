@@ -930,11 +930,13 @@ lemma diagPrimeSumCoarse_eq_fast : diagPrimeSumCoarse = diagPrimeSumCoarse_fast 
     refine Finset.sum_congr rfl fun p hp => (hterm p hp).symm
   have hsum' :
       ∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ) / (diagPrimeDen : ℚ) =
-        ((∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) / (diagPrimeDen : ℚ) := by
-    simp [div_eq_mul_inv, Finset.sum_mul, mul_comm]
+        ( (∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) * (diagPrimeDen : ℚ)⁻¹ := by
+    simp [div_eq_mul_inv, Finset.sum_mul]
   calc
     diagPrimeSumCoarse = _ := hsum
-    _ = ((∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) / (diagPrimeDen : ℚ) := hsum'
+    _ = ( (∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) * (diagPrimeDen : ℚ)⁻¹ := hsum'
+    _ = ((∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) / (diagPrimeDen : ℚ) := by
+      simp [div_eq_mul_inv]
     _ = diagPrimeSumCoarse_fast := by simp [diagPrimeSumCoarse_fast, diagPrimeNum]
 
 def offPrimeDen : ℕ :=
@@ -947,6 +949,33 @@ def offPrimeNum : ℕ :=
 def offPrimeSumCoarse_fast : ℚ :=
   (offPrimeNum : ℚ) / (offPrimeDen : ℚ)
 
+lemma offPrimeSumCoarse_eq_fast : offPrimeSumCoarse = offPrimeSumCoarse_fast := by
+  have hden_ne : (offPrimeDen : ℚ) ≠ 0 := (ne_of_gt offPrimeDen_pos : _)
+  have hterm :
+      ∀ p ∈ offPrimesCoarse,
+        (1 : ℚ) / (p ^ 2 : ℚ) = ((offPrimeDen / p ^ 2 : ℕ) : ℚ) / (offPrimeDen : ℚ) := by
+    intro p hp
+    have hdiv : (p ^ 2 : ℕ) ∣ offPrimeDen := Finset.dvd_prod (fun q => q ^ 2) hp
+    have hcast : ((offPrimeDen / p ^ 2 : ℕ) : ℚ) = (offPrimeDen : ℚ) / (p ^ 2 : ℚ) := by
+      exact_mod_cast (Nat.cast_div (dvd := hdiv))
+    have hcancel :
+        ((offPrimeDen : ℚ) / (p ^ 2 : ℚ)) / (offPrimeDen : ℚ) = (1 : ℚ) / (p ^ 2 : ℚ) := by
+      field_simp [hden_ne]
+    simpa [hcast] using hcancel
+  have hsum :
+      offPrimeSumCoarse =
+        ∑ p ∈ offPrimesCoarse, ((offPrimeDen / p ^ 2 : ℕ) : ℚ) / (offPrimeDen : ℚ) := by
+    simp [offPrimeSumCoarse]
+    refine Finset.sum_congr rfl fun p hp => (hterm p hp).symm
+  have hsum' :
+      ∑ p ∈ offPrimesCoarse, ((offPrimeDen / p ^ 2 : ℕ) : ℚ) / (offPrimeDen : ℚ) =
+        ((∑ p ∈ offPrimesCoarse, ((offPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) / (offPrimeDen : ℚ) := by
+    simp [div_eq_mul_inv, Finset.sum_mul]
+  calc
+    offPrimeSumCoarse = _ := hsum
+    _ = ((∑ p ∈ offPrimesCoarse, ((offPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) / (offPrimeDen : ℚ) := hsum'
+    _ = offPrimeSumCoarse_fast := by simp [offPrimeSumCoarse_fast, offPrimeNum]
+
 def no5PrimeDen : ℕ :=
   ∏ p ∈ no5PrimesCoarse, p ^ 2
 
@@ -956,6 +985,33 @@ def no5PrimeNum : ℕ :=
 
 def no5PrimeSumCoarse_fast : ℚ :=
   (no5PrimeNum : ℚ) / (no5PrimeDen : ℚ)
+
+lemma no5PrimeSumCoarse_eq_fast : no5PrimeSumCoarse = no5PrimeSumCoarse_fast := by
+  have hden_ne : (no5PrimeDen : ℚ) ≠ 0 := (ne_of_gt no5PrimeDen_pos : _)
+  have hterm :
+      ∀ p ∈ no5PrimesCoarse,
+        (1 : ℚ) / (p ^ 2 : ℚ) = ((no5PrimeDen / p ^ 2 : ℕ) : ℚ) / (no5PrimeDen : ℚ) := by
+    intro p hp
+    have hdiv : (p ^ 2 : ℕ) ∣ no5PrimeDen := Finset.dvd_prod (fun q => q ^ 2) hp
+    have hcast : ((no5PrimeDen / p ^ 2 : ℕ) : ℚ) = (no5PrimeDen : ℚ) / (p ^ 2 : ℚ) := by
+      exact_mod_cast (Nat.cast_div (dvd := hdiv))
+    have hcancel :
+        ((no5PrimeDen : ℚ) / (p ^ 2 : ℚ)) / (no5PrimeDen : ℚ) = (1 : ℚ) / (p ^ 2 : ℚ) := by
+      field_simp [hden_ne]
+    simpa [hcast] using hcancel
+  have hsum :
+      no5PrimeSumCoarse =
+        ∑ p ∈ no5PrimesCoarse, ((no5PrimeDen / p ^ 2 : ℕ) : ℚ) / (no5PrimeDen : ℚ) := by
+    simp [no5PrimeSumCoarse]
+    refine Finset.sum_congr rfl fun p hp => (hterm p hp).symm
+  have hsum' :
+      ∑ p ∈ no5PrimesCoarse, ((no5PrimeDen / p ^ 2 : ℕ) : ℚ) / (no5PrimeDen : ℚ) =
+        ((∑ p ∈ no5PrimesCoarse, ((no5PrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) / (no5PrimeDen : ℚ) := by
+    simp [div_eq_mul_inv, Finset.sum_mul]
+  calc
+    no5PrimeSumCoarse = _ := hsum
+    _ = ((∑ p ∈ no5PrimesCoarse, ((no5PrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) / (no5PrimeDen : ℚ) := hsum'
+    _ = no5PrimeSumCoarse_fast := by simp [no5PrimeSumCoarse_fast, no5PrimeNum]
 
 lemma diagPrimesCoarse_nonempty : diagPrimesCoarse.Nonempty := by
   have hprime : Nat.Prime 13 := by decide
