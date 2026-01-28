@@ -1823,6 +1823,8 @@ lemma diag_count_mod50odd_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 
 -- SECTION 10: THE BLOCKING THEOREM (TO BE PROVED)
 -- ============================================================================
 
+set_option maxHeartbeats 800000
+
 /-- THE GOAL: Prove SawhneyMain to complete the formalization.
 
 This is the only `sorry` in the entire file. Everything else is proved.
@@ -1832,7 +1834,6 @@ To prove this, one needs:
 2. Cross-term analysis: Mixed residue classes produce squarefree products
 3. Density argument: Sets with the property and density ≥ 1/25 - η must be structured
 -/
-set_option maxHeartbeats 800000
 theorem sawhney_main : SawhneyMain := by
   classical
   -- Numerical slack parameter for prime-counting error terms.
