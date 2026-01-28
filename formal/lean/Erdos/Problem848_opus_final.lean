@@ -3302,24 +3302,22 @@ theorem sawhney_main : SawhneyMain := by
               have h25 : a % 25 = 7 := by simpa [A7A] using (Finset.mem_filter.1 ha).2
               have hodd : a % 2 = 1 := hA7_all_odd a ha
               have ha_range : a ∈ Finset.range N := hA7A_sub_range ha
-              simp only [Finset.mem_union, Finset.mem_filter, Finset.mem_range]
               have ha_lt : a < N := Finset.mem_range.1 ha_range
               -- a ≡ 7 mod 25 and a odd → a ≡ 7 or 57 mod 100
-              have : a % 100 = 7 ∨ a % 100 = 57 := by omega
-              rcases this with h | h
-              · left; exact ⟨ha_lt, h⟩
-              · right; exact ⟨ha_lt, h⟩
+              have hmod : a % 100 = 7 ∨ a % 100 = 57 := by omega
+              rcases hmod with h | h
+              · exact Finset.mem_union_left _ (Finset.mem_filter.2 ⟨Finset.mem_range.2 ha_lt, h⟩)
+              · exact Finset.mem_union_right _ (Finset.mem_filter.2 ⟨Finset.mem_range.2 ha_lt, h⟩)
             have hA18_sub : A18A ⊆ S43 ∪ S93 := by
               intro a ha
               have h25 : a % 25 = 18 := by simpa [A18A] using (Finset.mem_filter.1 ha).2
               have hodd : a % 2 = 1 := hA18_all_odd a ha
               have ha_range : a ∈ Finset.range N := hA18A_sub_range ha
-              simp only [Finset.mem_union, Finset.mem_filter, Finset.mem_range]
               have ha_lt : a < N := Finset.mem_range.1 ha_range
-              have : a % 100 = 43 ∨ a % 100 = 93 := by omega
-              rcases this with h | h
-              · left; exact ⟨ha_lt, h⟩
-              · right; exact ⟨ha_lt, h⟩
+              have hmod : a % 100 = 43 ∨ a % 100 = 93 := by omega
+              rcases hmod with h | h
+              · exact Finset.mem_union_left _ (Finset.mem_filter.2 ⟨Finset.mem_range.2 ha_lt, h⟩)
+              · exact Finset.mem_union_right _ (Finset.mem_filter.2 ⟨Finset.mem_range.2 ha_lt, h⟩)
             -- By cases on b % 4
             rcases hb_mod4 with hb1 | hb3
             · -- Case b ≡ 1 mod 4: Free = {7, 43}, Sieve = {57, 93}
