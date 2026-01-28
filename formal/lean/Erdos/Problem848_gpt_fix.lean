@@ -927,19 +927,14 @@ lemma diagPrimeSumCoarse_eq_fast : diagPrimeSumCoarse = diagPrimeSumCoarse_fast 
       diagPrimeSumCoarse =
         ∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ) / (diagPrimeDen : ℚ) := by
     simp [diagPrimeSumCoarse]
-    apply Finset.sum_congr rfl
-    intro p hp
-    exact (hterm p hp).symm
+    refine Finset.sum_congr rfl fun p hp => (hterm p hp).symm
   have hsum' :
       ∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ) / (diagPrimeDen : ℚ) =
         ((∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) / (diagPrimeDen : ℚ) := by
-    have hden' : (diagPrimeDen : ℚ) ≠ 0 := hden_ne
-    simp [div_eq_mul_inv, Finset.sum_mul, mul_comm, mul_left_comm, mul_comm]
-    simpa using (Finset.sum_mul (diagPrimesCoarse) fun p => ((diagPrimeDen / p ^ 2 : ℕ) : ℚ))
+    simp [div_eq_mul_inv, Finset.sum_mul, mul_comm]
   calc
     diagPrimeSumCoarse = _ := hsum
-    _ = ((∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) / (diagPrimeDen : ℚ) := hsum'.trans
-      (Eq.refl _)
+    _ = ((∑ p ∈ diagPrimesCoarse, ((diagPrimeDen / p ^ 2 : ℕ) : ℚ)) : ℚ) / (diagPrimeDen : ℚ) := hsum'
     _ = diagPrimeSumCoarse_fast := by simp [diagPrimeSumCoarse_fast, diagPrimeNum]
 
 def offPrimeDen : ℕ :=
