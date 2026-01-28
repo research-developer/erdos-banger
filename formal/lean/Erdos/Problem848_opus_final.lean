@@ -1845,7 +1845,7 @@ lemma diag_count_mod50odd_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 
 -- SECTION 10: THE BLOCKING THEOREM (TO BE PROVED)
 -- ============================================================================
 
-set_option maxHeartbeats 800000
+set_option maxHeartbeats 2000000
 
 /-- THE GOAL: Prove SawhneyMain to complete the formalization.
 
@@ -1856,6 +1856,7 @@ To prove this, one needs:
 2. Cross-term analysis: Mixed residue classes produce squarefree products
 3. Density argument: Sets with the property and density ≥ 1/25 - η must be structured
 -/
+
 theorem sawhney_main : SawhneyMain := by
   classical
   -- Numerical slack parameter for prime-counting error terms.
@@ -3559,6 +3560,7 @@ theorem sawhney_main : SawhneyMain := by
                 _ = (N : ℝ) / 50 + 2 + 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by ring
             · -- Case b ≡ 3 mod 4: Free = {57, 93}, Sieve = {7, 43}
               -- Symmetric to the b ≡ 1 case
+              set_option maxHeartbeats 1600000 in
               have hfree_bound : (((A7A.filter (·%100=57)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ)) ≤ (N : ℝ) / 50 + 2 := by
                 have h57_le : ((A7A.filter (·%100=57)).card : ℝ) ≤ (N : ℝ) / 100 + 1 := by
                   have hS57_card : S57.card ≤ N / 100 + 1 := card_filter_mod_eq_le N 100 57
@@ -3584,6 +3586,7 @@ theorem sawhney_main : SawhneyMain := by
                         linarith
                 linarith [h57_le, h93_le]
               -- Bound sieve classes (7 and 43 mod 100)
+              set_option maxHeartbeats 1600000 in
               have hsieve7_bound : ((A7A.filter (·%100=7)).card : ℝ) ≤
                   (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
                 have hsubset : A7A.filter (·%100=7) ⊆ (offPrimesUpTo N).biUnion (fun p =>
@@ -3611,8 +3614,9 @@ theorem sawhney_main : SawhneyMain := by
                     have h25_dvd : 25 ∣ b * a + 1 := hp2_dvd
                     have hb25 : b % 25 ≠ 7 ∧ b % 25 ≠ 18 := hb_mod_ne
                     have h0 : (b * a + 1) % 25 = 0 := Nat.dvd_iff_mod_eq_zero.1 h25_dvd
-                    have heq : (b * a) % 25 = (b * 7) % 25 := by simp only [Nat.mul_mod, ha25]
-                    have hb7 : (b * 7 + 1) % 25 = 0 := by simp only [Nat.add_mod, heq, h0]
+                    have ha_mod : Nat.ModEq 25 a 7 := by unfold Nat.ModEq; simp [ha25]
+                    have heq : Nat.ModEq 25 (b * a) (b * 7) := Nat.ModEq.mul_left b ha_mod
+                    have hb7 : (b * 7 + 1) % 25 = 0 := by rw [← heq.add_right 1]; exact h0
                     have hb_mod25 : b % 25 = 7 := by omega
                     exact hb25.1 hb_mod25
                   have hp_le : p ≤ N := by
@@ -3684,8 +3688,9 @@ theorem sawhney_main : SawhneyMain := by
                     have h25_dvd : 25 ∣ b * a + 1 := hp2_dvd
                     have hb25 : b % 25 ≠ 7 ∧ b % 25 ≠ 18 := hb_mod_ne
                     have h0 : (b * a + 1) % 25 = 0 := Nat.dvd_iff_mod_eq_zero.1 h25_dvd
-                    have heq : (b * a) % 25 = (b * 18) % 25 := by simp only [Nat.mul_mod, ha25]
-                    have hb18 : (b * 18 + 1) % 25 = 0 := by simp only [Nat.add_mod, heq, h0]
+                    have ha_mod : Nat.ModEq 25 a 18 := by unfold Nat.ModEq; simp [ha25]
+                    have heq : Nat.ModEq 25 (b * a) (b * 18) := Nat.ModEq.mul_left b ha_mod
+                    have hb18 : (b * 18 + 1) % 25 = 0 := by rw [← heq.add_right 1]; exact h0
                     have hb_mod25 : b % 25 = 18 := by omega
                     exact hb25.2 hb_mod25
                   have hp_le : p ≤ N := by
@@ -3742,7 +3747,10 @@ theorem sawhney_main : SawhneyMain := by
                     have hmod : a % 100 = 7 ∨ a % 100 = 57 := by omega
                     rcases hmod with h | h <;> [left; right] <;> exact ⟨ha, h⟩
                   · intro ha; rcases ha with ⟨h, _⟩ | ⟨h, _⟩ <;> exact h
-                rw [h_union]; exact Finset.card_union_le _ _
+                have hcard_eq : A7A.card = (A7A.filter (·%100=7) ∪ A7A.filter (·%100=57)).card := by
+                  conv_lhs => rw [h_union]
+                rw [hcard_eq]
+                exact Finset.card_union_le (A7A.filter (· % 100 = 7)) (A7A.filter (· % 100 = 57))
               have hA18_split : A18A.card ≤ (A18A.filter (·%100=43)).card + (A18A.filter (·%100=93)).card := by
                 have h_union : A18A = A18A.filter (·%100=43) ∪ A18A.filter (·%100=93) := by
                   ext a; simp only [Finset.mem_union, Finset.mem_filter]
@@ -3753,7 +3761,10 @@ theorem sawhney_main : SawhneyMain := by
                     have hmod : a % 100 = 43 ∨ a % 100 = 93 := by omega
                     rcases hmod with h | h <;> [left; right] <;> exact ⟨ha, h⟩
                   · intro ha; rcases ha with ⟨h, _⟩ | ⟨h, _⟩ <;> exact h
-                rw [h_union]; exact Finset.card_union_le _ _
+                have hcard_eq : A18A.card = (A18A.filter (·%100=43) ∪ A18A.filter (·%100=93)).card := by
+                  conv_lhs => rw [h_union]
+                rw [hcard_eq]
+                exact Finset.card_union_le (A18A.filter (· % 100 = 43)) (A18A.filter (· % 100 = 93))
               have hA7_real : (A7A.card : ℝ) ≤ ((A7A.filter (·%100=7)).card : ℝ) + ((A7A.filter (·%100=57)).card : ℝ) := by
                 exact_mod_cast hA7_split
               have hA18_real : (A18A.card : ℝ) ≤ ((A18A.filter (·%100=43)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ) := by
@@ -3763,13 +3774,15 @@ theorem sawhney_main : SawhneyMain := by
                     (((A18A.filter (·%100=43)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ)) := by linarith
                 _ = (((A7A.filter (·%100=57)).card : ℝ) + ((A18A.filter (·%100=93)).card : ℝ)) +
                     (((A7A.filter (·%100=7)).card : ℝ) + ((A18A.filter (·%100=43)).card : ℝ)) := by ring
-                _ ≤ (N : ℝ) / 50 + (((A7A.filter (·%100=7)).card : ℝ) + ((A18A.filter (·%100=43)).card : ℝ)) := by linarith [hfree_bound]
-                _ ≤ (N : ℝ) / 50 + ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) +
+                _ ≤ ((N : ℝ) / 50 + 2) + (((A7A.filter (·%100=7)).card : ℝ) + ((A18A.filter (·%100=43)).card : ℝ)) := by linarith [hfree_bound]
+                _ ≤ ((N : ℝ) / 50 + 2) + ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) +
                     ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by linarith [hsieve7_bound, hsieve18_bound]
-                _ = (N : ℝ) / 50 + 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by ring
+                _ = (N : ℝ) / 50 + 2 + 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := by ring
           -- Final numerical contradiction.
+          set_option maxHeartbeats 1600000 in
           have hA_le_parts : (A.card : ℝ) ≤ (A7A.card : ℝ) + (A18A.card : ℝ) + (Astar.card : ℝ) := by
             exact_mod_cast hA_card_le_parts_nat
+          set_option maxHeartbeats 1600000 in
           have hdiag : (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) ≤ (1 : ℝ) / 3500 := by
             have hdiagQ : (∑ p ∈ diagPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) ≤ (1 : ℚ) / 70 :=
               sum_diagPrimesUpTo_le N
@@ -3813,7 +3826,7 @@ theorem sawhney_main : SawhneyMain := by
                         (N : ℝ) / 3500 + δ * (N : ℝ) := add_le_add hNdiag hπN'
               exact le_trans hAstar_bound (mul_le_mul_of_nonneg_left h2 (by positivity))
             -- Explicit A78 bound
-            have hA78_explicit : (A7A.card : ℝ) + (A18A.card : ℝ) ≤ (N : ℝ) / 50 + 2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by
+            have hA78_explicit : (A7A.card : ℝ) + (A18A.card : ℝ) ≤ (N : ℝ) / 50 + 2 + 2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by
               have hπN2 : 2 * (N.primeCounting : ℝ) ≤ 2 * δ * (N : ℝ) := by nlinarith [hπN']
               have h2 : 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) ≤
                         2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by
@@ -3821,12 +3834,12 @@ theorem sawhney_main : SawhneyMain := by
                 have h2mul := mul_le_mul_of_nonneg_left hmul (show (0 : ℝ) ≤ 2 by norm_num)
                 calc 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ)
                     = 2 * ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2))) + 2 * (N.primeCounting : ℝ) := by ring
-                  _ ≤ 2 * ((N : ℝ) * (163 / 100000)) + 2 * δ * (N : ℝ) := by linarith [h2mul, hπN2]
+                  _ ≤ 2 * ((N : ℝ) * (163 / 100000)) + 2 * δ * (N : ℝ) := add_le_add h2mul hπN2
                   _ = 2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by ring
               calc (A7A.card : ℝ) + (A18A.card : ℝ)
-                  ≤ (N : ℝ) / 50 + 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := hA78_bound
-                _ ≤ (N : ℝ) / 50 + (2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ)) := by linarith [h2]
-                _ = (N : ℝ) / 50 + 2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by ring
+                  ≤ (N : ℝ) / 50 + 2 + 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) := hA78_bound
+                _ ≤ (N : ℝ) / 50 + 2 + (2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ)) := by linarith [h2]
+                _ = (N : ℝ) / 50 + 2 + 2 * (N : ℝ) * (163 / 100000) + 2 * δ * (N : ℝ) := by ring
             nlinarith [hA_le_parts, hAstar_explicit, hA78_explicit, hNpos]
           exact (not_lt_of_ge hdense) hA_lt
 
