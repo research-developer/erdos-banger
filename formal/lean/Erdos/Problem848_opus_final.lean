@@ -2160,9 +2160,7 @@ theorem sawhney_main : SawhneyMain := by
             have hno5R : (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (413 : ℝ) / 25000 := by
               -- cast the rational sum bound and factor 1/25
               have hcast : ((∑ p ∈ no5PrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ) ≤ (413 : ℝ) / 1000 := by
-                calc ((∑ p ∈ no5PrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ)
-                    ≤ (((413 : ℚ) / 1000) : ℝ) := Rat.cast_le.mpr hno5
-                  _ = (413 : ℝ) / 1000 := by norm_cast
+                norm_cast
               have : (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) =
                   (1 / 25 : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
                 simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
@@ -2480,9 +2478,7 @@ theorem sawhney_main : SawhneyMain := by
           have hdiagQ : (∑ p ∈ diagPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) ≤ (1 : ℚ) / 70 :=
             sum_diagPrimesUpTo_le N
           have hcast : ((∑ p ∈ diagPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ) ≤ (1 : ℝ) / 70 := by
-                calc ((∑ p ∈ diagPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ)
-                    ≤ (((1 : ℚ) / 70) : ℝ) := Rat.cast_le.mpr hdiagQ
-                  _ = (1 : ℝ) / 70 := by norm_cast
+                simpa using Rat.cast_le.mpr hdiagQ
           have : (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) =
               (1 / 25 : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
             simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
@@ -2496,9 +2492,7 @@ theorem sawhney_main : SawhneyMain := by
           have hoffQ : (∑ p ∈ offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) ≤ (163 : ℚ) / 1000 :=
             sum_offPrimesUpTo_le N
           have hcast : ((∑ p ∈ offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ) ≤ (163 : ℝ) / 1000 := by
-                calc ((∑ p ∈ offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ)
-                    ≤ (((163 : ℚ) / 1000) : ℝ) := Rat.cast_le.mpr hoffQ
-                  _ = (163 : ℝ) / 1000 := by norm_cast
+                simpa using Rat.cast_le.mpr hoffQ
           have : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) =
               (1 / 25 : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
             simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
@@ -2798,9 +2792,7 @@ theorem sawhney_main : SawhneyMain := by
                 have hdiagQ : (∑ p ∈ diagPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) ≤ (1 : ℚ) / 70 :=
                   sum_diagPrimesUpTo_le N
                 have hcast : ((∑ p ∈ diagPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ) ≤ (1 : ℝ) / 70 := by
-                      calc ((∑ p ∈ diagPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ)
-                          ≤ (((1 : ℚ) / 70) : ℝ) := Rat.cast_le.mpr hdiagQ
-                        _ = (1 : ℝ) / 70 := by norm_cast
+                      simpa using Rat.cast_le.mpr hdiagQ
                 have : (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) =
                     (1 / 50 : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
                   simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
@@ -2828,9 +2820,7 @@ theorem sawhney_main : SawhneyMain := by
                 have hoffQ : (∑ p ∈ offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) ≤ (163 : ℚ) / 1000 :=
                   sum_offPrimesUpTo_le N
                 have hcast : ((∑ p ∈ offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ) ≤ (163 : ℝ) / 1000 := by
-                      calc ((∑ p ∈ offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ)
-                          ≤ (((163 : ℚ) / 1000) : ℝ) := Rat.cast_le.mpr hoffQ
-                        _ = (163 : ℝ) / 1000 := by norm_cast
+                      simpa using Rat.cast_le.mpr hoffQ
                 have : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) =
                     (1 / 25 : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
                   simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
@@ -3007,9 +2997,7 @@ theorem sawhney_main : SawhneyMain := by
                 have hdiagQ : (∑ p ∈ diagPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) ≤ (1 : ℚ) / 70 :=
                   sum_diagPrimesUpTo_le N
                 have hcast : ((∑ p ∈ diagPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ) ≤ (1 : ℝ) / 70 := by
-                      calc ((∑ p ∈ diagPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ)
-                          ≤ (((1 : ℚ) / 70) : ℝ) := Rat.cast_le.mpr hdiagQ
-                        _ = (1 : ℝ) / 70 := by norm_cast
+                      simpa using Rat.cast_le.mpr hdiagQ
                 have : (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) =
                     (1 / 50 : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
                   simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
@@ -3037,9 +3025,7 @@ theorem sawhney_main : SawhneyMain := by
                 have hoffQ : (∑ p ∈ offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) ≤ (163 : ℚ) / 1000 :=
                   sum_offPrimesUpTo_le N
                 have hcast : ((∑ p ∈ offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ) ≤ (163 : ℝ) / 1000 := by
-                      calc ((∑ p ∈ offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ)
-                          ≤ (((163 : ℚ) / 1000) : ℝ) := Rat.cast_le.mpr hoffQ
-                        _ = (163 : ℝ) / 1000 := by norm_cast
+                      simpa using Rat.cast_le.mpr hoffQ
                 have : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) =
                     (1 / 25 : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
                   simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
@@ -3132,9 +3118,7 @@ theorem sawhney_main : SawhneyMain := by
             have hdiagQ : (∑ p ∈ diagPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) ≤ (1 : ℚ) / 70 :=
               sum_diagPrimesUpTo_le N
             have hcast : ((∑ p ∈ diagPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ) ≤ (1 : ℝ) / 70 := by
-                calc ((∑ p ∈ diagPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ)
-                    ≤ (((1 : ℚ) / 70) : ℝ) := Rat.cast_le.mpr hdiagQ
-                  _ = (1 : ℝ) / 70 := by norm_cast
+                simpa using Rat.cast_le.mpr hdiagQ
             have : (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) =
                 (1 / 50 : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
               simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
@@ -3148,9 +3132,7 @@ theorem sawhney_main : SawhneyMain := by
             have hoffQ : (∑ p ∈ offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) ≤ (163 : ℚ) / 1000 :=
               sum_offPrimesUpTo_le N
             have hcast : ((∑ p ∈ offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ) ≤ (163 : ℝ) / 1000 := by
-                calc ((∑ p ∈ offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) : ℝ)
-                    ≤ (((163 : ℚ) / 1000) : ℝ) := Rat.cast_le.mpr hoffQ
-                  _ = (163 : ℝ) / 1000 := by norm_cast
+                simpa using Rat.cast_le.mpr hoffQ
             have : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) =
                 (1 / 100 : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
               simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
