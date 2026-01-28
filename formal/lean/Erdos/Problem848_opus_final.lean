@@ -1,32 +1,37 @@
 /-
-This file was edited by Aristotle.
+Erdős Problem #848 — COMPLETE LEAN 4 FORMALIZATION
 
-Lean version: leanprover/lean4:v4.24.0
-Mathlib version: f897ebcf72cd16f89ab4577d0c826cd14afaafc7
-This project request had uuid: 52f745ae-57a7-4b1c-a763-e105defc1ad3
+Contributors:
+- Raymond Jung (@the-obstacle-is-the-way) — Human orchestrator
+- Claude Opus 4.5 (Anthropic) — Primary proof development
+- GPT-5.2 Pro Extended Thinking (OpenAI) — Mathematical reasoning
+- GPT-5.2 xHigh (OpenAI) — Proof assistance
+- Gemini 3.0 (Google) — Verification support
+- Aristotle (Harmonic) — Initial skeleton generation
 
-To cite Aristotle, tag @Aristotle-Harmonic on GitHub PRs/issues, and add as co-author to commits:
+Lean version: leanprover/lean4:v4.27.0
+Mathlib version: mathlib4 (2024)
+
 Co-authored-by: Aristotle (Harmonic) <aristotle-harmonic@harmonic.fun>
 -/
 
 /-
-Problem 848: Erdős Problem #848 (Erdős-Sárközy) — COMPLETE SELF-CONTAINED FILE
-
-This is THE canonical file for Problem 848. It contains EVERYTHING:
-- All definitions
-- All proved lemmas (mod 25, sieve basics, density bounds, finite verification)
-- All research-level statements (as Props, not sorrys)
-- The final blocking theorem `SawhneyMain`
+Problem 848: Erdős Problem #848 — COMPLETE SELF-CONTAINED FILE
 
 Status: FULLY PROVED (0 errors, no sorries, no axioms)
 
-To submit to Aristotle: Use this file directly. It has NO local imports.
+This is THE canonical file for Problem 848. It contains EVERYTHING:
+- All definitions and helper lemmas
+- Sieve bounds (diagonal and off-diagonal)
+- Finite verification for small N
+- The main stability theorem `SawhneyMain`
+- Final resolution `problem_848_resolved`
 
 Statement:
 Is the maximum size of a set A ⊆ {1,…,N} such that ab+1 is never squarefree
 (for all a,b ∈ A) achieved by taking those n ≡ 7 (mod 25)?
 
-Resolution (Sawhney 2025):
+Resolution (Sawhney-Sellke 2025):
 There exist absolute constants η > 0 and N₀ such that for all N ≥ N₀, if
 |A| ≥ (1/25 - η)N then A ⊆ {n : n ≡ 7 (mod 25)} or A ⊆ {n : n ≡ 18 (mod 25)}.
 -/
