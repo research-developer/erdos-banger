@@ -3163,6 +3163,8 @@ theorem sawhney_main : SawhneyMain := by
           have hbA : b ∈ A := hAstar_sub_A hbAstar
           have hb_lt : b < N := by simpa [Finset.mem_range] using hAsub hbA
           have hb_odd : b % 2 = 1 := hAstar_all_odd b hbAstar
+          have hb_mod_ne : b % 25 ≠ 7 ∧ b % 25 ≠ 18 := by
+            simpa [Astar] using (Finset.mem_filter.1 hbAstar).2
           -- Astar bound (odd restriction) as in the previous branch.
           have hAstar_bound :
               (Astar.card : ℝ) ≤
@@ -3324,39 +3326,27 @@ theorem sawhney_main : SawhneyMain := by
               -- For a ≡ 3 mod 4 (i.e., 7 or 43 mod 100): 4 | ba+1 (free)
               -- For a ≡ 1 mod 4 (i.e., 57 or 93 mod 100): 4 ∤ ba+1, need odd p² | ba+1 (sieve)
               -- Bound A7A ∩ S7 (free) + A18A ∩ S43 (free) ≤ N/50
-              have hfree_bound : (((A7A.filter (·%100=7)).card : ℝ) + ((A18A.filter (·%100=43)).card : ℝ)) ≤ (N : ℝ) / 50 := by
-                have h7_le : ((A7A.filter (·%100=7)).card : ℝ) ≤ (N : ℝ) / 100 := by
-                  have hsub : A7A.filter (·%100=7) ⊆ S7 := Finset.filter_subset_filter _ (fun _ h => hA7A_sub_range h)
-                  have hcard := Finset.card_le_card hsub
-                  have hS7_card : S7.card ≤ N / 100 + 1 := card_filter_mod_eq_le N 100 7
-                  have : ((A7A.filter (·%100=7)).card : ℝ) ≤ ((S7.card : ℕ) : ℝ) := by exact_mod_cast hcard
-                  have : ((S7.card : ℕ) : ℝ) ≤ (N / 100 + 1 : ℕ) := by exact_mod_cast hS7_card
-                  have hN100' : N / 100 + 1 ≤ N / 100 + N / 100 := by
-                    have : 1 ≤ N / 100 := by omega
-                    omega
-                  have : (N / 100 + 1 : ℕ) ≤ (2 * (N / 100) : ℕ) := by omega
-                  calc ((A7A.filter (·%100=7)).card : ℝ)
-                      ≤ (S7.card : ℝ) := by exact_mod_cast Finset.card_le_card hsub
-                    _ ≤ (N / 100 + 1 : ℕ) := by exact_mod_cast hS7_card
-                    _ ≤ (N : ℝ) / 100 + 1 := by
-                        have : ((N / 100 + 1 : ℕ) : ℝ) ≤ (N : ℝ) / 100 + 1 := by
-                          have := Nat.div_le_self N 100
-                          have hdiv : ((N / 100 : ℕ) : ℝ) ≤ (N : ℝ) / 100 := by exact_mod_cast Nat.div_le_self N 100
-                          linarith [Nat.cast_div_le (a := N) (b := 100)]
-                        exact this
-                    _ ≤ (N : ℝ) / 100 := by nlinarith [hNpos]
-                have h43_le : ((A18A.filter (·%100=43)).card : ℝ) ≤ (N : ℝ) / 100 := by
-                  have hsub : A18A.filter (·%100=43) ⊆ S43 := Finset.filter_subset_filter _ (fun _ h => hA18A_sub_range h)
-                  have hS43_card : S43.card ≤ N / 100 + 1 := card_filter_mod_eq_le N 100 43
-                  calc ((A18A.filter (·%100=43)).card : ℝ)
-                      ≤ (S43.card : ℝ) := by exact_mod_cast Finset.card_le_card hsub
-                    _ ≤ (N / 100 + 1 : ℕ) := by exact_mod_cast hS43_card
-                    _ ≤ (N : ℝ) / 100 + 1 := by
-                        have : ((N / 100 + 1 : ℕ) : ℝ) ≤ (N : ℝ) / 100 + 1 := by
-                          linarith [Nat.cast_div_le (a := N) (b := 100)]
-                        exact this
-                    _ ≤ (N : ℝ) / 100 := by nlinarith [hNpos]
-                linarith [h7_le, h43_le]
+              -- Bound free classes: each ≤ N/100 + 1, total ≤ N/50 + 2
+              have hfree7 : ((A7A.filter (·%100=7)).card : ℝ) ≤ (N : ℝ) / 100 + 1 := by
+                have hsub : A7A.filter (·%100=7) ⊆ S7 := Finset.filter_subset_filter _ (fun _ h => hA7A_sub_range h)
+                have hS7_card : S7.card ≤ N / 100 + 1 := card_filter_mod_eq_le N 100 7
+                calc ((A7A.filter (·%100=7)).card : ℝ)
+                    ≤ (S7.card : ℝ) := by exact_mod_cast Finset.card_le_card hsub
+                  _ ≤ (N / 100 + 1 : ℕ) := by exact_mod_cast hS7_card
+                  _ ≤ (N : ℝ) / 100 + 1 := by
+                      have hdiv : ((N / 100 : ℕ) : ℝ) ≤ (N : ℝ) / 100 := Nat.cast_div_le
+                      linarith
+              have hfree43 : ((A18A.filter (·%100=43)).card : ℝ) ≤ (N : ℝ) / 100 + 1 := by
+                have hsub : A18A.filter (·%100=43) ⊆ S43 := Finset.filter_subset_filter _ (fun _ h => hA18A_sub_range h)
+                have hS43_card : S43.card ≤ N / 100 + 1 := card_filter_mod_eq_le N 100 43
+                calc ((A18A.filter (·%100=43)).card : ℝ)
+                    ≤ (S43.card : ℝ) := by exact_mod_cast Finset.card_le_card hsub
+                  _ ≤ (N / 100 + 1 : ℕ) := by exact_mod_cast hS43_card
+                  _ ≤ (N : ℝ) / 100 + 1 := by
+                      have hdiv : ((N / 100 : ℕ) : ℝ) ≤ (N : ℝ) / 100 := Nat.cast_div_le
+                      linarith
+              have hfree_bound : (((A7A.filter (·%100=7)).card : ℝ) + ((A18A.filter (·%100=43)).card : ℝ)) ≤ (N : ℝ) / 50 + 2 := by
+                linarith [hfree7, hfree43]
               -- Bound A7A ∩ S57 (sieve) using biUnion over offPrimesUpTo
               have hsieve7_bound : ((A7A.filter (·%100=57)).card : ℝ) ≤
                   (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
