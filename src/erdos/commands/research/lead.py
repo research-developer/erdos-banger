@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -431,17 +432,7 @@ def lead_ingest(
         return
     if app_ctx is None:
         return
-    if app_ctx.config.repo_root is None:
-        exit_with_result(
-            ctx,
-            CLIOutput.err(
-                command="erdos research lead ingest",
-                error_type="ConfigError",
-                message="Repository root not configured",
-                code=ExitCode.CONFIG_ERROR,
-            ),
-        )
-        return
+    repo_root = app_ctx.config.repo_root or Path.cwd()
     if error := load_problem_or_error(
         problem_id, repo=app_ctx.problems, command="erdos research lead ingest"
     ):
@@ -455,7 +446,7 @@ def lead_ingest(
     enriched_leads = [lead for lead in leads if lead.enriched_at is not None]
 
     # Load existing manifest
-    manifest_path = app_ctx.config.repo_root / get_manifest_path(problem_id)
+    manifest_path = repo_root / get_manifest_path(problem_id)
     manifest = _load_existing_manifest(manifest_path, force=False)
     if manifest is None:
         manifest = ProblemManifest(problem_id=problem_id, entries=[])
