@@ -111,7 +111,7 @@ lemma mod25_divisibility (a b : ℕ) (ha : a % 25 = 7) (hb : b % 25 = 7) :
     25 ∣ (a * b + 1) := by
   have h1 : a * b % 25 = (a % 25) * (b % 25) % 25 := Nat.mul_mod a b 25
   rw [ha, hb] at h1
-  have h2 : (7 : ℕ) * 7 % 25 = 24 := by native_decide
+  have h2 : (7 : ℕ) * 7 % 25 = 24 := by norm_num
   rw [h2] at h1
   have h3 : (a * b + 1) % 25 = 0 := by omega
   exact Nat.dvd_of_mod_eq_zero h3
@@ -121,13 +121,13 @@ lemma mod25_divisibility_18 (a b : ℕ) (ha : a % 25 = 18) (hb : b % 25 = 18) :
     25 ∣ (a * b + 1) := by
   have h1 : a * b % 25 = (a % 25) * (b % 25) % 25 := Nat.mul_mod a b 25
   rw [ha, hb] at h1
-  have h2 : (18 : ℕ) * 18 % 25 = 24 := by native_decide
+  have h2 : (18 : ℕ) * 18 % 25 = 24 := by norm_num
   rw [h2] at h1
   have h3 : (a * b + 1) % 25 = 0 := by omega
   exact Nat.dvd_of_mod_eq_zero h3
 
 /-- Helper: 25 = 5² -/
-lemma twenty_five_eq_five_sq : (25 : ℕ) = 5 ^ 2 := by native_decide
+lemma twenty_five_eq_five_sq : (25 : ℕ) = 5 ^ 2 := by rfl
 
 /-- If 25 | n and n > 0, then n is not squarefree. -/
 lemma not_squarefree_of_dvd_25 {n : ℕ} (_hn : n > 0) (h : 25 ∣ n) : ¬ Squarefree n := by
@@ -334,7 +334,7 @@ lemma cross_residue_not_div_25 (a b : ℕ) (ha : a % 25 = 7)
     simpa [haZ] using this
   have h2 : (7 : ZMod 25) * (b : ZMod 25) = (-1 : ZMod 25) := by
     simpa using (eq_neg_of_add_eq_zero_left h1)
-  have h187 : (18 : ZMod 25) * (7 : ZMod 25) = 1 := by native_decide
+  have h187 : (18 : ZMod 25) * (7 : ZMod 25) = 1 := by decide
   have hbZ : (b : ZMod 25) = (7 : ZMod 25) := by
     have hmul : (18 : ZMod 25) * ((7 : ZMod 25) * (b : ZMod 25)) =
         (18 : ZMod 25) * (-1 : ZMod 25) := by
@@ -349,7 +349,7 @@ lemma cross_residue_not_div_25 (a b : ℕ) (ha : a % 25 = 7)
       have : (1 : ZMod 25) * (b : ZMod 25) = (18 : ZMod 25) * (-1 : ZMod 25) := by
         simpa [h187] using hmul'
       simpa using this
-    exact hb'.trans (by native_decide : (18 : ZMod 25) * (-1 : ZMod 25) = (7 : ZMod 25))
+    exact hb'.trans (by decide : (18 : ZMod 25) * (-1 : ZMod 25) = (7 : ZMod 25))
   have hbmod : b % 25 = 7 := by
     have hb' : b % 25 = 7 % 25 := (ZMod.natCast_eq_natCast_iff' b 7 25).1 hbZ
     simpa [Nat.mod_eq_of_lt (by decide : 7 < 25)] using hb'
@@ -371,7 +371,7 @@ lemma cross_residue_not_div_25_18 (a b : ℕ) (ha : a % 25 = 18)
     simpa [haZ] using this
   have h2 : (18 : ZMod 25) * (b : ZMod 25) = (-1 : ZMod 25) := by
     simpa using (eq_neg_of_add_eq_zero_left h1)
-  have h718 : (7 : ZMod 25) * (18 : ZMod 25) = 1 := by native_decide
+  have h718 : (7 : ZMod 25) * (18 : ZMod 25) = 1 := by decide
   have hbZ : (b : ZMod 25) = (18 : ZMod 25) := by
     have hmul : (7 : ZMod 25) * ((18 : ZMod 25) * (b : ZMod 25)) =
         (7 : ZMod 25) * (-1 : ZMod 25) := by
@@ -386,7 +386,7 @@ lemma cross_residue_not_div_25_18 (a b : ℕ) (ha : a % 25 = 18)
       have : (1 : ZMod 25) * (b : ZMod 25) = (7 : ZMod 25) * (-1 : ZMod 25) := by
         simpa [h718] using hmul'
       simpa using this
-    exact hb'.trans (by native_decide : (7 : ZMod 25) * (-1 : ZMod 25) = (18 : ZMod 25))
+    exact hb'.trans (by decide : (7 : ZMod 25) * (-1 : ZMod 25) = (18 : ZMod 25))
   have hbmod : b % 25 = 18 := by
     have hb' : b % 25 = 18 % 25 := (ZMod.natCast_eq_natCast_iff' b 18 25).1 hbZ
     simpa [Nat.mod_eq_of_lt (by decide : 18 < 25)] using hb'
@@ -1280,7 +1280,7 @@ lemma coprime_25_pow_two_of_prime_ne5 (p : ℕ) (hp : Nat.Prime p) (hp5 : p ≠ 
   have hnot : ¬ p ∣ 25 := by
     intro h
     have hpow : p ∣ 5 ^ 2 := by
-      have : (5 ^ 2 : ℕ) = 25 := by native_decide
+      have : (5 ^ 2 : ℕ) = 25 := by rfl
       simpa [this] using h
     have h5 : p ∣ 5 := hp.dvd_of_dvd_pow hpow
     exact hp5 (prime_eq_of_dvd_5 p hp h5)
@@ -1291,11 +1291,11 @@ lemma coprime_100_pow_two_of_prime_ne2_ne5 (p : ℕ) (hp : Nat.Prime p) (hp2 : p
   have hnot : ¬ p ∣ 100 := by
     intro h
     have hpow : p ∣ 10 ^ 2 := by
-      have : (10 ^ 2 : ℕ) = 100 := by native_decide
+      have : (10 ^ 2 : ℕ) = 100 := by rfl
       simpa [this] using h
     have h10 : p ∣ 10 := hp.dvd_of_dvd_pow hpow
     have hmul : p ∣ 2 ∨ p ∣ 5 := by
-      have : 10 = 2 * 5 := by native_decide
+      have : 10 = 2 * 5 := by rfl
       simpa [this] using (hp.dvd_mul.1 (by simpa [this] using h10))
     cases hmul with
     | inl h2 => exact hp2 (prime_eq_of_dvd_2 p hp h2)
@@ -1381,7 +1381,7 @@ lemma cross_residue_7_18_not_div_25 (a b : ℕ) (ha : a % 25 = 7) (hb : b % 25 =
     have : (a : ZMod 25) * (b : ZMod 25) + 1 = 0 := by
       simpa [Nat.cast_add, Nat.cast_mul, Nat.cast_one] using h0
     simpa [haZ, hbZ] using this
-  have hneq : (7 : ZMod 25) * (18 : ZMod 25) + 1 ≠ 0 := by native_decide
+  have hneq : (7 : ZMod 25) * (18 : ZMod 25) + 1 ≠ 0 := by decide
   exact (hneq hab).elim
 
 lemma cross_residue_18_7_not_div_25 (a b : ℕ) (ha : a % 25 = 18) (hb : b % 25 = 7) :
@@ -1593,14 +1593,14 @@ lemma coprime_50_pow_two_of_prime_ne2_ne5 (p : ℕ) (hp : Nat.Prime p) (hp2 : p 
   have hnot : ¬ p ∣ 50 := by
     intro h
     have hmul : p ∣ 2 * 25 := by
-      have : 2 * 25 = 50 := by native_decide
+      have : 2 * 25 = 50 := by rfl
       simpa [this] using h
     have hdiv : p ∣ 2 ∨ p ∣ 25 := hp.dvd_mul.1 hmul
     cases hdiv with
     | inl h2 => exact hp2 (prime_eq_of_dvd_2 p hp h2)
     | inr h25 =>
         have hpow : p ∣ 5 ^ 2 := by
-          have : (5 ^ 2 : ℕ) = 25 := by native_decide
+          have : (5 ^ 2 : ℕ) = 25 := by rfl
           simpa [this] using h25
         have h5 : p ∣ 5 := hp.dvd_of_dvd_pow hpow
         exact hp5 (prime_eq_of_dvd_5 p hp h5)
@@ -1767,7 +1767,7 @@ lemma diag_count_mod25_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 =
   have hconst :
       (∑ _t ∈ residues25, 2 * (N / (25 * p ^ 2) + 1)) = 46 * (N / (25 * p ^ 2) + 1) := by
     classical
-    have h46 : (46 : ℕ) = 23 * 2 := by native_decide
+    have h46 : (46 : ℕ) = 23 * 2 := by rfl
     calc
       (∑ _t ∈ residues25, 2 * (N / (25 * p ^ 2) + 1)) = residues25.card * (2 * (N / (25 * p ^ 2) + 1)) := by
         simp
@@ -1795,16 +1795,16 @@ lemma diag_count_mod50odd_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 
       have htlt : t < 50 := Nat.mod_lt n (by decide : 0 < 50)
       have htodd : t % 2 = 1 := by
         have : (n % 50) % 2 = n % 2 := by
-          simpa [show 50 = 25 * 2 by native_decide] using Nat.mod_mul_left_mod n 25 2
+          simpa [show 50 = 25 * 2 by rfl] using Nat.mod_mul_left_mod n 25 2
         simpa [t, this] using hn.2.1
       have htne7 : t % 25 ≠ 7 := by
         have : (n % 50) % 25 = n % 25 := by
-          simpa [show 50 = 25 * 2 by native_decide] using Nat.mod_mul_right_mod n 25 2
+          simpa [show 50 = 25 * 2 by rfl] using Nat.mod_mul_right_mod n 25 2
         have hnne7 : n % 25 ≠ 7 := hn.2.2.1
         simpa [t, this] using hnne7
       have htne18 : t % 25 ≠ 18 := by
         have : (n % 50) % 25 = n % 25 := by
-          simpa [show 50 = 25 * 2 by native_decide] using Nat.mod_mul_right_mod n 25 2
+          simpa [show 50 = 25 * 2 by rfl] using Nat.mod_mul_right_mod n 25 2
         have hnne18 : n % 25 ≠ 18 := hn.2.2.2.1
         simpa [t, this] using hnne18
       refine Finset.mem_filter.2 ?_
@@ -1838,7 +1838,7 @@ lemma diag_count_mod50odd_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 
   have hconst :
       (∑ _t ∈ residues50odd, 2 * (N / (50 * p ^ 2) + 1)) = 46 * (N / (50 * p ^ 2) + 1) := by
     classical
-    have h46 : (46 : ℕ) = 23 * 2 := by native_decide
+    have h46 : (46 : ℕ) = 23 * 2 := by rfl
     calc
       (∑ _t ∈ residues50odd, 2 * (N / (50 * p ^ 2) + 1)) = residues50odd.card * (2 * (N / (50 * p ^ 2) + 1)) := by
         simp
