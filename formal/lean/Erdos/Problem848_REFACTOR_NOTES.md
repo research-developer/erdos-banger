@@ -192,7 +192,7 @@ diff Problem848.lean Problem848_Refactor.lean | head -100
 - [x] Phase 5: Explicit proofs for Squarefree lemmas (2 done, 10 remaining)
 - [ ] PR updated
 
-**Results:** 43 → 12 `native_decide` (31 removed, **72% reduction**)
+**Results:** 43 → 11 `native_decide` (32 removed, **74% reduction**)
 
 ---
 
@@ -214,12 +214,12 @@ diff Problem848.lean Problem848_Refactor.lean | head -100
 |------|-------|----------|
 | 651 | `seven_times_eighteen_plus_one_squarefree` | ✅ `norm_num` proves `Nat.Prime 127`, then `Nat.Prime.squarefree` |
 | 654 | `pair_7_18_fails` | ✅ Use squarefree lemma as witness |
+| 665 | `pair_32_43_works` | ✅ Explicit case split + `not_squarefree_1025/1377/1850` lemmas |
 
-**REMAINING `native_decide` (12):**
+**REMAINING `native_decide` (11):**
 
 | Line | Lemma | Why `decide` fails |
 |------|-------|-------------------|
-| 665 | `pair_32_43_works` | Uses `NonSquarefreeProductProp` which depends on `Squarefree` |
 | 688 | `diag_cand_50` | `DiagonalCandidates` filters by `Squarefree` |
 | 690 | `diag_cand_100` | `DiagonalCandidates` filters by `Squarefree` |
 | 693 | `no_triple_works_50` | Uses `tripleHasProperty` which checks `Squarefree` |

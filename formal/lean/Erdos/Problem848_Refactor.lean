@@ -661,8 +661,45 @@ lemma pair_7_18_fails : ¬ NonSquarefreeProductProp ({7, 18} : Finset ℕ) := by
   have h18 : 18 ∈ ({7, 18} : Finset ℕ) := by simp
   exact h 7 h7 18 h18 seven_times_eighteen_plus_one_squarefree
 
+-- Helper lemmas for pair_32_43_works: prove products are NOT squarefree
+-- 32 * 32 + 1 = 1025 = 5² × 41
+lemma not_squarefree_1025 : ¬ Squarefree 1025 := by
+  intro h
+  have hdiv : 5^2 ∣ 1025 := by norm_num
+  have := h 5 hdiv
+  norm_num at this
+
+-- 32 * 43 + 1 = 1377 = 3² × 153 = 3² × 9 × 17 = 3⁴ × 17
+lemma not_squarefree_1377 : ¬ Squarefree 1377 := by
+  intro h
+  have hdiv : 3^2 ∣ 1377 := by norm_num
+  have := h 3 hdiv
+  norm_num at this
+
+-- 43 * 43 + 1 = 1850 = 2 × 5² × 37
+lemma not_squarefree_1850 : ¬ Squarefree 1850 := by
+  intro h
+  have hdiv : 5^2 ∣ 1850 := by norm_num
+  have := h 5 hdiv
+  norm_num at this
+
 /-- {32, 43} DOES have the property (mixing works for this pair!). -/
-lemma pair_32_43_works : NonSquarefreeProductProp ({32, 43} : Finset ℕ) := by native_decide
+lemma pair_32_43_works : NonSquarefreeProductProp ({32, 43} : Finset ℕ) := by
+  intro a ha b hb
+  simp only [Finset.mem_insert, Finset.mem_singleton] at ha hb
+  rcases ha with rfl | rfl <;> rcases hb with rfl | rfl
+  · -- a = 32, b = 32: 32 * 32 + 1 = 1025
+    simp only [show 32 * 32 + 1 = 1025 by norm_num]
+    exact not_squarefree_1025
+  · -- a = 32, b = 43: 32 * 43 + 1 = 1377
+    simp only [show 32 * 43 + 1 = 1377 by norm_num]
+    exact not_squarefree_1377
+  · -- a = 43, b = 32: 43 * 32 + 1 = 1377
+    simp only [show 43 * 32 + 1 = 1377 by norm_num]
+    exact not_squarefree_1377
+  · -- a = 43, b = 43: 43 * 43 + 1 = 1850
+    simp only [show 43 * 43 + 1 = 1850 by norm_num]
+    exact not_squarefree_1850
 
 -- ============================================================================
 -- SECTION 7: FINITE VERIFICATION (PROVED by native_decide)
