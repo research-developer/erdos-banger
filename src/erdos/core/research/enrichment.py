@@ -5,6 +5,8 @@ Enriches LeadRecords with metadata from FallbackProvider (OpenAlex/Crossref/arXi
 
 from __future__ import annotations
 
+import logging
+import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
@@ -35,6 +37,9 @@ class EnrichmentStats:
     enriched: int = 0
     skipped_no_id: int = 0
     failed: int = 0
+
+
+logger = logging.getLogger(__name__)
 
 
 class LeadEnrichmentService:
@@ -75,12 +80,15 @@ class LeadEnrichmentService:
         try:
             reference: ReferenceRecord | None = None
             if doi:
+                logger.debug("Looking up DOI: %s", doi)
                 reference = self._provider.get_by_doi(doi)
             elif arxiv_id:
+                logger.debug("Looking up arXiv ID: %s", arxiv_id)
                 reference = self._provider.get_by_arxiv(arxiv_id)
 
             if reference is None:
                 # Provider returned nothing
+                logger.debug("No metadata found for lead %s", lead.id)
                 return EnrichmentResult(lead=lead)
 
             # Enrich the lead using model_copy (frozen model pattern)
@@ -114,22 +122,26 @@ class LeadEnrichmentService:
         leads: list[LeadRecord],
         *,
         force: bool = False,
+        delay: float = 1.0,
     ) -> tuple[list[EnrichmentResult], EnrichmentStats]:
         """Enrich multiple leads in batch.
 
         Args:
             leads: List of LeadRecords to enrich.
             force: If True, re-enrich already enriched leads.
+            delay: Seconds to sleep between API calls (rate limiting).
 
         Returns:
             Tuple of (results, stats).
         """
         results: list[EnrichmentResult] = []
         stats = EnrichmentStats(total=len(leads))
+        first_api_call = True
 
         for lead in leads:
             # Check if already enriched
             if lead.enriched_at is not None and not force:
+                logger.debug("Skipping already enriched lead: %s", lead.id)
                 results.append(EnrichmentResult(lead=lead))
                 continue
 
@@ -139,16 +151,30 @@ class LeadEnrichmentService:
                 stats.with_identifiers += 1
             else:
                 stats.skipped_no_id += 1
+                logger.debug("Skipping lead with no identifier: %s", lead.id)
                 results.append(EnrichmentResult(lead=lead))
                 continue
 
+            # Rate limiting: sleep before API call (except first)
+            if not first_api_call and delay > 0:
+                time.sleep(delay)
+            first_api_call = False
+
             # Enrich the lead
+            logger.info(
+                "Enriching lead %s (doi=%s, arxiv=%s)",
+                lead.id,
+                lead.source.doi,
+                lead.source.arxiv_id,
+            )
             result = self.enrich_lead(lead)
             results.append(result)
 
             if result.error:
                 stats.failed += 1
+                logger.warning("Enrichment failed for %s: %s", lead.id, result.error)
             elif result.reference is not None:
                 stats.enriched += 1
+                logger.info("Enriched %s via %s", lead.id, result.provider)
 
         return results, stats

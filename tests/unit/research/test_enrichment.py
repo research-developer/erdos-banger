@@ -6,7 +6,7 @@ TDD Phase 2: Lead enrichment service using FallbackProvider.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from erdos.core.models import ReferenceRecord
 from erdos.core.research.enrichment import (
@@ -202,3 +202,55 @@ class TestLeadEnrichmentServiceBatch:
         assert stats.failed == 1
         assert stats.enriched == 0
         assert results[0].error == "Network error"
+
+
+class TestLeadEnrichmentServiceRateLimiting:
+    """Tests for rate limiting between API calls."""
+
+    @patch("erdos.core.research.enrichment.time.sleep")
+    def test_enrich_leads_rate_limits_between_calls(self, mock_sleep: Mock) -> None:
+        """Batch enrichment should sleep between API calls."""
+        mock_provider = Mock()
+        mock_provider.get_by_doi.return_value = _make_reference(doi="10.1234/test")
+
+        service = LeadEnrichmentService(mock_provider)
+        leads = [
+            _make_lead(doi="10.1234/test1"),
+            _make_lead(doi="10.1234/test2"),
+            _make_lead(doi="10.1234/test3"),
+        ]
+        service.enrich_leads(leads, delay=0.5)
+
+        # Should sleep between calls, not before first
+        assert mock_sleep.call_count == 2
+        mock_sleep.assert_called_with(0.5)
+
+    @patch("erdos.core.research.enrichment.time.sleep")
+    def test_enrich_leads_no_delay_skips_sleep(self, mock_sleep: Mock) -> None:
+        """delay=0 should skip sleep between calls."""
+        mock_provider = Mock()
+        mock_provider.get_by_doi.return_value = _make_reference(doi="10.1234/test")
+
+        service = LeadEnrichmentService(mock_provider)
+        leads = [
+            _make_lead(doi="10.1234/test1"),
+            _make_lead(doi="10.1234/test2"),
+        ]
+        service.enrich_leads(leads, delay=0)
+
+        mock_sleep.assert_not_called()
+
+    @patch("erdos.core.research.enrichment.time.sleep")
+    def test_enrich_leads_default_delay_is_one_second(self, mock_sleep: Mock) -> None:
+        """Default delay should be 1.0 second."""
+        mock_provider = Mock()
+        mock_provider.get_by_doi.return_value = _make_reference(doi="10.1234/test")
+
+        service = LeadEnrichmentService(mock_provider)
+        leads = [
+            _make_lead(doi="10.1234/test1"),
+            _make_lead(doi="10.1234/test2"),
+        ]
+        service.enrich_leads(leads)
+
+        mock_sleep.assert_called_with(1.0)

@@ -314,6 +314,9 @@ def lead_enrich(
     dry_run: Annotated[
         bool, typer.Option("--dry-run", help="Show what would be enriched")
     ] = False,
+    delay: Annotated[
+        float, typer.Option("--delay", help="Seconds between API calls (rate limiting)")
+    ] = 1.0,
 ) -> None:
     """Enrich leads with metadata from OpenAlex/Crossref."""
     app_ctx, app_error = get_app_context(ctx, command="erdos research lead enrich")
@@ -369,7 +372,7 @@ def lead_enrich(
     service = LeadEnrichmentService(provider)
 
     # Enrich leads
-    results, stats = service.enrich_leads(leads, force=force)
+    results, stats = service.enrich_leads(leads, force=force, delay=delay)
 
     # Persist enriched leads
     enriched_count = 0
