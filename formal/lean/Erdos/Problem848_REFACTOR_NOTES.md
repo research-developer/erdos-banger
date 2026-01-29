@@ -189,9 +189,10 @@ diff Problem848.lean Problem848_Refactor.lean | head -100
 - [x] Phase 2: Tier 2 refactoring (5 ZMod `native_decide` → `decide`)
 - [x] Phase 3: Additional Tier 3 refactoring (see results below)
 - [x] Phase 4: Verification (compiles clean, 0 errors, 0 sorries)
+- [x] Phase 5: Explicit proofs for Squarefree lemmas (2 done, 10 remaining)
 - [ ] PR updated
 
-**Results:** 43 → 14 `native_decide` (29 removed, **67% reduction**)
+**Results:** 43 → 12 `native_decide` (31 removed, **72% reduction**)
 
 ---
 
@@ -207,13 +208,18 @@ diff Problem848.lean Problem848_Refactor.lean | head -100
 | 684 | `A₇_100_card` | Finset.range + filter on `%` |
 | 686 | `A₇_200_card` | Finset.range + filter on `%` |
 
-**CANNOT USE `decide` - MUST STAY `native_decide` (14 remaining):**
+**SOLVED WITH EXPLICIT PROOFS (Phase 5):**
+
+| Line | Lemma | Solution |
+|------|-------|----------|
+| 651 | `seven_times_eighteen_plus_one_squarefree` | ✅ `norm_num` proves `Nat.Prime 127`, then `Nat.Prime.squarefree` |
+| 654 | `pair_7_18_fails` | ✅ Use squarefree lemma as witness |
+
+**REMAINING `native_decide` (12):**
 
 | Line | Lemma | Why `decide` fails |
 |------|-------|-------------------|
-| 651 | `seven_times_eighteen_plus_one_squarefree` | `Squarefree` uses `Nat.minSqFac` which doesn't reduce in kernel |
-| 654 | `pair_7_18_fails` | Uses `NonSquarefreeProductProp` which depends on `Squarefree` |
-| 657 | `pair_32_43_works` | Uses `NonSquarefreeProductProp` which depends on `Squarefree` |
+| 665 | `pair_32_43_works` | Uses `NonSquarefreeProductProp` which depends on `Squarefree` |
 | 688 | `diag_cand_50` | `DiagonalCandidates` filters by `Squarefree` |
 | 690 | `diag_cand_100` | `DiagonalCandidates` filters by `Squarefree` |
 | 693 | `no_triple_works_50` | Uses `tripleHasProperty` which checks `Squarefree` |
@@ -235,8 +241,13 @@ match (7 * 18 + 1).minSqFac with
 ```
 Native code handles this fine, but the pure kernel cannot reduce it.
 
-**Conclusion:** The remaining 14 `native_decide` are NOT removable without:
-1. Redefining `Squarefree` with a kernel-reducible decidability instance, OR
-2. Explicit proofs (e.g., prove `Nat.Prime 127` then use `Nat.Prime.squarefree`)
+**Conclusion:** ~~The remaining 14 `native_decide` are NOT removable~~ **UPDATE: We proved Option 2 works!**
 
-Option 2 is theoretically possible but would add significant complexity for no mathematical gain.
+**Key Discovery:** `norm_num` can prove primality!
+```lean
+example : Nat.Prime 127 := by norm_num  -- Works in Lean 4.27.0 with Mathlib
+```
+
+This unlocks Squarefree proofs via `Nat.Prime.squarefree`. We've already eliminated 2 more this way.
+
+**Remaining 12:** The exhaustive search lemmas and large computation bounds are harder but potentially tractable with more work.
