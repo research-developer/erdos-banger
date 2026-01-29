@@ -2445,54 +2445,86 @@ def offPrimesCoarse : Finset ℕ :=
 def no5PrimesCoarse : Finset ℕ :=
   (primesUpTo primeCutoff).filter (fun p => p ≠ 5)
 
+/-! ## Bool predicates for kernel-efficient computation -/
+
+/-- Bool version of diagonal prime predicate for kernel computation. -/
+def is_diag_prime_bool (n : ℕ) : Bool :=
+  (n : Num).Prime && (n % 4 == 1) && (13 <= n)
+
+/-- Bool version of no-5 prime predicate for kernel computation. -/
+def is_no5_prime_bool (n : ℕ) : Bool :=
+  (n : Num).Prime && (n != 5)
+
+/-! ## Explicit lists (as List ℕ) -/
+
+/-- Explicit list of diagonal primes ≤ 2000 (p ≡ 1 mod 4, p ≥ 13). -/
+def diag_explicit_list : List ℕ :=
+  [13, 17, 29, 37, 41, 53, 61, 73, 89, 97, 101, 109,
+   113, 137, 149, 157, 173, 181, 193, 197, 229, 233, 241, 257,
+   269, 277, 281, 293, 313, 317, 337, 349, 353, 373, 389, 397,
+   401, 409, 421, 433, 449, 457, 461, 509, 521, 541, 557, 569,
+   577, 593, 601, 613, 617, 641, 653, 661, 673, 677, 701, 709,
+   733, 757, 761, 769, 773, 797, 809, 821, 829, 853, 857, 877,
+   881, 929, 937, 941, 953, 977, 997, 1009, 1013, 1021, 1033, 1049,
+   1061, 1069, 1093, 1097, 1109, 1117, 1129, 1153, 1181, 1193, 1201, 1213,
+   1217, 1229, 1237, 1249, 1277, 1289, 1297, 1301, 1321, 1361, 1373, 1381,
+   1409, 1429, 1433, 1453, 1481, 1489, 1493, 1549, 1553, 1597, 1601, 1609,
+   1613, 1621, 1637, 1657, 1669, 1693, 1697, 1709, 1721, 1733, 1741, 1753,
+   1777, 1789, 1801, 1861, 1873, 1877, 1889, 1901, 1913, 1933, 1949, 1973,
+   1993, 1997]
+
+/-- Computed list using Bool filter (for kernel computation). -/
+def diag_computed_list : List ℕ :=
+  (List.range (primeCutoff + 1)).filter is_diag_prime_bool
+
+/-- LIST equality - this is O(n) fast! -/
+lemma diag_lists_eq : diag_computed_list = diag_explicit_list := by decide
+
 set_option maxRecDepth 20000 in
 /-- Explicit diagonal-prime list for `primeCutoff = 2000`.
 
 This is the set of primes `p ≤ 2000` with `p % 4 = 1` and `13 ≤ p`. -/
-def diagPrimesCoarse_list : Finset ℕ :=
-  ([13, 17, 29, 37, 41, 53, 61, 73, 89, 97, 101, 109,
-    113, 137, 149, 157, 173, 181, 193, 197, 229, 233, 241, 257,
-    269, 277, 281, 293, 313, 317, 337, 349, 353, 373, 389, 397,
-    401, 409, 421, 433, 449, 457, 461, 509, 521, 541, 557, 569,
-    577, 593, 601, 613, 617, 641, 653, 661, 673, 677, 701, 709,
-    733, 757, 761, 769, 773, 797, 809, 821, 829, 853, 857, 877,
-    881, 929, 937, 941, 953, 977, 997, 1009, 1013, 1021, 1033, 1049,
-    1061, 1069, 1093, 1097, 1109, 1117, 1129, 1153, 1181, 1193, 1201, 1213,
-    1217, 1229, 1237, 1249, 1277, 1289, 1297, 1301, 1321, 1361, 1373, 1381,
-    1409, 1429, 1433, 1453, 1481, 1489, 1493, 1549, 1553, 1597, 1601, 1609,
-    1613, 1621, 1637, 1657, 1669, 1693, 1697, 1709, 1721, 1733, 1741, 1753,
-    1777, 1789, 1801, 1861, 1873, 1877, 1889, 1901, 1913, 1933, 1949, 1973,
-    1993, 1997] : List ℕ).toFinset
+def diagPrimesCoarse_list : Finset ℕ := diag_explicit_list.toFinset
+
+/-- Explicit list of no-5 primes ≤ 2000 (all primes except 5). -/
+def no5_explicit_list : List ℕ :=
+  [2, 3, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41,
+   43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
+   101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157,
+   163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227,
+   229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283,
+   293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367,
+   373, 379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439,
+   443, 449, 457, 461, 463, 467, 479, 487, 491, 499, 503, 509,
+   521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599,
+   601, 607, 613, 617, 619, 631, 641, 643, 647, 653, 659, 661,
+   673, 677, 683, 691, 701, 709, 719, 727, 733, 739, 743, 751,
+   757, 761, 769, 773, 787, 797, 809, 811, 821, 823, 827, 829,
+   839, 853, 857, 859, 863, 877, 881, 883, 887, 907, 911, 919,
+   929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997, 1009,
+   1013, 1019, 1021, 1031, 1033, 1039, 1049, 1051, 1061, 1063, 1069, 1087,
+   1091, 1093, 1097, 1103, 1109, 1117, 1123, 1129, 1151, 1153, 1163, 1171,
+   1181, 1187, 1193, 1201, 1213, 1217, 1223, 1229, 1231, 1237, 1249, 1259,
+   1277, 1279, 1283, 1289, 1291, 1297, 1301, 1303, 1307, 1319, 1321, 1327,
+   1361, 1367, 1373, 1381, 1399, 1409, 1423, 1427, 1429, 1433, 1439, 1447,
+   1451, 1453, 1459, 1471, 1481, 1483, 1487, 1489, 1493, 1499, 1511, 1523,
+   1531, 1543, 1549, 1553, 1559, 1567, 1571, 1579, 1583, 1597, 1601, 1607,
+   1609, 1613, 1619, 1621, 1627, 1637, 1657, 1663, 1667, 1669, 1693, 1697,
+   1699, 1709, 1721, 1723, 1733, 1741, 1747, 1753, 1759, 1777, 1783, 1787,
+   1789, 1801, 1811, 1823, 1831, 1847, 1861, 1867, 1871, 1873, 1877, 1879,
+   1889, 1901, 1907, 1913, 1931, 1933, 1949, 1951, 1973, 1979, 1987, 1993,
+   1997, 1999]
+
+/-- Computed list using Bool filter (for kernel computation). -/
+def no5_computed_list : List ℕ :=
+  (List.range (primeCutoff + 1)).filter is_no5_prime_bool
+
+/-- LIST equality - this is O(n) fast! -/
+lemma no5_lists_eq : no5_computed_list = no5_explicit_list := by decide
 
 set_option maxRecDepth 40000 in
 /-- Explicit prime list for `primeCutoff = 2000` with `p ≠ 5`. -/
-def no5PrimesCoarse_list : Finset ℕ :=
-  ([2, 3, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41,
-    43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
-    101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157,
-    163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227,
-    229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283,
-    293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367,
-    373, 379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439,
-    443, 449, 457, 461, 463, 467, 479, 487, 491, 499, 503, 509,
-    521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599,
-    601, 607, 613, 617, 619, 631, 641, 643, 647, 653, 659, 661,
-    673, 677, 683, 691, 701, 709, 719, 727, 733, 739, 743, 751,
-    757, 761, 769, 773, 787, 797, 809, 811, 821, 823, 827, 829,
-    839, 853, 857, 859, 863, 877, 881, 883, 887, 907, 911, 919,
-    929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997, 1009,
-    1013, 1019, 1021, 1031, 1033, 1039, 1049, 1051, 1061, 1063, 1069, 1087,
-    1091, 1093, 1097, 1103, 1109, 1117, 1123, 1129, 1151, 1153, 1163, 1171,
-    1181, 1187, 1193, 1201, 1213, 1217, 1223, 1229, 1231, 1237, 1249, 1259,
-    1277, 1279, 1283, 1289, 1291, 1297, 1301, 1303, 1307, 1319, 1321, 1327,
-    1361, 1367, 1373, 1381, 1399, 1409, 1423, 1427, 1429, 1433, 1439, 1447,
-    1451, 1453, 1459, 1471, 1481, 1483, 1487, 1489, 1493, 1499, 1511, 1523,
-    1531, 1543, 1549, 1553, 1559, 1567, 1571, 1579, 1583, 1597, 1601, 1607,
-    1609, 1613, 1619, 1621, 1627, 1637, 1657, 1663, 1667, 1669, 1693, 1697,
-    1699, 1709, 1721, 1723, 1733, 1741, 1747, 1753, 1759, 1777, 1783, 1787,
-    1789, 1801, 1811, 1823, 1831, 1847, 1861, 1867, 1871, 1873, 1877, 1879,
-    1889, 1901, 1907, 1913, 1931, 1933, 1949, 1951, 1973, 1979, 1987, 1993,
-    1997, 1999] : List ℕ).toFinset
+def no5PrimesCoarse_list : Finset ℕ := no5_explicit_list.toFinset
 
 set_option maxRecDepth 20000 in
  /-- Kernel-friendly prime list: uses `Num.Prime` instead of `Nat.Prime`. -/
@@ -2521,18 +2553,41 @@ lemma no5PrimesCoarse_eq_num : no5PrimesCoarse = no5PrimesCoarse_num := by
   simp [no5PrimesCoarse, no5PrimesCoarse_num, primesUpTo_eq_num]
 
 set_option maxRecDepth 20000 in
-set_option maxHeartbeats 20000000 in
 lemma diagPrimesCoarse_eq_list : diagPrimesCoarse = diagPrimesCoarse_list := by
-  have h : diagPrimesCoarse_num = diagPrimesCoarse_list := by
-    decide
-  simpa [diagPrimesCoarse_eq_num] using h
+  -- Use List equality (fast!) then lift to Finset
+  have h_list : diag_computed_list = diag_explicit_list := diag_lists_eq
+  -- diagPrimesCoarse_list = diag_explicit_list.toFinset by definition
+  -- We need to show diagPrimesCoarse = diag_explicit_list.toFinset
+  simp only [diagPrimesCoarse_list]
+  rw [← h_list]
+  -- Now need: diagPrimesCoarse = diag_computed_list.toFinset
+  ext p
+  simp only [diagPrimesCoarse, primesUpTo, Finset.mem_filter, Finset.mem_range,
+             List.mem_toFinset, diag_computed_list, List.mem_filter,
+             List.mem_range, is_diag_prime_bool, Bool.and_eq_true,
+             beq_iff_eq, decide_eq_true_eq, Nat.Prime]
+  constructor
+  · intro ⟨⟨hp_lt, hp_prime⟩, hp_mod, hp_ge⟩
+    exact ⟨hp_lt, (Num.Prime.iff_nat_prime.mpr hp_prime), hp_mod, hp_ge⟩
+  · intro ⟨hp_lt, hp_num_prime, hp_mod, hp_ge⟩
+    exact ⟨⟨hp_lt, Num.Prime.iff_nat_prime.mp hp_num_prime⟩, hp_mod, hp_ge⟩
 
 set_option maxRecDepth 20000 in
-set_option maxHeartbeats 40000000 in
 lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
-  have h : no5PrimesCoarse_num = no5PrimesCoarse_list := by
-    decide
-  simpa [no5PrimesCoarse_eq_num] using h
+  -- Use List equality (fast!) then lift to Finset
+  have h_list : no5_computed_list = no5_explicit_list := no5_lists_eq
+  simp only [no5PrimesCoarse_list]
+  rw [← h_list]
+  ext p
+  simp only [no5PrimesCoarse, primesUpTo, Finset.mem_filter, Finset.mem_range,
+             List.mem_toFinset, no5_computed_list, List.mem_filter,
+             List.mem_range, is_no5_prime_bool, Bool.and_eq_true,
+             bne_iff_ne, decide_eq_true_eq, Nat.Prime]
+  constructor
+  · intro ⟨⟨hp_lt, hp_prime⟩, hp_ne5⟩
+    exact ⟨hp_lt, (Num.Prime.iff_nat_prime.mpr hp_prime), hp_ne5⟩
+  · intro ⟨hp_lt, hp_num_prime, hp_ne5⟩
+    exact ⟨⟨hp_lt, Num.Prime.iff_nat_prime.mp hp_num_prime⟩, hp_ne5⟩
 
 -- Precomputed values (verified by Python; checked below using `simp`+`norm_num`)
 def diagPrimeDen : ℕ := 675067109924022977481515022034423512130479741539843807153469481052459028449452239232681980484545751069432973665683513280116016389500052645708341506941475615768814814870158065312753645077424198983444958279911880503831858071611272341994669353872744477768603209022359280059888618077776469014358245817529542708972753086348322957228843681307207963965767547374440897724003930473524265583251046012199781767374651834379560815527295708011857396433182071977716977932488431948888643891386067228558290565991227834390721337450990589134617661285518460561497407002739052848895879304579595915925480129856478914111298702283283880166246123671142902924556816351174498397701877438338568113063768986635318468872328007108093276626460935787650985933892343902371072373911766012319899393655815824547851160252826653544514334345091072636858918139681
