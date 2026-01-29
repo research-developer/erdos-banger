@@ -1199,10 +1199,10 @@ lemma diag_cand_50 : DiagonalCandidates 50 = {7, 18, 32, 38, 41, 43} := by
             _ = n % 25 := by simp [h0]
         cases hn_mod with
         | inl h7 =>
-            have : n = 7 := by simpa [hn_eq] using h7
+            have : n = 7 := hn_eq.trans h7
             simp [this]
         | inr h18 =>
-            have : n = 18 := by simpa [hn_eq] using h18
+            have : n = 18 := hn_eq.trans h18
             simp [this]
       · have hn_eq : n = n % 25 + 25 := by
           calc
