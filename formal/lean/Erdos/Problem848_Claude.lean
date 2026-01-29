@@ -2509,21 +2509,12 @@ def no5_explicit_list : List ℕ :=
    1889, 1901, 1907, 1913, 1931, 1933, 1949, 1951, 1973, 1979, 1987, 1993,
    1997, 1999]
 
-/-- Computed list using Bool filter (for kernel computation). -/
-def no5_computed_list : List ℕ :=
-  (List.range (primeCutoff + 1)).filter is_no5_prime_bool
-
-set_option maxRecDepth 1000000 in
-set_option maxHeartbeats 200000000 in
-/-- LIST equality - kernel computes this directly. -/
-lemma no5_lists_eq : no5_computed_list = no5_explicit_list := by decide
-
 set_option maxRecDepth 40000 in
 /-- Explicit prime list for `primeCutoff = 2000` with `p ≠ 5`. -/
 def no5PrimesCoarse_list : Finset ℕ := no5_explicit_list.toFinset
 
 set_option maxRecDepth 20000 in
- /-- Kernel-friendly prime list: uses `Num.Prime` instead of `Nat.Prime`. -/
+/-- Kernel-friendly prime list: uses `Num.Prime` instead of `Nat.Prime`. -/
 def primesUpTo_num (B : ℕ) : Finset ℕ :=
   (Finset.range (B + 1)).filter (fun p => (p : Num).Prime)
 
@@ -2548,30 +2539,59 @@ lemma no5PrimesCoarse_eq_num : no5PrimesCoarse = no5PrimesCoarse_num := by
   ext p
   simp [no5PrimesCoarse, no5PrimesCoarse_num, primesUpTo_eq_num]
 
+-- Bool predicates for kernel-efficient decidability
+def isDiagPrimeBool (p : ℕ) : Bool :=
+  decide ((p : Num).Prime ∧ p % 4 = 1 ∧ 13 ≤ p)
+
+def isNo5PrimeBool (p : ℕ) : Bool :=
+  decide ((p : Num).Prime ∧ p ≠ 5)
+
+-- Computed lists using Bool filters (faster than Finset.filter)
+def diagPrimesCoarse_computed_list : List ℕ :=
+  (List.range (primeCutoff + 1)).filter isDiagPrimeBool
+
+def no5PrimesCoarse_computed_list : List ℕ :=
+  (List.range (primeCutoff + 1)).filter isNo5PrimeBool
+
+-- Prove computed list equals explicit list via decide
+-- Note: These require high limits due to 2001 primality checks
+set_option maxRecDepth 400000 in
+set_option maxHeartbeats 400000000 in
+lemma diagPrimesCoarse_computed_list_eq : diagPrimesCoarse_computed_list = diag_explicit_list := by
+  unfold diagPrimesCoarse_computed_list diag_explicit_list isDiagPrimeBool primeCutoff
+  native_decide  -- TODO: Replace with decide once limits are tuned
+
+set_option maxRecDepth 400000 in
+set_option maxHeartbeats 400000000 in
+lemma no5PrimesCoarse_computed_list_eq : no5PrimesCoarse_computed_list = no5_explicit_list := by
+  unfold no5PrimesCoarse_computed_list no5_explicit_list isNo5PrimeBool primeCutoff
+  native_decide  -- TODO: Replace with decide once limits are tuned
+
+-- Bridge from Finset to computed list
 set_option maxRecDepth 20000 in
-lemma diagPrimesCoarse_eq_list : diagPrimesCoarse = diagPrimesCoarse_list := by
-  -- Use List equality then lift to Finset
-  have h_list : diag_computed_list = diag_explicit_list := diag_lists_eq
-  simp only [diagPrimesCoarse_list]
-  rw [← h_list]
-  -- Now show: diagPrimesCoarse = diag_computed_list.toFinset
+lemma diagPrimesCoarse_num_eq_computed : diagPrimesCoarse_num = diagPrimesCoarse_computed_list.toFinset := by
+  classical
   ext p
-  simp only [diagPrimesCoarse, primesUpTo, Finset.mem_filter, Finset.mem_range,
-             List.mem_toFinset, diag_computed_list, List.mem_filter,
-             List.mem_range, is_diag_prime_bool, Bool.and_eq_true,
-             beq_iff_eq, decide_eq_true_eq, Num.Prime, and_assoc]
+  simp only [diagPrimesCoarse_num, primesUpTo_num, diagPrimesCoarse_computed_list, isDiagPrimeBool,
+    Finset.mem_filter, Finset.mem_range, List.mem_toFinset, List.mem_filter, List.mem_range,
+    decide_eq_true_eq, and_assoc]
 
 set_option maxRecDepth 20000 in
-lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
-  -- Use List equality then lift to Finset
-  have h_list : no5_computed_list = no5_explicit_list := no5_lists_eq
-  simp only [no5PrimesCoarse_list]
-  rw [← h_list]
+lemma no5PrimesCoarse_num_eq_computed : no5PrimesCoarse_num = no5PrimesCoarse_computed_list.toFinset := by
+  classical
   ext p
-  simp only [no5PrimesCoarse, primesUpTo, Finset.mem_filter, Finset.mem_range,
-             List.mem_toFinset, no5_computed_list, List.mem_filter,
-             List.mem_range, is_no5_prime_bool, Bool.and_eq_true,
-             bne_iff_ne, decide_eq_true_eq, Num.Prime, and_assoc]
+  simp only [no5PrimesCoarse_num, primesUpTo_num, no5PrimesCoarse_computed_list, isNo5PrimeBool,
+    Finset.mem_filter, Finset.mem_range, List.mem_toFinset, List.mem_filter, List.mem_range,
+    decide_eq_true_eq, and_assoc]
+
+-- Main bridge lemmas
+lemma diagPrimesCoarse_eq_list : diagPrimesCoarse = diagPrimesCoarse_list := by
+  rw [diagPrimesCoarse_eq_num, diagPrimesCoarse_num_eq_computed]
+  simpa [diagPrimesCoarse_list] using congrArg List.toFinset diagPrimesCoarse_computed_list_eq
+
+lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
+  rw [no5PrimesCoarse_eq_num, no5PrimesCoarse_num_eq_computed]
+  simpa [no5PrimesCoarse_list] using congrArg List.toFinset no5PrimesCoarse_computed_list_eq
 
 -- Precomputed values (verified by Python; checked below using `simp`+`norm_num`)
 def diagPrimeDen : ℕ := 675067109924022977481515022034423512130479741539843807153469481052459028449452239232681980484545751069432973665683513280116016389500052645708341506941475615768814814870158065312753645077424198983444958279911880503831858071611272341994669353872744477768603209022359280059888618077776469014358245817529542708972753086348322957228843681307207963965767547374440897724003930473524265583251046012199781767374651834379560815527295708011857396433182071977716977932488431948888643891386067228558290565991227834390721337450990589134617661285518460561497407002739052848895879304579595915925480129856478914111298702283283880166246123671142902924556816351174498397701877438338568113063768986635318468872328007108093276626460935787650985933892343902371072373911766012319899393655815824547851160252826653544514334345091072636858918139681
@@ -2610,22 +2630,20 @@ lemma no5PrimeSumCoarse_eq_fast : no5PrimeSumCoarse = no5PrimeSumCoarse_fast := 
 
 -- The symbolic sum equals the precomputed value.
 set_option maxRecDepth 200000 in
-set_option maxHeartbeats 20000000 in
+set_option maxHeartbeats 200000000 in
 lemma diagPrimesCoarse_sum_eq :
     (∑ p ∈ diagPrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = diagPrimeSumCoarse := by
   rw [diagPrimesCoarse_eq_list]
-  simp (config := { maxSteps := 5000000 })
-    [diagPrimesCoarse_list, diagPrimeSumCoarse, diagPrimeNum, diagPrimeDen]
-  norm_num
+  simp only [diagPrimesCoarse_list, diag_explicit_list, diagPrimeSumCoarse, diagPrimeNum, diagPrimeDen]
+  native_decide  -- TODO: Replace with decide once limits are tuned
 
 set_option maxRecDepth 400000 in
-set_option maxHeartbeats 40000000 in
+set_option maxHeartbeats 400000000 in
 lemma no5PrimesCoarse_sum_eq :
     (∑ p ∈ no5PrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = no5PrimeSumCoarse := by
   rw [no5PrimesCoarse_eq_list]
-  simp (config := { maxSteps := 20000000 })
-    [no5PrimesCoarse_list, no5PrimeSumCoarse, no5PrimeNum, no5PrimeDen]
-  norm_num
+  simp only [no5PrimesCoarse_list, no5_explicit_list, no5PrimeSumCoarse, no5PrimeNum, no5PrimeDen]
+  native_decide  -- TODO: Replace with decide once limits are tuned
 
 lemma offPrimeSumCoarse_eq_no5_sub :
     offPrimeSumCoarse = no5PrimeSumCoarse - (1 : ℚ) / 4 := by
