@@ -2648,7 +2648,7 @@ lemma diagPrimesCoarse_sum_eq :
     (∑ p ∈ diagPrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = diagPrimeSumCoarse := by
   rw [diagPrimesCoarse_eq_list]
   simp (config := { maxSteps := 5000000 })
-    [diagPrimesCoarse_list, diagPrimeSumCoarse, diagPrimeNum, diagPrimeDen]
+    [diagPrimesCoarse_list, diagPrimesCoarse_listL, diagPrimeSumCoarse, diagPrimeNum, diagPrimeDen]
   norm_num
 
 set_option maxRecDepth 400000 in
@@ -2657,7 +2657,7 @@ lemma no5PrimesCoarse_sum_eq :
     (∑ p ∈ no5PrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = no5PrimeSumCoarse := by
   rw [no5PrimesCoarse_eq_list]
   simp (config := { maxSteps := 20000000 })
-    [no5PrimesCoarse_list, no5PrimeSumCoarse, no5PrimeNum, no5PrimeDen]
+    [no5PrimesCoarse_list, no5PrimesCoarse_listL, no5PrimeSumCoarse, no5PrimeNum, no5PrimeDen]
   norm_num
 
 lemma offPrimeSumCoarse_eq_no5_sub :
