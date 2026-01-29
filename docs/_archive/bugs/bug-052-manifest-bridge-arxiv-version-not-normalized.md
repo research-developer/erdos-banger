@@ -4,6 +4,7 @@
 **Status:** Fixed
 **Found:** 2026-01-29
 **Fixed:** 2026-01-29
+**Commit:** b5497d4
 **Component:** `src/erdos/core/research/manifest_bridge.py`
 
 ## Description

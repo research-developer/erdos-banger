@@ -59,10 +59,12 @@ import Mathlib.Data.Num.Lemmas
 import Mathlib.NumberTheory.Chebyshev
 import Mathlib.Analysis.PSeries
 
+open scoped BigOperators
+open scoped Finset
+open scoped Nat.Prime
+
 
 namespace Erdos.Problem848_workbench
-
-open scoped Finset
 
 -- ============================================================================
 -- SECTION 1: CORE DEFINITIONS
@@ -2423,8 +2425,6 @@ theorem problem_848_resolved_up_to_finite_check_of_sawhney (h : SawhneyMain) :
 -- SECTION 9.5: QUANTITATIVE BOUNDS (finite prime sums + tails)
 -- ============================================================================
 
-open scoped Nat.Prime
-open scoped BigOperators
 open Filter Finset
 
 /-- Cutoff for computing reciprocal-square sums over primes. -/
