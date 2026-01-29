@@ -2442,17 +2442,6 @@ def offPrimesCoarse : Finset ℕ :=
 def no5PrimesCoarse : Finset ℕ :=
   (primesUpTo primeCutoff).filter (fun p => p ≠ 5)
 
-/-- A computation-friendly characterization of primality for numerals. -/
-lemma natPrime_iff_primeFactorsList_eq_singleton (n : ℕ) :
-    Nat.Prime n ↔ n.primeFactorsList = [n] := by
-  constructor
-  · intro hn
-    simpa using Nat.primeFactorsList_prime hn
-  · intro h
-    have : n ∈ n.primeFactorsList := by
-      simpa [h]
-    exact Nat.prime_of_mem_primeFactorsList this
-
 set_option maxRecDepth 20000 in
 /-- Explicit diagonal-prime list for `primeCutoff = 2000`.
 
@@ -2516,7 +2505,7 @@ lemma diagPrimesCoarse_eq_list : diagPrimesCoarse = diagPrimesCoarse_list := by
     have hp' : p < 2001 := by
       simpa [primeCutoff] using hp
     interval_cases p <;>
-      (simp [diagPrimesCoarse, primesUpTo, primeCutoff, natPrime_iff_primeFactorsList_eq_singleton]; decide)
+      (simp [diagPrimesCoarse, primesUpTo, primeCutoff, diagPrimesCoarse_list] <;> norm_num)
   ·
     have hp' : ¬ p < 2001 := by
       simpa [primeCutoff] using hp
@@ -2537,7 +2526,7 @@ lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
     have hp' : p < 2001 := by
       simpa [primeCutoff] using hp
     interval_cases p <;>
-      (simp [no5PrimesCoarse, primesUpTo, primeCutoff, natPrime_iff_primeFactorsList_eq_singleton]; decide)
+      (simp [no5PrimesCoarse, primesUpTo, primeCutoff, no5PrimesCoarse_list] <;> norm_num)
   ·
     have hp' : ¬ p < 2001 := by
       simpa [primeCutoff] using hp
