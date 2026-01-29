@@ -1606,6 +1606,41 @@ lemma diag_cand_100 : DiagonalCandidates 100 = {7, 18, 32, 38, 41, 43, 57, 68, 7
     · refine ⟨by decide, ?_⟩
       simpa [show 99 * 99 + 1 = 9802 by norm_num] using not_squarefree_9802
 
+ -/
+
+lemma diag_cand_100 : DiagonalCandidates 100 = {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99} := by
+  classical
+  ext n
+  by_cases hn : n < 100
+  · interval_cases n <;>
+      simp [DiagonalCandidates, Nat.squarefree_iff_nodup_primeFactorsList]
+  ·
+    have hne7 : n ≠ 7 := by
+      intro h; subst h; exact hn (by decide)
+    have hne18 : n ≠ 18 := by
+      intro h; subst h; exact hn (by decide)
+    have hne32 : n ≠ 32 := by
+      intro h; subst h; exact hn (by decide)
+    have hne38 : n ≠ 38 := by
+      intro h; subst h; exact hn (by decide)
+    have hne41 : n ≠ 41 := by
+      intro h; subst h; exact hn (by decide)
+    have hne43 : n ≠ 43 := by
+      intro h; subst h; exact hn (by decide)
+    have hne57 : n ≠ 57 := by
+      intro h; subst h; exact hn (by decide)
+    have hne68 : n ≠ 68 := by
+      intro h; subst h; exact hn (by decide)
+    have hne70 : n ≠ 70 := by
+      intro h; subst h; exact hn (by decide)
+    have hne82 : n ≠ 82 := by
+      intro h; subst h; exact hn (by decide)
+    have hne93 : n ≠ 93 := by
+      intro h; subst h; exact hn (by decide)
+    have hne99 : n ≠ 99 := by
+      intro h; subst h; exact hn (by decide)
+    simp [DiagonalCandidates, hn, hne7, hne18, hne32, hne38, hne41, hne43, hne57, hne68, hne70, hne82, hne93, hne99]
+
 -- Key finite checks
 lemma no_triple_in_candidates :
     ∀ (s : Finset ℕ), s ⊆ {7, 18, 32, 38, 41, 43} → s.card = 3 → ¬ NonSquarefreeProductProp s := by
