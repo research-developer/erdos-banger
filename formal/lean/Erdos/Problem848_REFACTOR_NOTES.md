@@ -250,4 +250,73 @@ example : Nat.Prime 127 := by norm_num  -- Works in Lean 4.27.0 with Mathlib
 
 This unlocks Squarefree proofs via `Nat.Prime.squarefree`. We've already eliminated 2 more this way.
 
-**Remaining 12:** The exhaustive search lemmas and large computation bounds are harder but potentially tractable with more work.
+**Remaining 11:** The exhaustive search lemmas and large computation bounds are harder but potentially tractable with more work.
+
+---
+
+## Code Quality Audit (AI Slop Check)
+
+**Date:** 2026-01-29
+**Status:** Documented for future cleanup (Make it work → Make it right)
+
+### Compiler Warnings (40 total)
+
+| Type | Count | Example Lines | Fix |
+|------|-------|---------------|-----|
+| `simpa` → `simp` | ~30 | 1157, 1216, 1274, 1447, ... | Replace `simpa` with `simp` |
+| Unused simp args | ~5 | 1084, 1613, 1975, 3171, 3185 | Remove `mul_assoc` from simp calls |
+| `simpa using x` → `simp at x` | ~5 | 2043, 2058, 2430, 2513 | Cleaner syntax |
+
+**Priority:** LOW - These are style warnings, not errors.
+
+### Potentially Unused Lemmas (10 found)
+
+| Lemma | Line | Status |
+|-------|------|--------|
+| `density_single_prime` | ~590 | Never referenced after definition |
+| `pair_7_18_fails` | 658 | May be illustrative only |
+| `no_triple_works_50` | 738 | Used in theorem but check |
+| `diagPrimeSumCoarse_eq_fast` | ~960 | Possibly superseded |
+| `offPrimeSumCoarse_eq_fast` | ~965 | Possibly superseded |
+| `no5PrimeSumCoarse_eq_fast` | ~970 | Possibly superseded |
+| `cast_nat_div_le_rat` | TBD | Check if used |
+| `prime_not_dvd_left_of_sq_dvd_mul_add_one` | TBD | Check if used |
+| `problem_848_statement_50` | TBD | May be illustrative |
+| `problem_848_statement_100` | TBD | May be illustrative |
+
+**Action:** Before removing, verify they're not:
+1. Used in downstream proofs
+2. Illustrative/documentation lemmas
+3. Part of the logical story
+
+### Typical AI Slop Patterns to Watch For
+
+| Pattern | Found? | Notes |
+|---------|--------|-------|
+| Redundant parentheses | Some | Minor, cosmetic |
+| Overly verbose tactics | Yes | `simp only [...]` could often be shorter |
+| Duplicate logic | Maybe | `_18` variants mirror `_7` variants |
+| Magic numbers without comments | Few | Most constants documented |
+| Dead code paths | Check | Need deeper analysis |
+
+### Recommended Cleanup Order (Post native_decide)
+
+1. **Phase A:** Fix compiler warnings (40 `simpa` → `simp`)
+2. **Phase B:** Verify/remove unused lemmas
+3. **Phase C:** Consolidate duplicated `_7` / `_18` patterns if possible
+4. **Phase D:** Add docstrings to exported theorems
+5. **Phase E:** Consider extracting helper lemmas to separate file
+
+### Stats Summary
+
+```
+Total lines:        3920+
+Definitions:        123
+Compiler warnings:  40
+Potentially unused: 10
+native_decide:      11 (down from 43)
+sorries:            0
+errors:             0
+```
+
+**Bottom line:** The proof is mathematically valid. Cleanup is cosmetic polish, not correctness.
