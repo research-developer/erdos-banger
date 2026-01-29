@@ -655,7 +655,11 @@ lemma seven_times_eighteen_plus_one_squarefree : Squarefree (7 * 18 + 1) := by
   exact h.squarefree
 
 /-- {7, 18} does NOT have the property. -/
-lemma pair_7_18_fails : ¬ NonSquarefreeProductProp ({7, 18} : Finset ℕ) := by native_decide
+lemma pair_7_18_fails : ¬ NonSquarefreeProductProp ({7, 18} : Finset ℕ) := by
+  intro h
+  have h7 : 7 ∈ ({7, 18} : Finset ℕ) := by simp
+  have h18 : 18 ∈ ({7, 18} : Finset ℕ) := by simp
+  exact h 7 h7 18 h18 seven_times_eighteen_plus_one_squarefree
 
 /-- {32, 43} DOES have the property (mixing works for this pair!). -/
 lemma pair_32_43_works : NonSquarefreeProductProp ({32, 43} : Finset ℕ) := by native_decide
