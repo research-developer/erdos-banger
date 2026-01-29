@@ -1141,6 +1141,7 @@ lemma diag_cand_50 : DiagonalCandidates 50 = {7, 18, 32, 38, 41, 43} := by
       intro h; subst h; exact hn (by decide)
     simp [DiagonalCandidates, hn, hne7, hne18, hne32, hne38, hne41, hne43]
 
+/- Old proof (kept for reference). Replaced below with a `primeFactorsList`-simproc proof.
 lemma diag_cand_100 : DiagonalCandidates 100 = {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99} := by
   ext n
   simp [DiagonalCandidates, Finset.mem_filter, Finset.mem_range]
