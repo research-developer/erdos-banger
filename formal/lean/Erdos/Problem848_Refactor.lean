@@ -41,6 +41,7 @@ There exist absolute constants η > 0 and N₀ such that for all N ≥ N₀, if
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Nat.Prime.Basic
 import Mathlib.Data.Nat.Squarefree
+import Mathlib.Tactic.NormNum.Prime
 import Mathlib.Data.Nat.Cast.Order.Field
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Algebra.Order.Field.Basic
@@ -648,7 +649,10 @@ lemma prop_implies_diag_candidates (A : Finset ℕ) (N : ℕ) (hAsub : A ⊆ Fin
   · exact hAprop a ha a ha
 
 /-- 7 × 18 + 1 = 127 is squarefree (it's prime). -/
-lemma seven_times_eighteen_plus_one_squarefree : Squarefree (7 * 18 + 1) := by native_decide
+lemma seven_times_eighteen_plus_one_squarefree : Squarefree (7 * 18 + 1) := by
+  have h : Nat.Prime 127 := by norm_num
+  simp only [show 7 * 18 + 1 = 127 by norm_num]
+  exact h.squarefree
 
 /-- {7, 18} does NOT have the property. -/
 lemma pair_7_18_fails : ¬ NonSquarefreeProductProp ({7, 18} : Finset ℕ) := by native_decide
