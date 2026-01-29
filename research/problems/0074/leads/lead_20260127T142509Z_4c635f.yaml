@@ -16,4 +16,18 @@ notes: "[Exa] [1306.5167] The history of degenerate (bipartite) extremal graph p
   \ \nAll fieldsTitleAuthorAbstractCommentsJournal referenceACM classificationMSC\
   \ classificationReport"
 created_at: '2026-01-27T14:25:09Z'
-updated_at: '2026-01-27T14:25:09Z'
+updated_at: '2026-01-29T05:39:32Z'
+enriched_title: The history of degenerate (bipartite) extremal graph problems
+enriched_authors:
+- Zoltán Füredi
+- Miklós Simonovits
+enriched_year: 2013
+enriched_venue: arXiv (Cornell University)
+enriched_abstract: This paper is a survey on Extremal Graph Theory, primarily focusing
+  on the case when one of the excluded graphs is bipartite. On one hand we give an
+  introduction to this field and also describe many important results, methods, problems,
+  and constructions.
+enriched_provider: openalex
+enriched_at: '2026-01-29T05:39:31.857018Z'
+ingested_at: null
+manifest_entry_id: null

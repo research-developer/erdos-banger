@@ -7,6 +7,7 @@ entries:
   extract_path: null
   extracted: false
   ingested_at: '2026-01-27T14:25:47.856613Z'
+  lead_id: null
   reference:
     abstract: null
     arxiv_id: null
@@ -33,6 +34,7 @@ entries:
     venue: Discrete Mathematics
     year: 1985
   schema_version: 1
+  source: problem_ref
 - cache_hash: 10025bffb641bbe6ba9a0545d07c88bbddcdae6d60a5d7910df9c50bd556e87c
   cache_path: literature/cache/arxiv/1902.08177/source.tar.gz
   cached: true
@@ -40,6 +42,7 @@ entries:
   extract_path: literature/extracts/arxiv/1902.08177/fulltext.txt
   extracted: true
   ingested_at: '2026-01-27T14:25:51.428765Z'
+  lead_id: null
   reference:
     abstract: null
     arxiv_id: '1902.08177'
@@ -65,6 +68,7 @@ entries:
     venue: Advances in Mathematics
     year: 2020
   schema_version: 1
+  source: problem_ref
 - cache_hash: 98b5321e4f849218d56be66502dcbe62e707e1e829a7a7dc5a5c1b7429b14a73
   cache_path: literature/cache/arxiv/1306.5167/source.tar.gz
   cached: true
@@ -72,6 +76,7 @@ entries:
   extract_path: literature/extracts/arxiv/1306.5167/fulltext.txt
   extracted: true
   ingested_at: '2026-01-27T14:25:54.667072Z'
+  lead_id: null
   reference:
     abstract: This paper is a survey on Extremal Graph Theory, primarily focusing
       on the case when one of the excluded graphs is bipartite. On one hand we give
@@ -101,6 +106,7 @@ entries:
     venue: arXiv (Cornell University)
     year: 2013
   schema_version: 1
+  source: problem_ref
 - cache_hash: 2b7b019ce49bf78bfdb82681c22937f73d861eb449b3054f08a6d12c65fd7358
   cache_path: literature/cache/arxiv/2012.10409/source.tar.gz
   cached: true
@@ -116,6 +122,7 @@ entries:
   extract_path: null
   extracted: false
   ingested_at: '2026-01-27T14:25:57.938818Z'
+  lead_id: null
   reference:
     abstract: "In 1973, Erd\u0151s and Simonovits asked whether every $n$-vertex triangle-free\
       \ graph with minimum degree greater than $1/3 \\cdot n$ is 3-colourable. This\
@@ -155,6 +162,7 @@ entries:
     venue: arXiv (Cornell University)
     year: 2020
   schema_version: 1
+  source: problem_ref
 - cache_hash: 2df88b7d35da7aab3f8d7717abfd3669d65d5d0cc0e159308fb33f6cea426338
   cache_path: literature/cache/arxiv/2203.13833/source.tar.gz
   cached: true
@@ -162,6 +170,7 @@ entries:
   extract_path: literature/extracts/arxiv/2203.13833/fulltext.txt
   extracted: true
   ingested_at: '2026-01-27T14:26:01.155083Z'
+  lead_id: null
   reference:
     abstract: How large must the chromatic number of a graph be, in terms of the graph's
       maximum degree, to ensure that the most efficient way to reduce the chromatic
@@ -195,6 +204,300 @@ entries:
     venue: arXiv (Cornell University)
     year: 2022
   schema_version: 1
+  source: problem_ref
+- cache_hash: null
+  cache_path: null
+  cached: false
+  error: null
+  extract_path: null
+  extracted: false
+  ingested_at: null
+  lead_id: lead_20260127T142456Z_17f7c8
+  reference:
+    abstract: "Scott and Seymour conjectured the existence of a function $f \\colon\
+      \ \\mathbb{N} \\to \\mathbb{N}$ such that, for every graph $G$ and tournament\
+      \ $T$ on the same vertex set, $\u03C7(G) \\geqslant f(k)$ implies that $\u03C7\
+      (G[N_T^+(v)]) \\geqslant k$ for some vertex $v$. In this note we disprove this\
+      \ conjecture even if $v$ is replaced by a vertex set of size $\\mathcal{O}(\\\
+      log{\\lvert V(G)\\rvert})$. As a consequence, we answer in the negative a question\
+      \ of Harutyunyan, Le, Thomass\xE9, and Wu concerning the corresponding statement\
+      \ where the graph $G$ is replaced by another tournament, and disprove a related\
+      \ conjecture of Nguyen, Scott, and Seymour. We also show that the setting where\
+      \ chromatic number is replaced by degeneracy exhibits a quite different behaviour."
+    arxiv_id: '2305.15585'
+    authors:
+    - "Ant\xF3nio Gir\xE3o"
+    - Kevin Hendrey
+    - Freddie Illingworth
+    - Florian Lehner
+    - Lukas Michel
+    - Michael Savery
+    - Raphael Steiner
+    cited_by_count: null
+    concepts: []
+    doi: null
+    fetched_at: null
+    license: null
+    oa_status: unknown
+    oa_url: null
+    openalex_id: null
+    pdf_url: null
+    semantic_scholar_id: null
+    source: openalex
+    title: Chromatic number is not tournament-local
+    venue: arXiv (Cornell University)
+    year: 2024
+  schema_version: 1
+  source: lead
+- cache_hash: null
+  cache_path: null
+  cached: false
+  error: null
+  extract_path: null
+  extracted: false
+  ingested_at: null
+  lead_id: lead_20260127T142456Z_27bc99
+  reference:
+    abstract: An injective colouring of a graph is a colouring in which every two
+      vertices sharing a common neighbour receive a different colour. Chen, Hahn,
+      Raspaud and Wang conjectured that every planar graph of maximum degree $\Delta
+      \ge 3$ admits an injective colouring with at most $\lfloor 3\Delta/2\rfloor$
+      colours. This was later disproved by Lu\v{z}ar and \v{S}krekovski for certain
+      small and even values of $\Delta$ and they proposed a new refined conjecture.
+      Using an algorithm for determining the injective chromatic number of a graph,
+      i.e. the smallest number of colours for which the graph admits an injective
+      colouring, we give computational evidence for Lu\v{z}ar and \v{S}krekovski's
+      conjecture and extend their results by presenting an infinite family of $3$-connected
+      planar graphs for each $\Delta$ (except for $4$) attaining their bound, whereas
+      they only gave a finite amount of examples for each $\Delta$. Hence, together
+      with another infinite family of maximum degree $4$, we provide infinitely many
+      counterexamples to the conjecture by Chen et al. for each $\Delta$ if $4\le
+      \Delta \le 7$ and every even $\Delta \ge 8$. We provide similar evidence for
+      analogous conjectures by La and \v{S}torgel and Lu\v{z}ar, \v{S}krekovski and
+      Tancer when the girth is restricted as well. Also in these cases we provide
+      infinite families of $3$-connected planar graphs attaining the bounds of these
+      conjectures for certain maximum degrees $\Delta\geq 3$.
+    arxiv_id: '2412.09969'
+    authors:
+    - Matias Daneels
+    - Jan Goedgebeur
+    - Jarne Renders
+    cited_by_count: null
+    concepts: []
+    doi: null
+    fetched_at: null
+    license: null
+    oa_status: unknown
+    oa_url: null
+    openalex_id: null
+    pdf_url: null
+    semantic_scholar_id: null
+    source: openalex
+    title: Infinite families of planar graphs of a given injective chromatic number
+    venue: arXiv (Cornell University)
+    year: 2024
+  schema_version: 1
+  source: lead
+- cache_hash: null
+  cache_path: null
+  cached: false
+  error: null
+  extract_path: null
+  extracted: false
+  ingested_at: null
+  lead_id: lead_20260127T142456Z_54c320
+  reference:
+    abstract: The locating chromatic number of a graph is the smallest integer $n$
+      such that there is a proper $n$-coloring $c$ and every vertex has a unique vector
+      of distances to colors in $c$. We explore the necessary conditions and provide
+      sufficient conditions for an infinite tree to have a finite locating chromatic
+      number. We also give an algorithm for computing the locating coloring of trees
+      that works for both finite and infinite trees.
+    arxiv_id: '2104.04914'
+    authors:
+    - Yusuf Hafidh
+    - Edy Tri Baskoro
+    - Devi Imulia Dian Primaskun
+    cited_by_count: null
+    concepts: []
+    doi: null
+    fetched_at: null
+    license: null
+    oa_status: unknown
+    oa_url: null
+    openalex_id: null
+    pdf_url: null
+    semantic_scholar_id: null
+    source: openalex
+    title: On the locating chromatic number of infinite trees
+    venue: arXiv (Cornell University)
+    year: 2021
+  schema_version: 1
+  source: lead
+- cache_hash: null
+  cache_path: null
+  cached: false
+  error: null
+  extract_path: null
+  extracted: false
+  ingested_at: null
+  lead_id: lead_20260127T142456Z_5ac2bb
+  reference:
+    abstract: 'A graph $G$ is $H$-induced-saturated if $G$ is $H$-free but deleting
+      any edge or adding any edge creates an induced copy of $H$. There are non-trivial
+      graphs $H$, such as $P_4$, for which no finite $H$-induced-saturated graph $G$
+      exists. We show that for every finite graph $H$ that is not a clique or an independent
+      set, there always exists a countable $H$-induced-saturated graph. In fact, we
+      show that a far stronger property can be achieved: there is a countably infinite
+      $H$-free graph $G$ such that any graph $G''\ne G$ obtained by making a locally
+      finite set of changes to $G$ contains a copy of $H$.'
+    arxiv_id: '2506.08810'
+    authors:
+    - Marthe Bonamy
+    - Carla Groenland
+    - Tom Johnston
+    - Natasha Morrison
+    - Alex Scott
+    cited_by_count: null
+    concepts: []
+    doi: null
+    fetched_at: null
+    license: null
+    oa_status: unknown
+    oa_url: null
+    openalex_id: null
+    pdf_url: null
+    semantic_scholar_id: null
+    source: openalex
+    title: Infinite induced-saturated graphs
+    venue: arXiv (Cornell University)
+    year: 2025
+  schema_version: 1
+  source: lead
+- cache_hash: null
+  cache_path: null
+  cached: false
+  error: null
+  extract_path: null
+  extracted: false
+  ingested_at: null
+  lead_id: lead_20260127T142456Z_5db3ae
+  reference:
+    abstract: A complete partition of a graph $G$ is a partition of the vertex set
+      such that there is at least one edge between any two parts. The largest $r$
+      such that $G$ has a complete partition into $r$ parts, each of which is an independent
+      set, is the achromatic number of $G$. We determine the achromatic number of
+      polarity graphs of biaffine planes coming from generalized polygons. Our colorings
+      of a family of unitary polarity graphs are used to solve a problem of Axenovich
+      and Martin on complete partitions of $C_4$-free graphs. Furthermore, these colorings
+      prove that there are sequences of graphs which are optimally complete and have
+      unbounded degree, a problem that had been studied for the sequence of hypercubes
+      independently by Roichman, and Ahlswede, Bezrukov, Blokhuis, Metsch, and Moorhouse.
+    arxiv_id: '2311.10379'
+    authors:
+    - Vladislav Taranchuk
+    - Craig Timmons
+    cited_by_count: null
+    concepts: []
+    doi: null
+    fetched_at: null
+    license: null
+    oa_status: unknown
+    oa_url: null
+    openalex_id: null
+    pdf_url: null
+    semantic_scholar_id: null
+    source: openalex
+    title: Achromatic colorings of polarity graphs
+    venue: arXiv (Cornell University)
+    year: 2023
+  schema_version: 1
+  source: lead
+- cache_hash: null
+  cache_path: null
+  cached: false
+  error: null
+  extract_path: null
+  extracted: false
+  ingested_at: null
+  lead_id: lead_20260127T142456Z_fea34d
+  reference:
+    abstract: "The classical Andr\xE1sfai-Erd\u0151s-S\xF3s theorem considers the\
+      \ chromatic number of $K_{r + 1}$-free graphs with large minimum degree, and\
+      \ in the case $r = 2$ says that any $n$-vertex triangle-free graph with minimum\
+      \ degree greater than $2/5 \\cdot n$ is bipartite. This began the study of the\
+      \ chromatic profile of triangle-free graphs: for each $k$, what minimum degree\
+      \ guarantees that a triangle-free graph is $k$-colourable? The profile has been\
+      \ extensively studied and was finally determined by Brandt and Thomass\xE9.\
+      \ Triangle-free graphs are exactly those in which each neighbourhood is one-colourable.\
+      \ As a natural variant, \u0141uczak and Thomass\xE9 introduced the notion of\
+      \ a locally bipartite graph in which each neighbourhood is 2-colourable. Here\
+      \ we study the chromatic profile of the family of graphs in which every neighbourhood\
+      \ is $b$-colourable (locally $b$-partite graphs) as well as the family where\
+      \ the common neighbourhood of every $a$-clique is $b$-colourable. Our results\
+      \ include the chromatic thresholds of these families as well as showing that\
+      \ every $n$-vertex locally $b$-partite graph with minimum degree greater than\
+      \ $(1 - 1/(b + 1/7)) \\cdot n$ is $(b + 1)$-colourable. Understanding these\
+      \ locally colourable graphs is crucial for extending the Andr\xE1sfai-Erd\u0151\
+      s-S\xF3s theorem to non-complete graphs, which we develop elsewhere."
+    arxiv_id: '2102.05522'
+    authors:
+    - Freddie Illingworth
+    cited_by_count: null
+    concepts: []
+    doi: null
+    fetched_at: null
+    license: null
+    oa_status: unknown
+    oa_url: null
+    openalex_id: null
+    pdf_url: null
+    semantic_scholar_id: null
+    source: openalex
+    title: The chromatic profile of locally colourable graphs
+    venue: arXiv (Cornell University)
+    year: 2021
+  schema_version: 1
+  source: lead
+- cache_hash: null
+  cache_path: null
+  cached: false
+  error: null
+  extract_path: null
+  extracted: false
+  ingested_at: null
+  lead_id: lead_20260127T142509Z_431c88
+  reference:
+    abstract: "What is the minimum number of edges that have to be added to the random\
+      \ graph $G=G_{n,0.5}$ in order to increase its chromatic number $\u03C7=\u03C7\
+      (G)$ by one percent ? One possibility is to add all missing edges on a set of\
+      \ $1.01 \u03C7$ vertices, thus creating a clique of chromatic number $1.01 \u03C7\
+      $. This requires, with high probability, the addition of $\u03A9(n^2/\\log^2\
+      \ n)$ edges. We show that this is tight up to a constant factor, consider the\
+      \ question for more general random graphs $G_{n,p}$ with $p=p(n)$, and study\
+      \ a local version of the question as well. The question is motivated by the\
+      \ study of the resilience of graph properties, initiated by the second author\
+      \ and Vu, and improves one of their results."
+    arxiv_id: '1002.1748'
+    authors:
+    - Noga Alon
+    - Benny Sudakov
+    cited_by_count: null
+    concepts: []
+    doi: null
+    fetched_at: null
+    license: null
+    oa_status: unknown
+    oa_url: null
+    openalex_id: null
+    pdf_url: null
+    semantic_scholar_id: null
+    source: openalex
+    title: Increasing the chromatic number of a random graph
+    venue: arXiv (Cornell University)
+    year: 2010
+  schema_version: 1
+  source: lead
 problem_id: 74
 schema_version: 1
-updated_at: '2026-01-27T14:26:04.160193Z'
+updated_at: '2026-01-29T05:40:54.477300Z'

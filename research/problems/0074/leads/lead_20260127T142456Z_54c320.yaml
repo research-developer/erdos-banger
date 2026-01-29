@@ -27,4 +27,21 @@ notes: '[Exa] arXiv:2104.04914v3 [math.CO] 1 Aug 2023
 
   The locating chromatic number of a graph is the small'
 created_at: '2026-01-27T14:24:56Z'
-updated_at: '2026-01-27T14:24:56Z'
+updated_at: '2026-01-29T05:40:54Z'
+enriched_title: On the locating chromatic number of infinite trees
+enriched_authors:
+- Yusuf Hafidh
+- Edy Tri Baskoro
+- Devi Imulia Dian Primaskun
+enriched_year: 2021
+enriched_venue: arXiv (Cornell University)
+enriched_abstract: The locating chromatic number of a graph is the smallest integer
+  $n$ such that there is a proper $n$-coloring $c$ and every vertex has a unique vector
+  of distances to colors in $c$. We explore the necessary conditions and provide sufficient
+  conditions for an infinite tree to have a finite locating chromatic number. We also
+  give an algorithm for computing the locating coloring of trees that works for both
+  finite and infinite trees.
+enriched_provider: openalex
+enriched_at: '2026-01-29T05:39:26.361363Z'
+ingested_at: '2026-01-29T05:40:54.493693Z'
+manifest_entry_id: null

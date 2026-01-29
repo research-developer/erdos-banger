@@ -1,0 +1,23 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260129T053907Z_63dc58
+title: Test Erdős-Ko-Rado theorem paper
+status: new
+priority: medium
+tags: []
+source:
+  doi: 10.1016/S0012-365X(00)00078-X
+  arxiv_id: null
+  url: null
+notes: ''
+created_at: '2026-01-29T05:39:07Z'
+updated_at: '2026-01-29T05:39:07Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null
