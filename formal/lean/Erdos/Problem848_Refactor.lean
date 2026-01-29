@@ -1251,7 +1251,7 @@ def residues50odd : Finset ℕ :=
   (Finset.range 50).filter (fun t => t % 2 = 1 ∧ t % 25 ≠ 7 ∧ t % 25 ≠ 18)
 
 lemma residues50odd_card : residues50odd.card = 23 := by
-  native_decide
+  decide
 
 lemma primesUpTo_card (B : ℕ) : (primesUpTo B).card = B.primeCounting := by
   classical
