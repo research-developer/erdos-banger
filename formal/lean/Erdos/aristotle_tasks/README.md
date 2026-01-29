@@ -1,97 +1,102 @@
 # Aristotle Tasks for Problem 848 Refactoring
 
-**Goal:** Replace 14 `native_decide` calls with explicit proofs acceptable to Mathlib.
+**Goal:** Replace remaining `native_decide` calls with explicit proofs acceptable to Mathlib.
+
+**Status:** 43 → 12 `native_decide` (72% reduction achieved manually!)
 
 **Aristotle Version:** Lean 4.24.0 / Mathlib v4.24.0
-**Our Project:** Lean 4.27.0 (may need separate project)
+**Our Project:** Lean 4.27.0 (version mismatch - may need downgrade or separate project)
 
 ---
 
-## Category A: Squarefree Proofs (8 tasks)
+## ✅ COMPLETED (Manual - No Aristotle Needed)
 
-These need explicit primality proofs. Strategy:
-1. Prove `Nat.Prime n` using `norm_num [Nat.Prime]`
-2. Use `Nat.Prime.squarefree` to get `Squarefree n`
-
-### Task A1: `seven_times_eighteen_plus_one_squarefree`
+### Task A1: `seven_times_eighteen_plus_one_squarefree` ✅ DONE
 ```lean
--- CURRENT (line 651):
-lemma seven_times_eighteen_plus_one_squarefree : Squarefree (7 * 18 + 1) := by native_decide
-
--- TARGET:
+-- Solution: Use norm_num to prove Prime 127, then Nat.Prime.squarefree
 lemma seven_times_eighteen_plus_one_squarefree : Squarefree (7 * 18 + 1) := by
-  have h : Nat.Prime 127 := by norm_num [Nat.Prime]
+  have h : Nat.Prime 127 := by norm_num
+  simp only [show 7 * 18 + 1 = 127 by norm_num]
   exact h.squarefree
 ```
 
-### Task A2: `pair_7_18_fails`
+### Task A2: `pair_7_18_fails` ✅ DONE
 ```lean
--- CURRENT (line 654):
-lemma pair_7_18_fails : ¬ NonSquarefreeProductProp ({7, 18} : Finset ℕ) := by native_decide
-
--- NEEDS: Proof that 7*18+1 = 127 is squarefree (prime)
--- Approach: unfold NonSquarefreeProductProp, exhibit witness (7,18), show 127 squarefree
-```
-
-### Task A3: `pair_32_43_works`
-```lean
--- CURRENT (line 657):
-lemma pair_32_43_works : NonSquarefreeProductProp ({32, 43} : Finset ℕ) := by native_decide
-
--- NEEDS: Proofs that:
--- 32*32+1 = 1025 = 5² × 41 (not squarefree)
--- 32*43+1 = 1377 = 3⁴ × 17 (not squarefree)
--- 43*43+1 = 1850 = 2 × 5² × 37 (not squarefree)
-```
-
-### Task A4-A5: `diag_cand_50`, `diag_cand_100`
-```lean
--- CURRENT (lines 688, 690):
--- These compute DiagonalCandidates which filters by Squarefree
--- Need to enumerate and prove each element satisfies the predicate
-```
-
-### Task A6-A8: Exhaustive search lemmas
-```lean
--- Lines 693, 697, 702
--- noTripleWorksIn 50, no_triple_in_candidates, no_five_in_candidates_100
--- These check combinations - need systematic case analysis
+-- Solution: Use the squarefree lemma as witness
+lemma pair_7_18_fails : ¬ NonSquarefreeProductProp ({7, 18} : Finset ℕ) := by
+  intro h
+  have h7 : 7 ∈ ({7, 18} : Finset ℕ) := by simp
+  have h18 : 18 ∈ ({7, 18} : Finset ℕ) := by simp
+  exact h 7 h7 18 h18 seven_times_eighteen_plus_one_squarefree
 ```
 
 ---
 
-## Category B: Large Computation Proofs (6 tasks)
+## 🔴 REMAINING (12 native_decide calls)
 
-These involve sums over primes or ~2000-digit number inequalities.
+### Category A: Squarefree-based (6 tasks)
 
-### Task B1-B3: Prime sum equalities (lines 947, 951, 955)
+| Line | Lemma | Status | Notes |
+|------|-------|--------|-------|
+| 665 | `pair_32_43_works` | TODO | Need non-squarefree proofs for 1025, 1377, 1850 |
+| 696 | `diag_cand_50` | HARD | Set enumeration with Squarefree filter |
+| 698 | `diag_cand_100` | HARD | Set enumeration with Squarefree filter |
+| 701 | `no_triple_works_50` | HARD | Exhaustive combinatorial search |
+| 705 | `no_triple_in_candidates` | HARD | Exhaustive search |
+| 710 | `no_five_in_candidates_100` | HARD | Exhaustive search |
+
+### Category B: Large Computation (6 tasks)
+
+| Line | Lemma | Status | Notes |
+|------|-------|--------|-------|
+| 955 | `diagPrimesCoarse_sum_eq` | VERY HARD | Sum over primes |
+| 959 | `offPrimesCoarse_sum_eq` | VERY HARD | Sum over primes |
+| 963 | `no5PrimesCoarse_sum_eq` | VERY HARD | Sum over primes |
+| 975 | `diagPrimeSumCoarse_bound` | VERY HARD | ~2000-digit integers |
+| 996 | `offPrimeSumCoarse_bound` | VERY HARD | ~2000-digit integers |
+| 1017 | `no5PrimeSumCoarse_bound` | VERY HARD | ~2000-digit integers |
+
+---
+
+## Next Task: `pair_32_43_works`
+
+Need to prove these are NOT squarefree:
+- 32×32+1 = 1025 = 5² × 41
+- 32×43+1 = 1377 = 3⁴ × 17
+- 43×32+1 = 1377 (same)
+- 43×43+1 = 1850 = 2 × 5² × 37
+
+Strategy:
 ```lean
--- diagPrimesCoarse_sum_eq, offPrimesCoarse_sum_eq, no5PrimesCoarse_sum_eq
--- Strategy: May need interval_cases or explicit summation over primes
-```
-
-### Task B4-B6: Large integer inequalities (lines 967, 988, 1009)
-```lean
--- diagPrimeSumCoarse_bound, offPrimeSumCoarse_bound, no5PrimeSumCoarse_bound
--- These are inequalities with ~2000-digit numbers
--- Strategy: norm_num with large literal comparison?
+lemma not_squarefree_1025 : ¬ Squarefree 1025 := by
+  intro h
+  have : 5^2 ∣ 1025 := by norm_num
+  have : IsUnit 5 := h 5 this
+  simp at this
 ```
 
 ---
 
-## Approach for Aristotle
+## Aristotle API Approach (If Needed)
 
-1. Create a Lean 4.24.0 project with minimal Mathlib
-2. Define stubs for each lemma as `sorry`
-3. Submit to Aristotle API to fill in proofs
-4. Port successful proofs back to our 4.27.0 project
+1. **Version Issue:** Our project is Lean 4.27.0, Aristotle needs 4.24.0
+2. **Options:**
+   - Downgrade our project to 4.24.0 (risky)
+   - Create separate 4.24.0 project for Aristotle tasks
+   - Continue manual refactoring (working well so far!)
+
+3. **If using Aristotle:**
+   - Create stubs with `sorry`
+   - Submit to API
+   - Port solutions back
 
 ---
 
-## Priority Order
+## Key Discovery
 
-1. **A1** - Simplest, just prove Prime 127
-2. **A2, A3** - Build on A1
-3. **B4-B6** - Try norm_num on large integers
-4. **A4-A8** - More complex case analysis
-5. **B1-B3** - Hardest (sum over prime sets)
+**`norm_num` works for primality!**
+```lean
+example : Nat.Prime 127 := by norm_num  -- Works!
+```
+
+This unlocks many Squarefree proofs via `Nat.Prime.squarefree`.
