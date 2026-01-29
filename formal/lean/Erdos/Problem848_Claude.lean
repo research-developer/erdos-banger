@@ -56,6 +56,7 @@ import Mathlib.Tactic.Simproc.Factors
 import Mathlib.Tactic.NormNum.BigOperators
 import Mathlib.Data.Num.Prime
 import Mathlib.Data.Num.Lemmas
+import Mathlib.Data.Finset.Sort
 import Mathlib.NumberTheory.Chebyshev
 import Mathlib.Analysis.PSeries
 

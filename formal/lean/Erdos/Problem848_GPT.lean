@@ -2527,11 +2527,13 @@ def no5PrimesCoarse_computed_list : List ℕ :=
 set_option maxRecDepth 40000 in
 set_option maxHeartbeats 20000000 in
 lemma diagPrimesCoarse_computed_list_eq : diagPrimesCoarse_computed_list = diagPrimesCoarse_listL := by
+  unfold diagPrimesCoarse_computed_list diagPrimesCoarse_listL isDiagPrimeBool primeCutoff
   decide
 
 set_option maxRecDepth 80000 in
 set_option maxHeartbeats 40000000 in
 lemma no5PrimesCoarse_computed_list_eq : no5PrimesCoarse_computed_list = no5PrimesCoarse_listL := by
+  unfold no5PrimesCoarse_computed_list no5PrimesCoarse_listL isNo5PrimeBool primeCutoff
   decide
 
 set_option maxRecDepth 20000 in
