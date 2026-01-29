@@ -378,7 +378,7 @@ def lead_enrich(
     # Persist enriched leads
     enriched_count = 0
     for result in results:
-        if result.lead.enriched_at is not None and result.reference is not None:
+        if result.reference is not None:  # reference is set iff enrichment succeeded
             try:
                 store.lead_update(
                     problem_id,
