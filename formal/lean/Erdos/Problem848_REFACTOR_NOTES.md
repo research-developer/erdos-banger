@@ -1,322 +1,119 @@
-# Problem 848 Refactor Notes
+# Problem 848 Refactor Notes (Presentation + SSOT)
 
 **Date:** 2026-01-29
-**Status:** Under Review
-**Files:**
-- `Problem848.lean` - Original (DO NOT TOUCH)
-- `Problem848_FINAL.lean` - Backup (DO NOT TOUCH)
-- `Problem848_Refactor.lean` - Working copy for improvements
+**Status:** Builds clean; independent verification in progress
+**Scope:** This document is the SSOT for the **`Problem848_GPT.lean` sandbox** refactor.
 
----
+## Files (What to Touch / Not Touch)
 
-## Current State
+- ✅ `formal/lean/Erdos/Problem848_GPT.lean` — sandbox (edited during this refactor sprint)
+- ❌ `formal/lean/Erdos/Problem848_Refactor.lean` — reference (do not edit)
+- ❌ `formal/lean/Erdos/Problem848_FINAL.lean` / `formal/lean/Erdos/Problem848_Claude.lean` — historical variants (may still contain `native_decide`; out of scope for this sprint)
 
-- **3887 lines** of Lean 4 code
-- **127 theorems/lemmas/definitions**
-- **11 sections** with clear headers
-- **0 errors, 0 sorries** - compiles clean
-- Formalizes Sawhney-Sellke 2025 resolution of Erdos Problem 848
+## Current State (Verified Locally)
 
----
+- `formal/lean/Erdos/Problem848_GPT.lean` is **5570 lines**.
+- `lake build Erdos.Problem848_GPT` succeeds (no errors, no sorries).
+- `native_decide` count in `Problem848_GPT.lean`: **0**.
 
-## File Structure (Sections)
-
-| Section | Lines | Purpose |
-|---------|-------|---------|
-| 1. Core Definitions | 57-104 | `NonSquarefreeProductProp`, `A₇`, `A₁₈`, `DiagonalCandidates` |
-| 2. Mod 25 Divisibility | 105-155 | Key lemmas for 7×7≡-1, 18×18≡-1 (mod 25) |
-| 3. Sieve Building Blocks | 156-316 | `dvd_pow_two_mul_add_one_iff`, prime residue lemmas |
-| 4. Cross-Residue Analysis | 317-430 | Why mixing A₇ and A₁₈ fails |
-| 5. Density Lemmas | 431-630 | Counting bounds, CRT lemmas |
-| 6. Structural Lemmas | 631-658 | Hereditary property, {7,18} counterexample |
-| 7. Finite Verification | 659-737 | N=50, N=100 cases via `native_decide` |
-| 8. Main Definitions | 738-759 | `SawhneyMainAt`, `SawhneyMain`, `Problem848Statement` |
-| 9. Glue Theorems | 760-881 | Connecting pieces |
-| 10. Precomputed Sums | 882-1059 | Giant constants for ∑1/p² bounds |
-| 11. Main Proof | 1060-3887 | `sawhney_main` (2000+ lines) |
-
----
-
-## Refactoring Methodology (Rob C. Martin Style)
-
-### Principle: "Make it work, make it right, make it fast"
-- **It works** ✓ (compiles, 0 sorries)
-- **Make it right** ← WE ARE HERE (clean code, reduce `native_decide`)
-- Make it fast (optional - not a priority)
-
-### Safety Protocol
-1. **NEVER edit `Problem848.lean` or `Problem848_FINAL.lean`**
-2. **Work ONLY on `Problem848_Refactor.lean`**
-3. **Compile after EVERY change**: `lake build Erdos.Problem848_Refactor`
-4. **If compilation fails, revert immediately**
-
----
-
-## native_decide Audit (43 occurrences)
-
-### TIER 1: Trivial Arithmetic (EASY - Replace with `norm_num`)
-These are pure numeric facts. `norm_num` handles them cleanly.
-
-| Line | Statement | Replacement |
-|------|-----------|-------------|
-| 114 | `(7 : ℕ) * 7 % 25 = 24` | `norm_num` |
-| 124 | `(18 : ℕ) * 18 % 25 = 24` | `norm_num` |
-| 130 | `(25 : ℕ) = 5 ^ 2` | `rfl` or `norm_num` |
-| 1283 | `(5 ^ 2 : ℕ) = 25` | `rfl` |
-| 1294 | `(10 ^ 2 : ℕ) = 100` | `rfl` |
-| 1298 | `10 = 2 * 5` | `rfl` |
-| 1596 | `2 * 25 = 50` | `rfl` |
-| 1770 | `(46 : ℕ) = 23 * 2` | `rfl` |
-| 1841 | `(46 : ℕ) = 23 * 2` | `rfl` |
-| 1798, 1802, 1807 | `50 = 25 * 2` | `rfl` |
-
-**Estimated effort:** 15 minutes
-**Risk:** NONE
-
-### TIER 2: ZMod Computations (MEDIUM - Replace with `decide`)
-Finite ring arithmetic. `decide` is the "clean" alternative to `native_decide`.
-
-| Line | Statement | Replacement |
-|------|-----------|-------------|
-| 337 | `(18 : ZMod 25) * (7 : ZMod 25) = 1` | `decide` |
-| 352 | `(18 : ZMod 25) * (-1) = (7 : ZMod 25)` | `decide` |
-| 374 | `(7 : ZMod 25) * (18 : ZMod 25) = 1` | `decide` |
-| 389 | `(7 : ZMod 25) * (-1) = (18 : ZMod 25)` | `decide` |
-| 1384 | `(7 : ZMod 25) * (18 : ZMod 25) + 1 ≠ 0` | `decide` |
-
-**Estimated effort:** 10 minutes
-**Risk:** LOW (may need `decide` or explicit proof if `decide` fails)
-
-### TIER 3: Finite Set Verification (LOW PRIORITY - Acceptable)
-These verify properties of small finite sets. `native_decide` is reasonable here.
-
-| Line | Statement | Notes |
-|------|-----------|-------|
-| 651 | `Squarefree (7 * 18 + 1)` | 127 is prime, could prove explicitly |
-| 654 | `¬ NonSquarefreeProductProp ({7, 18})` | Finite check |
-| 657 | `NonSquarefreeProductProp ({32, 43})` | Finite check |
-| 682 | `(A₇ 50).card = 2` | Finite count |
-| 684 | `(A₇ 100).card = 4` | Finite count |
-| 686 | `(A₇ 200).card = 8` | Finite count |
-| 688 | `DiagonalCandidates 50 = {...}` | Set equality |
-| 690 | `DiagonalCandidates 100 = {...}` | Set equality |
-| 693 | `noTripleWorksIn 50` | Exhaustive search |
-| 697, 702 | Triple/five element checks | Exhaustive search |
-| 1248, 1254, 1521 | Various finite checks | Exhaustive search |
-
-**Recommendation:** LEAVE THESE. Finite decidable checks are a valid use of `native_decide`.
-
-### TIER 4: Precomputed Rational Bounds (DOCUMENT, DON'T REMOVE)
-These are the big ones at lines 947, 951, 955, 967, 988, 1009.
-
-| Line | Statement | Purpose |
-|------|-----------|---------|
-| 947 | `diagPrimesCoarse_sum_eq` | ∑(1/p²) for diagonal primes = precomputed |
-| 951 | `offPrimesCoarse_sum_eq` | ∑(1/p²) for off-diagonal primes = precomputed |
-| 955 | `no5PrimesCoarse_sum_eq` | ∑(1/p²) for p≠5 primes = precomputed |
-| 967 | `diagPrimeSumCoarse_bound` | Numerical inequality |
-| 988 | `offPrimeSumCoarse_bound` | Numerical inequality |
-| 1009 | `no5PrimeSumCoarse_bound` | Numerical inequality |
-
-**Why they exist:** Direct Lean computation hits recursion/heartbeat limits. External Python computed these, then `native_decide` verifies the equality.
-
-**Recommendation:**
-1. Add documentation explaining methodology
-2. Keep `native_decide` but add comments explaining why
-3. Consider replacing with `decide` if feasible
-
----
-
-## Execution Plan
-
-### Phase 1: Tier 1 (Trivial Arithmetic)
-1. Read lines around each occurrence
-2. Replace `native_decide` with `norm_num` or `rfl`
-3. Compile after each change
-4. Commit with message: "refactor: replace trivial native_decide with norm_num"
-
-### Phase 2: Tier 2 (ZMod)
-1. Try replacing `native_decide` with `decide`
-2. If `decide` fails, try explicit proof or leave as-is
-3. Compile after each change
-4. Commit with message: "refactor: replace ZMod native_decide with decide"
-
-### Phase 3: Documentation
-1. Add comments to Tier 4 explaining the precomputed constants
-2. Add docstring explaining N₀ computation
-3. Commit with message: "docs: document precomputed constants and N₀"
-
-### Phase 4: Verification
-1. Full `lake build`
-2. Run any tests
-3. Diff against original to verify only intended changes
-
----
-
-## Commands Reference
+### Build / Audit Commands
 
 ```bash
-# Build single file
 cd /Users/ray/Desktop/CLARITY-DIGITAL-TWIN/erdos-banger/formal/lean
-lake build Erdos.Problem848_Refactor
+source ~/.elan/env
+lake build Erdos.Problem848_GPT
 
-# Check for errors
-lake build 2>&1 | grep -i error
-
-# Diff against original
-diff Problem848.lean Problem848_Refactor.lean | head -100
+cd /Users/ray/Desktop/CLARITY-DIGITAL-TWIN/erdos-banger
+rg -n "\\bnative_decide\\b" formal/lean/Erdos/Problem848_GPT.lean
+rg -n "\\bsorry\\b" formal/lean/Erdos/Problem848_GPT.lean
 ```
+
+**Note:** Full builds can be slow (~10–15 minutes) due to very large `simp`/`norm_num` goals in the coarse prime-sum section.
 
 ---
 
-## Key Insight for Critics
+## What Actually Solved the “Mathlib bans native_decide” Problem
 
-**`native_decide` vs `decide`:**
-- Both use kernel computation to verify decidable propositions
-- `native_decide` uses native code (faster but "less pure")
-- `decide` uses the Lean kernel (slower but "cleaner")
-- **Neither affects correctness** - if it compiles, it's mathematically valid
+### 1) Squarefree numerals without `native_decide` (certified computation)
 
-**The real issue:** Some reviewers view `native_decide` as "cheating" because it bypasses the type-theoretic proof. But for finite decidable checks, it's a pragmatic choice.
+We use:
 
----
+- `Mathlib.Tactic.Simproc.Factors` (computes `Nat.primeFactorsList` for numerals via a simproc)
+- `Nat.squarefree_iff_nodup_primeFactorsList` (reduces squarefreeness to `Nodup` of the factor list)
 
-## Status Tracking
+Pattern:
 
-- [x] Audit complete
-- [x] Methodology documented
-- [x] Phase 1: Tier 1 refactoring (11 `native_decide` → `norm_num`/`rfl`)
-- [x] Phase 2: Tier 2 refactoring (5 ZMod `native_decide` → `decide`)
-- [x] Phase 3: Additional Tier 3 refactoring (see results below)
-- [x] Phase 4: Verification (compiles clean, 0 errors, 0 sorries)
-- [x] Phase 5: Explicit proofs for Squarefree lemmas (2 done, 10 remaining)
-- [ ] PR updated
-
-**Results:** 43 → 11 `native_decide` (32 removed, **74% reduction**)
-
----
-
-## Phase 3 Findings: What Can/Cannot Use `decide`
-
-**SUCCESSFULLY CONVERTED TO `decide` (9 more):**
-| Line | Lemma | Reason it works |
-|------|-------|-----------------|
-| 1248 | `residues25_card` | Pure Finset.card computation |
-| 1254 | `residues50odd_card` | Pure Finset.card computation |
-| 1521 | `zmod25_sq_eq_neg_one_iff` | Finite ZMod 25 enumeration |
-| 682 | `A₇_50_card` | Finset.range + filter on `%` |
-| 684 | `A₇_100_card` | Finset.range + filter on `%` |
-| 686 | `A₇_200_card` | Finset.range + filter on `%` |
-
-**SOLVED WITH EXPLICIT PROOFS (Phase 5):**
-
-| Line | Lemma | Solution |
-|------|-------|----------|
-| 651 | `seven_times_eighteen_plus_one_squarefree` | ✅ `norm_num` proves `Nat.Prime 127`, then `Nat.Prime.squarefree` |
-| 654 | `pair_7_18_fails` | ✅ Use squarefree lemma as witness |
-| 665 | `pair_32_43_works` | ✅ Explicit case split + `not_squarefree_1025/1377/1850` lemmas |
-
-**REMAINING `native_decide` (11):**
-
-| Line | Lemma | Why `decide` fails |
-|------|-------|-------------------|
-| 688 | `diag_cand_50` | `DiagonalCandidates` filters by `Squarefree` |
-| 690 | `diag_cand_100` | `DiagonalCandidates` filters by `Squarefree` |
-| 693 | `no_triple_works_50` | Uses `tripleHasProperty` which checks `Squarefree` |
-| 697 | `no_triple_in_candidates` | Involves `Squarefree` checks |
-| 702 | `no_five_in_candidates_100` | Involves `Squarefree` checks |
-| 947 | `diagPrimesCoarse_sum_eq` | Large sum over primes - kernel too slow |
-| 951 | `offPrimesCoarse_sum_eq` | Large sum over primes - kernel too slow |
-| 955 | `no5PrimesCoarse_sum_eq` | Large sum over primes - kernel too slow |
-| 967 | `diagPrimeSumCoarse_bound` | Inequality with ~2000-digit numbers |
-| 988 | `offPrimeSumCoarse_bound` | Inequality with ~2000-digit numbers |
-| 1009 | `no5PrimeSumCoarse_bound` | Inequality with ~2000-digit numbers |
-
-**Root cause:** `Squarefree` is defined via `Nat.minSqFac` which uses `Option` with pattern matching.
-The kernel's `whnf` (weak head normal form) reduction gets stuck at:
-```
-match (7 * 18 + 1).minSqFac with
-| none => isTrue ⋯
-| some val => isFalse ⋯
-```
-Native code handles this fine, but the pure kernel cannot reduce it.
-
-**Conclusion:** ~~The remaining 14 `native_decide` are NOT removable~~ **UPDATE: We proved Option 2 works!**
-
-**Key Discovery:** `norm_num` can prove primality!
 ```lean
-example : Nat.Prime 127 := by norm_num  -- Works in Lean 4.27.0 with Mathlib
+import Mathlib.Tactic.Simproc.Factors
+
+-- Squarefree n ↔ Nodup (primeFactorsList n); simp computes primeFactorsList for numerals.
+-- Example (conceptual):
+-- refine (Nat.squarefree_iff_nodup_primeFactorsList (by decide : (n:ℕ) ≠ 0)).2 ?_
+-- simp
 ```
 
-This unlocks Squarefree proofs via `Nat.Prime.squarefree`. We've already eliminated 2 more this way.
+This avoids the “kernel can’t compute `Nat.minSqFac`” failure mode, without adding axioms.
 
-**Remaining 11:** The exhaustive search lemmas and large computation bounds are harder but potentially tractable with more work.
+### 2) Avoid `Finset` equality decision: prove **List equality**, then lift
+
+Core issue: `decide` on `Finset` equality reduces to multiset/permutation machinery (can get stuck or explode).
+
+Fix: compute an ordered `List` and prove **strict list equality** (fast), then lift with `List.toFinset`.
+
+In `Problem848_GPT.lean` this is used for `diagPrimesCoarse` / `no5PrimesCoarse` at the coarse cutoff:
+
+- explicit lists: `diagPrimesCoarse_listL`, `no5PrimesCoarse_listL`
+- computed lists: `diagPrimesCoarse_computed_list`, `no5PrimesCoarse_computed_list`
+- lift: `congrArg List.toFinset` + simp
+
+### 3) The “hidden gotcha”: `(p : Num).Prime` doesn’t reduce for `decide`
+
+`Num.Prime` is designed for kernel computation, but the cast `(p : Num)` (via `Num.ofNat'`) does not unfold enough for `decide` to see the `Num.pos` constructor.
+
+Working fix: define a **kernel-reducible** conversion:
+
+```lean
+def natToNum : ℕ → Num
+  | 0 => 0
+  | n + 1 => natToNum n + 1
+```
+
+Then compute primality via `(natToNum p).Prime`, and bridge back to `Nat.Prime p` using `(↑(natToNum p) : ℕ) = p`.
+
+This makes list-based prime enumeration computable by `decide` in the kernel.
 
 ---
 
-## Code Quality Audit (AI Slop Check)
+## Prime Sums (Why the Build Is Slow)
 
-**Date:** 2026-01-29
-**Status:** Documented for future cleanup (Make it work → Make it right)
+The coarse prime-sum equalities/inequalities are closed by expanding to a gigantic explicit sum (via `simp`) and finishing with `norm_num`.
 
-### Compiler Warnings (40 total)
+This is correct, but expensive for the kernel and requires large `maxSteps` / `maxHeartbeats` in a few lemmas.
 
-| Type | Count | Example Lines | Fix |
-|------|-------|---------------|-----|
-| `simpa` → `simp` | ~30 | 1157, 1216, 1274, 1447, ... | Replace `simpa` with `simp` |
-| Unused simp args | ~5 | 1084, 1613, 1975, 3171, 3185 | Remove `mul_assoc` from simp calls |
-| `simpa using x` → `simp at x` | ~5 | 2043, 2058, 2430, 2513 | Cleaner syntax |
+**Future improvement ideas (do not change Lean file right now):**
 
-**Priority:** LOW - These are style warnings, not errors.
+- Replace “expand-then-`norm_num`” with `field_simp` (or `simp only [field]`) to clear denominators once and reduce to integer arithmetic.
+- Isolate the coarse-sum verification into a separate file or section with tightly scoped options so the rest of the file compiles faster.
 
-### Potentially Unused Lemmas (10 found)
+---
 
-| Lemma | Line | Status |
-|-------|------|--------|
-| `density_single_prime` | ~590 | Never referenced after definition |
-| `pair_7_18_fails` | 658 | May be illustrative only |
-| `no_triple_works_50` | 738 | Used in theorem but check |
-| `diagPrimeSumCoarse_eq_fast` | ~960 | Possibly superseded |
-| `offPrimeSumCoarse_eq_fast` | ~965 | Possibly superseded |
-| `no5PrimeSumCoarse_eq_fast` | ~970 | Possibly superseded |
-| `cast_nat_div_le_rat` | TBD | Check if used |
-| `prime_not_dvd_left_of_sq_dvd_mul_add_one` | TBD | Check if used |
-| `problem_848_statement_50` | TBD | May be illustrative |
-| `problem_848_statement_100` | TBD | May be illustrative |
+## Presentation Cleanup (No Lean Changes Yet)
 
-**Action:** Before removing, verify they're not:
-1. Used in downstream proofs
-2. Illustrative/documentation lemmas
-3. Part of the logical story
+The file builds but emits many linter warnings (e.g. “try `simp` instead of `simpa`”, unused simp args, deprecations).
 
-### Typical AI Slop Patterns to Watch For
+Recommended **non-behavioral** cleanup pass later:
 
-| Pattern | Found? | Notes |
-|---------|--------|-------|
-| Redundant parentheses | Some | Minor, cosmetic |
-| Overly verbose tactics | Yes | `simp only [...]` could often be shorter |
-| Duplicate logic | Maybe | `_18` variants mirror `_7` variants |
-| Magic numbers without comments | Few | Most constants documented |
-| Dead code paths | Check | Need deeper analysis |
+1. Replace unnecessary `simpa` with `simp` where suggested.
+2. Remove unused simp args from simp lists.
+3. Replace deprecated `Finset.exists_ne_of_one_lt_card` with `Finset.exists_mem_ne`.
+4. Consolidate repeated `set_option maxRecDepth` / `maxHeartbeats` blocks into a single “heavy computation” region (or a helper file) for readability.
 
-### Recommended Cleanup Order (Post native_decide)
+---
 
-1. **Phase A:** Fix compiler warnings (40 `simpa` → `simp`)
-2. **Phase B:** Verify/remove unused lemmas
-3. **Phase C:** Consolidate duplicated `_7` / `_18` patterns if possible
-4. **Phase D:** Add docstrings to exported theorems
-5. **Phase E:** Consider extracting helper lemmas to separate file
+## Historical Note (For Reviewers)
 
-### Stats Summary
+Other files in `formal/lean/Erdos/` may still contain `native_decide` (e.g. older FINAL/Claude variants).
 
-```
-Total lines:        3920+
-Definitions:        123
-Compiler warnings:  40
-Potentially unused: 10
-native_decide:      11 (down from 43)
-sorries:            0
-errors:             0
-```
+The Mathlib-compliant target for this sprint is the sandbox:
 
-**Bottom line:** The proof is mathematically valid. Cleanup is cosmetic polish, not correctness.
+- `formal/lean/Erdos/Problem848_GPT.lean` (`native_decide` = 0)
