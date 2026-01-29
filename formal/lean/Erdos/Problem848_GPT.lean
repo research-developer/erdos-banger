@@ -2527,7 +2527,7 @@ lemma diagPrimesCoarse_eq_list : diagPrimesCoarse = diagPrimesCoarse_list := by
 
 set_option maxRecDepth 20000 in
 set_option maxHeartbeats 5000000 in
-lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
+ lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
   classical
   ext p
   by_cases hp : p < primeCutoff + 1
@@ -2535,33 +2535,33 @@ lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
     have hp' : p < 2001 := by
       simpa [primeCutoff] using hp
     interval_cases p <;>
-      (match_target with
-        | (?n ∈ no5PrimesCoarse ↔ ?n ∈ no5PrimesCoarse_list) =>
-          (first
-            | -- prime case
-              have hnprime : Nat.Prime n := by norm_num
-              by_cases hn5 : n = 5
-              · have hnot_coarse : n ∉ no5PrimesCoarse := by
-                  simp (config := { failIfUnchanged := false })
-                    [no5PrimesCoarse, primesUpTo, primeCutoff, hnprime, hn5]
-                have hnot_list : n ∉ no5PrimesCoarse_list := by
-                  have : (5 : ℕ) ∉ no5PrimesCoarse_list := by decide
-                  simpa [hn5] using this
-                simpa [hnot_coarse, hnot_list]
-              · have hmem_coarse : n ∈ no5PrimesCoarse := by
-                  simp (config := { failIfUnchanged := false })
-                    [no5PrimesCoarse, primesUpTo, primeCutoff, hnprime, hn5]
-                have hmem_list : n ∈ no5PrimesCoarse_list := by decide
-                simpa [hmem_coarse, hmem_list]
-            | -- composite case
-              have hnnotprime : ¬ Nat.Prime n := by norm_num
-              have hnot_coarse : n ∉ no5PrimesCoarse := by
-                simp (config := { failIfUnchanged := false })
-                  [no5PrimesCoarse, primesUpTo, primeCutoff, hnnotprime]
-              have hnot_list : n ∉ no5PrimesCoarse_list := by
-                intro hnmem
-                exact hnnotprime (no5PrimesCoarse_list_mem_prime hnmem)
-              simpa [hnot_coarse, hnot_list]))
+      (first
+        | -- prime case
+          have hp_prime : Nat.Prime p := by norm_num
+          by_cases hp5 : p = 5
+          ·
+            have hnot_coarse : p ∉ no5PrimesCoarse := by
+              simp (config := { failIfUnchanged := false })
+                [no5PrimesCoarse, primesUpTo, primeCutoff, hp_prime, hp5]
+            have hnot_list : p ∉ no5PrimesCoarse_list := by
+              have : (5 : ℕ) ∉ no5PrimesCoarse_list := by decide
+              simpa [hp5] using this
+            simpa [hnot_coarse, hnot_list]
+          ·
+            have hmem_coarse : p ∈ no5PrimesCoarse := by
+              simp (config := { failIfUnchanged := false })
+                [no5PrimesCoarse, primesUpTo, primeCutoff, hp_prime, hp5]
+            have hmem_list : p ∈ no5PrimesCoarse_list := by decide
+            simpa [hmem_coarse, hmem_list]
+        | -- composite case
+          have hp_notprime : ¬ Nat.Prime p := by norm_num
+          have hnot_coarse : p ∉ no5PrimesCoarse := by
+            simp (config := { failIfUnchanged := false })
+              [no5PrimesCoarse, primesUpTo, primeCutoff, hp_notprime]
+          have hnot_list : p ∉ no5PrimesCoarse_list := by
+            intro hp_mem
+            exact hp_notprime (no5PrimesCoarse_list_mem_prime hp_mem)
+          simpa [hnot_coarse, hnot_list])
   ·
     have hp' : ¬ p < 2001 := by
       simpa [primeCutoff] using hp
