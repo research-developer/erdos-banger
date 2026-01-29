@@ -2449,8 +2449,8 @@ set_option maxRecDepth 20000 in
 /-- Explicit diagonal-prime list for `primeCutoff = 2000`.
 
 This is the set of primes `p ≤ 2000` with `p % 4 = 1` and `13 ≤ p`. -/
-def diagPrimesCoarse_list : Finset ℕ :=
-  ([
+def diagPrimesCoarse_listL : List ℕ :=
+  [
   13, 17, 29, 37, 41, 53, 61, 73, 89, 97, 101, 109,
   113, 137, 149, 157, 173, 181, 193, 197, 229, 233, 241, 257,
   269, 277, 281, 293, 313, 317, 337, 349, 353, 373, 389, 397,
@@ -2464,12 +2464,15 @@ def diagPrimesCoarse_list : Finset ℕ :=
   1613, 1621, 1637, 1657, 1669, 1693, 1697, 1709, 1721, 1733, 1741, 1753,
   1777, 1789, 1801, 1861, 1873, 1877, 1889, 1901, 1913, 1933, 1949, 1973,
   1993, 1997
-  ] : List ℕ).toFinset
+  ]
+
+def diagPrimesCoarse_list : Finset ℕ :=
+  diagPrimesCoarse_listL.toFinset
 
 set_option maxRecDepth 40000 in
 /-- Explicit prime list for `primeCutoff = 2000` with `p ≠ 5`. -/
-def no5PrimesCoarse_list : Finset ℕ :=
-  ([
+def no5PrimesCoarse_listL : List ℕ :=
+  [
   2, 3, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41,
   43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
   101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157,
@@ -2496,7 +2499,40 @@ def no5PrimesCoarse_list : Finset ℕ :=
   1789, 1801, 1811, 1823, 1831, 1847, 1861, 1867, 1871, 1873, 1877, 1879,
   1889, 1901, 1907, 1913, 1931, 1933, 1949, 1951, 1973, 1979, 1987, 1993,
   1997, 1999
-  ] : List ℕ).toFinset
+  ]
+
+def no5PrimesCoarse_list : Finset ℕ :=
+  no5PrimesCoarse_listL.toFinset
+
+/-!
+Computable (list-level) prime enumerations.
+
+The bottleneck is deciding finset equalities, which reduces to multiset permutation checks.
+Instead we compute *ordered lists* via kernel-friendly `Num.Prime`, prove list equality by `decide`,
+and lift to finsets via `List.toFinset`.
+-/
+
+def isDiagPrimeBool (p : ℕ) : Bool :=
+  decide ((p : Num).Prime ∧ p % 4 = 1 ∧ 13 ≤ p)
+
+def isNo5PrimeBool (p : ℕ) : Bool :=
+  decide ((p : Num).Prime ∧ p ≠ 5)
+
+def diagPrimesCoarse_computed_list : List ℕ :=
+  (List.range (primeCutoff + 1)).filter isDiagPrimeBool
+
+def no5PrimesCoarse_computed_list : List ℕ :=
+  (List.range (primeCutoff + 1)).filter isNo5PrimeBool
+
+set_option maxRecDepth 40000 in
+set_option maxHeartbeats 20000000 in
+lemma diagPrimesCoarse_computed_list_eq : diagPrimesCoarse_computed_list = diagPrimesCoarse_listL := by
+  decide
+
+set_option maxRecDepth 80000 in
+set_option maxHeartbeats 40000000 in
+lemma no5PrimesCoarse_computed_list_eq : no5PrimesCoarse_computed_list = no5PrimesCoarse_listL := by
+  decide
 
 set_option maxRecDepth 20000 in
  /-- Kernel-friendly prime list: uses `Num.Prime` instead of `Nat.Prime`. -/

@@ -2477,7 +2477,9 @@ def diag_explicit_list : List ℕ :=
 def diag_computed_list : List ℕ :=
   (List.range (primeCutoff + 1)).filter is_diag_prime_bool
 
-/-- LIST equality - this is O(n) fast! -/
+set_option maxRecDepth 1000000 in
+set_option maxHeartbeats 100000000 in
+/-- LIST equality - kernel computes this directly. -/
 lemma diag_lists_eq : diag_computed_list = diag_explicit_list := by decide
 
 set_option maxRecDepth 20000 in
@@ -2519,7 +2521,9 @@ def no5_explicit_list : List ℕ :=
 def no5_computed_list : List ℕ :=
   (List.range (primeCutoff + 1)).filter is_no5_prime_bool
 
-/-- LIST equality - this is O(n) fast! -/
+set_option maxRecDepth 1000000 in
+set_option maxHeartbeats 200000000 in
+/-- LIST equality - kernel computes this directly. -/
 lemma no5_lists_eq : no5_computed_list = no5_explicit_list := by decide
 
 set_option maxRecDepth 40000 in
@@ -2554,27 +2558,20 @@ lemma no5PrimesCoarse_eq_num : no5PrimesCoarse = no5PrimesCoarse_num := by
 
 set_option maxRecDepth 20000 in
 lemma diagPrimesCoarse_eq_list : diagPrimesCoarse = diagPrimesCoarse_list := by
-  -- Use List equality (fast!) then lift to Finset
+  -- Use List equality then lift to Finset
   have h_list : diag_computed_list = diag_explicit_list := diag_lists_eq
-  -- diagPrimesCoarse_list = diag_explicit_list.toFinset by definition
-  -- We need to show diagPrimesCoarse = diag_explicit_list.toFinset
   simp only [diagPrimesCoarse_list]
   rw [← h_list]
-  -- Now need: diagPrimesCoarse = diag_computed_list.toFinset
+  -- Now show: diagPrimesCoarse = diag_computed_list.toFinset
   ext p
   simp only [diagPrimesCoarse, primesUpTo, Finset.mem_filter, Finset.mem_range,
              List.mem_toFinset, diag_computed_list, List.mem_filter,
              List.mem_range, is_diag_prime_bool, Bool.and_eq_true,
-             beq_iff_eq, decide_eq_true_eq, Nat.Prime]
-  constructor
-  · intro ⟨⟨hp_lt, hp_prime⟩, hp_mod, hp_ge⟩
-    exact ⟨hp_lt, (Num.Prime.iff_nat_prime.mpr hp_prime), hp_mod, hp_ge⟩
-  · intro ⟨hp_lt, hp_num_prime, hp_mod, hp_ge⟩
-    exact ⟨⟨hp_lt, Num.Prime.iff_nat_prime.mp hp_num_prime⟩, hp_mod, hp_ge⟩
+             beq_iff_eq, decide_eq_true_eq, Num.Prime, and_assoc]
 
 set_option maxRecDepth 20000 in
 lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
-  -- Use List equality (fast!) then lift to Finset
+  -- Use List equality then lift to Finset
   have h_list : no5_computed_list = no5_explicit_list := no5_lists_eq
   simp only [no5PrimesCoarse_list]
   rw [← h_list]
@@ -2582,12 +2579,7 @@ lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
   simp only [no5PrimesCoarse, primesUpTo, Finset.mem_filter, Finset.mem_range,
              List.mem_toFinset, no5_computed_list, List.mem_filter,
              List.mem_range, is_no5_prime_bool, Bool.and_eq_true,
-             bne_iff_ne, decide_eq_true_eq, Nat.Prime]
-  constructor
-  · intro ⟨⟨hp_lt, hp_prime⟩, hp_ne5⟩
-    exact ⟨hp_lt, (Num.Prime.iff_nat_prime.mpr hp_prime), hp_ne5⟩
-  · intro ⟨hp_lt, hp_num_prime, hp_ne5⟩
-    exact ⟨⟨hp_lt, Num.Prime.iff_nat_prime.mp hp_num_prime⟩, hp_ne5⟩
+             bne_iff_ne, decide_eq_true_eq, Num.Prime, and_assoc]
 
 -- Precomputed values (verified by Python; checked below using `simp`+`norm_num`)
 def diagPrimeDen : ℕ := 675067109924022977481515022034423512130479741539843807153469481052459028449452239232681980484545751069432973665683513280116016389500052645708341506941475615768814814870158065312753645077424198983444958279911880503831858071611272341994669353872744477768603209022359280059888618077776469014358245817529542708972753086348322957228843681307207963965767547374440897724003930473524265583251046012199781767374651834379560815527295708011857396433182071977716977932488431948888643891386067228558290565991227834390721337450990589134617661285518460561497407002739052848895879304579595915925480129856478914111298702283283880166246123671142902924556816351174498397701877438338568113063768986635318468872328007108093276626460935787650985933892343902371072373911766012319899393655815824547851160252826653544514334345091072636858918139681
