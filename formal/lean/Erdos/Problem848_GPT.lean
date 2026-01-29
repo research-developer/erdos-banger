@@ -54,6 +54,8 @@ import Mathlib.Tactic.IntervalCases
 import Mathlib.Tactic.FinCases
 import Mathlib.Tactic.Simproc.Factors
 import Mathlib.Tactic.NormNum.BigOperators
+import Mathlib.Data.Num.Prime
+import Mathlib.Data.Num.Lemmas
 import Mathlib.NumberTheory.Chebyshev
 import Mathlib.Analysis.PSeries
 
@@ -2448,7 +2450,7 @@ set_option maxRecDepth 20000 in
 
 This is the set of primes `p ≤ 2000` with `p % 4 = 1` and `13 ≤ p`. -/
 def diagPrimesCoarse_list : Finset ℕ :=
-{
+  ([
   13, 17, 29, 37, 41, 53, 61, 73, 89, 97, 101, 109,
   113, 137, 149, 157, 173, 181, 193, 197, 229, 233, 241, 257,
   269, 277, 281, 293, 313, 317, 337, 349, 353, 373, 389, 397,
@@ -2462,12 +2464,12 @@ def diagPrimesCoarse_list : Finset ℕ :=
   1613, 1621, 1637, 1657, 1669, 1693, 1697, 1709, 1721, 1733, 1741, 1753,
   1777, 1789, 1801, 1861, 1873, 1877, 1889, 1901, 1913, 1933, 1949, 1973,
   1993, 1997
-}
+  ] : List ℕ).toFinset
 
 set_option maxRecDepth 40000 in
 /-- Explicit prime list for `primeCutoff = 2000` with `p ≠ 5`. -/
 def no5PrimesCoarse_list : Finset ℕ :=
-{
+  ([
   2, 3, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41,
   43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
   101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157,
@@ -2494,55 +2496,47 @@ def no5PrimesCoarse_list : Finset ℕ :=
   1789, 1801, 1811, 1823, 1831, 1847, 1861, 1867, 1871, 1873, 1877, 1879,
   1889, 1901, 1907, 1913, 1931, 1933, 1949, 1951, 1973, 1979, 1987, 1993,
   1997, 1999
-}
+  ] : List ℕ).toFinset
 
 set_option maxRecDepth 20000 in
-set_option maxHeartbeats 5000000 in
-lemma diagPrimesCoarse_eq_list : diagPrimesCoarse = diagPrimesCoarse_list := by
+ /-- Kernel-friendly prime list: uses `Num.Prime` instead of `Nat.Prime`. -/
+def primesUpTo_num (B : ℕ) : Finset ℕ :=
+  (Finset.range (B + 1)).filter (fun p => (p : Num).Prime)
+
+def diagPrimesCoarse_num : Finset ℕ :=
+  (primesUpTo_num primeCutoff).filter (fun p => p % 4 = 1 ∧ 13 ≤ p)
+
+def no5PrimesCoarse_num : Finset ℕ :=
+  (primesUpTo_num primeCutoff).filter (fun p => p ≠ 5)
+
+lemma primesUpTo_eq_num (B : ℕ) : primesUpTo B = primesUpTo_num B := by
   classical
   ext p
-  by_cases hp : p < primeCutoff + 1
-  ·
-    have hp' : p < 2001 := by
-      simpa [primeCutoff] using hp
-    interval_cases p <;>
-      (simp (config := { maxSteps := 2000000 }) only
-          [diagPrimesCoarse, primesUpTo, primeCutoff, diagPrimesCoarse_list,
-           Finset.mem_filter, Finset.mem_range, Finset.mem_insert, Finset.mem_singleton] <;>
-        norm_num)
-  ·
-    have hp' : ¬ p < 2001 := by
-      simpa [primeCutoff] using hp
-    have hsub : diagPrimesCoarse_list ⊆ Finset.range (primeCutoff + 1) := by decide
-    have hp_not_list : p ∉ diagPrimesCoarse_list := by
-      intro hp_mem
-      have hp_range : p ∈ Finset.range (primeCutoff + 1) := hsub hp_mem
-      exact hp (by simpa [Finset.mem_range] using hp_range)
-    simp [diagPrimesCoarse, primesUpTo, primeCutoff, hp', hp_not_list]
+  simp [primesUpTo, primesUpTo_num, Num.Prime, Num.to_of_nat]
+
+lemma diagPrimesCoarse_eq_num : diagPrimesCoarse = diagPrimesCoarse_num := by
+  classical
+  ext p
+  simp [diagPrimesCoarse, diagPrimesCoarse_num, primesUpTo_eq_num]
+
+lemma no5PrimesCoarse_eq_num : no5PrimesCoarse = no5PrimesCoarse_num := by
+  classical
+  ext p
+  simp [no5PrimesCoarse, no5PrimesCoarse_num, primesUpTo_eq_num]
 
 set_option maxRecDepth 20000 in
 set_option maxHeartbeats 20000000 in
+lemma diagPrimesCoarse_eq_list : diagPrimesCoarse = diagPrimesCoarse_list := by
+  have h : diagPrimesCoarse_num = diagPrimesCoarse_list := by
+    decide
+  simpa [diagPrimesCoarse_eq_num] using h
+
+set_option maxRecDepth 20000 in
+set_option maxHeartbeats 40000000 in
 lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
-  classical
-  ext p
-  by_cases hp : p < primeCutoff + 1
-  ·
-    have hp' : p < 2001 := by
-      simpa [primeCutoff] using hp
-    interval_cases p <;>
-      (simp (config := { maxSteps := 8000000 }) only
-          [no5PrimesCoarse, primesUpTo, primeCutoff, no5PrimesCoarse_list,
-           Finset.mem_filter, Finset.mem_range, Finset.mem_insert, Finset.mem_singleton] <;>
-        norm_num)
-  ·
-    have hp' : ¬ p < 2001 := by
-      simpa [primeCutoff] using hp
-    have hsub : no5PrimesCoarse_list ⊆ Finset.range (primeCutoff + 1) := by decide
-    have hp_not_list : p ∉ no5PrimesCoarse_list := by
-      intro hp_mem
-      have hp_range : p ∈ Finset.range (primeCutoff + 1) := hsub hp_mem
-      exact hp (by simpa [Finset.mem_range] using hp_range)
-    simp [no5PrimesCoarse, primesUpTo, primeCutoff, hp', hp_not_list]
+  have h : no5PrimesCoarse_num = no5PrimesCoarse_list := by
+    decide
+  simpa [no5PrimesCoarse_eq_num] using h
 
 -- Precomputed values (verified by Python; checked below using `simp`+`norm_num`)
 def diagPrimeDen : ℕ := 675067109924022977481515022034423512130479741539843807153469481052459028449452239232681980484545751069432973665683513280116016389500052645708341506941475615768814814870158065312753645077424198983444958279911880503831858071611272341994669353872744477768603209022359280059888618077776469014358245817529542708972753086348322957228843681307207963965767547374440897724003930473524265583251046012199781767374651834379560815527295708011857396433182071977716977932488431948888643891386067228558290565991227834390721337450990589134617661285518460561497407002739052848895879304579595915925480129856478914111298702283283880166246123671142902924556816351174498397701877438338568113063768986635318468872328007108093276626460935787650985933892343902371072373911766012319899393655815824547851160252826653544514334345091072636858918139681
