@@ -1245,7 +1245,7 @@ def residues25 : Finset ℕ :=
   (Finset.range 25).filter (fun t => t ≠ 7 ∧ t ≠ 18)
 
 lemma residues25_card : residues25.card = 23 := by
-  native_decide
+  decide
 
 def residues50odd : Finset ℕ :=
   (Finset.range 50).filter (fun t => t % 2 = 1 ∧ t % 25 ≠ 7 ∧ t % 25 ≠ 18)
