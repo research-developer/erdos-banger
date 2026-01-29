@@ -2585,7 +2585,8 @@ lemma diagPrimesCoarse_eq_list : diagPrimesCoarse = diagPrimesCoarse_list := by
     classical
     have hcomp : diagPrimesCoarse_num = diagPrimesCoarse_computed_list.toFinset := by
       ext p
-      simp [diagPrimesCoarse_num, primesUpTo_num, diagPrimesCoarse_computed_list, isDiagPrimeBool]
+      simp [diagPrimesCoarse_num, primesUpTo_num, diagPrimesCoarse_computed_list, isDiagPrimeBool,
+        and_assoc, and_left_comm, and_comm]
     have hlift : diagPrimesCoarse_computed_list.toFinset = diagPrimesCoarse_list := by
       simpa [diagPrimesCoarse_list] using congrArg List.toFinset diagPrimesCoarse_computed_list_eq
     exact hcomp.trans hlift
@@ -2598,7 +2599,8 @@ lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
     classical
     have hcomp : no5PrimesCoarse_num = no5PrimesCoarse_computed_list.toFinset := by
       ext p
-      simp [no5PrimesCoarse_num, primesUpTo_num, no5PrimesCoarse_computed_list, isNo5PrimeBool]
+      simp [no5PrimesCoarse_num, primesUpTo_num, no5PrimesCoarse_computed_list, isNo5PrimeBool,
+        and_assoc, and_left_comm, and_comm]
     have hlift : no5PrimesCoarse_computed_list.toFinset = no5PrimesCoarse_list := by
       simpa [no5PrimesCoarse_list] using congrArg List.toFinset no5PrimesCoarse_computed_list_eq
     exact hcomp.trans hlift
