@@ -2474,15 +2474,6 @@ def diag_explicit_list : List ℕ :=
    1777, 1789, 1801, 1861, 1873, 1877, 1889, 1901, 1913, 1933, 1949, 1973,
    1993, 1997]
 
-/-- Computed list using Bool filter (for kernel computation). -/
-def diag_computed_list : List ℕ :=
-  (List.range (primeCutoff + 1)).filter is_diag_prime_bool
-
-set_option maxRecDepth 1000000 in
-set_option maxHeartbeats 100000000 in
-/-- LIST equality - kernel computes this directly. -/
-lemma diag_lists_eq : diag_computed_list = diag_explicit_list := by decide
-
 set_option maxRecDepth 20000 in
 /-- Explicit diagonal-prime list for `primeCutoff = 2000`.
 
