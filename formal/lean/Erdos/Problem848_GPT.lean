@@ -1935,8 +1935,7 @@ lemma no_five_in_candidates_100 :
         b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 ∨ b = 57 ∨ b = 68 ∨ b = 70 ∨ b = 82 ∨
           b = 93 ∨ b = 99 := by
       simpa [C, Finset.mem_insert, Finset.mem_singleton] using hbC
-    rcases hb_cases with
-    | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+    rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
     · have : Squarefree (38 * 7 + 1) := by
         simpa [show 38 * 7 + 1 = 267 by norm_num, mul_comm] using squarefree_267
       exact (hsprop 38 h38 7 (by simpa [C] using hb) this).elim
@@ -1982,8 +1981,7 @@ lemma no_five_in_candidates_100 :
           b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 ∨ b = 57 ∨ b = 68 ∨ b = 70 ∨ b = 82 ∨
             b = 93 ∨ b = 99 := by
         simpa [C, Finset.mem_insert, Finset.mem_singleton] using hbC
-      rcases hb_cases with
-      | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+      rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
       · have : Squarefree (18 * 7 + 1) := by
           simpa [show 18 * 7 + 1 = 127 by norm_num] using squarefree_127
         exact (hsprop 18 h18 7 (by simpa [C] using hb) this).elim
@@ -2024,8 +2022,7 @@ lemma no_five_in_candidates_100 :
           b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 ∨ b = 57 ∨ b = 68 ∨ b = 70 ∨ b = 82 ∨
             b = 93 ∨ b = 99 := by
         simpa [C, Finset.mem_insert, Finset.mem_singleton] using hbC
-      rcases hb_cases with
-      | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+      rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
       · have : Squarefree (70 * 7 + 1) := by
           simpa [show 70 * 7 + 1 = 491 by norm_num, mul_comm] using squarefree_491
         exact (hsprop 70 h70 7 (by simpa [C] using hb) this).elim
@@ -2066,8 +2063,7 @@ lemma no_five_in_candidates_100 :
           b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 ∨ b = 57 ∨ b = 68 ∨ b = 70 ∨ b = 82 ∨
             b = 93 ∨ b = 99 := by
         simpa [C, Finset.mem_insert, Finset.mem_singleton] using hbC
-      rcases hb_cases with
-      | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+      rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
       · have : Squarefree (99 * 7 + 1) := by
           simpa [show 99 * 7 + 1 = 694 by norm_num, mul_comm] using squarefree_694
         exact (hsprop 99 h99 7 (by simpa [C] using hb) this).elim
@@ -2086,7 +2082,7 @@ lemma no_five_in_candidates_100 :
       · have : Squarefree (99 * 68 + 1) := by
           simpa [show 99 * 68 + 1 = 6733 by norm_num, mul_comm] using squarefree_6733
         exact (hsprop 99 h99 68 (by simpa [C] using hb) this).elim
-      · omega
+      · exact (h70 hb).elim
       · have : Squarefree (99 * 82 + 1) := by
           simpa [show 99 * 82 + 1 = 8119 by norm_num, mul_comm] using squarefree_8119
         exact (hsprop 99 h99 82 (by simpa [C] using hb) this).elim
@@ -2106,8 +2102,7 @@ lemma no_five_in_candidates_100 :
           b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 ∨ b = 57 ∨ b = 68 ∨ b = 70 ∨ b = 82 ∨
             b = 93 ∨ b = 99 := by
         simpa [C, Finset.mem_insert, Finset.mem_singleton] using hbC
-      rcases hb_cases with
-      | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+      rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
       · simp
       · have : Squarefree (41 * 18 + 1) := by
           simpa [show 41 * 18 + 1 = 739 by norm_num, mul_comm] using squarefree_739
@@ -2146,8 +2141,7 @@ lemma no_five_in_candidates_100 :
           b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 ∨ b = 57 ∨ b = 68 ∨ b = 70 ∨ b = 82 ∨
             b = 93 ∨ b = 99 := by
         simpa [C, Finset.mem_insert, Finset.mem_singleton] using hbC
-      rcases hb_cases with
-      | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+      rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
       · simp
       · have : Squarefree (82 * 18 + 1) := by
           simpa [show 82 * 18 + 1 = 1477 by norm_num, mul_comm] using squarefree_1477
@@ -2186,8 +2180,7 @@ lemma no_five_in_candidates_100 :
         b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 ∨ b = 57 ∨ b = 68 ∨ b = 70 ∨ b = 82 ∨
           b = 93 ∨ b = 99 := by
       simpa [C, Finset.mem_insert, Finset.mem_singleton] using hbC
-    rcases hb_cases with
-    | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+    rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
     · simp
     · exact (h18 hb).elim
     · simp
