@@ -50,11 +50,15 @@ import Mathlib.Data.ZMod.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.NumberTheory.LegendreSymbol.Basic
 import Mathlib.Data.Nat.ModEq
+import Mathlib.Tactic.IntervalCases
+import Mathlib.Tactic.Simproc.Factors
 import Mathlib.NumberTheory.Chebyshev
 import Mathlib.Analysis.PSeries
 
 
 namespace Erdos.Problem848_workbench
+
+open scoped Finset
 
 -- ============================================================================
 -- SECTION 1: CORE DEFINITIONS
@@ -1086,24 +1090,6 @@ lemma not_dvd_four_sq_add_one (n : ℕ) : ¬ (4 ∣ n ^ 2 + 1) := by
     have : n % 4 < 3 + 1 := by simpa using hn4lt
     exact (Nat.lt_succ_iff).1 this
   interval_cases hcase : n % 4 <;> simp [hcase] at hmod'
-
--- Explicit roots of x^2 = -1 in small ZMod (p^2) (used to pin down diagonal candidates).
-set_option maxRecDepth 20000 in
-lemma zmod169_sq_eq_neg_one_iff :
-    ∀ x : ZMod 169, x ^ 2 = (-1 : ZMod 169) ↔ x = (70 : ZMod 169) ∨ x = (99 : ZMod 169) := by
-  decide
-
-set_option maxRecDepth 20000 in
-lemma zmod289_sq_eq_neg_one_iff :
-    ∀ x : ZMod 289, x ^ 2 = (-1 : ZMod 289) ↔ x = (38 : ZMod 289) ∨ x = (251 : ZMod 289) := by
-  decide
-
-set_option maxRecDepth 20000 in
-lemma zmod841_sq_eq_neg_one_iff :
-    ∀ x : ZMod 841, x ^ 2 = (-1 : ZMod 841) ↔ x = (41 : ZMod 841) ∨ x = (800 : ZMod 841) := by
-  decide
-
--- (We avoid larger `ZMod (p^2)` enumerations here to keep elaboration lightweight.)
 
 -- ============================================================================
 -- SECTION 7: FINITE VERIFICATION (proved without native computation)
