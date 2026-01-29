@@ -685,9 +685,9 @@ lemma A₇_100_card : (A₇ 100).card = 4 := by decide
 
 lemma A₇_200_card : (A₇ 200).card = 8 := by decide
 
-lemma diag_cand_50 : DiagonalCandidates 50 = {7, 18, 32, 38, 41, 43} := by decide
+lemma diag_cand_50 : DiagonalCandidates 50 = {7, 18, 32, 38, 41, 43} := by native_decide
 
-lemma diag_cand_100 : DiagonalCandidates 100 = {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99} := by decide
+lemma diag_cand_100 : DiagonalCandidates 100 = {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99} := by native_decide
 
 -- Key finite checks
 theorem no_triple_works_50 : noTripleWorksIn 50 := by native_decide
