@@ -2119,14 +2119,14 @@ lemma no_five_in_candidates_100 :
       · have : Squarefree (41 * 68 + 1) := by
           simpa [show 41 * 68 + 1 = 2789 by norm_num, mul_comm] using squarefree_2789
         exact (hsprop 41 h41 68 (by simpa [C] using hb) this).elim
-      · omega
+      · exact (h70 hb).elim
       · have : Squarefree (41 * 82 + 1) := by
           simpa [show 41 * 82 + 1 = 3363 by norm_num, mul_comm] using squarefree_3363
         exact (hsprop 41 h41 82 (by simpa [C] using hb) this).elim
       · have : Squarefree (41 * 93 + 1) := by
           simpa [show 41 * 93 + 1 = 3814 by norm_num, mul_comm] using squarefree_3814
         exact (hsprop 41 h41 93 (by simpa [C] using hb) this).elim
-      · omega
+      · exact (h99 hb).elim
     have : s.card ≤ 3 := by
       have : s.card ≤ ({7, 41, 43} : Finset ℕ).card := Finset.card_le_card hs_sub
       simpa using this
