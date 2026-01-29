@@ -2512,11 +2512,24 @@ Instead we compute *ordered lists* via kernel-friendly `Num.Prime`, prove list e
 and lift to finsets via `List.toFinset`.
 -/
 
+def natToNum : ℕ → Num
+  | 0 => 0
+  | n + 1 => natToNum n + 1
+
+lemma natToNum_toNat (n : ℕ) : ((natToNum n : Num) : ℕ) = n := by
+  induction n with
+  | zero => simp [natToNum]
+  | succ n ih =>
+      simp [natToNum, ih]
+
+lemma natToNum_prime_iff (p : ℕ) : (natToNum p).Prime ↔ Nat.Prime p := by
+  simp [Num.Prime, natToNum_toNat]
+
 def isDiagPrimeBool (p : ℕ) : Bool :=
-  decide ((p : Num).Prime ∧ p % 4 = 1 ∧ 13 ≤ p)
+  decide ((natToNum p).Prime ∧ p % 4 = 1 ∧ 13 ≤ p)
 
 def isNo5PrimeBool (p : ℕ) : Bool :=
-  decide ((p : Num).Prime ∧ p ≠ 5)
+  decide ((natToNum p).Prime ∧ p ≠ 5)
 
 def diagPrimesCoarse_computed_list : List ℕ :=
   (List.range (primeCutoff + 1)).filter isDiagPrimeBool
@@ -2527,19 +2540,19 @@ def no5PrimesCoarse_computed_list : List ℕ :=
 set_option maxRecDepth 40000 in
 set_option maxHeartbeats 20000000 in
 lemma diagPrimesCoarse_computed_list_eq : diagPrimesCoarse_computed_list = diagPrimesCoarse_listL := by
-  unfold diagPrimesCoarse_computed_list diagPrimesCoarse_listL isDiagPrimeBool primeCutoff
+  unfold diagPrimesCoarse_computed_list diagPrimesCoarse_listL isDiagPrimeBool natToNum primeCutoff
   decide
 
 set_option maxRecDepth 80000 in
 set_option maxHeartbeats 40000000 in
 lemma no5PrimesCoarse_computed_list_eq : no5PrimesCoarse_computed_list = no5PrimesCoarse_listL := by
-  unfold no5PrimesCoarse_computed_list no5PrimesCoarse_listL isNo5PrimeBool primeCutoff
+  unfold no5PrimesCoarse_computed_list no5PrimesCoarse_listL isNo5PrimeBool natToNum primeCutoff
   decide
 
 set_option maxRecDepth 20000 in
  /-- Kernel-friendly prime list: uses `Num.Prime` instead of `Nat.Prime`. -/
 def primesUpTo_num (B : ℕ) : Finset ℕ :=
-  (Finset.range (B + 1)).filter (fun p => (p : Num).Prime)
+  (Finset.range (B + 1)).filter (fun p => (natToNum p).Prime)
 
 def diagPrimesCoarse_num : Finset ℕ :=
   (primesUpTo_num primeCutoff).filter (fun p => p % 4 = 1 ∧ 13 ≤ p)
@@ -2550,7 +2563,7 @@ def no5PrimesCoarse_num : Finset ℕ :=
 lemma primesUpTo_eq_num (B : ℕ) : primesUpTo B = primesUpTo_num B := by
   classical
   ext p
-  simp [primesUpTo, primesUpTo_num, Num.Prime, Num.to_of_nat]
+  simp [primesUpTo, primesUpTo_num, natToNum_prime_iff]
 
 lemma diagPrimesCoarse_eq_num : diagPrimesCoarse = diagPrimesCoarse_num := by
   classical
