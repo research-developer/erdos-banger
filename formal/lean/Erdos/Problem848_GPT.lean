@@ -52,6 +52,7 @@ import Mathlib.NumberTheory.LegendreSymbol.Basic
 import Mathlib.Data.Nat.ModEq
 import Mathlib.Tactic.IntervalCases
 import Mathlib.Tactic.Simproc.Factors
+import Mathlib.Tactic.NormNum.BigOperators
 import Mathlib.NumberTheory.Chebyshev
 import Mathlib.Analysis.PSeries
 
@@ -1608,6 +1609,7 @@ lemma diag_cand_100 : DiagonalCandidates 100 = {7, 18, 32, 38, 41, 43, 57, 68, 7
 
  -/
 
+set_option maxHeartbeats 1000000 in
 lemma diag_cand_100 : DiagonalCandidates 100 = {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99} := by
   classical
   ext n
@@ -2148,18 +2150,18 @@ lemma no_five_in_candidates_100 :
         exact (hsprop 82 h82 18 (by simpa [C] using hb) this).elim
       · simp
       · exact (h38_not hb).elim
-      · omega
+      · exact (h41 hb).elim
       · have : Squarefree (82 * 43 + 1) := by
           simpa [show 82 * 43 + 1 = 3527 by norm_num, mul_comm] using squarefree_3527
         exact (hsprop 82 h82 43 (by simpa [C] using hb) this).elim
       · simp
       · simp
-      · omega
+      · exact (h70 hb).elim
       · simp
       · have : Squarefree (82 * 93 + 1) := by
           simpa [show 82 * 93 + 1 = 7627 by norm_num] using squarefree_7627
         exact (hsprop 82 h82 93 (by simpa [C] using hb) this).elim
-      · omega
+      · exact (h99 hb).elim
     have hcard_eq :
         s = ({7, 32, 57, 68, 82} : Finset ℕ) := by
       apply Finset.eq_of_subset_of_card_le hs_sub
@@ -2185,14 +2187,14 @@ lemma no_five_in_candidates_100 :
     · exact (h18 hb).elim
     · simp
     · exact (h38_not hb).elim
-    · omega
+    · exact (h41 hb).elim
     · simp
     · simp
     · simp
-    · omega
-    · omega
+    · exact (h70 hb).elim
+    · exact (h82 hb).elim
     · simp
-    · omega
+    · exact (h99 hb).elim
   by_cases h32 : 32 ∈ s
   · by_cases h68 : 68 ∈ s
     · have : Squarefree (32 * 68 + 1) := by
@@ -2202,7 +2204,11 @@ lemma no_five_in_candidates_100 :
       have hs_sub : s ⊆ ({7, 32, 43, 57, 93} : Finset ℕ) := by
         intro b hb
         have hbR : b ∈ ({7, 32, 43, 57, 68, 93} : Finset ℕ) := hs_subR hb
-        simpa [Finset.mem_insert, Finset.mem_singleton, h68] using hbR
+        have hb_ne68 : b ≠ 68 := by
+          intro hb68
+          subst hb68
+          exact (h68 hb).elim
+        simpa [Finset.mem_insert, Finset.mem_singleton, hb_ne68] using hbR
       have hs_eq : s = ({7, 32, 43, 57, 93} : Finset ℕ) := by
         apply Finset.eq_of_subset_of_card_le hs_sub
         have : ({7, 32, 43, 57, 93} : Finset ℕ).card ≤ s.card := by
@@ -2216,7 +2222,11 @@ lemma no_five_in_candidates_100 :
     have hs_sub : s ⊆ ({7, 43, 57, 68, 93} : Finset ℕ) := by
       intro b hb
       have hbR : b ∈ ({7, 32, 43, 57, 68, 93} : Finset ℕ) := hs_subR hb
-      simpa [Finset.mem_insert, Finset.mem_singleton, h32] using hbR
+      have hb_ne32 : b ≠ 32 := by
+        intro hb32
+        subst hb32
+        exact (h32 hb).elim
+      simpa [Finset.mem_insert, Finset.mem_singleton, hb_ne32] using hbR
     have hs_eq : s = ({7, 43, 57, 68, 93} : Finset ℕ) := by
       apply Finset.eq_of_subset_of_card_le hs_sub
       have : ({7, 43, 57, 68, 93} : Finset ℕ).card ≤ s.card := by
@@ -2432,7 +2442,113 @@ def offPrimesCoarse : Finset ℕ :=
 def no5PrimesCoarse : Finset ℕ :=
   (primesUpTo primeCutoff).filter (fun p => p ≠ 5)
 
--- Precomputed values (verified by Python, checked by native_decide)
+/-- A computation-friendly characterization of primality for numerals. -/
+lemma natPrime_iff_primeFactorsList_eq_singleton (n : ℕ) :
+    Nat.Prime n ↔ n.primeFactorsList = [n] := by
+  constructor
+  · intro hn
+    simpa using Nat.primeFactorsList_prime hn
+  · intro h
+    have : n ∈ n.primeFactorsList := by
+      simpa [h]
+    exact Nat.prime_of_mem_primeFactorsList this
+
+set_option maxRecDepth 20000 in
+/-- Explicit diagonal-prime list for `primeCutoff = 2000`.
+
+This is the set of primes `p ≤ 2000` with `p % 4 = 1` and `13 ≤ p`. -/
+def diagPrimesCoarse_list : Finset ℕ :=
+{
+  13, 17, 29, 37, 41, 53, 61, 73, 89, 97, 101, 109,
+  113, 137, 149, 157, 173, 181, 193, 197, 229, 233, 241, 257,
+  269, 277, 281, 293, 313, 317, 337, 349, 353, 373, 389, 397,
+  401, 409, 421, 433, 449, 457, 461, 509, 521, 541, 557, 569,
+  577, 593, 601, 613, 617, 641, 653, 661, 673, 677, 701, 709,
+  733, 757, 761, 769, 773, 797, 809, 821, 829, 853, 857, 877,
+  881, 929, 937, 941, 953, 977, 997, 1009, 1013, 1021, 1033, 1049,
+  1061, 1069, 1093, 1097, 1109, 1117, 1129, 1153, 1181, 1193, 1201, 1213,
+  1217, 1229, 1237, 1249, 1277, 1289, 1297, 1301, 1321, 1361, 1373, 1381,
+  1409, 1429, 1433, 1453, 1481, 1489, 1493, 1549, 1553, 1597, 1601, 1609,
+  1613, 1621, 1637, 1657, 1669, 1693, 1697, 1709, 1721, 1733, 1741, 1753,
+  1777, 1789, 1801, 1861, 1873, 1877, 1889, 1901, 1913, 1933, 1949, 1973,
+  1993, 1997
+}
+
+set_option maxRecDepth 40000 in
+/-- Explicit prime list for `primeCutoff = 2000` with `p ≠ 5`. -/
+def no5PrimesCoarse_list : Finset ℕ :=
+{
+  2, 3, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41,
+  43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
+  101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157,
+  163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227,
+  229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283,
+  293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367,
+  373, 379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439,
+  443, 449, 457, 461, 463, 467, 479, 487, 491, 499, 503, 509,
+  521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599,
+  601, 607, 613, 617, 619, 631, 641, 643, 647, 653, 659, 661,
+  673, 677, 683, 691, 701, 709, 719, 727, 733, 739, 743, 751,
+  757, 761, 769, 773, 787, 797, 809, 811, 821, 823, 827, 829,
+  839, 853, 857, 859, 863, 877, 881, 883, 887, 907, 911, 919,
+  929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997, 1009,
+  1013, 1019, 1021, 1031, 1033, 1039, 1049, 1051, 1061, 1063, 1069, 1087,
+  1091, 1093, 1097, 1103, 1109, 1117, 1123, 1129, 1151, 1153, 1163, 1171,
+  1181, 1187, 1193, 1201, 1213, 1217, 1223, 1229, 1231, 1237, 1249, 1259,
+  1277, 1279, 1283, 1289, 1291, 1297, 1301, 1303, 1307, 1319, 1321, 1327,
+  1361, 1367, 1373, 1381, 1399, 1409, 1423, 1427, 1429, 1433, 1439, 1447,
+  1451, 1453, 1459, 1471, 1481, 1483, 1487, 1489, 1493, 1499, 1511, 1523,
+  1531, 1543, 1549, 1553, 1559, 1567, 1571, 1579, 1583, 1597, 1601, 1607,
+  1609, 1613, 1619, 1621, 1627, 1637, 1657, 1663, 1667, 1669, 1693, 1697,
+  1699, 1709, 1721, 1723, 1733, 1741, 1747, 1753, 1759, 1777, 1783, 1787,
+  1789, 1801, 1811, 1823, 1831, 1847, 1861, 1867, 1871, 1873, 1877, 1879,
+  1889, 1901, 1907, 1913, 1931, 1933, 1949, 1951, 1973, 1979, 1987, 1993,
+  1997, 1999
+}
+
+set_option maxRecDepth 20000 in
+set_option maxHeartbeats 5000000 in
+lemma diagPrimesCoarse_eq_list : diagPrimesCoarse = diagPrimesCoarse_list := by
+  classical
+  ext p
+  by_cases hp : p < primeCutoff + 1
+  ·
+    have hp' : p < 2001 := by
+      simpa [primeCutoff] using hp
+    interval_cases p <;>
+      (simp [diagPrimesCoarse, primesUpTo, primeCutoff, natPrime_iff_primeFactorsList_eq_singleton]; decide)
+  ·
+    have hp' : ¬ p < 2001 := by
+      simpa [primeCutoff] using hp
+    have hsub : diagPrimesCoarse_list ⊆ Finset.range (primeCutoff + 1) := by decide
+    have hp_not_list : p ∉ diagPrimesCoarse_list := by
+      intro hp_mem
+      have hp_range : p ∈ Finset.range (primeCutoff + 1) := hsub hp_mem
+      exact hp (by simpa [Finset.mem_range] using hp_range)
+    simp [diagPrimesCoarse, primesUpTo, primeCutoff, hp', hp_not_list]
+
+set_option maxRecDepth 20000 in
+set_option maxHeartbeats 5000000 in
+lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
+  classical
+  ext p
+  by_cases hp : p < primeCutoff + 1
+  ·
+    have hp' : p < 2001 := by
+      simpa [primeCutoff] using hp
+    interval_cases p <;>
+      (simp [no5PrimesCoarse, primesUpTo, primeCutoff, natPrime_iff_primeFactorsList_eq_singleton]; decide)
+  ·
+    have hp' : ¬ p < 2001 := by
+      simpa [primeCutoff] using hp
+    have hsub : no5PrimesCoarse_list ⊆ Finset.range (primeCutoff + 1) := by decide
+    have hp_not_list : p ∉ no5PrimesCoarse_list := by
+      intro hp_mem
+      have hp_range : p ∈ Finset.range (primeCutoff + 1) := hsub hp_mem
+      exact hp (by simpa [Finset.mem_range] using hp_range)
+    simp [no5PrimesCoarse, primesUpTo, primeCutoff, hp', hp_not_list]
+
+-- Precomputed values (verified by Python; checked below using `simp`+`norm_num`)
 def diagPrimeDen : ℕ := 675067109924022977481515022034423512130479741539843807153469481052459028449452239232681980484545751069432973665683513280116016389500052645708341506941475615768814814870158065312753645077424198983444958279911880503831858071611272341994669353872744477768603209022359280059888618077776469014358245817529542708972753086348322957228843681307207963965767547374440897724003930473524265583251046012199781767374651834379560815527295708011857396433182071977716977932488431948888643891386067228558290565991227834390721337450990589134617661285518460561497407002739052848895879304579595915925480129856478914111298702283283880166246123671142902924556816351174498397701877438338568113063768986635318468872328007108093276626460935787650985933892343902371072373911766012319899393655815824547851160252826653544514334345091072636858918139681
 
 def diagPrimeNum : ℕ := 9305610659457897442676762862705965160774002555239187280326616824765234123780557950402694941485474115851934365564701907981391869361100532018302588546527816525182066155886026230828249088321763633219652942462312124219609612722188796413697767666009124057865982064831388014566139360058830576198938347738999199604817115293773916567614816635477749647011858507377026639402635648230109093785743026065979324685919233919683228360366693877028924951436389249109634069368426189819537949188621546091565402853367547905644723070462800659946565285260706726866118982643627117971703925445170082273301522379205943743210925761931977490511577686030761597012740023119745448189583494143740813932629018217041118409757090741073742791813029359289392669630990356661277433141915142252769433037626264467619973192311414856413911733309761632824747221874
@@ -2467,31 +2583,66 @@ def no5PrimeSumCoarse_fast : ℚ := no5PrimeSumCoarse
 lemma no5PrimeDen_pos : 0 < no5PrimeDen := by decide
 lemma no5PrimeSumCoarse_eq_fast : no5PrimeSumCoarse = no5PrimeSumCoarse_fast := rfl
 
-/-- The symbolic sum equals the precomputed value. Verified externally (Python/native_decide).
-    Direct computation in Lean hits recursion depth limits due to the large prime set. -/
+-- The symbolic sum equals the precomputed value.
+set_option maxRecDepth 200000 in
+set_option maxHeartbeats 20000000 in
 lemma diagPrimesCoarse_sum_eq :
     (∑ p ∈ diagPrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = diagPrimeSumCoarse := by
-  native_decide
+  rw [diagPrimesCoarse_eq_list]
+  simp (config := { maxSteps := 5000000 })
+    [diagPrimesCoarse_list, diagPrimeSumCoarse, diagPrimeNum, diagPrimeDen]
+  norm_num
+
+set_option maxRecDepth 400000 in
+set_option maxHeartbeats 40000000 in
+lemma no5PrimesCoarse_sum_eq :
+    (∑ p ∈ no5PrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = no5PrimeSumCoarse := by
+  rw [no5PrimesCoarse_eq_list]
+  simp (config := { maxSteps := 20000000 })
+    [no5PrimesCoarse_list, no5PrimeSumCoarse, no5PrimeNum, no5PrimeDen]
+  norm_num
+
+lemma offPrimeSumCoarse_eq_no5_sub :
+    offPrimeSumCoarse = no5PrimeSumCoarse - (1 : ℚ) / 4 := by
+  norm_num
+    [offPrimeSumCoarse, no5PrimeSumCoarse, offPrimeNum, offPrimeDen, no5PrimeNum, no5PrimeDen]
 
 lemma offPrimesCoarse_sum_eq :
     (∑ p ∈ offPrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = offPrimeSumCoarse := by
-  native_decide
-
-lemma no5PrimesCoarse_sum_eq :
-    (∑ p ∈ no5PrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = no5PrimeSumCoarse := by
-  native_decide
+  classical
+  let f : ℕ → ℚ := fun p => (1 : ℚ) / (p ^ 2 : ℚ)
+  have hoff : offPrimesCoarse = no5PrimesCoarse.erase 2 := by
+    ext p
+    simp [offPrimesCoarse, no5PrimesCoarse, primesUpTo, and_left_comm, and_assoc, and_comm]
+  have h2 : 2 ∈ no5PrimesCoarse := by
+    simp [no5PrimesCoarse, primesUpTo, primeCutoff, Nat.prime_two]
+  have hsum := Finset.sum_erase_add (s := no5PrimesCoarse) (a := 2) (f := f) h2
+  have hsum' := congrArg (fun x => x - f 2) hsum
+  have hsum_erase :
+      (∑ p ∈ no5PrimesCoarse.erase 2, f p) = (∑ p ∈ no5PrimesCoarse, f p) - f 2 := by
+    simpa [sub_eq_add_neg, add_assoc, add_left_comm, add_comm] using hsum'
+  have hf2 : f 2 = (1 : ℚ) / 4 := by
+    simp [f]
+    norm_num
+  rw [hoff]
+  calc
+    (∑ p ∈ no5PrimesCoarse.erase 2, f p)
+        = (∑ p ∈ no5PrimesCoarse, f p) - (1 : ℚ) / 4 := by simpa [hsum_erase, hf2]
+    _ = no5PrimeSumCoarse - (1 : ℚ) / 4 := by
+        simpa [f] using congrArg (fun x => x - (1 : ℚ) / 4) no5PrimesCoarse_sum_eq
+    _ = offPrimeSumCoarse := by
+        simpa [offPrimeSumCoarse_eq_no5_sub] using (offPrimeSumCoarse_eq_no5_sub).symm
 
 /-!
 We bound the *infinite* reciprocal-square sums by:
-1) computing primes up to `primeCutoff` exactly (via `native_decide` on `ℚ`),
+1) computing primes up to `primeCutoff` exactly,
 2) bounding the tail by `∑_{i > B} 1/i^2 ≤ 1/B`.
 -/
 
 lemma diagPrimeSumCoarse_bound :
     diagPrimeSumCoarse + (1 : ℚ) / primeCutoff ≤ (1 : ℚ) / 70 := by
-  -- Key numerical inequality verified by native_decide
   have hNat : 70 * (diagPrimeNum * primeCutoff + diagPrimeDen) ≤ diagPrimeDen * primeCutoff := by
-    native_decide
+    norm_num [primeCutoff, diagPrimeNum, diagPrimeDen]
   have hD_pos : (0 : ℚ) < diagPrimeDen := Nat.cast_pos.mpr diagPrimeDen_pos
   have hB_pos : (0 : ℚ) < primeCutoff := Nat.cast_pos.mpr primeCutoff_pos
   have hD_ne : (diagPrimeDen : ℚ) ≠ 0 := ne_of_gt hD_pos
@@ -2510,9 +2661,8 @@ lemma diagPrimeSumCoarse_bound :
 
 lemma offPrimeSumCoarse_bound :
     offPrimeSumCoarse + (1 : ℚ) / primeCutoff ≤ (163 : ℚ) / 1000 := by
-  -- Key numerical inequality verified by native_decide
   have hNat : 1000 * (offPrimeNum * primeCutoff + offPrimeDen) ≤ 163 * (offPrimeDen * primeCutoff) := by
-    native_decide
+    norm_num [primeCutoff, offPrimeNum, offPrimeDen]
   have hD_pos : (0 : ℚ) < offPrimeDen := Nat.cast_pos.mpr offPrimeDen_pos
   have hB_pos : (0 : ℚ) < primeCutoff := Nat.cast_pos.mpr primeCutoff_pos
   have hD_ne : (offPrimeDen : ℚ) ≠ 0 := ne_of_gt hD_pos
@@ -2531,9 +2681,8 @@ lemma offPrimeSumCoarse_bound :
 
 lemma no5PrimeSumCoarse_bound :
     no5PrimeSumCoarse + (1 : ℚ) / primeCutoff ≤ (413 : ℚ) / 1000 := by
-  -- Key numerical inequality verified by native_decide
   have hNat : 1000 * (no5PrimeNum * primeCutoff + no5PrimeDen) ≤ 413 * (no5PrimeDen * primeCutoff) := by
-    native_decide
+    norm_num [primeCutoff, no5PrimeNum, no5PrimeDen]
   have hD_pos : (0 : ℚ) < no5PrimeDen := Nat.cast_pos.mpr no5PrimeDen_pos
   have hB_pos : (0 : ℚ) < primeCutoff := Nat.cast_pos.mpr primeCutoff_pos
   have hD_ne : (no5PrimeDen : ℚ) ≠ 0 := ne_of_gt hD_pos
