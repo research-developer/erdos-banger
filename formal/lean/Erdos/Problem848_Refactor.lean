@@ -1518,7 +1518,7 @@ lemma off_count_modEq100_le' (N p b t25 t4 : ℕ) (hp : Nat.Prime p) (hp2 : p �
 
 lemma zmod25_sq_eq_neg_one_iff :
     ∀ x : ZMod 25, x ^ 2 = (-1 : ZMod 25) ↔ x = (7 : ZMod 25) ∨ x = (18 : ZMod 25) := by
-  native_decide
+  decide
 
 lemma mod25_eq_7_or_18_of_dvd_sq_add_one {n : ℕ} (h : 25 ∣ n ^ 2 + 1) :
     n % 25 = 7 ∨ n % 25 = 18 := by
