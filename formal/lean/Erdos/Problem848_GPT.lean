@@ -2505,7 +2505,20 @@ lemma diagPrimesCoarse_eq_list : diagPrimesCoarse = diagPrimesCoarse_list := by
     have hp' : p < 2001 := by
       simpa [primeCutoff] using hp
     interval_cases p <;>
-      (simp [diagPrimesCoarse, primesUpTo, primeCutoff, diagPrimesCoarse_list] <;> norm_num)
+      (first
+        | have hmem : p ∈ diagPrimesCoarse_list := by decide
+          constructor
+          · intro _hp; exact hmem
+          · intro _hp
+            simpa [diagPrimesCoarse, primesUpTo, primeCutoff] using
+              (by
+                simp [diagPrimesCoarse, primesUpTo, primeCutoff] <;> norm_num : p ∈ diagPrimesCoarse)
+        | have hmem : p ∉ diagPrimesCoarse_list := by decide
+          have hnot : p ∉ diagPrimesCoarse := by
+            simp [diagPrimesCoarse, primesUpTo, primeCutoff] <;> norm_num
+          constructor
+          · intro hp_mem; exact (False.elim (hnot hp_mem))
+          · intro hp_mem; exact (False.elim (hmem hp_mem)))
   ·
     have hp' : ¬ p < 2001 := by
       simpa [primeCutoff] using hp
@@ -2526,7 +2539,20 @@ lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
     have hp' : p < 2001 := by
       simpa [primeCutoff] using hp
     interval_cases p <;>
-      (simp [no5PrimesCoarse, primesUpTo, primeCutoff, no5PrimesCoarse_list] <;> norm_num)
+      (first
+        | have hmem : p ∈ no5PrimesCoarse_list := by decide
+          constructor
+          · intro _hp; exact hmem
+          · intro _hp
+            simpa [no5PrimesCoarse, primesUpTo, primeCutoff] using
+              (by
+                simp [no5PrimesCoarse, primesUpTo, primeCutoff] <;> norm_num : p ∈ no5PrimesCoarse)
+        | have hmem : p ∉ no5PrimesCoarse_list := by decide
+          have hnot : p ∉ no5PrimesCoarse := by
+            simp [no5PrimesCoarse, primesUpTo, primeCutoff] <;> norm_num
+          constructor
+          · intro hp_mem; exact (False.elim (hnot hp_mem))
+          · intro hp_mem; exact (False.elim (hmem hp_mem)))
   ·
     have hp' : ¬ p < 2001 := by
       simpa [primeCutoff] using hp
