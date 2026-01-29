@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime  # noqa: TC003 - needed at runtime for Pydantic
 from enum import Enum
 from pathlib import Path  # noqa: TC003 - needed at runtime for Pydantic
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
 
@@ -138,6 +138,16 @@ class ManifestEntry(ErdosBaseModel):
     ingested_at: Annotated[datetime | None, Field(default=None)] = None
     error: Annotated[
         str | None, Field(default=None, description="Error if ingestion failed")
+    ] = None
+
+    # Source tracking (SPEC-036) - provenance for entries from leads
+    source: Annotated[
+        Literal["problem_ref", "lead"],
+        Field(default="problem_ref", description="Origin of this entry"),
+    ] = "problem_ref"
+    lead_id: Annotated[
+        str | None,
+        Field(default=None, description="LeadRecord ID if source='lead'"),
     ] = None
 
 

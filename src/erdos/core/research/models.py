@@ -67,6 +67,8 @@ class LeadSource(_FrozenModel):
 
 
 class LeadRecord(_FrozenModel):
+    """Research lead record with enrichment support (SPEC-036)."""
+
     schema_version: Annotated[int, Field(default=1)] = 1
     problem_id: Annotated[int, Field(ge=1)]
     id: Annotated[str, Field(min_length=1)]
@@ -79,6 +81,19 @@ class LeadRecord(_FrozenModel):
     notes: Annotated[str, Field(default="")] = ""
     created_at: datetime
     updated_at: datetime
+
+    # Enrichment fields (SPEC-036) - populated by LeadEnrichmentService
+    enriched_title: Annotated[str | None, Field(default=None)] = None
+    enriched_authors: Annotated[list[str] | None, Field(default=None)] = None
+    enriched_year: Annotated[int | None, Field(default=None)] = None
+    enriched_venue: Annotated[str | None, Field(default=None)] = None
+    enriched_abstract: Annotated[str | None, Field(default=None)] = None
+    enriched_provider: Annotated[str | None, Field(default=None)] = None
+    enriched_at: Annotated[datetime | None, Field(default=None)] = None
+
+    # Ingest tracking (SPEC-036) - set when added to manifest
+    ingested_at: Annotated[datetime | None, Field(default=None)] = None
+    manifest_entry_id: Annotated[str | None, Field(default=None)] = None
 
 
 class HypothesisRecord(_FrozenModel):

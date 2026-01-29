@@ -157,7 +157,7 @@ class FSResearchStore:
             records.append(rec)
         return records
 
-    def lead_update(
+    def lead_update(  # noqa: PLR0912
         self,
         problem_id: int,
         lead_id: str,
@@ -165,6 +165,17 @@ class FSResearchStore:
         status: LeadStatus | None = None,
         priority: Priority | None = None,
         notes: str | None = None,
+        # Enrichment fields (SPEC-036)
+        enriched_title: str | None = None,
+        enriched_authors: list[str] | None = None,
+        enriched_year: int | None = None,
+        enriched_venue: str | None = None,
+        enriched_abstract: str | None = None,
+        enriched_provider: str | None = None,
+        enriched_at: datetime | None = None,
+        # Ingest tracking fields (SPEC-036)
+        ingested_at: datetime | None = None,
+        manifest_entry_id: str | None = None,
         now: datetime | None = None,
     ) -> tuple[LeadRecord, Path]:
         _validate_record_id(lead_id, "lead")
@@ -182,14 +193,36 @@ class FSResearchStore:
                 f"Lead filename {path.name} does not match id={rec.id}"
             )
         updated = _utc_now(now)
-        new = rec.model_copy(
-            update={
-                **({"status": status} if status is not None else {}),
-                **({"priority": priority} if priority is not None else {}),
-                **({"notes": notes} if notes is not None else {}),
-                "updated_at": updated,
-            }
-        )
+        # Build update dict with non-None values
+        update_dict: dict[str, object] = {"updated_at": updated}
+        if status is not None:
+            update_dict["status"] = status
+        if priority is not None:
+            update_dict["priority"] = priority
+        if notes is not None:
+            update_dict["notes"] = notes
+        # Enrichment fields (SPEC-036)
+        if enriched_title is not None:
+            update_dict["enriched_title"] = enriched_title
+        if enriched_authors is not None:
+            update_dict["enriched_authors"] = enriched_authors
+        if enriched_year is not None:
+            update_dict["enriched_year"] = enriched_year
+        if enriched_venue is not None:
+            update_dict["enriched_venue"] = enriched_venue
+        if enriched_abstract is not None:
+            update_dict["enriched_abstract"] = enriched_abstract
+        if enriched_provider is not None:
+            update_dict["enriched_provider"] = enriched_provider
+        if enriched_at is not None:
+            update_dict["enriched_at"] = enriched_at
+        # Ingest tracking fields (SPEC-036)
+        if ingested_at is not None:
+            update_dict["ingested_at"] = ingested_at
+        if manifest_entry_id is not None:
+            update_dict["manifest_entry_id"] = manifest_entry_id
+
+        new = rec.model_copy(update=update_dict)
         _write_record(path, new.model_dump(mode="json"))
         return new, path
 

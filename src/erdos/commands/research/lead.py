@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime
 from typing import Annotated
 
 import typer
@@ -12,8 +13,19 @@ from erdos.commands.presenter import exit_with_result
 from erdos.core.clients.semantic_scholar import S2Config, SemanticScholarClient
 from erdos.core.clients.zbmath import ZbMathClient, ZbMathConfig
 from erdos.core.exit_codes import ExitCode
-from erdos.core.models import CLIOutput
+from erdos.core.ingest.service import (
+    _load_existing_manifest,
+    _write_manifest_atomic,
+)
+from erdos.core.literature_paths import get_manifest_path
+from erdos.core.models import CLIOutput, ProblemManifest
+from erdos.core.providers.arxiv import ArxivProvider
+from erdos.core.providers.crossref import CrossrefProvider
+from erdos.core.providers.fallback import FallbackProvider
+from erdos.core.providers.openalex import OpenAlexProvider
 from erdos.core.research import FSResearchStore
+from erdos.core.research.enrichment import LeadEnrichmentService
+from erdos.core.research.manifest_bridge import ManifestBridge
 from erdos.core.research.models import LeadStatus, Priority
 
 from ._common import handle_store_error, load_problem_or_error
@@ -282,6 +294,233 @@ def lead_update(
                 "record_kind": "lead",
                 "path": str(path.resolve()),
                 "record": record.model_dump(mode="json"),
+            },
+        ),
+    )
+
+
+# -----------------------------------------------------------------------------
+# Enrich command (SPEC-036)
+# -----------------------------------------------------------------------------
+
+
+@app.command("enrich")
+def lead_enrich(
+    ctx: typer.Context,
+    problem_id: Annotated[int, typer.Argument(help="Problem ID", min=1)],
+    force: Annotated[
+        bool, typer.Option("--force", help="Re-enrich already enriched leads")
+    ] = False,
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Show what would be enriched")
+    ] = False,
+) -> None:
+    """Enrich leads with metadata from OpenAlex/Crossref."""
+    app_ctx, app_error = get_app_context(ctx, command="erdos research lead enrich")
+    if app_error is not None:
+        exit_with_result(ctx, app_error)
+        return
+    if app_ctx is None:
+        return
+    if error := load_problem_or_error(
+        problem_id, repo=app_ctx.problems, command="erdos research lead enrich"
+    ):
+        exit_with_result(ctx, error)
+        return
+
+    store = FSResearchStore(repo_root=app_ctx.config.repo_root)
+    leads = store.lead_list(problem_id)
+
+    # Filter to leads with identifiers
+    leads_with_id = [lead for lead in leads if lead.source.doi or lead.source.arxiv_id]
+
+    if dry_run:
+        # Show preview of what would be enriched
+        already_enriched = sum(
+            1 for lead in leads_with_id if lead.enriched_at is not None
+        )
+        to_enrich = (
+            len(leads_with_id) - already_enriched if not force else len(leads_with_id)
+        )
+        exit_with_result(
+            ctx,
+            CLIOutput.ok(
+                command="erdos research lead enrich",
+                data={
+                    "problem_id": problem_id,
+                    "dry_run": True,
+                    "total_leads": len(leads),
+                    "leads_with_identifiers": len(leads_with_id),
+                    "already_enriched": already_enriched,
+                    "would_enrich": to_enrich,
+                    "message": f"Would enrich {to_enrich} leads",
+                },
+            ),
+        )
+        return
+
+    # Create provider and service with standard chains
+    openalex = OpenAlexProvider.from_env()
+    provider = FallbackProvider(
+        doi_chain=[openalex, CrossrefProvider.from_env()],
+        arxiv_chain=[openalex, ArxivProvider()],
+        search_chain=[openalex],
+    )
+    service = LeadEnrichmentService(provider)
+
+    # Enrich leads
+    results, stats = service.enrich_leads(leads, force=force)
+
+    # Persist enriched leads
+    enriched_count = 0
+    for result in results:
+        if result.lead.enriched_at is not None and result.reference is not None:
+            try:
+                store.lead_update(
+                    problem_id,
+                    result.lead.id,
+                    enriched_title=result.lead.enriched_title,
+                    enriched_authors=result.lead.enriched_authors,
+                    enriched_year=result.lead.enriched_year,
+                    enriched_venue=result.lead.enriched_venue,
+                    enriched_abstract=result.lead.enriched_abstract,
+                    enriched_provider=result.lead.enriched_provider,
+                    enriched_at=result.lead.enriched_at,
+                )
+                enriched_count += 1
+            except Exception as e:
+                logger.warning("Failed to persist lead %s: %s", result.lead.id, e)
+
+    exit_with_result(
+        ctx,
+        CLIOutput.ok(
+            command="erdos research lead enrich",
+            data={
+                "problem_id": problem_id,
+                "total": stats.total,
+                "with_identifiers": stats.with_identifiers,
+                "enriched": enriched_count,
+                "skipped_no_id": stats.skipped_no_id,
+                "failed": stats.failed,
+                "message": f"Enriched {enriched_count} leads for problem {problem_id}",
+            },
+        ),
+    )
+
+
+# -----------------------------------------------------------------------------
+# Ingest command (SPEC-036)
+# -----------------------------------------------------------------------------
+
+
+@app.command("ingest")
+def lead_ingest(
+    ctx: typer.Context,
+    problem_id: Annotated[int, typer.Argument(help="Problem ID", min=1)],
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Show what would be ingested")
+    ] = False,
+) -> None:
+    """Ingest enriched leads into the problem manifest."""
+    app_ctx, app_error = get_app_context(ctx, command="erdos research lead ingest")
+    if app_error is not None:
+        exit_with_result(ctx, app_error)
+        return
+    if app_ctx is None:
+        return
+    if app_ctx.config.repo_root is None:
+        exit_with_result(
+            ctx,
+            CLIOutput.err(
+                command="erdos research lead ingest",
+                error_type="ConfigError",
+                message="Repository root not configured",
+                code=ExitCode.CONFIG_ERROR,
+            ),
+        )
+        return
+    if error := load_problem_or_error(
+        problem_id, repo=app_ctx.problems, command="erdos research lead ingest"
+    ):
+        exit_with_result(ctx, error)
+        return
+
+    store = FSResearchStore(repo_root=app_ctx.config.repo_root)
+    leads = store.lead_list(problem_id)
+
+    # Filter to enriched leads only
+    enriched_leads = [lead for lead in leads if lead.enriched_at is not None]
+
+    # Load existing manifest
+    manifest_path = app_ctx.config.repo_root / get_manifest_path(problem_id)
+    manifest = _load_existing_manifest(manifest_path, force=False)
+    if manifest is None:
+        manifest = ProblemManifest(problem_id=problem_id, entries=[])
+
+    # Use ManifestBridge to preview ingestion
+    bridge = ManifestBridge()
+
+    if dry_run:
+        # Preview mode
+        results, stats, _ = bridge.ingest_leads(enriched_leads, manifest)
+        exit_with_result(
+            ctx,
+            CLIOutput.ok(
+                command="erdos research lead ingest",
+                data={
+                    "problem_id": problem_id,
+                    "dry_run": True,
+                    "enriched_leads": len(enriched_leads),
+                    "would_add": stats.added,
+                    "would_skip_duplicate": stats.skipped_duplicate,
+                    "would_skip_not_enriched": stats.skipped_not_enriched,
+                    "message": f"Would add {stats.added} entries to manifest",
+                },
+            ),
+        )
+        return
+
+    # Actually ingest
+    results, stats, updated_manifest = bridge.ingest_leads(enriched_leads, manifest)
+
+    # Save updated manifest
+    if stats.added > 0:
+        success, error_msg = _write_manifest_atomic(updated_manifest, manifest_path)
+        if not success:
+            exit_with_result(
+                ctx,
+                CLIOutput.err(
+                    command="erdos research lead ingest",
+                    error_type="IOError",
+                    message=error_msg or "Failed to write manifest",
+                    code=ExitCode.ERROR,
+                ),
+            )
+            return
+
+        # Update leads with ingest tracking
+        for result in results:
+            if result.added and result.entry is not None:
+                try:
+                    store.lead_update(
+                        problem_id,
+                        result.lead_id,
+                        ingested_at=datetime.now(UTC),
+                    )
+                except Exception as e:
+                    logger.warning("Failed to update lead %s: %s", result.lead_id, e)
+
+    exit_with_result(
+        ctx,
+        CLIOutput.ok(
+            command="erdos research lead ingest",
+            data={
+                "problem_id": problem_id,
+                "added": stats.added,
+                "skipped_duplicate": stats.skipped_duplicate,
+                "skipped_not_enriched": stats.skipped_not_enriched,
+                "manifest_entries": len(updated_manifest.entries),
+                "message": f"Added {stats.added} entries to manifest",
             },
         ),
     )
