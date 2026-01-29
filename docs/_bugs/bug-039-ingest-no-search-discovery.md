@@ -103,9 +103,11 @@ find literature/cache/arxiv/extracted/2511.16072 -name "*.tex"
 3. ❌ **NOT STARTED:** Exa API integration for semantic paper search
 4. ❌ **NOT STARTED:** `--discover` flag to auto-search based on problem statement keywords
 
-See DEBT-110 for remaining feature work (Phases 2-3).
+See **SPEC-036** (`docs/_specs/spec-036-lead-enrichment-pipeline.md`) for the complete implementation plan covering Phases 2-3.
 
 ## Related
+
+- **SPEC-036:** Lead Enrichment Pipeline - authoritative implementation spec
 
 - SYNTHESIS.md lists 5 key leads for Problem 848 that cannot be ingested:
   - arXiv:2511.16072 (GPT-5 paper)

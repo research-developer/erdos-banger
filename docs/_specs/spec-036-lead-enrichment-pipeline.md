@@ -2,18 +2,19 @@
 
 > Bridges the gap between discovery (Exa/zbMATH/S2) and enrichment (OpenAlex/Crossref/arXiv) to create a unified literature acquisition flow.
 
-**Status:** Draft
+**Status:** Implementation Ready
 **Target:** v4.2
+**Issue:** #34
 **Prerequisites:**
-- SPEC-022: MetadataProvider Orchestration (FallbackProvider)
-- SPEC-024: Research Records (Leads CRUD)
-- SPEC-029: Exa Research Integration
+- SPEC-022: MetadataProvider Orchestration (FallbackProvider) ✅ IMPLEMENTED
+- SPEC-024: Research Records (Leads CRUD) ✅ IMPLEMENTED
+- SPEC-029: Exa Research Integration ✅ IMPLEMENTED
 
 ---
 
 ## 0) Problem Statement
 
-### Current State (Disconnected)
+### Current State (Verified 2026-01-28)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -30,10 +31,10 @@
 └───────────────────────────────────────┴─────────────────────────────────────┘
 ```
 
-**The Gap:** Discovery tools (Exa, zbMATH, S2) find papers and extract DOIs/arXiv IDs into leads. But:
-1. Leads are not enriched with full metadata from OpenAlex/Crossref
-2. Leads cannot be added to the literature manifest
-3. `erdos ingest` only reads from `problem.references[]` in the enriched YAML
+**The Gap:** Discovery tools find papers and extract DOIs/arXiv IDs into leads. But:
+1. Leads are NOT enriched with full metadata from OpenAlex/Crossref
+2. Leads CANNOT be added to the literature manifest
+3. `erdos ingest` ONLY reads from `problem.references[]` in the enriched YAML
 
 **Real-world impact:** Problem #848 has `references: [{key: "Er92b", doi: null, arxiv_id: null}]`. Running `erdos ingest 848` produces an empty manifest. Meanwhile, `erdos research exa search 848 "squarefree"` finds relevant papers with DOIs, but they go nowhere.
 
@@ -82,349 +83,542 @@
 
 ---
 
-## 2) CLI Interface
+## 2) Tracer Bullets: What Exists vs What's Missing
 
-### `erdos research lead enrich <problem_id>`
+### ✅ EXISTING COMPONENTS (Verified)
 
-Fetch full metadata from OpenAlex/Crossref/arXiv for all leads with identifiers.
+| Component | File | Key Elements | Lines |
+|-----------|------|--------------|-------|
+| **LeadRecord model** | `src/erdos/core/research/models.py` | `LeadRecord`, `LeadSource`, `LeadStatus` | 69-81 |
+| **LeadSource nested** | `src/erdos/core/research/models.py` | `doi`, `arxiv_id`, `url` (all nullable) | 63-66 |
+| **ManifestEntry model** | `src/erdos/core/models/reference.py` | `reference: ReferenceRecord`, `cached`, `extracted`, `ingested_at` | 113-141 |
+| **ProblemManifest** | `src/erdos/core/models/reference.py` | `problem_id`, `entries: list[ManifestEntry]`, `created_at`, `updated_at` | 144-161 |
+| **ReferenceRecord** | `src/erdos/core/models/reference.py` | `doi`, `arxiv_id`, `title`, `authors`, `year`, `venue`, `abstract`, `source` | 26-99 |
+| **FallbackProvider** | `src/erdos/core/providers/fallback.py` | `get_by_doi(doi)`, `get_by_arxiv(arxiv_id)`, `search(query)` | 37-172 |
+| **Lead CRUD** | `src/erdos/core/research/store_fs.py` | `lead_add()`, `lead_list()`, `lead_update()` | 90-199 |
+| **Lead commands** | `src/erdos/commands/research/lead.py` | `add`, `list`, `update` subcommands | entire file |
+| **Exa integration** | `src/erdos/commands/research/exa.py` | `--save-leads` creates leads from Exa results | 32-63 |
+| **Ingest service** | `src/erdos/core/ingest/service.py` | `ingest_problem_references()` - reads `problem.references[]` only | 296-448 |
+| **Atomic manifest write** | `src/erdos/core/ingest/service.py` | `_write_manifest_atomic()` | 99-121 |
+| **Manifest loading** | `src/erdos/core/ingest/service.py` | `_load_existing_manifest()` | 71-96 |
+| **Duplicate detection** | `src/erdos/core/ingest/service.py` | `_check_duplicate_keys()` uses stable keys | 157-176 |
 
-```bash
-# Enrich all leads with DOI or arXiv ID
-erdos research lead enrich 848
+### ❌ MISSING COMPONENTS (To Implement)
 
-# Dry-run: show what would be fetched
-erdos research lead enrich 848 --dry-run
-
-# Force re-fetch even if already enriched
-erdos research lead enrich 848 --force
-
-# JSON output
-erdos research lead enrich 848 --json
-```
-
-**Options:**
-- `--dry-run`: Show leads that would be enriched without making API calls
-- `--force`: Re-fetch metadata even if lead already has enriched data
-- `--source [openalex|crossref|arxiv]`: Override default provider chain (default: FallbackProvider)
-- `--timeout SECONDS`: HTTP timeout (default: 30)
-
-**Behavior:**
-1. Load leads from `research/problems/{problem_id:04d}/meta.yaml`
-2. Filter leads with `doi` or `arxiv_id` set
-3. For each lead:
-   - If `doi`: call `FallbackProvider.get_by_doi()`
-   - Else if `arxiv_id`: call `FallbackProvider.get_by_arxiv()`
-   - Store enriched metadata in lead record (new fields: `enriched_title`, `enriched_authors`, `enriched_year`, `enriched_at`)
-4. Write updated `meta.yaml`
-
-**Output (JSON):**
-```json
-{
-  "schema_version": 1,
-  "command": "erdos research lead enrich",
-  "success": true,
-  "data": {
-    "problem_id": 848,
-    "leads_total": 5,
-    "leads_with_identifiers": 3,
-    "leads_enriched": 3,
-    "leads_skipped": 0,
-    "leads_failed": 0,
-    "enriched": [
-      {
-        "lead_id": "lead-abc123",
-        "doi": "10.1234/example",
-        "title": "Original title from Exa",
-        "enriched_title": "Full title from OpenAlex",
-        "provider": "openalex"
-      }
-    ]
-  }
-}
-```
-
-### `erdos research lead ingest <problem_id>`
-
-Add enriched leads to the literature manifest with deduplication.
-
-```bash
-# Add enriched leads to manifest
-erdos research lead ingest 848
-
-# Dry-run: show what would be added
-erdos research lead ingest 848 --dry-run
-
-# Skip leads without enrichment (default: warn and skip)
-erdos research lead ingest 848 --require-enriched
-
-# JSON output
-erdos research lead ingest 848 --json
-```
-
-**Options:**
-- `--dry-run`: Show what would be added without writing
-- `--require-enriched`: Only ingest leads that have been enriched (skip others)
-- `--skip-duplicates`: Silently skip duplicates (default: warn)
-
-**Behavior:**
-1. Load leads from `research/problems/{problem_id:04d}/meta.yaml`
-2. Load existing manifest from `literature/manifests/{problem_id:04d}.yaml`
-3. For each lead with `doi` or `arxiv_id`:
-   - Check for duplicate in manifest (by DOI or arXiv ID)
-   - If duplicate: skip (log warning)
-   - If new: create `ManifestEntry` from lead + enriched data
-4. Write updated manifest (atomic write)
-5. Mark ingested leads with `ingested_at` timestamp
-
-**Deduplication Rules:**
-- Primary key: DOI (normalized to lowercase)
-- Secondary key: arXiv ID (if no DOI)
-- Leads without identifiers are skipped with warning
-
-**Output (JSON):**
-```json
-{
-  "schema_version": 1,
-  "command": "erdos research lead ingest",
-  "success": true,
-  "data": {
-    "problem_id": 848,
-    "leads_total": 5,
-    "leads_ingested": 2,
-    "leads_skipped_no_id": 1,
-    "leads_skipped_duplicate": 1,
-    "leads_skipped_not_enriched": 1,
-    "manifest_path": "literature/manifests/0848.yaml",
-    "manifest_entries_before": 0,
-    "manifest_entries_after": 2
-  }
-}
-```
+| Component | Target File | Purpose |
+|-----------|-------------|---------|
+| **Enrichment fields on LeadRecord** | `src/erdos/core/research/models.py` | `enriched_*` fields + `ingested_at` |
+| **Source tracking on ManifestEntry** | `src/erdos/core/models/reference.py` | `source` + `lead_id` fields |
+| **LeadEnrichmentService** | `src/erdos/core/research/enrichment.py` (NEW) | Bulk-enrich leads via FallbackProvider |
+| **ManifestBridge** | `src/erdos/core/research/manifest_bridge.py` (NEW) | Dedup + conversion logic |
+| **lead enrich command** | `src/erdos/commands/research/lead.py` | `enrich` subcommand |
+| **lead ingest command** | `src/erdos/commands/research/lead.py` | `ingest` subcommand |
+| **lead update for enrichment** | `src/erdos/core/research/store_fs.py` | Extend `lead_update()` for enrichment fields |
 
 ---
 
 ## 3) Data Model Changes
 
-### Lead Record Extensions
+### 3.1 LeadRecord Extensions
 
-Add new fields to `LeadRecord` in `src/erdos/core/research/models.py`:
+**File:** `src/erdos/core/research/models.py`
 
-```python
-class LeadRecord(BaseModel):
-    # Existing fields
-    id: str
-    title: str
-    doi: str | None = None
-    arxiv_id: str | None = None
-    url: str | None = None
-    status: LeadStatus = LeadStatus.NEW
-    priority: Priority = Priority.MEDIUM
-    notes: str | None = None
-    created_at: datetime
-    updated_at: datetime
-
-    # NEW: Enrichment fields
-    enriched_title: str | None = None
-    enriched_authors: list[str] | None = None
-    enriched_year: int | None = None
-    enriched_venue: str | None = None
-    enriched_abstract: str | None = None
-    enriched_provider: str | None = None  # "openalex", "crossref", "arxiv"
-    enriched_at: datetime | None = None
-
-    # NEW: Ingest tracking
-    ingested_at: datetime | None = None
-    manifest_entry_id: str | None = None  # Reference to ManifestEntry
-```
-
-### Manifest Entry Source Tracking
-
-Add provenance field to `ManifestEntry`:
+Add to `LeadRecord` class (after line 81):
 
 ```python
-class ManifestEntry(BaseModel):
-    # Existing fields...
+# Enrichment fields (from FallbackProvider)
+enriched_title: Annotated[str | None, Field(default=None)] = None
+enriched_authors: Annotated[list[str] | None, Field(default=None)] = None
+enriched_year: Annotated[int | None, Field(default=None)] = None
+enriched_venue: Annotated[str | None, Field(default=None)] = None
+enriched_abstract: Annotated[str | None, Field(default=None)] = None
+enriched_provider: Annotated[str | None, Field(default=None)] = None  # "openalex", "crossref", "arxiv"
+enriched_at: Annotated[datetime | None, Field(default=None)] = None
 
-    # NEW: Source tracking
-    source: Literal["problem_ref", "lead"] = "problem_ref"
-    lead_id: str | None = None  # If source == "lead"
+# Ingest tracking
+ingested_at: Annotated[datetime | None, Field(default=None)] = None
+manifest_entry_id: Annotated[str | None, Field(default=None)] = None
 ```
+
+### 3.2 ManifestEntry Extensions
+
+**File:** `src/erdos/core/models/reference.py`
+
+Add to `ManifestEntry` class (after line 141):
+
+```python
+# Source tracking (provenance)
+source: Annotated[
+    Literal["problem_ref", "lead"],
+    Field(default="problem_ref", description="Origin of this entry")
+] = "problem_ref"
+lead_id: Annotated[
+    str | None,
+    Field(default=None, description="LeadRecord ID if source='lead'")
+] = None
+```
+
+**Import:** Add `Literal` to imports at top of file.
 
 ---
 
-## 4) Implementation
+## 4) New Core Services
 
-### 4.1 `src/erdos/core/research/enrichment.py` (NEW)
+### 4.1 LeadEnrichmentService
+
+**File:** `src/erdos/core/research/enrichment.py` (NEW)
 
 ```python
-"""Lead enrichment service using FallbackProvider."""
+"""Lead enrichment service using FallbackProvider.
 
-from erdos.core.providers.fallback import FallbackProvider
-from erdos.core.research.models import LeadRecord
-from erdos.core.models import ReferenceRecord
+Bridges the gap between discovery (leads with DOI/arXiv IDs) and
+enrichment (full metadata from OpenAlex/Crossref/arXiv).
+"""
+
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from erdos.core.models import ReferenceRecord
+    from erdos.core.providers.fallback import FallbackProvider
+    from erdos.core.research.models import LeadRecord
+
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class EnrichmentStats:
+    """Statistics from a batch enrichment operation."""
+
+    total: int
+    with_identifiers: int
+    enriched: int
+    skipped_no_id: int
+    failed: int
+
+
+@dataclass
+class EnrichmentResult:
+    """Result of enriching a single lead."""
+
+    lead: LeadRecord
+    reference: ReferenceRecord | None
+    provider: str | None
+    error: str | None = None
+
 
 class LeadEnrichmentService:
     """Enriches leads with full metadata from OpenAlex/Crossref/arXiv."""
 
-    def __init__(self, provider: FallbackProvider):
-        self.provider = provider
+    def __init__(self, provider: FallbackProvider) -> None:
+        self._provider = provider
 
-    def enrich_lead(self, lead: LeadRecord) -> tuple[LeadRecord, ReferenceRecord | None]:
+    def enrich_lead(self, lead: LeadRecord) -> EnrichmentResult:
         """Enrich a single lead with metadata.
 
+        Args:
+            lead: LeadRecord with optional doi/arxiv_id in source.
+
         Returns:
-            Tuple of (updated lead, reference record or None if not found)
+            EnrichmentResult with updated lead and fetched reference.
         """
+        # Check for identifiers in lead.source
+        doi = lead.source.doi
+        arxiv_id = lead.source.arxiv_id
+
+        if not doi and not arxiv_id:
+            return EnrichmentResult(lead=lead, reference=None, provider=None)
+
         ref: ReferenceRecord | None = None
+        provider_name: str | None = None
 
-        if lead.doi:
-            ref = self.provider.get_by_doi(lead.doi)
-        elif lead.arxiv_id:
-            ref = self.provider.get_by_arxiv(lead.arxiv_id)
+        try:
+            if doi:
+                ref = self._provider.get_by_doi(doi)
+            elif arxiv_id:
+                ref = self._provider.get_by_arxiv(arxiv_id)
 
-        if ref:
-            lead = lead.model_copy(update={
-                "enriched_title": ref.title,
-                "enriched_authors": ref.authors,
-                "enriched_year": ref.year,
-                "enriched_venue": ref.venue,
-                "enriched_abstract": ref.abstract,
-                "enriched_provider": ref.source,
-                "enriched_at": datetime.now(UTC),
-            })
+            if ref:
+                provider_name = ref.source
+                # Update lead with enrichment fields (using model_copy for frozen models)
+                lead = lead.model_copy(update={
+                    "enriched_title": ref.title,
+                    "enriched_authors": list(ref.authors) if ref.authors else None,
+                    "enriched_year": ref.year,
+                    "enriched_venue": ref.venue,
+                    "enriched_abstract": ref.abstract,
+                    "enriched_provider": ref.source,
+                    "enriched_at": datetime.now(UTC),
+                })
+                logger.info(
+                    "Enriched lead %s via %s: %s",
+                    lead.id,
+                    provider_name,
+                    ref.title[:50] if ref.title else "untitled",
+                )
+        except Exception as e:
+            logger.warning("Failed to enrich lead %s: %s", lead.id, e)
+            return EnrichmentResult(lead=lead, reference=None, provider=None, error=str(e))
 
-        return lead, ref
+        return EnrichmentResult(lead=lead, reference=ref, provider=provider_name)
+
+    def enrich_leads(
+        self, leads: list[LeadRecord], *, force: bool = False
+    ) -> tuple[list[EnrichmentResult], EnrichmentStats]:
+        """Enrich multiple leads.
+
+        Args:
+            leads: List of LeadRecords to enrich.
+            force: If True, re-enrich even if already enriched.
+
+        Returns:
+            Tuple of (results, stats).
+        """
+        results: list[EnrichmentResult] = []
+        enriched = 0
+        skipped_no_id = 0
+        failed = 0
+
+        with_identifiers = sum(
+            1 for lead in leads if lead.source.doi or lead.source.arxiv_id
+        )
+
+        for lead in leads:
+            # Skip if no identifiers
+            if not lead.source.doi and not lead.source.arxiv_id:
+                skipped_no_id += 1
+                results.append(EnrichmentResult(lead=lead, reference=None, provider=None))
+                continue
+
+            # Skip if already enriched (unless force)
+            if lead.enriched_at and not force:
+                results.append(EnrichmentResult(lead=lead, reference=None, provider=None))
+                continue
+
+            result = self.enrich_lead(lead)
+            results.append(result)
+
+            if result.error:
+                failed += 1
+            elif result.reference:
+                enriched += 1
+
+        stats = EnrichmentStats(
+            total=len(leads),
+            with_identifiers=with_identifiers,
+            enriched=enriched,
+            skipped_no_id=skipped_no_id,
+            failed=failed,
+        )
+
+        return results, stats
 ```
 
-### 4.2 `src/erdos/core/research/manifest_bridge.py` (NEW)
+### 4.2 ManifestBridge
+
+**File:** `src/erdos/core/research/manifest_bridge.py` (NEW)
 
 ```python
-"""Bridge between research leads and literature manifests."""
+"""Bridge between research leads and literature manifests.
 
-from erdos.core.ingest.models import ManifestEntry, ProblemManifest
-from erdos.core.research.models import LeadRecord
+Handles deduplication and conversion of enriched leads to manifest entries.
+"""
+
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from erdos.core.models import ManifestEntry, ProblemManifest, ReferenceRecord
+    from erdos.core.research.models import LeadRecord
+
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class IngestStats:
+    """Statistics from a batch ingest operation."""
+
+    total: int
+    ingested: int
+    skipped_no_id: int
+    skipped_duplicate: int
+    skipped_not_enriched: int
+    errors: int
+
 
 class ManifestBridge:
     """Converts enriched leads to manifest entries with deduplication."""
 
-    def __init__(self, manifest: ProblemManifest):
-        self.manifest = manifest
+    def __init__(self, manifest: ProblemManifest) -> None:
+        self._manifest = manifest
         self._doi_index = self._build_doi_index()
         self._arxiv_index = self._build_arxiv_index()
 
     def _build_doi_index(self) -> set[str]:
-        return {e.doi.lower() for e in self.manifest.entries if e.doi}
+        """Build index of existing DOIs (lowercase for case-insensitive matching)."""
+        return {
+            entry.reference.doi.lower()
+            for entry in self._manifest.entries
+            if entry.reference.doi
+        }
 
     def _build_arxiv_index(self) -> set[str]:
-        return {e.arxiv_id for e in self.manifest.entries if e.arxiv_id}
+        """Build index of existing arXiv IDs."""
+        return {
+            entry.reference.arxiv_id
+            for entry in self._manifest.entries
+            if entry.reference.arxiv_id
+        }
 
     def is_duplicate(self, lead: LeadRecord) -> bool:
-        """Check if lead already exists in manifest."""
-        if lead.doi and lead.doi.lower() in self._doi_index:
+        """Check if lead already exists in manifest by DOI or arXiv ID."""
+        if lead.source.doi and lead.source.doi.lower() in self._doi_index:
             return True
-        if lead.arxiv_id and lead.arxiv_id in self._arxiv_index:
+        if lead.source.arxiv_id and lead.source.arxiv_id in self._arxiv_index:
             return True
         return False
 
     def lead_to_entry(self, lead: LeadRecord) -> ManifestEntry:
-        """Convert enriched lead to manifest entry."""
-        return ManifestEntry(
-            doi=lead.doi,
-            arxiv_id=lead.arxiv_id,
+        """Convert enriched lead to manifest entry.
+
+        Requires lead to have enrichment data (enriched_title, etc.).
+        """
+        from erdos.core.models import ManifestEntry, ReferenceRecord
+
+        # Build ReferenceRecord from enriched data
+        reference = ReferenceRecord(
+            doi=lead.source.doi,
+            arxiv_id=lead.source.arxiv_id,
             title=lead.enriched_title or lead.title,
             authors=lead.enriched_authors or [],
             year=lead.enriched_year,
             venue=lead.enriched_venue,
             abstract=lead.enriched_abstract,
+            source=lead.enriched_provider,
+            fetched_at=lead.enriched_at,
+        )
+
+        # Create manifest entry with provenance
+        return ManifestEntry(
+            reference=reference,
+            cached=False,
+            extracted=False,
+            ingested_at=datetime.now(UTC),
             source="lead",
             lead_id=lead.id,
         )
+
+    def add_entry(self, entry: ManifestEntry) -> None:
+        """Add entry to manifest and update indices."""
+        self._manifest.entries.append(entry)
+        if entry.reference.doi:
+            self._doi_index.add(entry.reference.doi.lower())
+        if entry.reference.arxiv_id:
+            self._arxiv_index.add(entry.reference.arxiv_id)
 ```
 
-### 4.3 Command Implementations
+---
 
-- `src/erdos/commands/research/lead_enrich.py` (NEW)
-- `src/erdos/commands/research/lead_ingest.py` (NEW)
+## 5) CLI Commands
 
-Both follow existing patterns from `src/erdos/commands/research/` with:
-- AppContext for dependency injection
-- CLIOutput for structured responses
-- Rich console for human-readable output
+### 5.1 `erdos research lead enrich`
+
+Add to `src/erdos/commands/research/lead.py`:
+
+```python
+@lead_app.command("enrich")
+def enrich_command(
+    problem_id: Annotated[int, typer.Argument(help="Problem ID")],
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="Preview without fetching")] = False,
+    force: Annotated[bool, typer.Option("--force", help="Re-enrich even if already enriched")] = False,
+    timeout: Annotated[float, typer.Option("--timeout", help="HTTP timeout")] = 30.0,
+) -> None:
+    """Enrich leads with full metadata from OpenAlex/Crossref/arXiv."""
+    from erdos.core.research.enrichment import LeadEnrichmentService
+    # ... implementation
+```
+
+### 5.2 `erdos research lead ingest`
+
+Add to `src/erdos/commands/research/lead.py`:
+
+```python
+@lead_app.command("ingest")
+def ingest_command(
+    problem_id: Annotated[int, typer.Argument(help="Problem ID")],
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="Preview without writing")] = False,
+    require_enriched: Annotated[bool, typer.Option("--require-enriched", help="Skip unenriched leads")] = False,
+) -> None:
+    """Add enriched leads to literature manifest with deduplication."""
+    from erdos.core.research.manifest_bridge import ManifestBridge
+    # ... implementation
+```
 
 ---
 
-## 5) Integration Points
+## 6) TDD Test Plan (Uncle Bob Style)
 
-### With Existing Commands
+### Phase 1: Model Tests (Red-Green-Refactor)
 
-| Command | Integration |
-|---------|-------------|
-| `erdos research exa search --save-leads` | Feeds leads with DOI/arXiv IDs |
-| `erdos refs zbmath` | User can manually add results as leads |
-| `erdos refs s2` | User can manually add results as leads |
-| `erdos ingest` | Continues to work for `problem.references[]` |
-| `erdos search` | Manifest entries are indexed as before |
+```python
+# tests/unit/core/research/test_models_enrichment.py
 
-### With FallbackProvider (SPEC-022)
+def test_lead_record_has_enrichment_fields():
+    """LeadRecord should have all enrichment fields with None defaults."""
+    lead = LeadRecord(...)
+    assert lead.enriched_title is None
+    assert lead.enriched_authors is None
+    assert lead.enriched_at is None
+    assert lead.ingested_at is None
 
-Reuses the existing provider chain:
-- DOI chain: OpenAlex → Crossref
-- arXiv chain: OpenAlex → arXiv
+def test_lead_record_enrichment_fields_are_optional():
+    """Existing leads without enrichment fields should still validate."""
+    # Backward compatibility test
 
-No changes to provider architecture needed.
+def test_manifest_entry_has_source_tracking():
+    """ManifestEntry should track source and lead_id."""
+    entry = ManifestEntry(...)
+    assert entry.source == "problem_ref"  # default
+    assert entry.lead_id is None
 
----
+def test_manifest_entry_source_lead():
+    """ManifestEntry should accept source='lead' with lead_id."""
+    entry = ManifestEntry(..., source="lead", lead_id="lead_123")
+    assert entry.source == "lead"
+    assert entry.lead_id == "lead_123"
+```
 
-## 6) Verification
-
-### Unit Tests
+### Phase 2: LeadEnrichmentService Tests
 
 ```python
 # tests/unit/core/research/test_enrichment.py
-def test_enrich_lead_with_doi():
-    """Lead with DOI is enriched via FallbackProvider."""
 
-def test_enrich_lead_with_arxiv():
-    """Lead with arXiv ID is enriched via FallbackProvider."""
+def test_enrich_lead_with_doi_success():
+    """Lead with DOI should be enriched via FallbackProvider."""
+    mock_provider = Mock()
+    mock_provider.get_by_doi.return_value = ReferenceRecord(...)
 
-def test_enrich_lead_no_identifier():
-    """Lead without identifiers returns None."""
+    service = LeadEnrichmentService(mock_provider)
+    lead = make_lead(doi="10.1234/test")
+    result = service.enrich_lead(lead)
 
-# tests/unit/core/research/test_manifest_bridge.py
-def test_duplicate_detection_by_doi():
-    """Duplicate DOIs are detected."""
+    assert result.lead.enriched_title == "..."
+    assert result.lead.enriched_at is not None
+    assert result.provider == "openalex"
 
-def test_duplicate_detection_by_arxiv():
-    """Duplicate arXiv IDs are detected."""
+def test_enrich_lead_with_arxiv_success():
+    """Lead with arXiv ID should be enriched via FallbackProvider."""
 
-def test_lead_to_entry_conversion():
-    """Enriched lead converts to ManifestEntry correctly."""
+def test_enrich_lead_no_identifier_skipped():
+    """Lead without identifiers should return unchanged."""
+    lead = make_lead(doi=None, arxiv_id=None)
+    result = service.enrich_lead(lead)
+    assert result.lead.enriched_at is None
+    assert result.reference is None
+
+def test_enrich_lead_provider_returns_none():
+    """Lead with unknown identifier should remain unenriched."""
+
+def test_enrich_lead_provider_error_handled():
+    """Network errors should be caught and logged."""
+
+def test_enrich_leads_batch_stats():
+    """Batch enrichment should return accurate stats."""
 ```
 
-### Integration Tests
+### Phase 3: ManifestBridge Tests
+
+```python
+# tests/unit/core/research/test_manifest_bridge.py
+
+def test_duplicate_detection_by_doi():
+    """Duplicate DOIs should be detected (case-insensitive)."""
+    manifest = make_manifest_with_doi("10.1234/TEST")
+    bridge = ManifestBridge(manifest)
+    lead = make_lead(doi="10.1234/test")  # lowercase
+    assert bridge.is_duplicate(lead) is True
+
+def test_duplicate_detection_by_arxiv():
+    """Duplicate arXiv IDs should be detected."""
+
+def test_no_duplicate_for_new_lead():
+    """New leads should not be flagged as duplicates."""
+
+def test_lead_to_entry_conversion():
+    """Enriched lead should convert to ManifestEntry correctly."""
+    lead = make_enriched_lead(...)
+    bridge = ManifestBridge(make_empty_manifest())
+    entry = bridge.lead_to_entry(lead)
+
+    assert entry.source == "lead"
+    assert entry.lead_id == lead.id
+    assert entry.reference.title == lead.enriched_title
+
+def test_add_entry_updates_indices():
+    """Adding entry should update DOI and arXiv indices."""
+```
+
+### Phase 4: Integration Tests
 
 ```python
 # tests/integration/test_lead_enrichment.py
+
+@pytest.mark.requires_network
 def test_enrich_and_ingest_workflow():
     """Full workflow: add lead → enrich → ingest → verify manifest."""
+    # 1. Add a lead with known arXiv ID
+    # 2. Run enrich
+    # 3. Run ingest
+    # 4. Verify manifest contains the entry
 
 def test_deduplication_across_ingests():
-    """Second ingest skips duplicates."""
+    """Second ingest should skip duplicates."""
 ```
 
-### CLI Tests
+### Phase 5: CLI Tests
 
-```bash
-# Dry-run should not modify files
-erdos research lead enrich 848 --dry-run
-erdos research lead ingest 848 --dry-run
+```python
+# tests/unit/commands/research/test_lead_enrich_ingest.py
 
-# JSON output is valid
-erdos research lead enrich 848 --json | jq .
-erdos research lead ingest 848 --json | jq .
+def test_enrich_dry_run_no_network():
+    """--dry-run should not make API calls."""
+
+def test_enrich_json_output_valid():
+    """--json output should be valid CLIOutput."""
+
+def test_ingest_dry_run_no_write():
+    """--dry-run should not write manifest."""
+
+def test_ingest_json_output_valid():
+    """--json output should be valid CLIOutput."""
 ```
 
-### Acceptance Criteria
+---
+
+## 7) Implementation Order
+
+1. **Model extensions** (LeadRecord + ManifestEntry) - enables all downstream work
+2. **LeadEnrichmentService** with unit tests
+3. **ManifestBridge** with unit tests
+4. **FSResearchStore.lead_update()** extension for enrichment fields
+5. **lead enrich command** with CLI tests
+6. **lead ingest command** with CLI tests
+7. **Integration tests** (requires network)
+8. **Acceptance test** (full workflow)
+
+---
+
+## 8) Acceptance Criteria
 
 ```bash
 # Full workflow test
@@ -434,23 +628,18 @@ uv run erdos research lead ingest 848
 uv run erdos refs problem 848  # Should show new entries
 ```
 
----
-
-## 7) Migration & Backwards Compatibility
-
-### No Breaking Changes
-
-- Existing `erdos ingest` behavior unchanged
-- Existing lead records remain valid (new fields are optional)
-- Existing manifests remain valid (new fields are optional)
-
-### Migration
-
-None required. New fields have defaults.
+- [ ] `erdos research lead enrich 848` enriches leads with full metadata
+- [ ] `erdos research lead ingest 848` adds to manifest with dedup
+- [ ] Existing manifest entries are preserved (merge, not overwrite)
+- [ ] `--dry-run` flag shows what would be added
+- [ ] `--json` output for both commands
+- [ ] All unit tests pass
+- [ ] Integration tests pass (with network)
+- [ ] No regressions in existing tests
 
 ---
 
-## 8) Error Handling
+## 9) Error Handling
 
 | Scenario | Behavior |
 |----------|----------|
@@ -462,21 +651,13 @@ None required. New fields have defaults.
 
 ---
 
-## 9) Future Extensions
-
-1. **Auto-enrich on save**: `--save-leads --enrich` flag for Exa search
-2. **Batch discovery → ingest**: `erdos research discover 848 --query "..." --ingest`
-3. **Cross-problem deduplication**: Global reference store
-4. **Citation chain following**: Enrich → get citations → add as leads → recurse
-
----
-
 ## 10) Related
 
-- Issue #34: Lead enrichment pipeline (tracks this work)
-- SPEC-022: MetadataProvider Orchestration (provides FallbackProvider)
-- SPEC-024: Research Records (provides LeadRecord)
-- SPEC-029: Exa Research Integration (provides discovery → leads)
+- **Issue #34:** Lead enrichment pipeline (tracks this work)
+- **BUG-039:** Ingest cannot discover papers (Phase 1 fixed, Phases 2-3 = this spec)
+- **SPEC-022:** MetadataProvider Orchestration (provides FallbackProvider)
+- **SPEC-024:** Research Records (provides LeadRecord)
+- **SPEC-029:** Exa Research Integration (provides discovery → leads)
 - `master-vision.md` Section 7: API Orchestration Strategy
 
 ---
@@ -486,3 +667,4 @@ None required. New fields have defaults.
 | Version | Date | Changes |
 |---------|------|---------|
 | 0.1.0 | 2026-01-26 | Initial draft |
+| 0.2.0 | 2026-01-28 | Verified tracer bullets, added TDD plan, implementation order |
