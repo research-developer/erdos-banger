@@ -1121,236 +1121,25 @@ lemma A₇_100_card : (A₇ 100).card = 4 := by decide
 lemma A₇_200_card : (A₇ 200).card = 8 := by decide
 
 lemma diag_cand_50 : DiagonalCandidates 50 = {7, 18, 32, 38, 41, 43} := by
+  classical
   ext n
-  simp [DiagonalCandidates, Finset.mem_filter, Finset.mem_range]
-  constructor
-  · rintro ⟨hn_lt, hn_nsq⟩
-    have hn_nsq' : ¬ Squarefree (n ^ 2 + 1) := by
-      simpa [pow_two] using hn_nsq
-    have h_ex : ∃ p, Nat.Prime p ∧ p * p ∣ n ^ 2 + 1 := by
-      have h' : ¬ (∀ p, Nat.Prime p → ¬ p * p ∣ n ^ 2 + 1) := by
-        intro hall
-        apply hn_nsq'
-        exact (Nat.squarefree_iff_prime_squarefree (n := n ^ 2 + 1)).2 hall
-      push_neg at h'
-      simpa [mul_assoc] using h'
-    rcases h_ex with ⟨p, hp, hpdiv⟩
-    have hp_ne2 : p ≠ 2 := by
-      intro hp2
-      subst hp2
-      have h4 : 4 ∣ n ^ 2 + 1 := by
-        simpa using hpdiv
-      exact not_dvd_four_sq_add_one n h4
-    have hp_gt2 : p > 2 := lt_of_le_of_ne hp.two_le (Ne.symm hp_ne2)
-    have hpdiv_pow : p ^ 2 ∣ n ^ 2 + 1 := by
-      simpa [pow_two] using hpdiv
-    have hp_mod4 : p % 4 = 1 :=
-      prime_sq_divides_implies_one_mod_four p n hp hp_gt2 hpdiv_pow
-    have hn_le49 : n ≤ 49 := Nat.le_of_lt_succ hn_lt
-    have hn_bound : n ^ 2 + 1 ≤ 2402 := by
-      have hnn_le : n * n ≤ 49 * 49 := Nat.mul_le_mul hn_le49 hn_le49
-      have h : n * n + 1 ≤ 49 * 49 + 1 := Nat.add_le_add_right hnn_le 1
-      simpa [pow_two, show 49 * 49 + 1 = (2402 : ℕ) by norm_num] using h
-    have hpp_le : p * p ≤ n ^ 2 + 1 := Nat.le_of_dvd (Nat.succ_pos _) hpdiv
-    have hpp_le_2402 : p * p ≤ 2402 := le_trans hpp_le hn_bound
-    have hp_lt50 : p < 50 := by
-      by_contra hp_ge50
-      have hp_ge50' : 50 ≤ p := Nat.le_of_not_lt hp_ge50
-      have hpp_ge : 50 * 50 ≤ p * p := Nat.mul_le_mul hp_ge50' hp_ge50'
-      have : (2500 : ℕ) ≤ 2402 := by
-        have : (2500 : ℕ) ≤ p * p := by simpa using hpp_ge
-        exact le_trans this hpp_le_2402
-      norm_num at this
-    have hp_le49 : p ≤ 49 := (Nat.lt_succ_iff).1 (by simpa using hp_lt50)
-    have hp_cases :
-        p = 5 ∨ p = 13 ∨ p = 17 ∨ p = 29 ∨ p = 37 ∨ p = 41 := by
-      interval_cases p <;> simp_all +decide
-    rcases hp_cases with rfl | rfl | rfl | rfl | rfl | rfl
-    · -- p = 5
-      have h25 : 25 ∣ n ^ 2 + 1 := by
-        simpa using hpdiv
-      have hn_mod : n % 25 = 7 ∨ n % 25 = 18 :=
-        mod25_eq_7_or_18_of_dvd_sq_add_one (n := n) h25
-      have hn_div_lt : n / 25 < 2 :=
-        Nat.div_lt_of_lt_mul (by simpa [Nat.mul_comm] using hn_lt)
-      have hn_div_cases : n / 25 = 0 ∨ n / 25 = 1 := by
-        have : n / 25 ≤ 1 := (Nat.lt_succ_iff).1 (by simpa using hn_div_lt)
-        omega
-      have hn_repr : n = n % 25 + 25 * (n / 25) := by
-        simpa using (Nat.mod_add_div n 25).symm
-      rcases hn_div_cases with h0 | h1
-      · have hn_eq : n = n % 25 := by
-          calc
-            n = n % 25 + 25 * (n / 25) := hn_repr
-            _ = n % 25 := by simp [h0]
-        cases hn_mod with
-        | inl h7 =>
-            have : n = 7 := hn_eq.trans h7
-            simp [this]
-        | inr h18 =>
-            have : n = 18 := hn_eq.trans h18
-            simp [this]
-      · have hn_eq : n = n % 25 + 25 := by
-          calc
-            n = n % 25 + 25 * (n / 25) := hn_repr
-            _ = n % 25 + 25 := by simp [h1]
-        cases hn_mod with
-        | inl h7 =>
-            have : n = 32 := by
-              calc
-                n = n % 25 + 25 := hn_eq
-                _ = 7 + 25 := by simp [h7]
-                _ = 32 := by norm_num
-            simp [this]
-        | inr h18 =>
-            have : n = 43 := by
-              calc
-                n = n % 25 + 25 := hn_eq
-                _ = 18 + 25 := by simp [h18]
-                _ = 43 := by norm_num
-            simp [this]
-    · -- p = 13 (impossible for n < 50)
-      have h169 : 169 ∣ n ^ 2 + 1 := by simpa using hpdiv
-      have h0 : ((n ^ 2 + 1 : ℕ) : ZMod 169) = 0 :=
-        (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) 169).2 h169
-      have hsq : (n : ZMod 169) ^ 2 = (-1 : ZMod 169) := by
-        have : (n : ZMod 169) ^ 2 + 1 = 0 := by
-          simpa [Nat.cast_add, Nat.cast_pow, Nat.cast_one] using h0
-        simpa using (eq_neg_of_add_eq_zero_left this)
-      have hnZ : (n : ZMod 169) = (70 : ZMod 169) ∨ (n : ZMod 169) = (99 : ZMod 169) :=
-        (zmod169_sq_eq_neg_one_iff (n : ZMod 169)).1 hsq
-      have hn_lt169 : n < 169 := lt_trans hn_lt (by decide : 50 < 169)
-      cases hnZ with
-      | inl h70 =>
-          have hn_mod : n % 169 = 70 % 169 := (ZMod.natCast_eq_natCast_iff' n 70 169).1 h70
-          have : n = 70 := by
-            simpa [Nat.mod_eq_of_lt hn_lt169, Nat.mod_eq_of_lt (by decide : 70 < 169)] using hn_mod
-          omega
-      | inr h99 =>
-          have hn_mod : n % 169 = 99 % 169 := (ZMod.natCast_eq_natCast_iff' n 99 169).1 h99
-          have : n = 99 := by
-            simpa [Nat.mod_eq_of_lt hn_lt169, Nat.mod_eq_of_lt (by decide : 99 < 169)] using hn_mod
-          omega
-    · -- p = 17
-      have h289 : 289 ∣ n ^ 2 + 1 := by simpa using hpdiv
-      have h0 : ((n ^ 2 + 1 : ℕ) : ZMod 289) = 0 :=
-        (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) 289).2 h289
-      have hsq : (n : ZMod 289) ^ 2 = (-1 : ZMod 289) := by
-        have : (n : ZMod 289) ^ 2 + 1 = 0 := by
-          simpa [Nat.cast_add, Nat.cast_pow, Nat.cast_one] using h0
-        simpa using (eq_neg_of_add_eq_zero_left this)
-      have hnZ : (n : ZMod 289) = (38 : ZMod 289) ∨ (n : ZMod 289) = (251 : ZMod 289) :=
-        (zmod289_sq_eq_neg_one_iff (n : ZMod 289)).1 hsq
-      have hn_lt289 : n < 289 := lt_trans hn_lt (by decide : 50 < 289)
-      cases hnZ with
-      | inl h38 =>
-          have hn_mod : n % 289 = 38 % 289 := (ZMod.natCast_eq_natCast_iff' n 38 289).1 h38
-          have : n = 38 := by
-            simpa [Nat.mod_eq_of_lt hn_lt289, Nat.mod_eq_of_lt (by decide : 38 < 289)] using hn_mod
-          simp [this]
-      | inr h251 =>
-          have hn_mod : n % 289 = 251 % 289 := (ZMod.natCast_eq_natCast_iff' n 251 289).1 h251
-          have : n = 251 := by
-            simpa [Nat.mod_eq_of_lt hn_lt289, Nat.mod_eq_of_lt (by decide : 251 < 289)] using hn_mod
-          omega
-    · -- p = 29
-      have h841 : 841 ∣ n ^ 2 + 1 := by simpa using hpdiv
-      have h0 : ((n ^ 2 + 1 : ℕ) : ZMod 841) = 0 :=
-        (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) 841).2 h841
-      have hsq : (n : ZMod 841) ^ 2 = (-1 : ZMod 841) := by
-        have : (n : ZMod 841) ^ 2 + 1 = 0 := by
-          simpa [Nat.cast_add, Nat.cast_pow, Nat.cast_one] using h0
-        simpa using (eq_neg_of_add_eq_zero_left this)
-      have hnZ : (n : ZMod 841) = (41 : ZMod 841) ∨ (n : ZMod 841) = (800 : ZMod 841) :=
-        (zmod841_sq_eq_neg_one_iff (n : ZMod 841)).1 hsq
-      have hn_lt841 : n < 841 := lt_trans hn_lt (by decide : 50 < 841)
-      cases hnZ with
-      | inl h41 =>
-          have hn_mod : n % 841 = 41 % 841 := (ZMod.natCast_eq_natCast_iff' n 41 841).1 h41
-          have : n = 41 := by
-            simpa [Nat.mod_eq_of_lt hn_lt841, Nat.mod_eq_of_lt (by decide : 41 < 841)] using hn_mod
-          simp [this]
-      | inr h800 =>
-          have hn_mod : n % 841 = 800 % 841 := (ZMod.natCast_eq_natCast_iff' n 800 841).1 h800
-          have : n = 800 := by
-            simpa [Nat.mod_eq_of_lt hn_lt841, Nat.mod_eq_of_lt (by decide : 800 < 841)] using hn_mod
-          omega
-    · -- p = 37 (impossible for n < 50 since 1369 ∣ n^2+1 forces n^2 = 1368)
-      have h1369 : 1369 ∣ n ^ 2 + 1 := by simpa using hpdiv
-      have hlt : n ^ 2 + 1 < 1369 * 2 := by
-        have : (2402 : ℕ) < 1369 * 2 := by norm_num
-        exact lt_of_le_of_lt hn_bound this
-      have hk_lt2 : (n ^ 2 + 1) / 1369 < 2 := Nat.div_lt_of_lt_mul hlt
-      have hk_ge1 : 1 ≤ (n ^ 2 + 1) / 1369 := by
-        have : 1369 ≤ n ^ 2 + 1 := Nat.le_of_dvd (Nat.succ_pos _) h1369
-        exact (Nat.one_le_div_iff (by norm_num : 0 < 1369)).2 this
-      have hk : (n ^ 2 + 1) / 1369 = 1 := by omega
-      have hmul : 1369 * ((n ^ 2 + 1) / 1369) = n ^ 2 + 1 := Nat.mul_div_cancel' h1369
-      have h_eq : n ^ 2 + 1 = 1369 := by simpa [hk] using hmul.symm
-      have h_sq : n ^ 2 = 1368 := by omega
-      have h36_lt : 36 < n := by
-        by_contra hn_le36
-        have hn_le36' : n ≤ 36 := Nat.le_of_not_gt hn_le36
-        have : n * n ≤ 36 * 36 := Nat.mul_le_mul hn_le36' hn_le36'
-        have : n ^ 2 ≤ 36 ^ 2 := by simpa [pow_two] using this
-        have : 1368 ≤ 1296 := by
-          simpa [h_sq, show (36 ^ 2 : ℕ) = 1296 by norm_num] using this
-        norm_num at this
-      have h_lt37 : n < 37 := by
-        by_contra hn_ge37
-        have hn_ge37' : 37 ≤ n := Nat.le_of_not_gt hn_ge37
-        have : 37 * 37 ≤ n * n := Nat.mul_le_mul hn_ge37' hn_ge37'
-        have : 37 ^ 2 ≤ n ^ 2 := by simpa [pow_two] using this
-        have : 1369 ≤ 1368 := by
-          simpa [h_sq, show (37 ^ 2 : ℕ) = 1369 by norm_num] using this
-        norm_num at this
-      omega
-    · -- p = 41 (impossible for n < 50 since 1681 ∣ n^2+1 forces n^2 = 1680)
-      have h1681 : 1681 ∣ n ^ 2 + 1 := by simpa using hpdiv
-      have hlt : n ^ 2 + 1 < 1681 * 2 := by
-        have : (2402 : ℕ) < 1681 * 2 := by norm_num
-        exact lt_of_le_of_lt hn_bound this
-      have hk_lt2 : (n ^ 2 + 1) / 1681 < 2 := Nat.div_lt_of_lt_mul hlt
-      have hk_ge1 : 1 ≤ (n ^ 2 + 1) / 1681 := by
-        have : 1681 ≤ n ^ 2 + 1 := Nat.le_of_dvd (Nat.succ_pos _) h1681
-        exact (Nat.one_le_div_iff (by norm_num : 0 < 1681)).2 this
-      have hk : (n ^ 2 + 1) / 1681 = 1 := by omega
-      have hmul : 1681 * ((n ^ 2 + 1) / 1681) = n ^ 2 + 1 := Nat.mul_div_cancel' h1681
-      have h_eq : n ^ 2 + 1 = 1681 := by simpa [hk] using hmul.symm
-      have h_sq : n ^ 2 = 1680 := by omega
-      have h40_lt : 40 < n := by
-        by_contra hn_le40
-        have hn_le40' : n ≤ 40 := Nat.le_of_not_gt hn_le40
-        have : n * n ≤ 40 * 40 := Nat.mul_le_mul hn_le40' hn_le40'
-        have : n ^ 2 ≤ 40 ^ 2 := by simpa [pow_two] using this
-        have : 1680 ≤ 1600 := by
-          simpa [h_sq, show (40 ^ 2 : ℕ) = 1600 by norm_num] using this
-        norm_num at this
-      have h_lt41 : n < 41 := by
-        by_contra hn_ge41
-        have hn_ge41' : 41 ≤ n := Nat.le_of_not_gt hn_ge41
-        have : 41 * 41 ≤ n * n := Nat.mul_le_mul hn_ge41' hn_ge41'
-        have : 41 ^ 2 ≤ n ^ 2 := by simpa [pow_two] using this
-        have : 1681 ≤ 1680 := by
-          simpa [h_sq, show (41 ^ 2 : ℕ) = 1681 by norm_num] using this
-        norm_num at this
-      omega
-  · intro hn_mem
-    rcases hn_mem with rfl | rfl | rfl | rfl | rfl | rfl
-    · refine ⟨by decide, ?_⟩
-      have : ¬ Squarefree 50 := not_squarefree_of_dvd_25 (by norm_num) (by norm_num)
-      simpa [show 7 * 7 + 1 = 50 by norm_num] using this
-    · refine ⟨by decide, ?_⟩
-      have : ¬ Squarefree 325 := not_squarefree_of_dvd_25 (by norm_num) (by norm_num)
-      simpa [show 18 * 18 + 1 = 325 by norm_num] using this
-    · refine ⟨by decide, ?_⟩
-      simpa [show 32 * 32 + 1 = 1025 by norm_num] using not_squarefree_1025
-    · refine ⟨by decide, ?_⟩
-      simpa [show 38 * 38 + 1 = 1445 by norm_num] using not_squarefree_1445
-    · refine ⟨by decide, ?_⟩
-      simpa [show 41 * 41 + 1 = 1682 by norm_num] using not_squarefree_1682
-    · refine ⟨by decide, ?_⟩
-      simpa [show 43 * 43 + 1 = 1850 by norm_num] using not_squarefree_1850
+  by_cases hn : n < 50
+  · interval_cases n <;>
+      simp [DiagonalCandidates, Nat.squarefree_iff_nodup_primeFactorsList]
+  ·
+    have hne7 : n ≠ 7 := by
+      intro h; subst h; exact hn (by decide)
+    have hne18 : n ≠ 18 := by
+      intro h; subst h; exact hn (by decide)
+    have hne32 : n ≠ 32 := by
+      intro h; subst h; exact hn (by decide)
+    have hne38 : n ≠ 38 := by
+      intro h; subst h; exact hn (by decide)
+    have hne41 : n ≠ 41 := by
+      intro h; subst h; exact hn (by decide)
+    have hne43 : n ≠ 43 := by
+      intro h; subst h; exact hn (by decide)
+    simp [DiagonalCandidates, hn, hne7, hne18, hne32, hne38, hne41, hne43]
 
 lemma diag_cand_100 : DiagonalCandidates 100 = {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99} := by
   ext n
