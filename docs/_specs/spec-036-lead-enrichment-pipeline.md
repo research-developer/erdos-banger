@@ -662,9 +662,256 @@ uv run erdos refs problem 848  # Should show new entries
 
 ---
 
+## 11) Critical Gotchas (Verified 2026-01-28)
+
+### 11.1 LeadRecord is Frozen (Immutable)
+
+**Location:** `src/erdos/core/research/models.py:14-15`
+
+```python
+class _FrozenModel(ErdosBaseModel):
+    model_config = ConfigDict(frozen=True)
+
+class LeadRecord(_FrozenModel):  # Frozen!
+```
+
+**Impact:** Cannot mutate lead in-place. Must use `lead.model_copy(update={...})` pattern.
+
+**Solution:** Already documented in spec. LeadEnrichmentService uses `model_copy()`.
+
+### 11.2 FSResearchStore.lead_update() Only Supports 3 Fields
+
+**Location:** `src/erdos/core/research/store_fs.py:160-194`
+
+```python
+def lead_update(
+    self,
+    problem_id: int,
+    lead_id: str,
+    *,
+    status: LeadStatus | None = None,   # ✅ Supported
+    priority: Priority | None = None,    # ✅ Supported
+    notes: str | None = None,            # ✅ Supported
+    # ❌ NO enrichment fields!
+) -> tuple[LeadRecord, Path]:
+```
+
+**Impact:** Cannot use existing `lead_update()` to write enrichment fields.
+
+**Solution:** Either:
+1. **Extend `lead_update()`** to accept all enrichment fields (recommended)
+2. **Add new `lead_save()`** method that writes full LeadRecord to disk
+3. **Write directly** using `_write_record()` after `model_copy()`
+
+**Recommended approach:** Add new optional parameters to `lead_update()`:
+
+```python
+def lead_update(
+    self,
+    problem_id: int,
+    lead_id: str,
+    *,
+    status: LeadStatus | None = None,
+    priority: Priority | None = None,
+    notes: str | None = None,
+    # NEW: Enrichment fields
+    enriched_title: str | None = None,
+    enriched_authors: list[str] | None = None,
+    enriched_year: int | None = None,
+    enriched_venue: str | None = None,
+    enriched_abstract: str | None = None,
+    enriched_provider: str | None = None,
+    enriched_at: datetime | None = None,
+    ingested_at: datetime | None = None,
+    manifest_entry_id: str | None = None,
+    now: datetime | None = None,
+) -> tuple[LeadRecord, Path]:
+```
+
+### 11.3 No --dry-run in Existing Research Commands
+
+**Location:** `src/erdos/commands/research/lead.py`
+
+**Impact:** No existing pattern to follow for `--dry-run`.
+
+**Solution:** Implement custom dry-run logic:
+
+```python
+if dry_run:
+    # Preview mode: collect stats but don't make API calls or write files
+    leads = store.lead_list(problem_id)
+    with_ids = [l for l in leads if l.source.doi or l.source.arxiv_id]
+    console.print(f"Would enrich {len(with_ids)} leads with identifiers")
+    return
+```
+
+### 11.4 Exa Extracts Identifiers from URLs Only
+
+**Location:** `src/erdos/core/clients/exa.py:308-323`
+
+**Issue:** `_extract_doi()` and `_extract_arxiv_id()` only parse URLs, not page text.
+
+```python
+def _extract_doi(url: str) -> str | None:
+    """Extract DOI from URL."""
+    match = re.search(r"doi\.org/(.+?)(?:\?|$)", url)  # Only doi.org URLs
+    ...
+```
+
+**Impact:** Semantic Scholar pages (`semanticscholar.org/paper/...`) have DOIs in page text, not URL. These won't be extracted.
+
+**Observed:** 34 of 45 leads for Problem 74 have `source.doi: null` and `source.arxiv_id: null` because their URLs are Semantic Scholar, Springer, etc.
+
+**Solution:** Out of scope for SPEC-036. Future enhancement: parse DOI from `relevance` field (page text).
+
+### 11.5 Existing Manifest Entries Must Be Preserved
+
+**Location:** `src/erdos/core/ingest/service.py:99-121`
+
+**Issue:** Manifest writing uses `_write_manifest_atomic()` which replaces the file.
+
+**Solution:** ManifestBridge must:
+1. Load existing manifest first
+2. Append new entries (not replace)
+3. Use same atomic write pattern
+
+### 11.6 Rate Limiting Between API Calls
+
+**Location:** `src/erdos/core/ingest/fetch.py:479`
+
+**Existing pattern:** Uses `config.fetch.delay` between references.
+
+**Solution:** LeadEnrichmentService should accept a delay parameter and sleep between enrichment calls:
+
+```python
+import time
+
+def enrich_leads(self, leads, *, force=False, delay: float = 1.0):
+    for lead in leads:
+        result = self.enrich_lead(lead)
+        if delay > 0:
+            time.sleep(delay)
+```
+
+---
+
+## 12) Demo Scenario: Problem 74 (Chromatic Number)
+
+### 12.1 Current State (Verified 2026-01-28)
+
+**Problem 74** is the **ideal demo candidate** because:
+- ✅ 45 leads already exist from Exa search
+- ✅ 11 leads have arXiv IDs that can be enriched
+- ✅ Existing manifest has 5 entries (good for dedup testing)
+- ✅ 4 arXiv IDs overlap (tests deduplication)
+- ✅ 7 unique leads can be ingested
+
+**Lead inventory:**
+
+| Metric | Count |
+|--------|-------|
+| Total leads | 45 |
+| Leads with arXiv ID | 11 |
+| Leads with DOI | 0 |
+| Leads without identifiers | 34 |
+
+**Manifest inventory:**
+
+| Metric | Count |
+|--------|-------|
+| Existing entries | 5 |
+| With arXiv ID | 4 |
+| With DOI only | 1 |
+
+**arXiv ID overlap analysis:**
+
+```
+Manifest arXiv IDs:     Leads arXiv IDs:           Dedup?
+1902.08177             1902.08177                  ⚠️ DUPLICATE
+1306.5167              1306.5167                   ⚠️ DUPLICATE
+2012.10409             2012.10409                  ⚠️ DUPLICATE
+2203.13833             2203.13833                  ⚠️ DUPLICATE
+                       2305.15585                  ✅ NEW
+                       2412.09969                  ✅ NEW
+                       2104.04914                  ✅ NEW
+                       2506.08810                  ✅ NEW
+                       2311.10379                  ✅ NEW
+                       2102.05522                  ✅ NEW
+                       1002.1748                   ✅ NEW
+```
+
+**Expected result after pipeline:** 7 new entries added to manifest (5 existing + 7 new = 12 total).
+
+### 12.2 Demo Commands (Post-Implementation)
+
+```bash
+# 1. Check current state
+uv run erdos research lead list 74 --json | jq '.data.records | length'
+# Expected: 45
+
+# 2. Dry-run enrichment (no API calls)
+uv run erdos research lead enrich 74 --dry-run
+# Expected output:
+# Would enrich 11 leads with identifiers
+# - 0 already enriched
+# - 34 without identifiers (skipped)
+
+# 3. Enrich leads (live API)
+uv run erdos research lead enrich 74
+# Expected output:
+# Enriched 11 leads via OpenAlex
+# - 11 successful
+# - 0 failed
+# - 34 skipped (no identifier)
+
+# 4. Dry-run ingest (no file writes)
+uv run erdos research lead ingest 74 --dry-run
+# Expected output:
+# Would add 7 entries to manifest
+# - 4 duplicates skipped (already in manifest)
+# - 34 skipped (no identifier)
+
+# 5. Ingest leads to manifest
+uv run erdos research lead ingest 74
+# Expected output:
+# Added 7 entries to literature/manifests/0074.yaml
+# - 4 duplicates skipped
+# - 34 skipped (no identifier)
+
+# 6. Verify manifest
+uv run erdos refs manifest 74 --json | jq '.data.entries | length'
+# Expected: 12 (5 existing + 7 new)
+
+# 7. Verify new entries have source=lead
+uv run erdos refs manifest 74 --json | jq '[.data.entries[] | select(.source == "lead")] | length'
+# Expected: 7
+```
+
+### 12.3 Required Environment Variables
+
+```bash
+# .env file must contain:
+OPENALEX_API_KEY=...  # Optional but recommended for rate limits
+ERDOS_MAILTO=...      # Required for polite pool
+```
+
+### 12.4 Demo Acceptance Criteria
+
+- [ ] `erdos research lead enrich 74` enriches 11 leads
+- [ ] `erdos research lead ingest 74` adds exactly 7 new entries
+- [ ] 4 duplicate arXiv IDs are correctly skipped
+- [ ] 34 leads without identifiers are skipped with warning
+- [ ] New manifest entries have `source: "lead"` and `lead_id`
+- [ ] Original 5 manifest entries are preserved
+- [ ] `--dry-run` works correctly for both commands
+- [ ] `--json` output is valid CLIOutput
+
+---
+
 ## Changelog
 
 | Version | Date | Changes |
 |---------|------|---------|
 | 0.1.0 | 2026-01-26 | Initial draft |
 | 0.2.0 | 2026-01-28 | Verified tracer bullets, added TDD plan, implementation order |
+| 0.3.0 | 2026-01-28 | Added critical gotchas, demo scenario for Problem 74, FSResearchStore extension needs |
