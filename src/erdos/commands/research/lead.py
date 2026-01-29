@@ -439,7 +439,7 @@ def lead_ingest(
         exit_with_result(ctx, error)
         return
 
-    store = FSResearchStore(repo_root=app_ctx.config.repo_root)
+    store = FSResearchStore(repo_root=repo_root)  # Use resolved repo_root consistently
     leads = store.lead_list(problem_id)
 
     # Filter to enriched leads only

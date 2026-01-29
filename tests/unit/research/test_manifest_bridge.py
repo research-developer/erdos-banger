@@ -254,3 +254,94 @@ class TestManifestBridgeBatch:
         _, _, updated_manifest = bridge.ingest_leads(leads, manifest)
 
         assert updated_manifest.updated_at >= old_updated
+
+
+class TestManifestBridgeCaseInsensitivity:
+    """Tests for case-insensitive DOI comparison (BUG-051 fix)."""
+
+    def test_doi_duplicate_detection_case_insensitive(self) -> None:
+        """DOI comparison should be case-insensitive.
+
+        BUG-051: DOIs are case-insensitive per the DOI handbook.
+        '10.1234/TEST' and '10.1234/test' are the same paper.
+        """
+        bridge = ManifestBridge()
+        # Manifest has DOI in uppercase
+        existing_entry = _make_entry(doi="10.1234/TEST")
+        manifest = _make_manifest(entries=[existing_entry])
+        # Lead has same DOI in lowercase
+        lead = _make_enriched_lead(doi="10.1234/test")
+
+        result = bridge.ingest_lead(lead, manifest)
+
+        assert result.added is False
+        assert result.reason == "duplicate_doi"
+
+    def test_doi_duplicate_detection_within_batch_case_insensitive(self) -> None:
+        """Within-batch DOI dedup should also be case-insensitive."""
+        bridge = ManifestBridge()
+        manifest = _make_manifest()
+        leads = [
+            _make_enriched_lead(lead_id="lead_1", doi="10.1234/TEST"),
+            _make_enriched_lead(
+                lead_id="lead_2", doi="10.1234/test"
+            ),  # Same DOI, different case
+        ]
+
+        _results, stats, updated_manifest = bridge.ingest_leads(leads, manifest)
+
+        assert stats.added == 1
+        assert stats.skipped_duplicate == 1
+        assert len(updated_manifest.entries) == 1
+
+
+class TestManifestBridgeArxivVersions:
+    """Tests for arXiv version suffix normalization (BUG-052 fix)."""
+
+    def test_arxiv_duplicate_detection_ignores_version_suffix(self) -> None:
+        """arXiv comparison should ignore version suffixes.
+
+        BUG-052: '2305.15585' and '2305.15585v2' are the same paper.
+        """
+        bridge = ManifestBridge()
+        # Manifest has arXiv ID without version
+        existing_entry = _make_entry(arxiv_id="2305.15585")
+        manifest = _make_manifest(entries=[existing_entry])
+        # Lead has same arXiv ID with version suffix
+        lead = _make_enriched_lead(arxiv_id="2305.15585v2")
+
+        result = bridge.ingest_lead(lead, manifest)
+
+        assert result.added is False
+        assert result.reason == "duplicate_arxiv"
+
+    def test_arxiv_duplicate_detection_version_in_manifest(self) -> None:
+        """Should detect duplicate when manifest has version but lead doesn't."""
+        bridge = ManifestBridge()
+        # Manifest has arXiv ID with version
+        existing_entry = _make_entry(arxiv_id="2305.15585v1")
+        manifest = _make_manifest(entries=[existing_entry])
+        # Lead has same arXiv ID without version
+        lead = _make_enriched_lead(arxiv_id="2305.15585")
+
+        result = bridge.ingest_lead(lead, manifest)
+
+        assert result.added is False
+        assert result.reason == "duplicate_arxiv"
+
+    def test_arxiv_duplicate_within_batch_ignores_version(self) -> None:
+        """Within-batch arXiv dedup should also ignore version suffixes."""
+        bridge = ManifestBridge()
+        manifest = _make_manifest()
+        leads = [
+            _make_enriched_lead(lead_id="lead_1", arxiv_id="2305.15585"),
+            _make_enriched_lead(
+                lead_id="lead_2", arxiv_id="2305.15585v3"
+            ),  # Same paper
+        ]
+
+        _results, stats, updated_manifest = bridge.ingest_leads(leads, manifest)
+
+        assert stats.added == 1
+        assert stats.skipped_duplicate == 1
+        assert len(updated_manifest.entries) == 1

@@ -1,8 +1,9 @@
 # BUG-052: ManifestBridge Does Not Normalize arXiv Version Suffixes
 
 **Priority:** P2
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-29
+**Fixed:** 2026-01-29
 **Component:** `src/erdos/core/research/manifest_bridge.py`
 
 ## Description

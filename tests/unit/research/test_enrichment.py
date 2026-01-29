@@ -254,3 +254,54 @@ class TestLeadEnrichmentServiceRateLimiting:
         service.enrich_leads(leads)
 
         mock_sleep.assert_called_with(1.0)
+
+
+class TestLeadEnrichmentServiceStats:
+    """Tests for accurate statistics (BUG-050 fix)."""
+
+    def test_with_identifiers_counts_all_leads_with_ids(self) -> None:
+        """with_identifiers should count ALL leads with DOI/arXiv, not just processed ones.
+
+        BUG-050: Previously, already-enriched leads were skipped before counting,
+        causing with_identifiers to be incorrect.
+        """
+        mock_provider = Mock()
+        mock_provider.get_by_doi.return_value = _make_reference(doi="10.1234/test")
+
+        service = LeadEnrichmentService(mock_provider)
+        # 3 leads with DOIs, 1 already enriched
+        leads = [
+            _make_lead(
+                doi="10.1234/test1", enriched_at=datetime.now(UTC)
+            ),  # Already enriched
+            _make_lead(doi="10.1234/test2"),  # Will be enriched
+            _make_lead(doi="10.1234/test3"),  # Will be enriched
+        ]
+        _results, stats = service.enrich_leads(leads, delay=0, force=False)
+
+        # All 3 have identifiers, even though only 2 were processed
+        assert stats.with_identifiers == 3
+        assert stats.enriched == 2  # Only 2 processed
+        assert stats.skipped_already_enriched == 1
+
+    def test_stats_include_skipped_already_enriched(self) -> None:
+        """Stats should separately track leads skipped because already enriched."""
+        mock_provider = Mock()
+
+        service = LeadEnrichmentService(mock_provider)
+        leads = [
+            _make_lead(
+                doi="10.1234/test1", enriched_at=datetime.now(UTC)
+            ),  # Already enriched
+            _make_lead(
+                doi="10.1234/test2", enriched_at=datetime.now(UTC)
+            ),  # Already enriched
+            _make_lead(),  # No identifier
+        ]
+        _results, stats = service.enrich_leads(leads, delay=0, force=False)
+
+        assert stats.total == 3
+        assert stats.with_identifiers == 2
+        assert stats.skipped_already_enriched == 2
+        assert stats.skipped_no_id == 1
+        assert stats.enriched == 0

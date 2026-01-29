@@ -36,6 +36,7 @@ class EnrichmentStats:
     with_identifiers: int = 0
     enriched: int = 0
     skipped_no_id: int = 0
+    skipped_already_enriched: int = 0
     failed: int = 0
 
 
@@ -139,17 +140,20 @@ class LeadEnrichmentService:
         first_api_call = True
 
         for lead in leads:
+            # Count identifiers first (for accurate stats - BUG-050 fix)
+            has_identifier = lead.source.doi or lead.source.arxiv_id
+            if has_identifier:
+                stats.with_identifiers += 1
+
             # Check if already enriched
             if lead.enriched_at is not None and not force:
+                stats.skipped_already_enriched += 1
                 logger.debug("Skipping already enriched lead: %s", lead.id)
                 results.append(EnrichmentResult(lead=lead))
                 continue
 
-            # Check for identifiers
-            has_identifier = lead.source.doi or lead.source.arxiv_id
-            if has_identifier:
-                stats.with_identifiers += 1
-            else:
+            # Check for identifiers (skip if none)
+            if not has_identifier:
                 stats.skipped_no_id += 1
                 logger.debug("Skipping lead with no identifier: %s", lead.id)
                 results.append(EnrichmentResult(lead=lead))

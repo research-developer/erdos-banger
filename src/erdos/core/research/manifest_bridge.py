@@ -5,11 +5,29 @@ Converts enriched LeadRecords to ManifestEntries with deduplication.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from erdos.core.models import ManifestEntry, ReferenceRecord
+
+
+def _normalize_doi(doi: str) -> str:
+    """Normalize DOI for case-insensitive comparison (BUG-051 fix).
+
+    DOIs are case-insensitive per DOI handbook section 2.4.
+    """
+    return doi.lower()
+
+
+def _normalize_arxiv_id(arxiv_id: str) -> str:
+    """Normalize arXiv ID by stripping version suffix (BUG-052 fix).
+
+    '2305.15585v2' -> '2305.15585'
+    Versions are different revisions of the same paper.
+    """
+    return re.sub(r"v\d+$", "", arxiv_id)
 
 
 if TYPE_CHECKING:
@@ -88,22 +106,31 @@ class ManifestBridge:
                 reason="no_identifier",
             )
 
-        # Build lookup sets from existing manifest
-        existing_dois = {e.reference.doi for e in manifest.entries if e.reference.doi}
+        # Build lookup sets from existing manifest (normalized - BUG-051, BUG-052 fix)
+        existing_dois = {
+            _normalize_doi(e.reference.doi) for e in manifest.entries if e.reference.doi
+        }
         existing_arxiv_ids = {
-            e.reference.arxiv_id for e in manifest.entries if e.reference.arxiv_id
+            _normalize_arxiv_id(e.reference.arxiv_id)
+            for e in manifest.entries
+            if e.reference.arxiv_id
         }
 
-        # Check for duplicate DOI
-        if doi and (doi in existing_dois or doi in seen_dois):
+        # Check for duplicate DOI (case-insensitive - BUG-051 fix)
+        if doi and (
+            _normalize_doi(doi) in existing_dois or _normalize_doi(doi) in seen_dois
+        ):
             return IngestResult(
                 lead_id=lead.id,
                 added=False,
                 reason="duplicate_doi",
             )
 
-        # Check for duplicate arXiv ID
-        if arxiv_id and (arxiv_id in existing_arxiv_ids or arxiv_id in seen_arxiv_ids):
+        # Check for duplicate arXiv ID (version-normalized - BUG-052 fix)
+        if arxiv_id and (
+            _normalize_arxiv_id(arxiv_id) in existing_arxiv_ids
+            or _normalize_arxiv_id(arxiv_id) in seen_arxiv_ids
+        ):
             return IngestResult(
                 lead_id=lead.id,
                 added=False,
@@ -166,11 +193,11 @@ class ManifestBridge:
             if result.added and result.entry is not None:
                 stats.added += 1
                 new_entries.append(result.entry)
-                # Track for batch dedup
+                # Track for batch dedup (normalized - BUG-051, BUG-052 fix)
                 if lead.source.doi:
-                    seen_dois.add(lead.source.doi)
+                    seen_dois.add(_normalize_doi(lead.source.doi))
                 if lead.source.arxiv_id:
-                    seen_arxiv_ids.add(lead.source.arxiv_id)
+                    seen_arxiv_ids.add(_normalize_arxiv_id(lead.source.arxiv_id))
             elif result.reason == "not_enriched":
                 stats.skipped_not_enriched += 1
             elif result.reason == "no_identifier":
