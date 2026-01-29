@@ -1082,10 +1082,10 @@ lemma not_dvd_four_sq_add_one (n : ℕ) : ¬ (4 ∣ n ^ 2 + 1) := by
   intro h4
   have hmod : (n ^ 2 + 1) % 4 = 0 := Nat.mod_eq_zero_of_dvd h4
   have hrewrite : (n ^ 2 + 1) % 4 = ((n % 4) ^ 2 + 1) % 4 := by
-    -- reduce everything to `n % 4`
-    calc
+      -- reduce everything to `n % 4`
+      calc
       (n ^ 2 + 1) % 4 = (n ^ 2 % 4 + 1 % 4) % 4 := by
-        simpa [Nat.add_mod] using (Nat.add_mod (n ^ 2) 1 4).symm
+        simp [Nat.add_mod]
       _ = (((n % 4) ^ 2 % 4) + 1) % 4 := by
         simp [Nat.pow_mod]
       _ = ((n % 4) ^ 2 + 1) % 4 := by
