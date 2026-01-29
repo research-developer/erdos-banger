@@ -39,8 +39,10 @@ There exist absolute constants η > 0 and N₀ such that for all N ≥ N₀, if
 -- ============================================================================
 
 import Mathlib.Data.Finset.Basic
+import Mathlib.Data.Finset.Card
 import Mathlib.Data.Nat.Prime.Basic
 import Mathlib.Data.Nat.Squarefree
+import Mathlib.Tactic.NormNum.Prime
 import Mathlib.Data.Nat.Cast.Order.Field
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Algebra.Order.Field.Basic
@@ -48,11 +50,19 @@ import Mathlib.Data.ZMod.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.NumberTheory.LegendreSymbol.Basic
 import Mathlib.Data.Nat.ModEq
+import Mathlib.Tactic.IntervalCases
+import Mathlib.Tactic.FinCases
+import Mathlib.Tactic.Simproc.Factors
+import Mathlib.Tactic.NormNum.BigOperators
+import Mathlib.Data.Num.Prime
+import Mathlib.Data.Num.Lemmas
 import Mathlib.NumberTheory.Chebyshev
 import Mathlib.Analysis.PSeries
 
 
-namespace Erdos.Problem848_workbench
+namespace Erdos.Problem848
+
+open scoped Finset
 
 -- ============================================================================
 -- SECTION 1: CORE DEFINITIONS
@@ -111,7 +121,7 @@ lemma mod25_divisibility (a b : ℕ) (ha : a % 25 = 7) (hb : b % 25 = 7) :
     25 ∣ (a * b + 1) := by
   have h1 : a * b % 25 = (a % 25) * (b % 25) % 25 := Nat.mul_mod a b 25
   rw [ha, hb] at h1
-  have h2 : (7 : ℕ) * 7 % 25 = 24 := by native_decide
+  have h2 : (7 : ℕ) * 7 % 25 = 24 := by norm_num
   rw [h2] at h1
   have h3 : (a * b + 1) % 25 = 0 := by omega
   exact Nat.dvd_of_mod_eq_zero h3
@@ -121,13 +131,13 @@ lemma mod25_divisibility_18 (a b : ℕ) (ha : a % 25 = 18) (hb : b % 25 = 18) :
     25 ∣ (a * b + 1) := by
   have h1 : a * b % 25 = (a % 25) * (b % 25) % 25 := Nat.mul_mod a b 25
   rw [ha, hb] at h1
-  have h2 : (18 : ℕ) * 18 % 25 = 24 := by native_decide
+  have h2 : (18 : ℕ) * 18 % 25 = 24 := by norm_num
   rw [h2] at h1
   have h3 : (a * b + 1) % 25 = 0 := by omega
   exact Nat.dvd_of_mod_eq_zero h3
 
 /-- Helper: 25 = 5² -/
-lemma twenty_five_eq_five_sq : (25 : ℕ) = 5 ^ 2 := by native_decide
+lemma twenty_five_eq_five_sq : (25 : ℕ) = 5 ^ 2 := by rfl
 
 /-- If 25 | n and n > 0, then n is not squarefree. -/
 lemma not_squarefree_of_dvd_25 {n : ℕ} (_hn : n > 0) (h : 25 ∣ n) : ¬ Squarefree n := by
@@ -334,7 +344,7 @@ lemma cross_residue_not_div_25 (a b : ℕ) (ha : a % 25 = 7)
     simpa [haZ] using this
   have h2 : (7 : ZMod 25) * (b : ZMod 25) = (-1 : ZMod 25) := by
     simpa using (eq_neg_of_add_eq_zero_left h1)
-  have h187 : (18 : ZMod 25) * (7 : ZMod 25) = 1 := by native_decide
+  have h187 : (18 : ZMod 25) * (7 : ZMod 25) = 1 := by decide
   have hbZ : (b : ZMod 25) = (7 : ZMod 25) := by
     have hmul : (18 : ZMod 25) * ((7 : ZMod 25) * (b : ZMod 25)) =
         (18 : ZMod 25) * (-1 : ZMod 25) := by
@@ -349,7 +359,7 @@ lemma cross_residue_not_div_25 (a b : ℕ) (ha : a % 25 = 7)
       have : (1 : ZMod 25) * (b : ZMod 25) = (18 : ZMod 25) * (-1 : ZMod 25) := by
         simpa [h187] using hmul'
       simpa using this
-    exact hb'.trans (by native_decide : (18 : ZMod 25) * (-1 : ZMod 25) = (7 : ZMod 25))
+    exact hb'.trans (by decide : (18 : ZMod 25) * (-1 : ZMod 25) = (7 : ZMod 25))
   have hbmod : b % 25 = 7 := by
     have hb' : b % 25 = 7 % 25 := (ZMod.natCast_eq_natCast_iff' b 7 25).1 hbZ
     simpa [Nat.mod_eq_of_lt (by decide : 7 < 25)] using hb'
@@ -371,7 +381,7 @@ lemma cross_residue_not_div_25_18 (a b : ℕ) (ha : a % 25 = 18)
     simpa [haZ] using this
   have h2 : (18 : ZMod 25) * (b : ZMod 25) = (-1 : ZMod 25) := by
     simpa using (eq_neg_of_add_eq_zero_left h1)
-  have h718 : (7 : ZMod 25) * (18 : ZMod 25) = 1 := by native_decide
+  have h718 : (7 : ZMod 25) * (18 : ZMod 25) = 1 := by decide
   have hbZ : (b : ZMod 25) = (18 : ZMod 25) := by
     have hmul : (7 : ZMod 25) * ((18 : ZMod 25) * (b : ZMod 25)) =
         (7 : ZMod 25) * (-1 : ZMod 25) := by
@@ -386,7 +396,7 @@ lemma cross_residue_not_div_25_18 (a b : ℕ) (ha : a % 25 = 18)
       have : (1 : ZMod 25) * (b : ZMod 25) = (7 : ZMod 25) * (-1 : ZMod 25) := by
         simpa [h718] using hmul'
       simpa using this
-    exact hb'.trans (by native_decide : (7 : ZMod 25) * (-1 : ZMod 25) = (18 : ZMod 25))
+    exact hb'.trans (by decide : (7 : ZMod 25) * (-1 : ZMod 25) = (18 : ZMod 25))
   have hbmod : b % 25 = 18 := by
     have hb' : b % 25 = 18 % 25 := (ZMod.natCast_eq_natCast_iff' b 18 25).1 hbZ
     simpa [Nat.mod_eq_of_lt (by decide : 18 < 25)] using hb'
@@ -648,16 +658,445 @@ lemma prop_implies_diag_candidates (A : Finset ℕ) (N : ℕ) (hAsub : A ⊆ Fin
   · exact hAprop a ha a ha
 
 /-- 7 × 18 + 1 = 127 is squarefree (it's prime). -/
-lemma seven_times_eighteen_plus_one_squarefree : Squarefree (7 * 18 + 1) := by native_decide
+lemma seven_times_eighteen_plus_one_squarefree : Squarefree (7 * 18 + 1) := by
+  have h : Nat.Prime 127 := by norm_num
+  simp only [show 7 * 18 + 1 = 127 by norm_num]
+  exact h.squarefree
+
+/-
+Squarefree witnesses (for small finite checks).
+
+These are proved constructively (no native computation).
+-/
+
+lemma squarefree_127 : Squarefree 127 := (by
+  have hp : Nat.Prime 127 := by norm_num
+  exact hp.squarefree)
+
+lemma squarefree_267 : Squarefree 267 := by
+  have hp : Nat.Prime 3 := by norm_num
+  have hq : Nat.Prime 89 := by norm_num
+  have hcop : Nat.Coprime 3 89 := by decide
+  have hmul : Squarefree (3 * 89) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 267 = 3 * 89 by norm_num] using hmul
+
+lemma squarefree_302 : Squarefree 302 := by
+  have hp : Nat.Prime 2 := by norm_num
+  have hq : Nat.Prime 151 := by norm_num
+  have hcop : Nat.Coprime 2 151 := by decide
+  have hmul : Squarefree (2 * 151) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 302 = 2 * 151 by norm_num] using hmul
+
+lemma squarefree_491 : Squarefree 491 := (by
+  have hp : Nat.Prime 491 := by norm_num
+  exact hp.squarefree)
+
+lemma squarefree_694 : Squarefree 694 := by
+  have hp : Nat.Prime 2 := by norm_num
+  have hq : Nat.Prime 347 := by norm_num
+  have hcop : Nat.Coprime 2 347 := by decide
+  have hmul : Squarefree (2 * 347) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 694 = 2 * 347 by norm_num] using hmul
+
+lemma squarefree_577 : Squarefree 577 := (by
+  have hp : Nat.Prime 577 := by norm_num
+  exact hp.squarefree)
+
+lemma squarefree_685 : Squarefree 685 := by
+  have hp : Nat.Prime 5 := by norm_num
+  have hq : Nat.Prime 137 := by norm_num
+  have hcop : Nat.Coprime 5 137 := by decide
+  have hmul : Squarefree (5 * 137) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 685 = 5 * 137 by norm_num] using hmul
+
+lemma squarefree_739 : Squarefree 739 := (by
+  have hp : Nat.Prime 739 := by norm_num
+  exact hp.squarefree)
+
+lemma squarefree_1027 : Squarefree 1027 := by
+  have hp : Nat.Prime 13 := by norm_num
+  have hq : Nat.Prime 79 := by norm_num
+  have hcop : Nat.Coprime 13 79 := by decide
+  have hmul : Squarefree (13 * 79) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 1027 = 13 * 79 by norm_num] using hmul
+
+lemma squarefree_1261 : Squarefree 1261 := by
+  have hp : Nat.Prime 13 := by norm_num
+  have hq : Nat.Prime 97 := by norm_num
+  have hcop : Nat.Coprime 13 97 := by decide
+  have hmul : Squarefree (13 * 97) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 1261 = 13 * 97 by norm_num] using hmul
+
+lemma squarefree_1477 : Squarefree 1477 := by
+  have hp : Nat.Prime 7 := by norm_num
+  have hq : Nat.Prime 211 := by norm_num
+  have hcop : Nat.Coprime 7 211 := by decide
+  have hmul : Squarefree (7 * 211) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 1477 = 7 * 211 by norm_num] using hmul
+
+lemma squarefree_1783 : Squarefree 1783 := (by
+  have hp : Nat.Prime 1783 := by norm_num
+  exact hp.squarefree)
+
+lemma squarefree_1217 : Squarefree 1217 := (by
+  have hp : Nat.Prime 1217 := by norm_num
+  exact hp.squarefree)
+
+lemma squarefree_1313 : Squarefree 1313 := by
+  have hp : Nat.Prime 13 := by norm_num
+  have hq : Nat.Prime 101 := by norm_num
+  have hcop : Nat.Coprime 13 101 := by decide
+  have hmul : Squarefree (13 * 101) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 1313 = 13 * 101 by norm_num] using hmul
+
+lemma squarefree_2177 : Squarefree 2177 := by
+  have hp : Nat.Prime 7 := by norm_num
+  have hq : Nat.Prime 311 := by norm_num
+  have hcop : Nat.Coprime 7 311 := by decide
+  have hmul : Squarefree (7 * 311) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 2177 = 7 * 311 by norm_num] using hmul
+
+lemma squarefree_2977 : Squarefree 2977 := by
+  have hp : Nat.Prime 13 := by norm_num
+  have hq : Nat.Prime 229 := by norm_num
+  have hcop : Nat.Coprime 13 229 := by decide
+  have hmul : Squarefree (13 * 229) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 2977 = 13 * 229 by norm_num] using hmul
+
+lemma squarefree_3169 : Squarefree 3169 := (by
+  have hp : Nat.Prime 3169 := by norm_num
+  exact hp.squarefree)
+
+lemma squarefree_1559 : Squarefree 1559 := (by
+  have hp : Nat.Prime 1559 := by norm_num
+  exact hp.squarefree)
+
+lemma squarefree_1635 : Squarefree 1635 := by
+  have hp : Nat.Prime 3 := by norm_num
+  have hq : Nat.Prime 5 := by norm_num
+  have hr : Nat.Prime 109 := by norm_num
+  have hcop_pq : Nat.Coprime 3 5 := by decide
+  have hcop_pq_r : Nat.Coprime (3 * 5) 109 := by decide
+  have hpq : Squarefree (3 * 5) :=
+    (Nat.squarefree_mul hcop_pq).2 ⟨hp.squarefree, hq.squarefree⟩
+  have hpqr : Squarefree ((3 * 5) * 109) :=
+    (Nat.squarefree_mul hcop_pq_r).2 ⟨hpq, hr.squarefree⟩
+  simpa [show 1635 = (3 * 5) * 109 by norm_num, mul_assoc] using hpqr
+
+lemma squarefree_2167 : Squarefree 2167 := by
+  have hp : Nat.Prime 11 := by norm_num
+  have hq : Nat.Prime 197 := by norm_num
+  have hcop : Nat.Coprime 11 197 := by decide
+  have hmul : Squarefree (11 * 197) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 2167 = 11 * 197 by norm_num] using hmul
+
+lemma squarefree_2585 : Squarefree 2585 := by
+  have hp : Nat.Prime 5 := by norm_num
+  have hq : Nat.Prime 11 := by norm_num
+  have hr : Nat.Prime 47 := by norm_num
+  have hcop_pq : Nat.Coprime 5 11 := by decide
+  have hcop_pq_r : Nat.Coprime (5 * 11) 47 := by decide
+  have hpq : Squarefree (5 * 11) :=
+    (Nat.squarefree_mul hcop_pq).2 ⟨hp.squarefree, hq.squarefree⟩
+  have hpqr : Squarefree ((5 * 11) * 47) :=
+    (Nat.squarefree_mul hcop_pq_r).2 ⟨hpq, hr.squarefree⟩
+  simpa [show 2585 = (5 * 11) * 47 by norm_num, mul_assoc] using hpqr
+
+lemma squarefree_2661 : Squarefree 2661 := by
+  have hp : Nat.Prime 3 := by norm_num
+  have hq : Nat.Prime 887 := by norm_num
+  have hcop : Nat.Coprime 3 887 := by decide
+  have hmul : Squarefree (3 * 887) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 2661 = 3 * 887 by norm_num] using hmul
+
+lemma squarefree_3117 : Squarefree 3117 := by
+  have hp : Nat.Prime 3 := by norm_num
+  have hq : Nat.Prime 1039 := by norm_num
+  have hcop : Nat.Coprime 3 1039 := by decide
+  have hmul : Squarefree (3 * 1039) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 3117 = 3 * 1039 by norm_num] using hmul
+
+lemma squarefree_3535 : Squarefree 3535 := by
+  have hp : Nat.Prime 5 := by norm_num
+  have hq : Nat.Prime 7 := by norm_num
+  have hr : Nat.Prime 101 := by norm_num
+  have hcop_pq : Nat.Coprime 5 7 := by decide
+  have hcop_pq_r : Nat.Coprime (5 * 7) 101 := by decide
+  have hpq : Squarefree (5 * 7) :=
+    (Nat.squarefree_mul hcop_pq).2 ⟨hp.squarefree, hq.squarefree⟩
+  have hpqr : Squarefree ((5 * 7) * 101) :=
+    (Nat.squarefree_mul hcop_pq_r).2 ⟨hpq, hr.squarefree⟩
+  simpa [show 3535 = (5 * 7) * 101 by norm_num, mul_assoc] using hpqr
+
+lemma squarefree_3763 : Squarefree 3763 := by
+  have hp : Nat.Prime 53 := by norm_num
+  have hq : Nat.Prime 71 := by norm_num
+  have hcop : Nat.Coprime 53 71 := by decide
+  have hmul : Squarefree (53 * 71) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 3763 = 53 * 71 by norm_num] using hmul
+
+lemma squarefree_2338 : Squarefree 2338 := by
+  have hp : Nat.Prime 2 := by norm_num
+  have hq : Nat.Prime 7 := by norm_num
+  have hr : Nat.Prime 167 := by norm_num
+  have hcop_pq : Nat.Coprime 2 7 := by decide
+  have hcop_pq_r : Nat.Coprime (2 * 7) 167 := by decide
+  have hpq : Squarefree (2 * 7) :=
+    (Nat.squarefree_mul hcop_pq).2 ⟨hp.squarefree, hq.squarefree⟩
+  have hpqr : Squarefree ((2 * 7) * 167) :=
+    (Nat.squarefree_mul hcop_pq_r).2 ⟨hpq, hr.squarefree⟩
+  simpa [show 2338 = (2 * 7) * 167 by norm_num, mul_assoc] using hpqr
+
+lemma squarefree_2789 : Squarefree 2789 := (by
+  have hp : Nat.Prime 2789 := by norm_num
+  exact hp.squarefree)
+
+lemma squarefree_3363 : Squarefree 3363 := by
+  have hp : Nat.Prime 3 := by norm_num
+  have hq : Nat.Prime 19 := by norm_num
+  have hr : Nat.Prime 59 := by norm_num
+  have hcop_pq : Nat.Coprime 3 19 := by decide
+  have hcop_pq_r : Nat.Coprime (3 * 19) 59 := by decide
+  have hpq : Squarefree (3 * 19) :=
+    (Nat.squarefree_mul hcop_pq).2 ⟨hp.squarefree, hq.squarefree⟩
+  have hpqr : Squarefree ((3 * 19) * 59) :=
+    (Nat.squarefree_mul hcop_pq_r).2 ⟨hpq, hr.squarefree⟩
+  simpa [show 3363 = (3 * 19) * 59 by norm_num, mul_assoc] using hpqr
+
+lemma squarefree_3814 : Squarefree 3814 := by
+  have hp : Nat.Prime 2 := by norm_num
+  have hq : Nat.Prime 1907 := by norm_num
+  have hcop : Nat.Coprime 2 1907 := by decide
+  have hmul : Squarefree (2 * 1907) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 3814 = 2 * 1907 by norm_num] using hmul
+
+lemma squarefree_3011 : Squarefree 3011 := (by
+  have hp : Nat.Prime 3011 := by norm_num
+  exact hp.squarefree)
+
+lemma squarefree_3527 : Squarefree 3527 := (by
+  have hp : Nat.Prime 3527 := by norm_num
+  exact hp.squarefree)
+
+lemma squarefree_4258 : Squarefree 4258 := by
+  have hp : Nat.Prime 2 := by norm_num
+  have hq : Nat.Prime 2129 := by norm_num
+  have hcop : Nat.Coprime 2 2129 := by decide
+  have hmul : Squarefree (2 * 2129) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 4258 = 2 * 2129 by norm_num] using hmul
+
+lemma squarefree_3877 : Squarefree 3877 := (by
+  have hp : Nat.Prime 3877 := by norm_num
+  exact hp.squarefree)
+
+lemma squarefree_3991 : Squarefree 3991 := by
+  have hp : Nat.Prime 13 := by norm_num
+  have hq : Nat.Prime 307 := by norm_num
+  have hcop : Nat.Coprime 13 307 := by decide
+  have hmul : Squarefree (13 * 307) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 3991 = 13 * 307 by norm_num] using hmul
+
+lemma squarefree_5302 : Squarefree 5302 := by
+  have hp : Nat.Prime 2 := by norm_num
+  have hq : Nat.Prime 11 := by norm_num
+  have hr : Nat.Prime 241 := by norm_num
+  have hcop_pq : Nat.Coprime 2 11 := by decide
+  have hcop_pq_r : Nat.Coprime (2 * 11) 241 := by decide
+  have hpq : Squarefree (2 * 11) :=
+    (Nat.squarefree_mul hcop_pq).2 ⟨hp.squarefree, hq.squarefree⟩
+  have hpqr : Squarefree ((2 * 11) * 241) :=
+    (Nat.squarefree_mul hcop_pq_r).2 ⟨hpq, hr.squarefree⟩
+  simpa [show 5302 = (2 * 11) * 241 by norm_num, mul_assoc] using hpqr
+
+lemma squarefree_6733 : Squarefree 6733 := (by
+  have hp : Nat.Prime 6733 := by norm_num
+  exact hp.squarefree)
+
+lemma squarefree_5741 : Squarefree 5741 := (by
+  have hp : Nat.Prime 5741 := by norm_num
+  exact hp.squarefree)
+
+lemma squarefree_6511 : Squarefree 6511 := by
+  have hp : Nat.Prime 17 := by norm_num
+  have hq : Nat.Prime 383 := by norm_num
+  have hcop : Nat.Coprime 17 383 := by decide
+  have hmul : Squarefree (17 * 383) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 6511 = 17 * 383 by norm_num] using hmul
+
+lemma squarefree_6931 : Squarefree 6931 := by
+  have hp : Nat.Prime 29 := by norm_num
+  have hq : Nat.Prime 239 := by norm_num
+  have hcop : Nat.Coprime 29 239 := by decide
+  have hmul : Squarefree (29 * 239) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 6931 = 29 * 239 by norm_num] using hmul
+
+lemma squarefree_7627 : Squarefree 7627 := by
+  have hp : Nat.Prime 29 := by norm_num
+  have hq : Nat.Prime 263 := by norm_num
+  have hcop : Nat.Coprime 29 263 := by decide
+  have hmul : Squarefree (29 * 263) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 7627 = 29 * 263 by norm_num] using hmul
+
+lemma squarefree_8119 : Squarefree 8119 := by
+  have hp : Nat.Prime 23 := by norm_num
+  have hq : Nat.Prime 353 := by norm_num
+  have hcop : Nat.Coprime 23 353 := by decide
+  have hmul : Squarefree (23 * 353) :=
+    (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
+  simpa [show 8119 = 23 * 353 by norm_num] using hmul
 
 /-- {7, 18} does NOT have the property. -/
-lemma pair_7_18_fails : ¬ NonSquarefreeProductProp ({7, 18} : Finset ℕ) := by native_decide
+lemma pair_7_18_fails : ¬ NonSquarefreeProductProp ({7, 18} : Finset ℕ) := by
+  intro h
+  have h7 : 7 ∈ ({7, 18} : Finset ℕ) := by simp
+  have h18 : 18 ∈ ({7, 18} : Finset ℕ) := by simp
+  exact h 7 h7 18 h18 seven_times_eighteen_plus_one_squarefree
+
+-- Helper lemmas for pair_32_43_works: prove products are NOT squarefree
+-- 32 * 32 + 1 = 1025 = 5² × 41
+lemma not_squarefree_1025 : ¬ Squarefree 1025 := by
+  intro h
+  have hdiv : 5^2 ∣ 1025 := by norm_num
+  have := h 5 hdiv
+  norm_num at this
+
+-- 32 * 43 + 1 = 1377 = 3² × 153 = 3² × 9 × 17 = 3⁴ × 17
+lemma not_squarefree_1377 : ¬ Squarefree 1377 := by
+  intro h
+  have hdiv : 3^2 ∣ 1377 := by norm_num
+  have := h 3 hdiv
+  norm_num at this
+
+-- 43 * 43 + 1 = 1850 = 2 × 5² × 37
+lemma not_squarefree_1850 : ¬ Squarefree 1850 := by
+  intro h
+  have hdiv : 5^2 ∣ 1850 := by norm_num
+  have := h 5 hdiv
+  norm_num at this
+
+-- 38 * 38 + 1 = 1445 = 5 * 17²
+lemma not_squarefree_1445 : ¬ Squarefree 1445 := by
+  intro h
+  have hdiv : 17^2 ∣ 1445 := by norm_num
+  have := h 17 hdiv
+  norm_num at this
+
+-- 41 * 41 + 1 = 1682 = 2 * 29²
+lemma not_squarefree_1682 : ¬ Squarefree 1682 := by
+  intro h
+  have hdiv : 29^2 ∣ 1682 := by norm_num
+  have := h 29 hdiv
+  norm_num at this
+
+-- 70 * 70 + 1 = 4901 = 13² * 29
+lemma not_squarefree_4901 : ¬ Squarefree 4901 := by
+  intro h
+  have hdiv : 13^2 ∣ 4901 := by norm_num
+  have := h 13 hdiv
+  norm_num at this
+
+-- 99 * 99 + 1 = 9802 = 2 * 13² * 29
+lemma not_squarefree_9802 : ¬ Squarefree 9802 := by
+  intro h
+  have hdiv : 13^2 ∣ 9802 := by norm_num
+  have := h 13 hdiv
+  norm_num at this
 
 /-- {32, 43} DOES have the property (mixing works for this pair!). -/
-lemma pair_32_43_works : NonSquarefreeProductProp ({32, 43} : Finset ℕ) := by native_decide
+lemma pair_32_43_works : NonSquarefreeProductProp ({32, 43} : Finset ℕ) := by
+  intro a ha b hb
+  simp only [Finset.mem_insert, Finset.mem_singleton] at ha hb
+  rcases ha with rfl | rfl <;> rcases hb with rfl | rfl
+  · -- a = 32, b = 32: 32 * 32 + 1 = 1025
+    simp only [show 32 * 32 + 1 = 1025 by norm_num]
+    exact not_squarefree_1025
+  · -- a = 32, b = 43: 32 * 43 + 1 = 1377
+    simp only [show 32 * 43 + 1 = 1377 by norm_num]
+    exact not_squarefree_1377
+  · -- a = 43, b = 32: 43 * 32 + 1 = 1377
+    simp only [show 43 * 32 + 1 = 1377 by norm_num]
+    exact not_squarefree_1377
+  · -- a = 43, b = 43: 43 * 43 + 1 = 1850
+    simp only [show 43 * 43 + 1 = 1850 by norm_num]
+    exact not_squarefree_1850
 
 -- ============================================================================
--- SECTION 7: FINITE VERIFICATION (PROVED by native_decide)
+-- SECTION 6.5: SMALL MODULAR FACTS (proved by computation)
+-- ============================================================================
+
+lemma zmod25_sq_eq_neg_one_iff :
+    ∀ x : ZMod 25, x ^ 2 = (-1 : ZMod 25) ↔ x = (7 : ZMod 25) ∨ x = (18 : ZMod 25) := by
+  decide
+
+lemma mod25_eq_7_or_18_of_dvd_sq_add_one {n : ℕ} (h : 25 ∣ n ^ 2 + 1) :
+    n % 25 = 7 ∨ n % 25 = 18 := by
+  have h0 : ((n ^ 2 + 1 : ℕ) : ZMod 25) = 0 :=
+    (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) 25).2 h
+  have hsq : (n : ZMod 25) ^ 2 = (-1 : ZMod 25) := by
+    have : (n : ZMod 25) ^ 2 + 1 = 0 := by
+      simpa [Nat.cast_add, Nat.cast_pow, Nat.cast_one] using h0
+    simpa using (eq_neg_of_add_eq_zero_left this)
+  have hx : (n : ZMod 25) = (7 : ZMod 25) ∨ (n : ZMod 25) = (18 : ZMod 25) :=
+    (zmod25_sq_eq_neg_one_iff (n : ZMod 25)).1 hsq
+  cases hx with
+  | inl h7 =>
+      left
+      have hn : n % 25 = 7 % 25 := (ZMod.natCast_eq_natCast_iff' n 7 25).1 h7
+      simpa [Nat.mod_eq_of_lt (by decide : 7 < 25)] using hn
+  | inr h18 =>
+      right
+      have hn : n % 25 = 18 % 25 := (ZMod.natCast_eq_natCast_iff' n 18 25).1 h18
+      simpa [Nat.mod_eq_of_lt (by decide : 18 < 25)] using hn
+
+lemma not_dvd_25_sq_add_one_of_mod_ne (n : ℕ) (h : n % 25 ≠ 7 ∧ n % 25 ≠ 18) :
+    ¬ (25 ∣ n ^ 2 + 1) := by
+  intro h25
+  have := mod25_eq_7_or_18_of_dvd_sq_add_one (n := n) h25
+  cases this with
+  | inl h7 => exact h.1 h7
+  | inr h18 => exact h.2 h18
+
+lemma not_dvd_four_sq_add_one (n : ℕ) : ¬ (4 ∣ n ^ 2 + 1) := by
+  intro h4
+  have hmod : (n ^ 2 + 1) % 4 = 0 := Nat.mod_eq_zero_of_dvd h4
+  have hrewrite : (n ^ 2 + 1) % 4 = ((n % 4) ^ 2 + 1) % 4 := by
+    -- reduce everything to `n % 4`
+    calc
+      (n ^ 2 + 1) % 4 = (n ^ 2 % 4 + 1 % 4) % 4 := by
+        simpa [Nat.add_mod] using (Nat.add_mod (n ^ 2) 1 4).symm
+      _ = (((n % 4) ^ 2 % 4) + 1) % 4 := by
+        simp [Nat.pow_mod]
+      _ = ((n % 4) ^ 2 + 1) % 4 := by
+        simp [Nat.add_mod]
+  have hmod' : ((n % 4) ^ 2 + 1) % 4 = 0 := by simpa [hrewrite] using hmod
+  have hn4 : n % 4 ≤ 3 := by
+    have hn4lt : n % 4 < 4 := Nat.mod_lt n (by decide : 0 < 4)
+    have : n % 4 < 3 + 1 := by simpa using hn4lt
+    exact (Nat.lt_succ_iff).1 this
+  interval_cases hcase : n % 4 <;> simp [hcase] at hmod'
+
+-- ============================================================================
+-- SECTION 7: FINITE VERIFICATION (proved without native computation)
 -- ============================================================================
 
 /-- Check if a triple has the property -/
@@ -679,27 +1118,1128 @@ def noTripleWorksIn (N : ℕ) : Prop :=
 instance (N : ℕ) : Decidable (noTripleWorksIn N) := by unfold noTripleWorksIn; infer_instance
 
 -- Computed values
-lemma A₇_50_card : (A₇ 50).card = 2 := by native_decide
+lemma A₇_50_card : (A₇ 50).card = 2 := by decide
 
-lemma A₇_100_card : (A₇ 100).card = 4 := by native_decide
+lemma A₇_100_card : (A₇ 100).card = 4 := by decide
 
-lemma A₇_200_card : (A₇ 200).card = 8 := by native_decide
+lemma A₇_200_card : (A₇ 200).card = 8 := by decide
 
-lemma diag_cand_50 : DiagonalCandidates 50 = {7, 18, 32, 38, 41, 43} := by native_decide
+lemma diag_cand_50 : DiagonalCandidates 50 = {7, 18, 32, 38, 41, 43} := by
+  classical
+  ext n
+  by_cases hn : n < 50
+  · interval_cases n <;>
+      simp [DiagonalCandidates, Nat.squarefree_iff_nodup_primeFactorsList]
+  ·
+    have hne7 : n ≠ 7 := by
+      intro h; subst h; exact hn (by decide)
+    have hne18 : n ≠ 18 := by
+      intro h; subst h; exact hn (by decide)
+    have hne32 : n ≠ 32 := by
+      intro h; subst h; exact hn (by decide)
+    have hne38 : n ≠ 38 := by
+      intro h; subst h; exact hn (by decide)
+    have hne41 : n ≠ 41 := by
+      intro h; subst h; exact hn (by decide)
+    have hne43 : n ≠ 43 := by
+      intro h; subst h; exact hn (by decide)
+    simp [DiagonalCandidates, hn, hne7, hne18, hne32, hne38, hne41, hne43]
 
-lemma diag_cand_100 : DiagonalCandidates 100 = {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99} := by native_decide
+/- Old proof (kept for reference). Replaced below with a `primeFactorsList`-simproc proof.
+lemma diag_cand_100 : DiagonalCandidates 100 = {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99} := by
+  ext n
+  simp [DiagonalCandidates, Finset.mem_filter, Finset.mem_range]
+  constructor
+  · rintro ⟨hn_lt, hn_nsq⟩
+    have hn_nsq' : ¬ Squarefree (n ^ 2 + 1) := by
+      simpa [pow_two] using hn_nsq
+    have h_ex : ∃ p, Nat.Prime p ∧ p * p ∣ n ^ 2 + 1 := by
+      have h' : ¬ (∀ p, Nat.Prime p → ¬ p * p ∣ n ^ 2 + 1) := by
+        intro hall
+        apply hn_nsq'
+        exact (Nat.squarefree_iff_prime_squarefree (n := n ^ 2 + 1)).2 hall
+      push_neg at h'
+      simpa [mul_assoc] using h'
+    rcases h_ex with ⟨p, hp, hpdiv⟩
+    have hp_ne2 : p ≠ 2 := by
+      intro hp2
+      subst hp2
+      have h4 : 4 ∣ n ^ 2 + 1 := by
+        simpa using hpdiv
+      exact not_dvd_four_sq_add_one n h4
+    have hp_gt2 : p > 2 := lt_of_le_of_ne hp.two_le (Ne.symm hp_ne2)
+    have hpdiv_pow : p ^ 2 ∣ n ^ 2 + 1 := by
+      simpa [pow_two] using hpdiv
+    have hp_mod4 : p % 4 = 1 :=
+      prime_sq_divides_implies_one_mod_four p n hp hp_gt2 hpdiv_pow
+    have hn_le99 : n ≤ 99 := Nat.le_of_lt_succ hn_lt
+    have hn_bound : n ^ 2 + 1 ≤ 9802 := by
+      have hnn_le : n * n ≤ 99 * 99 := Nat.mul_le_mul hn_le99 hn_le99
+      have h : n * n + 1 ≤ 99 * 99 + 1 := Nat.add_le_add_right hnn_le 1
+      simpa [pow_two, show 99 * 99 + 1 = (9802 : ℕ) by norm_num] using h
+    have hpp_le : p * p ≤ n ^ 2 + 1 := Nat.le_of_dvd (Nat.succ_pos _) hpdiv
+    have hpp_le_9802 : p * p ≤ 9802 := le_trans hpp_le hn_bound
+    have hp_lt100 : p < 100 := by
+      by_contra hp_ge100
+      have hp_ge100' : 100 ≤ p := Nat.le_of_not_lt hp_ge100
+      have hpp_ge : 100 * 100 ≤ p * p := Nat.mul_le_mul hp_ge100' hp_ge100'
+      have : (10000 : ℕ) ≤ 9802 := by
+        have : (10000 : ℕ) ≤ p * p := by simpa using hpp_ge
+        exact le_trans this hpp_le_9802
+      norm_num at this
+    have hp_le99 : p ≤ 99 := (Nat.lt_succ_iff).1 (by simpa using hp_lt100)
+    have hp_cases :
+        p = 5 ∨ p = 13 ∨ p = 17 ∨ p = 29 ∨ p = 37 ∨ p = 41 ∨ p = 53 ∨ p = 61 ∨ p = 73 ∨ p = 89 ∨ p = 97 := by
+      interval_cases p <;> simp_all +decide
+    rcases hp_cases with
+    | inl hp5 =>
+        subst hp5
+        have h25 : 25 ∣ n ^ 2 + 1 := by simpa using hpdiv
+        have hn_mod : n % 25 = 7 ∨ n % 25 = 18 :=
+          mod25_eq_7_or_18_of_dvd_sq_add_one (n := n) h25
+        have hn_div_lt : n / 25 < 4 :=
+          Nat.div_lt_of_lt_mul (by simpa [Nat.mul_comm] using hn_lt)
+        have hn_div_cases : n / 25 = 0 ∨ n / 25 = 1 ∨ n / 25 = 2 ∨ n / 25 = 3 := by
+          have : n / 25 ≤ 3 := (Nat.lt_succ_iff).1 (by simpa using hn_div_lt)
+          omega
+        have hn_repr : n = n % 25 + 25 * (n / 25) := by
+          simpa using (Nat.mod_add_div n 25).symm
+        rcases hn_div_cases with h0 | h1 | h2 | h3
+        · have hn_eq : n = n % 25 := by
+            calc
+              n = n % 25 + 25 * (n / 25) := hn_repr
+              _ = n % 25 := by simp [h0]
+          cases hn_mod with
+          | inl h7 =>
+              have : n = 7 := by simpa [hn_eq] using h7
+              simp [this]
+          | inr h18 =>
+              have : n = 18 := by simpa [hn_eq] using h18
+              simp [this]
+        · have hn_eq : n = n % 25 + 25 := by
+            calc
+              n = n % 25 + 25 * (n / 25) := hn_repr
+              _ = n % 25 + 25 := by simp [h1]
+          cases hn_mod with
+          | inl h7 =>
+              have : n = 32 := by
+                calc
+                  n = n % 25 + 25 := hn_eq
+                  _ = 7 + 25 := by simp [h7]
+                  _ = 32 := by norm_num
+              simp [this]
+          | inr h18 =>
+              have : n = 43 := by
+                calc
+                  n = n % 25 + 25 := hn_eq
+                  _ = 18 + 25 := by simp [h18]
+                  _ = 43 := by norm_num
+              simp [this]
+        · have hn_eq : n = n % 25 + 25 * 2 := by
+            calc
+              n = n % 25 + 25 * (n / 25) := hn_repr
+              _ = n % 25 + 25 * 2 := by simp [h2]
+          cases hn_mod with
+          | inl h7 =>
+              have : n = 57 := by
+                calc
+                  n = n % 25 + 25 * 2 := hn_eq
+                  _ = 7 + 25 * 2 := by simp [h7]
+                  _ = 57 := by norm_num
+              simp [this]
+          | inr h18 =>
+              have : n = 68 := by
+                calc
+                  n = n % 25 + 25 * 2 := hn_eq
+                  _ = 18 + 25 * 2 := by simp [h18]
+                  _ = 68 := by norm_num
+              simp [this]
+        · have hn_eq : n = n % 25 + 25 * 3 := by
+            calc
+              n = n % 25 + 25 * (n / 25) := hn_repr
+              _ = n % 25 + 25 * 3 := by simp [h3]
+          cases hn_mod with
+          | inl h7 =>
+              have : n = 82 := by
+                calc
+                  n = n % 25 + 25 * 3 := hn_eq
+                  _ = 7 + 25 * 3 := by simp [h7]
+                  _ = 82 := by norm_num
+              simp [this]
+          | inr h18 =>
+              have : n = 93 := by
+                calc
+                  n = n % 25 + 25 * 3 := hn_eq
+                  _ = 18 + 25 * 3 := by simp [h18]
+                  _ = 93 := by norm_num
+              simp [this]
+    | inr hp_rest =>
+        rcases hp_rest with
+        | inl hp13 =>
+            subst hp13
+            have h169 : 169 ∣ n ^ 2 + 1 := by simpa using hpdiv
+            have h0 : ((n ^ 2 + 1 : ℕ) : ZMod 169) = 0 :=
+              (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) 169).2 h169
+            have hsq : (n : ZMod 169) ^ 2 = (-1 : ZMod 169) := by
+              have : (n : ZMod 169) ^ 2 + 1 = 0 := by
+                simpa [Nat.cast_add, Nat.cast_pow, Nat.cast_one] using h0
+              simpa using (eq_neg_of_add_eq_zero_left this)
+            have hnZ : (n : ZMod 169) = (70 : ZMod 169) ∨ (n : ZMod 169) = (99 : ZMod 169) :=
+              (zmod169_sq_eq_neg_one_iff (n : ZMod 169)).1 hsq
+            have hn_lt169 : n < 169 := lt_trans hn_lt (by decide : 100 < 169)
+            cases hnZ with
+            | inl h70 =>
+                have hn_mod : n % 169 = 70 % 169 := (ZMod.natCast_eq_natCast_iff' n 70 169).1 h70
+                have : n = 70 := by
+                  simpa [Nat.mod_eq_of_lt hn_lt169, Nat.mod_eq_of_lt (by decide : 70 < 169)] using hn_mod
+                simp [this]
+            | inr h99 =>
+                have hn_mod : n % 169 = 99 % 169 := (ZMod.natCast_eq_natCast_iff' n 99 169).1 h99
+                have : n = 99 := by
+                  simpa [Nat.mod_eq_of_lt hn_lt169, Nat.mod_eq_of_lt (by decide : 99 < 169)] using hn_mod
+                simp [this]
+        | inr hp_rest =>
+            rcases hp_rest with
+            | inl hp17 =>
+                subst hp17
+                have h289 : 289 ∣ n ^ 2 + 1 := by simpa using hpdiv
+                have h0 : ((n ^ 2 + 1 : ℕ) : ZMod 289) = 0 :=
+                  (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) 289).2 h289
+                have hsq : (n : ZMod 289) ^ 2 = (-1 : ZMod 289) := by
+                  have : (n : ZMod 289) ^ 2 + 1 = 0 := by
+                    simpa [Nat.cast_add, Nat.cast_pow, Nat.cast_one] using h0
+                  simpa using (eq_neg_of_add_eq_zero_left this)
+                have hnZ : (n : ZMod 289) = (38 : ZMod 289) ∨ (n : ZMod 289) = (251 : ZMod 289) :=
+                  (zmod289_sq_eq_neg_one_iff (n : ZMod 289)).1 hsq
+                have hn_lt289 : n < 289 := lt_trans hn_lt (by decide : 100 < 289)
+                cases hnZ with
+                | inl h38 =>
+                    have hn_mod : n % 289 = 38 % 289 := (ZMod.natCast_eq_natCast_iff' n 38 289).1 h38
+                    have : n = 38 := by
+                      simpa [Nat.mod_eq_of_lt hn_lt289, Nat.mod_eq_of_lt (by decide : 38 < 289)] using hn_mod
+                    simp [this]
+                | inr h251 =>
+                    have hn_mod : n % 289 = 251 % 289 := (ZMod.natCast_eq_natCast_iff' n 251 289).1 h251
+                    have : n = 251 := by
+                      simpa [Nat.mod_eq_of_lt hn_lt289, Nat.mod_eq_of_lt (by decide : 251 < 289)] using hn_mod
+                    omega
+            | inr hp_rest =>
+                rcases hp_rest with
+                | inl hp29 =>
+                    subst hp29
+                    have h841 : 841 ∣ n ^ 2 + 1 := by simpa using hpdiv
+                    have h0 : ((n ^ 2 + 1 : ℕ) : ZMod 841) = 0 :=
+                      (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) 841).2 h841
+                    have hsq : (n : ZMod 841) ^ 2 = (-1 : ZMod 841) := by
+                      have : (n : ZMod 841) ^ 2 + 1 = 0 := by
+                        simpa [Nat.cast_add, Nat.cast_pow, Nat.cast_one] using h0
+                      simpa using (eq_neg_of_add_eq_zero_left this)
+                    have hnZ : (n : ZMod 841) = (41 : ZMod 841) ∨ (n : ZMod 841) = (800 : ZMod 841) :=
+                      (zmod841_sq_eq_neg_one_iff (n : ZMod 841)).1 hsq
+                    have hn_lt841 : n < 841 := lt_trans hn_lt (by decide : 100 < 841)
+                    cases hnZ with
+                    | inl h41 =>
+                        have hn_mod : n % 841 = 41 % 841 := (ZMod.natCast_eq_natCast_iff' n 41 841).1 h41
+                        have : n = 41 := by
+                          simpa [Nat.mod_eq_of_lt hn_lt841, Nat.mod_eq_of_lt (by decide : 41 < 841)] using hn_mod
+                        simp [this]
+                    | inr h800 =>
+                        have hn_mod : n % 841 = 800 % 841 := (ZMod.natCast_eq_natCast_iff' n 800 841).1 h800
+                        have : n = 800 := by
+                          simpa [Nat.mod_eq_of_lt hn_lt841, Nat.mod_eq_of_lt (by decide : 800 < 841)] using hn_mod
+                        omega
+                | inr hp_rest =>
+                    rcases hp_rest with
+                    | inl hp37 =>
+                        subst hp37
+                        have h1369 : 1369 ∣ n ^ 2 + 1 := by simpa using hpdiv
+                        have h0 : ((n ^ 2 + 1 : ℕ) : ZMod 1369) = 0 :=
+                          (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) 1369).2 h1369
+                        have hsq : (n : ZMod 1369) ^ 2 = (-1 : ZMod 1369) := by
+                          have : (n : ZMod 1369) ^ 2 + 1 = 0 := by
+                            simpa [Nat.cast_add, Nat.cast_pow, Nat.cast_one] using h0
+                          simpa using (eq_neg_of_add_eq_zero_left this)
+                        have hnZ :
+                            (n : ZMod 1369) = (117 : ZMod 1369) ∨ (n : ZMod 1369) = (1252 : ZMod 1369) :=
+                          (zmod1369_sq_eq_neg_one_iff (n : ZMod 1369)).1 hsq
+                        have hn_lt1369 : n < 1369 := lt_trans hn_lt (by decide : 100 < 1369)
+                        cases hnZ with
+                        | inl h117 =>
+                            have hn_mod : n % 1369 = 117 % 1369 :=
+                              (ZMod.natCast_eq_natCast_iff' n 117 1369).1 h117
+                            have : n = 117 := by
+                              simpa [Nat.mod_eq_of_lt hn_lt1369, Nat.mod_eq_of_lt (by decide : 117 < 1369)] using hn_mod
+                            omega
+                        | inr h1252 =>
+                            have hn_mod : n % 1369 = 1252 % 1369 :=
+                              (ZMod.natCast_eq_natCast_iff' n 1252 1369).1 h1252
+                            have : n = 1252 := by
+                              simpa [Nat.mod_eq_of_lt hn_lt1369, Nat.mod_eq_of_lt (by decide : 1252 < 1369)] using hn_mod
+                            omega
+                    | inr hp_rest =>
+                        rcases hp_rest with
+                        | inl hp41 =>
+                            subst hp41
+                            have h1681 : 1681 ∣ n ^ 2 + 1 := by simpa using hpdiv
+                            have h0 : ((n ^ 2 + 1 : ℕ) : ZMod 1681) = 0 :=
+                              (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) 1681).2 h1681
+                            have hsq : (n : ZMod 1681) ^ 2 = (-1 : ZMod 1681) := by
+                              have : (n : ZMod 1681) ^ 2 + 1 = 0 := by
+                                simpa [Nat.cast_add, Nat.cast_pow, Nat.cast_one] using h0
+                              simpa using (eq_neg_of_add_eq_zero_left this)
+                            have hnZ :
+                                (n : ZMod 1681) = (378 : ZMod 1681) ∨ (n : ZMod 1681) = (1303 : ZMod 1681) :=
+                              (zmod1681_sq_eq_neg_one_iff (n : ZMod 1681)).1 hsq
+                            have hn_lt1681 : n < 1681 := lt_trans hn_lt (by decide : 100 < 1681)
+                            cases hnZ with
+                            | inl h378 =>
+                                have hn_mod : n % 1681 = 378 % 1681 :=
+                                  (ZMod.natCast_eq_natCast_iff' n 378 1681).1 h378
+                                have : n = 378 := by
+                                  simpa [Nat.mod_eq_of_lt hn_lt1681, Nat.mod_eq_of_lt (by decide : 378 < 1681)] using hn_mod
+                                omega
+                            | inr h1303 =>
+                                have hn_mod : n % 1681 = 1303 % 1681 :=
+                                  (ZMod.natCast_eq_natCast_iff' n 1303 1681).1 h1303
+                                have : n = 1303 := by
+                                  simpa [Nat.mod_eq_of_lt hn_lt1681, Nat.mod_eq_of_lt (by decide : 1303 < 1681)] using hn_mod
+                                omega
+                        | inr hp_rest =>
+                            rcases hp_rest with
+                            | inl hp53 =>
+                                subst hp53
+                                have h2809 : 2809 ∣ n ^ 2 + 1 := by simpa using hpdiv
+                                have h0 : ((n ^ 2 + 1 : ℕ) : ZMod 2809) = 0 :=
+                                  (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) 2809).2 h2809
+                                have hsq : (n : ZMod 2809) ^ 2 = (-1 : ZMod 2809) := by
+                                  have : (n : ZMod 2809) ^ 2 + 1 = 0 := by
+                                    simpa [Nat.cast_add, Nat.cast_pow, Nat.cast_one] using h0
+                                  simpa using (eq_neg_of_add_eq_zero_left this)
+                                have hnZ :
+                                    (n : ZMod 2809) = (500 : ZMod 2809) ∨ (n : ZMod 2809) = (2309 : ZMod 2809) :=
+                                  (zmod2809_sq_eq_neg_one_iff (n : ZMod 2809)).1 hsq
+                                have hn_lt2809 : n < 2809 := lt_trans hn_lt (by decide : 100 < 2809)
+                                cases hnZ with
+                                | inl h500 =>
+                                    have hn_mod : n % 2809 = 500 % 2809 :=
+                                      (ZMod.natCast_eq_natCast_iff' n 500 2809).1 h500
+                                    have : n = 500 := by
+                                      simpa [Nat.mod_eq_of_lt hn_lt2809, Nat.mod_eq_of_lt (by decide : 500 < 2809)] using hn_mod
+                                    omega
+                                | inr h2309 =>
+                                    have hn_mod : n % 2809 = 2309 % 2809 :=
+                                      (ZMod.natCast_eq_natCast_iff' n 2309 2809).1 h2309
+                                    have : n = 2309 := by
+                                      simpa [Nat.mod_eq_of_lt hn_lt2809, Nat.mod_eq_of_lt (by decide : 2309 < 2809)] using hn_mod
+                                    omega
+                            | inr hp_rest =>
+                                rcases hp_rest with
+                                | inl hp61 =>
+                                    subst hp61
+                                    have h3721 : 3721 ∣ n ^ 2 + 1 := by simpa using hpdiv
+                                    have h0 : ((n ^ 2 + 1 : ℕ) : ZMod 3721) = 0 :=
+                                      (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) 3721).2 h3721
+                                    have hsq : (n : ZMod 3721) ^ 2 = (-1 : ZMod 3721) := by
+                                      have : (n : ZMod 3721) ^ 2 + 1 = 0 := by
+                                        simpa [Nat.cast_add, Nat.cast_pow, Nat.cast_one] using h0
+                                      simpa using (eq_neg_of_add_eq_zero_left this)
+                                    have hnZ :
+                                        (n : ZMod 3721) = (682 : ZMod 3721) ∨ (n : ZMod 3721) = (3039 : ZMod 3721) :=
+                                      (zmod3721_sq_eq_neg_one_iff (n : ZMod 3721)).1 hsq
+                                    have hn_lt3721 : n < 3721 := lt_trans hn_lt (by decide : 100 < 3721)
+                                    cases hnZ with
+                                    | inl h682 =>
+                                        have hn_mod : n % 3721 = 682 % 3721 :=
+                                          (ZMod.natCast_eq_natCast_iff' n 682 3721).1 h682
+                                        have : n = 682 := by
+                                          simpa [Nat.mod_eq_of_lt hn_lt3721, Nat.mod_eq_of_lt (by decide : 682 < 3721)] using hn_mod
+                                        omega
+                                    | inr h3039 =>
+                                        have hn_mod : n % 3721 = 3039 % 3721 :=
+                                          (ZMod.natCast_eq_natCast_iff' n 3039 3721).1 h3039
+                                        have : n = 3039 := by
+                                          simpa [Nat.mod_eq_of_lt hn_lt3721, Nat.mod_eq_of_lt (by decide : 3039 < 3721)] using hn_mod
+                                        omega
+                                | inr hp_rest =>
+                                    rcases hp_rest with
+                                    | inl hp73 =>
+                                        subst hp73
+                                        have h5329 : 5329 ∣ n ^ 2 + 1 := by
+                                          -- 73^2 = 5329
+                                          simpa using hpdiv_pow
+                                        -- n^2+1 ≤ 9802 < 2*5329, so n^2+1 = 5329
+                                        have hpos : 0 < 5329 := by norm_num
+                                        have h_le : n ^ 2 + 1 ≤ 9802 := hn_bound
+                                        have hlt : n ^ 2 + 1 < 5329 * 2 := by
+                                          have : (9802 : ℕ) < 5329 * 2 := by norm_num
+                                          exact lt_of_le_of_lt h_le this
+                                        have h_eq : n ^ 2 + 1 = 5329 := by
+                                          have : n ^ 2 + 1 / 5329 < 2 := (Nat.div_lt_iff_lt_mul hpos).2 hlt
+                                          have hk : n ^ 2 + 1 / 5329 = 1 := by
+                                            -- divisibility gives quotient is positive and <2
+                                            have hk_pos : 1 ≤ (n ^ 2 + 1) / 5329 := by
+                                              have hdiv' : 5329 ∣ n ^ 2 + 1 := h5329
+                                              exact Nat.succ_le_iff.2 (Nat.pos_of_dvd_of_pos hdiv' (Nat.succ_pos _))
+                                            omega
+                                          have hmul : 5329 * ((n ^ 2 + 1) / 5329) = n ^ 2 + 1 :=
+                                            Nat.mul_div_cancel' h5329
+                                          simpa [hk] using hmul.symm
+                                        have : n ^ 2 = 5328 := by omega
+                                        have h72_lt : 72 < n := by
+                                          by_contra hn_le72
+                                          have hn_le72' : n ≤ 72 := Nat.le_of_not_gt hn_le72
+                                          have : n * n ≤ 72 * 72 := Nat.mul_le_mul hn_le72' hn_le72'
+                                          have : n ^ 2 ≤ 72 ^ 2 := by simpa [pow_two] using this
+                                          have : 5328 ≤ 5184 := by
+                                            have : 5328 ≤ 72 ^ 2 := le_trans (by simpa using this) this
+                                            simpa using this
+                                          norm_num at this
+                                        have h_lt73 : n < 73 := by
+                                          by_contra hn_ge73
+                                          have hn_ge73' : 73 ≤ n := Nat.le_of_not_lt hn_ge73
+                                          have : 73 * 73 ≤ n * n := Nat.mul_le_mul hn_ge73' hn_ge73'
+                                          have : 73 ^ 2 ≤ n ^ 2 := by simpa [pow_two] using this
+                                          have : 5329 ≤ 5328 := by simpa [this] using this
+                                          norm_num at this
+                                        omega
+                                    | inr hp_rest =>
+                                        rcases hp_rest with
+                                        | inl hp89 =>
+                                            subst hp89
+                                            have h7921 : 7921 ∣ n ^ 2 + 1 := by
+                                              simpa using hpdiv_pow
+                                            have hpos : 0 < 7921 := by norm_num
+                                            have h_le : n ^ 2 + 1 ≤ 9802 := hn_bound
+                                            have hlt : n ^ 2 + 1 < 7921 * 2 := by
+                                              have : (9802 : ℕ) < 7921 * 2 := by norm_num
+                                              exact lt_of_le_of_lt h_le this
+                                            have h_eq : n ^ 2 + 1 = 7921 := by
+                                              have : n ^ 2 + 1 / 7921 < 2 := (Nat.div_lt_iff_lt_mul hpos).2 hlt
+                                              have hk : n ^ 2 + 1 / 7921 = 1 := by
+                                                have hk_pos : 1 ≤ (n ^ 2 + 1) / 7921 := by
+                                                  exact Nat.succ_le_iff.2 (Nat.pos_of_dvd_of_pos h7921 (Nat.succ_pos _))
+                                                omega
+                                              have hmul : 7921 * ((n ^ 2 + 1) / 7921) = n ^ 2 + 1 :=
+                                                Nat.mul_div_cancel' h7921
+                                              simpa [hk] using hmul.symm
+                                            have : n ^ 2 = 7920 := by omega
+                                            have h88_lt : 88 < n := by
+                                              by_contra hn_le88
+                                              have hn_le88' : n ≤ 88 := Nat.le_of_not_gt hn_le88
+                                              have : n * n ≤ 88 * 88 := Nat.mul_le_mul hn_le88' hn_le88'
+                                              have : n ^ 2 ≤ 88 ^ 2 := by simpa [pow_two] using this
+                                              have : 7920 ≤ 7744 := by
+                                                have : 7920 ≤ 88 ^ 2 := le_trans (by simpa using this) this
+                                                simpa using this
+                                              norm_num at this
+                                            have h_lt89 : n < 89 := by
+                                              by_contra hn_ge89
+                                              have hn_ge89' : 89 ≤ n := Nat.le_of_not_lt hn_ge89
+                                              have : 89 * 89 ≤ n * n := Nat.mul_le_mul hn_ge89' hn_ge89'
+                                              have : 89 ^ 2 ≤ n ^ 2 := by simpa [pow_two] using this
+                                              have : 7921 ≤ 7920 := by simpa [this] using this
+                                              norm_num at this
+                                            omega
+                                        | inr hp97 =>
+                                            subst hp97
+                                            have h9409 : 9409 ∣ n ^ 2 + 1 := by
+                                              simpa using hpdiv_pow
+                                            have hpos : 0 < 9409 := by norm_num
+                                            have h_le : n ^ 2 + 1 ≤ 9802 := hn_bound
+                                            have hlt : n ^ 2 + 1 < 9409 * 2 := by
+                                              have : (9802 : ℕ) < 9409 * 2 := by norm_num
+                                              exact lt_of_le_of_lt h_le this
+                                            have h_eq : n ^ 2 + 1 = 9409 := by
+                                              have : n ^ 2 + 1 / 9409 < 2 := (Nat.div_lt_iff_lt_mul hpos).2 hlt
+                                              have hk : n ^ 2 + 1 / 9409 = 1 := by
+                                                have hk_pos : 1 ≤ (n ^ 2 + 1) / 9409 := by
+                                                  exact Nat.succ_le_iff.2 (Nat.pos_of_dvd_of_pos h9409 (Nat.succ_pos _))
+                                                omega
+                                              have hmul : 9409 * ((n ^ 2 + 1) / 9409) = n ^ 2 + 1 :=
+                                                Nat.mul_div_cancel' h9409
+                                              simpa [hk] using hmul.symm
+                                            have : n ^ 2 = 9408 := by omega
+                                            have h96_lt : 96 < n := by
+                                              by_contra hn_le96
+                                              have hn_le96' : n ≤ 96 := Nat.le_of_not_gt hn_le96
+                                              have : n * n ≤ 96 * 96 := Nat.mul_le_mul hn_le96' hn_le96'
+                                              have : n ^ 2 ≤ 96 ^ 2 := by simpa [pow_two] using this
+                                              have : 9408 ≤ 9216 := by
+                                                have : 9408 ≤ 96 ^ 2 := le_trans (by simpa using this) this
+                                                simpa using this
+                                              norm_num at this
+                                            have h_lt97 : n < 97 := by
+                                              by_contra hn_ge97
+                                              have hn_ge97' : 97 ≤ n := Nat.le_of_not_lt hn_ge97
+                                              have : 97 * 97 ≤ n * n := Nat.mul_le_mul hn_ge97' hn_ge97'
+                                              have : 97 ^ 2 ≤ n ^ 2 := by simpa [pow_two] using this
+                                              have : 9409 ≤ 9408 := by simpa [this] using this
+                                              norm_num at this
+                                            omega
+  · intro hn_mem
+    rcases hn_mem with
+    | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+    · refine ⟨by decide, ?_⟩
+      have : ¬ Squarefree 50 := not_squarefree_of_dvd_25 (by norm_num) (by norm_num)
+      simpa [show 7 * 7 + 1 = 50 by norm_num] using this
+    · refine ⟨by decide, ?_⟩
+      have : ¬ Squarefree 325 := not_squarefree_of_dvd_25 (by norm_num) (by norm_num)
+      simpa [show 18 * 18 + 1 = 325 by norm_num] using this
+    · refine ⟨by decide, ?_⟩
+      simpa [show 32 * 32 + 1 = 1025 by norm_num] using not_squarefree_1025
+    · refine ⟨by decide, ?_⟩
+      simpa [show 38 * 38 + 1 = 1445 by norm_num] using not_squarefree_1445
+    · refine ⟨by decide, ?_⟩
+      simpa [show 41 * 41 + 1 = 1682 by norm_num] using not_squarefree_1682
+    · refine ⟨by decide, ?_⟩
+      simpa [show 43 * 43 + 1 = 1850 by norm_num] using not_squarefree_1850
+    · refine ⟨by decide, ?_⟩
+      have : ¬ Squarefree 3250 := not_squarefree_of_dvd_25 (by norm_num) (by norm_num)
+      simpa [show 57 * 57 + 1 = 3250 by norm_num] using this
+    · refine ⟨by decide, ?_⟩
+      have : ¬ Squarefree 4625 := not_squarefree_of_dvd_25 (by norm_num) (by norm_num)
+      simpa [show 68 * 68 + 1 = 4625 by norm_num] using this
+    · refine ⟨by decide, ?_⟩
+      simpa [show 70 * 70 + 1 = 4901 by norm_num] using not_squarefree_4901
+    · refine ⟨by decide, ?_⟩
+      have : ¬ Squarefree 6725 := not_squarefree_of_dvd_25 (by norm_num) (by norm_num)
+      simpa [show 82 * 82 + 1 = 6725 by norm_num] using this
+    · refine ⟨by decide, ?_⟩
+      have : ¬ Squarefree 8650 := not_squarefree_of_dvd_25 (by norm_num) (by norm_num)
+      simpa [show 93 * 93 + 1 = 8650 by norm_num] using this
+    · refine ⟨by decide, ?_⟩
+      simpa [show 99 * 99 + 1 = 9802 by norm_num] using not_squarefree_9802
+
+ -/
+
+set_option maxHeartbeats 1000000 in
+lemma diag_cand_100 : DiagonalCandidates 100 = {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99} := by
+  classical
+  ext n
+  by_cases hn : n < 100
+  · interval_cases n <;>
+      simp [DiagonalCandidates, Nat.squarefree_iff_nodup_primeFactorsList]
+  ·
+    have hne7 : n ≠ 7 := by
+      intro h; subst h; exact hn (by decide)
+    have hne18 : n ≠ 18 := by
+      intro h; subst h; exact hn (by decide)
+    have hne32 : n ≠ 32 := by
+      intro h; subst h; exact hn (by decide)
+    have hne38 : n ≠ 38 := by
+      intro h; subst h; exact hn (by decide)
+    have hne41 : n ≠ 41 := by
+      intro h; subst h; exact hn (by decide)
+    have hne43 : n ≠ 43 := by
+      intro h; subst h; exact hn (by decide)
+    have hne57 : n ≠ 57 := by
+      intro h; subst h; exact hn (by decide)
+    have hne68 : n ≠ 68 := by
+      intro h; subst h; exact hn (by decide)
+    have hne70 : n ≠ 70 := by
+      intro h; subst h; exact hn (by decide)
+    have hne82 : n ≠ 82 := by
+      intro h; subst h; exact hn (by decide)
+    have hne93 : n ≠ 93 := by
+      intro h; subst h; exact hn (by decide)
+    have hne99 : n ≠ 99 := by
+      intro h; subst h; exact hn (by decide)
+    simp [DiagonalCandidates, hn, hne7, hne18, hne32, hne38, hne41, hne43, hne57, hne68, hne70, hne82, hne93, hne99]
 
 -- Key finite checks
-theorem no_triple_works_50 : noTripleWorksIn 50 := by native_decide
-
 lemma no_triple_in_candidates :
     ∀ (s : Finset ℕ), s ⊆ {7, 18, 32, 38, 41, 43} → s.card = 3 → ¬ NonSquarefreeProductProp s := by
-  native_decide
+  classical
+  intro s hs hcard hsprop
+  have hcard' : #s = 3 := by simpa using hcard
+  rcases (Finset.card_eq_three).1 hcard' with ⟨a, b, c, hab, hac, hbc, rfl⟩
+  have ha : a ∈ ({7, 18, 32, 38, 41, 43} : Finset ℕ) := hs (by simp)
+  have hb : b ∈ ({7, 18, 32, 38, 41, 43} : Finset ℕ) := hs (by simp)
+  have hc : c ∈ ({7, 18, 32, 38, 41, 43} : Finset ℕ) := hs (by simp)
+  have ha_cases :
+      a = 7 ∨ a = 18 ∨ a = 32 ∨ a = 38 ∨ a = 41 ∨ a = 43 := by
+    simpa [Finset.mem_insert, Finset.mem_singleton] using ha
+  rcases ha_cases with rfl | rfl | rfl | rfl | rfl | rfl
+  · -- a = 7: then b,c must be 32 and 41, but 32*41+1 is squarefree
+    have hb_cases :
+        b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 := by
+      simpa [Finset.mem_insert, Finset.mem_singleton] using hb
+    have hc_cases :
+        c = 7 ∨ c = 18 ∨ c = 32 ∨ c = 38 ∨ c = 41 ∨ c = 43 := by
+      simpa [Finset.mem_insert, Finset.mem_singleton] using hc
+    have hb_32_or_41 : b = 32 ∨ b = 41 := by
+      rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl
+      · exact (hab rfl).elim
+      · have : Squarefree (7 * 18 + 1) := by
+          simpa [show 7 * 18 + 1 = 127 by norm_num] using squarefree_127
+        exact (hsprop 7 (by simp) 18 (by simp) this).elim
+      · exact Or.inl rfl
+      · have : Squarefree (7 * 38 + 1) := by
+          simpa [show 7 * 38 + 1 = 267 by norm_num] using squarefree_267
+        exact (hsprop 7 (by simp) 38 (by simp) this).elim
+      · exact Or.inr rfl
+      · have : Squarefree (7 * 43 + 1) := by
+          simpa [show 7 * 43 + 1 = 302 by norm_num] using squarefree_302
+        exact (hsprop 7 (by simp) 43 (by simp) this).elim
+    have hc_32_or_41 : c = 32 ∨ c = 41 := by
+      rcases hc_cases with rfl | rfl | rfl | rfl | rfl | rfl
+      · exact (hac rfl).elim
+      · have : Squarefree (7 * 18 + 1) := by
+          simpa [show 7 * 18 + 1 = 127 by norm_num] using squarefree_127
+        exact (hsprop 7 (by simp) 18 (by simp) this).elim
+      · exact Or.inl rfl
+      · have : Squarefree (7 * 38 + 1) := by
+          simpa [show 7 * 38 + 1 = 267 by norm_num] using squarefree_267
+        exact (hsprop 7 (by simp) 38 (by simp) this).elim
+      · exact Or.inr rfl
+      · have : Squarefree (7 * 43 + 1) := by
+          simpa [show 7 * 43 + 1 = 302 by norm_num] using squarefree_302
+        exact (hsprop 7 (by simp) 43 (by simp) this).elim
+    rcases hb_32_or_41 with hb32 | hb41 <;> rcases hc_32_or_41 with hc32 | hc41
+    · subst hb32; subst hc32; exact (hbc rfl).elim
+    · subst hb32; subst hc41
+      have : Squarefree (32 * 41 + 1) := by
+        simpa [show 32 * 41 + 1 = 1313 by norm_num] using squarefree_1313
+      exact (hsprop 32 (by simp) 41 (by simp) this).elim
+    · subst hb41; subst hc32
+      have : Squarefree (41 * 32 + 1) := by
+        simpa [show 41 * 32 + 1 = 1313 by norm_num, mul_comm] using squarefree_1313
+      exact (hsprop 41 (by simp) 32 (by simp) this).elim
+    · subst hb41; subst hc41; exact (hbc rfl).elim
+  · -- a = 18: then b = 43 and c = 43, contradicting b ≠ c
+    have hb_cases :
+        b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 := by
+      simpa [Finset.mem_insert, Finset.mem_singleton] using hb
+    have hc_cases :
+        c = 7 ∨ c = 18 ∨ c = 32 ∨ c = 38 ∨ c = 41 ∨ c = 43 := by
+      simpa [Finset.mem_insert, Finset.mem_singleton] using hc
+    have hb_eq43 : b = 43 := by
+      rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl
+      · have : Squarefree (18 * 7 + 1) := by
+          simpa [show 18 * 7 + 1 = 127 by norm_num] using squarefree_127
+        exact (hsprop 18 (by simp) 7 (by simp) this).elim
+      · exact (hab rfl).elim
+      · have : Squarefree (18 * 32 + 1) := by
+          simpa [show 18 * 32 + 1 = 577 by norm_num] using squarefree_577
+        exact (hsprop 18 (by simp) 32 (by simp) this).elim
+      · have : Squarefree (18 * 38 + 1) := by
+          simpa [show 18 * 38 + 1 = 685 by norm_num] using squarefree_685
+        exact (hsprop 18 (by simp) 38 (by simp) this).elim
+      · have : Squarefree (18 * 41 + 1) := by
+          simpa [show 18 * 41 + 1 = 739 by norm_num] using squarefree_739
+        exact (hsprop 18 (by simp) 41 (by simp) this).elim
+      · rfl
+    have hc_eq43 : c = 43 := by
+      rcases hc_cases with rfl | rfl | rfl | rfl | rfl | rfl
+      · have : Squarefree (18 * 7 + 1) := by
+          simpa [show 18 * 7 + 1 = 127 by norm_num] using squarefree_127
+        exact (hsprop 18 (by simp) 7 (by simp) this).elim
+      · exact (hac rfl).elim
+      · have : Squarefree (18 * 32 + 1) := by
+          simpa [show 18 * 32 + 1 = 577 by norm_num] using squarefree_577
+        exact (hsprop 18 (by simp) 32 (by simp) this).elim
+      · have : Squarefree (18 * 38 + 1) := by
+          simpa [show 18 * 38 + 1 = 685 by norm_num] using squarefree_685
+        exact (hsprop 18 (by simp) 38 (by simp) this).elim
+      · have : Squarefree (18 * 41 + 1) := by
+          simpa [show 18 * 41 + 1 = 739 by norm_num] using squarefree_739
+        exact (hsprop 18 (by simp) 41 (by simp) this).elim
+      · rfl
+    subst hb_eq43
+    subst hc_eq43
+    exact (hbc rfl).elim
+  · -- a = 32: then b,c must be 7 and 43, but 7*43+1 is squarefree
+    have hb_cases :
+        b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 := by
+      simpa [Finset.mem_insert, Finset.mem_singleton] using hb
+    have hc_cases :
+        c = 7 ∨ c = 18 ∨ c = 32 ∨ c = 38 ∨ c = 41 ∨ c = 43 := by
+      simpa [Finset.mem_insert, Finset.mem_singleton] using hc
+    have hb_7_or_43 : b = 7 ∨ b = 43 := by
+      rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl
+      · exact Or.inl rfl
+      · have : Squarefree (32 * 18 + 1) := by
+          simpa [show 32 * 18 + 1 = 577 by norm_num, mul_comm] using squarefree_577
+        exact (hsprop 32 (by simp) 18 (by simp) this).elim
+      · exact (hab rfl).elim
+      · have : Squarefree (32 * 38 + 1) := by
+          simpa [show 32 * 38 + 1 = 1217 by norm_num] using squarefree_1217
+        exact (hsprop 32 (by simp) 38 (by simp) this).elim
+      · have : Squarefree (32 * 41 + 1) := by
+          simpa [show 32 * 41 + 1 = 1313 by norm_num] using squarefree_1313
+        exact (hsprop 32 (by simp) 41 (by simp) this).elim
+      · exact Or.inr rfl
+    have hc_7_or_43 : c = 7 ∨ c = 43 := by
+      rcases hc_cases with rfl | rfl | rfl | rfl | rfl | rfl
+      · exact Or.inl rfl
+      · have : Squarefree (32 * 18 + 1) := by
+          simpa [show 32 * 18 + 1 = 577 by norm_num, mul_comm] using squarefree_577
+        exact (hsprop 32 (by simp) 18 (by simp) this).elim
+      · exact (hac rfl).elim
+      · have : Squarefree (32 * 38 + 1) := by
+          simpa [show 32 * 38 + 1 = 1217 by norm_num] using squarefree_1217
+        exact (hsprop 32 (by simp) 38 (by simp) this).elim
+      · have : Squarefree (32 * 41 + 1) := by
+          simpa [show 32 * 41 + 1 = 1313 by norm_num] using squarefree_1313
+        exact (hsprop 32 (by simp) 41 (by simp) this).elim
+      · exact Or.inr rfl
+    rcases hb_7_or_43 with hb7 | hb43 <;> rcases hc_7_or_43 with hc7 | hc43
+    · subst hb7; subst hc7; exact (hbc rfl).elim
+    · subst hb7; subst hc43
+      have : Squarefree (7 * 43 + 1) := by
+        simpa [show 7 * 43 + 1 = 302 by norm_num] using squarefree_302
+      exact (hsprop 7 (by simp) 43 (by simp) this).elim
+    · subst hb43; subst hc7
+      have : Squarefree (43 * 7 + 1) := by
+        simpa [show 43 * 7 + 1 = 302 by norm_num, mul_comm] using squarefree_302
+      exact (hsprop 43 (by simp) 7 (by simp) this).elim
+    · subst hb43; subst hc43; exact (hbc rfl).elim
+  · -- a = 38: 38 has squarefree product+1 with every other candidate
+    have hb_cases :
+        b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 := by
+      simpa [Finset.mem_insert, Finset.mem_singleton] using hb
+    rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl
+    · have : Squarefree (38 * 7 + 1) := by
+        simpa [show 38 * 7 + 1 = 267 by norm_num, mul_comm] using squarefree_267
+      exact (hsprop 38 (by simp) 7 (by simp) this).elim
+    · have : Squarefree (38 * 18 + 1) := by
+        simpa [show 38 * 18 + 1 = 685 by norm_num, mul_comm] using squarefree_685
+      exact (hsprop 38 (by simp) 18 (by simp) this).elim
+    · have : Squarefree (38 * 32 + 1) := by
+        simpa [show 38 * 32 + 1 = 1217 by norm_num, mul_comm] using squarefree_1217
+      exact (hsprop 38 (by simp) 32 (by simp) this).elim
+    · exact (hab rfl).elim
+    · have : Squarefree (38 * 41 + 1) := by
+        simpa [show 38 * 41 + 1 = 1559 by norm_num] using squarefree_1559
+      exact (hsprop 38 (by simp) 41 (by simp) this).elim
+    · have : Squarefree (38 * 43 + 1) := by
+        simpa [show 38 * 43 + 1 = 1635 by norm_num] using squarefree_1635
+      exact (hsprop 38 (by simp) 43 (by simp) this).elim
+  · -- a = 41: then b,c must be 7 and 43, but 7*43+1 is squarefree
+    have hb_cases :
+        b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 := by
+      simpa [Finset.mem_insert, Finset.mem_singleton] using hb
+    have hc_cases :
+        c = 7 ∨ c = 18 ∨ c = 32 ∨ c = 38 ∨ c = 41 ∨ c = 43 := by
+      simpa [Finset.mem_insert, Finset.mem_singleton] using hc
+    have hb_7_or_43 : b = 7 ∨ b = 43 := by
+      rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl
+      · exact Or.inl rfl
+      · have : Squarefree (41 * 18 + 1) := by
+          simpa [show 41 * 18 + 1 = 739 by norm_num, mul_comm] using squarefree_739
+        exact (hsprop 41 (by simp) 18 (by simp) this).elim
+      · have : Squarefree (41 * 32 + 1) := by
+          simpa [show 41 * 32 + 1 = 1313 by norm_num, mul_comm] using squarefree_1313
+        exact (hsprop 41 (by simp) 32 (by simp) this).elim
+      · have : Squarefree (41 * 38 + 1) := by
+          simpa [show 41 * 38 + 1 = 1559 by norm_num, mul_comm] using squarefree_1559
+        exact (hsprop 41 (by simp) 38 (by simp) this).elim
+      · exact (hab rfl).elim
+      · exact Or.inr rfl
+    have hc_7_or_43 : c = 7 ∨ c = 43 := by
+      rcases hc_cases with rfl | rfl | rfl | rfl | rfl | rfl
+      · exact Or.inl rfl
+      · have : Squarefree (41 * 18 + 1) := by
+          simpa [show 41 * 18 + 1 = 739 by norm_num, mul_comm] using squarefree_739
+        exact (hsprop 41 (by simp) 18 (by simp) this).elim
+      · have : Squarefree (41 * 32 + 1) := by
+          simpa [show 41 * 32 + 1 = 1313 by norm_num, mul_comm] using squarefree_1313
+        exact (hsprop 41 (by simp) 32 (by simp) this).elim
+      · have : Squarefree (41 * 38 + 1) := by
+          simpa [show 41 * 38 + 1 = 1559 by norm_num, mul_comm] using squarefree_1559
+        exact (hsprop 41 (by simp) 38 (by simp) this).elim
+      · exact (hac rfl).elim
+      · exact Or.inr rfl
+    rcases hb_7_or_43 with hb7 | hb43 <;> rcases hc_7_or_43 with hc7 | hc43
+    · subst hb7; subst hc7; exact (hbc rfl).elim
+    · subst hb7; subst hc43
+      have : Squarefree (7 * 43 + 1) := by
+        simpa [show 7 * 43 + 1 = 302 by norm_num] using squarefree_302
+      exact (hsprop 7 (by simp) 43 (by simp) this).elim
+    · subst hb43; subst hc7
+      have : Squarefree (43 * 7 + 1) := by
+        simpa [show 43 * 7 + 1 = 302 by norm_num, mul_comm] using squarefree_302
+      exact (hsprop 43 (by simp) 7 (by simp) this).elim
+    · subst hb43; subst hc43; exact (hbc rfl).elim
+  · -- a = 43: then b,c are among 18,32,41, but any such pair gives a squarefree product
+    have hb_cases :
+        b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 := by
+      simpa [Finset.mem_insert, Finset.mem_singleton] using hb
+    have hc_cases :
+        c = 7 ∨ c = 18 ∨ c = 32 ∨ c = 38 ∨ c = 41 ∨ c = 43 := by
+      simpa [Finset.mem_insert, Finset.mem_singleton] using hc
+    -- eliminate b = 7 or 38 using squarefree witnesses
+    have hb_18_32_or_41 : b = 18 ∨ b = 32 ∨ b = 41 := by
+      rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl
+      · have : Squarefree (43 * 7 + 1) := by
+          simpa [show 43 * 7 + 1 = 302 by norm_num, mul_comm] using squarefree_302
+        exact (hsprop 43 (by simp) 7 (by simp) this).elim
+      · exact Or.inl rfl
+      · exact Or.inr (Or.inl rfl)
+      · have : Squarefree (43 * 38 + 1) := by
+          simpa [show 43 * 38 + 1 = 1635 by norm_num, mul_comm] using squarefree_1635
+        exact (hsprop 43 (by simp) 38 (by simp) this).elim
+      · exact Or.inr (Or.inr rfl)
+      · exact (hab rfl).elim
+    have hc_18_32_or_41 : c = 18 ∨ c = 32 ∨ c = 41 := by
+      rcases hc_cases with rfl | rfl | rfl | rfl | rfl | rfl
+      · have : Squarefree (43 * 7 + 1) := by
+          simpa [show 43 * 7 + 1 = 302 by norm_num, mul_comm] using squarefree_302
+        exact (hsprop 43 (by simp) 7 (by simp) this).elim
+      · exact Or.inl rfl
+      · exact Or.inr (Or.inl rfl)
+      · have : Squarefree (43 * 38 + 1) := by
+          simpa [show 43 * 38 + 1 = 1635 by norm_num, mul_comm] using squarefree_1635
+        exact (hsprop 43 (by simp) 38 (by simp) this).elim
+      · exact Or.inr (Or.inr rfl)
+      · exact (hac rfl).elim
+    -- pick the (distinct) pair among {18,32,41}
+    rcases hb_18_32_or_41 with hb18 | hb32 | hb41 <;>
+      rcases hc_18_32_or_41 with hc18 | hc32 | hc41
+    · subst hb18; subst hc18; exact (hbc rfl).elim
+    · subst hb18; subst hc32
+      have : Squarefree (18 * 32 + 1) := by
+        simpa [show 18 * 32 + 1 = 577 by norm_num] using squarefree_577
+      exact (hsprop 18 (by simp) 32 (by simp) this).elim
+    · subst hb18; subst hc41
+      have : Squarefree (18 * 41 + 1) := by
+        simpa [show 18 * 41 + 1 = 739 by norm_num] using squarefree_739
+      exact (hsprop 18 (by simp) 41 (by simp) this).elim
+    · subst hb32; subst hc18
+      have : Squarefree (32 * 18 + 1) := by
+        simpa [show 32 * 18 + 1 = 577 by norm_num, mul_comm] using squarefree_577
+      exact (hsprop 32 (by simp) 18 (by simp) this).elim
+    · subst hb32; subst hc32; exact (hbc rfl).elim
+    · subst hb32; subst hc41
+      have : Squarefree (32 * 41 + 1) := by
+        simpa [show 32 * 41 + 1 = 1313 by norm_num] using squarefree_1313
+      exact (hsprop 32 (by simp) 41 (by simp) this).elim
+    · subst hb41; subst hc18
+      have : Squarefree (41 * 18 + 1) := by
+        simpa [show 41 * 18 + 1 = 739 by norm_num, mul_comm] using squarefree_739
+      exact (hsprop 41 (by simp) 18 (by simp) this).elim
+    · subst hb41; subst hc32
+      have : Squarefree (41 * 32 + 1) := by
+        simpa [show 41 * 32 + 1 = 1313 by norm_num, mul_comm] using squarefree_1313
+      exact (hsprop 41 (by simp) 32 (by simp) this).elim
+    · subst hb41; subst hc41; exact (hbc rfl).elim
 
 lemma no_five_in_candidates_100 :
     ∀ (s : Finset ℕ), s ⊆ {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99} →
       s.card = 5 → ¬ NonSquarefreeProductProp s := by
-  native_decide
+  classical
+  intro s hs hcard hsprop
+  have hs_one_lt : 1 < s.card := by simpa [hcard] using (by decide : (1 : ℕ) < 5)
+  let C : Finset ℕ := {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99}
+  have hsC : s ⊆ C := by simpa [C] using hs
+
+  by_cases h38 : 38 ∈ s
+  · obtain ⟨b, hb, hb_ne⟩ := Finset.exists_ne_of_one_lt_card hs_one_lt 38
+    have hbC : b ∈ C := hsC hb
+    have hb_cases :
+        b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 ∨ b = 57 ∨ b = 68 ∨ b = 70 ∨ b = 82 ∨
+          b = 93 ∨ b = 99 := by
+      simpa [C, Finset.mem_insert, Finset.mem_singleton] using hbC
+    rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+    · have : Squarefree (38 * 7 + 1) := by
+        simpa [show 38 * 7 + 1 = 267 by norm_num, mul_comm] using squarefree_267
+      exact (hsprop 38 h38 7 (by simpa [C] using hb) this).elim
+    · have : Squarefree (38 * 18 + 1) := by
+        simpa [show 38 * 18 + 1 = 685 by norm_num, mul_comm] using squarefree_685
+      exact (hsprop 38 h38 18 (by simpa [C] using hb) this).elim
+    · have : Squarefree (38 * 32 + 1) := by
+        simpa [show 38 * 32 + 1 = 1217 by norm_num, mul_comm] using squarefree_1217
+      exact (hsprop 38 h38 32 (by simpa [C] using hb) this).elim
+    · exact (hb_ne rfl).elim
+    · have : Squarefree (38 * 41 + 1) := by
+        simpa [show 38 * 41 + 1 = 1559 by norm_num] using squarefree_1559
+      exact (hsprop 38 h38 41 (by simpa [C] using hb) this).elim
+    · have : Squarefree (38 * 43 + 1) := by
+        simpa [show 38 * 43 + 1 = 1635 by norm_num] using squarefree_1635
+      exact (hsprop 38 h38 43 (by simpa [C] using hb) this).elim
+    · have : Squarefree (38 * 57 + 1) := by
+        simpa [show 38 * 57 + 1 = 2167 by norm_num] using squarefree_2167
+      exact (hsprop 38 h38 57 (by simpa [C] using hb) this).elim
+    · have : Squarefree (38 * 68 + 1) := by
+        simpa [show 38 * 68 + 1 = 2585 by norm_num] using squarefree_2585
+      exact (hsprop 38 h38 68 (by simpa [C] using hb) this).elim
+    · have : Squarefree (38 * 70 + 1) := by
+        simpa [show 38 * 70 + 1 = 2661 by norm_num] using squarefree_2661
+      exact (hsprop 38 h38 70 (by simpa [C] using hb) this).elim
+    · have : Squarefree (38 * 82 + 1) := by
+        simpa [show 38 * 82 + 1 = 3117 by norm_num] using squarefree_3117
+      exact (hsprop 38 h38 82 (by simpa [C] using hb) this).elim
+    · have : Squarefree (38 * 93 + 1) := by
+        simpa [show 38 * 93 + 1 = 3535 by norm_num] using squarefree_3535
+      exact (hsprop 38 h38 93 (by simpa [C] using hb) this).elim
+    · have : Squarefree (38 * 99 + 1) := by
+        simpa [show 38 * 99 + 1 = 3763 by norm_num] using squarefree_3763
+      exact (hsprop 38 h38 99 (by simpa [C] using hb) this).elim
+  have h38_not : 38 ∉ s := h38
+
+  by_cases h18 : 18 ∈ s
+  · -- if 18 ∈ s, then s ⊆ {18, 43, 68, 93}, so card ≤ 4
+    have hs_sub : s ⊆ ({18, 43, 68, 93} : Finset ℕ) := by
+      intro b hb
+      have hbC : b ∈ C := hsC hb
+      have hb_cases :
+          b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 ∨ b = 57 ∨ b = 68 ∨ b = 70 ∨ b = 82 ∨
+            b = 93 ∨ b = 99 := by
+        simpa [C, Finset.mem_insert, Finset.mem_singleton] using hbC
+      rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+      · have : Squarefree (18 * 7 + 1) := by
+          simpa [show 18 * 7 + 1 = 127 by norm_num] using squarefree_127
+        exact (hsprop 18 h18 7 (by simpa [C] using hb) this).elim
+      · simp
+      · have : Squarefree (18 * 32 + 1) := by
+          simpa [show 18 * 32 + 1 = 577 by norm_num] using squarefree_577
+        exact (hsprop 18 h18 32 (by simpa [C] using hb) this).elim
+      · exact (h38_not hb).elim
+      · have : Squarefree (18 * 41 + 1) := by
+          simpa [show 18 * 41 + 1 = 739 by norm_num] using squarefree_739
+        exact (hsprop 18 h18 41 (by simpa [C] using hb) this).elim
+      · simp
+      · have : Squarefree (18 * 57 + 1) := by
+          simpa [show 18 * 57 + 1 = 1027 by norm_num] using squarefree_1027
+        exact (hsprop 18 h18 57 (by simpa [C] using hb) this).elim
+      · simp
+      · have : Squarefree (18 * 70 + 1) := by
+          simpa [show 18 * 70 + 1 = 1261 by norm_num] using squarefree_1261
+        exact (hsprop 18 h18 70 (by simpa [C] using hb) this).elim
+      · have : Squarefree (18 * 82 + 1) := by
+          simpa [show 18 * 82 + 1 = 1477 by norm_num] using squarefree_1477
+        exact (hsprop 18 h18 82 (by simpa [C] using hb) this).elim
+      · simp
+      · have : Squarefree (18 * 99 + 1) := by
+          simpa [show 18 * 99 + 1 = 1783 by norm_num] using squarefree_1783
+        exact (hsprop 18 h18 99 (by simpa [C] using hb) this).elim
+    have : s.card ≤ 4 := by
+      have : s.card ≤ ({18, 43, 68, 93} : Finset ℕ).card := Finset.card_le_card hs_sub
+      simpa using this
+    omega
+
+  by_cases h70 : 70 ∈ s
+  · -- if 70 ∈ s, then s ⊆ {32, 41, 68, 70}, so card ≤ 4
+    have hs_sub : s ⊆ ({32, 41, 68, 70} : Finset ℕ) := by
+      intro b hb
+      have hbC : b ∈ C := hsC hb
+      have hb_cases :
+          b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 ∨ b = 57 ∨ b = 68 ∨ b = 70 ∨ b = 82 ∨
+            b = 93 ∨ b = 99 := by
+        simpa [C, Finset.mem_insert, Finset.mem_singleton] using hbC
+      rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+      · have : Squarefree (70 * 7 + 1) := by
+          simpa [show 70 * 7 + 1 = 491 by norm_num, mul_comm] using squarefree_491
+        exact (hsprop 70 h70 7 (by simpa [C] using hb) this).elim
+      · have : Squarefree (70 * 18 + 1) := by
+          simpa [show 70 * 18 + 1 = 1261 by norm_num, mul_comm] using squarefree_1261
+        exact (hsprop 70 h70 18 (by simpa [C] using hb) this).elim
+      · simp
+      · exact (h38_not hb).elim
+      · simp
+      · have : Squarefree (70 * 43 + 1) := by
+          simpa [show 70 * 43 + 1 = 3011 by norm_num, mul_comm] using squarefree_3011
+        exact (hsprop 70 h70 43 (by simpa [C] using hb) this).elim
+      · have : Squarefree (70 * 57 + 1) := by
+          simpa [show 70 * 57 + 1 = 3991 by norm_num, mul_comm] using squarefree_3991
+        exact (hsprop 70 h70 57 (by simpa [C] using hb) this).elim
+      · simp
+      · simp
+      · have : Squarefree (70 * 82 + 1) := by
+          simpa [show 70 * 82 + 1 = 5741 by norm_num, mul_comm] using squarefree_5741
+        exact (hsprop 70 h70 82 (by simpa [C] using hb) this).elim
+      · have : Squarefree (70 * 93 + 1) := by
+          simpa [show 70 * 93 + 1 = 6511 by norm_num, mul_comm] using squarefree_6511
+        exact (hsprop 70 h70 93 (by simpa [C] using hb) this).elim
+      · have : Squarefree (70 * 99 + 1) := by
+          simpa [show 70 * 99 + 1 = 6931 by norm_num, mul_comm] using squarefree_6931
+        exact (hsprop 70 h70 99 (by simpa [C] using hb) this).elim
+    have : s.card ≤ 4 := by
+      have : s.card ≤ ({32, 41, 68, 70} : Finset ℕ).card := Finset.card_le_card hs_sub
+      simpa using this
+    omega
+
+  by_cases h99 : 99 ∈ s
+  · -- if 99 ∈ s, then s ⊆ {41, 57, 93, 99}, so card ≤ 4
+    have hs_sub : s ⊆ ({41, 57, 93, 99} : Finset ℕ) := by
+      intro b hb
+      have hbC : b ∈ C := hsC hb
+      have hb_cases :
+          b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 ∨ b = 57 ∨ b = 68 ∨ b = 70 ∨ b = 82 ∨
+            b = 93 ∨ b = 99 := by
+        simpa [C, Finset.mem_insert, Finset.mem_singleton] using hbC
+      rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+      · have : Squarefree (99 * 7 + 1) := by
+          simpa [show 99 * 7 + 1 = 694 by norm_num, mul_comm] using squarefree_694
+        exact (hsprop 99 h99 7 (by simpa [C] using hb) this).elim
+      · have : Squarefree (99 * 18 + 1) := by
+          simpa [show 99 * 18 + 1 = 1783 by norm_num, mul_comm] using squarefree_1783
+        exact (hsprop 99 h99 18 (by simpa [C] using hb) this).elim
+      · have : Squarefree (99 * 32 + 1) := by
+          simpa [show 99 * 32 + 1 = 3169 by norm_num, mul_comm] using squarefree_3169
+        exact (hsprop 99 h99 32 (by simpa [C] using hb) this).elim
+      · exact (h38_not hb).elim
+      · simp
+      · have : Squarefree (99 * 43 + 1) := by
+          simpa [show 99 * 43 + 1 = 4258 by norm_num, mul_comm] using squarefree_4258
+        exact (hsprop 99 h99 43 (by simpa [C] using hb) this).elim
+      · simp
+      · have : Squarefree (99 * 68 + 1) := by
+          simpa [show 99 * 68 + 1 = 6733 by norm_num, mul_comm] using squarefree_6733
+        exact (hsprop 99 h99 68 (by simpa [C] using hb) this).elim
+      · exact (h70 hb).elim
+      · have : Squarefree (99 * 82 + 1) := by
+          simpa [show 99 * 82 + 1 = 8119 by norm_num, mul_comm] using squarefree_8119
+        exact (hsprop 99 h99 82 (by simpa [C] using hb) this).elim
+      · simp
+      · simp
+    have : s.card ≤ 4 := by
+      have : s.card ≤ ({41, 57, 93, 99} : Finset ℕ).card := Finset.card_le_card hs_sub
+      simpa using this
+    omega
+
+  by_cases h41 : 41 ∈ s
+  · -- if 41 ∈ s and 70 ∉ s and 99 ∉ s, then all other elements must be in {7, 43}
+    have hs_sub : s ⊆ ({7, 41, 43} : Finset ℕ) := by
+      intro b hb
+      have hbC : b ∈ C := hsC hb
+      have hb_cases :
+          b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 ∨ b = 57 ∨ b = 68 ∨ b = 70 ∨ b = 82 ∨
+            b = 93 ∨ b = 99 := by
+        simpa [C, Finset.mem_insert, Finset.mem_singleton] using hbC
+      rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+      · simp
+      · have : Squarefree (41 * 18 + 1) := by
+          simpa [show 41 * 18 + 1 = 739 by norm_num, mul_comm] using squarefree_739
+        exact (hsprop 41 h41 18 (by simpa [C] using hb) this).elim
+      · have : Squarefree (41 * 32 + 1) := by
+          simpa [show 41 * 32 + 1 = 1313 by norm_num, mul_comm] using squarefree_1313
+        exact (hsprop 41 h41 32 (by simpa [C] using hb) this).elim
+      · exact (h38_not hb).elim
+      · simp
+      · simp
+      · have : Squarefree (41 * 57 + 1) := by
+          simpa [show 41 * 57 + 1 = 2338 by norm_num, mul_comm] using squarefree_2338
+        exact (hsprop 41 h41 57 (by simpa [C] using hb) this).elim
+      · have : Squarefree (41 * 68 + 1) := by
+          simpa [show 41 * 68 + 1 = 2789 by norm_num, mul_comm] using squarefree_2789
+        exact (hsprop 41 h41 68 (by simpa [C] using hb) this).elim
+      · exact (h70 hb).elim
+      · have : Squarefree (41 * 82 + 1) := by
+          simpa [show 41 * 82 + 1 = 3363 by norm_num, mul_comm] using squarefree_3363
+        exact (hsprop 41 h41 82 (by simpa [C] using hb) this).elim
+      · have : Squarefree (41 * 93 + 1) := by
+          simpa [show 41 * 93 + 1 = 3814 by norm_num, mul_comm] using squarefree_3814
+        exact (hsprop 41 h41 93 (by simpa [C] using hb) this).elim
+      · exact (h99 hb).elim
+    have : s.card ≤ 3 := by
+      have : s.card ≤ ({7, 41, 43} : Finset ℕ).card := Finset.card_le_card hs_sub
+      simpa using this
+    omega
+
+  by_cases h82 : 82 ∈ s
+  · -- if 82 ∈ s, then s ⊆ {7,32,57,68,82}, hence s = that set, but 32*68+1 is squarefree
+    have hs_sub : s ⊆ ({7, 32, 57, 68, 82} : Finset ℕ) := by
+      intro b hb
+      have hbC : b ∈ C := hsC hb
+      have hb_cases :
+          b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 ∨ b = 57 ∨ b = 68 ∨ b = 70 ∨ b = 82 ∨
+            b = 93 ∨ b = 99 := by
+        simpa [C, Finset.mem_insert, Finset.mem_singleton] using hbC
+      rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+      · simp
+      · have : Squarefree (82 * 18 + 1) := by
+          simpa [show 82 * 18 + 1 = 1477 by norm_num, mul_comm] using squarefree_1477
+        exact (hsprop 82 h82 18 (by simpa [C] using hb) this).elim
+      · simp
+      · exact (h38_not hb).elim
+      · exact (h41 hb).elim
+      · have : Squarefree (82 * 43 + 1) := by
+          simpa [show 82 * 43 + 1 = 3527 by norm_num, mul_comm] using squarefree_3527
+        exact (hsprop 82 h82 43 (by simpa [C] using hb) this).elim
+      · simp
+      · simp
+      · exact (h70 hb).elim
+      · simp
+      · have : Squarefree (82 * 93 + 1) := by
+          simpa [show 82 * 93 + 1 = 7627 by norm_num] using squarefree_7627
+        exact (hsprop 82 h82 93 (by simpa [C] using hb) this).elim
+      · exact (h99 hb).elim
+    have hcard_eq :
+        s = ({7, 32, 57, 68, 82} : Finset ℕ) := by
+      apply Finset.eq_of_subset_of_card_le hs_sub
+      have : ({7, 32, 57, 68, 82} : Finset ℕ).card ≤ s.card := by
+        simpa [hcard] using (le_rfl : 5 ≤ 5)
+      simpa using this
+    have h32 : 32 ∈ s := by simpa [hcard_eq]
+    have h68 : 68 ∈ s := by simpa [hcard_eq]
+    have : Squarefree (32 * 68 + 1) := by
+      simpa [show 32 * 68 + 1 = 2177 by norm_num] using squarefree_2177
+    exact (hsprop 32 h32 68 h68 this).elim
+
+  -- Remaining elements: {7,32,43,57,68,93}. Any 5-subset contains a squarefree pair.
+  have hs_subR : s ⊆ ({7, 32, 43, 57, 68, 93} : Finset ℕ) := by
+    intro b hb
+    have hbC : b ∈ C := hsC hb
+    have hb_cases :
+        b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 ∨ b = 57 ∨ b = 68 ∨ b = 70 ∨ b = 82 ∨
+          b = 93 ∨ b = 99 := by
+      simpa [C, Finset.mem_insert, Finset.mem_singleton] using hbC
+    rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+    · simp
+    · exact (h18 hb).elim
+    · simp
+    · exact (h38_not hb).elim
+    · exact (h41 hb).elim
+    · simp
+    · simp
+    · simp
+    · exact (h70 hb).elim
+    · exact (h82 hb).elim
+    · simp
+    · exact (h99 hb).elim
+  by_cases h32 : 32 ∈ s
+  · by_cases h68 : 68 ∈ s
+    · have : Squarefree (32 * 68 + 1) := by
+        simpa [show 32 * 68 + 1 = 2177 by norm_num] using squarefree_2177
+      exact (hsprop 32 h32 68 h68 this).elim
+    · -- 68 ∉ s, so s = {7,32,43,57,93} and 32*93+1 is squarefree
+      have hs_sub : s ⊆ ({7, 32, 43, 57, 93} : Finset ℕ) := by
+        intro b hb
+        have hbR : b ∈ ({7, 32, 43, 57, 68, 93} : Finset ℕ) := hs_subR hb
+        have hb_ne68 : b ≠ 68 := by
+          intro hb68
+          subst hb68
+          exact (h68 hb).elim
+        simpa [Finset.mem_insert, Finset.mem_singleton, hb_ne68] using hbR
+      have hs_eq : s = ({7, 32, 43, 57, 93} : Finset ℕ) := by
+        apply Finset.eq_of_subset_of_card_le hs_sub
+        have : ({7, 32, 43, 57, 93} : Finset ℕ).card ≤ s.card := by
+          simpa [hcard] using (le_rfl : 5 ≤ 5)
+        simpa using this
+      have h93 : 93 ∈ s := by simpa [hs_eq]
+      have : Squarefree (32 * 93 + 1) := by
+        simpa [show 32 * 93 + 1 = 2977 by norm_num] using squarefree_2977
+      exact (hsprop 32 h32 93 h93 this).elim
+  · -- 32 ∉ s, so s = {7,43,57,68,93} and 7*43+1 is squarefree
+    have hs_sub : s ⊆ ({7, 43, 57, 68, 93} : Finset ℕ) := by
+      intro b hb
+      have hbR : b ∈ ({7, 32, 43, 57, 68, 93} : Finset ℕ) := hs_subR hb
+      have hb_ne32 : b ≠ 32 := by
+        intro hb32
+        subst hb32
+        exact (h32 hb).elim
+      simpa [Finset.mem_insert, Finset.mem_singleton, hb_ne32] using hbR
+    have hs_eq : s = ({7, 43, 57, 68, 93} : Finset ℕ) := by
+      apply Finset.eq_of_subset_of_card_le hs_sub
+      have : ({7, 43, 57, 68, 93} : Finset ℕ).card ≤ s.card := by
+        simpa [hcard] using (le_rfl : 5 ≤ 5)
+      simpa using this
+    have h7 : 7 ∈ s := by simpa [hs_eq]
+    have h43 : 43 ∈ s := by simpa [hs_eq]
+    have : Squarefree (7 * 43 + 1) := by
+      simpa [show 7 * 43 + 1 = 302 by norm_num] using squarefree_302
+    exact (hsprop 7 h7 43 h43 this).elim
 
 -- Main theorems for small N
 theorem problem_848_N50 :
@@ -905,7 +2445,168 @@ def offPrimesCoarse : Finset ℕ :=
 def no5PrimesCoarse : Finset ℕ :=
   (primesUpTo primeCutoff).filter (fun p => p ≠ 5)
 
--- Precomputed values (verified by Python, checked by native_decide)
+set_option maxRecDepth 20000 in
+/-- Explicit diagonal-prime list for `primeCutoff = 2000`.
+
+This is the set of primes `p ≤ 2000` with `p % 4 = 1` and `13 ≤ p`. -/
+def diagPrimesCoarse_listL : List ℕ :=
+  [
+  13, 17, 29, 37, 41, 53, 61, 73, 89, 97, 101, 109,
+  113, 137, 149, 157, 173, 181, 193, 197, 229, 233, 241, 257,
+  269, 277, 281, 293, 313, 317, 337, 349, 353, 373, 389, 397,
+  401, 409, 421, 433, 449, 457, 461, 509, 521, 541, 557, 569,
+  577, 593, 601, 613, 617, 641, 653, 661, 673, 677, 701, 709,
+  733, 757, 761, 769, 773, 797, 809, 821, 829, 853, 857, 877,
+  881, 929, 937, 941, 953, 977, 997, 1009, 1013, 1021, 1033, 1049,
+  1061, 1069, 1093, 1097, 1109, 1117, 1129, 1153, 1181, 1193, 1201, 1213,
+  1217, 1229, 1237, 1249, 1277, 1289, 1297, 1301, 1321, 1361, 1373, 1381,
+  1409, 1429, 1433, 1453, 1481, 1489, 1493, 1549, 1553, 1597, 1601, 1609,
+  1613, 1621, 1637, 1657, 1669, 1693, 1697, 1709, 1721, 1733, 1741, 1753,
+  1777, 1789, 1801, 1861, 1873, 1877, 1889, 1901, 1913, 1933, 1949, 1973,
+  1993, 1997
+  ]
+
+def diagPrimesCoarse_list : Finset ℕ :=
+  diagPrimesCoarse_listL.toFinset
+
+set_option maxRecDepth 40000 in
+/-- Explicit prime list for `primeCutoff = 2000` with `p ≠ 5`. -/
+def no5PrimesCoarse_listL : List ℕ :=
+  [
+  2, 3, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41,
+  43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
+  101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157,
+  163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227,
+  229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283,
+  293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367,
+  373, 379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439,
+  443, 449, 457, 461, 463, 467, 479, 487, 491, 499, 503, 509,
+  521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599,
+  601, 607, 613, 617, 619, 631, 641, 643, 647, 653, 659, 661,
+  673, 677, 683, 691, 701, 709, 719, 727, 733, 739, 743, 751,
+  757, 761, 769, 773, 787, 797, 809, 811, 821, 823, 827, 829,
+  839, 853, 857, 859, 863, 877, 881, 883, 887, 907, 911, 919,
+  929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997, 1009,
+  1013, 1019, 1021, 1031, 1033, 1039, 1049, 1051, 1061, 1063, 1069, 1087,
+  1091, 1093, 1097, 1103, 1109, 1117, 1123, 1129, 1151, 1153, 1163, 1171,
+  1181, 1187, 1193, 1201, 1213, 1217, 1223, 1229, 1231, 1237, 1249, 1259,
+  1277, 1279, 1283, 1289, 1291, 1297, 1301, 1303, 1307, 1319, 1321, 1327,
+  1361, 1367, 1373, 1381, 1399, 1409, 1423, 1427, 1429, 1433, 1439, 1447,
+  1451, 1453, 1459, 1471, 1481, 1483, 1487, 1489, 1493, 1499, 1511, 1523,
+  1531, 1543, 1549, 1553, 1559, 1567, 1571, 1579, 1583, 1597, 1601, 1607,
+  1609, 1613, 1619, 1621, 1627, 1637, 1657, 1663, 1667, 1669, 1693, 1697,
+  1699, 1709, 1721, 1723, 1733, 1741, 1747, 1753, 1759, 1777, 1783, 1787,
+  1789, 1801, 1811, 1823, 1831, 1847, 1861, 1867, 1871, 1873, 1877, 1879,
+  1889, 1901, 1907, 1913, 1931, 1933, 1949, 1951, 1973, 1979, 1987, 1993,
+  1997, 1999
+  ]
+
+def no5PrimesCoarse_list : Finset ℕ :=
+  no5PrimesCoarse_listL.toFinset
+
+/-!
+Computable (list-level) prime enumerations.
+
+The bottleneck is deciding finset equalities, which reduces to multiset permutation checks.
+Instead we compute *ordered lists* via kernel-friendly `Num.Prime`, prove list equality by `decide`,
+and lift to finsets via `List.toFinset`.
+-/
+
+def natToNum : ℕ → Num
+  | 0 => 0
+  | n + 1 => natToNum n + 1
+
+lemma natToNum_toNat (n : ℕ) : ((natToNum n : Num) : ℕ) = n := by
+  induction n with
+  | zero => simp [natToNum]
+  | succ n ih =>
+      simp [natToNum, ih]
+
+lemma natToNum_prime_iff (p : ℕ) : (natToNum p).Prime ↔ Nat.Prime p := by
+  simp [Num.Prime, natToNum_toNat]
+
+lemma natToNum_natPrime_iff (p : ℕ) : Nat.Prime (↑(natToNum p) : ℕ) ↔ Nat.Prime p := by
+  simpa [natToNum_toNat]
+
+def isDiagPrimeBool (p : ℕ) : Bool :=
+  decide ((natToNum p).Prime ∧ p % 4 = 1 ∧ 13 ≤ p)
+
+def isNo5PrimeBool (p : ℕ) : Bool :=
+  decide ((natToNum p).Prime ∧ p ≠ 5)
+
+def diagPrimesCoarse_computed_list : List ℕ :=
+  (List.range (primeCutoff + 1)).filter isDiagPrimeBool
+
+def no5PrimesCoarse_computed_list : List ℕ :=
+  (List.range (primeCutoff + 1)).filter isNo5PrimeBool
+
+set_option maxRecDepth 40000 in
+set_option maxHeartbeats 20000000 in
+lemma diagPrimesCoarse_computed_list_eq : diagPrimesCoarse_computed_list = diagPrimesCoarse_listL := by
+  unfold diagPrimesCoarse_computed_list diagPrimesCoarse_listL isDiagPrimeBool natToNum primeCutoff
+  decide
+
+set_option maxRecDepth 80000 in
+set_option maxHeartbeats 40000000 in
+lemma no5PrimesCoarse_computed_list_eq : no5PrimesCoarse_computed_list = no5PrimesCoarse_listL := by
+  unfold no5PrimesCoarse_computed_list no5PrimesCoarse_listL isNo5PrimeBool natToNum primeCutoff
+  decide
+
+set_option maxRecDepth 20000 in
+ /-- Kernel-friendly prime list: uses `Num.Prime` instead of `Nat.Prime`. -/
+def primesUpTo_num (B : ℕ) : Finset ℕ :=
+  (Finset.range (B + 1)).filter (fun p => (natToNum p).Prime)
+
+def diagPrimesCoarse_num : Finset ℕ :=
+  (primesUpTo_num primeCutoff).filter (fun p => p % 4 = 1 ∧ 13 ≤ p)
+
+def no5PrimesCoarse_num : Finset ℕ :=
+  (primesUpTo_num primeCutoff).filter (fun p => p ≠ 5)
+
+lemma primesUpTo_eq_num (B : ℕ) : primesUpTo B = primesUpTo_num B := by
+  classical
+  ext p
+  simp [primesUpTo, primesUpTo_num, natToNum_natPrime_iff]
+
+lemma diagPrimesCoarse_eq_num : diagPrimesCoarse = diagPrimesCoarse_num := by
+  classical
+  ext p
+  simp [diagPrimesCoarse, diagPrimesCoarse_num, primesUpTo_eq_num]
+
+lemma no5PrimesCoarse_eq_num : no5PrimesCoarse = no5PrimesCoarse_num := by
+  classical
+  ext p
+  simp [no5PrimesCoarse, no5PrimesCoarse_num, primesUpTo_eq_num]
+
+set_option maxRecDepth 20000 in
+set_option maxHeartbeats 20000000 in
+lemma diagPrimesCoarse_eq_list : diagPrimesCoarse = diagPrimesCoarse_list := by
+  have hnum : diagPrimesCoarse_num = diagPrimesCoarse_list := by
+    classical
+    have hcomp : diagPrimesCoarse_num = diagPrimesCoarse_computed_list.toFinset := by
+      ext p
+      simp [diagPrimesCoarse_num, primesUpTo_num, diagPrimesCoarse_computed_list, isDiagPrimeBool,
+        and_assoc, and_left_comm, and_comm]
+    have hlift : diagPrimesCoarse_computed_list.toFinset = diagPrimesCoarse_list := by
+      simpa [diagPrimesCoarse_list] using congrArg List.toFinset diagPrimesCoarse_computed_list_eq
+    exact hcomp.trans hlift
+  simpa [diagPrimesCoarse_eq_num] using hnum
+
+set_option maxRecDepth 20000 in
+set_option maxHeartbeats 40000000 in
+lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
+  have hnum : no5PrimesCoarse_num = no5PrimesCoarse_list := by
+    classical
+    have hcomp : no5PrimesCoarse_num = no5PrimesCoarse_computed_list.toFinset := by
+      ext p
+      simp [no5PrimesCoarse_num, primesUpTo_num, no5PrimesCoarse_computed_list, isNo5PrimeBool,
+        and_assoc, and_left_comm, and_comm]
+    have hlift : no5PrimesCoarse_computed_list.toFinset = no5PrimesCoarse_list := by
+      simpa [no5PrimesCoarse_list] using congrArg List.toFinset no5PrimesCoarse_computed_list_eq
+    exact hcomp.trans hlift
+  simpa [no5PrimesCoarse_eq_num] using hnum
+
+-- Precomputed values (verified by Python; checked below using `simp`+`norm_num`)
 def diagPrimeDen : ℕ := 675067109924022977481515022034423512130479741539843807153469481052459028449452239232681980484545751069432973665683513280116016389500052645708341506941475615768814814870158065312753645077424198983444958279911880503831858071611272341994669353872744477768603209022359280059888618077776469014358245817529542708972753086348322957228843681307207963965767547374440897724003930473524265583251046012199781767374651834379560815527295708011857396433182071977716977932488431948888643891386067228558290565991227834390721337450990589134617661285518460561497407002739052848895879304579595915925480129856478914111298702283283880166246123671142902924556816351174498397701877438338568113063768986635318468872328007108093276626460935787650985933892343902371072373911766012319899393655815824547851160252826653544514334345091072636858918139681
 
 def diagPrimeNum : ℕ := 9305610659457897442676762862705965160774002555239187280326616824765234123780557950402694941485474115851934365564701907981391869361100532018302588546527816525182066155886026230828249088321763633219652942462312124219609612722188796413697767666009124057865982064831388014566139360058830576198938347738999199604817115293773916567614816635477749647011858507377026639402635648230109093785743026065979324685919233919683228360366693877028924951436389249109634069368426189819537949188621546091565402853367547905644723070462800659946565285260706726866118982643627117971703925445170082273301522379205943743210925761931977490511577686030761597012740023119745448189583494143740813932629018217041118409757090741073742791813029359289392669630990356661277433141915142252769433037626264467619973192311414856413911733309761632824747221874
@@ -940,31 +2641,66 @@ def no5PrimeSumCoarse_fast : ℚ := no5PrimeSumCoarse
 lemma no5PrimeDen_pos : 0 < no5PrimeDen := by decide
 lemma no5PrimeSumCoarse_eq_fast : no5PrimeSumCoarse = no5PrimeSumCoarse_fast := rfl
 
-/-- The symbolic sum equals the precomputed value. Verified externally (Python/native_decide).
-    Direct computation in Lean hits recursion depth limits due to the large prime set. -/
+-- The symbolic sum equals the precomputed value.
+set_option maxRecDepth 200000 in
+set_option maxHeartbeats 20000000 in
 lemma diagPrimesCoarse_sum_eq :
     (∑ p ∈ diagPrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = diagPrimeSumCoarse := by
-  native_decide
+  rw [diagPrimesCoarse_eq_list]
+  simp (config := { maxSteps := 5000000 })
+    [diagPrimesCoarse_list, diagPrimesCoarse_listL, diagPrimeSumCoarse, diagPrimeNum, diagPrimeDen]
+  norm_num
+
+set_option maxRecDepth 400000 in
+set_option maxHeartbeats 40000000 in
+lemma no5PrimesCoarse_sum_eq :
+    (∑ p ∈ no5PrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = no5PrimeSumCoarse := by
+  rw [no5PrimesCoarse_eq_list]
+  simp (config := { maxSteps := 20000000 })
+    [no5PrimesCoarse_list, no5PrimesCoarse_listL, no5PrimeSumCoarse, no5PrimeNum, no5PrimeDen]
+  norm_num
+
+lemma offPrimeSumCoarse_eq_no5_sub :
+    offPrimeSumCoarse = no5PrimeSumCoarse - (1 : ℚ) / 4 := by
+  norm_num
+    [offPrimeSumCoarse, no5PrimeSumCoarse, offPrimeNum, offPrimeDen, no5PrimeNum, no5PrimeDen]
 
 lemma offPrimesCoarse_sum_eq :
     (∑ p ∈ offPrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = offPrimeSumCoarse := by
-  native_decide
-
-lemma no5PrimesCoarse_sum_eq :
-    (∑ p ∈ no5PrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = no5PrimeSumCoarse := by
-  native_decide
+  classical
+  let f : ℕ → ℚ := fun p => (1 : ℚ) / (p ^ 2 : ℚ)
+  have hoff : offPrimesCoarse = no5PrimesCoarse.erase 2 := by
+    ext p
+    simp [offPrimesCoarse, no5PrimesCoarse, primesUpTo, and_left_comm, and_assoc, and_comm]
+  have h2 : 2 ∈ no5PrimesCoarse := by
+    simp [no5PrimesCoarse, primesUpTo, primeCutoff, Nat.prime_two]
+  have hsum := Finset.sum_erase_add (s := no5PrimesCoarse) (a := 2) (f := f) h2
+  have hsum' := congrArg (fun x => x - f 2) hsum
+  have hsum_erase :
+      (∑ p ∈ no5PrimesCoarse.erase 2, f p) = (∑ p ∈ no5PrimesCoarse, f p) - f 2 := by
+    simpa [sub_eq_add_neg, add_assoc, add_left_comm, add_comm] using hsum'
+  have hf2 : f 2 = (1 : ℚ) / 4 := by
+    simp [f]
+    norm_num
+  rw [hoff]
+  calc
+    (∑ p ∈ no5PrimesCoarse.erase 2, f p)
+        = (∑ p ∈ no5PrimesCoarse, f p) - (1 : ℚ) / 4 := by simpa [hsum_erase, hf2]
+    _ = no5PrimeSumCoarse - (1 : ℚ) / 4 := by
+        simpa [f] using congrArg (fun x => x - (1 : ℚ) / 4) no5PrimesCoarse_sum_eq
+    _ = offPrimeSumCoarse := by
+        simpa [offPrimeSumCoarse_eq_no5_sub] using (offPrimeSumCoarse_eq_no5_sub).symm
 
 /-!
 We bound the *infinite* reciprocal-square sums by:
-1) computing primes up to `primeCutoff` exactly (via `native_decide` on `ℚ`),
+1) computing primes up to `primeCutoff` exactly,
 2) bounding the tail by `∑_{i > B} 1/i^2 ≤ 1/B`.
 -/
 
 lemma diagPrimeSumCoarse_bound :
     diagPrimeSumCoarse + (1 : ℚ) / primeCutoff ≤ (1 : ℚ) / 70 := by
-  -- Key numerical inequality verified by native_decide
   have hNat : 70 * (diagPrimeNum * primeCutoff + diagPrimeDen) ≤ diagPrimeDen * primeCutoff := by
-    native_decide
+    norm_num [primeCutoff, diagPrimeNum, diagPrimeDen]
   have hD_pos : (0 : ℚ) < diagPrimeDen := Nat.cast_pos.mpr diagPrimeDen_pos
   have hB_pos : (0 : ℚ) < primeCutoff := Nat.cast_pos.mpr primeCutoff_pos
   have hD_ne : (diagPrimeDen : ℚ) ≠ 0 := ne_of_gt hD_pos
@@ -983,9 +2719,8 @@ lemma diagPrimeSumCoarse_bound :
 
 lemma offPrimeSumCoarse_bound :
     offPrimeSumCoarse + (1 : ℚ) / primeCutoff ≤ (163 : ℚ) / 1000 := by
-  -- Key numerical inequality verified by native_decide
   have hNat : 1000 * (offPrimeNum * primeCutoff + offPrimeDen) ≤ 163 * (offPrimeDen * primeCutoff) := by
-    native_decide
+    norm_num [primeCutoff, offPrimeNum, offPrimeDen]
   have hD_pos : (0 : ℚ) < offPrimeDen := Nat.cast_pos.mpr offPrimeDen_pos
   have hB_pos : (0 : ℚ) < primeCutoff := Nat.cast_pos.mpr primeCutoff_pos
   have hD_ne : (offPrimeDen : ℚ) ≠ 0 := ne_of_gt hD_pos
@@ -1004,9 +2739,8 @@ lemma offPrimeSumCoarse_bound :
 
 lemma no5PrimeSumCoarse_bound :
     no5PrimeSumCoarse + (1 : ℚ) / primeCutoff ≤ (413 : ℚ) / 1000 := by
-  -- Key numerical inequality verified by native_decide
   have hNat : 1000 * (no5PrimeNum * primeCutoff + no5PrimeDen) ≤ 413 * (no5PrimeDen * primeCutoff) := by
-    native_decide
+    norm_num [primeCutoff, no5PrimeNum, no5PrimeDen]
   have hD_pos : (0 : ℚ) < no5PrimeDen := Nat.cast_pos.mpr no5PrimeDen_pos
   have hB_pos : (0 : ℚ) < primeCutoff := Nat.cast_pos.mpr primeCutoff_pos
   have hD_ne : (no5PrimeDen : ℚ) ≠ 0 := ne_of_gt hD_pos
@@ -1245,13 +2979,13 @@ def residues25 : Finset ℕ :=
   (Finset.range 25).filter (fun t => t ≠ 7 ∧ t ≠ 18)
 
 lemma residues25_card : residues25.card = 23 := by
-  native_decide
+  decide
 
 def residues50odd : Finset ℕ :=
   (Finset.range 50).filter (fun t => t % 2 = 1 ∧ t % 25 ≠ 7 ∧ t % 25 ≠ 18)
 
 lemma residues50odd_card : residues50odd.card = 23 := by
-  native_decide
+  decide
 
 lemma primesUpTo_card (B : ℕ) : (primesUpTo B).card = B.primeCounting := by
   classical
@@ -1280,7 +3014,7 @@ lemma coprime_25_pow_two_of_prime_ne5 (p : ℕ) (hp : Nat.Prime p) (hp5 : p ≠ 
   have hnot : ¬ p ∣ 25 := by
     intro h
     have hpow : p ∣ 5 ^ 2 := by
-      have : (5 ^ 2 : ℕ) = 25 := by native_decide
+      have : (5 ^ 2 : ℕ) = 25 := by rfl
       simpa [this] using h
     have h5 : p ∣ 5 := hp.dvd_of_dvd_pow hpow
     exact hp5 (prime_eq_of_dvd_5 p hp h5)
@@ -1291,11 +3025,11 @@ lemma coprime_100_pow_two_of_prime_ne2_ne5 (p : ℕ) (hp : Nat.Prime p) (hp2 : p
   have hnot : ¬ p ∣ 100 := by
     intro h
     have hpow : p ∣ 10 ^ 2 := by
-      have : (10 ^ 2 : ℕ) = 100 := by native_decide
+      have : (10 ^ 2 : ℕ) = 100 := by rfl
       simpa [this] using h
     have h10 : p ∣ 10 := hp.dvd_of_dvd_pow hpow
     have hmul : p ∣ 2 ∨ p ∣ 5 := by
-      have : 10 = 2 * 5 := by native_decide
+      have : 10 = 2 * 5 := by rfl
       simpa [this] using (hp.dvd_mul.1 (by simpa [this] using h10))
     cases hmul with
     | inl h2 => exact hp2 (prime_eq_of_dvd_2 p hp h2)
@@ -1381,7 +3115,7 @@ lemma cross_residue_7_18_not_div_25 (a b : ℕ) (ha : a % 25 = 7) (hb : b % 25 =
     have : (a : ZMod 25) * (b : ZMod 25) + 1 = 0 := by
       simpa [Nat.cast_add, Nat.cast_mul, Nat.cast_one] using h0
     simpa [haZ, hbZ] using this
-  have hneq : (7 : ZMod 25) * (18 : ZMod 25) + 1 ≠ 0 := by native_decide
+  have hneq : (7 : ZMod 25) * (18 : ZMod 25) + 1 ≠ 0 := by decide
   exact (hneq hab).elim
 
 lemma cross_residue_18_7_not_div_25 (a b : ℕ) (ha : a % 25 = 18) (hb : b % 25 = 7) :
@@ -1516,57 +3250,6 @@ lemma off_count_modEq100_le' (N p b t25 t4 : ℕ) (hp : Nat.Prime p) (hp2 : p �
 -- SECTION 9.9: SMALL MODULAR FACTS (proved by computation)
 -- =========================================================================
 
-lemma zmod25_sq_eq_neg_one_iff :
-    ∀ x : ZMod 25, x ^ 2 = (-1 : ZMod 25) ↔ x = (7 : ZMod 25) ∨ x = (18 : ZMod 25) := by
-  native_decide
-
-lemma mod25_eq_7_or_18_of_dvd_sq_add_one {n : ℕ} (h : 25 ∣ n ^ 2 + 1) :
-    n % 25 = 7 ∨ n % 25 = 18 := by
-  have h0 : ((n ^ 2 + 1 : ℕ) : ZMod 25) = 0 :=
-    (ZMod.natCast_eq_zero_iff (n ^ 2 + 1) 25).2 h
-  have hsq : (n : ZMod 25) ^ 2 = (-1 : ZMod 25) := by
-    have : (n : ZMod 25) ^ 2 + 1 = 0 := by
-      simpa [Nat.cast_add, Nat.cast_pow, Nat.cast_one] using h0
-    simpa using (eq_neg_of_add_eq_zero_left this)
-  have hx : (n : ZMod 25) = (7 : ZMod 25) ∨ (n : ZMod 25) = (18 : ZMod 25) :=
-    (zmod25_sq_eq_neg_one_iff (n : ZMod 25)).1 hsq
-  cases hx with
-  | inl h7 =>
-      left
-      have hn : n % 25 = 7 % 25 := (ZMod.natCast_eq_natCast_iff' n 7 25).1 h7
-      simpa [Nat.mod_eq_of_lt (by decide : 7 < 25)] using hn
-  | inr h18 =>
-      right
-      have hn : n % 25 = 18 % 25 := (ZMod.natCast_eq_natCast_iff' n 18 25).1 h18
-      simpa [Nat.mod_eq_of_lt (by decide : 18 < 25)] using hn
-
-lemma not_dvd_25_sq_add_one_of_mod_ne (n : ℕ) (h : n % 25 ≠ 7 ∧ n % 25 ≠ 18) :
-    ¬ (25 ∣ n ^ 2 + 1) := by
-  intro h25
-  have := mod25_eq_7_or_18_of_dvd_sq_add_one (n := n) h25
-  cases this with
-  | inl h7 => exact h.1 h7
-  | inr h18 => exact h.2 h18
-
-lemma not_dvd_four_sq_add_one (n : ℕ) : ¬ (4 ∣ n ^ 2 + 1) := by
-  intro h4
-  have hmod : (n ^ 2 + 1) % 4 = 0 := Nat.mod_eq_zero_of_dvd h4
-  have hrewrite : (n ^ 2 + 1) % 4 = ((n % 4) ^ 2 + 1) % 4 := by
-    -- reduce everything to `n % 4`
-    calc
-      (n ^ 2 + 1) % 4 = (n ^ 2 % 4 + 1 % 4) % 4 := by
-        simpa [Nat.add_mod] using (Nat.add_mod (n ^ 2) 1 4).symm
-      _ = (((n % 4) ^ 2 % 4) + 1) % 4 := by
-        simp [Nat.pow_mod]
-      _ = ((n % 4) ^ 2 + 1) % 4 := by
-        simp [Nat.add_mod]
-  have hmod' : ((n % 4) ^ 2 + 1) % 4 = 0 := by simpa [hrewrite] using hmod
-  have hn4 : n % 4 ≤ 3 := by
-    have hn4lt : n % 4 < 4 := Nat.mod_lt n (by decide : 0 < 4)
-    have : n % 4 < 3 + 1 := by simpa using hn4lt
-    exact (Nat.lt_succ_iff).1 this
-  interval_cases hcase : n % 4 <;> simp [hcase] at hmod'
-
 lemma prime_ge_13_of_mod4_one_ne5 (p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) (hp5 : p ≠ 5) :
     13 ≤ p := by
   have hp_ge2 : 2 ≤ p := hp.two_le
@@ -1593,14 +3276,14 @@ lemma coprime_50_pow_two_of_prime_ne2_ne5 (p : ℕ) (hp : Nat.Prime p) (hp2 : p 
   have hnot : ¬ p ∣ 50 := by
     intro h
     have hmul : p ∣ 2 * 25 := by
-      have : 2 * 25 = 50 := by native_decide
+      have : 2 * 25 = 50 := by rfl
       simpa [this] using h
     have hdiv : p ∣ 2 ∨ p ∣ 25 := hp.dvd_mul.1 hmul
     cases hdiv with
     | inl h2 => exact hp2 (prime_eq_of_dvd_2 p hp h2)
     | inr h25 =>
         have hpow : p ∣ 5 ^ 2 := by
-          have : (5 ^ 2 : ℕ) = 25 := by native_decide
+          have : (5 ^ 2 : ℕ) = 25 := by rfl
           simpa [this] using h25
         have h5 : p ∣ 5 := hp.dvd_of_dvd_pow hpow
         exact hp5 (prime_eq_of_dvd_5 p hp h5)
@@ -1767,7 +3450,7 @@ lemma diag_count_mod25_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 =
   have hconst :
       (∑ _t ∈ residues25, 2 * (N / (25 * p ^ 2) + 1)) = 46 * (N / (25 * p ^ 2) + 1) := by
     classical
-    have h46 : (46 : ℕ) = 23 * 2 := by native_decide
+    have h46 : (46 : ℕ) = 23 * 2 := by rfl
     calc
       (∑ _t ∈ residues25, 2 * (N / (25 * p ^ 2) + 1)) = residues25.card * (2 * (N / (25 * p ^ 2) + 1)) := by
         simp
@@ -1795,16 +3478,16 @@ lemma diag_count_mod50odd_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 
       have htlt : t < 50 := Nat.mod_lt n (by decide : 0 < 50)
       have htodd : t % 2 = 1 := by
         have : (n % 50) % 2 = n % 2 := by
-          simpa [show 50 = 25 * 2 by native_decide] using Nat.mod_mul_left_mod n 25 2
+          simpa [show 50 = 25 * 2 by rfl] using Nat.mod_mul_left_mod n 25 2
         simpa [t, this] using hn.2.1
       have htne7 : t % 25 ≠ 7 := by
         have : (n % 50) % 25 = n % 25 := by
-          simpa [show 50 = 25 * 2 by native_decide] using Nat.mod_mul_right_mod n 25 2
+          simpa [show 50 = 25 * 2 by rfl] using Nat.mod_mul_right_mod n 25 2
         have hnne7 : n % 25 ≠ 7 := hn.2.2.1
         simpa [t, this] using hnne7
       have htne18 : t % 25 ≠ 18 := by
         have : (n % 50) % 25 = n % 25 := by
-          simpa [show 50 = 25 * 2 by native_decide] using Nat.mod_mul_right_mod n 25 2
+          simpa [show 50 = 25 * 2 by rfl] using Nat.mod_mul_right_mod n 25 2
         have hnne18 : n % 25 ≠ 18 := hn.2.2.2.1
         simpa [t, this] using hnne18
       refine Finset.mem_filter.2 ?_
@@ -1838,7 +3521,7 @@ lemma diag_count_mod50odd_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 
   have hconst :
       (∑ _t ∈ residues50odd, 2 * (N / (50 * p ^ 2) + 1)) = 46 * (N / (50 * p ^ 2) + 1) := by
     classical
-    have h46 : (46 : ℕ) = 23 * 2 := by native_decide
+    have h46 : (46 : ℕ) = 23 * 2 := by rfl
     calc
       (∑ _t ∈ residues50odd, 2 * (N / (50 * p ^ 2) + 1)) = residues50odd.card * (2 * (N / (50 * p ^ 2) + 1)) := by
         simp
@@ -3884,4 +5567,4 @@ theorem problem_848_statement_100 : Problem848Statement 100 := problem_848_N100
 theorem problem_848_resolved : ∃ N₀ : ℕ, ∀ N ≥ N₀, Problem848Statement N :=
   problem_848_resolved_up_to_finite_check_of_sawhney sawhney_main
 
-end Erdos.Problem848_workbench
+end Erdos.Problem848
