@@ -1,8 +1,8 @@
 # Problem 848 Refactor Notes (Presentation + SSOT)
 
 **Date:** 2026-01-29
-**Last Updated:** 2026-01-29 22:00 PST (GPT cleanup in progress ~3.5 hours)
-**Status:** 🔄 REFACTOR IN PROGRESS — GPT agent cleaning up linter warnings
+**Last Updated:** 2026-01-30 (structural refactoring — density bound extraction)
+**Status:** 🔄 REFACTOR IN PROGRESS — Extracting repeated density bound patterns
 **Scope:** This document is the SSOT for the **Problem 848 Lean formalization**.
 
 ---
@@ -73,6 +73,8 @@ lake build Erdos.Problem848_workbench  # ERROR: no such file
 
 ## Progress Tracking (GPT Agent)
 
+### Phase 1: Linter Cleanup (COMPLETED)
+
 | Metric | Original | Final | Progress |
 |--------|----------|-------|----------|
 | Build errors | 0 | 0 | ✅ Maintained |
@@ -81,6 +83,19 @@ lake build Erdos.Problem848_workbench  # ERROR: no such file
 | Deprecated APIs | 1 | **0** | ✅ **100% fixed** |
 | `simpa` count | 542 | 505 | ✅ 37 safely removed (7%) |
 | Time elapsed | — | ~10 hours | Completed |
+
+### Phase 2: Structural Refactoring (IN PROGRESS)
+
+| Metric | Before | Current | Progress |
+|--------|--------|---------|----------|
+| Total lines | 5594 | **5476** | ✅ **-118 lines (-2.1%)** |
+| `card_biUnion_le` calls | 18 | **11** | ✅ 7 deduplicated |
+| Helper lemma usages | 0 | **9** | ✅ 1 def + 8 call sites |
+| `simpa` count | 505 | **498** | ✅ 7 more removed |
+
+**New helper added:** `residue_class_card_bound_of_subset` at line 3623
+- Factors the repeated "subset → biUnion → card_biUnion_le → sum_div_add_one_le → primesUpTo_card" chain
+- Replaced 8 duplicated ~25-line blocks with single-line calls
 
 ### ✅ BUILD STATUS (as of 2026-01-30 — VERIFIED)
 
@@ -237,18 +252,18 @@ Non-behavioral changes for code cleanliness:
 - [x] Fix deprecated API (`exists_ne_of_one_lt_card` → `exists_mem_ne`) — **DONE**
 - [x] Remove unused simp arguments — **DONE** (all flagged args removed)
 
-### 🔲 REMAINING STRUCTURAL DEBT (Lower Priority)
+### 🔄 REMAINING STRUCTURAL DEBT (In Progress)
 
 These are NOT linter issues — they're structural improvements for Mathlib submission:
 
-| Debt | Current State | Ideal State | Priority |
-|------|---------------|-------------|----------|
-| **maxHeartbeats** | 13 occurrences, up to 40,000,000 | ≤200,000 per Mathlib style | LOW |
-| **Repeated density bounds** | 11 duplicates of `hA7_bound`/`hA18_bound` | Extract to helper lemma | LOW |
-| **Monolithic theorem** | `sawhney_main` is 2000+ lines | Break into 10-15 composable lemmas | LOW |
-| **Computation isolation** | Heavy prime sums mixed with proof | Separate `PrimeSums.lean` file | LOW |
+| Debt | Current State | Ideal State | Priority | Status |
+|------|---------------|-------------|----------|--------|
+| **Repeated density bounds** | 11→**3 remaining** | Extract to helper lemma | HIGH | 🔄 **8/11 done** |
+| **maxHeartbeats** | 13 occurrences, up to 40,000,000 | ≤200,000 per Mathlib style | LOW | 🔲 Not started |
+| **Monolithic theorem** | `sawhney_main` is 2000+ lines | Break into 10-15 composable lemmas | LOW | 🔲 Not started |
+| **Computation isolation** | Heavy prime sums mixed with proof | Separate `PrimeSums.lean` file | LOW | 🔲 Not started |
 
-**Recommendation:** This structural debt is acceptable for a standalone proof. Only address if preparing for Mathlib submission.
+**Current focus:** Completing density bound extraction (3 more call sites to convert).
 
 ### 🔲 TODO — Linter Warnings
 
@@ -291,13 +306,14 @@ These simp lists have args that don't contribute — remove them:
 | ~1934 | `'decide' tactic does nothing` — remove trailing `decide` |
 | ~1934 | `this tactic is never executed` — unreachable branch |
 
-### 🔲 TODO — Structural (Lower Priority)
+### 🔄 TODO — Structural (In Progress)
 
-- [ ] Extract repeated `hA7_bound`/`hA18_bound` patterns to helper lemma (5+ duplicates)
+- [x] Extract repeated `hA7_bound`/`hA18_bound` patterns to helper lemma — **8/11 DONE** via `residue_class_card_bound_of_subset`
+- [ ] Complete remaining 3 density bound extractions
 - [ ] Consider grouping heavy-computation sections with shared `set_option` block
 - [ ] Move `open Filter Finset` (line 2428) to header with other opens
 
-**Priority:** LOW — The file builds and proves the theorem. Cleanup is for presentation only.
+**Priority:** MEDIUM — Active refactoring in progress.
 
 ---
 
@@ -442,7 +458,7 @@ From [Mathlib Style Guide](https://leanprover-community.github.io/contribute/sty
 
 ## Summary (2026-01-30)
 
-**Mission accomplished.** The GPT agent successfully cleaned up `Problem848_REFACTOR.lean`:
+### Phase 1: Linter Cleanup ✅ COMPLETE
 
 | Before | After |
 |--------|-------|
@@ -455,4 +471,14 @@ From [Mathlib Style Guide](https://leanprover-community.github.io/contribute/sty
 **Approach:** Iterative small changes with verification after each batch
 **Key learning:** `simpa` ≠ `simp` — agent learned this the hard way and recovered
 
-The file is now **linter-clean** and ready for use. Structural debt remains but is acceptable for standalone deployment.
+### Phase 2: Structural Refactoring 🔄 IN PROGRESS
+
+| Metric | Start | Current | Target |
+|--------|-------|---------|--------|
+| Total lines | 5594 | **5476** | ~5200 (est.) |
+| Duplicated density blocks | 11 | **3** | 0 |
+| Helper lemma calls | 0 | **8** | ~11 |
+
+**Approach:** Extract `residue_class_card_bound_of_subset` helper, replace duplicates one-by-one with build verification.
+
+**Current status:** 8 of 11 density bound blocks converted. ~3 remaining.
