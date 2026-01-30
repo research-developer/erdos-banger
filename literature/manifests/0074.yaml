@@ -235,17 +235,9 @@ entries:
 - cache_hash: 9a24b6c9339d96ae0f4fa14d45da4d41c464eddc0fee8e737499c37103073e0e
   cache_path: literature/cache/arxiv/0905.2527/source.tar.gz
   cached: true
-  error: 'Extraction failed: file could not be opened successfully:
-
-    - method gz: ReadError(''invalid header'')
-
-    - method bz2: ReadError(''not a bzip2 file'')
-
-    - method xz: ReadError(''not an lzma file'')
-
-    - method tar: ReadError(''invalid header'')'
-  extract_path: null
-  extracted: false
+  error: null
+  extract_path: literature/extracts/arxiv/0905.2527/fulltext.txt
+  extracted: true
   ingested_at: '2026-01-30T23:06:04.100742Z'
   lead_id: null
   reference:
