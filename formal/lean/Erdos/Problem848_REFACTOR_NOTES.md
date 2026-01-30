@@ -93,9 +93,27 @@ lake build Erdos.Problem848_workbench  # ERROR: no such file
 | Helper lemma usages | 0 | **9** | ✅ 1 def + 8 call sites |
 | `simpa` count | 505 | **498** | ✅ 7 more removed |
 
-**New helper added:** `residue_class_card_bound_of_subset` at line 3623
-- Factors the repeated "subset → biUnion → card_biUnion_le → sum_div_add_one_le → primesUpTo_card" chain
-- Replaced 8 duplicated ~25-line blocks with single-line calls
+#### Two Distinct Patterns Identified
+
+**Pattern A: Mod 25 density bounds** — ✅ COMPLETE
+- Helper: `residue_class_card_bound_of_subset` at line ~3623
+- Uses: `off_count_modEq25_le'` (line 3154)
+- Status: **8/8 blocks replaced**
+
+**Pattern B: Mod 100 density bounds** — 🔄 IN PROGRESS
+- Helper needed: `residue_class_card_bound100_of_subset` (not yet created)
+- Uses: `off_count_modEq100_le'` (line 3228)
+- Remaining blocks at lines: **5070, 5148, 5295, 5369**
+- Status: **0/4 blocks replaced**
+
+**Why two helpers?** The mod 100 pattern has different signature:
+```lean
+-- Mod 25 (done):
+off_count_modEq25_le' N p b t hp hp5        -- t is residue mod 25
+
+-- Mod 100 (needs new helper):
+off_count_modEq100_le' N p b t25 t4 hp hp2 hp5  -- t25 mod 25, t4 mod 4, excludes p=2
+```
 
 ### ✅ BUILD STATUS (as of 2026-01-30 — VERIFIED)
 
@@ -258,12 +276,13 @@ These are NOT linter issues — they're structural improvements for Mathlib subm
 
 | Debt | Current State | Ideal State | Priority | Status |
 |------|---------------|-------------|----------|--------|
-| **Repeated density bounds** | 11→**3 remaining** | Extract to helper lemma | HIGH | 🔄 **8/11 done** |
+| **Mod 25 density bounds** | 8 blocks | Extract to helper | HIGH | ✅ **8/8 done** |
+| **Mod 100 density bounds** | 4 blocks at lines 5070, 5148, 5295, 5369 | Extract to 2nd helper | HIGH | 🔄 **0/4 done** |
 | **maxHeartbeats** | 13 occurrences, up to 40,000,000 | ≤200,000 per Mathlib style | LOW | 🔲 Not started |
 | **Monolithic theorem** | `sawhney_main` is 2000+ lines | Break into 10-15 composable lemmas | LOW | 🔲 Not started |
 | **Computation isolation** | Heavy prime sums mixed with proof | Separate `PrimeSums.lean` file | LOW | 🔲 Not started |
 
-**Current focus:** Completing density bound extraction (3 more call sites to convert).
+**Current focus:** Create `residue_class_card_bound100_of_subset` helper for mod 100 pattern, then replace 4 remaining blocks.
 
 ### 🔲 TODO — Linter Warnings
 
@@ -308,8 +327,12 @@ These simp lists have args that don't contribute — remove them:
 
 ### 🔄 TODO — Structural (In Progress)
 
-- [x] Extract repeated `hA7_bound`/`hA18_bound` patterns to helper lemma — **8/11 DONE** via `residue_class_card_bound_of_subset`
-- [ ] Complete remaining 3 density bound extractions
+**Density Bound Extraction:**
+- [x] Extract mod 25 density bounds — **8/8 DONE** via `residue_class_card_bound_of_subset` (line ~3623)
+- [ ] Create `residue_class_card_bound100_of_subset` helper for mod 100 pattern
+- [ ] Replace 4 mod 100 blocks (lines 5070, 5148, 5295, 5369) with new helper
+
+**Other Cleanup:**
 - [ ] Consider grouping heavy-computation sections with shared `set_option` block
 - [ ] Move `open Filter Finset` (line 2428) to header with other opens
 
@@ -473,12 +496,18 @@ From [Mathlib Style Guide](https://leanprover-community.github.io/contribute/sty
 
 ### Phase 2: Structural Refactoring 🔄 IN PROGRESS
 
+| Pattern | Blocks | Replaced | Remaining | Helper |
+|---------|--------|----------|-----------|--------|
+| Mod 25 | 8 | **8** | 0 ✅ | `residue_class_card_bound_of_subset` |
+| Mod 100 | 4 | 0 | **4** | Needs new helper |
+| **Total** | 12 | **8** | **4** | — |
+
 | Metric | Start | Current | Target |
 |--------|-------|---------|--------|
 | Total lines | 5594 | **5476** | ~5200 (est.) |
-| Duplicated density blocks | 11 | **3** | 0 |
-| Helper lemma calls | 0 | **8** | ~11 |
 
-**Approach:** Extract `residue_class_card_bound_of_subset` helper, replace duplicates one-by-one with build verification.
+**Approach:** Extract helpers for each pattern, replace duplicates one-by-one with build verification.
 
-**Current status:** 8 of 11 density bound blocks converted. ~3 remaining.
+**Current status:**
+- Mod 25 pattern: ✅ COMPLETE (8/8)
+- Mod 100 pattern: 🔄 Need to create `residue_class_card_bound100_of_subset` helper, then replace 4 blocks at lines 5070, 5148, 5295, 5369
