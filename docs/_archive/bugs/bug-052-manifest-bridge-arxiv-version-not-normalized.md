@@ -100,4 +100,4 @@ Should we:
 ## Related
 
 - SPEC-036: Lead Enrichment Pipeline
-- arXiv ID format: https://info.arxiv.org/help/arxiv_identifier_for_services.html
+- arXiv ID format: <https://info.arxiv.org/help/arxiv_identifier_for_services.html>

@@ -120,7 +120,8 @@ Build completed successfully (2755 jobs).
 ### Verification Commands
 
 ```bash
-cd /Users/ray/Desktop/CLARITY-DIGITAL-TWIN/erdos-banger/formal/lean
+# From repo root:
+cd formal/lean
 source ~/.elan/env
 
 # Build REFACTOR (note: uses FILENAME not namespace)

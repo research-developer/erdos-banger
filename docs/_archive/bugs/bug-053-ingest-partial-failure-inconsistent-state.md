@@ -61,6 +61,7 @@ for result in results:
 ## Recommended Fix
 
 Option 1: **Report partial failure in exit code and output**
+
 ```python
 failed_updates = 0
 for result in results:

@@ -9,10 +9,10 @@
 
 Two modules exceed LOC thresholds due to SPEC-036 lead enrichment pipeline implementation:
 
-| Module | Actual | Limit | Over |
-|--------|--------|-------|------|
-| `lead.py` | 520 | 400 | +120 |
-| `store_fs.py` | 503 | 500 | +3 |
+| Module         | Actual | Limit | Over |
+| -------------- | ------ | ----- | ---- |
+| `lead.py`      | 520    | 400   | +120 |
+| `store_fs.py`  | 503    | 500   | +3   |
 
 ## Justification for Exemption
 

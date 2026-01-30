@@ -113,8 +113,11 @@ def _validate_repo_url(url: str) -> tuple[bool, str | None]:  # noqa: PLR0911
     Note:
         Uses early returns for security validation clarity (noqa: PLR0911).
     """
-    # Early rejection of non-HTTPS
-    if not url.startswith("https://"):
+    # Normalize input (strip whitespace, case-insensitive protocol check)
+    url = url.strip()
+
+    # Early rejection of non-HTTPS (case-insensitive)
+    if not url.lower().startswith("https://"):
         return False, "Only HTTPS URLs are allowed"
 
     try:
@@ -122,8 +125,8 @@ def _validate_repo_url(url: str) -> tuple[bool, str | None]:  # noqa: PLR0911
     except ValueError as e:
         return False, f"Invalid URL format: {e}"
 
-    # Validate scheme and host
-    if parsed.scheme != "https" or not parsed.hostname:
+    # Validate scheme and host (case-insensitive)
+    if parsed.scheme.lower() != "https" or not parsed.hostname:
         return False, "URL must have a valid HTTPS host"
 
     # Reject embedded credentials (security risk)

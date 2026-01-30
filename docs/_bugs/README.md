@@ -22,12 +22,6 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 |----|-------|----------|--------|-----------|
 | BUG-039 | Ingest cannot discover papers - only fetches pre-defined refs | P2 | Phase 1 Fixed | `erdos ingest` |
 | BUG-047 | PDF converter thread-unsafe env mutation | P1 | Open | `erdos convert` |
-| BUG-048 | Subprocess calls missing timeouts | P2 | Fixed | `erdos sync` |
-| BUG-049 | Aristotle CLI integration friction | P2 | Fixed | `erdos lean prove` |
-| BUG-050 | Enrichment `with_identifiers` stat wrong when leads already enriched | P1 | Fixed (b5497d4) | `erdos research lead enrich` |
-| BUG-051 | ManifestBridge DOI comparison is case-sensitive | P2 | Fixed (b5497d4) | `erdos research lead ingest` |
-| BUG-052 | ManifestBridge does not normalize arXiv version suffixes | P2 | Fixed (b5497d4) | `erdos research lead ingest` |
-| BUG-053 | Lead ingest partial failure creates inconsistent state | P2 | Fixed | `erdos research lead ingest` |
 
 **Note:** BUG-039 core workflow (`erdos refs add` + `erdos ingest`) works. Remaining phases (auto-discovery) are feature requests tracked in DEBT-110.
 
@@ -60,7 +54,7 @@ cat literature/extracts/arxiv/2511.16072/fulltext.txt # Extracted LaTeX
 **Feature Requests (not bugs):**
 - DEBT-110 Phase 2/3: Auto-discovery mode (`--discover`, `--search`)
 
-**SPEC-036 Lead Enrichment Pipeline:** IMPLEMENTED (BUG-050/051/052 fixed; BUG-053 open)
+**SPEC-036 Lead Enrichment Pipeline:** IMPLEMENTED (BUG-050/051/052/053 fixed)
 
 **Impact:** Manual workflow is complete. Auto-discovery is a future enhancement.
 
@@ -113,6 +107,12 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-043 | pdfplumber not installed | N/A | Invalidated | f5557d7 |
 | BUG-045 | literature/papers/ not gitignored | P3 | Fixed | f5557d7 |
 | BUG-046 | `erdos lean` command crashes | N/A | Invalidated | 1ed768b |
+| BUG-048 | Subprocess calls missing timeouts | P2 | Fixed | PR#43 |
+| BUG-049 | Aristotle CLI integration friction | P2 | Fixed | PR#43 |
+| BUG-050 | Enrichment `with_identifiers` stat wrong | P1 | Fixed | b5497d4 |
+| BUG-051 | ManifestBridge DOI case-sensitive | P2 | Fixed | b5497d4 |
+| BUG-052 | ManifestBridge arXiv version not normalized | P2 | Fixed | b5497d4 |
+| BUG-053 | Lead ingest partial failure inconsistent state | P2 | Fixed | PR#43 |
 
 *Naming: GH-XXX = also tracked on GitHub Issues. BUG-XXX = local docs only. Both systems maintained in parallel.*
 
@@ -122,7 +122,6 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 
 - `docs/_bugs/bug-039-ingest-no-search-discovery.md` (BUG-039) - Phase 1 Fixed
 - `docs/_bugs/bug-047-pdf-converter-thread-unsafe-env.md` (BUG-047) - Open
-- `docs/_bugs/bug-053-ingest-partial-failure-inconsistent-state.md` (BUG-053) - Fixed
 
 ### Archived Bug Decks
 
@@ -182,6 +181,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_archive/bugs/bug-050-enrichment-with-identifiers-stat-wrong.md`
 - `docs/_archive/bugs/bug-051-manifest-bridge-doi-case-sensitive.md`
 - `docs/_archive/bugs/bug-052-manifest-bridge-arxiv-version-not-normalized.md`
+- `docs/_archive/bugs/bug-053-ingest-partial-failure-inconsistent-state.md`
 
 ## Bug Priority Definitions
 

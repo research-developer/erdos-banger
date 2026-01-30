@@ -825,7 +825,7 @@ def enrich_leads(self, leads, *, force=False, delay: float = 1.0):
 
 **arXiv ID overlap analysis:**
 
-```
+```text
 Manifest arXiv IDs:     Leads arXiv IDs:           Dedup?
 1902.08177             1902.08177                  ⚠️ DUPLICATE
 1306.5167              1306.5167                   ⚠️ DUPLICATE

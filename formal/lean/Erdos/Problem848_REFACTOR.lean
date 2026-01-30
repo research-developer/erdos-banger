@@ -64,7 +64,7 @@ open scoped Finset
 open scoped Nat.Prime
 
 
-namespace Erdos.Problem848_workbench
+namespace Erdos.Problem848_REFACTOR
 
 -- ============================================================================
 -- SECTION 1: CORE DEFINITIONS
@@ -5565,4 +5565,4 @@ theorem problem_848_statement_100 : Problem848Statement 100 := problem_848_N100
 theorem problem_848_resolved : ∃ N₀ : ℕ, ∀ N ≥ N₀, Problem848Statement N :=
   problem_848_resolved_up_to_finite_check_of_sawhney sawhney_main
 
-end Erdos.Problem848_workbench
+end Erdos.Problem848_REFACTOR

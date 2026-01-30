@@ -11,7 +11,7 @@
 
 The `ManifestBridge.ingest_lead()` method performs case-sensitive DOI comparison, which can lead to duplicate entries when the same DOI appears with different cases (e.g., `10.1234/TEST` vs `10.1234/test`).
 
-DOIs are case-insensitive by specification (https://www.doi.org/doi_handbook/2_Numbering.html#2.4).
+DOIs are case-insensitive by specification ([DOI Handbook 2.4](https://www.doi.org/doi_handbook/2_Numbering.html#2.4)).
 
 ## Steps to Reproduce
 

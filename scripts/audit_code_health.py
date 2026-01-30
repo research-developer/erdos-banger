@@ -41,7 +41,10 @@ FUNCTION_LOC_THRESHOLD = 120
 # Known exemptions paired with debt decks (module -> debt ID).
 # These files are tracked for refactoring and should not trigger CI failures.
 # NOTE: Keep this list small. Prefer reducing modules below thresholds.
-EXEMPTED_MODULES: dict[str, str] = {}
+EXEMPTED_MODULES: dict[str, str] = {
+    # Security: URL validation added for DEBT-118 (defense-in-depth)
+    "src/erdos/core/sync/proofs.py": "DEBT-118",
+}
 
 # Known exemptions for long functions paired with debt decks
 # Note: Typer command functions are long due to option declarations + docstrings,
@@ -53,6 +56,8 @@ EXEMPTED_FUNCTIONS: dict[tuple[str, str], str] = {
     ("src/erdos/commands/loop.py", "run"): "DEBT-065",  # 145 LOC, ~37 LOC logic
     # LEGITIMATE DEBT: Linear orchestration (acceptable pattern)
     ("src/erdos/core/ingest/service.py", "ingest_problem_references"): "DEBT-050",
+    # SPEC-036 lead enrichment pipeline
+    ("src/erdos/commands/research/lead.py", "lead_ingest"): "DEBT-119",  # 124 LOC
 }
 
 
