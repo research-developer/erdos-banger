@@ -98,11 +98,8 @@ The set of minimum edge distances to bipartite for subgraphs of size `n` is boun
 A graph on `n` vertices has at most `n choose 2` edges, and deleting all of them
 makes the graph bipartite, providing a straightforward upper bound.
 -/
-theorem SimpleGraph.subgraphEdgeDistsToBipartite_bddAbove (G : SimpleGraph V) (n : ℕ) :
-    BddAbove (SimpleGraph.subgraphEdgeDistsToBipartite G n) := by
-  use n.choose 2
-  simp only [upperBounds, Set.mem_setOf_eq, SimpleGraph.subgraphEdgeDistsToBipartite,
-    SimpleGraph.minEdgeDistToBipartite, SimpleGraph.edgeDistancesToBipartite]
+theorem SimpleGraph.subgraphEdgeDistsToBipartite_le_choose_two (G : SimpleGraph V) (n : ℕ) :
+    ∀ m ∈ SimpleGraph.subgraphEdgeDistsToBipartite G n, m ≤ n.choose 2 := by
   intro m h
   replace ⟨A, ⟨hn, h_fin, h⟩⟩ := h
   rw [← h]
@@ -111,17 +108,25 @@ theorem SimpleGraph.subgraphEdgeDistsToBipartite_bddAbove (G : SimpleGraph V) (n
     have := h_fin.fintype
     have := Fintype.ofFinite ↑A.coe.edgeSet
     convert (A.coe).card_edgeFinset_le_card_choose_two
-    · rw [← Set.ncard_coe_finset A.coe.edgeFinset, coe_edgeFinset A.coe, ← Subgraph.image_coe_edgeSet_coe A]
+    · rw [← Set.ncard_coe_finset A.coe.edgeFinset, coe_edgeFinset A.coe,
+        ← Subgraph.image_coe_edgeSet_coe A]
       exact (Set.ncard_image_iff (Set.toFinite A.coe.edgeSet)).mpr <|
         Function.Injective.injOn <| Sym2.map.injective Subtype.coe_injective
     · rw [Set.ncard_eq_toFinset_card _ h_fin, Set.Finite.card_toFinset]
   refine le_trans ?_ this
   apply Nat.sInf_le
-  simp only [Subgraph.deleteEdges_verts, exists_prop, Set.mem_setOf_eq]
-  use A.edgeSet
-  refine ⟨by rfl, ?_, rfl⟩
+  -- `A.edgeSet.ncard` is in the set of achievable deletion counts, by deleting all edges.
+  simp [SimpleGraph.edgeDistancesToBipartite]
+  refine ⟨A.edgeSet, subset_rfl, ?_, rfl⟩
   use fun _ => 0
   simp
+
+theorem SimpleGraph.subgraphEdgeDistsToBipartite_bddAbove (G : SimpleGraph V) (n : ℕ) :
+    BddAbove (SimpleGraph.subgraphEdgeDistsToBipartite G n) := by
+  use n.choose 2
+  simp only [upperBounds, Set.mem_setOf_eq]
+  intro m hm
+  exact SimpleGraph.subgraphEdgeDistsToBipartite_le_choose_two (G := G) n m hm
 
 /-!
 ## Additional Derived Facts
@@ -179,8 +184,9 @@ theorem SimpleGraph.minEdgeDistToBipartite_eq_zero_of_isBipartite {G : SimpleGra
 theorem SimpleGraph.maxSubgraphEdgeDistToBipartite_le_choose_two (G : SimpleGraph V) (n : ℕ) :
     SimpleGraph.maxSubgraphEdgeDistToBipartite G n ≤ n.choose 2 := by
   dsimp [SimpleGraph.maxSubgraphEdgeDistToBipartite]
-  rcases SimpleGraph.subgraphEdgeDistsToBipartite_bddAbove (G := G) n with ⟨_, hUpper⟩
-  exact csSup_le' hUpper
+  refine csSup_le' (a := n.choose 2) (s := SimpleGraph.subgraphEdgeDistsToBipartite G n) ?_
+  intro m hm
+  exact SimpleGraph.subgraphEdgeDistsToBipartite_le_choose_two (G := G) n m hm
 
 /-!
 ## Main Conjectures (OPEN)
@@ -243,10 +249,11 @@ theorem tendsto_nat_sqrt_atTop : Tendsto Nat.sqrt atTop atTop := by
   intro a ha
   exact (Nat.le_sqrt).2 ha
 
-theorem erdos_74_sqrt_of_erdos_74 : erdos_74 → erdos_74_sqrt := by
+theorem erdos_74_sqrt_of_erdos_74 : erdos_74.{u} → erdos_74_sqrt.{u} := by
   intro h
   have hs : Tendsto Nat.sqrt atTop atTop := tendsto_nat_sqrt_atTop
-  simpa [erdos_74_sqrt] using h Nat.sqrt hs
+  rcases h Nat.sqrt hs with ⟨W, G, hχ, hbound⟩
+  exact ⟨W, G, hχ, hbound⟩
 
 /-!
 ## Research Notes
