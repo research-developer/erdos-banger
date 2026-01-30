@@ -1,21 +1,113 @@
 # Problem 848 Refactor Notes (Presentation + SSOT)
 
 **Date:** 2026-01-29
-**Last Updated:** 2026-01-29 (GPT cleanup in progress)
+**Last Updated:** 2026-01-29 22:00 PST (GPT cleanup in progress ~3.5 hours)
 **Status:** 🔄 REFACTOR IN PROGRESS — GPT agent cleaning up linter warnings
 **Scope:** This document is the SSOT for the **Problem 848 Lean formalization**.
 
 ---
 
+## ⚠️ CRITICAL GOTCHAS — READ BEFORE EDITING
+
+These are known pitfalls that WILL break the build if you're not careful:
+
+### 1. `simpa` → `simp` is NOT a simple replacement
+
+**WRONG:**
+```lean
+-- Original (works)
+simpa using h0
+-- Naive replacement (BREAKS)
+simp using h0  -- ERROR: 'using' is not valid with simp
+```
+
+**CORRECT patterns:**
+```lean
+-- Pattern A: simpa using X → simp at X
+simpa using h0  →  simp at h0
+
+-- Pattern B: simpa [args] → simp only [args] (then verify goal closes)
+simpa [foo]  →  simp only [foo]  -- but test it!
+
+-- Pattern C: simpa at H → simp at H (check if goal still closes)
+```
+
+### 2. ZMod field access doesn't work like Fin
+
+**WRONG:**
+```lean
+-- This works for Fin n:
+r₁.isLt  -- gives proof that r₁.val < n
+
+-- This FAILS for ZMod (p^2):
+r₁.isLt  -- ERROR: invalid field 'isLt', ZMod is not Fin
+```
+
+**Why:** `ZMod n` unfolds to a match expression, not directly to `Fin n`.
+
+### 3. Multiplication order matters in type checking
+
+```lean
+-- These are NOT interchangeable in type assertions:
+N / (p ^ 2 * 100) + 1  -- NOT equal to
+N / (100 * p ^ 2) + 1  -- even though mathematically same
+```
+
+### 4. Lake builds by FILENAME, not namespace
+
+```bash
+# CORRECT (filename is Problem848_REFACTOR.lean):
+lake build Erdos.Problem848_REFACTOR
+
+# WRONG (namespace inside file):
+lake build Erdos.Problem848_workbench  # ERROR: no such file
+```
+
+### 5. Tactic `decide` limitations
+
+- `decide` on Finset equality can explode or hang
+- Use List equality + `List.toFinset` instead
+- `(p : Num).Prime` won't reduce; use `(natToNum p).Prime`
+
+---
+
+## Progress Tracking (GPT Agent)
+
+| Metric | Original | Current | Progress |
+|--------|----------|---------|----------|
+| `simpa` occurrences | 542 | 505 | **7% reduced** (~37 attempted) |
+| Deprecated API | 1 | 1 | Not yet fixed |
+| Build status | ✅ | ❌ **BROKEN** | See errors below |
+| Time elapsed | — | ~3.5 hours | Broke the build |
+
+### ❌ CURRENT BUILD ERRORS (as of 2026-01-29 22:15 PST)
+
+The REFACTOR file does NOT compile. Errors:
+
+| Line | Error | Cause |
+|------|-------|-------|
+| 4387 | `tabs are not allowed` | Tab character not removed |
+| 4067 | `No goals to be solved` | `simpa` → `simp` broke goal |
+| 4151 | `No goals to be solved` | `simpa` → `simp` broke goal |
+| 4267 | `unsolved goals` (case neg) | Proof branch incomplete |
+| 4279 | `unsolved goals` (case pos) | Proof branch incomplete |
+| 4386 | `elaboration function for 'by' not implemented` | Syntax error |
+
+**Root cause:** The `simpa using h0` → `simp at h0` pattern doesn't close the goal. Need to either:
+1. Revert to `simpa using h0` (original)
+2. Use `simp at h0; exact h0` or similar to close the goal
+
+---
+
 ## Files Status
 
-| File | Namespace | Status | Purpose |
-|------|-----------|--------|---------|
-| `Problem848.lean` | `Erdos.Problem848` | ✅ Builds | **Primary** — externally linked, DO NOT EDIT |
-| `Problem848_FINAL.lean` | `Erdos.Problem848_FINAL` | ✅ Builds | **Backup** — externally linked, DO NOT EDIT |
-| `Problem848_REFACTOR.lean` | `Erdos.Problem848_workbench` | 🔄 Cleaning | **Sandbox** — GPT agent making linter fixes |
+| File | Namespace | Build Command | Status | Purpose |
+|------|-----------|---------------|--------|---------|
+| `Problem848.lean` | `Erdos.Problem848` | `lake build Erdos.Problem848` | ✅ Builds | **Primary** — DO NOT EDIT |
+| `Problem848_FINAL.lean` | `Erdos.Problem848_FINAL` | `lake build Erdos.Problem848_FINAL` | ✅ Builds | **Backup** — DO NOT EDIT |
+| `Problem848_REFACTOR.lean` | `Erdos.Problem848_workbench` | `lake build Erdos.Problem848_REFACTOR` | 🔄 Cleaning | **Sandbox** — GPT agent workspace |
 
-**Note:** REFACTOR is now diverging from PRIMARY/FINAL during cleanup. Once cleanup is complete and verified, changes can be synced back.
+**⚠️ NAMESPACE MISMATCH:** The REFACTOR file has namespace `Problem848_workbench` but filename `Problem848_REFACTOR.lean`. Lake builds by filename, so use `lake build Erdos.Problem848_REFACTOR`.
 
 ### Verification Commands
 
@@ -23,10 +115,12 @@
 cd /Users/ray/Desktop/CLARITY-DIGITAL-TWIN/erdos-banger/formal/lean
 source ~/.elan/env
 
-# Build all three
+# Build REFACTOR (note: uses FILENAME not namespace)
+lake build Erdos.Problem848_REFACTOR
+
+# Build stable files (for comparison)
 lake build Erdos.Problem848
 lake build Erdos.Problem848_FINAL
-lake build Erdos.Problem848_workbench
 
 # Audit (should all return 0)
 rg -c "\\bnative_decide\\b" Erdos/Problem848_REFACTOR.lean    # 0
@@ -128,7 +222,10 @@ Non-behavioral changes for code cleanliness:
 ### ✅ COMPLETED (by GPT agent)
 
 - [x] Move all `open scoped` to file header (after imports) — **DONE** (lines 62-64)
-- [ ] Replace `simpa` → `simp` where linter suggests (~35 occurrences) — **IN PROGRESS**
+- [x] Remove tab characters from file — **DONE**
+- [ ] Replace `simpa` → `simp` where linter suggests — **IN PROGRESS** (~37 of ~50 done, 7%)
+- [ ] Fix deprecated API (`exists_ne_of_one_lt_card` → `exists_mem_ne`) — **NOT STARTED**
+- [ ] Remove unused simp arguments — **NOT STARTED**
 
 ### 🔲 TODO — Linter Warnings
 
