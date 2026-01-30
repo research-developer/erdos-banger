@@ -5053,34 +5053,26 @@ theorem sawhney_main : SawhneyMain := by
                     simp only [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range]
                     exact ⟨⟨Nat.lt_succ_of_le hp_le, hp_prime⟩, hp_ne2, hp_ne5⟩
                   refine Finset.mem_biUnion.2 ⟨p, hp_mem, Finset.mem_filter.2 ⟨Finset.mem_range.2 ha_lt, ?_, ?_, hp2_dvd⟩⟩ <;> simp [Nat.ModEq, ha25, ha4]
-                have hcard : (A7A.filter (·%100=57)).card ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
-                  calc (A7A.filter (·%100=57)).card
-                      ≤ ((offPrimesUpTo N).biUnion (fun p =>
-                           (Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ a ≡ 1 [MOD 4] ∧ p ^ 2 ∣ b * a + 1))).card :=
-                        Finset.card_le_card hsubset
-                    _ ≤ ∑ p ∈ offPrimesUpTo N,
-                           ((Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ a ≡ 1 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)).card :=
-                        Finset.card_biUnion_le
-                    _ ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
-                        apply Finset.sum_le_sum
-                        intro p hp
-                        have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                        have hp_ne2 : p ≠ 2 := (Finset.mem_filter.1 hp).2.1
-                        have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2.2
-                        exact off_count_modEq100_le' N p b 7 1 hp_prime hp_ne2 hp_ne5
-                have hcard_real : ((A7A.filter (·%100=57)).card : ℝ) ≤ ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) := by
-                  exact_mod_cast hcard
-                have hsum := sum_div_add_one_le (P := offPrimesUpTo N) (k := 100)
-                have hPcard : ((offPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-                  have hsub : offPrimesUpTo N ⊆ primesUpTo N := by intro p hp; exact (Finset.mem_filter.1 hp).1
-                  have := Finset.card_le_card hsub
-                  have := (Nat.cast_le.2 this : ((offPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-                  simpa [primesUpTo_card] using this
-                have hsum' :
-                    ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                      (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-                  exact hsum.trans (add_le_add (le_refl _) hPcard)
-                exact le_trans hcard_real hsum'
+                have hP_sub : offPrimesUpTo N ⊆ primesUpTo N := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).1
+                have hP_ne2 : ∀ p ∈ offPrimesUpTo N, p ≠ 2 := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).2.1
+                have hP_ne5 : ∀ p ∈ offPrimesUpTo N, p ≠ 5 := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).2.2
+                exact
+                  residue_class_card_bound100_of_subset
+                    (t25 := 7)
+                    (t4 := 1)
+                    (b := b)
+                    (P := offPrimesUpTo N)
+                    (S := A7A.filter (· % 100 = 57))
+                    hsubset
+                    hP_sub
+                    hP_ne2
+                    hP_ne5
               -- Bound A18A ∩ S93 (sieve) similarly
               have hsieve18_bound : ((A18A.filter (·%100=93)).card : ℝ) ≤
                   (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
