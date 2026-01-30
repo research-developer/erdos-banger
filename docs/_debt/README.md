@@ -22,6 +22,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 | DEBT-117 | Database connection error handling fragile | P2 | Fixed |
 | DEBT-118 | Proof repository URL validation incomplete | P1 | Fixed |
 | DEBT-119 | SPEC-036 LOC violations (lead.py, store_fs.py) | P3 | Exempted |
+| DEBT-120 | Test suite startup latency (~40s before tests flow) | P4 | Open |
 
 ### DEBT-114: Hardcoded Relative Paths (Core)
 
@@ -160,7 +161,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-095 | zbMATH client LOC violation | P3 | Superseded | 9f10546 |
 | DEBT-110 | Add paper discovery mode to ingest | P2 | Superseded | SPEC-036 |
 
-**Next Debt ID:** DEBT-120
+**Next Debt ID:** DEBT-121
 
 ### Archived Debt Decks
 
