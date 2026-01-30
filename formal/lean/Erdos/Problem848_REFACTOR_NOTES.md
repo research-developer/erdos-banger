@@ -360,11 +360,83 @@ All three files (`Problem848.lean`, `Problem848_FINAL.lean`, `Problem848_REFACTO
 
 ---
 
+## Documentation Debt (Readability)
+
+Per [Mathlib Documentation Style Guide](https://leanprover-community.github.io/contribute/doc.html) and [Library Style Guidelines](https://leanprover-community.github.io/contribute/style.html):
+
+### 🔲 File-Level Documentation
+
+Mathlib expects a file header with structure:
+```lean
+/-!
+# Problem 848: Erdős-Sárközy Squarefree Products
+
+## Main definitions
+- `NonSquarefreeProductProp` - The non-squarefree product property
+- `A₇`, `A₁₈` - Candidate extremal sets
+- `SawhneyMainAt` - Parameterized stability theorem
+
+## Main statements
+- `sawhney_main` - Proof of SawhneyMain (∃ η N₀, stability holds)
+- `problem_848_resolved` - Final resolution for N ≥ N₀
+
+## Implementation notes
+- Uses `Num.Prime` for kernel-efficient primality
+- Exact rational arithmetic via explicit denominators
+
+## References
+- Sawhney-Sellke (2025), arXiv:2511.16072
+- erdosproblems.com/848
+
+## Tags
+number theory, squarefree, Erdős, extremal combinatorics
+-/
+```
+
+**Status:** NOT DONE — Current file has basic header but not Mathlib-compliant structure.
+
+### 🔲 Definition Docstrings
+
+The `docBlame` linter flags definitions without docstrings. Key definitions needing documentation:
+
+| Definition | Current | Needed |
+|------------|---------|--------|
+| `δ` (in `sawhney_main`) | Inline comment only | Explain: slack parameter for prime counting error |
+| `N₀` | Inline comment only | Explain: threshold from `exists_primeCounting_le_mul_nat` |
+| `SawhneyMainAt` | Has docstring ✅ | — |
+| `NonSquarefreeProductProp` | Has docstring ✅ | — |
+| `offPrimeDen`, `diagPrimeDen` | No docstring | Explain: denominators for exact ∑(1/p²) computation |
+| `natToNum` | Has docstring ✅ | — |
+
+### 🔲 Proof Strategy Documentation
+
+Add section comments explaining the proof structure:
+```lean
+/-! ### Step 1: Establish density slack
+    We use the prime counting function bound to get room for error. -/
+
+/-! ### Step 2: Case analysis on A*
+    Split into cases based on whether A* is empty, contains evens, etc. -/
+```
+
+### Best Practices Reference
+
+From [Mathlib Style Guide](https://leanprover-community.github.io/contribute/style.html):
+- Lines ≤ 100 characters
+- Docstrings start with full sentence, tactic as subject
+- Use `/-!` for module docs, `/--` for definition docs
+- Include "Examples:" section in code blocks where helpful
+
+**Priority:** MEDIUM — Not required for correctness, but improves maintainability and reviewer experience.
+
+---
+
 ## Next Steps
 
 1. **If submitting to Mathlib:** Address structural debt (maxHeartbeats, extract helpers)
 2. **If keeping as standalone proof:** ✅ **DONE** — REFACTOR is production-ready
 3. **For publication:** Consider extracting the `natToNum` technique as a reusable pattern
+4. **For readability:** Add file header and definition docstrings per Mathlib style
 
 ---
 
