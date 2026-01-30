@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230222Z_2c2264
+title: A proof of the Erdős--Faber--Lovász conjecture
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://projecteuclid.org/journals/annals-of-mathematics/volume-198/issue-2/A-proof-of-the-Erd%c5%91s--Faber--Lov%c3%a1sz-conjecture/10.4007/annals.2023.198.2.2.short
+notes: "[Exa] A proof of the Erdős--Faber--Lov&#225;sz conjecture\nEmail\nPassword[Forgot\
+  \ your password?] \nShow\nRemember Email on this computer\nRemember Password\n![]\
+  \ Please wait...\nNo Project Euclid account?[Create an account] \nor[Sign in with\
+  \ your institutional credentials] \nWe can help you reset your password using the\
+  \ email address linked to your Project Euclid account.\nEmail\nRegistered users\
+  \ receive a variety of benefits including the ability to customize email alerts,"
+created_at: '2026-01-30T23:02:22Z'
+updated_at: '2026-01-30T23:02:22Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

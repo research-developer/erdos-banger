@@ -1,0 +1,49 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230227Z_9994ce
+title: '[Exa] https://homepages.math.uic.edu/~mubayi/papers/finalbipalg.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://homepages.math.uic.edu/~mubayi/papers/finalbipalg.pdf
+notes: '[Exa] Finding bipartite subgraphs efficiently
+
+  Dhruv Mubayi∗ and Gy¨orgy Tur´an†
+
+  Abstract
+
+  Polynomial algorithms are given for the following two problems:
+
+  • given a graph with n vertices and m edges, find a complete balanced bipartite
+
+  subgraph Kq,q with q = b
+
+  ln n
+
+  ln(2en2/m)
+
+  c,
+
+  • given a graph with n vertices, find a decomposition of its edges into complete
+
+  balanced bipartite graphs having altogether O(n
+
+  2/ ln n) vertices.
+
+  The first algorithm can be modified to have running time linear in m and find
+
+  a K'
+created_at: '2026-01-30T23:02:27Z'
+updated_at: '2026-01-30T23:02:27Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

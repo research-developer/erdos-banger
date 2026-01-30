@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230222Z_6fb525
+title: The chromatic number of the product of two ℵ1-chromatic graphs can be countable
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://link.springer.com/article/10.1007/BF02579376?error=cookies_not_supported&code=31d6758a-ce4c-4870-ad5c-c7ebf2010465
+notes: "[Exa] # The chromatic number of the product of two ℵ1-chromatic graphs can\
+  \ be countable\n\n- Published: June 1985\n\n- Volume 5, pages 137–139, (1985)\n\
+  - [Cite this article] \n\n[![] Combinatorica] [Aims and scope] [Submit manuscript]\
+  \ \n\n## Abstract\n\nWe prove (in ZFC) that for every infinite cardinal ϰ there\
+  \ are two graphs _G_ 0, _G_ 1 with χ( _G_ 0)=χ( _G_ 1)=ϰ+ and χ( _G_ 0× _G_ 1)=ϰ.\
+  \ We also prove a result from the other direction. If χ( _G_ 0)≧≧ℵ0 and χ( _G_"
+created_at: '2026-01-30T23:02:22Z'
+updated_at: '2026-01-30T23:02:22Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

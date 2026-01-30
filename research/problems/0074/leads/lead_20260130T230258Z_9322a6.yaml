@@ -1,0 +1,27 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230258Z_9322a6
+title: Computer Science > Data Structures and Algorithms
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2506.01228'
+  url: https://arxiv.org/abs/2506.01228
+notes: "[Exa] [2506.01228] Reweighted Spectral Partitioning Works: A Simple Algorithm\
+  \ for Vertex Separators in Special Graph Classes\n[Skip to main content] \n[![Cornell\
+  \ University]] \nWe gratefully acknowledge support from the Simons Foundation,[member\
+  \ institutions], and all contributors.[Donate] \n[] \n[![arxiv logo]] &gt;[cs] &gt;arXiv:2506.01228\n\
+  [Help] |[Advanced Search] \nAll fieldsTitleAuthorAbstractCommentsJournal"
+created_at: '2026-01-30T23:02:58Z'
+updated_at: '2026-01-30T23:02:58Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

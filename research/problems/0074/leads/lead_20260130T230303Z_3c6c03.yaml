@@ -1,0 +1,43 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230303Z_3c6c03
+title: '[Exa] https://renyi.hu/~p_erdos/1968-04.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://renyi.hu/~p_erdos/1968-04.pdf
+notes: '[Exa] ON CHROMATIC NUMBER OF INFINITE GRAPHS
+
+  by
+
+  P. ERDOS and A . HAJNAL
+
+  Mathematical Institute of the Hungarian Academy of Sciences, and Eötvös Loránd
+
+  University
+
+  Budapest, Hungary
+
+  § 1 . Introduction . Notations
+
+  In our paper [1.] using a special set-theoretical construction assuming
+
+  the generalized continuum hypothesis (G.C .H. in what follows) we proved
+
+  that the topological product of J~k discrete topological spaces of power J~ o
+
+  is not k-compact for every k < co . Since then several related or equiva'
+created_at: '2026-01-30T23:03:03Z'
+updated_at: '2026-01-30T23:03:03Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

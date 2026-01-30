@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230210Z_11e3b1
+title: Hadwiger's conjecture for graphs with infinite chromatic number
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://ui.adsabs.harvard.edu/abs/2012arXiv1212.3093V
+notes: "[Exa] Now on home page\n\n## NASA/ADS\n\n## Hadwiger's conjecture for graphs\
+  \ with infinite chromatic number\n\n- [van der Zypen, Dominic] \n\n#### Abstract\n\
+  \nWe construct a connected graph H such that (1) \\\\chi(H) = \\\\omega; (2) K\\\
+  _\\\\omega, the complete graph on \\\\omega points, is not a minor of H. Therefore\
+  \ Hadwiger's conjecture does not hold for graphs with infinite coloring number.\n\
+  \nPublication:\n\narXiv e-prints\n\nPub Date:December 2012DOI:[10.48550/arXiv.1212.3093]\
+  \ arXiv:[arXiv:1212.3093]"
+created_at: '2026-01-30T23:02:10Z'
+updated_at: '2026-01-30T23:02:10Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

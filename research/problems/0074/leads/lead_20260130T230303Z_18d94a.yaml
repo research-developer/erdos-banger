@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230303Z_18d94a
+title: '[Exa] https://users.renyi.hu/~p_erdos/1975-33.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://users.renyi.hu/~p_erdos/1975-33.pdf
+notes: "[Exa] Problems and Results on Finite and Infinite Graphs\nPaul Erdös\nIn this\
+  \ short note I discuss some of the problems which occupied\nmy collaborators and\
+  \ myself for a very long time . I tried to\nselect those problems which are striking\
+  \ and which are not too\nwell known . I will also give a few proofs which I hope\
+  \ are new .\nI published many papers on problems in graph theory, e .g . [1,\n21\
+  \ ; see also [3] .\nI . Let oc be an ordinal number which has no immediate prede\x02\
+  cessor . G(cx) denotes a graph whose"
+created_at: '2026-01-30T23:03:03Z'
+updated_at: '2026-01-30T23:03:03Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

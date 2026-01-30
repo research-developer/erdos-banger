@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230205Z_e9edfb
+title: '[Exa] https://ems.press/content/book-chapter-files/33310'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://ems.press/content/book-chapter-files/33310
+notes: "[Exa] Graphs of large\nchromatic number\nAlex Scott\nAbstract\nThe chromatic\
+  \ number has been a fundamental topic of study in graph theory for more\nthan 150\
+  \ years. Graph coloring has a deep combinatorial theory and, as with many NP\x02\
+  hard problems, is of interest in both mathematics and computer science. An important\n\
+  challenge is to understand graphs with very large chromatic number. The chromatic\n\
+  number tells us something global about the structure of a graph: if G has small\
+  \ chromatic\nnumber then it can be"
+created_at: '2026-01-30T23:02:05Z'
+updated_at: '2026-01-30T23:02:05Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

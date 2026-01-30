@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230303Z_a25eb0
+title: ComplementsAndHG
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://mathweb.ucsd.edu/~erdosproblems/erdos/newproblems/OddCycleOfLargeChromaticNumber.html
+notes: "[Exa] # Any graph of large chromatic number has an odd cycle spanning a subgraph\
+  \ of large chromatic number\n\n[Home] [Search] \nSubjects\n\n- [All (170)] \n- [Ramsey\
+  \ Theory (40)] \n- [Extremal Graph Theory (40)] \n- [Coloring, Packing, and Covering\
+  \ (25)] \n- [Random Graphs and Graph Enumeration (16)] \n- [Hypergraphs (35)] \n\
+  - [Infinite Graphs (14)] \n\n[About Erdös] [About This Site] \n\nIn \\[ [1] \\],\
+  \ Erdös"
+created_at: '2026-01-30T23:03:03Z'
+updated_at: '2026-01-30T23:03:03Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

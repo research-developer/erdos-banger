@@ -1,0 +1,47 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230227Z_c40a24
+title: '[Exa] arXiv 1402.0860'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '1402.0860'
+  url: https://export.arxiv.org/pdf/1402.0860v3.pdf
+notes: '[Exa] arXiv:1402.0860v3 [math.CO] 26 Nov 2015
+
+  Decomposition of random graphs into complete bipartite
+
+  graphs
+
+  Fan Chung ∗ Xing Peng †
+
+  Abstract
+
+  We consider the problem of partitioning the edge set of a graph G into the minimum
+
+  number τ (G) of edge-disjoint complete bipartite subgraphs. We show that for a random
+
+  graph G in G(n, p), where p is a constant no greater than 1/2, asymptotically almost
+
+  surely τ (G) is between n−c(log1/p n)
+
+  3+ǫ
+
+  and n−(2 +o(1)) log1/(1−p) n for any positive
+
+  constants c and ǫ.
+
+  1 In'
+created_at: '2026-01-30T23:02:27Z'
+updated_at: '2026-01-30T23:02:27Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230205Z_80ef3f
+title: Chromatic capacity and graph operations
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.sciencedirect.com/science/article/pii/S0012365X07003007
+notes: "[Exa] [Skip to main content] [Skip to article] \n\n- [View **PDF**] \n- Download\
+  \ full issue\n\nSearch ScienceDirect\n\n## Outline\n\n01. [Abstract] \n02. [Keywords]\
+  \ \n03. [1\\. Introduction] \n04. [2\\. Greene's conjecture] \n05. [3\\. Pinwheels]\
+  \ \n06. [4\\. Graph products and vertex splitting] \n07. [5\\. Local graph operations]\
+  \ \n08. [6\\. Open problems] \n09. [Acknowledgments] \n10. [References] \n\nShow\
+  \ full"
+created_at: '2026-01-30T23:02:05Z'
+updated_at: '2026-01-30T23:02:05Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

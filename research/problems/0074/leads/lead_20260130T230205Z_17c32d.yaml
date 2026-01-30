@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230205Z_17c32d
+title: What must and what need not be contained in a graph of uncountable chromatic
+  number?
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://link.springer.com/article/10.1007/BF02579156?error=cookies_not_supported&code=4fe3baf9-0fce-437f-b4a1-bf66f1d26e93
+notes: "[Exa] # What must and what need not be contained in a graph of uncountable\
+  \ chromatic number?\n\n- Published: March 1984\n\n- Volume 4, pages 47–52, (1984)\n\
+  - [Cite this article] \n\n[![] Combinatorica] [Aims and scope] [Submit manuscript]\
+  \ \n\n## Abstract\n\nWe investigate the following problem: What countable graphs\
+  \ must a graph of uncountable chromatic number contain? We define two graphs _Γ_\
+  \ and _Δ_ which are very similar and we show that _Γ_ is contained in every"
+created_at: '2026-01-30T23:02:05Z'
+updated_at: '2026-01-30T23:02:05Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

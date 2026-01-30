@@ -1,0 +1,41 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230210Z_66ed42
+title: '[Exa] arXiv 1902.08177'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '1902.08177'
+  url: https://arxiv.org/pdf/1902.08177
+notes: '[Exa] arXiv:1902.08177v2 [math.LO] 25 Feb 2019
+
+  ON THE GROWTH RATE OF CHROMATIC NUMBERS OF
+
+  FINITE SUBGRAPHS
+
+  CHRIS LAMBIE-HANSON
+
+  Abstract. We prove that, for every function f : N → N, there is a graph G
+
+  with uncountable chromatic number such that, for every k ∈ N with k ≥ 3,
+
+  every subgraph of G with fewer than f(k) vertices has chromatic number less
+
+  than k. This answers a question of Erd˝os, Hajnal, and Szemeredi.
+
+  1. Introduction
+
+  The De Bruijn-Erd˝os compactness theorem, proven in [2], states that, for'
+created_at: '2026-01-30T23:02:10Z'
+updated_at: '2026-01-30T23:02:10Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

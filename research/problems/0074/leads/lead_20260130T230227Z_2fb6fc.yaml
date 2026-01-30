@@ -1,0 +1,43 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230227Z_2fb6fc
+title: '[Exa] https://web.math.princeton.edu/~nalon/PDFS/edita.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://web.math.princeton.edu/~nalon/PDFS/edita.pdf
+notes: '[Exa] Additive Approximation for Edge-Deletion Problems
+
+  Noga Alon ∗ Asaf Shapira † Benny Sudakov ‡
+
+  Abstract
+
+  A graph property is monotone if it is closed under removal of vertices and edges.
+  In this
+
+  paper we consider the following algorithmic problem, called the edge-deletion problem;
+  given a
+
+  monotone property P and a graph G, compute the smallest number of edge deletions
+  that are
+
+  needed in order to turn G into a graph satisfying P. We denote this quantity by
+  E0
+
+  P (G). The
+
+  first result of this paper st'
+created_at: '2026-01-30T23:02:27Z'
+updated_at: '2026-01-30T23:02:27Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

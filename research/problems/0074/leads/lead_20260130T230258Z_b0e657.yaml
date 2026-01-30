@@ -1,0 +1,39 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230258Z_b0e657
+title: '[Exa] https://www.tau.ac.il/~nogaa/PDFS/lex2.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.tau.ac.il/~nogaa/PDFS/lex2.pdf
+notes: '[Exa] A simple algorithm for edge-coloring bipartite multigraphs
+
+  Noga Alon ∗
+
+  It is well known that the chromatic index of any bipartite multigraph G with n vertices
+  and m
+
+  edges is equal to its maximum degree k. The best algorithm currently known for finding
+  a proper
+
+  k-edge-coloring of such a multigraph runs in time O(m log k), see [2], or the forthcoming
+  book [6], and
+
+  applies rather elaborate data structures together with the basic approach of [5].
+  Another algorithm,
+
+  of Cole and Hopcroft [1], finds su'
+created_at: '2026-01-30T23:02:58Z'
+updated_at: '2026-01-30T23:02:58Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

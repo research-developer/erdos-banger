@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230309Z_6528cc
+title: Bipartite Graph - How to determine largest subsets that are all connected
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://cs.stackexchange.com/questions/49878/bipartite-graph-how-to-determine-largest-subsets-that-are-all-connected
+notes: "[Exa] **Teams**\n\nQ&A for work\n\nConnect and share knowledge within a single\
+  \ location that is structured and easy to search.\n\n[Learn more about Teams] \n\
+  \n# [Bipartite Graph - How to determine largest subsets that are all connected]\
+  \ \n\n[Ask Question] \n\nAsked8 years, 6 months ago\n\nModified [8 years, 6 months\
+  \ ago] \n\nViewed\n669 times\n\n7\n\n$\\\\begingroup$\n\nI have a bipartite graph\
+  \ $G = (U,V,E)$, where $U$ and $V$ are disjoint node sets and $U \\\\cup V$ is the\
+  \ set of all vertices,"
+created_at: '2026-01-30T23:03:09Z'
+updated_at: '2026-01-30T23:03:09Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

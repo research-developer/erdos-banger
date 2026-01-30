@@ -1,0 +1,63 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230210Z_9c771a
+title: '[Exa] https://math.berkeley.edu/~marks/papers/combinatorics20book.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://math.berkeley.edu/~marks/papers/combinatorics20book.pdf
+notes: '[Exa] Alexander S. Kechris and Andrew S. Marks
+
+  Descriptive Graph Combinatorics
+
+  (Preliminary version; October 9, 2020)
+
+  2
+
+  Alexander S. Kechris
+
+  Department of Mathematics
+
+  California Institute of Technology
+
+  Pasadena, CA 91125
+
+  kechris@caltech.edu
+
+  Andrew S. Marks
+
+  Department of Mathematics
+
+  UCLA
+
+  Los Angeles, CA 90095
+
+  marks@math.ucla.edu
+
+  Contents
+
+  1 Introduction 7
+
+  2 Outline 9
+
+  I COLORINGS 13
+
+  3 Preliminaries on graphs and colorings 15
+
+  4 Countable vs. uncountable Borel chromatic numbers 21
+
+  4.1 Edge chromatic number'
+created_at: '2026-01-30T23:02:10Z'
+updated_at: '2026-01-30T23:02:10Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

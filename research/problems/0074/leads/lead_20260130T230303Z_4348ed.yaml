@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230303Z_4348ed
+title: FourChromaticSubgraph
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://mathweb.ucsd.edu/~erdosproblems/erdos/newproblems/FourChromaticSubgraph.html
+notes: "[Exa] # Uncountable-chromatic graphs have common \\\\(4\\\\)-chromatic subgraphs\n\
+  \n[Home] \n\n[Search] \n\nSubjects\n\n- [All (170)] \n- [Ramsey Theory (40)] \n\
+  - [Extremal Graph Theory (40)] \n- [Coloring, Packing, and Covering (25)] \n- [Random\
+  \ Graphs and Graph Enumeration (16)] \n- [Hypergraphs (35)] \n- [Infinite Graphs\
+  \ (14)] \n\n[About Erdös] \n\n[About This Site] \n\n**A problem on 4-chromatic subgraphs**\
+  \ (proposed by\nErdös,"
+created_at: '2026-01-30T23:03:03Z'
+updated_at: '2026-01-30T23:03:03Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

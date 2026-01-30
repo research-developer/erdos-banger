@@ -1,0 +1,42 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230217Z_fd53ad
+title: '[Exa] https://web.math.princeton.edu/~nalon/PDFS/Publications/The%20chromatic%20number%20of%20Kneser%20hypergraphs.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://web.math.princeton.edu/~nalon/PDFS/Publications/The%20chromatic%20number%20of%20Kneser%20hypergraphs.pdf
+notes: '[Exa] The Chromatic Number of Kneser Hypergraphs
+
+  Author(s): N. Alon, P. Frankl, L. Lovász
+
+  Source: Transactions of the American Mathematical Society, Vol. 298, No. 1 (Nov.,
+  1986), pp.
+
+  359-370
+
+  Published by: American Mathematical Society
+
+  Stable URL: http://www.jstor.org/stable/2000624
+
+  Accessed: 14/03/2010 07:55
+
+  Your use of the JSTOR archive indicates your acceptance of JSTOR''s Terms and Conditions
+  of Use, available at
+
+  http://www.jstor.org/page/info/about/policies/terms.jsp. JSTOR''s Terms and Conditions
+  o'
+created_at: '2026-01-30T23:02:17Z'
+updated_at: '2026-01-30T23:02:17Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

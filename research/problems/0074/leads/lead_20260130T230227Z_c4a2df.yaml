@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230227Z_c4a2df
+title: Mathematics > Combinatorics
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2504.15096'
+  url: https://arxiv.org/abs/2504.15096
+notes: "[Exa] [2504.15096] Bisections of graphs under degree constraints\n[Skip to\
+  \ main content] \n[![Cornell University]] \nWe gratefully acknowledge support from\
+  \ the Simons Foundation,[member institutions], and all contributors.[Donate] \n\
+  [] \n[![arxiv logo]] &gt;[math] &gt;arXiv:2504.15096\n[Help] |[Advanced Search]\
+  \ \nAll fieldsTitleAuthorAbstractCommentsJournal referenceACM classificationMSC\
+  \ classificationReport"
+created_at: '2026-01-30T23:02:27Z'
+updated_at: '2026-01-30T23:02:27Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

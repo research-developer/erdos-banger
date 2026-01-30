@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230258Z_c0da52
+title: bip.dvi
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.cs.princeton.edu/courses/archive/spr04/cos598B/bib/GoldreichR-bipartTest.pdf
+notes: "[Exa] A Sublinear Bipartiteness Tester\nfor Bounded Degree Graphs\nOded Goldreich\
+  \ Dana Ron\n\x01\nFebruary 5, 1998\nAbstract\nWe present a sublinear-time algorithm\
+  \ for testing whether a bounded degree graph is bipartite or far from\nbeing bipartite.\
+  \ Graphs are represented by incidence lists of bounded length \x02 , and the testing\
+  \ algorithm\ncan perform queries of the form: “who is the \x03 \x04 \x05 neighbor\
+  \ of vertex \x06 ”. The tester should determine with\nhigh probability whether the\
+  \ graph is bipartite or \a -far from bipar"
+created_at: '2026-01-30T23:02:58Z'
+updated_at: '2026-01-30T23:02:58Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230217Z_5d131d
+title: Maximum bipartite subgraphs of Kneser graphs
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://link.springer.com/article/10.1007/BF01788540?error=cookies_not_supported&code=24a13f17-acf6-4b4b-977c-6c3d13a41a87
+notes: "[Exa] Advertisement\n\n# Maximum bipartite subgraphs of Kneser graphs\n\n\
+  - Published: December 1987\n\n- Volume 3, pages 191–199, (1987)\n- [Cite this article]\
+  \ \n\n[![] Graphs and Combinatorics] [Aims and scope] [Submit manuscript] \n\n##\
+  \ Abstract\n\nWe investigate the maximum number of edges in a bipartite subgraph\
+  \ of the Kneser graph _K(n, r)._ The exact solution is given for either _r_ arbitrary\
+  \ and _n ≤ (4.3 + o(1))r_, or _r_ = 2 and _n_ arbitrary. The problem is"
+created_at: '2026-01-30T23:02:17Z'
+updated_at: '2026-01-30T23:02:17Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

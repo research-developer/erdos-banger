@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230210Z_9c1ad7
+title: Constructions of infinite graphs with Ramsey property
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://onlinelibrary.wiley.com/doi/10.1002/jgt.22539
+notes: "[Exa] Opens in a new windowOpens an external websiteOpens an external website\
+  \ in a new window\n\nClose this dialog\n\nThis website utilizes technologies such\
+  \ as cookies to enable essential site functionality, as well as for analytics, personalization,\
+  \ and targeted advertising. To learn more, view the following link: [Privacy Policy]\
+  \ \n\nClose Cookie Preferences\n\n[Journal of Graph Theory] \n\n[Volume 94, Issue\
+  \ 4] p. 499-508 [![Journal of Graph Theory]] \n\nARTICLE\n"
+created_at: '2026-01-30T23:02:10Z'
+updated_at: '2026-01-30T23:02:10Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230258Z_194961
+title: 𝑂⁢(log𝑛)-Approximation Algorithms for Bipartiteness Ratio
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://arxiv.org/html/2507.12847v2
+notes: "[Exa] # O​(log⁡n)O(\\\\log n)-Approximation Algorithms for Bipartiteness Ratio\n\
+  \nTasuku Soma\nThe Institute of Statistical Mathematics & RIKEN AIP\n[soma@ism.ac.jp]\
+  \ Mingquan Ye\nNational Institute of Informatics & University of California, Santa\
+  \ Cruz\n[mye26@ucsc.edu] Yuichi Yoshida\nNational Institute of Informatics\n[yyoshida@nii.ac.jp]\
+  \ \n\n(November 4, 2025)\n\n###### Abstract\n\nWe propose an O​(log⁡n)O(\\\\log\
+  \ n)-approximation algorithm for the bipartiteness ratio of undirected graphs introduced"
+created_at: '2026-01-30T23:02:58Z'
+updated_at: '2026-01-30T23:02:58Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

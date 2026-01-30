@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230258Z_25d5cb
+title: Edge-Coloring Bipartite Graphs
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.sciencedirect.com/science/article/abs/pii/S0196677499910581
+notes: "[Exa] [Skip to main content] [Skip to article] \n\n- [Access through **your\
+  \ institution**] \n- [Purchase PDF] \n\nSearch ScienceDirect\n\n## Article preview\n\
+  \n- [Abstract] \n- [References (8)] \n- [Cited by (23)] \n\n[![Elsevier]] \n\n##\
+  \ [Journal of Algorithms] \n\n[Volume 34, Issue 2], February 2000, Pages 390-396\n\
+  \n[![Journal of Algorithms]] \n\n# Note Edge-Coloring Bipartite Graphs\n\nAuthor\
+  \ links"
+created_at: '2026-01-30T23:02:58Z'
+updated_at: '2026-01-30T23:02:58Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

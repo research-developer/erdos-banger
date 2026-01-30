@@ -1,0 +1,55 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230227Z_c3cf8a
+title: '[Exa] https://web.math.princeton.edu/~nalon/PDFS/bipartite3.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://web.math.princeton.edu/~nalon/PDFS/bipartite3.pdf
+notes: '[Exa] Bipartite subgraphs
+
+  (Final Version; appeared in Combinatorica 16 (1996), 301-311.)
+
+  Noga Alon ∗
+
+  Abstract
+
+  It is shown that there exists a positive c so that for any large integer m, any
+  graph with 2m2
+
+  edges contains a bipartite subgraph with at least m2 + m/2 + c
+
+  √
+
+  m edges. This is tight up to
+
+  the constant c and settles a problem of Erd˝os. It is also proved that any triangle-free
+  graph with
+
+  e > 1 edges contains a bipartite subgraph with at least e
+
+  2 +c
+
+  0
+
+  e
+
+  4/5
+
+  edges for some absolute positive
+
+  con'
+created_at: '2026-01-30T23:02:27Z'
+updated_at: '2026-01-30T23:02:27Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

@@ -1,0 +1,42 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230217Z_bb42b1
+title: doi:10.1016/j.jctb.2006.02.007
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://users.renyi.hu/~gyarfas/Cikkek/116_improved.pdf
+notes: '[Exa] Journal of Combinatorial Theory, Series B 96 (2006) 855–873
+
+  www.elsevier.com/locate/jctb
+
+  An improved bound for the monochromatic cycle
+
+  partition number
+
+  András Gyárfás a, Miklós Ruszinkó a,1, Gábor N. Sárközy a,b,2,
+
+  Endre Szemerédi c
+
+  a Computer and Automation Research Institute, Hungarian Academy of Sciences,
+
+  PO Box 63, Budapest H-1518, Hungary
+
+  b Computer Science Department, Worcester Polytechnic Institute, Worcester, MA 01609,
+  USA
+
+  c Computer Science Department, Rutgers University, New Brunswick,'
+created_at: '2026-01-30T23:02:17Z'
+updated_at: '2026-01-30T23:02:17Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

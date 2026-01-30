@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230205Z_15f2e7
+title: Mathematics > Combinatorics
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2512.01614'
+  url: https://arxiv.org/abs/2512.01614
+notes: "[Exa] [2512.01614] The edge chromatic transformation index of graphs\n[Skip\
+  \ to main content] \n[![Cornell University]] \nWe gratefully acknowledge support\
+  \ from the Simons Foundation,[member institutions], and all contributors.[Donate]\
+  \ \n[] \n[![arxiv logo]] &gt;[math] &gt;arXiv:2512.01614\n[Help] |[Advanced Search]\
+  \ \nAll fieldsTitleAuthorAbstractCommentsJournal referenceACM classificationMSC\
+  \ classificationReport"
+created_at: '2026-01-30T23:02:05Z'
+updated_at: '2026-01-30T23:02:05Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

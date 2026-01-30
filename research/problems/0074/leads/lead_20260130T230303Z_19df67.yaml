@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230303Z_19df67
+title: Erdős Problems
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.erdosproblems.com/sources_bib/Er87/open
+notes: "[Exa] [![Logo]] \n\n[Tags] [Prizes] \n\n[More] \n\n[FAQ] [Problem Lists] [Definitions]\
+  \ [Links] [How to help] \n\nGo\n\nGo\n\n[All] [Random Solved] [Random Open] \n\n\
+  0 solved out of 16 shown\n\nOPEN\n\nIf $G\\_1,G\\_2$ are two graphs with chromatic\
+  \ number $\\\\aleph\\_1$ then must there exist a graph $G$ whose chromatic number\
+  \ is $4$ (or even $\\\\aleph\\_0$) which is a subgraph of both $G\\_1$ and $G\\\
+  _2$?"
+created_at: '2026-01-30T23:03:03Z'
+updated_at: '2026-01-30T23:03:03Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

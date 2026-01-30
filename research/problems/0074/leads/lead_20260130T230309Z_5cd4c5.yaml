@@ -1,0 +1,51 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230309Z_5cd4c5
+title: '[Exa] arXiv 0905.2527'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '0905.2527'
+  url: https://arxiv.org/pdf/0905.2527
+notes: '[Exa] arXiv:0905.2527v1 [math.CO] 15 May 2009
+
+  Finding bipartite subgraphs efficiently
+
+  Dhruv Mubayi∗ and Gy¨orgy Tur´an†
+
+  Abstract
+
+  Polynomial algorithms are given for the following two problems:
+
+  • given a graph with n vertices and m edges, where m ≥ 3n
+
+  3/2
+
+  , find a complete
+
+  balanced bipartite subgraph with parts about ln n
+
+  ln(n2/m)
+
+  ,
+
+  • given a graph with n vertices, find a decomposition of its edges into complete
+
+  balanced bipartite graphs having altogether O(n
+
+  2/ ln n) vertices.
+
+  Previous proofs of the e'
+created_at: '2026-01-30T23:03:09Z'
+updated_at: '2026-01-30T23:03:09Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

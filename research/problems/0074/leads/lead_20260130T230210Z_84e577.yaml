@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230210Z_84e577
+title: '[Exa] https://www.math.cmu.edu/~clintonc/onlinepapers/infchromnumbasis.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.math.cmu.edu/~clintonc/onlinepapers/infchromnumbasis.pdf
+notes: "[Exa] AN ANTIBASIS RESULT FOR GRAPHS OF INFINITE BOREL\nCHROMATIC NUMBER\n\
+  CLINTON T. CONLEY AND BENJAMIN D. MILLER\nAbstract. We answer in the negative a\
+  \ question posed by Kechris-Solecki\x02Todorcevic as to whether the shift graph\
+  \ on Baire space is minimal among\ngraphs of indecomposably infinite Borel chromatic\
+  \ number. To do so, we use\nergodic-theoretic techniques to construct a new graph\
+  \ amalgamating various\nproperties of the shift actions of free groups. The resulting\
+  \ graph is incompara\x02ble with any grap"
+created_at: '2026-01-30T23:02:10Z'
+updated_at: '2026-01-30T23:02:10Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

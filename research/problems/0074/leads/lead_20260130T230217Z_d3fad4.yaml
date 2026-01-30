@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230217Z_d3fad4
+title: The power of many colours
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2308.15387'
+  url: https://arxiv.org/abs/2308.15387
+notes: "[Exa] # Mathematics > Combinatorics\n\n**arXiv:2308.15387** (math)\n\n\\[Submitted\
+  \ on 29 Aug 2023 ( [v1]), last revised 10 Jun 2024 (this version, v2)\\]\n\n# Title:The\
+  \ power of many colours\n\nAuthors: [Noga Alon], [Matija Bucić], [Micha Christoph],\
+  \ [Michael Krivelevich] \n\nView a PDF of the paper titled The power of many colours,\
+  \ by Noga Alon and 2 other authors\n\n[View PDF] [HTML (experimental)] \n\n> Abstract:A\
+  \ classical problem, due to Gerencsér"
+created_at: '2026-01-30T23:02:17Z'
+updated_at: '2026-01-30T23:02:17Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

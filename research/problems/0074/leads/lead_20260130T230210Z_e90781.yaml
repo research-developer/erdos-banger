@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230210Z_e90781
+title: '[Exa] arXiv 2509.16573'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2509.16573'
+  url: https://www.arxiv.org/pdf/2509.16573
+notes: "[Exa] The S-packing coloring of the infinite diagonal grid\nwith S = (1, 6,\
+  \ 6, . . .)\nTeeradej Kittipassorn∗† Peerawit Suriya‡\nSeptember 23, 2025\nAbstract\n\
+  For a non-decreasing sequence of positive integers S = (a1, a2, . . .), the S-packing\
+  \ chro\x02matic number of a graph G is the smallest positive integer k such that\
+  \ the vertices can\nbe colored with k colors, where the distance between any two\
+  \ distinct vertices of color i is\ngreater than ai. In this paper, we show that\
+  \ the S-packing chromatic number of t"
+created_at: '2026-01-30T23:02:10Z'
+updated_at: '2026-01-30T23:02:10Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

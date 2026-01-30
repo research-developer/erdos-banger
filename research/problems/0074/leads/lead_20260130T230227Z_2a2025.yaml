@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230227Z_2a2025
+title: '[Exa] arXiv 2212.00189'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2212.00189'
+  url: https://export.arxiv.org/pdf/2212.00189v2.pdf
+notes: "[Exa] arXiv:2212.00189v2 [cs.DS] 26 Apr 2023\nSublinear Algorithms for (1.5\
+  \ + ǫ)-Approximate Matching\nSayan Bhattacharya ∗1, Peter Kiss1,2, and Thatchaphol\
+  \ Saranurak3\n1University of Warwick\n2Max-Planck-Institut für Informatik\n3University\
+  \ of Michigan\nAbstract\nWe study sublinear time algorithms for estimating the size\
+  \ of maximum matching. Af\x02ter a long line of research, the problem was finally\
+  \ settled by Behnezhad [FOCS’22], in the\nregime where one is willing to pay an\
+  \ approximation factor of 2. Very rec"
+created_at: '2026-01-30T23:02:27Z'
+updated_at: '2026-01-30T23:02:27Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

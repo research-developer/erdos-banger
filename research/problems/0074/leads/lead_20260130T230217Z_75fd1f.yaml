@@ -1,0 +1,57 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260130T230217Z_75fd1f
+title: '[Exa] arXiv math/0512019'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: math/0512019
+  url: https://export.arxiv.org/pdf/math/0512019v1.pdf
+notes: '[Exa] arXiv:math/0512019v1 [math.CO] 1 Dec 2005
+
+  Colorful subgraphs in Kneser-like graphs
+
+  G´abor Simonyi1
+
+  Alfr´ed R´enyi Institute of Mathematics
+
+  Hungarian Academy of Sciences
+
+  1364 Budapest, POB 127, Hungary
+
+  simonyi@renyi.hu
+
+  G´abor Tardos2
+
+  School of Computing Science
+
+  Simon Fraser University
+
+  Burnaby BC, Canada V5A 1S6
+
+  and
+
+  Alfr´ed R´enyi Institute of Mathematics
+
+  Hungarian Academy of Sciences
+
+  1364 Budapest, POB 127, Hungary
+
+  tardos@cs.sfu.ca
+
+  February 28, 2022
+
+  1Research partially supported by the Hungarian'
+created_at: '2026-01-30T23:02:17Z'
+updated_at: '2026-01-30T23:02:17Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null
