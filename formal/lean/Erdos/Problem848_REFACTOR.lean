@@ -2843,7 +2843,7 @@ lemma sum_diagPrimesUpTo_le (N : ℕ) :
       (∑ p ∈ diagPrimesUpTo N, f p) ≤
           ∑ p ∈ diagPrimesCoarse ∪ Finset.Ioc primeCutoff N, f p := hsum_le_union
       _ = (∑ p ∈ diagPrimesCoarse, f p) + (∑ i ∈ Finset.Ioc primeCutoff N, f i) := by
-          simpa [Finset.sum_union hdisj]
+          simp [Finset.sum_union hdisj]
       _ = diagPrimeSumCoarse + (∑ i ∈ Finset.Ioc primeCutoff N, f i) := by
           simp only [f, diagPrimesCoarse_sum_eq]
   have htail :
@@ -2902,7 +2902,7 @@ lemma sum_offPrimesUpTo_le (N : ℕ) :
       (∑ p ∈ offPrimesUpTo N, f p) ≤
           ∑ p ∈ offPrimesCoarse ∪ Finset.Ioc primeCutoff N, f p := hsum_le_union
       _ = (∑ p ∈ offPrimesCoarse, f p) + (∑ i ∈ Finset.Ioc primeCutoff N, f i) := by
-          simpa [Finset.sum_union hdisj]
+          simp [Finset.sum_union hdisj]
       _ = offPrimeSumCoarse + (∑ i ∈ Finset.Ioc primeCutoff N, f i) := by
           simp only [f, offPrimesCoarse_sum_eq]
   have htail :
@@ -2960,7 +2960,7 @@ lemma sum_no5PrimesUpTo_le (N : ℕ) :
       (∑ p ∈ no5PrimesUpTo N, f p) ≤
           ∑ p ∈ no5PrimesCoarse ∪ Finset.Ioc primeCutoff N, f p := hsum_le_union
       _ = (∑ p ∈ no5PrimesCoarse, f p) + (∑ i ∈ Finset.Ioc primeCutoff N, f i) := by
-          simpa [Finset.sum_union hdisj]
+          simp [Finset.sum_union hdisj]
       _ = no5PrimeSumCoarse + (∑ i ∈ Finset.Ioc primeCutoff N, f i) := by
           simp only [f, no5PrimesCoarse_sum_eq]
   have htail :
@@ -3133,7 +3133,7 @@ lemma off_count_modEq25_le (N p b t : ℕ) (hp : Nat.Prime p) (hb : ¬ p ∣ b) 
   let r : ℕ := rZ.val
   have hrZ : (r : ZMod (p ^ 2)) = rZ := by
     haveI : NeZero (p ^ 2) := ⟨hp0⟩
-    simpa [r, rZ] using (ZMod.natCast_zmod_val rZ).symm
+    simp [r, rZ]
   have hsubset :
       (Finset.range N).filter (fun a => a ≡ t [MOD 25] ∧ p ^ 2 ∣ b * a + 1) ⊆
         (Finset.range N).filter (fun a => a ≡ t [MOD 25] ∧ a ≡ r [MOD p ^ 2]) := by
@@ -3198,7 +3198,7 @@ lemma off_count_modEq100_le (N p b t25 t4 : ℕ) (hp : Nat.Prime p) (hb : ¬ p �
   let r : ℕ := rZ.val
   have hrZ : (r : ZMod (p ^ 2)) = rZ := by
     haveI : NeZero (p ^ 2) := ⟨hp0⟩
-    simpa [r, rZ] using (ZMod.natCast_zmod_val rZ).symm
+    simp [r, rZ]
   have hsubset2 :
       (Finset.range N).filter (fun a => a ≡ Nat.chineseRemainder hcop25_4 t25 t4 [MOD 100] ∧ p ^ 2 ∣ b * a + 1) ⊆
         (Finset.range N).filter (fun a => a ≡ Nat.chineseRemainder hcop25_4 t25 t4 [MOD 100] ∧ a ≡ r [MOD p ^ 2]) := by
@@ -3323,7 +3323,7 @@ lemma diag_count_modEq25_le (N p t : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) 
         have hcast : (n : ZMod (p ^ 2)) = (r₁.val : ZMod (p ^ 2)) := by
           calc
             (n : ZMod (p ^ 2)) = r₁ := hn1
-            _ = (r₁.val : ZMod (p ^ 2)) := by simpa using (ZMod.natCast_zmod_val r₁).symm
+            _ = (r₁.val : ZMod (p ^ 2)) := by simp
         exact (ZMod.natCast_eq_natCast_iff n r₁.val (p ^ 2)).1 hcast
     | inr hn2 =>
         refine Or.inr ?_
@@ -3332,7 +3332,7 @@ lemma diag_count_modEq25_le (N p t : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) 
         have hcast : (n : ZMod (p ^ 2)) = (r₂.val : ZMod (p ^ 2)) := by
           calc
             (n : ZMod (p ^ 2)) = r₂ := hn2
-            _ = (r₂.val : ZMod (p ^ 2)) := by simpa using (ZMod.natCast_zmod_val r₂).symm
+            _ = (r₂.val : ZMod (p ^ 2)) := by simp
         exact (ZMod.natCast_eq_natCast_iff n r₂.val (p ^ 2)).1 hcast
   have hcard : S.card ≤ (S₁ ∪ S₂).card := Finset.card_le_card hsubset
   have hunion : (S₁ ∪ S₂).card ≤ S₁.card + S₂.card := Finset.card_union_le _ _
@@ -3380,7 +3380,7 @@ lemma diag_count_modEq50_le (N p t : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) 
         have hcast : (n : ZMod (p ^ 2)) = (r₁.val : ZMod (p ^ 2)) := by
           calc
             (n : ZMod (p ^ 2)) = r₁ := hn1
-            _ = (r₁.val : ZMod (p ^ 2)) := by simpa using (ZMod.natCast_zmod_val r₁).symm
+            _ = (r₁.val : ZMod (p ^ 2)) := by simp
         exact (ZMod.natCast_eq_natCast_iff n r₁.val (p ^ 2)).1 hcast
     | inr hn2 =>
         refine Or.inr ?_
@@ -3389,7 +3389,7 @@ lemma diag_count_modEq50_le (N p t : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) 
         have hcast : (n : ZMod (p ^ 2)) = (r₂.val : ZMod (p ^ 2)) := by
           calc
             (n : ZMod (p ^ 2)) = r₂ := hn2
-            _ = (r₂.val : ZMod (p ^ 2)) := by simpa using (ZMod.natCast_zmod_val r₂).symm
+            _ = (r₂.val : ZMod (p ^ 2)) := by simp
         exact (ZMod.natCast_eq_natCast_iff n r₂.val (p ^ 2)).1 hcast
   have hcard : S.card ≤ (S₁ ∪ S₂).card := Finset.card_le_card hsubset
   have hunion : (S₁ ∪ S₂).card ≤ S₁.card + S₂.card := Finset.card_union_le _ _
@@ -3459,7 +3459,7 @@ lemma diag_count_mod25_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 =
       _ = (23 * 2) * (N / (25 * p ^ 2) + 1) := by
         simpa using (mul_assoc 23 2 (N / (25 * p ^ 2) + 1)).symm
       _ = 46 * (N / (25 * p ^ 2) + 1) := by
-        simpa [h46.symm]
+        simp [h46.symm]
   exact le_trans (le_trans hcard hsum) (le_trans hsum' (le_of_eq hconst))
 
 lemma diag_count_mod50odd_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) (hp2 : p ≠ 2) (hp5 : p ≠ 5) :
@@ -3478,16 +3478,16 @@ lemma diag_count_mod50odd_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 
       have htlt : t < 50 := Nat.mod_lt n (by decide : 0 < 50)
       have htodd : t % 2 = 1 := by
         have : (n % 50) % 2 = n % 2 := by
-          simpa [show 50 = 25 * 2 by rfl] using Nat.mod_mul_left_mod n 25 2
+          simp [show 50 = 25 * 2 by rfl]
         simpa [t, this] using hn.2.1
       have htne7 : t % 25 ≠ 7 := by
         have : (n % 50) % 25 = n % 25 := by
-          simpa [show 50 = 25 * 2 by rfl] using Nat.mod_mul_right_mod n 25 2
+          simp [show 50 = 25 * 2 by rfl]
         have hnne7 : n % 25 ≠ 7 := hn.2.2.1
         simpa [t, this] using hnne7
       have htne18 : t % 25 ≠ 18 := by
         have : (n % 50) % 25 = n % 25 := by
-          simpa [show 50 = 25 * 2 by rfl] using Nat.mod_mul_right_mod n 25 2
+          simp [show 50 = 25 * 2 by rfl]
         have hnne18 : n % 25 ≠ 18 := hn.2.2.2.1
         simpa [t, this] using hnne18
       refine Finset.mem_filter.2 ?_
@@ -3530,7 +3530,7 @@ lemma diag_count_mod50odd_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 
       _ = (23 * 2) * (N / (50 * p ^ 2) + 1) := by
         simpa using (mul_assoc 23 2 (N / (50 * p ^ 2) + 1)).symm
       _ = 46 * (N / (50 * p ^ 2) + 1) := by
-        simpa [h46.symm]
+        simp [h46.symm]
   exact le_trans (le_trans hcard hsum) (le_trans hsum' (le_of_eq hconst))
 
 
