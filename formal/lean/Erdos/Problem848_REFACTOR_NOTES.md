@@ -2,12 +2,12 @@
 
 **Date:** 2026-01-29
 **Last Updated:** 2026-01-30 (verified)
-**Status:** ✅ PHASE 3 COMPLETE — Astar bound extraction finished
+**Status:** ✅ PHASE 4 IN PROGRESS — P0 heartbeat scoping fixed
 **Scope:** This document is the SSOT for the **Problem 848 Lean formalization**.
 
 ---
 
-## Current State (2026-01-31)
+## Current State (2026-01-30)
 
 | Metric | Value |
 |--------|-------|
@@ -24,11 +24,7 @@ lake build Erdos.Problem848_REFACTOR
 
 ---
 
-## ⚠️ CRITICAL: One Blocking Issue for Mathlib
-
-**Line 3541 has a GLOBAL `set_option maxHeartbeats 2000000`** (no `in`).
-
-This affects everything after it and is a Mathlib red flag. Fix:
+## ✅ Resolved: Scoped Heartbeat Option (Mathlib Hygiene)
 
 ```lean
 -- CURRENT (bad):
@@ -121,7 +117,7 @@ For Mathlib submission, these would improve the file:
 
 | Debt | Current | Target | Priority |
 |------|---------|--------|----------|
-| **Global maxHeartbeats** | Line 3541 missing `in` | Add `in` | **P0** |
+| **Scoped maxHeartbeats** | Line 3541 uses `set_option ... in` | Keep scoped | DONE |
 | **40M heartbeats** | 3 occurrences (lines 2550, 2596, 2655) | Use `#count_heartbeats` to tune | LOW |
 | **Monolithic theorem** | `sawhney_main` ~1842 lines (3555-5396) | Split into 4-8 case lemmas | LOW |
 | **Computation isolation** | Mixed with proof | Separate `Computation.lean` | LOW |
