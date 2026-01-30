@@ -263,6 +263,11 @@ theorem erdos_74_sqrt_of_erdos_74 : erdos_74.{u} → erdos_74_sqrt.{u} := by
 - The case f(n) = √n remains open
 - The statement FAILS for graphs with chromatic number ℵ₁
 
+### Formalization caveat (Mathlib):
+`SimpleGraph.chromaticNumber` in Mathlib is `ℕ∞`, so it only distinguishes *finite* vs *infinite*,
+and cannot express the fine distinction between `χ(G) = ℵ₀` and `χ(G) = ℵ₁`. Formalizing the
+`ℵ₁` negative result would require a cardinal-valued chromatic number.
+
 ### Related Work:
 - Lambie-Hanson (arXiv:1902.08177): Solved the CHROMATIC GROWTH question
   (different from edge-deletion to bipartite)
