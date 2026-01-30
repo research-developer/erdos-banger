@@ -27,7 +27,7 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 | BUG-050 | Enrichment `with_identifiers` stat wrong when leads already enriched | P1 | Fixed (b5497d4) | `erdos research lead enrich` |
 | BUG-051 | ManifestBridge DOI comparison is case-sensitive | P2 | Fixed (b5497d4) | `erdos research lead ingest` |
 | BUG-052 | ManifestBridge does not normalize arXiv version suffixes | P2 | Fixed (b5497d4) | `erdos research lead ingest` |
-| BUG-053 | Lead ingest partial failure creates inconsistent state | P2 | Open | `erdos research lead ingest` |
+| BUG-053 | Lead ingest partial failure creates inconsistent state | P2 | Fixed | `erdos research lead ingest` |
 
 **Note:** BUG-039 core workflow (`erdos refs add` + `erdos ingest`) works. Remaining phases (auto-discovery) are feature requests tracked in DEBT-110.
 
@@ -122,7 +122,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 
 - `docs/_bugs/bug-039-ingest-no-search-discovery.md` (BUG-039) - Phase 1 Fixed
 - `docs/_bugs/bug-047-pdf-converter-thread-unsafe-env.md` (BUG-047) - Open
-- `docs/_bugs/bug-053-ingest-partial-failure-inconsistent-state.md` (BUG-053) - Open
+- `docs/_bugs/bug-053-ingest-partial-failure-inconsistent-state.md` (BUG-053) - Fixed
 
 ### Archived Bug Decks
 

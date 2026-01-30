@@ -1,8 +1,9 @@
 # BUG-053: Lead Ingest Partial Failure Creates Inconsistent State
 
 **Priority:** P2
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-29
+**Fixed:** 2026-01-29
 **Component:** `src/erdos/commands/research/lead.py`
 
 ## Description

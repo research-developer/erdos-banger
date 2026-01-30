@@ -1,8 +1,9 @@
 # DEBT-118: Proof Repository URL Validation Incomplete
 
 **Priority:** P1
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-27
+**Fixed:** 2026-01-29
 **Component:** `src/erdos/core/sync/proofs.py`
 
 ## Summary

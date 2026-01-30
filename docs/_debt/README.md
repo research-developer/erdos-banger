@@ -19,8 +19,8 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 | DEBT-114 | Hardcoded relative paths across codebase | P2 | Open |
 | DEBT-115 | formal/lean relative paths in Lean commands | P2 | Open |
 | DEBT-116 | Timeout constants fragmented across codebase | P3 | Open |
-| DEBT-117 | Database connection error handling fragile | P2 | Open |
-| DEBT-118 | Proof repository URL validation incomplete | P1 | Open |
+| DEBT-117 | Database connection error handling fragile | P2 | Fixed |
+| DEBT-118 | Proof repository URL validation incomplete | P1 | Fixed |
 | DEBT-119 | SPEC-036 LOC violations (lead.py, store_fs.py) | P3 | Exempted |
 
 ### DEBT-114: Hardcoded Relative Paths (Core)
@@ -34,14 +34,6 @@ GH-036/PR#40 fixed only ONE instance (`logs/loop` in runner.py). Audit found **1
 ### DEBT-116: Timeout Fragmentation
 
 Timeout values scattered across codebase (constants.py, inline, class defaults). Makes global tuning impossible.
-
-### DEBT-117: DB Connection Handling
-
-`SearchDatabase.connect()` has fragile finally block that can raise secondary exceptions.
-
-### DEBT-118: Proof URL Validation (P1)
-
-Proof repository URL validation only checks `https://` prefix. Should validate host against allowlist.
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 
