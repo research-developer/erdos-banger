@@ -117,12 +117,13 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 
 *Naming: GH-XXX = also tracked on GitHub Issues. BUG-XXX = local docs only. Both systems maintained in parallel.*
 
-**Next Bug ID:** BUG-054 (or GH-XXX if filing on GitHub)
+**Next Bug ID:** BUG-055 (or GH-XXX if filing on GitHub)
 
 ### Active Bug Decks
 
 - `docs/_bugs/bug-039-ingest-no-search-discovery.md` (BUG-039) - Phase 1 Fixed
 - `docs/_bugs/bug-047-pdf-converter-thread-unsafe-env.md` (BUG-047) - Open
+- `docs/_bugs/bug-054-arxiv-single-tex-gzip-extraction-failure.md` (BUG-054) - Open
 
 ### Archived Bug Decks
 
