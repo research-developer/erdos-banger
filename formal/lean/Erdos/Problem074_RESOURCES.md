@@ -28,7 +28,7 @@ All in `literature/extracts/pdf/0074/`:
 
 | File | Paper | Key Content |
 |------|-------|-------------|
-| `erdos-hajnal-szemeredi-1982-almost-bipartite.md` | **EHS82** - The foundational paper | Definition 3.1 (`maxSubgraphEdgeDistToBipartite`), Theorem 1 (linear bound), Specker graphs |
+| `erdos-hajnal-szemeredi-1982-almost-bipartite.md` | **EHS82** - The foundational paper | Definition 3.1 (`maxSubgraphEdgeDistToBipartite`), Theorem 3.A (subquadratic bound), Problem 3 (slow growth), Specker/edge graphs |
 | `rodl-1982-nearly-bipartite.md` | **Rödl82** - Companion paper | Kneser graph construction, $(\varepsilon, k)$-edge property |
 | `erdos-hajnal-1985-chromatic.md` | Survey paper | Problem context, related conjectures |
 | `erdos-hajnal-1968-infinite.md` | Earlier foundational work | Partition theorems, universal graphs $\mathcal{G}_{\alpha,\gamma}$ |
