@@ -1,8 +1,9 @@
 # DEBT-116: Timeout Constants Not Consistently Used
 
 **Priority:** P3
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-27
+**Fixed:** 2026-01-29
 
 ## Summary
 
@@ -62,9 +63,9 @@ from erdos.core.constants import DEFAULT_HTTP_TIMEOUT
 
 ## Acceptance Criteria
 
-- [ ] `proofs.py` imports from `constants.py` instead of defining local constants
-- [ ] Inline `30.0` in `website.py` replaced with `DEFAULT_HTTP_TIMEOUT`
-- [ ] Inline `30.0` in clients replaced with `DEFAULT_HTTP_TIMEOUT`
+- [x] `proofs.py` imports from `constants.py` instead of defining local constants
+- [x] Inline `30.0` in `website.py` replaced with `DEFAULT_HTTP_TIMEOUT`
+- [x] Inline `30.0` in clients replaced with `DEFAULT_HTTP_TIMEOUT`
 - [x] Add `GIT_OP_TIMEOUT` / `GIT_FETCH_TIMEOUT` to `constants.py` for `submodule.py` (BUG-048)
 
 ## Notes

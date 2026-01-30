@@ -177,7 +177,9 @@ class TestGetSubmodulePath:
 
         config = AppConfig()  # No submodule_path set
         path = get_submodule_path(config)
-        assert path == Path("data/erdosproblems")
+        # Now returns absolute path via repo_path()
+        assert path.is_absolute()
+        assert path.parts[-2:] == ("data", "erdosproblems")
 
     def test_respects_config_override(self) -> None:
         """Respects submodule_path from AppConfig."""

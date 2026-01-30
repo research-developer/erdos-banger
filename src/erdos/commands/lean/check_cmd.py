@@ -10,6 +10,7 @@ import typer
 
 from erdos.commands.lean.common import print_human
 from erdos.commands.presenter import exit_with_result
+from erdos.core.config import get_default_lean_project_path
 from erdos.core.exit_codes import ExitCode
 from erdos.core.lean import LeanRunner, LeanRunnerError
 from erdos.core.models import CLIOutput
@@ -88,7 +89,7 @@ def register(app: typer.Typer) -> None:
         Example: erdos lean check formal/lean/Erdos/Problem006.lean
         """
         with measure_time_ms() as duration:
-            path = project_path or Path("formal/lean")
+            path = project_path or get_default_lean_project_path()
             result = check_lean_file(file, path)
 
         result.duration_ms = duration[0]

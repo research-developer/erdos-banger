@@ -156,8 +156,14 @@ class TestLeanStatusCommand:
             finally:
                 os.chdir(old_cwd)
 
-    def test_status_missing_upstream(self, tmp_path: Path, enriched_yaml: Path) -> None:
-        """Status with missing upstream metadata returns error."""
+    def test_status_with_upstream_from_any_dir(
+        self, tmp_path: Path, enriched_yaml: Path
+    ) -> None:
+        """Status finds upstream metadata via repo_path() even from temp dir.
+
+        With DEBT-114 fix, repo_path() discovers the actual repo root,
+        so upstream metadata is found regardless of cwd.
+        """
         with patch.dict(
             os.environ,
             {
@@ -173,8 +179,10 @@ class TestLeanStatusCommand:
                 if "No such command" in result.stdout:
                     pytest.skip("status command not implemented yet")
 
-                # Should fail with CONFIG_ERROR
-                assert result.exit_code == ExitCode.CONFIG_ERROR
+                # repo_path() finds the actual repo, so this now succeeds
+                # (or may fail with NOT_FOUND if problem 6 isn't in upstream,
+                # but NOT CONFIG_ERROR since metadata file is found)
+                assert result.exit_code in (0, ExitCode.NOT_FOUND)
             finally:
                 os.chdir(old_cwd)
 

@@ -21,7 +21,11 @@ from erdos.commands.list_cmd import ListOptions, _execute_list_query
 from erdos.commands.refs import get_refs
 from erdos.commands.show import get_problem as show_get_problem
 from erdos.core.ask import ask_question as core_ask_question
-from erdos.core.config import DEFAULT_INDEX_PATH, AppConfig
+from erdos.core.config import (
+    DEFAULT_INDEX_PATH,
+    AppConfig,
+    get_default_lean_project_path,
+)
 from erdos.core.constants import DEFAULT_RAG_LIMIT, DEFAULT_SEARCH_LIMIT
 from erdos.core.exit_codes import ExitCode
 from erdos.core.lean import (
@@ -50,7 +54,7 @@ mcp = FastMCP("erdos-banger")
 
 
 # Default project path for Lean operations
-DEFAULT_LEAN_PROJECT_PATH = Path("formal/lean")
+DEFAULT_LEAN_PROJECT_PATH = get_default_lean_project_path()
 
 
 def _get_repo() -> ProblemRepository:

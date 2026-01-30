@@ -13,6 +13,7 @@ import typer
 
 from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import console, exit_with_result
+from erdos.core.config import get_default_lean_project_path
 from erdos.core.constants import DEFAULT_RAG_LIMIT, LEAN_COMPILE_TIMEOUT
 from erdos.core.exit_codes import ExitCode
 from erdos.core.llm import LLMRouterError, TaskType, resolve_llm_command
@@ -196,7 +197,7 @@ def run(
         if app_ctx is None:
             return  # Unreachable
 
-        path = project_path or Path("formal/lean")
+        path = project_path or get_default_lean_project_path()
 
         # Resolve LLM command via router (SPEC-032)
         # - --llm-cmd: explicit override bypasses router

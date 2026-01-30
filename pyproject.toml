@@ -161,6 +161,15 @@ ignore = [
 "src/erdos/core/sync/*.py" = [
     "TC003",  # Path used at runtime for file caching and sync operations
 ]
+"src/erdos/commands/loop.py" = [
+    "TC003",  # Path used at runtime for typer CLI argument types
+]
+"src/erdos/commands/sync/*.py" = [
+    "TC003",  # Path used at runtime for typer CLI argument types
+]
+"src/erdos/mcp/*.py" = [
+    "TC003",  # Path used at runtime
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["erdos"]

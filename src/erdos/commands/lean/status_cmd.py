@@ -11,6 +11,7 @@ import typer
 from erdos.commands.app_context import get_app_context
 from erdos.commands.lean.common import UPSTREAM_METADATA_PATH, print_human
 from erdos.commands.presenter import exit_with_result
+from erdos.core.config import get_default_lean_project_path
 from erdos.core.exit_codes import ExitCode
 from erdos.core.formal_conjectures import (
     FORMAL_CONJECTURES_REPO,
@@ -255,7 +256,7 @@ def register(app: typer.Typer) -> None:
             if app_ctx is None:
                 return
 
-            path = project_path or Path("formal/lean")
+            path = project_path or get_default_lean_project_path()
 
             # Default: check both if neither specified
             check_upstream = upstream or not (upstream or local)

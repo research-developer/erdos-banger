@@ -16,25 +16,35 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| DEBT-114 | Hardcoded relative paths across codebase | P2 | Open |
-| DEBT-115 | formal/lean relative paths in Lean commands | P2 | Open |
-| DEBT-116 | Timeout constants fragmented across codebase | P3 | Open |
+| DEBT-114 | Hardcoded relative paths across codebase | P2 | Fixed |
+| DEBT-115 | formal/lean relative paths in Lean commands | P2 | Fixed |
+| DEBT-116 | Timeout constants fragmented across codebase | P3 | Fixed |
 | DEBT-117 | Database connection error handling fragile | P2 | Fixed |
 | DEBT-118 | Proof repository URL validation incomplete | P1 | Fixed |
 | DEBT-119 | SPEC-036 LOC violations (lead.py, store_fs.py) | P3 | Exempted |
 | DEBT-120 | Test suite startup latency (~40s before tests flow) | P4 | Open |
 
-### DEBT-114: Hardcoded Relative Paths (Core)
+### DEBT-114: Hardcoded Relative Paths (Core) - FIXED
 
-GH-036/PR#40 fixed only ONE instance (`logs/loop` in runner.py). Audit found **13+ similar hardcoded relative paths** across the codebase that break when running from subdirectories. See `debt-114-hardcoded-relative-paths.md` for full analysis.
+Added `repo_path()` helper to `erdos.core.repo_root` that resolves paths relative to the discovered repo root. Fixed 8+ hardcoded paths in core modules including:
+- `problem_loader.py` - data file paths
+- `sync/*.py` - cache and latex directories
+- `commands/lean/common.py` - upstream metadata path
 
-### DEBT-115: Lean Command Paths
+### DEBT-115: Lean Command Paths - FIXED
 
-9 Lean-related commands use `Path("formal/lean")` hardcoded. Subset of DEBT-114 but tracked separately due to different module layer.
+Added `get_default_lean_project_path()` helper to `erdos.core.config`. Fixed 9 hardcoded `Path("formal/lean")` usages across:
+- `commands/lean/*.py` (check, formalize, init, import, status)
+- `commands/sync/*.py` (all, statements)
+- `commands/loop.py`
+- `mcp/server.py`
 
-### DEBT-116: Timeout Fragmentation
+### DEBT-116: Timeout Fragmentation - FIXED
 
-Timeout values scattered across codebase (constants.py, inline, class defaults). Makes global tuning impossible.
+Consolidated timeout constants:
+- HTTP timeouts now use `DEFAULT_HTTP_TIMEOUT` from `constants.py`
+- Clone/build/check timeouts in `proofs.py` now reference central constants
+- Fixed in: `arxiv.py`, `crossref.py`, `openalex.py`, `website.py`, `forum.py`, `proofs.py`
 
 ### Note on Audit False Positives (DEBT-068 through DEBT-071)
 

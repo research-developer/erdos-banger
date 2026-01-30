@@ -1,8 +1,9 @@
 # DEBT-115: formal/lean Relative Paths in Lean Commands
 
 **Priority:** P2
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-27
+**Fixed:** 2026-01-29
 **Related:** DEBT-114 (parent issue)
 
 ## Summary
@@ -50,10 +51,10 @@ path = project_path or get_default_lean_project_path()
 
 ## Acceptance Criteria
 
-- [ ] All 9 files updated to use helper function
-- [ ] Helper function added to config.py or constants.py
-- [ ] Tests verify paths work from subdirectories
-- [ ] MCP server uses the same helper
+- [x] All 9 files updated to use helper function
+- [x] Helper function added to config.py or constants.py
+- [x] Tests verify paths work from subdirectories
+- [x] MCP server uses the same helper
 
 ## Notes
 

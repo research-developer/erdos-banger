@@ -1,9 +1,10 @@
 # DEBT-114: Hardcoded Relative Paths Across Codebase
 
 **Priority:** P2
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-27
-**Related:** GH-036 (partial fix in PR#40)
+**Fixed:** 2026-01-29
+**Related:** GH-036 (partial fix in PR#40), DEBT-115, DEBT-116
 
 ## Summary
 
@@ -97,10 +98,10 @@ def _get_default_data_path() -> Path:
 
 ## Acceptance Criteria
 
-- [ ] All `Path("data/...")`, `Path("logs/...")`, `Path("literature/...")`, `Path("index/...")` replaced
-- [ ] New helper `repo_path()` added to `repo_root.py`
-- [ ] Tests added to verify paths work from subdirectories
-- [ ] No relative paths remain in module-level constants
+- [x] All `Path("data/...")`, `Path("logs/...")`, `Path("literature/...")`, `Path("index/...")` replaced
+- [x] New helper `repo_path()` added to `repo_root.py`
+- [x] Tests added to verify paths work from subdirectories
+- [x] No relative paths remain in module-level constants
 
 ## Files to Modify
 

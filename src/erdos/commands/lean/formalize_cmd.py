@@ -32,6 +32,7 @@ from erdos.core.batch import (
     BatchProgress,
     filter_problem_ids,
 )
+from erdos.core.config import get_default_lean_project_path
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
 from erdos.core.timing import measure_time_ms
@@ -270,7 +271,7 @@ def register(app: typer.Typer) -> None:
         """
         args = _FormalizeArgs(
             problem_id=problem_id,
-            project_path=project_path or Path("formal/lean"),
+            project_path=project_path or get_default_lean_project_path(),
             force=force,
             import_upstream=import_upstream,
             no_network=no_network,

@@ -12,6 +12,7 @@ from erdos.commands.lean.import_cmd import import_upstream_formalization
 from erdos.commands.presenter import console, exit_with_result
 from erdos.commands.sync.submodule_cmd import sync_submodule
 from erdos.commands.sync.website_cmd import sync_website_problem
+from erdos.core.config import get_default_lean_project_path
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
 from erdos.core.sync.proof_service import sync_proof_links
@@ -380,7 +381,7 @@ def sync_all(
             return
 
     with measure_time_ms() as duration:
-        lean_path = project_path or Path("formal/lean")
+        lean_path = project_path or get_default_lean_project_path()
         output_data = _run_sync_pipeline(
             pids,
             lean_path,
