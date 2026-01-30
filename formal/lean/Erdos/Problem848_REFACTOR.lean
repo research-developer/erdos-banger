@@ -2685,11 +2685,11 @@ lemma offPrimesCoarse_sum_eq :
   rw [hoff]
   calc
     (∑ p ∈ no5PrimesCoarse.erase 2, f p)
-        = (∑ p ∈ no5PrimesCoarse, f p) - (1 : ℚ) / 4 := by simpa [hsum_erase, hf2]
+        = (∑ p ∈ no5PrimesCoarse, f p) - (1 : ℚ) / 4 := by simp [hsum_erase, hf2]
     _ = no5PrimeSumCoarse - (1 : ℚ) / 4 := by
         simpa [f] using congrArg (fun x => x - (1 : ℚ) / 4) no5PrimesCoarse_sum_eq
     _ = offPrimeSumCoarse := by
-        simpa [offPrimeSumCoarse_eq_no5_sub] using (offPrimeSumCoarse_eq_no5_sub).symm
+        simp [offPrimeSumCoarse_eq_no5_sub]
 
 /-!
 We bound the *infinite* reciprocal-square sums by:
