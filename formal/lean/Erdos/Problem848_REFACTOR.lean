@@ -3784,54 +3784,21 @@ theorem sawhney_main : SawhneyMain := by
               have : a ∈ (Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ p ^ 2 ∣ b18 * a + 1) := by
                 simp [Finset.mem_filter, Finset.mem_range, ha_lt, Nat.ModEq, ha_mod7, hp2div]
               exact this
-            have hcard : A7A.card ≤ (∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1)) := by
-              calc A7A.card
-                  ≤ ((no5PrimesUpTo N).biUnion (fun p =>
-                       (Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ p ^ 2 ∣ b18 * a + 1))).card :=
-                    Finset.card_le_card hsubset
-                _ ≤ ∑ p ∈ no5PrimesUpTo N,
-                       ((Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ p ^ 2 ∣ b18 * a + 1)).card :=
-                    Finset.card_biUnion_le
-                _ ≤ ∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) := by
-                    apply Finset.sum_le_sum
-                    intro p hp
-                    have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                    have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2
-                    by_cases hpdiv : p ∣ b18
-                    · -- If p | b18, the filter is empty (p ∤ b18*a+1)
-                      have hempty : ((Finset.range N).filter
-                          (fun a => a ≡ 7 [MOD 25] ∧ p ^ 2 ∣ b18 * a + 1)).card = 0 := by
-                        rw [Finset.card_eq_zero, Finset.eq_empty_iff_forall_notMem]
-                        intro a; simp only [Finset.mem_filter, Finset.mem_range, not_and]
-                        intro _ _ hdiv
-                        have hpdiv' : p ∣ b18 * a + 1 := Nat.dvd_of_pow_dvd (by omega : 1 ≤ 2) hdiv
-                        -- p | b18 implies p | b18 * a, so b18 * a + 1 ≡ 1 (mod p)
-                        have hpmod : p ∣ b18 * a := Nat.dvd_mul_right_of_dvd hpdiv a
-                        have hone : (b18 * a + 1) % p = 1 := by
-                          have := Nat.add_mod (b18 * a) 1 p
-                          simp [Nat.dvd_iff_mod_eq_zero.1 hpmod, Nat.mod_eq_of_lt hp_prime.one_lt] at this
-                          exact this
-                        -- But p | (b18 * a + 1) implies (b18 * a + 1) % p = 0, contradiction
-                        have hzero : (b18 * a + 1) % p = 0 := Nat.dvd_iff_mod_eq_zero.1 hpdiv'
-                        omega
-                      simp [hempty]
-                    · exact off_count_modEq25_le N p b18 7 hp_prime hpdiv hp_ne5
-            have hcard_real : (A7A.card : ℝ) ≤ ((∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) := by
-              exact_mod_cast hcard
-            have hsum :=
-              sum_div_add_one_le (P := no5PrimesUpTo N) (k := 25)
-            have hPcard : ((no5PrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-              have hsub : no5PrimesUpTo N ⊆ primesUpTo N := by
-                intro p hp
-                exact (Finset.mem_filter.1 hp).1
-              have := Finset.card_le_card hsub
-              have := (Nat.cast_le.2 this : ((no5PrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-              simpa [primesUpTo_card] using this
-            have hsum' :
-                ((∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                  (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-              exact hsum.trans (add_le_add (le_refl _) hPcard)
-            exact le_trans hcard_real hsum'
+            have hP_sub : no5PrimesUpTo N ⊆ primesUpTo N := by
+              intro p hp
+              exact (Finset.mem_filter.1 hp).1
+            have hP_ne5 : ∀ p ∈ no5PrimesUpTo N, p ≠ 5 := by
+              intro p hp
+              exact (Finset.mem_filter.1 hp).2
+            exact
+              residue_class_card_bound_of_subset
+                (t := 7)
+                (b := b18)
+                (P := no5PrimesUpTo N)
+                (S := A7A)
+                hsubset
+                hP_sub
+                hP_ne5
           -- Bound A18A using b7.
           have hA18A_le :
               (A18A.card : ℝ) ≤
@@ -3875,36 +3842,21 @@ theorem sawhney_main : SawhneyMain := by
               have : a ∈ (Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ p ^ 2 ∣ b7 * a + 1) := by
                 simp [Finset.mem_filter, Finset.mem_range, ha_lt, Nat.ModEq, ha_mod18, hp2div]
               exact this
-            have hcard : A18A.card ≤ (∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1)) := by
-              calc A18A.card
-                  ≤ ((no5PrimesUpTo N).biUnion (fun p =>
-                       (Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ p ^ 2 ∣ b7 * a + 1))).card :=
-                    Finset.card_le_card hsubset
-                _ ≤ ∑ p ∈ no5PrimesUpTo N,
-                       ((Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ p ^ 2 ∣ b7 * a + 1)).card :=
-                    Finset.card_biUnion_le
-                _ ≤ ∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) := by
-                    apply Finset.sum_le_sum
-                    intro p hp
-                    have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                    have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2
-                    exact off_count_modEq25_le' N p b7 18 hp_prime hp_ne5
-            have hcard_real : (A18A.card : ℝ) ≤ ((∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) := by
-              exact_mod_cast hcard
-            have hsum :=
-              sum_div_add_one_le (P := no5PrimesUpTo N) (k := 25)
-            have hPcard : ((no5PrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-              have hsub : no5PrimesUpTo N ⊆ primesUpTo N := by
-                intro p hp
-                exact (Finset.mem_filter.1 hp).1
-              have := Finset.card_le_card hsub
-              have := (Nat.cast_le.2 this : ((no5PrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-              simpa [primesUpTo_card] using this
-            have hsum' :
-                ((∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                  (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-              exact hsum.trans (add_le_add (le_refl _) hPcard)
-            exact le_trans hcard_real hsum'
+            have hP_sub : no5PrimesUpTo N ⊆ primesUpTo N := by
+              intro p hp
+              exact (Finset.mem_filter.1 hp).1
+            have hP_ne5 : ∀ p ∈ no5PrimesUpTo N, p ≠ 5 := by
+              intro p hp
+              exact (Finset.mem_filter.1 hp).2
+            exact
+              residue_class_card_bound_of_subset
+                (t := 18)
+                (b := b7)
+                (P := no5PrimesUpTo N)
+                (S := A18A)
+                hsubset
+                hP_sub
+                hP_ne5
           -- Combine and contradict density.
           have hA_le : (A.card : ℝ) ≤ (A7A.card : ℝ) + (A18A.card : ℝ) := by
             have hcard : A.card ≤ (A7A ∪ A18A).card := Finset.card_le_card hA_sub_78
