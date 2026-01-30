@@ -25,7 +25,7 @@ from pathlib import Path
 
 from erdos.core.constants import DEFAULT_HTTP_TIMEOUT
 from erdos.core.dotenv_loader import load_dotenv_file
-from erdos.core.repo_root import resolve_repo_root
+from erdos.core.repo_root import repo_path, resolve_repo_root
 
 
 # Default values (matching existing behavior)
@@ -42,6 +42,7 @@ __all__ = [
     "DEFAULT_RUN_LOG_PATH",
     "AppConfig",
     "build_subprocess_env",
+    "get_default_lean_project_path",
     "initialize_environment",
 ]
 
@@ -236,3 +237,16 @@ def _parse_int_env(name: str, default: int) -> int:
         return int(value)
     except ValueError:
         return default
+
+
+def get_default_lean_project_path() -> Path:
+    """Get the default Lean project path (formal/lean).
+
+    Returns:
+        Absolute path to the formal/lean directory relative to repo root.
+
+    Example:
+        >>> get_default_lean_project_path()
+        PosixPath('/abs/path/to/repo/formal/lean')
+    """
+    return repo_path("formal", "lean")

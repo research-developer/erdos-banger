@@ -12,6 +12,7 @@ from typing import cast
 from urllib.parse import quote
 
 from erdos.core.clients.json_response import response_json_or_raise
+from erdos.core.constants import DEFAULT_HTTP_TIMEOUT
 from erdos.core.models import ReferenceRecord
 from erdos.core.retry import fetch_with_retry
 
@@ -114,7 +115,7 @@ def parse_crossref_work(payload: dict[str, object], *, doi: str) -> ReferenceRec
 
 
 def fetch_crossref_work(
-    doi: str, *, mailto: str, timeout: float = 30.0
+    doi: str, *, mailto: str, timeout: float = DEFAULT_HTTP_TIMEOUT
 ) -> dict[str, object]:
     """Fetch Crossref work metadata via REST API.
 

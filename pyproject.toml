@@ -155,6 +155,12 @@ ignore = [
 "src/erdos/core/clients/cache.py" = [
     "TC003",  # Path used at runtime in FileCache class
 ]
+"src/erdos/core/problem_loader.py" = [
+    "TC003",  # Path used at runtime for file loading
+]
+"src/erdos/core/sync/*.py" = [
+    "TC003",  # Path used at runtime for file caching and sync operations
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["erdos"]

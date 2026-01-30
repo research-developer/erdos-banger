@@ -21,6 +21,7 @@ import requests
 
 from erdos.core.clients.openalex_transform import openalex_to_reference
 from erdos.core.config import AppConfig
+from erdos.core.constants import DEFAULT_HTTP_TIMEOUT
 from erdos.core.retry import fetch_with_retry
 
 
@@ -36,7 +37,7 @@ class OpenAlexConfig:
 
     email: str | None = None
     api_key: str | None = None
-    timeout: float = 30.0
+    timeout: float = DEFAULT_HTTP_TIMEOUT
     max_retries: int = 3
 
     @classmethod

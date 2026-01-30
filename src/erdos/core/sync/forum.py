@@ -18,7 +18,9 @@ from urllib.parse import urlparse
 
 import requests
 
+from erdos.core.constants import DEFAULT_HTTP_TIMEOUT
 from erdos.core.rate_limiter import RateLimiter
+from erdos.core.repo_root import repo_path
 from erdos.core.sync.models import ProofLink, ProofLinksCache
 
 
@@ -220,7 +222,7 @@ def parse_forum_html(
 def fetch_forum_thread(
     problem_id: int,
     *,
-    timeout: float = 30.0,
+    timeout: float = DEFAULT_HTTP_TIMEOUT,
     base_url: str = "https://www.erdosproblems.com",
 ) -> ForumFetchResult:
     """
@@ -271,7 +273,7 @@ def fetch_forum_thread(
 def fetch_and_parse_forum(
     problem_id: int,
     *,
-    timeout: float = 30.0,
+    timeout: float = DEFAULT_HTTP_TIMEOUT,
     base_url: str = "https://www.erdosproblems.com",
 ) -> ProofLinksCache:
     """
@@ -314,7 +316,7 @@ def save_proof_links_cache(
         Path to saved file
     """
     if cache_dir is None:
-        cache_dir = Path("data/sync_cache/proofs")
+        cache_dir = repo_path("data", "sync_cache", "proofs")
 
     # Create problem-specific directory
     problem_dir = cache_dir / str(cache.problem_id)

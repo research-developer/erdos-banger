@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from erdos.core.repo_root import repo_path
 from erdos.core.sync.models import ProofLink, ProofProvenance, VerificationStatus
 
 
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
     from erdos.core.sync.proofs_types import VerificationResult
 
 
-DEFAULT_CACHE_PATH = Path("data/sync_cache/proofs")
+DEFAULT_CACHE_PATH = repo_path("data", "sync_cache", "proofs")
 
 
 def create_provenance(

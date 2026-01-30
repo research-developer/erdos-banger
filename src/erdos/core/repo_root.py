@@ -39,3 +39,22 @@ def resolve_repo_root(repo_root: Path | None) -> Path:
     if repo_root is not None:
         return repo_root.resolve()
     return discover_repo_root() or Path.cwd().resolve()
+
+
+def repo_path(*parts: str) -> Path:
+    """Get absolute path relative to repository root.
+
+    Convenience function that joins path parts with the discovered repo root.
+    Use this instead of hardcoded relative paths like Path("data/...").
+
+    Args:
+        *parts: Path components to join (e.g., "data", "problems_enriched.yaml")
+
+    Returns:
+        Absolute path: repo_root / parts[0] / parts[1] / ...
+
+    Example:
+        >>> repo_path("data", "problems_enriched.yaml")
+        PosixPath('/abs/path/to/repo/data/problems_enriched.yaml')
+    """
+    return resolve_repo_root(None).joinpath(*parts)

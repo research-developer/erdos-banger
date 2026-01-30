@@ -17,6 +17,7 @@ from erdos.core.config import (
     DEFAULT_MAILTO,
     DEFAULT_RUN_LOG_PATH,
     AppConfig,
+    get_default_lean_project_path,
     initialize_environment,
 )
 from erdos.core.context import AppContext
@@ -286,3 +287,17 @@ class TestAppContextFromConfig:
 
         # Verify index was created at the configured path
         assert index_path.exists()
+
+
+class TestGetDefaultLeanProjectPath:
+    """Tests for get_default_lean_project_path()."""
+
+    def test_returns_absolute_path(self) -> None:
+        """get_default_lean_project_path() returns an absolute path."""
+        result = get_default_lean_project_path()
+        assert result.is_absolute()
+
+    def test_path_ends_with_formal_lean(self) -> None:
+        """get_default_lean_project_path() path ends with formal/lean."""
+        result = get_default_lean_project_path()
+        assert result.parts[-2:] == ("formal", "lean")

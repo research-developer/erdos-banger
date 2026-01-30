@@ -22,7 +22,9 @@ from pathlib import Path
 
 import requests
 
+from erdos.core.constants import DEFAULT_HTTP_TIMEOUT
 from erdos.core.rate_limiter import RateLimiter
+from erdos.core.repo_root import repo_path
 from erdos.core.sync.models import (
     WebsiteProblemData,
     WebsiteReferenceData,
@@ -63,7 +65,7 @@ class WebsiteFetchResult:
 def fetch_problem_page(
     problem_id: int,
     *,
-    timeout: float = 30.0,
+    timeout: float = DEFAULT_HTTP_TIMEOUT,
     base_url: str = "https://www.erdosproblems.com",
 ) -> WebsiteFetchResult:
     """
@@ -247,7 +249,7 @@ def parse_problem_html(
 def fetch_and_parse_problem(
     problem_id: int,
     *,
-    timeout: float = 30.0,
+    timeout: float = DEFAULT_HTTP_TIMEOUT,
     base_url: str = "https://www.erdosproblems.com",
 ) -> tuple[WebsiteProblemData, WebsiteSyncStatus]:
     """
@@ -314,7 +316,7 @@ def fetch_and_parse_problem(
 def fetch_latex_source(
     problem_id: int,
     *,
-    timeout: float = 30.0,
+    timeout: float = DEFAULT_HTTP_TIMEOUT,
     base_url: str = "https://www.erdosproblems.com",
 ) -> str | None:
     """
@@ -367,7 +369,7 @@ def save_latex_source(
         Path to saved file
     """
     if output_dir is None:
-        output_dir = Path("data/latex")
+        output_dir = repo_path("data", "latex")
 
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"{problem_id}.tex"

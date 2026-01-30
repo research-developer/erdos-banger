@@ -21,6 +21,11 @@ import tempfile
 from pathlib import Path
 from urllib.parse import urlparse
 
+from erdos.core.constants import (
+    GIT_FETCH_TIMEOUT,
+    LAKE_UPDATE_TIMEOUT,
+    LEAN_COMPILE_TIMEOUT,
+)
 from erdos.core.sync.models import ProofLink, VerificationStatus, VerificationStrength
 from erdos.core.sync.proofs_provenance import (
     create_provenance,
@@ -57,10 +62,10 @@ logger = logging.getLogger(__name__)
 # Configuration constants
 # =============================================================================
 
-# Timeouts (in seconds)
-CLONE_TIMEOUT = 120  # 2 minutes for git clone
-BUILD_TIMEOUT = 600  # 10 minutes for lake build
-NO_SORRIES_TIMEOUT = 120  # 2 minutes for no-sorries check
+# Timeouts: use centralized constants from erdos.core.constants
+CLONE_TIMEOUT = GIT_FETCH_TIMEOUT  # 120s for git clone
+BUILD_TIMEOUT = LAKE_UPDATE_TIMEOUT  # 600s for lake build
+NO_SORRIES_TIMEOUT = LEAN_COMPILE_TIMEOUT  # 120s for no-sorries check
 
 # Log limits
 MAX_LOG_SIZE = 100_000  # 100KB max log size

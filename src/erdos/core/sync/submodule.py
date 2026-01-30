@@ -22,13 +22,14 @@ import yaml
 
 from erdos.core.config import AppConfig
 from erdos.core.constants import GIT_FETCH_TIMEOUT, GIT_OP_TIMEOUT
+from erdos.core.repo_root import repo_path
 from erdos.core.sync.models import SubmoduleProblemData, SubmoduleSyncStatus
 
 
 logger = logging.getLogger(__name__)
 
 # Default submodule path
-DEFAULT_SUBMODULE_PATH = Path("data/erdosproblems")
+DEFAULT_SUBMODULE_PATH = repo_path("data", "erdosproblems")
 
 
 # =============================================================================

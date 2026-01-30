@@ -15,6 +15,7 @@ from pathlib import Path
 
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
+from erdos.core.repo_root import repo_path
 from erdos.core.sync.forum import (
     ForumFetchError,
     fetch_and_parse_forum,
@@ -33,7 +34,7 @@ from erdos.core.sync.proofs import (
 logger = logging.getLogger(__name__)
 
 
-DEFAULT_CACHE_PATH = Path("data/sync_cache/proofs")
+DEFAULT_CACHE_PATH = repo_path("data", "sync_cache", "proofs")
 
 
 def _ensure_cache_dir(cache_path: Path) -> None:

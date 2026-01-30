@@ -10,7 +10,7 @@ All models are designed for deterministic serialization and offline-first operat
 
 from __future__ import annotations
 
-from datetime import datetime  # noqa: TC003 - needed at runtime for Pydantic
+from datetime import datetime
 from enum import Enum
 from typing import Annotated, Any
 

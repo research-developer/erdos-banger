@@ -12,6 +12,7 @@ from pydantic import ValidationError
 
 from erdos.core.config import AppConfig
 from erdos.core.models import ProblemRecord, ProblemStatus, ReferenceEntry
+from erdos.core.repo_root import repo_path
 
 
 if TYPE_CHECKING:
@@ -190,7 +191,7 @@ class ProblemLoader:
         Raises:
             ProblemLoaderError: If no valid path found
         """
-        enriched_path = Path("data/problems_enriched.yaml")
+        enriched_path = repo_path("data", "problems_enriched.yaml")
         if enriched_path.exists():
             return cls(enriched_path)
 
@@ -204,7 +205,7 @@ class ProblemLoader:
         except (ImportError, TypeError, AttributeError, FileNotFoundError):
             logger.debug("Package data loading skipped", exc_info=True)
 
-        relative_path = Path("data/erdosproblems/data/problems.yaml")
+        relative_path = repo_path("data", "erdosproblems", "data", "problems.yaml")
         if relative_path.exists():
             return cls(relative_path)
 

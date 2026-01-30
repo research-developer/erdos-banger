@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 from erdos.commands.presenter import console
 from erdos.core.models import LeanCheckResult
+from erdos.core.repo_root import repo_path
 
 
 # Default upstream metadata path
-UPSTREAM_METADATA_PATH = Path("data/erdosproblems/data/problems.yaml")
+UPSTREAM_METADATA_PATH = repo_path("data", "erdosproblems", "data", "problems.yaml")
 
 
 def print_human_check_result(result_data: dict[str, Any]) -> None:

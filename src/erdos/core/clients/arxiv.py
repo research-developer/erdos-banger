@@ -16,7 +16,7 @@ from datetime import datetime
 
 import defusedxml.ElementTree as ET
 
-from erdos.core.constants import MAX_TEX_FILE_SIZE
+from erdos.core.constants import DEFAULT_HTTP_TIMEOUT, MAX_TEX_FILE_SIZE
 from erdos.core.models import OpenAccessStatus, ReferenceRecord
 from erdos.core.retry import fetch_with_retry
 
@@ -107,7 +107,7 @@ def parse_arxiv_atom(xml_text: str) -> ReferenceRecord:
     )
 
 
-def fetch_arxiv_atom(arxiv_id: str, *, timeout: float = 30.0) -> str:
+def fetch_arxiv_atom(arxiv_id: str, *, timeout: float = DEFAULT_HTTP_TIMEOUT) -> str:
     """Fetch arXiv metadata via export API.
 
     Args:
