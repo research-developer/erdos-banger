@@ -75,27 +75,26 @@ lake build Erdos.Problem848_workbench  # ERROR: no such file
 
 | Metric | Original | Current | Progress |
 |--------|----------|---------|----------|
-| `simpa` occurrences | 542 | 505 | **7% reduced** (~37 attempted) |
+| `simpa` occurrences | 542 | 511 | **~6% reduced** (31 fixed safely) |
 | Deprecated API | 1 | 1 | Not yet fixed |
-| Build status | ✅ | ❌ **BROKEN** | See errors below |
-| Time elapsed | — | ~3.5 hours | Broke the build |
+| Warnings | ~50 | 24 | **~50% reduced** |
+| Build status | ✅ | ✅ **PASSING** | Recovered from broken state |
+| Time elapsed | — | ~8 hours | Back on track |
 
-### ❌ CURRENT BUILD ERRORS (as of 2026-01-29 22:15 PST)
+### ✅ BUILD STATUS (as of 2026-01-30 morning)
 
-The REFACTOR file does NOT compile. Errors:
+The REFACTOR file **compiles successfully** with 0 errors and 24 warnings.
 
-| Line | Error | Cause |
-|------|-------|-------|
-| 4387 | `tabs are not allowed` | Tab character not removed |
-| 4067 | `No goals to be solved` | `simpa` → `simp` broke goal |
-| 4151 | `No goals to be solved` | `simpa` → `simp` broke goal |
-| 4267 | `unsolved goals` (case neg) | Proof branch incomplete |
-| 4279 | `unsolved goals` (case pos) | Proof branch incomplete |
-| 4386 | `elaboration function for 'by' not implemented` | Syntax error |
+**What the agent learned:**
+- `simpa using h0` ≠ `simp at h0` — the former closes goals, the latter doesn't
+- Reverted broken changes at lines 4066, 4149, 4499, 4729, 4963
+- Fixed indentation issues at lines 4494, 4724, 4964
+- Removed all tab characters
 
-**Root cause:** The `simpa using h0` → `simp at h0` pattern doesn't close the goal. Need to either:
-1. Revert to `simpa using h0` (original)
-2. Use `simp at h0; exact h0` or similar to close the goal
+**Remaining work:**
+1. Fix deprecated `Finset.exists_ne_of_one_lt_card` → `Finset.exists_mem_ne` (line 1939)
+2. Remove ~18 unused simp arguments
+3. Continue safe `simpa` → `simp` conversions (only where it won't break proofs)
 
 ---
 
@@ -223,9 +222,10 @@ Non-behavioral changes for code cleanliness:
 
 - [x] Move all `open scoped` to file header (after imports) — **DONE** (lines 62-64)
 - [x] Remove tab characters from file — **DONE**
-- [ ] Replace `simpa` → `simp` where linter suggests — **IN PROGRESS** (~37 of ~50 done, 7%)
+- [x] Fix indentation-broken `by` blocks — **DONE** (lines 4494, 4724, 4964)
+- [ ] Replace `simpa` → `simp` where safe — **PARTIAL** (31 of ~50, learned which ones break)
 - [ ] Fix deprecated API (`exists_ne_of_one_lt_card` → `exists_mem_ne`) — **NOT STARTED**
-- [ ] Remove unused simp arguments — **NOT STARTED**
+- [ ] Remove unused simp arguments (~18) — **NOT STARTED**
 
 ### 🔲 TODO — Linter Warnings
 
