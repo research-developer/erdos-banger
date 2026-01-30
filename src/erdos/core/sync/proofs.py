@@ -19,6 +19,7 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
+from urllib.parse import urlparse
 
 from erdos.core.sync.models import ProofLink, VerificationStatus, VerificationStrength
 from erdos.core.sync.proofs_provenance import (
@@ -30,6 +31,7 @@ from erdos.core.sync.proofs_types import CloneResult, VerificationResult
 
 
 __all__ = [
+    "ALLOWED_REPO_HOSTS",
     "CloneResult",
     "VerificationResult",
     "check_no_sorries",
@@ -38,8 +40,14 @@ __all__ = [
     "run_lake_build",
     "save_provenance",
     "save_verification_log",
+    "validate_repo_url",
     "verify_proof",
 ]
+
+
+def validate_repo_url(url: str) -> tuple[bool, str | None]:
+    """Public wrapper for URL validation. See _validate_repo_url."""
+    return _validate_repo_url(url)
 
 
 logger = logging.getLogger(__name__)
@@ -71,6 +79,70 @@ STRIPPED_ENV_VARS = frozenset(
         "SECRET_KEY",
     }
 )
+
+# Allowed hosts for proof repositories (defense-in-depth)
+ALLOWED_REPO_HOSTS = frozenset({"github.com", "gitlab.com"})
+
+
+# =============================================================================
+# URL validation (defense-in-depth)
+# =============================================================================
+
+
+def _validate_repo_url(url: str) -> tuple[bool, str | None]:  # noqa: PLR0911
+    """Validate repository URL for security.
+
+    Checks:
+    - HTTPS protocol only
+    - Host against allowlist (github.com, gitlab.com)
+    - No embedded credentials
+    - No explicit ports
+    - Valid URL structure with repository path
+
+    Args:
+        url: Repository URL to validate
+
+    Returns:
+        Tuple of (is_valid, error_message or None)
+
+    Note:
+        Uses early returns for security validation clarity (noqa: PLR0911).
+    """
+    # Early rejection of non-HTTPS
+    if not url.startswith("https://"):
+        return False, "Only HTTPS URLs are allowed"
+
+    try:
+        parsed = urlparse(url)
+    except ValueError as e:
+        return False, f"Invalid URL format: {e}"
+
+    # Validate scheme and host
+    if parsed.scheme != "https" or not parsed.hostname:
+        return False, "URL must have a valid HTTPS host"
+
+    # Reject embedded credentials (security risk)
+    if parsed.username or parsed.password:
+        return False, "Credentials are not allowed in repository URLs"
+
+    # Reject explicit ports
+    try:
+        if parsed.port is not None:
+            return False, "Ports are not allowed in repository URLs"
+    except ValueError:
+        return False, "Invalid port in URL"
+
+    # Validate host against allowlist
+    host = parsed.hostname.lower()
+    if host not in ALLOWED_REPO_HOSTS:
+        allowed = ", ".join(sorted(ALLOWED_REPO_HOSTS))
+        return False, f"Only repositories from {allowed} are allowed"
+
+    # Validate repository path exists
+    if not parsed.path or parsed.path == "/":
+        return False, "URL must include repository path"
+
+    return True, None
 
 
 # =============================================================================
@@ -116,8 +188,10 @@ def clone_repository(
     Returns:
         CloneResult with success status and commit hash
     """
-    if not url.startswith("https://"):
-        return CloneResult(success=False, error="Only HTTPS URLs are allowed")
+    # Validate URL (defense-in-depth)
+    is_valid, error = _validate_repo_url(url)
+    if not is_valid:
+        return CloneResult(success=False, error=error)
 
     try:
         # Shallow clone without hooks or submodules

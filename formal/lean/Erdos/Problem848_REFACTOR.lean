@@ -3676,11 +3676,10 @@ theorem sawhney_main : SawhneyMain := by
         intro a ha
         have ha78 : a ∈ A7A ∪ A18A := hA_sub_78 ha
         have ha18 : a ∈ A18A := by
-          rcases Finset.mem_union.1 ha78 with ha7 | ha18
-          · exfalso
-            simp [hA7_empty] at ha7
-            exact ha7
-          · exact ha18
+	          rcases Finset.mem_union.1 ha78 with ha7 | ha18
+	          · exfalso
+	            simp [hA7_empty] at ha7
+	          · exact ha18
         have ha_range : a ∈ Finset.range N := hA18A_sub_range ha18
         have ha_mod : a % 25 = 18 := by
           simpa [A18A] using (Finset.mem_filter.1 ha18).2
@@ -3693,9 +3692,8 @@ theorem sawhney_main : SawhneyMain := by
           have ha7 : a ∈ A7A := by
             rcases Finset.mem_union.1 ha78 with ha7 | ha18
             · exact ha7
-            · exfalso
-              simp [hA18_empty] at ha18
-              exact ha18
+	            · exfalso
+	              simp [hA18_empty] at ha18
           have ha_range : a ∈ Finset.range N := hA7A_sub_range ha7
           have ha_mod : a % 25 = 7 := by
             simpa [A7A] using (Finset.mem_filter.1 ha7).2

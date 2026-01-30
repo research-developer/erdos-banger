@@ -16,12 +16,14 @@ import pytest
 
 from erdos.core.sync.models import ProofLink, VerificationStatus, VerificationStrength
 from erdos.core.sync.proofs import (
+    ALLOWED_REPO_HOSTS,
     CloneResult,
     VerificationResult,
     _find_problem_files,
     _read_toolchain,
     _sanitize_env,
     _truncate_log,
+    _validate_repo_url,
     check_no_sorries,
     clone_repository,
     create_provenance,
@@ -102,6 +104,77 @@ class TestSanitizeEnv:
             assert "GITHUB_TOKEN" not in env
             assert "DB_SECRET" not in env
             assert "SAFE_VAR" in env
+
+
+class TestValidateRepoUrl:
+    """Tests for repository URL validation (DEBT-118)."""
+
+    def test_accepts_valid_github_url(self) -> None:
+        """Accepts valid GitHub HTTPS URL."""
+        is_valid, error = _validate_repo_url("https://github.com/user/repo")
+        assert is_valid is True
+        assert error is None
+
+    def test_accepts_valid_gitlab_url(self) -> None:
+        """Accepts valid GitLab HTTPS URL."""
+        is_valid, error = _validate_repo_url("https://gitlab.com/user/repo")
+        assert is_valid is True
+        assert error is None
+
+    def test_rejects_http_url(self) -> None:
+        """Rejects HTTP (non-HTTPS) URLs."""
+        is_valid, error = _validate_repo_url("http://github.com/user/repo")
+        assert is_valid is False
+        assert error is not None
+        assert "HTTPS" in error
+
+    def test_rejects_ssh_url(self) -> None:
+        """Rejects SSH URLs."""
+        is_valid, error = _validate_repo_url("git@github.com:user/repo.git")
+        assert is_valid is False
+        assert "HTTPS" in (error or "")
+
+    def test_rejects_url_with_credentials(self) -> None:
+        """Rejects URLs with embedded username."""
+        is_valid, error = _validate_repo_url("https://user@github.com/user/repo")
+        assert is_valid is False
+        assert "Credentials" in (error or "")
+
+    def test_rejects_url_with_password(self) -> None:
+        """Rejects URLs with embedded password."""
+        is_valid, error = _validate_repo_url("https://user:pass@github.com/user/repo")
+        assert is_valid is False
+        assert "Credentials" in (error or "")
+
+    def test_rejects_url_with_port(self) -> None:
+        """Rejects URLs with explicit port."""
+        is_valid, error = _validate_repo_url("https://github.com:8080/user/repo")
+        assert is_valid is False
+        assert "Ports" in (error or "")
+
+    def test_rejects_disallowed_host(self) -> None:
+        """Rejects URLs from hosts not in allowlist."""
+        is_valid, error = _validate_repo_url("https://bitbucket.org/user/repo")
+        assert is_valid is False
+        assert "Only repositories from" in (error or "")
+
+    def test_rejects_url_without_path(self) -> None:
+        """Rejects URLs without repository path."""
+        is_valid, error = _validate_repo_url("https://github.com/")
+        assert is_valid is False
+        assert "repository path" in (error or "")
+
+    def test_rejects_url_with_only_host(self) -> None:
+        """Rejects URLs with only host, no path."""
+        is_valid, error = _validate_repo_url("https://github.com")
+        assert is_valid is False
+        assert "repository path" in (error or "")
+
+    def test_allowed_hosts_constant_is_frozen(self) -> None:
+        """ALLOWED_REPO_HOSTS is a frozenset (immutable)."""
+        assert isinstance(ALLOWED_REPO_HOSTS, frozenset)
+        assert "github.com" in ALLOWED_REPO_HOSTS
+        assert "gitlab.com" in ALLOWED_REPO_HOSTS
 
 
 class TestTruncateLog:
@@ -206,6 +279,20 @@ class TestCloneRepository:
         result = clone_repository("git@github.com:user/repo", tmp_path / "dest")
         assert result.success is False
         assert "HTTPS" in (result.error or "")
+
+    def test_rejects_disallowed_host(self, tmp_path: Path) -> None:
+        """Rejects URLs from hosts not in allowlist."""
+        result = clone_repository("https://bitbucket.org/user/repo", tmp_path / "dest")
+        assert result.success is False
+        assert "Only repositories from" in (result.error or "")
+
+    def test_rejects_url_with_credentials(self, tmp_path: Path) -> None:
+        """Rejects URLs with embedded credentials."""
+        result = clone_repository(
+            "https://user:pass@github.com/user/repo", tmp_path / "dest"
+        )
+        assert result.success is False
+        assert "Credentials" in (result.error or "")
 
     def test_successful_clone(self, tmp_path: Path) -> None:
         """Successful clone returns commit hash."""

@@ -122,17 +122,24 @@ class DatabaseManager:
 
     @contextmanager
     def connect(self) -> Iterator[sqlite3.Connection]:
-        """Context manager for database connections."""
-        conn = sqlite3.connect(self._db_path)
-        conn.row_factory = sqlite3.Row
+        """Context manager for database connections.
+
+        Handles connection errors gracefully to avoid secondary exceptions
+        (UnboundLocalError) when sqlite3.connect() fails.
+        """
+        conn: sqlite3.Connection | None = None
         try:
+            conn = sqlite3.connect(self._db_path)
+            conn.row_factory = sqlite3.Row
             yield conn
             conn.commit()
         except Exception:  # always rollback on any exception at this boundary
-            conn.rollback()
+            if conn is not None:
+                conn.rollback()
             raise
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     def _ensure_schema(self) -> None:
         """Create tables if they don't exist."""

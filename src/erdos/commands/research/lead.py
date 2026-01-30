@@ -480,6 +480,9 @@ def lead_ingest(
     # Actually ingest
     results, stats, updated_manifest = bridge.ingest_leads(enriched_leads, manifest)
 
+    # Track failed lead updates (for reporting even if stats.added == 0)
+    failed_lead_updates = 0
+
     # Save updated manifest
     if stats.added > 0:
         success, error_msg = _write_manifest_atomic(updated_manifest, manifest_path)
@@ -513,18 +516,32 @@ def lead_ingest(
                     )
                 except Exception as e:
                     logger.warning("Failed to update lead %s: %s", result.lead_id, e)
+                    failed_lead_updates += 1
+
+    # Build output data with all stats
+    output_data: dict[str, object] = {
+        "problem_id": problem_id,
+        "added": stats.added,
+        "skipped_duplicate": stats.skipped_duplicate,
+        "skipped_not_enriched": stats.skipped_not_enriched,
+        "skipped_no_identifier": stats.skipped_no_identifier,
+        "failed": stats.failed,
+        "manifest_entries": len(updated_manifest.entries),
+        "message": f"Added {stats.added} entries to manifest",
+    }
+
+    # Add warning if there were failures
+    if stats.failed > 0 or failed_lead_updates > 0:
+        output_data["failed_lead_updates"] = failed_lead_updates
+        output_data["warning"] = (
+            f"{stats.failed} leads failed validation, "
+            f"{failed_lead_updates} leads could not be marked as ingested"
+        )
 
     exit_with_result(
         ctx,
         CLIOutput.ok(
             command="erdos research lead ingest",
-            data={
-                "problem_id": problem_id,
-                "added": stats.added,
-                "skipped_duplicate": stats.skipped_duplicate,
-                "skipped_not_enriched": stats.skipped_not_enriched,
-                "manifest_entries": len(updated_manifest.entries),
-                "message": f"Added {stats.added} entries to manifest",
-            },
+            data=output_data,
         ),
     )
