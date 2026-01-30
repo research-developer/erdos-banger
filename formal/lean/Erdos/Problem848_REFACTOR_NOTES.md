@@ -143,6 +143,46 @@ Non-behavioral changes for code cleanliness:
 
 ---
 
+## Expert-Level Structural Assessment
+
+An honest evaluation of the code architecture vs. what an expert Lean developer would do.
+
+### What's Actually Fine (Standard Lean Practice)
+
+| Pattern | Verdict | Notes |
+|---------|---------|-------|
+| `SawhneyMainAt` → `sawhney_main` → `problem_848_resolved` | ✅ Standard | Define prop, prove it, use it. NOT circular. |
+| Exact rational constants (`offPrimeDen`, `diagPrimeDen`) | ✅ Correct | Ugly but necessary for formal math |
+| `natToNum` workaround | ✅ Legitimate | Required for kernel reduction |
+| List-based prime enumeration | ✅ Smart | Avoids Finset permutation explosion |
+| Large `sawhney_main` theorem | ⚠️ Acceptable | Works, but harder to maintain |
+
+### What an Expert Would Do Differently
+
+| Issue | Current State | Expert Approach |
+|-------|---------------|-----------------|
+| **Proof modularity** | `sawhney_main` is 2000+ lines | Break into 10-15 smaller lemmas that compose |
+| **Repeated density bounds** | `hA7_bound`/`hA18_bound` copy-pasted 5+ times | Extract to `density_bound_for_residue_class` helper |
+| **Computation isolation** | Heavy prime sums mixed with proof logic | Separate file `PrimeSums.lean` with precomputed values |
+| **Blueprint documentation** | None | Human-readable outline linking to code (like Tao's PFR) |
+| **Tactic DRY** | Same 10-line tactic blocks repeated | Custom tactic or `repeat`/`all_goals` patterns |
+
+### Identified Spaghetti (Cosmetic, Not Logical)
+
+1. **Case-split explosion in `sawhney_main`** — Many `by_cases` branches with nearly identical logic. Could abstract the common pattern.
+
+2. **Inline `have` chains** — Long sequences of `have h1 ... have h2 ... have h3 ...` that could be standalone lemmas with descriptive names.
+
+3. **Scattered `set_option maxHeartbeats`** — Should be consolidated or heavy lemmas restructured.
+
+### Bottom Line
+
+The code is **working-but-unpolished** — like a prototype vs. production code. Both compile. Both are correct. One is prettier.
+
+For a 4-5 day effort with AI assistance, the structure is genuinely sound. The "spaghetti" is cosmetic, not logical. The proof is valid.
+
+---
+
 ## Historical Note (For Reviewers)
 
 The `natToNum` breakthrough was discovered by GPT-5.2 agent during collaborative development.

@@ -1931,7 +1931,7 @@ lemma no_five_in_candidates_100 :
       s.card = 5 → ¬ NonSquarefreeProductProp s := by
   classical
   intro s hs hcard hsprop
-  have hs_one_lt : 1 < s.card := by simpa [hcard] using (by decide : (1 : ℕ) < 5)
+  have hs_one_lt : 1 < s.card := by simp [hcard]
   let C : Finset ℕ := {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99}
   have hsC : s ⊆ C := by simpa [C] using hs
 
@@ -2171,10 +2171,10 @@ lemma no_five_in_candidates_100 :
         s = ({7, 32, 57, 68, 82} : Finset ℕ) := by
       apply Finset.eq_of_subset_of_card_le hs_sub
       have : ({7, 32, 57, 68, 82} : Finset ℕ).card ≤ s.card := by
-        simpa [hcard] using (le_rfl : 5 ≤ 5)
+        simp [hcard]
       simpa using this
-    have h32 : 32 ∈ s := by simpa [hcard_eq]
-    have h68 : 68 ∈ s := by simpa [hcard_eq]
+    have h32 : 32 ∈ s := by simp [hcard_eq]
+    have h68 : 68 ∈ s := by simp [hcard_eq]
     have : Squarefree (32 * 68 + 1) := by
       simpa [show 32 * 68 + 1 = 2177 by norm_num] using squarefree_2177
     exact (hsprop 32 h32 68 h68 this).elim
@@ -2217,9 +2217,9 @@ lemma no_five_in_candidates_100 :
       have hs_eq : s = ({7, 32, 43, 57, 93} : Finset ℕ) := by
         apply Finset.eq_of_subset_of_card_le hs_sub
         have : ({7, 32, 43, 57, 93} : Finset ℕ).card ≤ s.card := by
-          simpa [hcard] using (le_rfl : 5 ≤ 5)
+          simp [hcard]
         simpa using this
-      have h93 : 93 ∈ s := by simpa [hs_eq]
+      have h93 : 93 ∈ s := by simp [hs_eq]
       have : Squarefree (32 * 93 + 1) := by
         simpa [show 32 * 93 + 1 = 2977 by norm_num] using squarefree_2977
       exact (hsprop 32 h32 93 h93 this).elim
@@ -2235,10 +2235,10 @@ lemma no_five_in_candidates_100 :
     have hs_eq : s = ({7, 43, 57, 68, 93} : Finset ℕ) := by
       apply Finset.eq_of_subset_of_card_le hs_sub
       have : ({7, 43, 57, 68, 93} : Finset ℕ).card ≤ s.card := by
-        simpa [hcard] using (le_rfl : 5 ≤ 5)
+        simp [hcard]
       simpa using this
-    have h7 : 7 ∈ s := by simpa [hs_eq]
-    have h43 : 43 ∈ s := by simpa [hs_eq]
+    have h7 : 7 ∈ s := by simp [hs_eq]
+    have h43 : 43 ∈ s := by simp [hs_eq]
     have : Squarefree (7 * 43 + 1) := by
       simpa [show 7 * 43 + 1 = 302 by norm_num] using squarefree_302
     exact (hsprop 7 h7 43 h43 this).elim
