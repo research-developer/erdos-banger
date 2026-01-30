@@ -3538,7 +3538,7 @@ lemma diag_count_mod50odd_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 
 -- SECTION 10: THE MAIN STABILITY THEOREM (SAWHNEY)
 -- ============================================================================
 
-set_option maxHeartbeats 2000000
+set_option maxHeartbeats 2000000 in
 
 /-- SawhneyMain: The stability theorem for Erdős Problem 848.
 
