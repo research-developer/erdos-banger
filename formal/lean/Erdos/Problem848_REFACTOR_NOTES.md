@@ -73,28 +73,37 @@ lake build Erdos.Problem848_workbench  # ERROR: no such file
 
 ## Progress Tracking (GPT Agent)
 
-| Metric | Original | Current | Progress |
-|--------|----------|---------|----------|
-| `simpa` occurrences | 542 | 511 | **~6% reduced** (31 fixed safely) |
-| Deprecated API | 1 | 1 | Not yet fixed |
-| Warnings | ~50 | 24 | **~50% reduced** |
-| Build status | ✅ | ✅ **PASSING** | Recovered from broken state |
-| Time elapsed | — | ~8 hours | Back on track |
+| Metric | Original | Final | Progress |
+|--------|----------|-------|----------|
+| Build errors | 0 | 0 | ✅ Maintained |
+| Build warnings | ~50 | **0** | ✅ **100% fixed** |
+| Tabs | >0 | **0** | ✅ **100% fixed** |
+| Deprecated APIs | 1 | **0** | ✅ **100% fixed** |
+| `simpa` count | 542 | 505 | ✅ 37 safely removed (7%) |
+| Time elapsed | — | ~10 hours | Completed |
 
-### ✅ BUILD STATUS (as of 2026-01-30 morning)
+### ✅ BUILD STATUS (as of 2026-01-30 — VERIFIED)
 
-The REFACTOR file **compiles successfully** with 0 errors and 24 warnings.
+```
+lake build Erdos.Problem848_REFACTOR
+Build completed successfully (2755 jobs).
+```
 
-**What the agent learned:**
-- `simpa using h0` ≠ `simp at h0` — the former closes goals, the latter doesn't
-- Reverted broken changes at lines 4066, 4149, 4499, 4729, 4963
-- Fixed indentation issues at lines 4494, 4724, 4964
+**Independently verified:**
+- 0 errors ✅
+- 0 warnings ✅
+- 0 tabs ✅
+- 0 deprecated APIs ✅
+- 0 sorry ✅
+- 0 native_decide ✅
+
+**What the agent accomplished:**
+- Replaced `Finset.exists_ne_of_one_lt_card` → `Finset.exists_mem_ne`
+- Removed all unused simp arguments flagged by linter
+- Converted 37 `simpa` → `simp` where safe
+- Learned which `simpa` conversions break proofs and avoided them
+- Fixed all indentation-broken `by` blocks
 - Removed all tab characters
-
-**Remaining work:**
-1. Fix deprecated `Finset.exists_ne_of_one_lt_card` → `Finset.exists_mem_ne` (line 1939)
-2. Remove ~18 unused simp arguments
-3. Continue safe `simpa` → `simp` conversions (only where it won't break proofs)
 
 ---
 
@@ -218,14 +227,27 @@ Current usage (may need reduction for Mathlib submission):
 
 Non-behavioral changes for code cleanliness:
 
-### ✅ COMPLETED (by GPT agent)
+### ✅ COMPLETED (by GPT agent) — ALL LINTER WORK DONE
 
-- [x] Move all `open scoped` to file header (after imports) — **DONE** (lines 62-64)
-- [x] Remove tab characters from file — **DONE**
-- [x] Fix indentation-broken `by` blocks — **DONE** (lines 4494, 4724, 4964)
-- [ ] Replace `simpa` → `simp` where safe — **PARTIAL** (31 of ~50, learned which ones break)
-- [ ] Fix deprecated API (`exists_ne_of_one_lt_card` → `exists_mem_ne`) — **NOT STARTED**
-- [ ] Remove unused simp arguments (~18) — **NOT STARTED**
+- [x] Move all `open scoped` to file header (after imports) — **DONE**
+- [x] Remove tab characters from file — **DONE** (0 tabs)
+- [x] Fix indentation-broken `by` blocks — **DONE**
+- [x] Replace `simpa` → `simp` where safe — **DONE** (37 converted, rest needed)
+- [x] Fix deprecated API (`exists_ne_of_one_lt_card` → `exists_mem_ne`) — **DONE**
+- [x] Remove unused simp arguments — **DONE** (all flagged args removed)
+
+### 🔲 REMAINING STRUCTURAL DEBT (Lower Priority)
+
+These are NOT linter issues — they're structural improvements for Mathlib submission:
+
+| Debt | Current State | Ideal State | Priority |
+|------|---------------|-------------|----------|
+| **maxHeartbeats** | 13 occurrences, up to 40,000,000 | ≤200,000 per Mathlib style | LOW |
+| **Repeated density bounds** | 11 duplicates of `hA7_bound`/`hA18_bound` | Extract to helper lemma | LOW |
+| **Monolithic theorem** | `sawhney_main` is 2000+ lines | Break into 10-15 composable lemmas | LOW |
+| **Computation isolation** | Heavy prime sums mixed with proof | Separate `PrimeSums.lean` file | LOW |
+
+**Recommendation:** This structural debt is acceptable for a standalone proof. Only address if preparing for Mathlib submission.
 
 ### 🔲 TODO — Linter Warnings
 
@@ -339,6 +361,25 @@ All three files (`Problem848.lean`, `Problem848_FINAL.lean`, `Problem848_REFACTO
 
 ## Next Steps
 
-1. **If submitting to Mathlib:** Apply cleanup checklist, reduce maxHeartbeats
-2. **If keeping as standalone proof:** Current state is production-ready
+1. **If submitting to Mathlib:** Address structural debt (maxHeartbeats, extract helpers)
+2. **If keeping as standalone proof:** ✅ **DONE** — REFACTOR is production-ready
 3. **For publication:** Consider extracting the `natToNum` technique as a reusable pattern
+
+---
+
+## Summary (2026-01-30)
+
+**Mission accomplished.** The GPT agent successfully cleaned up `Problem848_REFACTOR.lean`:
+
+| Before | After |
+|--------|-------|
+| ~50 linter warnings | **0 warnings** |
+| 1 deprecated API | **0 deprecated** |
+| Tab characters present | **0 tabs** |
+| Build: ✅ | Build: ✅ |
+
+**Time spent:** ~10 hours (overnight run)
+**Approach:** Iterative small changes with verification after each batch
+**Key learning:** `simpa` ≠ `simp` — agent learned this the hard way and recovered
+
+The file is now **linter-clean** and ready for use. Structural debt remains but is acceptable for standalone deployment.

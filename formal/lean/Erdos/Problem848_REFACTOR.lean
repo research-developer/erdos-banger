@@ -1095,7 +1095,7 @@ lemma not_dvd_four_sq_add_one (n : ℕ) : ¬ (4 ∣ n ^ 2 + 1) := by
     have hn4lt : n % 4 < 4 := Nat.mod_lt n (by decide : 0 < 4)
     have : n % 4 < 3 + 1 := by simpa using hn4lt
     exact (Nat.lt_succ_iff).1 this
-  interval_cases hcase : n % 4 <;> simp [hcase] at hmod'
+  interval_cases hcase : n % 4 <;> simp at hmod'
 
 -- ============================================================================
 -- SECTION 7: FINITE VERIFICATION (proved without native computation)
@@ -1936,7 +1936,7 @@ lemma no_five_in_candidates_100 :
   have hsC : s ⊆ C := by simpa [C] using hs
 
   by_cases h38 : 38 ∈ s
-  · obtain ⟨b, hb, hb_ne⟩ := Finset.exists_ne_of_one_lt_card hs_one_lt 38
+  · obtain ⟨b, hb, hb_ne⟩ := Finset.exists_mem_ne hs_one_lt 38
     have hbC : b ∈ C := hsC hb
     have hb_cases :
         b = 7 ∨ b = 18 ∨ b = 32 ∨ b = 38 ∨ b = 41 ∨ b = 43 ∨ b = 57 ∨ b = 68 ∨ b = 70 ∨ b = 82 ∨
@@ -2600,7 +2600,7 @@ lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
     have hcomp : no5PrimesCoarse_num = no5PrimesCoarse_computed_list.toFinset := by
       ext p
       simp [no5PrimesCoarse_num, primesUpTo_num, no5PrimesCoarse_computed_list, isNo5PrimeBool,
-        and_assoc, and_left_comm, and_comm]
+        and_left_comm, and_comm]
     have hlift : no5PrimesCoarse_computed_list.toFinset = no5PrimesCoarse_list := by
       simpa [no5PrimesCoarse_list] using congrArg List.toFinset no5PrimesCoarse_computed_list_eq
     exact hcomp.trans hlift
@@ -2671,7 +2671,7 @@ lemma offPrimesCoarse_sum_eq :
   let f : ℕ → ℚ := fun p => (1 : ℚ) / (p ^ 2 : ℚ)
   have hoff : offPrimesCoarse = no5PrimesCoarse.erase 2 := by
     ext p
-    simp [offPrimesCoarse, no5PrimesCoarse, primesUpTo, and_left_comm, and_assoc, and_comm]
+    simp [offPrimesCoarse, no5PrimesCoarse, primesUpTo, and_left_comm, and_assoc]
   have h2 : 2 ∈ no5PrimesCoarse := by
     simp [no5PrimesCoarse, primesUpTo, primeCutoff, Nat.prime_two]
   have hsum := Finset.sum_erase_add (s := no5PrimesCoarse) (a := 2) (f := f) h2
@@ -2770,7 +2770,7 @@ lemma sum_Ioc_inv_sq_le_inv (B N : ℕ) (hB : B ≠ 0) :
   · have hIoc : (Finset.Ioc B N) = ∅ := by
       apply Finset.Ioc_eq_empty
       exact not_lt.2 (Nat.le_of_not_gt hBN)
-    simp [hIoc, hB, one_div]
+    simp [hIoc, one_div]
 
 def diagPrimesUpTo (N : ℕ) : Finset ℕ :=
   (primesUpTo N).filter (fun p => p % 4 = 1 ∧ 13 ≤ p)
@@ -3610,7 +3610,7 @@ theorem sawhney_main : SawhneyMain := by
         have :
             (∑ p ∈ P, (N : ℝ) / (k * (p : ℝ) ^ 2)) =
               (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) := by
-          simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
+          simp [div_eq_mul_inv, mul_sum, mul_comm]
         exact hdiv'.trans (le_of_eq this)
       have h := add_le_add_right hdiv (P.card : ℝ)
       calc
@@ -3883,7 +3883,7 @@ theorem sawhney_main : SawhneyMain := by
                 exact this
               have heq : (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) =
                   (1 / 25 : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
-                simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
+                simp [div_eq_mul_inv, mul_sum, mul_left_comm, mul_comm]
               have hmul : (1 / 25 : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤ (1 / 25 : ℝ) * ((413 : ℝ) / 1000) :=
                 mul_le_mul_of_nonneg_left hcast' (by positivity)
               have hsum_nonneg : (0 : ℝ) ≤ (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) :=
@@ -4063,7 +4063,7 @@ theorem sawhney_main : SawhneyMain := by
                   have h0 : (b * a + 1) % 2 = 0 := by
                     have : 2 ∣ 4 := by decide
                     exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
-                  exact (by simpa [hodd] using h0)
+                  simp [hodd] at h0
                 exact (this (by simpa [pow_two] using hp2div)).elim
               have hp_lt : p ≤ N := by
                 have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
@@ -4146,7 +4146,7 @@ theorem sawhney_main : SawhneyMain := by
                   have h0 : (b * a + 1) % 2 = 0 := by
                     have : 2 ∣ 4 := by decide
                     exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
-                  exact (by simpa [hodd] using h0)
+                  simp [hodd] at h0
                 exact (this (by simpa [pow_two] using hp2div)).elim
               have hp_lt : p ≤ N := by
                 have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
@@ -4211,7 +4211,7 @@ theorem sawhney_main : SawhneyMain := by
             exact this
           have : (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) =
               (1 / 25 : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
-            simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
+            simp [div_eq_mul_inv, mul_sum, mul_left_comm, mul_comm]
           have hmul : (1 / 25 : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤
               (1 / 25 : ℝ) * ((1 : ℝ) / 70) :=
             mul_le_mul_of_nonneg_left hcast' (by positivity)
@@ -4225,7 +4225,7 @@ theorem sawhney_main : SawhneyMain := by
             exact this
           have : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) =
               (1 / 25 : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
-            simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
+            simp [div_eq_mul_inv, mul_sum, mul_left_comm, mul_comm]
           have hmul : (1 / 25 : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤
               (1 / 25 : ℝ) * ((163 : ℝ) / 1000) :=
             mul_le_mul_of_nonneg_left hcast' (by positivity)
@@ -4385,7 +4385,7 @@ theorem sawhney_main : SawhneyMain := by
               have hmul_le' :
                   ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) ≤
                     (46 : ℝ) * ((∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) := by
-                simpa [hmul]
+                simp [hmul]
               exact le_trans hmul_le' (mul_le_mul_of_nonneg_left hsum' (by positivity))
             exact le_trans hcard_real hmul_le
           -- Now bound A7 and A18 depending on where the even element lies.
@@ -4496,7 +4496,7 @@ theorem sawhney_main : SawhneyMain := by
                       have h0 : (b7 * a + 1) % 2 = 0 := by
                         have : 2 ∣ 4 := by decide
                         exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
-                      exact (by simpa [hodd] using h0)
+                      simp [hodd] at h0
                     exact (this (by simpa [pow_two] using hp2div)).elim
                   have hp_le : p ≤ N := by
                     have hp2_le : p ^ 2 ≤ b7 * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
@@ -4560,7 +4560,7 @@ theorem sawhney_main : SawhneyMain := by
                   exact this
                 have : (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) =
                     (1 / 50 : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
-                  simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
+                  simp [div_eq_mul_inv, mul_sum, mul_left_comm, mul_comm]
                 have : (1 / 50 : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤
                     (1 / 50 : ℝ) * ((1 : ℝ) / 70) := by
                   exact mul_le_mul_of_nonneg_left hcast' (by positivity)
@@ -4574,7 +4574,7 @@ theorem sawhney_main : SawhneyMain := by
                   exact this
                 have : (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) =
                     (1 / 25 : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
-                  simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
+                  simp [div_eq_mul_inv, mul_sum, mul_left_comm, mul_comm]
                 have : (1 / 25 : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤
                     (1 / 25 : ℝ) * ((413 : ℝ) / 1000) := by
                   exact mul_le_mul_of_nonneg_left hcast' (by positivity)
@@ -4588,7 +4588,7 @@ theorem sawhney_main : SawhneyMain := by
                   exact this
                 have : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) =
                     (1 / 25 : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
-                  simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
+                  simp [div_eq_mul_inv, mul_sum, mul_left_comm, mul_comm]
                 have : (1 / 25 : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤
                     (1 / 25 : ℝ) * ((163 : ℝ) / 1000) := by
                   exact mul_le_mul_of_nonneg_left hcast' (by positivity)
@@ -4726,7 +4726,7 @@ theorem sawhney_main : SawhneyMain := by
                       have h0 : (b18 * a + 1) % 2 = 0 := by
                         have : 2 ∣ 4 := by decide
                         exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
-                      exact (by simpa [hodd] using h0)
+                      simp [hodd] at h0
                     exact (this (by simpa [pow_two] using hp2div)).elim
                   have hp_le : p ≤ N := by
                     have hp2_le : p ^ 2 ≤ b18 * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
@@ -4790,7 +4790,7 @@ theorem sawhney_main : SawhneyMain := by
                   exact this
                 have : (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) =
                     (1 / 50 : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
-                  simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
+                  simp [div_eq_mul_inv, mul_sum, mul_left_comm, mul_comm]
                 have : (1 / 50 : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤
                     (1 / 50 : ℝ) * ((1 : ℝ) / 70) := by
                   exact mul_le_mul_of_nonneg_left hcast' (by positivity)
@@ -4804,7 +4804,7 @@ theorem sawhney_main : SawhneyMain := by
                   exact this
                 have : (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) =
                     (1 / 25 : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
-                  simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
+                  simp [div_eq_mul_inv, mul_sum, mul_left_comm, mul_comm]
                 have : (1 / 25 : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤
                     (1 / 25 : ℝ) * ((413 : ℝ) / 1000) := by
                   exact mul_le_mul_of_nonneg_left hcast' (by positivity)
@@ -4818,7 +4818,7 @@ theorem sawhney_main : SawhneyMain := by
                   exact this
                 have : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) =
                     (1 / 25 : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
-                  simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
+                  simp [div_eq_mul_inv, mul_sum, mul_left_comm, mul_comm]
                 have : (1 / 25 : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤
                     (1 / 25 : ℝ) * ((163 : ℝ) / 1000) := by
                   exact mul_le_mul_of_nonneg_left hcast' (by positivity)
@@ -4957,11 +4957,11 @@ theorem sawhney_main : SawhneyMain := by
             have hmul_le :
                 ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) ≤
                   (46 : ℝ) * ((N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by
-                have hmul_le' :
-                    ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                      (46 : ℝ) * ((∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) := by
-                  simpa [hmul]
-                exact le_trans hmul_le' (mul_le_mul_of_nonneg_left hsum' (by positivity))
+              have hmul_le' :
+                  ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) ≤
+                    (46 : ℝ) * ((∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) := by
+                simp [hmul]
+              exact le_trans hmul_le' (mul_le_mul_of_nonneg_left hsum' (by positivity))
             exact le_trans hcard_real hmul_le
           -- Bound A7 ∪ A18 (no even elements) using mod 100 split.
           -- In this case (A* all odd, A7 ∪ A18 all odd), the elements of A7A are in odd residue
@@ -5485,7 +5485,7 @@ theorem sawhney_main : SawhneyMain := by
               exact this
             have : (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) =
                 (1 / 50 : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
-              simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
+              simp [div_eq_mul_inv, mul_sum, mul_left_comm, mul_comm]
             have : (1 / 50 : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤
                 (1 / 50 : ℝ) * ((1 : ℝ) / 70) := by
               exact mul_le_mul_of_nonneg_left hcast' (by positivity)
@@ -5499,7 +5499,7 @@ theorem sawhney_main : SawhneyMain := by
               exact this
             have : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) =
                 (1 / 100 : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) := by
-              simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]
+              simp [div_eq_mul_inv, mul_sum, mul_left_comm, mul_comm]
             have : (1 / 100 : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤
                 (1 / 100 : ℝ) * ((163 : ℝ) / 1000) := by
               exact mul_le_mul_of_nonneg_left hcast' (by positivity)
