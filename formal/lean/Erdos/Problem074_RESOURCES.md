@@ -39,12 +39,14 @@ All in `literature/extracts/pdf/0074/`:
 
 ### Proved (can be stated as theorems)
 
-1. **EHS82 Theorem 1 (Linear Bound):** For all $\varepsilon > 0$ and all $\kappa$, there exists $\mathcal{G}$ with $\chi(\mathcal{G}) > \kappa$ such that $f_{\mathcal{G}}^{(3)}(n) \leq \varepsilon n$ for all $n$.
-   - Translation: `erdos_74_linear` - answer is YES when $f(n) = \varepsilon n$
+1. **Linear edge-deletion bound (Rödl82 / Lovász):** For all $\varepsilon > 0$ and all $k < \omega$, there exist (finite) graphs with $\chi(\mathcal{G}) \ge k$ such that every subgraph $H$ can be made bipartite by deleting at most $\varepsilon |V(H)|$ edges (the $(\varepsilon,k)$-*edge* property).
+   - By taking a disjoint union over $k \to \infty$, this yields an infinite-chromatic graph satisfying a linear bound, matching `erdos_74_linear`.
 
 2. **Rödl82 Theorem 1.5:** The modified Kneser graphs $K^*(n,k)$ have the $(\varepsilon, k)$-edge property.
 
 3. **Upper bound:** $f_{\mathcal{G}}^{(3)}(n) \leq 2n^{3/2}$ for $\mathcal{G}_0(\omega, 2)$ (EHS82 Theorem 3.A)
+
+> Note: **EHS82 Theorem 1** is a *different* “linear” result about omitting **vertices** to obtain a large bipartite induced subgraph (their function $f^2$), not about omitting **edges** (their function $f^3$ / Problem 74’s formulation).
 
 ### Open (stated as `Prop` or `sorry`)
 
