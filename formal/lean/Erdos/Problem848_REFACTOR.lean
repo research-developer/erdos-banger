@@ -4493,11 +4493,10 @@ theorem sawhney_main : SawhneyMain := by
                       omega
                     have : ¬ (4 ∣ b7 * a + 1) := by
                       intro h4
-                        have h0 : (b7 * a + 1) % 2 = 0 := by
-                          have : 2 ∣ 4 := by decide
-                          exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
-                        simp [hodd] at h0
-                        exact h0
+                      have h0 : (b7 * a + 1) % 2 = 0 := by
+                        have : 2 ∣ 4 := by decide
+                        exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
+                      exact (by simpa [hodd] using h0)
                     exact (this (by simpa [pow_two] using hp2div)).elim
                   have hp_le : p ≤ N := by
                     have hp2_le : p ^ 2 ≤ b7 * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
