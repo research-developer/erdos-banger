@@ -1,7 +1,8 @@
 # Problem 848 Refactor Notes (Presentation + SSOT)
 
 **Date:** 2026-01-29
-**Status:** ✅ BUILDS CLEAN — All 3 files verified identical (modulo namespace)
+**Last Updated:** 2026-01-29 (GPT cleanup in progress)
+**Status:** 🔄 REFACTOR IN PROGRESS — GPT agent cleaning up linter warnings
 **Scope:** This document is the SSOT for the **Problem 848 Lean formalization**.
 
 ---
@@ -10,11 +11,11 @@
 
 | File | Namespace | Status | Purpose |
 |------|-----------|--------|---------|
-| `Problem848.lean` | `Erdos.Problem848` | ✅ Builds | **Primary** — externally linked |
-| `Problem848_FINAL.lean` | `Erdos.Problem848_FINAL` | ✅ Builds | **Backup** — externally linked |
-| `Problem848_REFACTOR.lean` | `Erdos.Problem848_workbench` | ✅ Builds | **Sandbox** — for cleanup experiments |
+| `Problem848.lean` | `Erdos.Problem848` | ✅ Builds | **Primary** — externally linked, DO NOT EDIT |
+| `Problem848_FINAL.lean` | `Erdos.Problem848_FINAL` | ✅ Builds | **Backup** — externally linked, DO NOT EDIT |
+| `Problem848_REFACTOR.lean` | `Erdos.Problem848_workbench` | 🔄 Cleaning | **Sandbox** — GPT agent making linter fixes |
 
-All three files are **byte-identical** except for namespace declarations.
+**Note:** REFACTOR is now diverging from PRIMARY/FINAL during cleanup. Once cleanup is complete and verified, changes can be synced back.
 
 ### Verification Commands
 
@@ -124,12 +125,57 @@ Current usage (may need reduction for Mathlib submission):
 
 Non-behavioral changes for code cleanliness:
 
-- [ ] Move all `open scoped` to file header (after imports)
-- [ ] Replace `simpa` → `simp` where linter suggests (~35 occurrences)
-- [ ] Remove unused simp arguments (~15 occurrences)
-- [ ] Replace deprecated `Finset.exists_ne_of_one_lt_card` → `Finset.exists_mem_ne`
-- [ ] Extract repeated `hA7_bound`/`hA18_bound` patterns to helper lemma
+### ✅ COMPLETED (by GPT agent)
+
+- [x] Move all `open scoped` to file header (after imports) — **DONE** (lines 62-64)
+- [ ] Replace `simpa` → `simp` where linter suggests (~35 occurrences) — **IN PROGRESS**
+
+### 🔲 TODO — Linter Warnings
+
+#### Unused Simp Arguments (~18 occurrences)
+
+These simp lists have args that don't contribute — remove them:
+
+| Line | Unused Arg | Current Code |
+|------|------------|--------------|
+| ~1098 | `hcase` | `simp [hcase] at hmod'` |
+| ~2589 | `and_assoc` | `simp [..., and_assoc, and_left_comm, and_comm]` |
+| ~2603 | `and_assoc` | same pattern |
+| ~2674 | `and_comm` | `simp [offPrimesCoarse, ..., and_comm]` |
+| ~2773 | `hB` | `simp [hIoc, hB, one_div]` |
+| ~3613 | `mul_assoc`, `mul_left_comm` | `simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]` |
+| ~3888 | `mul_assoc` | same pattern |
+| ~4216 | `mul_assoc` | same pattern |
+| ~4230 | `mul_assoc` | same pattern |
+| ~4565 | `mul_assoc` | same pattern |
+| ~4579 | `mul_assoc` | same pattern |
+| ~4593 | `mul_assoc` | same pattern |
+| ~4795 | `mul_assoc` | same pattern |
+| ~4809 | `mul_assoc` | same pattern |
+| ~4823 | `mul_assoc` | same pattern |
+| ~5475 | `mul_assoc` | same pattern |
+| ~5489 | `mul_assoc` | same pattern |
+
+**Pattern:** Many lines have `simp [div_eq_mul_inv, mul_sum, mul_assoc, mul_left_comm, mul_comm]` but only `mul_comm` is used.
+
+#### Deprecated API (1 occurrence)
+
+| Line | Current | Replacement |
+|------|---------|-------------|
+| 1939 | `Finset.exists_ne_of_one_lt_card` | `Finset.exists_mem_ne` |
+
+#### Useless Tactics (2 occurrences)
+
+| Line | Issue |
+|------|-------|
+| ~1934 | `'decide' tactic does nothing` — remove trailing `decide` |
+| ~1934 | `this tactic is never executed` — unreachable branch |
+
+### 🔲 TODO — Structural (Lower Priority)
+
+- [ ] Extract repeated `hA7_bound`/`hA18_bound` patterns to helper lemma (5+ duplicates)
 - [ ] Consider grouping heavy-computation sections with shared `set_option` block
+- [ ] Move `open Filter Finset` (line 2428) to header with other opens
 
 **Priority:** LOW — The file builds and proves the theorem. Cleanup is for presentation only.
 
