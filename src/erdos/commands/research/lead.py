@@ -1,4 +1,7 @@
-"""Lead commands for `erdos research` (Spec 024, SPEC-030, SPEC-031)."""
+"""Lead commands for `erdos research` (Spec 024, SPEC-030, SPEC-031).
+
+# exempt: DEBT-119 - LOC violation (520/400) due to SPEC-036 enrich/ingest commands
+"""
 
 from __future__ import annotations
 
@@ -492,14 +495,21 @@ def lead_ingest(
             )
             return
 
-        # Update leads with ingest tracking
+        # Update leads with ingest tracking (consistent timestamp for batch)
+        ingested_at = datetime.now(UTC)
         for result in results:
             if result.added and result.entry is not None:
+                # Determine manifest_entry_id from the entry's reference
+                ref = result.entry.reference
+                manifest_entry_id = (
+                    f"doi:{ref.doi}" if ref.doi else f"arxiv:{ref.arxiv_id}"
+                )
                 try:
                     store.lead_update(
                         problem_id,
                         result.lead_id,
-                        ingested_at=datetime.now(UTC),
+                        ingested_at=ingested_at,
+                        manifest_entry_id=manifest_entry_id,
                     )
                 except Exception as e:
                     logger.warning("Failed to update lead %s: %s", result.lead_id, e)

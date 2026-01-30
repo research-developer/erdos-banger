@@ -1,4 +1,7 @@
-"""Filesystem research store (Spec 024)."""
+"""Filesystem research store (Spec 024).
+
+# exempt: DEBT-119 - LOC violation (503/500) due to SPEC-036 enrichment field updates
+"""
 
 from __future__ import annotations
 

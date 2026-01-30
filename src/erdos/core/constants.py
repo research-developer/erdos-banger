@@ -73,6 +73,14 @@ when sources contain large blobs (e.g., PDF extractions or long synthesis).
 MAX_TEX_FILE_SIZE = 2 * 1024 * 1024
 """Maximum LaTeX file size to process (2 MiB)."""
 
+# --- Year validation ---
+
+YEAR_MIN = 1900
+"""Minimum valid publication year for references."""
+
+YEAR_MAX = 2100
+"""Maximum valid publication year for references."""
+
 # --- Retry configuration ---
 
 RETRY_MAX_ATTEMPTS = 3

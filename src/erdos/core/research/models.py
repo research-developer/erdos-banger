@@ -8,6 +8,7 @@ from typing import Annotated
 
 from pydantic import ConfigDict, Field
 
+from erdos.core.constants import YEAR_MAX, YEAR_MIN
 from erdos.core.models.base import ErdosBaseModel
 
 
@@ -85,7 +86,9 @@ class LeadRecord(_FrozenModel):
     # Enrichment fields (SPEC-036) - populated by LeadEnrichmentService
     enriched_title: Annotated[str | None, Field(default=None)] = None
     enriched_authors: Annotated[list[str] | None, Field(default=None)] = None
-    enriched_year: Annotated[int | None, Field(default=None)] = None
+    enriched_year: Annotated[
+        int | None, Field(default=None, ge=YEAR_MIN, le=YEAR_MAX)
+    ] = None
     enriched_venue: Annotated[str | None, Field(default=None)] = None
     enriched_abstract: Annotated[str | None, Field(default=None)] = None
     enriched_provider: Annotated[str | None, Field(default=None)] = None

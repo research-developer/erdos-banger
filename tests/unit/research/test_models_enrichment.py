@@ -181,6 +181,18 @@ class TestManifestEntrySourceTracking:
                 source="invalid_source",  # type: ignore[arg-type]
             )
 
+    def test_manifest_entry_source_lead_requires_lead_id(self) -> None:
+        """ManifestEntry with source='lead' must have lead_id set."""
+        with pytest.raises(ValueError, match="lead_id is required"):
+            ManifestEntry(
+                reference=ReferenceRecord(
+                    doi="10.1234/test",
+                    title="Test Reference",
+                ),
+                source="lead",
+                lead_id=None,  # Missing lead_id should fail
+            )
+
     def test_existing_manifests_without_source_field_still_validate(self) -> None:
         """Backward compatibility: manifests without source field should validate."""
         entry_dict = {

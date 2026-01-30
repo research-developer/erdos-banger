@@ -9,6 +9,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
 
+from erdos.core.constants import YEAR_MAX, YEAR_MIN
 from erdos.core.models.base import ErdosBaseModel, utc_now
 
 
@@ -48,7 +49,7 @@ class ReferenceRecord(ErdosBaseModel):
     authors: Annotated[list[str], Field(default_factory=list)] = Field(
         default_factory=list
     )
-    year: Annotated[int | None, Field(default=None, ge=1900, le=2100)] = None
+    year: Annotated[int | None, Field(default=None, ge=YEAR_MIN, le=YEAR_MAX)] = None
     venue: Annotated[
         str | None, Field(default=None, description="Journal or conference")
     ] = None
@@ -149,6 +150,13 @@ class ManifestEntry(ErdosBaseModel):
         str | None,
         Field(default=None, description="LeadRecord ID if source='lead'"),
     ] = None
+
+    @model_validator(mode="after")
+    def validate_source_lead_id(self) -> ManifestEntry:
+        """Ensure lead_id is set when source is 'lead'."""
+        if self.source == "lead" and self.lead_id is None:
+            raise ValueError("lead_id is required when source='lead'")
+        return self
 
 
 class ProblemManifest(ErdosBaseModel):

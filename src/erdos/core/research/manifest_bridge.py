@@ -54,6 +54,7 @@ class IngestStats:
     skipped_duplicate: int = 0
     skipped_not_enriched: int = 0
     skipped_no_identifier: int = 0
+    failed: int = 0  # Leads that failed validation during ingest
 
 
 class ManifestBridge:
@@ -187,7 +188,16 @@ class ManifestBridge:
         new_entries: list[ManifestEntry] = []
 
         for lead in leads:
-            result = self.ingest_lead(lead, manifest, seen_dois, seen_arxiv_ids)
+            try:
+                result = self.ingest_lead(lead, manifest, seen_dois, seen_arxiv_ids)
+            except Exception as e:
+                # Handle malformed data that fails validation
+                result = IngestResult(
+                    lead_id=lead.id,
+                    added=False,
+                    reason=f"invalid_data: {e}",
+                )
+                stats.failed += 1
             results.append(result)
 
             if result.added and result.entry is not None:
