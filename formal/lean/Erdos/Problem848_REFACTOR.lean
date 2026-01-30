@@ -2650,6 +2650,7 @@ lemma diagPrimesCoarse_sum_eq :
   norm_num
 
 set_option maxRecDepth 400000 in
+set_option maxHeartbeats 10000000 in
 lemma no5PrimesCoarse_sum_eq :
     (∑ p ∈ no5PrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = no5PrimeSumCoarse := by
   rw [no5PrimesCoarse_eq_list]
