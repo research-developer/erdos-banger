@@ -80,11 +80,23 @@ noncomputable def SimpleGraph.maxSubgraphEdgeDistToBipartite (G : SimpleGraph V)
 
 ## arXiv Papers (from manifest)
 
-| arXiv ID | Title | Relevance |
-|----------|-------|-----------|
-| 1902.08177 | Lambie-Hanson: Growth rate of chromatic numbers | Related but different (chromatic growth, not edge-deletion) |
-| 1306.5167 | Füredi-Simonovits: Degenerate extremal graph problems | Background/context |
-| 2012.10409 | Illingworth: Chromatic profile of locally bipartite | Related chromatic problems |
+| arXiv ID | Title | Relevance | Extracted |
+|----------|-------|-----------|-----------|
+| 1902.08177 | Lambie-Hanson: Growth rate of chromatic numbers | Related but different (chromatic growth, not edge-deletion) | ✅ |
+| 1306.5167 | Füredi-Simonovits: Degenerate extremal graph problems | Background/context | ✅ |
+| 2012.10409 | Illingworth: Chromatic profile of locally bipartite | Related chromatic problems, minimum degree thresholds | ✅ |
+| 2203.13833 | Cambie et al: Removing independent sets for chromatic reduction | Brooks' theorem stability | ✅ |
+| **0905.2527** | **Mubayi-Turán: Finding bipartite subgraphs efficiently** | **ALGORITHMIC - polynomial algorithms for bipartite subgraph problems** | ✅ |
+
+---
+
+## DOI Papers (from manifest - via Exa discovery)
+
+| DOI | Paper | Relevance |
+|-----|-------|-----------|
+| 10.1007/BF01788540 | **Tuza 1987: Maximum bipartite subgraphs of Kneser graphs** | **DIRECTLY RELEVANT - bounds on bipartite subgraphs of K(n,k)** |
+| 10.1007/BF01261315 | **Alon 1996: Bipartite subgraphs** | **DIRECTLY RELEVANT - edge bounds for bipartization** |
+| 10.1016/0012-365x(85)90148-7 | Erdős-Hajnal 1985: Chromatic number survey | Survey paper (PDF in `literature/extracts/pdf/0074/`) |
 
 ---
 
@@ -98,9 +110,27 @@ noncomputable def SimpleGraph.maxSubgraphEdgeDistToBipartite (G : SimpleGraph V)
 
 ---
 
+## Exa Research Leads (2026-01-30)
+
+75+ leads discovered via Exa search. Most promising for Problem 74:
+
+| Paper | Why It's Gold |
+|-------|---------------|
+| Alex Scott 2023 "Graphs of large chromatic number" (EMS) | Recent comprehensive survey |
+| Thomassen 2016 "Infinitely connected subgraphs" | Uncountable chromatic number |
+| Jane Tan 2023 "Induced subgraphs of large chromatic" | Recent Combinatorica |
+| arXiv 2512.04993 "Edge density thresholds for unbounded χ" | Dec 2024 - NEW |
+| arXiv 2510.19650 "Burling graphs in large chromatic" | Oct 2025 - NEW |
+
+**Full leads:** Run `uv run erdos research lead list 74` to see all leads.
+
+---
+
 ## Suggested Approach
 
 1. **Start with `Problem074_experimental.lean`** (warning-free)
 2. **Add `erdos_74_linear`** - state EHS82 Theorem 1 (known positive result)
 3. **Keep `erdos_74` and `erdos_74_sqrt`** as open `Prop` definitions
 4. **The main difficulty:** Constructing the Specker graphs or edge graphs $\mathcal{G}_0(\alpha, k)$ in Lean with proper cardinality arguments
+5. **Key insight from Tuza 1987:** Maximum bipartite subgraph of $K(n,k)$ gives explicit bounds
+6. **Key insight from Alon 1996:** Every graph with $2m^2$ edges has bipartite subgraph with $≥ m^2 + m/2$ edges
