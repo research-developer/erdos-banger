@@ -2547,8 +2547,6 @@ lemma diagPrimesCoarse_computed_list_eq : diagPrimesCoarse_computed_list = diagP
   decide
 
 set_option maxRecDepth 80000 in
-set_option maxHeartbeats 40000000 in
-#count_heartbeats in
 lemma no5PrimesCoarse_computed_list_eq : no5PrimesCoarse_computed_list = no5PrimesCoarse_listL := by
   unfold no5PrimesCoarse_computed_list no5PrimesCoarse_listL isNo5PrimeBool natToNum primeCutoff
   decide
@@ -2594,8 +2592,6 @@ lemma diagPrimesCoarse_eq_list : diagPrimesCoarse = diagPrimesCoarse_list := by
   simpa [diagPrimesCoarse_eq_num] using hnum
 
 set_option maxRecDepth 20000 in
-set_option maxHeartbeats 40000000 in
-#count_heartbeats in
 lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
   have hnum : no5PrimesCoarse_num = no5PrimesCoarse_list := by
     classical
@@ -2654,8 +2650,6 @@ lemma diagPrimesCoarse_sum_eq :
   norm_num
 
 set_option maxRecDepth 400000 in
-set_option maxHeartbeats 40000000 in
-#count_heartbeats in
 lemma no5PrimesCoarse_sum_eq :
     (∑ p ∈ no5PrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = no5PrimeSumCoarse := by
   rw [no5PrimesCoarse_eq_list]
