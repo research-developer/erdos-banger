@@ -4063,8 +4063,7 @@ theorem sawhney_main : SawhneyMain := by
                   have h0 : (b * a + 1) % 2 = 0 := by
                     have : 2 ∣ 4 := by decide
                     exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
-                  simp [hodd] at h0
-                  exact h0
+                  exact (by simpa [hodd] using h0)
                 exact (this (by simpa [pow_two] using hp2div)).elim
               have hp_lt : p ≤ N := by
                 have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
@@ -4147,8 +4146,7 @@ theorem sawhney_main : SawhneyMain := by
                   have h0 : (b * a + 1) % 2 = 0 := by
                     have : 2 ∣ 4 := by decide
                     exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
-                  simp [hodd] at h0
-                  exact h0
+                  exact (by simpa [hodd] using h0)
                 exact (this (by simpa [pow_two] using hp2div)).elim
               have hp_lt : p ≤ N := by
                 have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
@@ -4384,10 +4382,10 @@ theorem sawhney_main : SawhneyMain := by
             have hmul_le :
                 ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) ≤
                   (46 : ℝ) * ((N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by
-                have hmul_le' :
-                    ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                      (46 : ℝ) * ((∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) := by
-                  simp [hmul]
+              have hmul_le' :
+                  ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) ≤
+                    (46 : ℝ) * ((∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) := by
+                simpa [hmul]
               exact le_trans hmul_le' (mul_le_mul_of_nonneg_left hsum' (by positivity))
             exact le_trans hcard_real hmul_le
           -- Now bound A7 and A18 depending on where the even element lies.
