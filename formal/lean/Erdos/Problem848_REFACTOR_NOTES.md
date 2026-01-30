@@ -11,7 +11,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Total lines | **5409** |
+| Total lines | **5407** |
 | Build time | ~12-13 min |
 | `sorry` | **0** ✅ |
 | `native_decide` | **0** ✅ |
@@ -73,7 +73,7 @@ flowchart TD
 ```
 
 **Bottlenecks:**
-1. **Section 9.5** (lines 2425-2973) — 40M heartbeats at lines 2550, 2596, 2655
+1. **Section 9.5** (lines 2425-2973) — tuned heartbeat caps (no more 40M)
 2. **Section 10** — `sawhney_main` is ~1842 lines (lines 3555-5396)
 
 ---
@@ -118,7 +118,7 @@ For Mathlib submission, these would improve the file:
 | Debt | Current | Target | Priority |
 |------|---------|--------|----------|
 | **Scoped maxHeartbeats** | Line 3541 uses `set_option ... in` | Keep scoped | DONE |
-| **40M heartbeats** | 3 occurrences (lines 2550, 2596, 2655) | Use `#count_heartbeats` to tune | LOW |
+| **High heartbeats in 9.5** | 20M/10M caps remain (lines drift; grep for `maxHeartbeats`) | Keep lowering where possible | LOW |
 | **Monolithic theorem** | `sawhney_main` ~1842 lines (3555-5396) | Split into 4-8 case lemmas | LOW |
 | **Computation isolation** | Mixed with proof | Separate `Computation.lean` | LOW |
 
