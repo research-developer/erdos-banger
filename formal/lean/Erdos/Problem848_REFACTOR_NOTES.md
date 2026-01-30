@@ -1,8 +1,8 @@
 # Problem 848 Refactor Notes (Presentation + SSOT)
 
 **Date:** 2026-01-29
-**Last Updated:** 2026-01-30 (structural refactoring — density bound extraction)
-**Status:** 🔄 REFACTOR IN PROGRESS — Extracting repeated density bound patterns
+**Last Updated:** 2026-01-30 23:00 PST (Phase 2 structural refactoring COMPLETE)
+**Status:** ✅ PHASE 2 COMPLETE — Density bound extraction finished
 **Scope:** This document is the SSOT for the **Problem 848 Lean formalization**.
 
 ---
@@ -84,36 +84,42 @@ lake build Erdos.Problem848_workbench  # ERROR: no such file
 | `simpa` count | 542 | 505 | ✅ 37 safely removed (7%) |
 | Time elapsed | — | ~10 hours | Completed |
 
-### Phase 2: Structural Refactoring (IN PROGRESS)
+### Phase 2: Structural Refactoring ✅ COMPLETE
 
 | Metric | Before | Current | Progress |
 |--------|--------|---------|----------|
-| Total lines | 5594 | **5476** | ✅ **-118 lines (-2.1%)** |
-| `card_biUnion_le` calls | 18 | **11** | ✅ 7 deduplicated |
-| Helper lemma usages | 0 | **9** | ✅ 1 def + 8 call sites |
-| `simpa` count | 505 | **498** | ✅ 7 more removed |
+| Total lines | 5594 | **5487** | ✅ **-107 lines (-1.9%)** |
+| `card_biUnion_le` calls | 18 | **8** | ✅ **10 deduplicated** |
+| Helper lemmas created | 0 | **2** | ✅ mod25 + mod100 |
+| Helper call sites | 0 | **12** | ✅ All duplicates replaced |
+| Build time | ~13 min | **777s (~13 min)** | ✅ No regression |
 
-#### Two Distinct Patterns Identified
+#### Two Helper Lemmas Extracted
 
-**Pattern A: Mod 25 density bounds** — ✅ COMPLETE
-- Helper: `residue_class_card_bound_of_subset` at line ~3623
-- Uses: `off_count_modEq25_le'` (line 3154)
-- Status: **8/8 blocks replaced**
+**Helper A: `residue_class_card_bound_of_subset`** (line 3623)
+- Pattern: Mod 25 density bounds
+- Uses: `off_count_modEq25_le'`
+- Status: **8/8 blocks replaced** ✅
 
-**Pattern B: Mod 100 density bounds** — 🔄 IN PROGRESS
-- Helper needed: `residue_class_card_bound100_of_subset` (not yet created)
-- Uses: `off_count_modEq100_le'` (line 3228)
-- Remaining blocks at lines: **5070, 5148, 5295, 5369**
-- Status: **0/4 blocks replaced**
+**Helper B: `residue_class_card_bound100_of_subset`** (line 3663)
+- Pattern: Mod 100 density bounds
+- Uses: `off_count_modEq100_le'`
+- Status: **4/4 blocks replaced** ✅
 
-**Why two helpers?** The mod 100 pattern has different signature:
-```lean
--- Mod 25 (done):
-off_count_modEq25_le' N p b t hp hp5        -- t is residue mod 25
+#### Remaining `card_biUnion_le` Calls (8 total — ALL LEGITIMATE)
 
--- Mod 100 (needs new helper):
-off_count_modEq100_le' N p b t25 t4 hp hp2 hp5  -- t25 mod 25, t4 mod 4, excludes p=2
-```
+| Line | Location | Why Not Extracted |
+|------|----------|-------------------|
+| 528 | `card_filter_mod_pair_le` | Different pattern (mod pair counting) |
+| 3438 | `diag_count_mod25` | Diagonal prime counting (different structure) |
+| 3509 | `diag_count_mod50odd` | Diagonal prime counting (different structure) |
+| 3640 | Helper A definition | Implementation, not duplicate |
+| 3682 | Helper B definition | Implementation, not duplicate |
+| 4019 | Astar bound (Case 1) | Diagonal primes with ×46 multiplier |
+| 4355 | Astar bound (Case 2) | Diagonal primes with ×46 multiplier |
+| 4875 | Astar bound (Case 3) | Diagonal primes with ×46 multiplier |
+
+**Note:** The 3 Astar bounds (4019, 4355, 4875) COULD be extracted to a 3rd helper, but they use a different pattern (diagonal primes, ×46 multiplier). Diminishing returns — left as-is.
 
 ### ✅ BUILD STATUS (as of 2026-01-30 — VERIFIED)
 
@@ -270,19 +276,20 @@ Non-behavioral changes for code cleanliness:
 - [x] Fix deprecated API (`exists_ne_of_one_lt_card` → `exists_mem_ne`) — **DONE**
 - [x] Remove unused simp arguments — **DONE** (all flagged args removed)
 
-### 🔄 REMAINING STRUCTURAL DEBT (In Progress)
+### 🔲 REMAINING STRUCTURAL DEBT (Phase 3 — Optional)
 
 These are NOT linter issues — they're structural improvements for Mathlib submission:
 
 | Debt | Current State | Ideal State | Priority | Status |
 |------|---------------|-------------|----------|--------|
-| **Mod 25 density bounds** | 8 blocks | Extract to helper | HIGH | ✅ **8/8 done** |
-| **Mod 100 density bounds** | 4 blocks at lines 5070, 5148, 5295, 5369 | Extract to 2nd helper | HIGH | 🔄 **0/4 done** |
+| **Mod 25 density bounds** | 8 blocks | Extract to helper | HIGH | ✅ **DONE** |
+| **Mod 100 density bounds** | 4 blocks | Extract to 2nd helper | HIGH | ✅ **DONE** |
+| **Astar bounds** | 3 blocks (lines 4019, 4355, 4875) | Could extract 3rd helper | LOW | 🔲 Diminishing returns |
 | **maxHeartbeats** | 13 occurrences, up to 40,000,000 | ≤200,000 per Mathlib style | LOW | 🔲 Not started |
-| **Monolithic theorem** | `sawhney_main` is 2000+ lines | Break into 10-15 composable lemmas | LOW | 🔲 Not started |
+| **Monolithic theorem** | `sawhney_main` is ~1932 lines | Break into 10-15 composable lemmas | LOW | 🔲 Not started |
 | **Computation isolation** | Heavy prime sums mixed with proof | Separate `PrimeSums.lean` file | LOW | 🔲 Not started |
 
-**Current focus:** Create `residue_class_card_bound100_of_subset` helper for mod 100 pattern, then replace 4 remaining blocks.
+**Phase 2 is COMPLETE.** Remaining items are optional polish for Mathlib submission.
 
 ### 🔲 TODO — Linter Warnings
 
@@ -325,18 +332,28 @@ These simp lists have args that don't contribute — remove them:
 | ~1934 | `'decide' tactic does nothing` — remove trailing `decide` |
 | ~1934 | `this tactic is never executed` — unreachable branch |
 
-### 🔄 TODO — Structural (In Progress)
+### ✅ COMPLETED — Structural (Phase 2)
 
 **Density Bound Extraction:**
-- [x] Extract mod 25 density bounds — **8/8 DONE** via `residue_class_card_bound_of_subset` (line ~3623)
-- [ ] Create `residue_class_card_bound100_of_subset` helper for mod 100 pattern
-- [ ] Replace 4 mod 100 blocks (lines 5070, 5148, 5295, 5369) with new helper
+- [x] Extract mod 25 density bounds — **8/8 DONE** via `residue_class_card_bound_of_subset` (line 3623)
+- [x] Create `residue_class_card_bound100_of_subset` helper — **DONE** (line 3663)
+- [x] Replace 4 mod 100 blocks — **4/4 DONE** (lines 5066, 5136, 5275, 5341)
 
-**Other Cleanup:**
-- [ ] Consider grouping heavy-computation sections with shared `set_option` block
-- [ ] Move `open Filter Finset` (line 2428) to header with other opens
+### 🔲 TODO — Phase 3 (Optional Polish)
 
-**Priority:** MEDIUM — Active refactoring in progress.
+**For Mathlib submission:**
+- [ ] Extract Astar bounds to 3rd helper (3 occurrences at 4019, 4355, 4875)
+- [ ] Reduce maxHeartbeats (13 occurrences, max 40M → target ≤1M)
+- [ ] Break `sawhney_main` into 10-15 smaller lemmas
+- [ ] Isolate heavy computations to separate `PrimeSums.lean` file
+- [ ] Group `set_option` blocks
+
+**For readability:**
+- [ ] Add Mathlib-style file header
+- [ ] Add docstrings to `offPrimeDen`, `diagPrimeDen`
+- [ ] Add proof strategy comments (`/-! ### Step N ... -/`)
+
+**Priority:** LOW — File is production-ready. These are polish for formal submission.
 
 ---
 
@@ -494,20 +511,18 @@ From [Mathlib Style Guide](https://leanprover-community.github.io/contribute/sty
 **Approach:** Iterative small changes with verification after each batch
 **Key learning:** `simpa` ≠ `simp` — agent learned this the hard way and recovered
 
-### Phase 2: Structural Refactoring 🔄 IN PROGRESS
+### Phase 2: Structural Refactoring ✅ COMPLETE
 
-| Pattern | Blocks | Replaced | Remaining | Helper |
-|---------|--------|----------|-----------|--------|
-| Mod 25 | 8 | **8** | 0 ✅ | `residue_class_card_bound_of_subset` |
-| Mod 100 | 4 | 0 | **4** | Needs new helper |
-| **Total** | 12 | **8** | **4** | — |
+| Pattern | Blocks | Replaced | Helper |
+|---------|--------|----------|--------|
+| Mod 25 | 8 | **8/8** ✅ | `residue_class_card_bound_of_subset` (line 3623) |
+| Mod 100 | 4 | **4/4** ✅ | `residue_class_card_bound100_of_subset` (line 3663) |
+| **Total** | 12 | **12/12** ✅ | — |
 
-| Metric | Start | Current | Target |
-|--------|-------|---------|--------|
-| Total lines | 5594 | **5476** | ~5200 (est.) |
+| Metric | Start | Final | Δ |
+|--------|-------|-------|---|
+| Total lines | 5594 | **5487** | **-107** |
+| `card_biUnion_le` | 18 | **8** | **-10** |
+| Build time | ~13 min | **777s** | No regression |
 
-**Approach:** Extract helpers for each pattern, replace duplicates one-by-one with build verification.
-
-**Current status:**
-- Mod 25 pattern: ✅ COMPLETE (8/8)
-- Mod 100 pattern: 🔄 Need to create `residue_class_card_bound100_of_subset` helper, then replace 4 blocks at lines 5070, 5148, 5295, 5369
+**All density bound duplicates eliminated.** Remaining 8 `card_biUnion_le` calls are legitimate (helper implementations + different patterns).
