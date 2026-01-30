@@ -2526,7 +2526,7 @@ lemma natToNum_prime_iff (p : ℕ) : (natToNum p).Prime ↔ Nat.Prime p := by
   simp [Num.Prime, natToNum_toNat]
 
 lemma natToNum_natPrime_iff (p : ℕ) : Nat.Prime (↑(natToNum p) : ℕ) ↔ Nat.Prime p := by
-  simpa [natToNum_toNat]
+  simp [natToNum_toNat]
 
 def isDiagPrimeBool (p : ℕ) : Bool :=
   decide ((natToNum p).Prime ∧ p % 4 = 1 ∧ 13 ≤ p)
