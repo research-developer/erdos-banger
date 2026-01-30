@@ -4723,11 +4723,10 @@ theorem sawhney_main : SawhneyMain := by
                       omega
                     have : ¬ (4 ∣ b18 * a + 1) := by
                       intro h4
-                        have h0 : (b18 * a + 1) % 2 = 0 := by
-                          have : 2 ∣ 4 := by decide
-                          exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
-                        simp [hodd] at h0
-                        exact h0
+                      have h0 : (b18 * a + 1) % 2 = 0 := by
+                        have : 2 ∣ 4 := by decide
+                        exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
+                      exact (by simpa [hodd] using h0)
                     exact (this (by simpa [pow_two] using hp2div)).elim
                   have hp_le : p ≤ N := by
                     have hp2_le : p ^ 2 ≤ b18 * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
@@ -4961,8 +4960,8 @@ theorem sawhney_main : SawhneyMain := by
                 have hmul_le' :
                     ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) ≤
                       (46 : ℝ) * ((∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) := by
-                  simp [hmul]
-              exact le_trans hmul_le' (mul_le_mul_of_nonneg_left hsum' (by positivity))
+                  simpa [hmul]
+                exact le_trans hmul_le' (mul_le_mul_of_nonneg_left hsum' (by positivity))
             exact le_trans hcard_real hmul_le
           -- Bound A7 ∪ A18 (no even elements) using mod 100 split.
           -- In this case (A* all odd, A7 ∪ A18 all odd), the elements of A7A are in odd residue
