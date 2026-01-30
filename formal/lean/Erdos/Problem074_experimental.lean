@@ -117,7 +117,7 @@ theorem SimpleGraph.subgraphEdgeDistsToBipartite_le_choose_two (G : SimpleGraph 
   apply Nat.sInf_le
   -- `A.edgeSet.ncard` is in the set of achievable deletion counts, by deleting all edges.
   simp [SimpleGraph.edgeDistancesToBipartite]
-  refine ⟨A.edgeSet, subset_rfl, ?_, rfl⟩
+  refine ⟨A.edgeSet, ?_, subset_rfl, rfl⟩
   use fun _ => 0
   simp
 
