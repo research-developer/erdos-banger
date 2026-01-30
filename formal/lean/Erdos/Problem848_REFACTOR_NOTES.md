@@ -1,7 +1,7 @@
 # Problem 848 Refactor Notes (SSOT)
 
 **Date:** 2026-01-29
-**Last Updated:** 2026-01-31 00:15 PST
+**Last Updated:** 2026-01-30 (verified)
 **Status:** ✅ PHASE 3 COMPLETE — Astar bound extraction finished
 **Scope:** This document is the SSOT for the **Problem 848 Lean formalization**.
 
@@ -44,19 +44,41 @@ theorem sawhney_main : SawhneyMain := by
 
 ## Architecture Overview
 
+### Section Map (verified line numbers)
+
+| Section | Lines | Description |
+|---------|-------|-------------|
+| 1 | 70-116 | Core definitions |
+| 2 | 118-167 | Mod 25 divisibility lemmas |
+| 3 | 169-328 | Sieve building blocks |
+| 4 | 330-442 | Cross-residue constraints |
+| 5 | 444-642 | Density lemmas |
+| 6 | 644-1044 | Helper lemmas |
+| 6.5 | 1046-1099 | Small modular facts (computation) |
+| 7 | 1101-2279 | Finite verification (no native_decide) |
+| 8 | 2281-2301 | SawhneyMain statement (Prop) |
+| 9 | 2303-2423 | Glue theorems |
+| 9.5 | 2425-2973 | Quantitative bounds 🔥 (40M heartbeats) |
+| 9.8 | 2975-3248 | Bridge lemmas |
+| 9.9 | 3250-3536 | More small modular facts |
+| 10 | 3538-5396 | `sawhney_main` 🔥 (~1842 lines) |
+| 11 | 5398-5409 | Final statements |
+
+### Dependency Flow
+
 ```mermaid
 flowchart TD
     S1["(1-5) Core defs + Mod lemmas + Sieve blocks"] --> S6
     S6["(6-7) Helpers + Finite checks"] --> S10
     S8["(8-9) Statement layer + Glue"] --> S10
     S95["(9.5) Computation 🔥<br/>natToNum, prime lists, huge ℚ sums"] --> S10
-    S10["(10) sawhney_main 🔥<br/>~1850 lines, case split tree"] --> S11
+    S10["(10) sawhney_main 🔥<br/>~1842 lines, case split tree"] --> S11
     S11["(11) Final wrapper"]
 ```
 
 **Bottlenecks:**
-1. **Section 9.5** — 40M heartbeats for prime list computations
-2. **Section 10** — `sawhney_main` is ~1850 lines (could be split into 4-8 case lemmas)
+1. **Section 9.5** (lines 2425-2973) — 40M heartbeats at lines 2550, 2596, 2655
+2. **Section 10** — `sawhney_main` is ~1842 lines (lines 3555-5396)
 
 ---
 
@@ -69,14 +91,16 @@ flowchart TD
 | Build warnings | ~50 | **0** |
 | Tabs | >0 | **0** |
 | Deprecated APIs | 1 | **0** |
-| `simpa` count | 542 | 505 |
+| `simpa` count | 542 | 486 |
 
 ### Phase 2: Density Bound Extraction ✅
 
 | Pattern | Blocks | Helper |
 |---------|--------|--------|
-| Mod 25 | 8 → 1 | `residue_class_card_bound_of_subset` |
-| Mod 100 | 4 → 1 | `residue_class_card_bound100_of_subset` |
+| Mod 25 | 8 → 1 | `residue_class_card_bound_of_subset` (line 3623, `have` in `sawhney_main`) |
+| Mod 100 | 4 → 1 | `residue_class_card_bound100_of_subset` (line 3663, `have` in `sawhney_main`) |
+
+**Note:** Helpers are `have` statements inside `sawhney_main`, not top-level lemmas.
 
 **Result:** -107 lines, 10 duplicates eliminated.
 
@@ -84,8 +108,8 @@ flowchart TD
 
 | Pattern | Before | After | Helper |
 |---------|--------|-------|--------|
-| Astar mod25 | 3 inline blocks | 1 helper, 3 call sites | `Astar_bound_mod25` (line 3750) |
-| Astar mod50 | 3 inline blocks | 1 helper, 3 call sites | `Astar_bound_mod50` (line 3854) |
+| Astar mod25 | 3 inline blocks | 1 `have`, 3 uses | `Astar_bound_mod25` (line 3750, inside `sawhney_main`) |
+| Astar mod50 | 3 inline blocks | 1 `have`, 3 uses | `Astar_bound_mod50` (line 3854, inside `sawhney_main`) |
 
 **Result:** -78 lines from Phase 2 baseline (5487 → 5409).
 
@@ -98,8 +122,8 @@ For Mathlib submission, these would improve the file:
 | Debt | Current | Target | Priority |
 |------|---------|--------|----------|
 | **Global maxHeartbeats** | Line 3541 missing `in` | Add `in` | **P0** |
-| **40M heartbeats** | 3 occurrences | Use `#count_heartbeats` to tune | LOW |
-| **Monolithic theorem** | `sawhney_main` ~1850 lines | Split into 4-8 case lemmas | LOW |
+| **40M heartbeats** | 3 occurrences (lines 2550, 2596, 2655) | Use `#count_heartbeats` to tune | LOW |
+| **Monolithic theorem** | `sawhney_main` ~1842 lines (3555-5396) | Split into 4-8 case lemmas | LOW |
 | **Computation isolation** | Mixed with proof | Separate `Computation.lean` | LOW |
 
 ### Case Lemma Tree (Future Target)
@@ -198,12 +222,59 @@ This is **kernel-reducible**, so `(natToNum p).Prime` can be computed by `decide
 
 ---
 
+## Quick Reference for Agents
+
+### Key Search Patterns
+
+| What | Grep Pattern | Current Count |
+|------|--------------|---------------|
+| All sorries | `sorry` | **0** |
+| Native decide | `native_decide` | **0** |
+| Global heartbeats (bad) | `^set_option maxHeartbeats.*[^n]$` | **1** (line 3541) |
+| Scoped heartbeats (ok) | `set_option maxHeartbeats.*in$` | 12 |
+| 40M heartbeats | `40000000` | 3 |
+| simpa usage | `simpa` | 486 |
+| biUnion bounds | `card_biUnion_le` | 7 |
+
+### Verification Commands
+
+```bash
+# Build (from repo root)
+lake -d formal/lean build Erdos.Problem848_REFACTOR
+
+# Count lines
+wc -l formal/lean/Erdos/Problem848_REFACTOR.lean
+
+# Find sorries
+grep -n "sorry" formal/lean/Erdos/Problem848_REFACTOR.lean
+
+# Find native_decide
+grep -n "native_decide" formal/lean/Erdos/Problem848_REFACTOR.lean
+
+# Find global maxHeartbeats (should show line 3541)
+grep -n "^set_option maxHeartbeats" formal/lean/Erdos/Problem848_REFACTOR.lean | grep -v " in$"
+```
+
+### Helper Locations Inside `sawhney_main`
+
+All helper `have` statements are defined early in `sawhney_main` (starts line 3555):
+
+| Helper | Line | Purpose |
+|--------|------|---------|
+| `sum_div_add_one_le` | 3586 | Bound `∑ (N/(k*p²)+1)` |
+| `residue_class_card_bound_of_subset` | 3623 | Mod 25 density bound |
+| `residue_class_card_bound100_of_subset` | 3663 | Mod 100 density bound |
+| `Astar_bound_mod25` | 3750 | A* bound (mod 25) |
+| `Astar_bound_mod50` | 3854 | A* bound (mod 50, odd only) |
+
+---
+
 ## Summary
 
 **The formalization is mathematically complete and production-ready.**
 
 - 0 sorry, 0 native_decide, 0 axioms
-- Builds cleanly in ~12 min
+- Builds cleanly in ~12-13 min
 - All density bound duplicates extracted to helpers
 - All Astar bound duplicates extracted to helpers
 
