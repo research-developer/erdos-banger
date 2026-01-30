@@ -3619,6 +3619,46 @@ theorem sawhney_main : SawhneyMain := by
         _ ≤ (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) + (P.card : ℝ) := by
             simpa [add_comm, add_left_comm, add_assoc] using h
 
+    -- Helper: residue-class counting via a union over prime-square divisors.
+    have residue_class_card_bound_of_subset
+        (t b : ℕ) (P S : Finset ℕ)
+        (hsubset :
+          S ⊆ P.biUnion (fun p =>
+            (Finset.range N).filter (fun a => a ≡ t [MOD 25] ∧ p ^ 2 ∣ b * a + 1)))
+        (hP_sub : P ⊆ primesUpTo N) (hP_ne5 : ∀ p ∈ P, p ≠ 5) :
+        (S.card : ℝ) ≤
+          (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
+      classical
+      have hcard : S.card ≤ (∑ p ∈ P, (N / (25 * p ^ 2) + 1)) := by
+        calc
+          S.card ≤
+              ((P.biUnion (fun p =>
+                    (Finset.range N).filter (fun a => a ≡ t [MOD 25] ∧ p ^ 2 ∣ b * a + 1))).card) :=
+            Finset.card_le_card hsubset
+          _ ≤ ∑ p ∈ P,
+                ((Finset.range N).filter (fun a => a ≡ t [MOD 25] ∧ p ^ 2 ∣ b * a + 1)).card :=
+            Finset.card_biUnion_le
+          _ ≤ ∑ p ∈ P, (N / (25 * p ^ 2) + 1) := by
+              apply Finset.sum_le_sum
+              intro p hp
+              have hp' : p ∈ primesUpTo N := hP_sub hp
+              have hp_prime : p.Prime := (Finset.mem_filter.1 hp').2
+              have hp_ne5 : p ≠ 5 := hP_ne5 p hp
+              exact off_count_modEq25_le' N p b t hp_prime hp_ne5
+      have hcard_real :
+          (S.card : ℝ) ≤ ((∑ p ∈ P, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) := by
+        exact_mod_cast hcard
+      have hsum := sum_div_add_one_le (P := P) (k := 25)
+      have hPcard : (P.card : ℝ) ≤ (N.primeCounting : ℝ) := by
+        have := Finset.card_le_card hP_sub
+        have := (Nat.cast_le.2 this : (P.card : ℝ) ≤ (primesUpTo N).card)
+        simpa [primesUpTo_card] using this
+      have hsum' :
+          ((∑ p ∈ P, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) ≤
+            (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
+        exact hsum.trans (add_le_add (le_refl _) hPcard)
+      exact le_trans hcard_real hsum'
+
     -- Split A into the 25-residue classes: 7, 18, and the rest.
     let A7A : Finset ℕ := A.filter (fun a => a % 25 = 7)
     let A18A : Finset ℕ := A.filter (fun a => a % 25 = 18)
