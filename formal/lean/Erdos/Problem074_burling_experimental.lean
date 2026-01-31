@@ -345,34 +345,79 @@ theorem burling_sublinear :
   WHAT WE NEED:
   Something special about Burling graphs beyond triangle-free.
 
-  CANDIDATE APPROACHES:
-  1. **Sparse edge structure**: If Burling n-vertex subgraphs have O(n) edges
-     (linear, not quadratic), then even m/2 would give O(n), closer to √n.
-     Question: Are Burling graphs sparse (bounded degeneracy)?
-
-  2. **Odd cycle sharing**: If all odd cycles in H share a common edge set of
-     size O(√n), then deleting that set makes H bipartite.
-     Question: Does the tree-decomposition force this?
-
-  3. **Induction on k**: Prove for B_1 (done!), then show the B_k → B_{k+1}
-     construction preserves the bound.
-     Question: How do new vertices/edges affect odd cycles?
-
-  4. **Box intersection geometry**: The 3D box structure might force odd cycles
-     to pass through "bottleneck" regions.
-     Question: Can we formalize this geometric constraint?
-
   PARTIAL RESULT (PROVED):
   - burling_1_bipartite: ∀ n, maxSubgraphEdgeDistToBipartite (BurlingGraph 1) n = 0 ≤ √n ✓
-
-  NEXT STEPS:
-  - Try to prove B_2 case (would reveal the key insight)
-  - Investigate if Burling graphs are sparse
-  - Look for odd cycle characterization in Burling graphs
   -/
-  -- Base case k = 1 is proved (burling_1_bipartite)
-  -- General case requires deeper structural insight
-  sorry
+  -- Try induction on k
+  match k with
+  | 0 =>
+    -- BurlingVertex 0 is empty (no constructors apply), so BurlingGraph 0 has no vertices
+    -- The set of n-vertex subgraphs is empty for n ≥ 1, and for n = 0 any bound holds
+    -- sSup of empty set is 0 for ℕ
+    simp only [SimpleGraph.maxSubgraphEdgeDistToBipartite]
+    apply csSup_le'
+    intro m hm
+    rcases hm with ⟨A, hn, hfin, rfl⟩
+    -- A.verts ⊆ BurlingVertex 0, but BurlingVertex 0 is empty
+    -- So A.verts = ∅, and A.verts.ncard = 0
+    -- But hn says A.verts.ncard = n, so either n = 0 or this case is vacuous
+    -- Either way, minEdgeDistToBipartite A ≤ √n
+    have hempty : IsEmpty (BurlingVertex 0) := ⟨fun v => by cases v⟩
+    have hverts_empty : A.verts = ∅ := by
+      ext x
+      simp only [Set.mem_empty_iff_false, iff_false]
+      exact fun h => hempty.false x
+    rw [hverts_empty, Set.ncard_empty] at hn
+    -- n = 0, so √n = 0, and we need minEdgeDistToBipartite A ≤ 0
+    subst hn
+    -- A has no vertices, so no edges, so it's bipartite with 0 deletions
+    apply Nat.le_zero.2
+    apply SimpleGraph.minEdgeDistToBipartite_eq_zero_of_isBipartite
+    use fun _ => 0
+    intro v _ _
+    exfalso
+    exact hempty.false v.val
+  | 1 =>
+    -- Base case: B_1 has one vertex, proved separately
+    have h := burling_1_bipartite n
+    simp only [h]
+    exact Nat.zero_le _
+  | k + 2 =>
+    /-
+    ═══════════════════════════════════════════════════════════════════════════════
+    THE $500 QUESTION: Prove this for k ≥ 2
+    ═══════════════════════════════════════════════════════════════════════════════
+
+    CURRENT STATUS: OPEN PROBLEM - This is where we'd win $500!
+
+    WHAT WE KNOW:
+    • B_{k+2} is triangle-free (axiom: burling_triangle_free)
+    • χ(B_{k+2}) = k+2 (axiom: burling_chromatic_number)
+    • Best known bound is n^{3/2} for Specker graphs (EHS82)
+    • Alon 1996: Triangle-free only gives O(n²) bound, not √n
+
+    WHAT WE NEED:
+    • Prove: maxSubgraphEdgeDistToBipartite (BurlingGraph (k+2)) n ≤ √n
+    • This requires something SPECIAL about Burling structure beyond triangle-free
+
+    POSSIBLE APPROACHES:
+    1. SPARSE STRUCTURE: Show Burling graphs have O(n) edges in n-vertex subgraphs
+       → Then Alon bound gives O(n), closer to √n
+    2. ODD CYCLE SHARING: Show all odd cycles share O(√n) edges
+       → Deleting those edges makes graph bipartite
+    3. TREE-DECOMPOSITION: Use arXiv:1703.07871 structure
+       → Odd cycles might be forced through bottlenecks
+    4. INDUCTION ON k: Use B_k → B_{k+1} construction explicitly
+       → Track how odd cycles change during construction
+
+    AXIOM NEEDED (if we want to close this with an axiom):
+    axiom burling_sublinear_axiom (k : ℕ) (hk : k ≥ 2) :
+        ∀ n, maxSubgraphEdgeDistToBipartite (BurlingGraph k) n ≤ Nat.sqrt n
+
+    But that would be "cheating" - the goal is to PROVE this from Burling structure!
+    ═══════════════════════════════════════════════════════════════════════════════
+    -/
+    sorry
 
 /-!
 ## If Burling Works: Constructing the Infinite Graph
@@ -401,22 +446,68 @@ theorem burling_infinite_graph_exists
   sorry
 
 /-!
-## Research Status
+## Research Status (Updated 2026-01-30)
 
-### What we've established:
-1. Burling graphs are triangle-free (axiom from literature)
-2. χ(B_k) = k (axiom from literature)
-3. Basic bounds (maxSubgraphEdgeDistToBipartite ≤ n.choose 2)
+### PROVED in this file:
+1. `burling_1_subsingleton` - B_1 has exactly one vertex
+2. `burling_1_no_edges` - B_1 has no edges
+3. `burling_1_bipartite_graph` - B_1 is bipartite
+4. `burling_1_bipartite` - ∀n, maxSubgraphEdgeDistToBipartite (BurlingGraph 1) n = 0 ≤ √n ✓
+5. `minEdgeDistToBipartite_eq_zero_of_isBipartite` - bipartite subgraphs need 0 deletions
+6. `minEdgeDistToBipartite_le_edgeSet_ncard` - deletion ≤ edge count
+7. `maxSubgraphEdgeDistToBipartite_le_edges` - deletion ≤ n.choose 2
 
-### What we need:
-1. Deeper understanding of odd cycle structure in Burling graphs
-2. Proof that the tree-decomposition forces edge sharing
-3. The actual √n bound
+### AXIOMATIZED (from literature):
+1. `BurlingGraphAdj` - adjacency relation
+2. `burling_triangle_free` - no 3-cycles
+3. `burling_chromatic_number` - χ(B_k) = k
 
-### Next steps:
-1. Read arXiv:1703.07871 for tree-decomposition details
-2. Try to prove B_2 case explicitly (smallest non-trivial case)
-3. Look for counterexamples (n-vertex subgraphs needing > √n deletions)
+### REMAINING SORRIES (3):
+1. `triangle_free_edge_bound_mantel` - Mantel's theorem (provable, not critical)
+2. `burling_sublinear` - **THE $500 QUESTION**
+3. `burling_infinite_graph_exists` - follows from #2
+
+### KEY INSIGHTS FROM LITERATURE:
+
+**EHS82 (Erdős-Hajnal-Szemerédi 1982):**
+- Best known bound: f^{(3)}(n) ≤ 2n^{3/2} for Specker graph G₀(ω,2)
+- This is SUBQUADRATIC but NOT √n
+- Problem 74 asks: can we achieve √n or slower?
+
+**Alon 1996:**
+- Triangle-free graphs: MaxCut ≥ |E|/2 + c·|E|^{4/5}
+- This gives minEdgeDistToBipartite ≤ |E|/2 - c·|E|^{4/5} ≈ O(|E|) ≈ O(n²)
+- NOT sufficient for √n bound
+
+**Burling graphs (Pournajafi-Trotignon 2023):**
+- Five equivalent characterizations
+- Intersection graphs of axis-parallel boxes in ℝ³
+- Tree-decomposition structure (arXiv:1703.07871)
+- Minimal hereditary class with unbounded χ (besides complete graphs)
+
+### THE GAP:
+- Known: n^{3/2} bound (EHS82 for Specker graphs)
+- Target: √n bound (Problem 74)
+- Unknown: Does ANY graph achieve √n while having χ = ω?
+- Burling graphs are untested for this property!
+
+### WHY BURLING MIGHT WORK:
+1. Triangle-free → min odd cycle length is 5 (weaker obstruction)
+2. Box intersection structure → geometric constraints on cycles
+3. Tree-decomposition → possible bottleneck structure
+4. Minimal hereditary class → "simplest" high-χ construction
+
+### NEXT STEPS:
+1. Investigate if Burling graphs are sparse (linear edge count)
+2. Prove B_2 case (first non-trivial case)
+3. Computational test on small Burling graphs
+4. Study odd cycle structure via tree-decomposition
+
+### KEY REFERENCES:
+- EHS82: literature/extracts/pdf/0074/erdos-hajnal-szemeredi-1982-almost-bipartite.md
+- Alon 1996: https://link.springer.com/article/10.1007/BF01261315
+- Burling revisited: arXiv:2104.07001, arXiv:2106.16089, arXiv:2112.11970
+- Tree-decomp: arXiv:1703.07871
 -/
 
 end Erdos.Problem074.BurlingExperimental

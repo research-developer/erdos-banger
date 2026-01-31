@@ -117,9 +117,9 @@ For Mathlib submission, these would improve the file further:
 
 | Debt | Current | Target | Priority |
 |------|---------|--------|----------|
-| **Scoped maxHeartbeats** | All 6 uses scoped with `in` | ✅ DONE | DONE |
+| **Scoped maxHeartbeats** | All 11 uses scoped with `in` | ✅ DONE | DONE |
 | **Case lemmas** | All 4 case lemmas extracted | ✅ DONE | DONE |
-| **High heartbeats in 9.5** | 20M/10M caps remain | Lower where possible | LOW |
+| **High heartbeats in 9.5** | 3× 20M, 1× 10M (lines 2544, 2581, 2644, 2653) | Lower where possible | MEDIUM |
 | **Computation isolation** | Mixed with proof | Separate `Computation.lean` | LOW |
 
 ### Phase 4 Complete: `sawhney_main` Case Lemmas ✅
@@ -222,7 +222,8 @@ This is **kernel-reducible**, so `(natToNum p).Prime` can be computed by `decide
 |------|--------|---------|
 | `Problem848.lean` | ✅ Stable | Primary — DO NOT EDIT |
 | `Problem848_FINAL.lean` | ✅ Stable | Backup — DO NOT EDIT |
-| `Problem848_REFACTOR.lean` | 🔄 Active | Sandbox — GPT agent workspace |
+| `Problem848_REFACTOR_BACKUP_PHASE4.lean` | ✅ Stable | Backup after Phase 4 complete — DO NOT EDIT |
+| `Problem848_REFACTOR.lean` | 🔄 Active | Sandbox — agent workspace for Phase 5 |
 
 ---
 
@@ -235,8 +236,9 @@ This is **kernel-reducible**, so `(natToNum p).Prime` can be computed by `decide
 | All sorries | `sorry` | **0** |
 | Native decide | `native_decide` | **0** |
 | Global heartbeats (bad) | `^set_option maxHeartbeats.*[^n]$` | **0** ✅ |
-| Scoped heartbeats (ok) | `set_option maxHeartbeats.*in$` | 6 |
-| 40M heartbeats | `40000000` | **0** ✅ |
+| Scoped heartbeats (ok) | `set_option maxHeartbeats.*in$` | **11** |
+| 20M heartbeats | `20000000` | **3** (lines 2544, 2581, 2644) |
+| 10M heartbeats | `10000000` | **1** (line 2653) |
 | simpa usage | `simpa` | 486 |
 | biUnion bounds | `card_biUnion_le` | 7 |
 
@@ -255,13 +257,16 @@ grep -n "sorry" formal/lean/Erdos/Problem848_REFACTOR.lean
 # Find native_decide
 grep -n "native_decide" formal/lean/Erdos/Problem848_REFACTOR.lean
 
-# Find global maxHeartbeats (should show line 3541)
+# Find global maxHeartbeats (should be empty now)
 grep -n "^set_option maxHeartbeats" formal/lean/Erdos/Problem848_REFACTOR.lean | grep -v " in$"
+
+# Find high heartbeat caps (20M/10M)
+grep -n "20000000\|10000000" formal/lean/Erdos/Problem848_REFACTOR.lean | grep maxHeartbeats
 ```
 
 ### Helper Locations Inside `sawhney_main`
 
-All helper `have` statements are defined early in `sawhney_main` (starts line 3555):
+All helper `have` statements are defined early in `sawhney_main` (starts line 3541):
 
 | Helper | Line | Purpose |
 |--------|------|---------|
@@ -285,4 +290,7 @@ All helper `have` statements are defined early in `sawhney_main` (starts line 35
 - All heartbeat options properly scoped with `in`
 - No 40M heartbeat caps remaining
 
-**Remaining work is optional polish for Mathlib submission (heartbeat reduction, computation isolation).**
+**Remaining work is optional polish for Mathlib submission:**
+1. Reduce 20M heartbeat caps in Section 9.5 (lines 2544, 2581, 2644) — use `#count_heartbeats in`
+2. Reduce 10M heartbeat cap (line 2653)
+3. Consider extracting computation to `Computation.lean`

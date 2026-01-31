@@ -19,6 +19,9 @@ import Mathlib.Combinatorics.SimpleGraph.Basic
 import Mathlib.Combinatorics.SimpleGraph.Subgraph
 import Mathlib.Combinatorics.SimpleGraph.Coloring
 import Mathlib.Combinatorics.SimpleGraph.Bipartite
+import Mathlib.Data.Set.Finite.Basic
+import Mathlib.Algebra.Order.Floor.Semiring
+import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Order.Filter.AtTopBot.Basic
 import Mathlib.Data.Nat.Sqrt
 import Mathlib.Data.Real.Basic
