@@ -4424,7 +4424,13 @@ theorem sawhney_main : SawhneyMain := by
             have h5 : 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) ≤
                       2 * (N : ℝ) * C_off + 2 * δ * (N : ℝ) := add_le_add h3 h4
             exact le_trans h1 h5
-          nlinarith [hA_le_parts, hAstar_explicit, hA78_explicit, hNpos]
+          have hAstar_explicit_num :
+              (Astar.card : ℝ) ≤ (46 : ℝ) * ((N : ℝ) * ((1 : ℝ) / 1750) + δ * (N : ℝ)) := by
+            simpa [C_diag] using hAstar_explicit
+          have hA78_explicit_num :
+              (A7A.card : ℝ) + (A18A.card : ℝ) ≤ 2 * (N : ℝ) * ((163 : ℝ) / 25000) + 2 * δ * (N : ℝ) := by
+            simpa [C_off] using hA78_explicit
+          nlinarith [hA_le_parts, hAstar_explicit_num, hA78_explicit_num, hNpos]
         exact (not_lt_of_ge hdense) hA_lt
       -- ═══════════════════════════════════════════════════════════════════
       -- CASE 1: ∃ even element in A* (Paper Case 1)
