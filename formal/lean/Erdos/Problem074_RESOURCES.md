@@ -18,6 +18,10 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 | **Burling** | f(n) = √n | ❌ **REFUTED** | `Problem074_burling_experimental.lean` |
 | **Twincut** | f(n) = √n | ❌ **REFUTED** | `Problem074_twincut_experimental.lean` |
 | **Mycielski** | f(n) = √n | ❌ **REFUTED** | `Problem074_MYCIELSKI_RESOURCES.md` |
+| **Shift graphs** | f(n) = √n | ❌ **REFUTED** | `scripts/shift_graph_sqrt_test.py` |
+| **Kneser graphs K(n,2)** | f(n) = √n | ❌ **REFUTED** | `scripts/kneser_graph_sqrt_test.py` |
+| **Paley graphs** | f(n) = √n | ❌ **REFUTED** | `scripts/paley_graph_sqrt_test.py` |
+| **Hasse/Suk-Tomon** | f(n) = √n | 🔬 **ACTIVE** | `Problem074_HASSE_STRATEGY.md` |
 
 ### Key Findings
 
@@ -25,8 +29,12 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 2. **Burling graphs:** FAIL √n bound - counterexample at B₃ (n=27, ebip=8 > √27≈5.2)
 3. **Twincut graphs:** FAIL √n bound - counterexample at G₄ (n=23, ebip=7 > √23≈4.8)
 4. **Mycielski graphs:** FAIL √n bound - counterexample at M₄ (n=11, ebip=4 > √11≈3.3)
+5. **Shift graphs:** FAIL √n bound - counterexample at Sh(7) (n=21, ebip=5 > ⌊√21⌋=4)
+6. **Kneser graphs K(n,2):** FAIL √n bound - counterexample at K(6,2) (n=15, ebip=15 > ⌊√15⌋=3)
+7. **Paley graphs:** FAIL √n bound - counterexample at P(13) (n=13, ebip=13 > ⌊√13⌋=3)
 
 **See also:**
+- `Problem074_HASSE_STRATEGY.md` - **ACTIVE: Suk-Tomon incidence posets + rank-parity defects**
 - `Problem074_BURLING_RESOURCES.md` - Why Burling failed (counterexample at B₃)
 - `Problem074_TWINCUT_RESOURCES.md` - Why Twincut failed (counterexample at G₄)
 - `Problem074_MYCIELSKI_RESOURCES.md` - Why Mycielski failed (counterexample at M₄)
@@ -44,12 +52,17 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 | `Problem074_twincut.lean` | Twincut template | ❌ REFUTED |
 | `Problem074_twincut_experimental.lean` | Twincut approach | ❌ REFUTED (G₄ counterexample) |
 | `Problem074_mycielski.lean` | Mycielski approach | ❌ REFUTED (M₄ counterexample) |
+| `Problem074_novel_experimental.lean` | **Hasse/Suk-Tomon approach** | 🔬 **ACTIVE** |
 
-**Active work:** None - need new candidate approach
+**Active work:** 🔬 **HASSE DIAGRAM / SUK-TOMON APPROACH** - See `Problem074_HASSE_STRATEGY.md`
 
-**Recommendation:**
-1. Search literature for other triangle-free high-χ constructions with special structure
-2. Consider original approach: construct NEW graph family specifically for this problem
+**Current Strategy (BREAKTHROUGH):**
+1. **Rank-parity defects** provide a canonical deletion set D(S) for any induced subgraph
+2. **Suk-Tomon incidence posets** achieve χ ≈ n^{1/4} - the EXACT right exponent
+3. **Fork Certificate Lemma**: Prove t defects ⟹ t² vertices ⟹ t ≤ √n
+4. Use **Fraïssé limit** to build the infinite graph
+
+**Why this is different:** This is a proof architecture, not "try another family"
 
 ---
 

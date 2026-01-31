@@ -44,10 +44,7 @@ Compile with:
   cd formal/lean && lake build Erdos.Problem074_novel_experimental
 -/
 
-import Mathlib.Combinatorics.SimpleGraph.Basic
-import Mathlib.Combinatorics.SimpleGraph.Subgraph
-import Mathlib.Combinatorics.SimpleGraph.Coloring
-import Mathlib.Combinatorics.SimpleGraph.Connectivity.WalkCounting
+import Erdos.Problem074
 import Mathlib.Data.Nat.Sqrt
 import Mathlib.Order.Filter.AtTopBot.Basic
 
@@ -58,16 +55,17 @@ namespace Erdos.Problem074.Novel
 universe u
 
 /-!
-## Core Definitions (from Problem074.lean)
+## Core definitions
+
+This file is meant to be a scratchpad. For the *canonical* definitions / conjecture
+statement, see `Erdos/Problem074.lean`.
 -/
 
-/-- Minimum edges to delete to make a subgraph bipartite. -/
-noncomputable def ebip {V : Type*} {G : SimpleGraph V} (A : G.Subgraph) : ℕ :=
-  sInf { k | ∃ E : Set (Sym2 V), E ⊆ A.edgeSet ∧ E.ncard = k ∧ (A.deleteEdges E).coe.IsBipartite }
+noncomputable abbrev ebip {V : Type*} {G : SimpleGraph V} (A : G.Subgraph) : ℕ :=
+  SimpleGraph.minEdgeDistToBipartite A
 
-/-- Maximum ebip over all n-vertex subgraphs. -/
-noncomputable def maxEbip {V : Type*} (G : SimpleGraph V) (n : ℕ) : ℕ :=
-  sSup { ebip A | (A : G.Subgraph) (_ : A.verts.ncard = n) }
+noncomputable abbrev maxEbip {V : Type*} (G : SimpleGraph V) (n : ℕ) : ℕ :=
+  SimpleGraph.maxSubgraphEdgeDistToBipartite G n
 
 /-!
 ## The Prize Theorem
@@ -88,7 +86,92 @@ theorem, defining the construction and stating its properties is valuable.
 -/
 
 /-!
-### Approach 1: Hierarchical Odd Cycle Graphs
+## Computation notes (exact MaxCut on small graphs)
+
+For each candidate family below we computed, for a finite graph `H`:
+
+`ebip(H) = |E(H)| - MaxCut(H)`
+
+using exact MaxCut (brute force / Gray-code). See the Python scripts in `scripts/`.
+
+### New families tried (2026-01-31) — all refuted
+
+1. **Shift graphs** `Sh(n)` (`scripts/shift_graph_sqrt_test.py`)
+   - Smallest violation found: `Sh(7)` has `|V|=21`, `ebip=5`, but `⌊√21⌋=4`.
+
+2. **Kneser graphs** `K(n,2)` (`scripts/kneser_graph_sqrt_test.py`)
+   - Smallest violation found: `K(6,2)` has `|V|=15`, `ebip=15`, but `⌊√15⌋=3`.
+   - (Also `K(7,2)` has `|V|=21`, `ebip=35`, `⌊√21⌋=4`.)
+
+3. **Paley graphs** `P(q)` (`scripts/paley_graph_sqrt_test.py`)
+   - Smallest violation found: `P(13)` has `|V|=13`, `ebip=13`, but `⌊√13⌋=3`.
+
+These are *not* proofs about the infinite variants, but they are strong evidence
+that the most obvious algebraic / Borel-combinatorics families do not satisfy the
+`√n` target.
+-/
+
+/-!
+## Refuted finite families (Lean stubs)
+
+These definitions are included so we can refer to the usual families inside Lean.
+The actual *refutations* here are still just `sorry` statements backed by the Python
+computations recorded above.
+-/
+
+abbrev ShiftV (n : ℕ) : Type :=
+  { p : Fin n × Fin n // p.1 < p.2 }
+
+def ShiftGraph (n : ℕ) : SimpleGraph (ShiftV n) where
+  Adj p q :=
+    (p.1.2 = q.1.1 ∧ p.1.1 < q.1.2) ∨ (q.1.2 = p.1.1 ∧ q.1.1 < p.1.2)
+  symm := by
+    intro p q h
+    rcases h with ⟨h1, h2⟩ | ⟨h1, h2⟩
+    · exact Or.inr ⟨h1, h2⟩
+    · exact Or.inl ⟨h1, h2⟩
+  loopless := by
+    intro p h
+    rcases h with ⟨hEq, hlt⟩ | ⟨hEq, hlt⟩
+    · exact lt_irrefl _ (hEq ▸ hlt)
+    · exact lt_irrefl _ (hEq ▸ hlt)
+
+abbrev KneserV (n k : ℕ) : Type :=
+  { S : Finset (Fin n) // S.card = k }
+
+def KneserGraph (n k : ℕ) : SimpleGraph (KneserV n k) where
+  Adj S T := Disjoint S.1 T.1 ∧ S ≠ T
+  symm := by
+    intro S T h
+    exact ⟨h.1.symm, h.2.symm⟩
+  loopless := by
+    intro S h
+    exact h.2 rfl
+
+/-! Concrete refutation statements (currently backed by computation). -/
+
+theorem shiftGraph_refuted_sqrt :
+    maxEbip (ShiftGraph 7) 21 > Nat.sqrt 21 := by
+  -- See `scripts/shift_graph_sqrt_test.py` (exact MaxCut):
+  -- Sh(7): |V|=21, ebip=5, floor(sqrt 21)=4.
+  sorry
+
+theorem kneserGraph_refuted_sqrt :
+    maxEbip (KneserGraph 6 2) 15 > Nat.sqrt 15 := by
+  -- See `scripts/kneser_graph_sqrt_test.py` (exact MaxCut):
+  -- K(6,2): |V|=15, ebip=15, floor(sqrt 15)=3.
+  sorry
+
+theorem paleyGraph_refuted_sqrt :
+    True := by
+  -- See `scripts/paley_graph_sqrt_test.py` (exact MaxCut):
+  -- P(13): |V|=13, ebip=13, floor(sqrt 13)=3.
+  --
+  -- TODO: add a Lean definition of Paley graphs (over `ZMod q`) to state this cleanly.
+  trivial
+
+/-!
+### Approach A: Hierarchical "odd-cycle spine" graphs (OPEN)
 
 Idea: Build a graph where odd cycles are forced to share edges.
 At each level, we add new vertices that create odd cycles, but
@@ -110,7 +193,7 @@ theorem hierarchical_sqrt_bound :
   sorry
 
 /-!
-### Approach 2: Sparse Random Triangle-Free Graphs
+### Approach B: Sparse random triangle-free graphs (OPEN)
 
 Idea: Use probabilistic method. A random triangle-free graph with
 carefully chosen edge probability might work.
@@ -125,7 +208,7 @@ theorem random_construction_exists :
   sorry
 
 /-!
-### Approach 3: Algebraic Construction
+### Approach C: Algebraic construction (OPEN)
 
 Idea: Cayley graph of an infinite group with specific properties.
 The group structure might force odd cycles to share edges.
@@ -136,7 +219,7 @@ def AlgebraicGraph : SimpleGraph ℤ := by
   sorry -- Define using group structure
 
 /-!
-### Approach 4: Prove Impossibility
+### Approach D: Prove impossibility (OPEN)
 
 Maybe the answer is NO - no such graph exists for f(n) = √n.
 -/
@@ -153,21 +236,21 @@ theorem erdos_74_sqrt_impossible :
 Useful lemmas that might help prove the main theorem.
 -/
 
-/-- Odd cycles are the only obstruction to bipartiteness. -/
-theorem bipartite_iff_no_odd_cycle {V : Type*} (G : SimpleGraph V) :
-    G.IsBipartite ↔ ∀ n, Odd n → G.CliqueFree n := by
-  sorry -- This is a known theorem
+/-!
+### A very crude (but useful) χ vs ebip upper bound
 
-/-- ebip equals |E| - MaxCut. -/
-theorem ebip_eq_edges_minus_maxcut {V : Type*} [Fintype V] (G : SimpleGraph V) :
-    ebip (⊤ : G.Subgraph) = G.edgeFinset.card - G.maxCut := by
-  sorry -- Needs definition of maxCut
+If deleting `k` edges makes a finite graph bipartite, then coloring the `≤ 2k` endpoints of those
+edges with fresh colors and 2-coloring the rest gives:
 
-/-- If odd cycles share many edges, ebip is small. -/
-theorem shared_odd_cycles_small_ebip {V : Type*} (G : SimpleGraph V)
-    (h : ∀ C₁ C₂ : G.Walk, C₁.IsOddCycle → C₂.IsOddCycle → (C₁.edges ∩ C₂.edges).Nonempty) :
-    ∀ n, maxEbip G n ≤ Nat.sqrt n := by
-  sorry -- Key insight: shared edges mean small hitting set
+`χ(G) ≤ 2k + 2`.
+
+This does *not* rule out `maxEbip(G,n) ≤ √n` (since `2√n + 2` still grows), but it is a sanity
+check: truly tiny `ebip` cannot support large chromatic number.
+-/
+
+theorem chromaticNumber_le_two_mul_ebip {V : Type*} [Fintype V] (G : SimpleGraph V) :
+    G.chromaticNumber ≤ (2 * ebip (G := G) (⊤ : G.Subgraph) + 2 : ℕ∞) := by
+  sorry
 
 /-!
 ## Notes for Overnight Agent

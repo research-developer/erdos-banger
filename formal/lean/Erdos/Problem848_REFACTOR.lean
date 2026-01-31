@@ -3621,7 +3621,7 @@ lemma sieve_set_card_bound_primeCounting
   have hadd :
       (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) + (P.card : ℝ) ≤
         (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) :=
-    add_le_add_left hPcard ((N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)))
+    add_le_add_right hPcard ((N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)))
   exact hbase.trans hadd
 
 -- ============================================================================
@@ -3909,7 +3909,7 @@ theorem sawhney_main : SawhneyMain := by
           simpa using
             (Finset.mul_sum (s := diagPrimesUpTo N) (f := fun p => (N / (25 * p ^ 2) + 1)) (a := 46)).symm
         exact_mod_cast this
-      have hsum := sum_div_add_one_le (P := diagPrimesUpTo N) (k := 25)
+      have hsum := sum_div_add_one_le_real (N := N) (P := diagPrimesUpTo N) (k := 25)
       have hPcard : ((diagPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
         have hsub : diagPrimesUpTo N ⊆ primesUpTo N := by
           intro p hp
