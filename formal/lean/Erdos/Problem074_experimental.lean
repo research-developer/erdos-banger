@@ -454,7 +454,10 @@ theorem SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear
               simpa using hx
             have hiI : i ∈ I := by simpa [I, Iset] using hiIset
             have : Sym2.map (Sigma.mk i) (s(u, v)) ∈ E := by
-              simp [E, hiI, hmem]
+              dsimp [E]
+              refine Set.mem_iUnion.2 ⟨i, ?_⟩
+              refine Set.mem_iUnion.2 ⟨hiI, ?_⟩
+              exact ⟨s(u, v), hmem, rfl⟩
             have : s(Sigma.mk i u, Sigma.mk i v) ∈ E := by
               simpa [Sym2.map_pair_eq] using this
             simpa using this
