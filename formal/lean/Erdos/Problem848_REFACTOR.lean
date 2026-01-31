@@ -118,25 +118,24 @@ instance instDecidableNonSquarefreeProductProp (A : Finset ℕ) :
 -- SECTION 2: MOD 25 DIVISIBILITY LEMMAS (PROVED)
 -- ============================================================================
 
+/-- Key lemma: If `a ≡ b ≡ r (mod 25)` and `r*r ≡ -1 (mod 25)`, then `5² | (ab + 1)`. -/
+lemma mod25_divisibility_of_residue (r a b : ℕ) (hr : r * r % 25 = 24) (ha : a % 25 = r)
+    (hb : b % 25 = r) : 25 ∣ (a * b + 1) := by
+  have h1 : a * b % 25 = (a % 25) * (b % 25) % 25 := Nat.mul_mod a b 25
+  rw [ha, hb] at h1
+  rw [hr] at h1
+  have h3 : (a * b + 1) % 25 = 0 := by omega
+  exact Nat.dvd_of_mod_eq_zero h3
+
 /-- Key lemma: If a ≡ b ≡ 7 (mod 25), then 5² | (ab + 1). -/
 lemma mod25_divisibility (a b : ℕ) (ha : a % 25 = 7) (hb : b % 25 = 7) :
     25 ∣ (a * b + 1) := by
-  have h1 : a * b % 25 = (a % 25) * (b % 25) % 25 := Nat.mul_mod a b 25
-  rw [ha, hb] at h1
-  have h2 : (7 : ℕ) * 7 % 25 = 24 := by norm_num
-  rw [h2] at h1
-  have h3 : (a * b + 1) % 25 = 0 := by omega
-  exact Nat.dvd_of_mod_eq_zero h3
+  exact mod25_divisibility_of_residue 7 a b (by norm_num) ha hb
 
 /-- Same for A₁₈: If a ≡ b ≡ 18 (mod 25), then 5² | (ab + 1). -/
 lemma mod25_divisibility_18 (a b : ℕ) (ha : a % 25 = 18) (hb : b % 25 = 18) :
     25 ∣ (a * b + 1) := by
-  have h1 : a * b % 25 = (a % 25) * (b % 25) % 25 := Nat.mul_mod a b 25
-  rw [ha, hb] at h1
-  have h2 : (18 : ℕ) * 18 % 25 = 24 := by norm_num
-  rw [h2] at h1
-  have h3 : (a * b + 1) % 25 = 0 := by omega
-  exact Nat.dvd_of_mod_eq_zero h3
+  exact mod25_divisibility_of_residue 18 a b (by norm_num) ha hb
 
 /-- Helper: 25 = 5² -/
 lemma twenty_five_eq_five_sq : (25 : ℕ) = 5 ^ 2 := by rfl
@@ -330,101 +329,71 @@ lemma two_roots_mod_p_squared (p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) :
 -- SECTION 4: CROSS-RESIDUE CONSTRAINTS (PROVED)
 -- ============================================================================
 
-/-- If a ≡ 7 (mod 25) and b ≢ 7, 18 (mod 25), then 25 ∤ (ab + 1). -/
-lemma cross_residue_not_div_25 (a b : ℕ) (ha : a % 25 = 7)
-    (hb : b % 25 ≠ 7 ∧ b % 25 ≠ 18) : ¬ (25 ∣ a * b + 1) := by
+/-- If `a ≡ r (mod 25)` and `r*r ≡ -1 (mod 25)`, then `25 ∣ a*b+1` forces `b ≡ r (mod 25)`. -/
+lemma cross_residue_not_div_25_of_residue (r a b : ℕ) (hr : r * r % 25 = 24) (ha : a % 25 = r)
+    (hb : b % 25 ≠ r) : ¬ (25 ∣ a * b + 1) := by
   intro hdiv
+  have hr_lt : r < 25 := by
+    have : a % 25 < 25 := Nat.mod_lt a (by decide : 0 < 25)
+    simpa [ha] using this
   have h0 : ((a * b + 1 : ℕ) : ZMod 25) = 0 :=
     (ZMod.natCast_eq_zero_iff (a * b + 1) 25).2 hdiv
-  have haZ : (a : ZMod 25) = 7 := by
-    have : a % 25 = 7 % 25 := by
-      simpa [Nat.mod_eq_of_lt (by decide : 7 < 25)] using ha
-    exact (ZMod.natCast_eq_natCast_iff' a 7 25).2 this
-  have h1 : (7 : ZMod 25) * (b : ZMod 25) + 1 = 0 := by
+  have haZ : (a : ZMod 25) = (r : ZMod 25) := by
+    have ha_mod : a % 25 = r % 25 := by
+      have h := congrArg (fun x => x % 25) ha
+      have hleft : (a % 25) % 25 = a % 25 :=
+        Nat.mod_eq_of_lt (Nat.mod_lt a (by decide : 0 < 25))
+      simpa [hleft] using h
+    exact (ZMod.natCast_eq_natCast_iff' a r 25).2 ha_mod
+  have h1 : (r : ZMod 25) * (b : ZMod 25) + 1 = 0 := by
     have : (a : ZMod 25) * (b : ZMod 25) + 1 = 0 := by
       simpa [Nat.cast_add, Nat.cast_mul, Nat.cast_one] using h0
     simpa [haZ] using this
-  have h2 : (7 : ZMod 25) * (b : ZMod 25) = (-1 : ZMod 25) := by
+  have h2 : (r : ZMod 25) * (b : ZMod 25) = (-1 : ZMod 25) := by
     simpa using (eq_neg_of_add_eq_zero_left h1)
-  have h187 : (18 : ZMod 25) * (7 : ZMod 25) = 1 := by decide
-  have hbZ : (b : ZMod 25) = (7 : ZMod 25) := by
-    have hmul : (18 : ZMod 25) * ((7 : ZMod 25) * (b : ZMod 25)) =
-        (18 : ZMod 25) * (-1 : ZMod 25) := by
-      simpa [mul_assoc] using congrArg (fun x => (18 : ZMod 25) * x) h2
-    have hb' : (b : ZMod 25) = (18 : ZMod 25) * (-1 : ZMod 25) := by
-      have hmul' : ((18 : ZMod 25) * (7 : ZMod 25)) * (b : ZMod 25) =
-          (18 : ZMod 25) * (-1 : ZMod 25) := by
-        calc
-          ((18 : ZMod 25) * (7 : ZMod 25)) * (b : ZMod 25) =
-              (18 : ZMod 25) * ((7 : ZMod 25) * (b : ZMod 25)) := mul_assoc _ _ _
-          _ = (18 : ZMod 25) * (-1 : ZMod 25) := hmul
-      have : (1 : ZMod 25) * (b : ZMod 25) = (18 : ZMod 25) * (-1 : ZMod 25) := by
-        simpa [h187] using hmul'
-      simpa using this
-    exact hb'.trans (by decide : (18 : ZMod 25) * (-1 : ZMod 25) = (7 : ZMod 25))
-  have hbmod : b % 25 = 7 := by
-    have hb' : b % 25 = 7 % 25 := (ZMod.natCast_eq_natCast_iff' b 7 25).1 hbZ
-    simpa [Nat.mod_eq_of_lt (by decide : 7 < 25)] using hb'
-  exact hb.1 hbmod
+  have hrZ : (r : ZMod 25) * (r : ZMod 25) = (-1 : ZMod 25) := by
+    have hrr : ((r * r : ℕ) : ZMod 25) = (24 : ZMod 25) := by
+      have : (r * r) % 25 = 24 % 25 := by
+        simpa [Nat.mod_eq_of_lt (by decide : 24 < 25)] using hr
+      exact (ZMod.natCast_eq_natCast_iff' (r * r) 24 25).2 this
+    have hrr' : (r : ZMod 25) * (r : ZMod 25) = (24 : ZMod 25) := by simpa using hrr
+    exact hrr'.trans (by decide : (24 : ZMod 25) = (-1 : ZMod 25))
+  have hr_inv : (-(r : ZMod 25)) * (r : ZMod 25) = (1 : ZMod 25) := by
+    calc
+      (-(r : ZMod 25)) * (r : ZMod 25) = -((r : ZMod 25) * (r : ZMod 25)) := by simp
+      _ = -(-1 : ZMod 25) := by simp [hrZ]
+      _ = (1 : ZMod 25) := by simp
+  have hbZ : (b : ZMod 25) = (r : ZMod 25) := by
+    have hmul : (-(r : ZMod 25)) * ((r : ZMod 25) * (b : ZMod 25)) =
+        (-(r : ZMod 25)) * (-1 : ZMod 25) := by
+      simpa [mul_assoc] using congrArg (fun x => (-(r : ZMod 25)) * x) h2
+    have hmul' : ((-(r : ZMod 25)) * (r : ZMod 25)) * (b : ZMod 25) =
+        (-(r : ZMod 25)) * (-1 : ZMod 25) := by
+      simpa [mul_assoc] using hmul
+    have hmul'' : ((-(r : ZMod 25)) * (r : ZMod 25)) * (b : ZMod 25) = (r : ZMod 25) := by
+      simpa using hmul'
+    have : (1 : ZMod 25) * (b : ZMod 25) = (r : ZMod 25) := by
+      simpa [hr_inv] using hmul''
+    simpa using this
+  have hbmod : b % 25 = r := by
+    have hb' : b % 25 = r % 25 := (ZMod.natCast_eq_natCast_iff' b r 25).1 hbZ
+    simpa [Nat.mod_eq_of_lt hr_lt] using hb'
+  exact hb hbmod
+
+/-- If a ≡ 7 (mod 25) and b ≢ 7, 18 (mod 25), then 25 ∤ (ab + 1). -/
+lemma cross_residue_not_div_25 (a b : ℕ) (ha : a % 25 = 7)
+    (hb : b % 25 ≠ 7 ∧ b % 25 ≠ 18) : ¬ (25 ∣ a * b + 1) := by
+  exact cross_residue_not_div_25_of_residue 7 a b (by norm_num) ha hb.1
 
 /-- If a ≡ 18 (mod 25) and b ≢ 7,18 (mod 25), then 25 ∤ (ab + 1). -/
 lemma cross_residue_not_div_25_18 (a b : ℕ) (ha : a % 25 = 18)
     (hb : b % 25 ≠ 7 ∧ b % 25 ≠ 18) : ¬ (25 ∣ a * b + 1) := by
-  intro hdiv
-  have h0 : ((a * b + 1 : ℕ) : ZMod 25) = 0 :=
-    (ZMod.natCast_eq_zero_iff (a * b + 1) 25).2 hdiv
-  have haZ : (a : ZMod 25) = 18 := by
-    have : a % 25 = 18 % 25 := by
-      simpa [Nat.mod_eq_of_lt (by decide : 18 < 25)] using ha
-    exact (ZMod.natCast_eq_natCast_iff' a 18 25).2 this
-  have h1 : (18 : ZMod 25) * (b : ZMod 25) + 1 = 0 := by
-    have : (a : ZMod 25) * (b : ZMod 25) + 1 = 0 := by
-      simpa [Nat.cast_add, Nat.cast_mul, Nat.cast_one] using h0
-    simpa [haZ] using this
-  have h2 : (18 : ZMod 25) * (b : ZMod 25) = (-1 : ZMod 25) := by
-    simpa using (eq_neg_of_add_eq_zero_left h1)
-  have h718 : (7 : ZMod 25) * (18 : ZMod 25) = 1 := by decide
-  have hbZ : (b : ZMod 25) = (18 : ZMod 25) := by
-    have hmul : (7 : ZMod 25) * ((18 : ZMod 25) * (b : ZMod 25)) =
-        (7 : ZMod 25) * (-1 : ZMod 25) := by
-      simpa [mul_assoc] using congrArg (fun x => (7 : ZMod 25) * x) h2
-    have hb' : (b : ZMod 25) = (7 : ZMod 25) * (-1 : ZMod 25) := by
-      have hmul' : ((7 : ZMod 25) * (18 : ZMod 25)) * (b : ZMod 25) =
-          (7 : ZMod 25) * (-1 : ZMod 25) := by
-        calc
-          ((7 : ZMod 25) * (18 : ZMod 25)) * (b : ZMod 25) =
-              (7 : ZMod 25) * ((18 : ZMod 25) * (b : ZMod 25)) := mul_assoc _ _ _
-          _ = (7 : ZMod 25) * (-1 : ZMod 25) := hmul
-      have : (1 : ZMod 25) * (b : ZMod 25) = (7 : ZMod 25) * (-1 : ZMod 25) := by
-        simpa [h718] using hmul'
-      simpa using this
-    exact hb'.trans (by decide : (7 : ZMod 25) * (-1 : ZMod 25) = (18 : ZMod 25))
-  have hbmod : b % 25 = 18 := by
-    have hb' : b % 25 = 18 % 25 := (ZMod.natCast_eq_natCast_iff' b 18 25).1 hbZ
-    simpa [Nat.mod_eq_of_lt (by decide : 18 < 25)] using hb'
-  exact hb.2 hbmod
+  exact cross_residue_not_div_25_of_residue 18 a b (by norm_num) ha hb.2
 
-/-- If b ≢ 7, 18 (mod 25), ab+1 not squarefree implies p² | ab+1 for some p ≠ 5. -/
-lemma must_have_other_prime_square (a b : ℕ) (ha : a % 25 = 7)
-    (hb : b % 25 ≠ 7 ∧ b % 25 ≠ 18) (hnsq : ¬ Squarefree (a * b + 1)) :
-    ∃ p : ℕ, Nat.Prime p ∧ p ≠ 5 ∧ p^2 ∣ a * b + 1 := by
-  classical
-  have hnot : ¬ ∀ p : ℕ, Nat.Prime p → ¬p * p ∣ a * b + 1 := by
-    intro hall
-    exact hnsq ((Nat.squarefree_iff_prime_squarefree).2 hall)
-  push_neg at hnot
-  rcases hnot with ⟨p, hp, hpp⟩
-  have h25 : ¬ (25 ∣ a * b + 1) := cross_residue_not_div_25 a b ha hb
-  have hp2 : p ^ 2 ∣ a * b + 1 := by simpa [pow_two] using hpp
-  refine ⟨p, hp, ?_, hp2⟩
-  intro hp5
-  subst hp5
-  have : 25 ∣ a * b + 1 := by simpa [pow_two] using hp2
-  exact (h25 this).elim
-
-/-- If b ≢ 7, 18 (mod 25), ab+1 not squarefree implies p² | ab+1 for some p ≠ 5 (18-version). -/
-lemma must_have_other_prime_square_18 (a b : ℕ) (ha : a % 25 = 18)
-    (hb : b % 25 ≠ 7 ∧ b % 25 ≠ 18) (hnsq : ¬ Squarefree (a * b + 1)) :
+/-- If `a ≡ r (mod 25)` and `r*r ≡ -1 (mod 25)`, then `¬ Squarefree (a*b+1)` forces a prime square divisor
+other than `5²` provided `b ≢ r (mod 25)`. -/
+lemma must_have_other_prime_square_of_residue (r a b : ℕ) (hr : r * r % 25 = 24) (ha : a % 25 = r)
+    (hb : b % 25 ≠ r) (hnsq : ¬ Squarefree (a * b + 1)) :
     ∃ p : ℕ, Nat.Prime p ∧ p ≠ 5 ∧ p ^ 2 ∣ a * b + 1 := by
   classical
   have hnot : ¬ ∀ p : ℕ, Nat.Prime p → ¬p * p ∣ a * b + 1 := by
@@ -432,13 +401,25 @@ lemma must_have_other_prime_square_18 (a b : ℕ) (ha : a % 25 = 18)
     exact hnsq ((Nat.squarefree_iff_prime_squarefree).2 hall)
   push_neg at hnot
   rcases hnot with ⟨p, hp, hpp⟩
-  have h25 : ¬ (25 ∣ a * b + 1) := cross_residue_not_div_25_18 a b ha hb
+  have h25 : ¬ (25 ∣ a * b + 1) := cross_residue_not_div_25_of_residue r a b hr ha hb
   have hp2 : p ^ 2 ∣ a * b + 1 := by simpa [pow_two] using hpp
   refine ⟨p, hp, ?_, hp2⟩
   intro hp5
   subst hp5
   have : 25 ∣ a * b + 1 := by simpa [pow_two] using hp2
   exact (h25 this).elim
+
+/-- If b ≢ 7, 18 (mod 25), ab+1 not squarefree implies p² | ab+1 for some p ≠ 5. -/
+lemma must_have_other_prime_square (a b : ℕ) (ha : a % 25 = 7)
+    (hb : b % 25 ≠ 7 ∧ b % 25 ≠ 18) (hnsq : ¬ Squarefree (a * b + 1)) :
+    ∃ p : ℕ, Nat.Prime p ∧ p ≠ 5 ∧ p^2 ∣ a * b + 1 := by
+  exact must_have_other_prime_square_of_residue 7 a b (by norm_num) ha hb.1 hnsq
+
+/-- If b ≢ 7, 18 (mod 25), ab+1 not squarefree implies p² | ab+1 for some p ≠ 5 (18-version). -/
+lemma must_have_other_prime_square_18 (a b : ℕ) (ha : a % 25 = 18)
+    (hb : b % 25 ≠ 7 ∧ b % 25 ≠ 18) (hnsq : ¬ Squarefree (a * b + 1)) :
+    ∃ p : ℕ, Nat.Prime p ∧ p ≠ 5 ∧ p ^ 2 ∣ a * b + 1 := by
+  exact must_have_other_prime_square_of_residue 18 a b (by norm_num) ha hb.2 hnsq
 
 -- ============================================================================
 -- SECTION 5: DENSITY LEMMAS (PROVED)
@@ -1934,6 +1915,9 @@ lemma no_five_in_candidates_100 :
   have hs_one_lt : 1 < s.card := by simp [hcard]
   let C : Finset ℕ := {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99}
   have hsC : s ⊆ C := by simpa [C] using hs
+  have clash : ∀ x y, x ∈ s → y ∈ s → Squarefree (x * y + 1) → False := by
+    intro x y hx hy hsq
+    exact hsprop x hx y hy hsq
 
   by_cases h38 : 38 ∈ s
   · obtain ⟨b, hb, hb_ne⟩ := Finset.exists_mem_ne hs_one_lt 38
@@ -1945,38 +1929,38 @@ lemma no_five_in_candidates_100 :
     rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
     · have : Squarefree (38 * 7 + 1) := by
         simpa [show 38 * 7 + 1 = 267 by norm_num, mul_comm] using squarefree_267
-      exact (hsprop 38 h38 7 (by simpa [C] using hb) this).elim
+      exact (clash 38 7 h38 hb this).elim
     · have : Squarefree (38 * 18 + 1) := by
         simpa [show 38 * 18 + 1 = 685 by norm_num, mul_comm] using squarefree_685
-      exact (hsprop 38 h38 18 (by simpa [C] using hb) this).elim
+      exact (clash 38 18 h38 hb this).elim
     · have : Squarefree (38 * 32 + 1) := by
         simpa [show 38 * 32 + 1 = 1217 by norm_num, mul_comm] using squarefree_1217
-      exact (hsprop 38 h38 32 (by simpa [C] using hb) this).elim
+      exact (clash 38 32 h38 hb this).elim
     · exact (hb_ne rfl).elim
     · have : Squarefree (38 * 41 + 1) := by
         simpa [show 38 * 41 + 1 = 1559 by norm_num] using squarefree_1559
-      exact (hsprop 38 h38 41 (by simpa [C] using hb) this).elim
+      exact (clash 38 41 h38 hb this).elim
     · have : Squarefree (38 * 43 + 1) := by
         simpa [show 38 * 43 + 1 = 1635 by norm_num] using squarefree_1635
-      exact (hsprop 38 h38 43 (by simpa [C] using hb) this).elim
+      exact (clash 38 43 h38 hb this).elim
     · have : Squarefree (38 * 57 + 1) := by
         simpa [show 38 * 57 + 1 = 2167 by norm_num] using squarefree_2167
-      exact (hsprop 38 h38 57 (by simpa [C] using hb) this).elim
+      exact (clash 38 57 h38 hb this).elim
     · have : Squarefree (38 * 68 + 1) := by
         simpa [show 38 * 68 + 1 = 2585 by norm_num] using squarefree_2585
-      exact (hsprop 38 h38 68 (by simpa [C] using hb) this).elim
+      exact (clash 38 68 h38 hb this).elim
     · have : Squarefree (38 * 70 + 1) := by
         simpa [show 38 * 70 + 1 = 2661 by norm_num] using squarefree_2661
-      exact (hsprop 38 h38 70 (by simpa [C] using hb) this).elim
+      exact (clash 38 70 h38 hb this).elim
     · have : Squarefree (38 * 82 + 1) := by
         simpa [show 38 * 82 + 1 = 3117 by norm_num] using squarefree_3117
-      exact (hsprop 38 h38 82 (by simpa [C] using hb) this).elim
+      exact (clash 38 82 h38 hb this).elim
     · have : Squarefree (38 * 93 + 1) := by
         simpa [show 38 * 93 + 1 = 3535 by norm_num] using squarefree_3535
-      exact (hsprop 38 h38 93 (by simpa [C] using hb) this).elim
+      exact (clash 38 93 h38 hb this).elim
     · have : Squarefree (38 * 99 + 1) := by
         simpa [show 38 * 99 + 1 = 3763 by norm_num] using squarefree_3763
-      exact (hsprop 38 h38 99 (by simpa [C] using hb) this).elim
+      exact (clash 38 99 h38 hb this).elim
   have h38_not : 38 ∉ s := h38
 
   by_cases h18 : 18 ∈ s
@@ -1991,30 +1975,30 @@ lemma no_five_in_candidates_100 :
       rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
       · have : Squarefree (18 * 7 + 1) := by
           simpa [show 18 * 7 + 1 = 127 by norm_num] using squarefree_127
-        exact (hsprop 18 h18 7 (by simpa [C] using hb) this).elim
+        exact (clash 18 7 h18 hb this).elim
       · simp
       · have : Squarefree (18 * 32 + 1) := by
           simpa [show 18 * 32 + 1 = 577 by norm_num] using squarefree_577
-        exact (hsprop 18 h18 32 (by simpa [C] using hb) this).elim
+        exact (clash 18 32 h18 hb this).elim
       · exact (h38_not hb).elim
       · have : Squarefree (18 * 41 + 1) := by
           simpa [show 18 * 41 + 1 = 739 by norm_num] using squarefree_739
-        exact (hsprop 18 h18 41 (by simpa [C] using hb) this).elim
+        exact (clash 18 41 h18 hb this).elim
       · simp
       · have : Squarefree (18 * 57 + 1) := by
           simpa [show 18 * 57 + 1 = 1027 by norm_num] using squarefree_1027
-        exact (hsprop 18 h18 57 (by simpa [C] using hb) this).elim
+        exact (clash 18 57 h18 hb this).elim
       · simp
       · have : Squarefree (18 * 70 + 1) := by
           simpa [show 18 * 70 + 1 = 1261 by norm_num] using squarefree_1261
-        exact (hsprop 18 h18 70 (by simpa [C] using hb) this).elim
+        exact (clash 18 70 h18 hb this).elim
       · have : Squarefree (18 * 82 + 1) := by
           simpa [show 18 * 82 + 1 = 1477 by norm_num] using squarefree_1477
-        exact (hsprop 18 h18 82 (by simpa [C] using hb) this).elim
+        exact (clash 18 82 h18 hb this).elim
       · simp
       · have : Squarefree (18 * 99 + 1) := by
           simpa [show 18 * 99 + 1 = 1783 by norm_num] using squarefree_1783
-        exact (hsprop 18 h18 99 (by simpa [C] using hb) this).elim
+        exact (clash 18 99 h18 hb this).elim
     have : s.card ≤ 4 := by
       have : s.card ≤ ({18, 43, 68, 93} : Finset ℕ).card := Finset.card_le_card hs_sub
       simpa using this
@@ -2032,30 +2016,30 @@ lemma no_five_in_candidates_100 :
       rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
       · have : Squarefree (70 * 7 + 1) := by
           simpa [show 70 * 7 + 1 = 491 by norm_num, mul_comm] using squarefree_491
-        exact (hsprop 70 h70 7 (by simpa [C] using hb) this).elim
+        exact (clash 70 7 h70 hb this).elim
       · have : Squarefree (70 * 18 + 1) := by
           simpa [show 70 * 18 + 1 = 1261 by norm_num, mul_comm] using squarefree_1261
-        exact (hsprop 70 h70 18 (by simpa [C] using hb) this).elim
+        exact (clash 70 18 h70 hb this).elim
       · simp
       · exact (h38_not hb).elim
       · simp
       · have : Squarefree (70 * 43 + 1) := by
           simpa [show 70 * 43 + 1 = 3011 by norm_num, mul_comm] using squarefree_3011
-        exact (hsprop 70 h70 43 (by simpa [C] using hb) this).elim
+        exact (clash 70 43 h70 hb this).elim
       · have : Squarefree (70 * 57 + 1) := by
           simpa [show 70 * 57 + 1 = 3991 by norm_num, mul_comm] using squarefree_3991
-        exact (hsprop 70 h70 57 (by simpa [C] using hb) this).elim
+        exact (clash 70 57 h70 hb this).elim
       · simp
       · simp
       · have : Squarefree (70 * 82 + 1) := by
           simpa [show 70 * 82 + 1 = 5741 by norm_num, mul_comm] using squarefree_5741
-        exact (hsprop 70 h70 82 (by simpa [C] using hb) this).elim
+        exact (clash 70 82 h70 hb this).elim
       · have : Squarefree (70 * 93 + 1) := by
           simpa [show 70 * 93 + 1 = 6511 by norm_num, mul_comm] using squarefree_6511
-        exact (hsprop 70 h70 93 (by simpa [C] using hb) this).elim
+        exact (clash 70 93 h70 hb this).elim
       · have : Squarefree (70 * 99 + 1) := by
           simpa [show 70 * 99 + 1 = 6931 by norm_num, mul_comm] using squarefree_6931
-        exact (hsprop 70 h70 99 (by simpa [C] using hb) this).elim
+        exact (clash 70 99 h70 hb this).elim
     have : s.card ≤ 4 := by
       have : s.card ≤ ({32, 41, 68, 70} : Finset ℕ).card := Finset.card_le_card hs_sub
       simpa using this
@@ -2073,26 +2057,26 @@ lemma no_five_in_candidates_100 :
       rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
       · have : Squarefree (99 * 7 + 1) := by
           simpa [show 99 * 7 + 1 = 694 by norm_num, mul_comm] using squarefree_694
-        exact (hsprop 99 h99 7 (by simpa [C] using hb) this).elim
+        exact (clash 99 7 h99 hb this).elim
       · have : Squarefree (99 * 18 + 1) := by
           simpa [show 99 * 18 + 1 = 1783 by norm_num, mul_comm] using squarefree_1783
-        exact (hsprop 99 h99 18 (by simpa [C] using hb) this).elim
+        exact (clash 99 18 h99 hb this).elim
       · have : Squarefree (99 * 32 + 1) := by
           simpa [show 99 * 32 + 1 = 3169 by norm_num, mul_comm] using squarefree_3169
-        exact (hsprop 99 h99 32 (by simpa [C] using hb) this).elim
+        exact (clash 99 32 h99 hb this).elim
       · exact (h38_not hb).elim
       · simp
       · have : Squarefree (99 * 43 + 1) := by
           simpa [show 99 * 43 + 1 = 4258 by norm_num, mul_comm] using squarefree_4258
-        exact (hsprop 99 h99 43 (by simpa [C] using hb) this).elim
+        exact (clash 99 43 h99 hb this).elim
       · simp
       · have : Squarefree (99 * 68 + 1) := by
           simpa [show 99 * 68 + 1 = 6733 by norm_num, mul_comm] using squarefree_6733
-        exact (hsprop 99 h99 68 (by simpa [C] using hb) this).elim
+        exact (clash 99 68 h99 hb this).elim
       · exact (h70 hb).elim
       · have : Squarefree (99 * 82 + 1) := by
           simpa [show 99 * 82 + 1 = 8119 by norm_num, mul_comm] using squarefree_8119
-        exact (hsprop 99 h99 82 (by simpa [C] using hb) this).elim
+        exact (clash 99 82 h99 hb this).elim
       · simp
       · simp
     have : s.card ≤ 4 := by
@@ -2113,26 +2097,26 @@ lemma no_five_in_candidates_100 :
       · simp
       · have : Squarefree (41 * 18 + 1) := by
           simpa [show 41 * 18 + 1 = 739 by norm_num, mul_comm] using squarefree_739
-        exact (hsprop 41 h41 18 (by simpa [C] using hb) this).elim
+        exact (clash 41 18 h41 hb this).elim
       · have : Squarefree (41 * 32 + 1) := by
           simpa [show 41 * 32 + 1 = 1313 by norm_num, mul_comm] using squarefree_1313
-        exact (hsprop 41 h41 32 (by simpa [C] using hb) this).elim
+        exact (clash 41 32 h41 hb this).elim
       · exact (h38_not hb).elim
       · simp
       · simp
       · have : Squarefree (41 * 57 + 1) := by
           simpa [show 41 * 57 + 1 = 2338 by norm_num, mul_comm] using squarefree_2338
-        exact (hsprop 41 h41 57 (by simpa [C] using hb) this).elim
+        exact (clash 41 57 h41 hb this).elim
       · have : Squarefree (41 * 68 + 1) := by
           simpa [show 41 * 68 + 1 = 2789 by norm_num, mul_comm] using squarefree_2789
-        exact (hsprop 41 h41 68 (by simpa [C] using hb) this).elim
+        exact (clash 41 68 h41 hb this).elim
       · exact (h70 hb).elim
       · have : Squarefree (41 * 82 + 1) := by
           simpa [show 41 * 82 + 1 = 3363 by norm_num, mul_comm] using squarefree_3363
-        exact (hsprop 41 h41 82 (by simpa [C] using hb) this).elim
+        exact (clash 41 82 h41 hb this).elim
       · have : Squarefree (41 * 93 + 1) := by
           simpa [show 41 * 93 + 1 = 3814 by norm_num, mul_comm] using squarefree_3814
-        exact (hsprop 41 h41 93 (by simpa [C] using hb) this).elim
+        exact (clash 41 93 h41 hb this).elim
       · exact (h99 hb).elim
     have : s.card ≤ 3 := by
       have : s.card ≤ ({7, 41, 43} : Finset ℕ).card := Finset.card_le_card hs_sub
@@ -2152,20 +2136,20 @@ lemma no_five_in_candidates_100 :
       · simp
       · have : Squarefree (82 * 18 + 1) := by
           simpa [show 82 * 18 + 1 = 1477 by norm_num, mul_comm] using squarefree_1477
-        exact (hsprop 82 h82 18 (by simpa [C] using hb) this).elim
+        exact (clash 82 18 h82 hb this).elim
       · simp
       · exact (h38_not hb).elim
       · exact (h41 hb).elim
       · have : Squarefree (82 * 43 + 1) := by
           simpa [show 82 * 43 + 1 = 3527 by norm_num, mul_comm] using squarefree_3527
-        exact (hsprop 82 h82 43 (by simpa [C] using hb) this).elim
+        exact (clash 82 43 h82 hb this).elim
       · simp
       · simp
       · exact (h70 hb).elim
       · simp
       · have : Squarefree (82 * 93 + 1) := by
           simpa [show 82 * 93 + 1 = 7627 by norm_num] using squarefree_7627
-        exact (hsprop 82 h82 93 (by simpa [C] using hb) this).elim
+        exact (clash 82 93 h82 hb this).elim
       · exact (h99 hb).elim
     have hcard_eq :
         s = ({7, 32, 57, 68, 82} : Finset ℕ) := by
@@ -2177,7 +2161,7 @@ lemma no_five_in_candidates_100 :
     have h68 : 68 ∈ s := by simp [hcard_eq]
     have : Squarefree (32 * 68 + 1) := by
       simpa [show 32 * 68 + 1 = 2177 by norm_num] using squarefree_2177
-    exact (hsprop 32 h32 68 h68 this).elim
+    exact (clash 32 68 h32 h68 this).elim
 
   -- Remaining elements: {7,32,43,57,68,93}. Any 5-subset contains a squarefree pair.
   have hs_subR : s ⊆ ({7, 32, 43, 57, 68, 93} : Finset ℕ) := by
@@ -2204,7 +2188,7 @@ lemma no_five_in_candidates_100 :
   · by_cases h68 : 68 ∈ s
     · have : Squarefree (32 * 68 + 1) := by
         simpa [show 32 * 68 + 1 = 2177 by norm_num] using squarefree_2177
-      exact (hsprop 32 h32 68 h68 this).elim
+      exact (clash 32 68 h32 h68 this).elim
     · -- 68 ∉ s, so s = {7,32,43,57,93} and 32*93+1 is squarefree
       have hs_sub : s ⊆ ({7, 32, 43, 57, 93} : Finset ℕ) := by
         intro b hb
@@ -2222,7 +2206,7 @@ lemma no_five_in_candidates_100 :
       have h93 : 93 ∈ s := by simp [hs_eq]
       have : Squarefree (32 * 93 + 1) := by
         simpa [show 32 * 93 + 1 = 2977 by norm_num] using squarefree_2977
-      exact (hsprop 32 h32 93 h93 this).elim
+      exact (clash 32 93 h32 h93 this).elim
   · -- 32 ∉ s, so s = {7,43,57,68,93} and 7*43+1 is squarefree
     have hs_sub : s ⊆ ({7, 43, 57, 68, 93} : Finset ℕ) := by
       intro b hb
@@ -2241,7 +2225,7 @@ lemma no_five_in_candidates_100 :
     have h43 : 43 ∈ s := by simp [hs_eq]
     have : Squarefree (7 * 43 + 1) := by
       simpa [show 7 * 43 + 1 = 302 by norm_num] using squarefree_302
-    exact (hsprop 7 h7 43 h43 this).elim
+    exact (clash 7 43 h7 h43 this).elim
 
 -- Main theorems for small N
 theorem problem_848_N50 :
@@ -3096,23 +3080,11 @@ lemma prime_square_exists_ne5 {n : ℕ} (hn : ¬ Squarefree n) (h25 : ¬ 25 ∣ 
 
 lemma cross_residue_7_18_not_div_25 (a b : ℕ) (ha : a % 25 = 7) (hb : b % 25 = 18) :
     ¬ (25 ∣ a * b + 1) := by
-  intro hdiv
-  have h0 : ((a * b + 1 : ℕ) : ZMod 25) = 0 :=
-    (ZMod.natCast_eq_zero_iff (a * b + 1) 25).2 hdiv
-  have haZ : (a : ZMod 25) = 7 := by
-    have : a % 25 = 7 % 25 := by
-      simpa [Nat.mod_eq_of_lt (by decide : 7 < 25)] using ha
-    exact (ZMod.natCast_eq_natCast_iff' a 7 25).2 this
-  have hbZ : (b : ZMod 25) = 18 := by
-    have : b % 25 = 18 % 25 := by
-      simpa [Nat.mod_eq_of_lt (by decide : 18 < 25)] using hb
-    exact (ZMod.natCast_eq_natCast_iff' b 18 25).2 this
-  have hab : (7 : ZMod 25) * (18 : ZMod 25) + 1 = 0 := by
-    have : (a : ZMod 25) * (b : ZMod 25) + 1 = 0 := by
-      simpa [Nat.cast_add, Nat.cast_mul, Nat.cast_one] using h0
-    simpa [haZ, hbZ] using this
-  have hneq : (7 : ZMod 25) * (18 : ZMod 25) + 1 ≠ 0 := by decide
-  exact (hneq hab).elim
+  have hb_ne : b % 25 ≠ 7 := by
+    intro hb7
+    have : (18 : ℕ) = 7 := hb.symm.trans hb7
+    exact (by decide : (18 : ℕ) ≠ 7) this
+  exact cross_residue_not_div_25_of_residue 7 a b (by norm_num) ha hb_ne
 
 lemma cross_residue_18_7_not_div_25 (a b : ℕ) (ha : a % 25 = 18) (hb : b % 25 = 7) :
     ¬ (25 ∣ a * b + 1) := by
@@ -3867,18 +3839,13 @@ theorem sawhney_main : SawhneyMain := by
           exact (not_dvd_25_sq_add_one_of_mod_ne x hx_mod_ne) this
         have hp_ge13 : 13 ≤ p := prime_ge_13_of_mod4_one_ne5 p hp hp_mod4 hp_ne5
         have hp_le : p ≤ N := by
-          have hp2_le : p ^ 2 ≤ x ^ 2 + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
           have hxx_lt : x ^ 2 + 1 < N ^ 2 := by
             have hx_le : x ≤ N - 1 := Nat.le_pred_of_lt hx_lt
             have hxx_le : x ^ 2 ≤ (N - 1) ^ 2 := Nat.pow_le_pow_left hx_le 2
             have : x ^ 2 + 1 ≤ (N - 1) ^ 2 + 1 := Nat.add_le_add_right hxx_le 1
             have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
             exact lt_of_le_of_lt this hlt
-          have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hxx_lt
-          by_contra hpge
-          have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-          have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-          exact (not_lt_of_ge this) hp2_lt
+          exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := x ^ 2 + 1) (Nat.succ_pos _) hxx_lt hp2div
         have hp_mem : p ∈ diagPrimesUpTo N := by
           have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_le
           simp [diagPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp_mod4, hp_ge13]
@@ -3973,18 +3940,13 @@ theorem sawhney_main : SawhneyMain := by
           exact (not_dvd_25_sq_add_one_of_mod_ne x hx_mod_ne) this
         have hp_ge13 : 13 ≤ p := prime_ge_13_of_mod4_one_ne5 p hp hp_mod4 hp_ne5
         have hp_le : p ≤ N := by
-          have hp2_le : p ^ 2 ≤ x ^ 2 + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
           have hxx_lt : x ^ 2 + 1 < N ^ 2 := by
             have hx_le : x ≤ N - 1 := Nat.le_pred_of_lt hx_lt
             have hxx_le : x ^ 2 ≤ (N - 1) ^ 2 := Nat.pow_le_pow_left hx_le 2
             have : x ^ 2 + 1 ≤ (N - 1) ^ 2 + 1 := Nat.add_le_add_right hxx_le 1
             have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
             exact lt_of_le_of_lt this hlt
-          have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hxx_lt
-          by_contra hpge
-          have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-          have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-          exact (not_lt_of_ge this) hp2_lt
+          exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := x ^ 2 + 1) (Nat.succ_pos _) hxx_lt hp2div
         have hp_mem : p ∈ diagPrimesUpTo N := by
           have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_le
           simp [diagPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp_mod4, hp_ge13]
@@ -4161,7 +4123,6 @@ theorem sawhney_main : SawhneyMain := by
                 exact cross_residue_7_18_not_div_25 b7 a hb7_mod ha_mod18
               obtain ⟨p, hp, hp5, hp2div⟩ := prime_square_exists_ne5 (n := b7 * a + 1) hnsq h25
               have hp_lt : p ≤ N := by
-                have hp2_le : p ^ 2 ≤ b7 * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
                 have hab_lt : b7 * a + 1 < N ^ 2 := by
                   have hb7_le : b7 ≤ N - 1 := Nat.le_pred_of_lt hb7_lt
                   have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -4169,11 +4130,7 @@ theorem sawhney_main : SawhneyMain := by
                   have : b7 * a + 1 ≤ (N - 1) * (N - 1) + 1 := Nat.add_le_add_right hab_le 1
                   have hlt : (N - 1) * (N - 1) + 1 < N ^ 2 := sq_pred_add_one_lt_sq N hN100
                   exact lt_of_le_of_lt this hlt
-                have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hab_lt
-                by_contra hpge
-                have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                exact (not_lt_of_ge this) hp2_lt
+                exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b7 * a + 1) (Nat.succ_pos _) hab_lt hp2div
               have hp_mem : p ∈ no5PrimesUpTo N := by
                 have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_lt
                 simp [no5PrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp5]
@@ -4307,7 +4264,6 @@ theorem sawhney_main : SawhneyMain := by
                   simp [hodd] at h0
                 exact (this (by simpa [pow_two] using hp2div)).elim
               have hp_lt : p ≤ N := by
-                have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
                 have hab_lt : b * a + 1 < N ^ 2 := by
                   have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
                   have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -4315,11 +4271,7 @@ theorem sawhney_main : SawhneyMain := by
                   have : b * a + 1 ≤ (N - 1) * (N - 1) + 1 := Nat.add_le_add_right hab_le 1
                   have hlt : (N - 1) * (N - 1) + 1 < N ^ 2 := sq_pred_add_one_lt_sq N hN100
                   exact lt_of_le_of_lt this hlt
-                have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hab_lt
-                by_contra hpge
-                have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                exact (not_lt_of_ge this) hp2_lt
+                exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b * a + 1) (Nat.succ_pos _) hab_lt hp2div
               have hp_mem : p ∈ offPrimesUpTo N := by
                 have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_lt
                 simp [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp_ne2, hp5]
@@ -4376,7 +4328,6 @@ theorem sawhney_main : SawhneyMain := by
                   simp [hodd] at h0
                 exact (this (by simpa [pow_two] using hp2div)).elim
               have hp_lt : p ≤ N := by
-                have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
                 have hab_lt : b * a + 1 < N ^ 2 := by
                   have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
                   have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -4384,11 +4335,7 @@ theorem sawhney_main : SawhneyMain := by
                   have : b * a + 1 ≤ (N - 1) * (N - 1) + 1 := Nat.add_le_add_right hab_le 1
                   have hlt : (N - 1) * (N - 1) + 1 < N ^ 2 := sq_pred_add_one_lt_sq N hN100
                   exact lt_of_le_of_lt this hlt
-                have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hab_lt
-                by_contra hpge
-                have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                exact (not_lt_of_ge this) hp2_lt
+                exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b * a + 1) (Nat.succ_pos _) hab_lt hp2div
               have hp_mem : p ∈ offPrimesUpTo N := by
                 have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_lt
                 simp [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp_ne2, hp5]
@@ -4534,7 +4481,6 @@ theorem sawhney_main : SawhneyMain := by
                   obtain ⟨p, hp, hp5, hp2div'⟩ := must_have_other_prime_square a b ha_mod7 hb_mod_ne hnsq'
                   have hp2div : p ^ 2 ∣ b * a + 1 := by simp only [Nat.mul_comm a b] at hp2div'; exact hp2div'
                   have hp_le : p ≤ N := by
-                    have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
                     have hab_lt : b * a + 1 < N ^ 2 := by
                       have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -4542,11 +4488,7 @@ theorem sawhney_main : SawhneyMain := by
                       have : b * a + 1 ≤ (N - 1) * (N - 1) + 1 := Nat.add_le_add_right hab_le 1
                       have hlt : (N - 1) * (N - 1) + 1 < N ^ 2 := sq_pred_add_one_lt_sq N hN100
                       exact lt_of_le_of_lt this hlt
-                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hab_lt
-                    by_contra hpge
-                    have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                    have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                    exact (not_lt_of_ge this) hp2_lt
+                    exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b * a + 1) (Nat.succ_pos _) hab_lt hp2div
                   have hp_mem : p ∈ no5PrimesUpTo N := by
                     have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_le
                     simp [no5PrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp5]
@@ -4603,7 +4545,6 @@ theorem sawhney_main : SawhneyMain := by
                       simp [hodd] at h0
                     exact (this (by simpa [pow_two] using hp2div)).elim
                   have hp_le : p ≤ N := by
-                    have hp2_le : p ^ 2 ≤ b7 * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
                     have hab_lt : b7 * a + 1 < N ^ 2 := by
                       have hb7_le : b7 ≤ N - 1 := Nat.le_pred_of_lt hb7_lt
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -4611,11 +4552,7 @@ theorem sawhney_main : SawhneyMain := by
                       have : b7 * a + 1 ≤ (N - 1) * (N - 1) + 1 := Nat.add_le_add_right hab_le 1
                       have hlt : (N - 1) * (N - 1) + 1 < N ^ 2 := sq_pred_add_one_lt_sq N hN100
                       exact lt_of_le_of_lt this hlt
-                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hab_lt
-                    by_contra hpge
-                    have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                    have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                    exact (not_lt_of_ge this) hp2_lt
+                    exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b7 * a + 1) (Nat.succ_pos _) hab_lt hp2div
                   have hp_mem : p ∈ offPrimesUpTo N := by
                     have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_le
                     simp [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp_ne2, hp5]
@@ -4737,7 +4674,6 @@ theorem sawhney_main : SawhneyMain := by
                   obtain ⟨p, hp, hp5, hp2div'⟩ := must_have_other_prime_square_18 a b ha_mod18 hb_mod_ne hnsq'
                   have hp2div : p ^ 2 ∣ b * a + 1 := by simp only [Nat.mul_comm a b] at hp2div'; exact hp2div'
                   have hp_le : p ≤ N := by
-                    have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
                     have hab_lt : b * a + 1 < N ^ 2 := by
                       have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -4745,11 +4681,7 @@ theorem sawhney_main : SawhneyMain := by
                       have : b * a + 1 ≤ (N - 1) * (N - 1) + 1 := Nat.add_le_add_right hab_le 1
                       have hlt : (N - 1) * (N - 1) + 1 < N ^ 2 := sq_pred_add_one_lt_sq N hN100
                       exact lt_of_le_of_lt this hlt
-                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hab_lt
-                    by_contra hpge
-                    have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                    have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                    exact (not_lt_of_ge this) hp2_lt
+                    exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b * a + 1) (Nat.succ_pos _) hab_lt hp2div
                   have hp_mem : p ∈ no5PrimesUpTo N := by
                     have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_le
                     simp [no5PrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp5]
@@ -4805,7 +4737,6 @@ theorem sawhney_main : SawhneyMain := by
                       simp [hodd] at h0
                     exact (this (by simpa [pow_two] using hp2div)).elim
                   have hp_le : p ≤ N := by
-                    have hp2_le : p ^ 2 ≤ b18 * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
                     have hab_lt : b18 * a + 1 < N ^ 2 := by
                       have hb18_le : b18 ≤ N - 1 := Nat.le_pred_of_lt hb18_lt
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -4813,11 +4744,7 @@ theorem sawhney_main : SawhneyMain := by
                       have : b18 * a + 1 ≤ (N - 1) * (N - 1) + 1 := Nat.add_le_add_right hab_le 1
                       have hlt : (N - 1) * (N - 1) + 1 < N ^ 2 := sq_pred_add_one_lt_sq N hN100
                       exact lt_of_le_of_lt this hlt
-                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hab_lt
-                    by_contra hpge
-                    have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                    have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                    exact (not_lt_of_ge this) hp2_lt
+                    exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b18 * a + 1) (Nat.succ_pos _) hab_lt hp2div
                   have hp_mem : p ∈ offPrimesUpTo N := by
                     have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_le
                     simp [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp_ne2, hp5]
@@ -5053,7 +4980,6 @@ theorem sawhney_main : SawhneyMain := by
                     exact hb25.1 hb_mod25
                   have hp_gt2 : p > 2 := lt_of_le_of_ne hp_prime.two_le (Ne.symm hp_ne2)
                   have hp_le : p ≤ N := by
-                    have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2_dvd
                     have hba_lt : b * a + 1 < N ^ 2 := by
                       have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -5061,8 +4987,7 @@ theorem sawhney_main : SawhneyMain := by
                       have : b * a + 1 ≤ (N - 1) ^ 2 + 1 := by simpa [pow_two] using Nat.add_le_add_right hba_le 1
                       have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
                       omega
-                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hba_lt
-                    nlinarith [sq_nonneg p, sq_nonneg N]
+                    exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b * a + 1) (Nat.succ_pos _) hba_lt hp2_dvd
                   have hp_mem : p ∈ offPrimesUpTo N := by
                     simp only [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range]
                     exact ⟨⟨Nat.lt_succ_of_le hp_le, hp_prime⟩, hp_ne2, hp_ne5⟩
@@ -5123,7 +5048,6 @@ theorem sawhney_main : SawhneyMain := by
                     exact hb25.2 hb_mod25
                   have hp_gt2 : p > 2 := lt_of_le_of_ne hp_prime.two_le (Ne.symm hp_ne2)
                   have hp_le : p ≤ N := by
-                    have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2_dvd
                     have hba_lt : b * a + 1 < N ^ 2 := by
                       have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -5131,8 +5055,7 @@ theorem sawhney_main : SawhneyMain := by
                       have : b * a + 1 ≤ (N - 1) ^ 2 + 1 := by simpa [pow_two] using Nat.add_le_add_right hba_le 1
                       have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
                       omega
-                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hba_lt
-                    nlinarith [sq_nonneg p, sq_nonneg N]
+                    exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b * a + 1) (Nat.succ_pos _) hba_lt hp2_dvd
                   have hp_mem : p ∈ offPrimesUpTo N := by
                     simp only [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range]
                     exact ⟨⟨Nat.lt_succ_of_le hp_le, hp_prime⟩, hp_ne2, hp_ne5⟩
@@ -5262,7 +5185,6 @@ theorem sawhney_main : SawhneyMain := by
                     have hb_mod25 : b % 25 = 7 := by omega
                     exact hb25.1 hb_mod25
                   have hp_le : p ≤ N := by
-                    have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2_dvd
                     have hba_lt : b * a + 1 < N ^ 2 := by
                       have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -5270,8 +5192,7 @@ theorem sawhney_main : SawhneyMain := by
                       have : b * a + 1 ≤ (N - 1) ^ 2 + 1 := by simpa [pow_two] using Nat.add_le_add_right hba_le 1
                       have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
                       omega
-                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hba_lt
-                    nlinarith [sq_nonneg p, sq_nonneg N]
+                    exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b * a + 1) (Nat.succ_pos _) hba_lt hp2_dvd
                   have hp_mem : p ∈ offPrimesUpTo N := by
                     simp only [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range]
                     exact ⟨⟨Nat.lt_succ_of_le hp_le, hp_prime⟩, hp_ne2, hp_ne5⟩
@@ -5328,7 +5249,6 @@ theorem sawhney_main : SawhneyMain := by
                     have hb_mod25 : b % 25 = 18 := by omega
                     exact hb25.2 hb_mod25
                   have hp_le : p ≤ N := by
-                    have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2_dvd
                     have hba_lt : b * a + 1 < N ^ 2 := by
                       have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -5336,8 +5256,7 @@ theorem sawhney_main : SawhneyMain := by
                       have : b * a + 1 ≤ (N - 1) ^ 2 + 1 := by simpa [pow_two] using Nat.add_le_add_right hba_le 1
                       have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
                       omega
-                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hba_lt
-                    nlinarith [sq_nonneg p, sq_nonneg N]
+                    exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b * a + 1) (Nat.succ_pos _) hba_lt hp2_dvd
                   have hp_mem : p ∈ offPrimesUpTo N := by
                     simp only [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range]
                     exact ⟨⟨Nat.lt_succ_of_le hp_le, hp_prime⟩, hp_ne2, hp_ne5⟩

@@ -36,7 +36,7 @@ RESOURCES:
 INSTRUCTIONS FOR OVERNIGHT AGENT:
 1. Research novel graph constructions with high χ and controlled odd cycle structure
 2. Define promising constructions in this file
-3. State key properties as theorems (or as axioms when currently unproved)
+3. State key properties as theorems (use `sorry` with clear TODO notes when unproved)
 4. If possible, prove the main theorem!
 5. Document your reasoning in comments
 
@@ -116,15 +116,21 @@ See:
 - `formal/lean/Erdos/Problem074_HASSE_STRATEGY.md`
 - `scripts/hasse_poset_test.py`
 
-Computational note (prototype, exact MaxCut on sampled induced subgraphs with `|S| ≤ 25`):
-- In a naive modeled "standard example" approximant with parameter `t=4` (`|V|=220, |E|=380`),
-  the script finds a **connected** induced subgraph on `n=25` vertices with `ebip=6 > √25=5`
-  (so the strict constant-1 `√n` bound fails for this naive model).
-- The same subset had a rank-parity defect upper bound `|D(S)|=15`, which is valid but loose.
+Computational note (exact MaxCut on sampled induced subgraphs with `|S| ≤ 25`):
+- `scripts/hasse_poset_test.py` implements Tomon’s “Claim 12” ordered-graph construction on the
+  standard point/line configuration, with two modes:
+  - `order-keys`: deterministic injective order keys (`x_key`, `slope_key`)
+  - `projective-transform`: explicit sampled projective transforms enforcing distinct x/slope
+- In both modes, we have observed strict constant-1 violations on small induced subgraphs, e.g.:
+  - `n=20`: `ebip=5 > ⌊√20⌋=4`
+  - `n=25`: `ebip=6 > ⌊√25⌋=5`
+- The rank-parity defect set `D(S)` is always a valid constructive upper bound on `ebip`,
+  but is often quite loose (`|D(S)| ≫ ebip`).
 
-This does **not** refute the broader Hasse-diagram strategy: the paper enforces distinctness
-conditions via a projective transformation, and constants may matter. It *does* strongly suggest
-we must implement the actual Suk–Tomon setup carefully before attempting Lean proofs.
+Interpretation:
+- This provides computational evidence that the Suk–Tomon/Tomon Claim 12 family is unlikely
+  to satisfy the *strict* `√n` bound needed for `erdos_74_sqrt` (constant 1), at least in this
+  straightforward instantiation.
 -/
 
 /-!

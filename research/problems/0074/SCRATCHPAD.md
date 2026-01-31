@@ -34,3 +34,66 @@ Findings (exact MaxCut on selected samples with |S|≤25):
   The script prints the subset vertex ids and decoded incidences for reproduction (seed is fixed in `main()`).
 - For `t=3` (`|V|=72, |E|=56`) and `t=5` quick probe (`|V|=525, |E|=1600`), no strict `√n` violations were
   found in the limited MaxCut samples, but this is not exhaustive.
+
+## 2026-01-31 — Hasse diagrams update: explicit projective transforms still violate √n
+
+We implemented the paper’s “apply a projection” step explicitly (sampled random invertible 3×3 projective
+transforms over rationals, rejecting transforms that create duplicate point x-coordinates / duplicate line slopes).
+
+Code:
+- `scripts/hasse_poset_test.py`: `use_projective_transform=True`
+- `scripts/hasse_projection_sweep.py`: quick robustness sweep across projections
+
+Findings (Monte Carlo, exact MaxCut on each sampled subset):
+- The strict constant-1 `⌊√n⌋` bound still fails for small `n` in projective mode.
+  - Example failures observed include `n=20` with `ebip=5 > ⌊√20⌋=4` and `n=25` with `ebip=6 > ⌊√25⌋=5`
+    (for `t=4` and multiple random projections).
+  - An ad-hoc sweep at `t=4`, `n=20` found violations in **3/10** random projections (with moderate sampling).
+- Rank-parity defects `|D(S)|` are often a very loose upper bound (e.g. defects ≫ ebip on the same subset).
+- Tooling: `scripts/ebip_utils.py` now exposes a MaxCut witness assignment; `scripts/hasse_poset_test.py` prints the
+  explicit edge-deletion witness (monochromatic edges) for violating subsets to help pattern-hunt.
+
+Interpretation:
+- “Projection details” do not appear to rescue the strict √n bound for the Suk–Tomon / Tomon Claim 12 graph,
+  at least on these small instances.
+
+## 2026-01-31 — New families tested (computational, exact MaxCut on sampled subsets)
+
+All scripts below compute exact `ebip = |E| - MaxCut` (Gray-code) on sampled induced subgraphs with `|S| ≤ 25`.
+
+### Specker graph G1(n,3,1) (EHS82 Def. 1.2)
+
+- Script: `scripts/specker_graph_sqrt_test.py`
+- Result: **refuted for strict √n**.
+  - For `n=13` (`|V|=286`), the script includes a deterministic witness `k=20` induced subset with
+    `ebip=5 > ⌊√20⌋=4`.
+
+### Edge graph G0(n,3,1) prototype (EHS82 Def. 1.1)
+
+- Script: `scripts/edge_graph_g0_sqrt_test.py`
+- Result (Monte Carlo, `n=11`, `|V|=165`):
+  - Found strict √n violation at `k=18`: `ebip=6 > ⌊√18⌋=4`.
+- Status: refuted (for the strict bound).
+
+### Cayley graphs on (Z/2Z)^d
+
+- Script: `scripts/cayley_z2_sqrt_test.py`
+- Result (Monte Carlo, random generator sets, `d=6`, `|V|=64`):
+  - Found strict √n violation at `k=18`: `ebip=7 > ⌊√18⌋=4`.
+- Status: refuted (for the strict bound).
+
+### Ordered edge graphs OE(G,<)
+
+- Script: `scripts/ordered_edge_graph_sqrt_test.py`
+- Result (very small sweep):
+  - OE applied to `K_{6,6}` with random orders produced many bipartite-looking induced samples (`ebip=0`).
+  - This does not establish usefulness: chromatic behavior looks small and we did not push parameters.
+- Status: inconclusive.
+
+### Heuristic extremal search (finite graphs)
+
+- Script: `scripts/ebip_chromatic_extremal_search.py`
+- Result (n=18):
+  - Found a graph with `χ=4` and whole-graph `ebip=4 = ⌊√18⌋`.
+  - But sampled induced subgraphs already violate strict √k (e.g. `k=12` sample with `ebip=4 > ⌊√12⌋=3`).
+- Interpretation: hereditary √n appears much tighter than whole-graph √n.

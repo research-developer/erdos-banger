@@ -22,6 +22,11 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 | **Kneser graphs K(n,2)** | f(n) = √n | ❌ **REFUTED** | `scripts/kneser_graph_sqrt_test.py` |
 | **Paley graphs** | f(n) = √n | ❌ **REFUTED** | `scripts/paley_graph_sqrt_test.py` |
 | **Hasse/Suk-Tomon** | f(n) = √n | 🔬 **ACTIVE** | `Problem074_HASSE_STRATEGY.md`, `scripts/hasse_poset_test.py` |
+| **Specker graphs (EHS82 G1(n,3,1))** | f(n) = √n | ❌ **REFUTED** | `scripts/specker_graph_sqrt_test.py` |
+| **Edge graphs (EHS82 G0)** | f(n) = √n | ❌ **REFUTED** | `scripts/edge_graph_g0_sqrt_test.py` |
+| **Ordered edge graphs OE(G,<)** | f(n) = √n | 🔬 **INCONCLUSIVE** | `scripts/ordered_edge_graph_sqrt_test.py` |
+| **Cayley graphs on (Z/2Z)^d** | f(n) = √n | ❌ **REFUTED** | `scripts/cayley_z2_sqrt_test.py` |
+| **Heuristic finite search** | f(n) = √n | 🔬 **INCONCLUSIVE** | `scripts/ebip_chromatic_extremal_search.py` |
 
 ### Key Findings
 
@@ -34,8 +39,17 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 7. **Paley graphs:** FAIL √n bound - counterexample at P(13) (n=13, ebip=13 > ⌊√13⌋=3)
 8. **Hasse/Suk-Tomon (prototype):** In a naive modeled "standard example" approximant (t=4),
    a connected induced subgraph on n=25 vertices has ebip=6 > √25=5 (see `scripts/hasse_poset_test.py`).
-   This does **not** refute the strategy (projective transform / configuration details matter), but it is an
-   important sanity check.
+   We also implemented explicit sampled projective transforms enforcing “distinct x / distinct slopes”; strict
+   √n violations still occur for small n in this family (see `Problem074_HASSE_STRATEGY.md`).
+9. **Specker graph G1(n,3,1):** Refuted for strict √n: for n=13 (|V|=286) the script exhibits a k=20 induced
+   subgraph with ebip=5 > ⌊√20⌋=4 (see `scripts/specker_graph_sqrt_test.py`).
+10. **Edge graph G0(n,3,1) prototype:** Fails strict √n in Monte Carlo already at n=11: found k=18 subset with
+    ebip=6 > ⌊√18⌋=4 (see `scripts/edge_graph_g0_sqrt_test.py`).
+11. **Cayley graphs on (Z/2Z)^d:** Fails strict √n quickly for random generator sets; example at d=6 found k=18
+    subset with ebip=7 > ⌊√18⌋=4 (see `scripts/cayley_z2_sqrt_test.py`).
+12. **Heuristic search:** Found an n=18 graph with χ=4 and ebip=4 = ⌊√18⌋, but sampled induced subgraphs already
+    violate strict √k (e.g. k=12 sample with ebip=4 > ⌊√12⌋=3). This is evidence that the hereditary constraint
+    is substantially tighter than the whole-graph constraint (see `scripts/ebip_chromatic_extremal_search.py`).
 
 **See also:**
 - `Problem074_HASSE_STRATEGY.md` - **ACTIVE: Suk-Tomon incidence posets + rank-parity defects**
@@ -57,6 +71,11 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 | `Problem074_twincut_experimental.lean` | Twincut approach | ❌ REFUTED (G₄ counterexample) |
 | `Problem074_mycielski.lean` | Mycielski approach | ❌ REFUTED (M₄ counterexample) |
 | `Problem074_novel_experimental.lean` | **Hasse/Suk-Tomon approach** | 🔬 **ACTIVE** |
+| `Problem074_specker_experimental.lean` | Specker graphs notes | ❌ REFUTED (G1(13,3,1) witness) |
+| `Problem074_edgegraph_experimental.lean` | EHS82 edge-graph notes | ❌ REFUTED (finite proxy) |
+| `Problem074_ordered_edge_graph_experimental.lean` | OE(G,<) notes | 🔬 INCONCLUSIVE |
+| `Problem074_cayley_experimental.lean` | Cayley graph notes | ❌ REFUTED (random sweeps) |
+| `Problem074_search_experimental.lean` | Heuristic search notes | 🔬 INCONCLUSIVE |
 
 **Active work:** 🔬 **HASSE DIAGRAM / SUK-TOMON APPROACH** - See `Problem074_HASSE_STRATEGY.md`
 

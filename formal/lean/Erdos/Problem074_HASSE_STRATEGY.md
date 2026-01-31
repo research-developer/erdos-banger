@@ -267,23 +267,28 @@ What it currently does:
 - Computes exact `ebip(G[S]) = |E(S)| - MaxCut(G[S])` for sampled subsets `S` with `|S| ≤ 25`.
 - Computes the **rank-parity defect** upper bound `|D(S)|` via induced poset heights mod 2.
 
-Important caveat:
-- The paper requires **distinct x-coordinates of points** and **distinct slopes of lines**, achieved by a projective
-  transformation. The prototype keeps the incidence relation from the standard example, but models these distinctness
-  assumptions via deterministic injective order-keys (`x_key`, `slope_key`). This may change the resulting graph.
+Important caveat (now addressed in code):
+- The paper says “by applying a projection” we may assume points have distinct x-coordinates and lines have distinct
+  slopes (without changing incidences). The prototype now supports an explicit projective transformation mode
+  (`use_projective_transform=True`) that samples random invertible 3×3 projective transforms over rationals and rejects
+  degeneracies (points at infinity / vertical lines / collisions).
 
-Observed behavior (Monte Carlo, not exhaustive):
-- For `t=4` (`|V|=220, |E|=380`) we found a **connected** induced subset `S` with `|S|=25` and
-  `ebip(G[S])=6 > √25=5` (so the strict constant-1 √n bound fails for this naive model).
-  The script prints the subset for reproduction.
-- The defect set `D(S)` is a valid constructive upper bound, but can be quite loose in this example
-  (the same subset had `|D(S)|=15`).
+Observed behavior (Monte Carlo, not exhaustive; exact MaxCut on each sampled subset):
+- The strict constant-1 `⌊√n⌋` bound already fails on small induced subgraphs for this family.
+  - In both “order-keys” mode and in explicit projective-transform mode we see counterexample subsets at
+    `n=20` (`ebip=5 > ⌊√20⌋=4`) and `n=25` (`ebip=6 > ⌊√25⌋=5`) for small parameters (`t=4`/`t=5`).
+  - A small projection sweep at `t=4`, `n=20` found violations in multiple random projections (so this is not a
+    one-off artifact of a single transform).
+- The rank-parity defect count `|D(S)|` is always a valid upper bound on `ebip`, but can be very loose
+  (often `|D(S)| ≫ ebip` on the same subset).
 
 Interpretation:
-- This is not a refutation of the Hasse-diagram strategy, but it strongly suggests we must:
-  - implement the *actual* projective/distinctness setup used in Suk–Tomon, and/or
-  - prove/target a `C√n` bound first (constants matter), and/or
-  - refine the canonical deletion set (beyond naive rank-parity).
+- The “rank-parity defect” deletion set is a compelling *proof architecture*, but the naive hope that the Suk–Tomon /
+  Tomon Claim 12 graphs satisfy the **strict constant-1** `√n` bound looks unlikely given the small counterexamples.
+- If we keep pursuing this direction, the next computational questions are:
+  - Is there a *different* incidence configuration (not the standard example) where the strict `√n` might survive?
+  - Does this family at least satisfy `ebip ≤ C√n` for a modest constant `C` (and does `C` stabilize with size)?
+  - Are the violating subsets structurally classifiable (via MaxCut witnesses), suggesting a modified construction?
 
 ---
 

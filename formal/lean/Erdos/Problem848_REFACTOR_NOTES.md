@@ -1,18 +1,18 @@
 # Problem 848 Refactor Notes (SSOT)
 
 **Date:** 2026-01-29
-**Last Updated:** 2026-01-30
-**Status:** ✅ PHASE 6 EXPANDED — 17 refactoring opportunities catalogued from external review
+**Last Updated:** 2026-01-31
+**Status:** ✅ PHASE 6 EXPANDED — external review items tracked (6.2/6.6/6.8 complete)
 **Scope:** This document is the SSOT for the **Problem 848 Lean formalization**.
 
 ---
 
-## Current State (2026-01-30)
+## Current State (2026-01-31)
 
 | Metric | Value |
 |--------|-------|
-| Total lines | **5421** |
-| Build time | ~12-13 min |
+| Total lines | **5427** |
+| Build time | ~10-11 min |
 | `sorry` | **0** ✅ |
 | `native_decide` | **0** ✅ |
 | Build status | **PASSES** ✅ |
@@ -40,25 +40,26 @@ theorem sawhney_main : SawhneyMain := by
 
 ## Architecture Overview
 
-### Section Map (verified 2026-01-30)
+### Section Map (verified 2026-01-31)
 
 | Section | Lines | Description |
 |---------|-------|-------------|
 | 1 | 70-117 | Core definitions |
-| 2 | 118-168 | Mod 25 divisibility lemmas |
-| 3 | 169-329 | Sieve building blocks |
-| 4 | 330-443 | Cross-residue constraints |
-| 5 | 444-643 | Density lemmas |
-| 6 | 644-1045 | Helper lemmas |
-| 6.5 | 1046-1100 | Small modular facts (computation) |
-| 7 | 1101-2280 | Finite verification (no native_decide) |
-| 8 | 2281-2302 | SawhneyMain statement (Prop) |
-| 9 | 2303-2424 | Glue theorems |
-| 9.5 | 2425-2972 | Quantitative bounds 🔥 (8M heartbeats × 2) |
-| 9.8 | 2973-3247 | Bridge lemmas |
-| 9.9 | 3248-3535 | More small modular facts |
-| 10 | 3536-5411 | `sawhney_main` 🔥 (~1876 lines) |
-| 11 | 5412-5423 | Final statements |
+| 2 | 118-167 | Mod 25 divisibility lemmas |
+| 3 | 168-328 | Sieve building blocks |
+| 4 | 329-424 | Cross-residue constraints |
+| 5 | 425-624 | Density lemmas |
+| 6 | 625-1026 | Helper lemmas |
+| 6.5 | 1027-1081 | Small modular facts (computation) |
+| 7 | 1082-2264 | Finite verification (no native_decide) |
+| 8 | 2265-2286 | SawhneyMain statement (Prop) |
+| 9 | 2287-2408 | Glue theorems |
+| 9.5 | 2409-2954 | Quantitative bounds 🔥 (8M heartbeats × 2) |
+| 9.8 | 2955-3217 | Bridge lemmas |
+| 9.9 | 3218-3504 | More small modular facts |
+| 9.95 | 3505-3608 | Generic sieve cardinality bounds |
+| 10 | 3609-5415 | `sawhney_main` 🔥 (~1807 lines) |
+| 11 | 5416-5427 | Final statements |
 
 ### Dependency Flow
 
@@ -73,8 +74,8 @@ flowchart TD
 ```
 
 **Bottlenecks:**
-1. **Section 9.5** (lines 2425-2972) — 2× 8M heartbeats
-2. **Section 10** — `sawhney_main` is ~1876 lines (lines 3536-5411)
+1. **Section 9.5** (lines 2409-2954) — 2× 8M heartbeats
+2. **Section 10** — `sawhney_main` is ~1807 lines (lines 3609-5415)
 
 ---
 
@@ -158,9 +159,10 @@ lemma sieve_set_card_bound {N k : ℕ} {P : Finset ℕ} {S : Finset ℕ}
 
 ### 6.2 Finite Verification Streamlining (MEDIUM PRIORITY)
 
-**Issue:** `no_five_in_candidates_100` (Section 7, ~lines 1800-2400) uses massive case splits with repeated `Squarefree` checks.
+✅ **Implemented** (2026-01-31)
 
-**Proposed:** Define a local clash helper:
+**Fix:** `no_five_in_candidates_100` now defines a local `clash` helper (`formal/lean/Erdos/Problem848_REFACTOR.lean:1918`)
+and uses it throughout the case split, collapsing repeated `hsprop x hx y hy hsq` boilerplate.
 
 ```lean
 have clash : ∀ x y, x ∈ s → y ∈ s → Squarefree (x * y + 1) → False := by
@@ -168,7 +170,7 @@ have clash : ∀ x y, x ∈ s → y ∈ s → Squarefree (x * y + 1) → False :
   exact hsprop x hx y hy hsq
 ```
 
-Then case splits collapse to single-line `exact clash 38 7 h38 hb squarefree_267`.
+**Impact:** Improves readability and removes fragile `simpa` casts in the finite verification proof.
 
 ### 6.3 Named Constants (LOW PRIORITY)
 
@@ -210,20 +212,28 @@ A second round of detailed review identified more refactoring opportunities:
 
 ### 6.6 Factor "prime ≤ N" Sub-Argument (MEDIUM PRIORITY)
 
-**Issue:** The same `p ≤ N` derivation repeats ~6 times in `sawhney_main`:
-- Lines ~3892–3895, ~4028–4031, ~4086–4089
-- Lines ~4301–4304, ~4459–4462, ~4528–4531
-- Variant at ~5243–5253
+✅ **Implemented** (2026-01-31)
 
-**Proposed:**
+**Issue:** The same `p ≤ N` derivation repeated throughout `sawhney_main`, typically from
+`p^2 ∣ X` and `X < N^2`, followed by a `by_contra` / `pow_le_pow_left` contradiction.
+
+**Fix:** Extracted a reusable helper lemma and replaced all occurrences.
+
+**Definition (in file):**
 
 ```lean
-have prime_le_of_sq_dvd_lt_sq
-    {p N X : ℕ} (hp : p.Prime) (hXlt : X < N^2) (hp2 : p^2 ∣ X) : p ≤ N := by
-  -- existing 6-8 line contradiction proof
+lemma prime_le_of_sq_dvd_lt_sq {p N X : ℕ}
+    (hXpos : 0 < X) (hXlt : X < N ^ 2) (hp2 : p ^ 2 ∣ X) : p ≤ N := by
+  -- contradiction using `p^2 ≤ X < N^2`
 ```
 
-**Impact:** ~40-60 lines saved, cleaner case proofs.
+**Location:** `formal/lean/Erdos/Problem848_REFACTOR.lean:3537`
+
+**Call sites replaced:** 14 occurrences (lines 3876, 3977, 4108, 4161, 4302, 4366, 4519, 4583,
+4712, 4775, 5018, 5086, 5223, 5287).
+
+**Impact:** ~40-60 lines saved; removed local `by_contra hpge` / `nlinarith` one-offs used only
+to get `p ≤ N`.
 
 ### 6.7 Factor "p ≠ 2 Because Odd" Micro-Proof (LOW PRIORITY)
 
@@ -245,22 +255,16 @@ have prime_ne_two_of_sq_dvd_odd
 
 ### 6.8 Unify 7/18 Residue Duplicate Lemmas (MEDIUM PRIORITY)
 
-**Issue:** Near-duplicate lemmas for residue 7 vs 18:
-- `mod25_divisibility` vs `mod25_divisibility_18` (~122–139)
-- `cross_residue_not_div_25` vs `_18` (~334–405)
-- `must_have_other_prime_square` vs `_18` (~408–441)
-- `cross_residue_7_18_not_div_25` vs `_18_7` (~3097–3121)
+✅ **Implemented** (2026-01-31)
 
-**Proposed:** Abstract with parameter `r : ℕ` plus data lemma:
+**Fix:** Factored the residue-7 / residue-18 duplicates into parameterized lemmas:
+- `mod25_divisibility_of_residue` (`formal/lean/Erdos/Problem848_REFACTOR.lean:122`) → wrappers `mod25_divisibility` / `_18`
+- `cross_residue_not_div_25_of_residue` (`formal/lean/Erdos/Problem848_REFACTOR.lean:333`) → wrappers `cross_residue_not_div_25` / `_18`
+- `must_have_other_prime_square_of_residue` (`formal/lean/Erdos/Problem848_REFACTOR.lean:395`) → wrappers `must_have_other_prime_square` / `_18`
+- `cross_residue_7_18_not_div_25` simplified to call `cross_residue_not_div_25_of_residue`
+  (`formal/lean/Erdos/Problem848_REFACTOR.lean:3081`)
 
-```lean
-lemma mod25_divisibility_of_residue {r : ℕ} (hr : r * r % 25 = 24) ... := by
-  -- shared proof
-```
-
-Instantiate for `r=7` and `r=18` using `by decide`.
-
-**Impact:** ~50-80 lines saved, eliminates "same lemma twice with different numeral".
+**Impact:** Removes duplicate proofs while preserving existing lemma names/signatures at call sites.
 
 ### 6.9 Unify A₇_card and A₁₈_card (LOW PRIORITY)
 
@@ -404,9 +408,9 @@ rcases Finset.mem_filter.1 hn with ⟨hn_range, hn_mod⟩
 | ID | Item | Priority | Est. Lines Saved |
 |----|------|----------|------------------|
 | 6.1 | `sieve_set_card_bound` top-level lemma | HIGH | 300-500 |
-| 6.2 | `clash` helper for finite verification | MEDIUM | 50-100 |
-| 6.6 | `prime_le_of_sq_dvd_lt_sq` helper | MEDIUM | 40-60 |
-| 6.8 | Unify 7/18 residue lemmas | MEDIUM | 50-80 |
+| 6.2 | ✅ `clash` helper for finite verification | DONE | 50-100 |
+| 6.6 | ✅ `prime_le_of_sq_dvd_lt_sq` helper | DONE | 40-60 |
+| 6.8 | ✅ Unify 7/18 residue lemmas | DONE | 50-80 |
 | 6.12 | `scale_sum_inv_sq_le_of_rat` helper | MEDIUM | (merged w/ 6.1) |
 | 6.3 | Named constants | LOW | readability |
 | 6.4 | Tactic hygiene (general) | LOW | stability |
@@ -421,10 +425,10 @@ rcases Finset.mem_filter.1 hn with ⟨hn_range, hn_mod⟩
 | 6.16 | `simp only` in 8M lemmas | LOW | heartbeats |
 | 6.17 | Replace `simp_all` in dense lemmas | LOW | stability |
 
-**If you only do three refactors, do:**
-1. Extract `prime_le_of_sq_dvd_lt_sq` (many-line savings, clearer)
-2. Extract ℚ→ℝ cast-and-scale boilerplate (6.12)
-3. Unify the 7/18 duplicate modular lemmas (6.8)
+**If you only do three *more* refactors, do:**
+1. Extract `sieve_set_card_bound` (6.1) (biggest remaining duplication)
+2. Extract ℚ→ℝ cast-and-scale boilerplate (6.12) (likely merges into 6.1)
+3. Factor `prime_ne_two_of_sq_dvd_odd` (6.7) (small, safe line reduction)
 
 These are the most "reviewer-per-line-changed" improvements and should not stress heartbeat constraints.
 

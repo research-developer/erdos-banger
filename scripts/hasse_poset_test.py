@@ -27,8 +27,11 @@ from typing import TYPE_CHECKING
 
 from ebip_utils import (
     Graph,
+    chromatic_number_exact,
     ebip,
+    ebip_witness,
     induced_subgraph_edges,
+    monochromatic_edges_for_assignment,
     normalize_edges,
     sqrt_bound,
 )
@@ -574,8 +577,10 @@ def experiment(  # noqa: PLR0912, PLR0915
                 f"        sample violation: ebip={e} > floor(sqrt {kk})={sqrt_bound(kk)} "
                 f"(defects={d})"
             )
+
+            subset_sorted = sorted(subset)
             decoded = []
-            for v in subset:
+            for v in subset_sorted:
                 inc = inc_sorted[v]
                 p = points[inc.p]
                 ln = lines[inc.line]
@@ -590,8 +595,56 @@ def experiment(  # noqa: PLR0912, PLR0915
                         "slope_order": str(line_slope[inc.line]),
                     }
                 )
-            print(f"        subset vertex ids: {sorted(subset)}")
+            print(f"        subset vertex ids: {subset_sorted}")
             print(f"        subset incidences: {decoded}")
+
+            # Additional diagnostics: exact chromatic number and an explicit MaxCut witness.
+            sub_edges = induced_subgraph_edges(G.edges, subset_sorted)
+            e_w, cut_mask = ebip_witness(kk, sub_edges)
+            if e_w != e:
+                raise AssertionError(
+                    f"internal mismatch: ebip={e} but ebip_witness={e_w}"
+                )
+
+            chi = chromatic_number_exact(kk, sub_edges)
+            approx_chi_bound = 2 + 2 * sqrt(e)
+            print(
+                "        exact diagnostics: "
+                f"chi={chi}, ebip={e}, "
+                f"2 + 2*sqrt(ebip)≈{approx_chi_bound:.3f}",  # heuristic sanity bound
+            )
+
+            mono = monochromatic_edges_for_assignment(sub_edges, cut_mask)
+            if len(mono) != e:
+                raise AssertionError(
+                    f"internal mismatch: |mono_edges|={len(mono)} but ebip={e}"
+                )
+
+            mono_decoded = []
+            for u, v in mono:
+                gu = subset_sorted[u]
+                gv = subset_sorted[v]
+                inc_u = inc_sorted[gu]
+                inc_v = inc_sorted[gv]
+                p_u = points[inc_u.p]
+                p_v = points[inc_v.p]
+                l_u = lines[inc_u.line]
+                l_v = lines[inc_v.line]
+                mono_decoded.append(
+                    {
+                        "u": gu,
+                        "v": gv,
+                        "u_inc": (inc_u.p, inc_u.line),
+                        "v_inc": (inc_v.p, inc_v.line),
+                        "u_p_xy": (p_u.x, p_u.y),
+                        "v_p_xy": (p_v.x, p_v.y),
+                        "u_line_ab": (l_u.slope, l_u.intercept),
+                        "v_line_ab": (l_v.slope, l_v.intercept),
+                    }
+                )
+            print(
+                f"        maxcut witness delete-edges (count={len(mono_decoded)}): {mono_decoded}"
+            )
 
     print("")
     print(f"Any sampled violation of the strict √n bound? {violated}")

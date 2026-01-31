@@ -87,6 +87,65 @@ def maxcut_gray(n: int, edges: list[tuple[int, int]]) -> int:
     return best
 
 
+def maxcut_gray_witness(n: int, edges: list[tuple[int, int]]) -> tuple[int, int]:
+    """
+    Exact MaxCut via Gray-code enumeration, returning a witness assignment.
+
+    Returns `(best_cut, assignment_mask)` where bit `i` indicates whether vertex `i`
+    is on side 1 of the cut. The last vertex is fixed to 0 to break symmetry.
+
+    Suitable for n up to ~25.
+    """
+
+    if n <= 1:
+        return 0, 0
+
+    adj = [0] * n
+    for u, v in edges:
+        adj[u] |= 1 << v
+        adj[v] |= 1 << u
+    deg = [a.bit_count() for a in adj]
+
+    best = 0
+    best_g = 0
+    cut = 0
+    prev_g = 0
+    limit = 1 << (n - 1)  # last vertex fixed to 0
+
+    for t in range(limit):
+        g = t ^ (t >> 1)
+        if t:
+            flip = g ^ prev_g
+            i = flip.bit_length() - 1
+            in_s = (prev_g >> i) & 1
+            neighbors_in_s = (adj[i] & prev_g).bit_count()
+            delta = deg[i] - 2 * neighbors_in_s
+            cut += delta if in_s == 0 else -delta
+
+        if cut > best:
+            best = cut
+            best_g = g
+        prev_g = g
+
+    return best, best_g
+
+
+def monochromatic_edges_for_assignment(
+    edges: list[tuple[int, int]], assignment_mask: int
+) -> list[tuple[int, int]]:
+    """
+    Return the edges whose endpoints are on the *same* side of the cut.
+
+    Deleting these edges makes the graph bipartite with the given bipartition.
+    """
+
+    mono: list[tuple[int, int]] = []
+    for u, v in edges:
+        if (((assignment_mask >> u) ^ (assignment_mask >> v)) & 1) == 0:
+            mono.append((u, v))
+    return mono
+
+
 def connected_components(n: int, edges: list[tuple[int, int]]) -> list[list[int]]:
     adj: dict[int, list[int]] = defaultdict(list)
     for u, v in edges:
@@ -136,6 +195,18 @@ def ebip(n: int, edges: list[tuple[int, int]]) -> int:
     """
 
     return len(edges) - maxcut_gray(n, edges)
+
+
+def ebip_witness(n: int, edges: list[tuple[int, int]]) -> tuple[int, int]:
+    """
+    Return `(ebip, assignment_mask)` where `assignment_mask` witnesses MaxCut.
+
+    The corresponding edge-deletion witness is
+    `monochromatic_edges_for_assignment(edges, assignment_mask)`.
+    """
+
+    best_cut, assignment_mask = maxcut_gray_witness(n, edges)
+    return len(edges) - best_cut, assignment_mask
 
 
 def sqrt_bound(n: int) -> int:
