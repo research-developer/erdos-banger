@@ -427,7 +427,8 @@ theorem SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear
               SimpleGraph.sigma_adj_mk_mk_of_ne (G := G) hne x.1.2 y.1.2
             exact this (A.adj_sub hAxy)
           -- Rewrite to a single component `i`.
-          cases hij
+          have hij' : j = i := hij.symm
+          subst j
           let u : W i := x.1.2
           let v : W i := y.1.2
 
@@ -552,7 +553,7 @@ theorem SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear
         have hVset_ncard : ∀ i : ι, (Vset i).ncard = (Ai i).verts.ncard := by
           intro i
           simpa [Vset] using
-            (Set.ncard_image_of_injective (Ai i).verts (fun _ _ hab => eq_of_heq (Sigma.mk.inj hab).2)).symm
+            (Set.ncard_image_of_injective (Ai i).verts (fun _ _ hab => eq_of_heq (Sigma.mk.inj hab).2))
         have hFinsum :
             (∑ᶠ i ∈ Iset, (Vset i).ncard) = ∑ i ∈ I, (Vset i).ncard :=
           finsum_mem_eq_finite_toFinset_sum (fun i => (Vset i).ncard) hIset_finite
