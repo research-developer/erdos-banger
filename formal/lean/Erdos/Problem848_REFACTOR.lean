@@ -4405,9 +4405,9 @@ theorem sawhney_main : SawhneyMain := by
               apply hEven
               exact ⟨b, hb, h0⟩
           | inr h1 => exact h1
-        by_cases hEven78 : (∃ b ∈ A7A, b % 2 = 0) ∨ (∃ b ∈ A18A, b % 2 = 0)
-        · -- Case 3 from the paper: one of A7 or A18 has an even element.
-          exfalso
+        have case_Astar_all_odd_exists_even_in_A78
+            (hAstar_all_odd : ∀ b ∈ Astar, b % 2 = 1)
+            (hEven78 : (∃ b ∈ A7A, b % 2 = 0) ∨ (∃ b ∈ A18A, b % 2 = 0)) : False := by
           -- Pick b∈A* and an even element from A7 or A18.
           rcases hAstar_nonempty with ⟨b, hbAstar⟩
           have hbA : b ∈ A := hAstar_sub_A hbAstar
@@ -4828,6 +4828,10 @@ theorem sawhney_main : SawhneyMain := by
                   exact le_trans hA18_bound h2
                 nlinarith [hA_le_parts, hAstar_explicit, hA7_explicit, hA18_explicit, hNpos]
               exact (not_lt_of_ge hdense) hA_lt
+        by_cases hEven78 : (∃ b ∈ A7A, b % 2 = 0) ∨ (∃ b ∈ A18A, b % 2 = 0)
+        · -- Case 3 from the paper: one of A7 or A18 has an even element.
+          exfalso
+          exact case_Astar_all_odd_exists_even_in_A78 hAstar_all_odd hEven78
         · -- Case 2 from the paper: A* odd, and no even element in A7 ∪ A18.
           exfalso
           rcases hAstar_nonempty with ⟨b, hbAstar⟩
