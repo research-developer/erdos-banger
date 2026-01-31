@@ -40,25 +40,25 @@ theorem sawhney_main : SawhneyMain := by
 
 ## Architecture Overview
 
-### Section Map (verified line numbers)
+### Section Map (verified 2026-01-30)
 
 | Section | Lines | Description |
 |---------|-------|-------------|
-| 1 | 70-116 | Core definitions |
-| 2 | 118-167 | Mod 25 divisibility lemmas |
-| 3 | 169-328 | Sieve building blocks |
-| 4 | 330-442 | Cross-residue constraints |
-| 5 | 444-642 | Density lemmas |
-| 6 | 644-1044 | Helper lemmas |
-| 6.5 | 1046-1099 | Small modular facts (computation) |
-| 7 | 1101-2279 | Finite verification (no native_decide) |
-| 8 | 2281-2301 | SawhneyMain statement (Prop) |
-| 9 | 2303-2423 | Glue theorems |
-| 9.5 | 2425-2973 | Quantitative bounds 🔥 (40M heartbeats) |
-| 9.8 | 2975-3248 | Bridge lemmas |
-| 9.9 | 3250-3536 | More small modular facts |
-| 10 | 3538-5396 | `sawhney_main` 🔥 (~1842 lines) |
-| 11 | 5398-5409 | Final statements |
+| 1 | 70-117 | Core definitions |
+| 2 | 118-168 | Mod 25 divisibility lemmas |
+| 3 | 169-329 | Sieve building blocks |
+| 4 | 330-443 | Cross-residue constraints |
+| 5 | 444-643 | Density lemmas |
+| 6 | 644-1045 | Helper lemmas |
+| 6.5 | 1046-1100 | Small modular facts (computation) |
+| 7 | 1101-2280 | Finite verification (no native_decide) |
+| 8 | 2281-2302 | SawhneyMain statement (Prop) |
+| 9 | 2303-2424 | Glue theorems |
+| 9.5 | 2425-2972 | Quantitative bounds 🔥 (20M heartbeats × 3, 10M × 1) |
+| 9.8 | 2973-3247 | Bridge lemmas |
+| 9.9 | 3248-3535 | More small modular facts |
+| 10 | 3536-5411 | `sawhney_main` 🔥 (~1876 lines) |
+| 11 | 5412-5423 | Final statements |
 
 ### Dependency Flow
 
@@ -73,8 +73,8 @@ flowchart TD
 ```
 
 **Bottlenecks:**
-1. **Section 9.5** (lines 2425-2973) — tuned heartbeat caps (no more 40M)
-2. **Section 10** — `sawhney_main` is ~1842 lines (lines 3555-5396)
+1. **Section 9.5** (lines 2425-2972) — 3× 20M heartbeats, 1× 10M heartbeat
+2. **Section 10** — `sawhney_main` is ~1876 lines (lines 3536-5411)
 
 ---
 

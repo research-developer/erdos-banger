@@ -251,6 +251,21 @@ Hypothesis: The tree structure forces odd cycles to share edges at "bottleneck" 
 We'll try to prove weaker bounds first and see if we can strengthen them.
 -/
 
+/-- Deleting all edges makes a graph bipartite, so minEdgeDistToBipartite ≤ edge count. -/
+theorem SimpleGraph.minEdgeDistToBipartite_le_edgeSet_ncard {G : SimpleGraph V} (A : G.Subgraph) :
+    SimpleGraph.minEdgeDistToBipartite A ≤ A.edgeSet.ncard := by
+  classical
+  dsimp [SimpleGraph.minEdgeDistToBipartite]
+  apply Nat.sInf_le
+  refine ⟨A.edgeSet, subset_rfl, ?_, rfl⟩
+  -- Deleting all edges gives a bipartite graph (empty graph)
+  use fun _ => 0
+  intro v w hvw
+  simp only [Subgraph.deleteEdges_adj, Set.mem_setOf_eq, not_and, not_not] at hvw
+  -- hvw.1 : A.Adj v w, hvw.2 : ⟦(v, w)⟧ ∈ A.edgeSet → False (contradiction)
+  exfalso
+  exact hvw.2 (A.mem_edgeSet.mpr hvw.1)
+
 /-- Trivial bound: any n-vertex graph needs at most n(n-1)/2 deletions.
     This is proved in Problem074_experimental.lean as
     `SimpleGraph.maxSubgraphEdgeDistToBipartite_le_choose_two`. -/
@@ -262,8 +277,25 @@ theorem maxSubgraphEdgeDistToBipartite_le_edges
   intro m hm
   rcases hm with ⟨A, hn, hfin, rfl⟩
   -- minEdgeDistToBipartite A ≤ A.edgeSet.ncard ≤ n.choose 2
-  -- (deleting all edges makes bipartite; n vertices have ≤ n.choose 2 edges)
-  sorry
+  calc SimpleGraph.minEdgeDistToBipartite A
+      ≤ A.edgeSet.ncard := SimpleGraph.minEdgeDistToBipartite_le_edgeSet_ncard A
+    _ ≤ n.choose 2 := by
+        -- A graph on n vertices has at most n.choose 2 edges
+        -- Proof follows Problem074_experimental.lean (adapted from there)
+        rw [← hn]
+        have := hfin.fintype
+        have := Fintype.ofFinite ↑A.coe.edgeSet
+        have hle := (A.coe).card_edgeFinset_le_card_choose_two
+        calc A.edgeSet.ncard
+            = A.coe.edgeSet.ncard := by
+                rw [← Subgraph.image_coe_edgeSet_coe A]
+                exact (Set.ncard_image_iff (Set.toFinite A.coe.edgeSet)).mpr <|
+                  Function.Injective.injOn <| Sym2.map.injective Subtype.coe_injective
+          _ = A.coe.edgeFinset.card := by
+                rw [← Set.ncard_coe_finset A.coe.edgeFinset, coe_edgeFinset A.coe]
+          _ ≤ (Fintype.card ↑A.verts).choose 2 := hle
+          _ = A.verts.ncard.choose 2 := by
+                rw [Set.ncard_eq_toFinset_card _ hfin, Set.Finite.card_toFinset]
 
 /--
 For triangle-free graphs, a tighter bound should exist.
@@ -297,12 +329,49 @@ def burling_sublinear_conjecture : Prop :=
 theorem burling_sublinear :
     ∀ k n : ℕ, SimpleGraph.maxSubgraphEdgeDistToBipartite (BurlingGraph k) n ≤ Nat.sqrt n := by
   intro k n
-  -- Strategy:
-  -- 1. Use triangle-free property to bound odd cycle structure
-  -- 2. Use recursive/tree structure to show edge sharing
-  -- 3. Conclude √n bound
-  --
-  -- Current status: OPEN - this is the $500 question!
+  /-
+  STRATEGY FOR THE $500 PRIZE:
+
+  We need: maxSubgraphEdgeDistToBipartite (BurlingGraph k) n ≤ √n
+  Equivalently: ∀ n-vertex subgraph H, minEdgeDistToBipartite H ≤ √n
+  Equivalently: ∀ n-vertex subgraph H, MaxCut(H) ≥ |E(H)| - √n
+
+  KNOWN RESULTS:
+  - Triangle-free (Burling property) → min odd cycle length is 5
+  - Alon 1996: Triangle-free with m edges → MaxCut ≥ m/2 + c·m^(4/5)
+    This gives: minEdgeDistToBipartite ≤ m/2 - c·m^(4/5) ≈ O(m) ≈ O(n²)
+    NOT STRONG ENOUGH for √n bound!
+
+  WHAT WE NEED:
+  Something special about Burling graphs beyond triangle-free.
+
+  CANDIDATE APPROACHES:
+  1. **Sparse edge structure**: If Burling n-vertex subgraphs have O(n) edges
+     (linear, not quadratic), then even m/2 would give O(n), closer to √n.
+     Question: Are Burling graphs sparse (bounded degeneracy)?
+
+  2. **Odd cycle sharing**: If all odd cycles in H share a common edge set of
+     size O(√n), then deleting that set makes H bipartite.
+     Question: Does the tree-decomposition force this?
+
+  3. **Induction on k**: Prove for B_1 (done!), then show the B_k → B_{k+1}
+     construction preserves the bound.
+     Question: How do new vertices/edges affect odd cycles?
+
+  4. **Box intersection geometry**: The 3D box structure might force odd cycles
+     to pass through "bottleneck" regions.
+     Question: Can we formalize this geometric constraint?
+
+  PARTIAL RESULT (PROVED):
+  - burling_1_bipartite: ∀ n, maxSubgraphEdgeDistToBipartite (BurlingGraph 1) n = 0 ≤ √n ✓
+
+  NEXT STEPS:
+  - Try to prove B_2 case (would reveal the key insight)
+  - Investigate if Burling graphs are sparse
+  - Look for odd cycle characterization in Burling graphs
+  -/
+  -- Base case k = 1 is proved (burling_1_bipartite)
+  -- General case requires deeper structural insight
   sorry
 
 /-!
