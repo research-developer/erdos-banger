@@ -1,8 +1,8 @@
 # Problem 848 Refactor Notes (SSOT)
 
 **Date:** 2026-01-29
-**Last Updated:** 2026-01-30 (verified)
-**Status:** ✅ PHASE 4 IN PROGRESS — P0 heartbeat scoping fixed
+**Last Updated:** 2026-01-30
+**Status:** ✅ PHASE 4 COMPLETE — All case lemmas extracted
 **Scope:** This document is the SSOT for the **Problem 848 Lean formalization**.
 
 ---
@@ -11,7 +11,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Total lines | **5415** |
+| Total lines | **5423** |
 | Build time | ~12-13 min |
 | `sorry` | **0** ✅ |
 | `native_decide` | **0** ✅ |
@@ -111,22 +111,24 @@ flowchart TD
 
 ---
 
-## Remaining Structural Debt (Phase 4 — Optional)
+## Remaining Structural Debt (Future Polish — Optional)
 
-For Mathlib submission, these would improve the file:
+For Mathlib submission, these would improve the file further:
 
 | Debt | Current | Target | Priority |
 |------|---------|--------|----------|
-| **Scoped maxHeartbeats** | Line 3541 uses `set_option ... in` | Keep scoped | DONE |
-| **High heartbeats in 9.5** | 20M/10M caps remain (lines drift; grep for `maxHeartbeats`) | Keep lowering where possible | LOW |
-| **Monolithic theorem** | `sawhney_main` still large (line numbers drift) | Split into case lemmas | LOW |
+| **Scoped maxHeartbeats** | All 6 uses scoped with `in` | ✅ DONE | DONE |
+| **Case lemmas** | All 4 case lemmas extracted | ✅ DONE | DONE |
+| **High heartbeats in 9.5** | 20M/10M caps remain | Lower where possible | LOW |
 | **Computation isolation** | Mixed with proof | Separate `Computation.lean` | LOW |
 
-### Phase 4 Progress: `sawhney_main` Case Lemmas
+### Phase 4 Complete: `sawhney_main` Case Lemmas ✅
 
-- Extracted `case_Astar_empty` as a local `have` lemma inside `sawhney_main`.
-- Extracted `case_Astar_nonempty_exists_even` (Case 1) as a local `have` lemma inside `sawhney_main`.
-- Remaining targets (per tree below): `case_Astar_all_odd_exists_even_in_A78`, `case_all_odd`.
+All 4 case lemmas extracted as local `have` statements inside `sawhney_main`:
+- `case_Astar_empty` (line 3961) ✅
+- `case_Astar_nonempty_exists_even` (line 4170) ✅
+- `case_Astar_all_odd_exists_even_in_A78` (line 4408) ✅
+- `case_all_odd` (line 4831) ✅
 
 ### Case Lemma Tree (Future Target)
 
@@ -232,9 +234,9 @@ This is **kernel-reducible**, so `(natToNum p).Prime` can be computed by `decide
 |------|--------------|---------------|
 | All sorries | `sorry` | **0** |
 | Native decide | `native_decide` | **0** |
-| Global heartbeats (bad) | `^set_option maxHeartbeats.*[^n]$` | **1** (line 3541) |
-| Scoped heartbeats (ok) | `set_option maxHeartbeats.*in$` | 12 |
-| 40M heartbeats | `40000000` | 3 |
+| Global heartbeats (bad) | `^set_option maxHeartbeats.*[^n]$` | **0** ✅ |
+| Scoped heartbeats (ok) | `set_option maxHeartbeats.*in$` | 6 |
+| 40M heartbeats | `40000000` | **0** ✅ |
 | simpa usage | `simpa` | 486 |
 | biUnion bounds | `card_biUnion_le` | 7 |
 
@@ -279,5 +281,8 @@ All helper `have` statements are defined early in `sawhney_main` (starts line 35
 - Builds cleanly in ~12-13 min
 - All density bound duplicates extracted to helpers
 - All Astar bound duplicates extracted to helpers
+- All 4 case lemmas extracted (Phase 4 complete)
+- All heartbeat options properly scoped with `in`
+- No 40M heartbeat caps remaining
 
-**Remaining work is optional polish for Mathlib submission.**
+**Remaining work is optional polish for Mathlib submission (heartbeat reduction, computation isolation).**
