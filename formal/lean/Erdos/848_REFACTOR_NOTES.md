@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-29
 **Last Updated:** 2026-01-31
-**Status:** ✅ PHASE 6 IN PROGRESS — 10 of 17 items complete (6.2/6.3/6.6/6.7/6.8/6.9/6.10/6.11/6.14/6.15 + 6.1 partial)
+**Status:** ✅ PHASE 6 IN PROGRESS — 10 of 17 items complete | PHASE 7 DOCUMENTED (7 future polish items)
 **Scope:** This document is the SSOT for the **Problem 848 Lean formalization**.
 
 ---
@@ -642,4 +642,144 @@ All helper `have` statements are defined early in `sawhney_main` (starts line 36
 
 **Full list:** See Phase 6 and Phase 6.5 sections above (items 6.1–6.17).
 
+**Phase 7 (Future):** 7 additional Mathlib-style polish items documented (7.1–7.7) — see Phase 7 section below.
+
 **Architectural decision:** Keep as single file for external consumers. Only decompose if community requests it.
+
+---
+
+## Phase 7: Mathlib Style Polish (Future Work)
+
+External AI review (2026-01-31) identified additional polish opportunities for Mathlib-quality code:
+
+### 7.1 Replace `omega`/`linarith` with `norm_num` for Constants (MEDIUM PRIORITY)
+
+**Issue:** Sections 2 and 6 use `omega` or `linarith` for basic constant arithmetic (e.g., `32 * 32 + 1 = 1025`).
+
+**Current:** General-purpose solvers for trivial numeric facts.
+
+**Fix:** Use `norm_num` — the standard tool for "normalizing numbers."
+
+```lean
+-- Before:
+example : 32 * 32 + 1 = 1025 := by omega
+
+-- After:
+example : 32 * 32 + 1 = 1025 := by norm_num
+```
+
+**Impact:** Faster compilation, more stable across versions.
+
+### 7.2 Genericize Residue Lemmas (Consolidate 7/18 Duplicates) (MEDIUM PRIORITY)
+
+**Issue:** `must_have_other_prime_square` and `must_have_other_prime_square_18` are near-identical.
+
+**Status:** Partially done in Phase 6.8, but deeper consolidation possible.
+
+**Proposed:** Create a single generic lemma taking residue `r` and proof `r ∈ {7, 18}` as arguments:
+
+```lean
+lemma must_have_other_prime_square_of_residue (r : ℕ) (hr : r = 7 ∨ r = 18)
+    (a b : ℕ) (ha : a % 25 = r) (hb : b % 25 = r) (h_ab : ¬Squarefree (a * b + 1)) :
+    ∃ p : ℕ, p.Prime ∧ p ≠ 5 ∧ p^2 ∣ a * b + 1 := by
+  -- unified proof
+```
+
+**Impact:** Could save 50-100 more lines beyond Phase 6.8.
+
+### 7.3 Clean Up Prime List "Wall of Numbers" (LOW PRIORITY)
+
+**Issue:** `no5PrimesCoarse_listL` is a massive hardcoded list of primes (~hundreds of lines).
+
+**Current:** Inline list definition.
+
+**Proposed Options:**
+1. Move to separate helper file (e.g., `Problem848_Data.lean`)
+2. Add clear `section` with docstring explaining the range
+3. Use more concise generation if possible
+
+```lean
+section PrimeLists
+/-! ## Prime lists for finite verification
+
+These lists contain primes in specific ranges used for density computations.
+- `diagPrimesCoarse_listL`: Primes ≤ 200 excluding 2, 5
+- `no5PrimesCoarse_listL`: Primes ≤ 2000 excluding 2, 5
+-/
+```
+
+**Impact:** Readability improvement; no line savings.
+
+### 7.4 Standardize Naming Conventions (LOW PRIORITY)
+
+**Issue:** Mix of camelCase and snake_case in lemma names.
+
+| Current | Mathlib Style |
+|---------|---------------|
+| `off_count_modEq100_le` | `off_count_mod_eq_hundred_le` or `off_count_modEq_le` |
+| `A₇` definition | Keep subscript (ok), but use consistently |
+| `primesUpTo` | `primesLe` (Mathlib convention) |
+
+**Impact:** Cleanliness for Mathlib submission.
+
+### 7.5 Avoid `simp_all` in Finalized Proofs (MEDIUM PRIORITY)
+
+**Issue:** `simp_all` is "non-terminal slop" — if Mathlib updates its simp-set, proofs may break.
+
+**Current:** Multiple uses of `simp_all +decide` in Sections 2-3 and `card_filter_mod_pair_le`.
+
+**Fix:** Replace with specific `simp only [...]` calls once proof is stable.
+
+```lean
+-- Before:
+simp_all +decide
+
+-- After:
+simp only [ZMod.natCast_mod, Nat.mod_mod_self, ...]
+ring
+```
+
+**Impact:** Stability across Mathlib versions.
+
+### 7.6 Add Docstrings to Every Theorem (LOW PRIORITY)
+
+**Issue:** Several intermediate lemmas in the sieve section lack documentation.
+
+**Fix:** Every lemma should have a `/-- ... -/` docstring explaining the mathematical intuition.
+
+```lean
+/-- Elements in A₇ always produce products ≡ 50 (mod 25²) when multiplied and incremented,
+    so they share a common 25-divisibility structure. -/
+lemma mod25_divisibility (a b : ℕ) (ha : a % 25 = 7) (hb : b % 25 = 7) :
+    (a * b + 1) % 25 = 0 := by
+```
+
+**Impact:** Easier review for anyone reading the proof.
+
+### 7.7 Consolidate Imports (LOW PRIORITY)
+
+**Issue:** Many specific imports like `Mathlib.Data.Finset.Basic` and `Mathlib.Data.Finset.Card`.
+
+**Proposed:** Keep imports minimal but organized alphabetically. For a "neat" file, prefer broader imports only if you're using many tactics from them.
+
+**Impact:** Minor cleanliness.
+
+---
+
+### Phase 7 Summary Table
+
+| ID | Item | Priority | Status | Est. Impact |
+|----|------|----------|--------|-------------|
+| 7.1 | `norm_num` for constants | MEDIUM | ⏳ TODO | Speed, stability |
+| 7.2 | Deeper 7/18 residue consolidation | MEDIUM | ⏳ TODO | 50-100 lines |
+| 7.3 | Prime list "wall of numbers" cleanup | LOW | ⏳ TODO | Readability |
+| 7.4 | Naming conventions | LOW | ⏳ TODO | Cleanliness |
+| 7.5 | Replace `simp_all` | MEDIUM | ⏳ TODO | Stability |
+| 7.6 | Docstrings for all theorems | LOW | ⏳ TODO | Documentation |
+| 7.7 | Import consolidation | LOW | ⏳ TODO | Minor |
+
+**Priority order for future work:**
+1. 7.5 (`simp_all` → `simp only`) — stability win
+2. 7.1 (`norm_num` for constants) — speed win
+3. 7.2 (deeper residue consolidation) — line reduction
+4. Rest are cosmetic polish
