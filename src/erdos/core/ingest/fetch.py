@@ -146,10 +146,16 @@ def _error_manifest_entry(
     ref: ReferenceEntry, *, title: str, error: str
 ) -> ManifestEntry:
     """Create a manifest entry representing a failed ingestion attempt."""
+    # Use DOI or arXiv ID if available, otherwise use a synthetic openalex_id
+    # to satisfy the ReferenceRecord identifier requirement
+    openalex_id = None
+    if not ref.doi and not ref.arxiv_id:
+        openalex_id = f"error:{ref.key}"
     return ManifestEntry(
         reference=ReferenceRecord(
             doi=ref.doi,
             arxiv_id=ref.arxiv_id,
+            openalex_id=openalex_id,
             title=title,
             authors=[],
             source="error",
@@ -228,6 +234,55 @@ def _build_manifest_entry_with_pdf(
         ingested_at=datetime.now(UTC),
         error=download_result.error,
     )
+
+
+def _process_url_only_pdf_reference(
+    ref: ReferenceEntry,
+    *,
+    fetch: FetchConfig,
+    pdf: PDFConfig,
+) -> ReferenceProcessResult:
+    """Process a URL-only PDF reference (BUG-055).
+
+    Creates a minimal ReferenceRecord from the ReferenceEntry and downloads
+    the PDF content. This handles references that have only a URL (no DOI or
+    arXiv ID) pointing to a PDF file.
+
+    Uses the reference key prefixed with "url:" as a synthetic openalex_id
+    to satisfy the ReferenceRecord identifier requirement.
+
+    Args:
+        ref: Reference entry with URL pointing to a PDF.
+        fetch: Fetch configuration.
+        pdf: PDF extraction configuration.
+
+    Returns:
+        ReferenceProcessResult with the processed entry.
+    """
+    if not ref.url:
+        raise ValueError("Reference has no URL")
+
+    # Create minimal ReferenceRecord from the entry
+    # Use a synthetic openalex_id based on the key to satisfy the identifier requirement
+    reference = ReferenceRecord(
+        title=ref.citation or ref.key,
+        authors=[],
+        source="pdf-url",
+        pdf_url=ref.url,
+        openalex_id=f"url:{ref.key}",  # Synthetic ID for URL-only refs
+    )
+
+    reference_id = sanitize_reference_id(ref.key)
+    entry = _build_manifest_entry_with_pdf(
+        reference,
+        ref.url,
+        repo_root=fetch.repo_root,
+        reference_id=reference_id,
+        timeout=fetch.timeout,
+        converter=pdf.converter,
+        use_llm=pdf.use_llm,
+    )
+    return _success_result(entry)
 
 
 def _fetch_with_provider(
@@ -425,6 +480,17 @@ def process_single_reference(
         return _error_result(ref, e, network_failed=False, internal_error=e)
 
 
+def _is_url_only_pdf_ref(ref: ReferenceEntry, config: IngestConfig) -> bool:
+    """Check if a reference is a URL-only PDF that should be processed (BUG-055)."""
+    return bool(
+        not ref.doi
+        and not ref.arxiv_id
+        and ref.url
+        and ref.url.lower().endswith(".pdf")
+        and config.pdf.enabled
+    )
+
+
 def process_all_references(
     problem: ProblemRecord,
     *,
@@ -451,27 +517,40 @@ def process_all_references(
     non_network_failed = False
 
     for ref in problem.references:
-        # Skip references without identifiers
-        if not ref.doi and not ref.arxiv_id:
-            skipped += 1
-            continue
+        result: ReferenceProcessResult | None = None
 
-        # Process reference
-        result = process_single_reference(
-            ref,
-            existing_manifest=existing_manifest,
-            config=config,
-            provider=provider,
-        )
+        # Skip references without identifiers (unless URL-only PDF - BUG-055)
+        if not ref.doi and not ref.arxiv_id:
+            if _is_url_only_pdf_ref(ref, config):
+                try:
+                    result = _process_url_only_pdf_reference(
+                        ref, fetch=config.fetch, pdf=config.pdf
+                    )
+                except Exception as e:  # defensive catch for URL-only processing
+                    logger.exception(
+                        "Unexpected error processing URL-only ref %s", ref.key
+                    )
+                    result = _error_result(
+                        ref, e, network_failed=False, internal_error=e
+                    )
+            else:
+                skipped += 1
+                continue
+        else:
+            # Process reference with DOI or arXiv ID
+            result = process_single_reference(
+                ref,
+                existing_manifest=existing_manifest,
+                config=config,
+                provider=provider,
+            )
 
         entries.append(result.entry)
 
         if result.failed:
             failed += 1
-            if result.network_failed:
-                network_failed = True
-            else:
-                non_network_failed = True
+            network_failed = network_failed or result.network_failed
+            non_network_failed = non_network_failed or not result.network_failed
             if result.internal_error and internal_error is None:
                 internal_error = result.internal_error
 

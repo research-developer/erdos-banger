@@ -6,6 +6,7 @@ arXiv export API (Atom XML format).
 API Reference: https://info.arxiv.org/help/api/user-manual.html
 """
 
+import gzip
 import io
 import logging
 import posixpath
@@ -152,15 +153,18 @@ def extract_arxiv_text(tarball_bytes: bytes) -> bytes:
     2. Select the largest .tex file by byte size
     3. Return its raw content (up to 2 MiB)
 
+    Falls back to gzip decompression for single-file .tex sources (BUG-054).
+
     Args:
-        tarball_bytes: Raw bytes of a tar archive (gzip, bzip2, xz, or uncompressed).
+        tarball_bytes: Raw bytes of a tar archive (gzip, bzip2, xz, or uncompressed),
+            or a gzip-compressed single .tex file.
 
     Returns:
         Raw bytes of the largest .tex file (capped at 2 MiB).
 
     Raises:
-        ValueError: If no .tex files found in tarball.
-        tarfile.TarError: If tarball is malformed.
+        ValueError: If no .tex files found in tarball or gzip content is not LaTeX.
+        tarfile.TarError: If tarball is malformed and gzip fallback also fails.
     """
     tar_buffer = io.BytesIO(tarball_bytes)
 
@@ -173,22 +177,34 @@ def extract_arxiv_text(tarball_bytes: bytes) -> bytes:
             or normalized.startswith("../")
         )
 
-    with tarfile.open(fileobj=tar_buffer, mode="r:*") as tar:
-        largest_member: tarfile.TarInfo | None = None
-        for member in tar.getmembers():
-            if (
-                member.isfile()
-                and member.name.endswith(".tex")
-                and _is_safe_member_name(member.name)
-                and (largest_member is None or member.size > largest_member.size)
-            ):
-                largest_member = member
+    try:
+        with tarfile.open(fileobj=tar_buffer, mode="r:*") as tar:
+            largest_member: tarfile.TarInfo | None = None
+            for member in tar.getmembers():
+                if (
+                    member.isfile()
+                    and member.name.endswith(".tex")
+                    and _is_safe_member_name(member.name)
+                    and (largest_member is None or member.size > largest_member.size)
+                ):
+                    largest_member = member
 
-        if largest_member is None:
-            raise ValueError("No .tex files found in arXiv source tarball")
+            if largest_member is None:
+                raise ValueError("No .tex files found in arXiv source tarball")
 
-        file_obj = tar.extractfile(largest_member)
-        if file_obj is None:
-            raise ValueError(f"Could not extract {largest_member.name}")
-        with file_obj:
-            return file_obj.read(MAX_TEX_FILE_SIZE)
+            file_obj = tar.extractfile(largest_member)
+            if file_obj is None:
+                raise ValueError(f"Could not extract {largest_member.name}")
+            with file_obj:
+                return file_obj.read(MAX_TEX_FILE_SIZE)
+    except tarfile.TarError:
+        # Fallback: single gzip-compressed .tex file (BUG-054)
+        # Some arXiv sources are just a gzipped .tex file, not a tarball
+        try:
+            decompressed = gzip.decompress(tarball_bytes)
+            # Validate that the content looks like LaTeX
+            if b"\\documentclass" in decompressed or b"\\begin{" in decompressed:
+                return decompressed[:MAX_TEX_FILE_SIZE]
+            raise ValueError("Gzip content is not LaTeX")
+        except (gzip.BadGzipFile, OSError) as e:
+            raise tarfile.TarError(f"Not valid tar or gzip: {e}") from e

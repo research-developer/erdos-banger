@@ -138,6 +138,7 @@ class AppConfig:
     semantic_scholar_cache_path: Path | None = None
     zbmath_cache_ttl_days: int = 30
     zbmath_cache_path: Path | None = None
+    exa_search_type: str = "neural"
 
     # Network
     http_timeout: float = DEFAULT_HTTP_TIMEOUT
@@ -165,6 +166,7 @@ class AppConfig:
             EXA_API_KEY: API key for Exa Research API.
             ERDOS_EXA_CACHE_TTL: Cache TTL in hours for Exa API (default: 24).
             ERDOS_EXA_CACHE_PATH: Path to Exa cache directory (for testing).
+            ERDOS_EXA_SEARCH_TYPE: Search type for Exa API (default: neural).
             SEMANTIC_SCHOLAR_API_KEY: API key for Semantic Scholar (optional).
             ERDOS_S2_CACHE_TTL: Cache TTL in days for S2 API (default: 7).
             ERDOS_S2_CACHE_PATH: Path to S2 cache directory (for testing).
@@ -214,6 +216,7 @@ class AppConfig:
             exa_api_key=os.environ.get("EXA_API_KEY", "").strip(),
             exa_cache_ttl_hours=_parse_int_env("ERDOS_EXA_CACHE_TTL", 24),
             exa_cache_path=Path(exa_cache_path_str) if exa_cache_path_str else None,
+            exa_search_type=os.environ.get("ERDOS_EXA_SEARCH_TYPE", "neural").strip(),
             semantic_scholar_api_key=os.environ.get(
                 "SEMANTIC_SCHOLAR_API_KEY", ""
             ).strip(),

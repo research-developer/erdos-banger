@@ -1,5 +1,6 @@
 """Unit tests for arXiv source extraction."""
 
+import gzip
 import io
 import tarfile
 
@@ -117,3 +118,43 @@ def test_extract_arxiv_text_empty_tarball():
 
     with pytest.raises(ValueError, match=r"No \.tex files found"):
         extract_arxiv_text(tar_buffer.read())
+
+
+def test_extract_arxiv_text_single_file_gzip():
+    """Test extraction of single gzip-compressed .tex file (BUG-054)."""
+    # Create a single .tex file content
+    tex_content = (
+        b"\\documentclass{article}\n"
+        b"\\begin{document}\n"
+        b"This is a gzipped single file.\n"
+        b"\\end{document}"
+    )
+
+    # Gzip compress the .tex content directly (not as a tarball)
+    gzipped = gzip.compress(tex_content)
+
+    result = extract_arxiv_text(gzipped)
+
+    assert b"gzipped single file" in result
+    assert b"\\documentclass" in result
+
+
+def test_extract_arxiv_text_gzip_non_latex_fails():
+    """Test that gzip fallback fails for non-LaTeX content (BUG-054)."""
+    # Create non-LaTeX content
+    non_latex_content = b"This is just plain text without any LaTeX commands."
+
+    # Gzip compress it
+    gzipped = gzip.compress(non_latex_content)
+
+    with pytest.raises(ValueError, match="Gzip content is not LaTeX"):
+        extract_arxiv_text(gzipped)
+
+
+def test_extract_arxiv_text_invalid_format_raises_tar_error():
+    """Test that invalid data raises TarError after gzip fallback fails."""
+    # Random bytes that are neither tar nor gzip
+    random_bytes = b"not a valid archive format at all"
+
+    with pytest.raises(tarfile.TarError, match="Not valid tar or gzip"):
+        extract_arxiv_text(random_bytes)

@@ -42,6 +42,7 @@ class ExaConfig:
     max_retries: int = RETRY_MAX_ATTEMPTS
     cache_ttl_hours: int = DEFAULT_CACHE_TTL_HOURS
     cache_path: Path = field(default=DEFAULT_CACHE_PATH)
+    search_type: str = "neural"
 
     @classmethod
     def from_env(cls) -> ExaConfig:
@@ -63,6 +64,7 @@ class ExaConfig:
                 if app_config.exa_cache_path
                 else DEFAULT_CACHE_PATH
             ),
+            search_type=app_config.exa_search_type,
         )
 
 
@@ -245,7 +247,7 @@ class ExaClient:
         payload = {
             "query": query,
             "numResults": max_results,
-            "type": "neural",
+            "type": self.config.search_type,
             "useAutoprompt": True,
             "contents": {"text": {"maxCharacters": 500}},
         }

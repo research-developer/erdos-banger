@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import concurrent.futures
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import MagicMock, patch
@@ -442,6 +444,55 @@ class TestConvertPDF:
 
 class TestTorchDeviceEnvVar:
     """Tests for TORCH_DEVICE environment variable wiring (DEBT-036)."""
+
+    def test_convert_pdf_torch_device_is_thread_safe(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """convert_pdf uses thread lock for concurrent TORCH_DEVICE access (BUG-047)."""
+        from erdos.core.pdf.converter import PDFConversionConfig, PDFConversionResult
+
+        # Create test PDF files
+        pdf_files = []
+        for i in range(5):
+            pdf_file = tmp_path / f"test_{i}.pdf"
+            pdf_file.write_bytes(b"%PDF-1.4 test content")
+            pdf_files.append(pdf_file)
+
+        # Track TORCH_DEVICE values seen during conversion
+        seen_devices: list[str | None] = []
+
+        def mock_convert(*_args: Any, **_kwargs: Any) -> PDFConversionResult:
+            # Record the env var value at conversion time
+            seen_devices.append(os.environ.get("TORCH_DEVICE"))
+            return PDFConversionResult(success=True, text="test", converter="marker")
+
+        monkeypatch.setattr(
+            "erdos.core.pdf.converter.convert_with_marker", mock_convert
+        )
+        monkeypatch.setattr(
+            "erdos.core.pdf.converter.is_marker_available", lambda: True
+        )
+
+        # Run concurrent conversions with different devices
+        devices = ["cpu", "cuda", "mps", "cuda:0", "cuda:1"]
+
+        def convert_with_device(args: tuple[Path, str]) -> None:
+            from erdos.core.pdf.converter import convert_pdf
+
+            pdf_path, device = args
+            config = PDFConversionConfig(torch_device=device)
+            convert_pdf(pdf_path, config)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            list(
+                executor.map(convert_with_device, zip(pdf_files, devices, strict=True))
+            )
+
+        # All 5 conversions should have completed
+        assert len(seen_devices) == 5
+
+        # After all conversions, TORCH_DEVICE should be restored (not set)
+        assert os.environ.get("TORCH_DEVICE") is None
 
     def test_convert_pdf_sets_torch_device_env_var(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path

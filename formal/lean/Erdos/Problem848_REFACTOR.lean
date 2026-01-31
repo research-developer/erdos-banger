@@ -3112,7 +3112,8 @@ lemma filter_empty_of_prime_dvd_left
       simpa [Nat.add_sub_cancel] using this
     exact (hp.not_dvd_one hp1).elim
   · intro ha
-    simpa using ha
+    simp at ha
+    contradiction
 
 /-- Variant of off_count_modEq25_le that works even when p | b (filter is empty in that case). -/
 lemma off_count_modEq25_le' (N p b t : ℕ) (hp : Nat.Prime p) (hp5 : p ≠ 5) :

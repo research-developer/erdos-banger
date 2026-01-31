@@ -64,6 +64,18 @@ class TestExaConfig:
             config = ExaConfig.from_env()
             assert config.api_key == "app-config-key"
 
+    def test_default_search_type(self) -> None:
+        """Default search_type is 'neural'."""
+        config = ExaConfig()
+        assert config.search_type == "neural"
+
+    def test_from_env_with_search_type(self) -> None:
+        """Config loads ERDOS_EXA_SEARCH_TYPE from environment."""
+        env = {"EXA_API_KEY": "key", "ERDOS_EXA_SEARCH_TYPE": "keyword"}
+        with patch.dict(os.environ, env, clear=False):
+            config = ExaConfig.from_env()
+            assert config.search_type == "keyword"
+
 
 class TestExaSource:
     """Tests for ExaSource dataclass."""
@@ -208,6 +220,25 @@ class TestExaClient:
         assert request.body is not None
         body = json.loads(request.body)
         assert body["numResults"] == 10
+
+    @responses.activate
+    def test_search_uses_config_search_type(self) -> None:
+        """Payload uses search_type from config (BUG-056)."""
+        responses.add(
+            responses.POST,
+            "https://api.exa.ai/search",
+            json=SAMPLE_EXA_RESPONSE,
+            status=200,
+        )
+
+        config = ExaConfig(api_key="test-key", search_type="keyword")
+        client = ExaClient(config)
+        client.search("search type test", max_results=5, use_cache=False)
+
+        request = responses.calls[0].request
+        assert request.body is not None
+        body = json.loads(request.body)
+        assert body["type"] == "keyword"
 
     @responses.activate
     def test_search_missing_api_key(self) -> None:
