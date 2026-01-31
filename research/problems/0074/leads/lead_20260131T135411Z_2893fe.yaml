@@ -1,0 +1,55 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135411Z_2893fe
+title: '[Exa] arXiv 1510.05982'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '1510.05982'
+  url: https://export.arxiv.org/pdf/1510.05982v1.pdf
+notes: '[Exa] arXiv:1510.05982v1 [math.CO] 20 Oct 2015
+
+  Dichromatic number and fractional chromatic number
+
+  Bojan Mohar∗†
+
+  Department of Mathematics
+
+  Simon Fraser University
+
+  Burnaby, BC, Canada
+
+  mohar@sfu.ca
+
+  Hehui Wu‡
+
+  Department of Mathematics
+
+  University of Mississipi
+
+  Oxford, MS
+
+  hhwu@olemiss.edu
+
+  April 5, 2024
+
+  Abstract
+
+  The dichromatic number of a graph G is the maximum integer k such that there
+
+  exists an orientation of the edges of G such that for every partition of the vertices
+
+  into fewer than k parts, at least on'
+created_at: '2026-01-31T13:54:11Z'
+updated_at: '2026-01-31T13:54:11Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null
