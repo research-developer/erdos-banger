@@ -134,3 +134,27 @@ Observed (for the sampled chain instance):
 Interpretation:
 - These two independent “generic” 5-chromatic generators (Mycielski and Hajós) look structurally incompatible with
   the strict √n regime even at the whole-graph level; the search repeatedly runs into edge-criticality barriers.
+
+## 2026-01-31 — Layered bipartite union (random layers) refuted via odd-cycle packing
+
+Goal idea: build a graph as a union of bipartite “layers”:
+- vertices are binary addresses (e.g. `0..2^k-1`)
+- layer `i` only uses edges crossing the cut “bit i differs”
+- layer densities `p_i` decay fast with `i`
+
+Prototype + run:
+- `scripts/layered_bipartite_test.py`
+- `uv run python scripts/layered_bipartite_test.py`
+
+Diagnostic:
+- `Ve(G[S])` = maximum number of edge-disjoint odd cycles in an induced subgraph `G[S]`.
+- Always `ebip(G[S]) ≥ Ve(G[S])`, so if `Ve(G[S]) > ⌊√|S|⌋` then the strict √n bound fails.
+
+Findings (seed fixed in the script for reproducibility; sampled subsets with `|S|≤25`):
+- For many “reasonable” density schedules (exponential `p_i ~ c·2^{-2i}` and related), the script quickly finds an
+  induced subset `|S|=25` with a greedy packing of **6 edge-disjoint odd cycles**, i.e. `Ve≥6 > ⌊√25⌋=5`.
+  The script prints the subset and an explicit list of the packed cycles (vertex ids), giving a deterministic witness
+  that `ebip(G[S]) > √|S|`.
+- If densities are made extremely tiny (e.g. shifted super-exponential with `p_0=1/16` and `p_1=1/256`), the sampled
+  √n violations disappear, but the finite graphs become very close to bipartite (`χ(G)=2` or `3` for `n=32`), so this
+  naive random-layer model likely cannot simultaneously achieve strict √n and unbounded chromatic number.
