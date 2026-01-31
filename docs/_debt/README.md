@@ -23,6 +23,7 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 | DEBT-118 | Proof repository URL validation incomplete | P1 | Fixed |
 | DEBT-119 | SPEC-036 LOC violations (lead.py, store_fs.py) | P3 | Exempted |
 | DEBT-120 | Test suite startup latency (~40s before tests flow) | P4 | Open |
+| DEBT-121 | Literature path convention drift (papers/ vs cache/pdf/) | P2 | Fixed |
 
 ### DEBT-114: Hardcoded Relative Paths (Core) - FIXED
 
