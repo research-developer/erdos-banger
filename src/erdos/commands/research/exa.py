@@ -184,6 +184,16 @@ def exa_search(
         int,
         typer.Option("--max-results", help="Maximum number of sources to return"),
     ] = 5,
+    search_type: Annotated[
+        str | None,
+        typer.Option(
+            "--search-type",
+            help=(
+                "Exa search type. Overrides ERDOS_EXA_SEARCH_TYPE "
+                "(e.g., auto, neural, fast, deep)."
+            ),
+        ),
+    ] = None,
     save_leads: Annotated[
         bool,
         typer.Option("--save-leads", help="Auto-create lead records from results"),
@@ -195,6 +205,7 @@ def exa_search(
         erdos research exa search 6 "What approaches have been tried for sum-free sets?"
         erdos research exa search 42 "Progress on arithmetic progressions" --max-results 10
         erdos research exa search 124 "Graph coloring bounds" --save-leads
+        erdos research exa search 74 "Novel approaches" --search-type deep
     """
     command = "erdos research exa"
 
@@ -227,6 +238,11 @@ def exa_search(
         return
 
     # Create client and search
+    effective_search_type = (search_type or app_ctx.config.exa_search_type).strip()
+    if not effective_search_type:
+        effective_search_type = "neural"
+    effective_search_type = effective_search_type.lower()
+
     config = ExaConfig(
         api_key=app_ctx.config.exa_api_key,
         cache_ttl_hours=app_ctx.config.exa_cache_ttl_hours,
@@ -235,7 +251,7 @@ def exa_search(
             if app_ctx.config.exa_cache_path
             else DEFAULT_CACHE_PATH
         ),
-        search_type=app_ctx.config.exa_search_type,  # BUG-057 fix
+        search_type=effective_search_type,  # BUG-056
     )
     client = ExaClient(config)
 
@@ -263,6 +279,7 @@ def exa_search(
                 "problem_id": problem_id,
                 "query": query,
                 "max_results": max_results,
+                "search_type": effective_search_type,
                 "sources": [s.to_dict() for s in result.sources],
                 "answer": result.answer,
                 "saved_leads": save_leads,

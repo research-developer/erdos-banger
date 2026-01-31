@@ -7,6 +7,27 @@
 
 ---
 
+## ⚠️ Important: What We Formalized
+
+**Original Erdős Problem 848:** Is the maximum size of a set $A ⊆ \{1, …, N\}$ such that $ab + 1$ is never squarefree always at most $|A_7(N)|$ = $⌊(N+18)/25⌋$? (**For ALL N**)
+
+**What Sawhney Proved (2025):** The asymptotic result — there exists $N_0$ such that for all $N ≥ N_0$, the bound holds. The paper does not compute an explicit $N_0$.
+
+**What We Formalized:** Sawhney's asymptotic theorem:
+```lean
+theorem erdos_848_asymptotic : ∃ N₀ : ℕ, ∀ N ≥ N₀, Erdos848 N
+```
+
+| Aspect | Status |
+|--------|--------|
+| Asymptotic result (∃ N₀, ∀ N ≥ N₀) | ✅ **Formally proved** |
+| Original conjecture (∀ N) | ❌ **Still open** |
+| Explicit N₀ value | ❌ **Not computed** (would require effectivizing bounds) |
+
+This is a **partial result**, consistent with how erdosproblems.com marks Problem 848 as "decidable" based on Sawhney's work.
+
+---
+
 ## Current State (2026-01-31)
 
 | Metric | Value |
@@ -287,20 +308,16 @@ Then `A₇_card` and `A₁₈_card` become `by simpa [A₇]` / `by simpa [A₁�
 
 ### 6.10 Factor "p ∣ b → Filter Empty" Helper (LOW PRIORITY)
 
-**Issue:** Duplicated in:
-- `off_count_modEq25_le'` (~3150–3170)
-- `off_count_modEq100_le'` (~3224–3244)
+✅ **Implemented** (2026-01-31)
 
-**Proposed:**
+**Fix:** Extracted helper lemmas for the "if p ∣ b then filter is empty" pattern:
+- `not_sq_dvd_mul_add_one_of_prime_dvd_left` — core impossibility lemma
+- `filter_empty_of_prime_dvd_left` — filter version
+- `filter_empty_of_prime_dvd_left_of_pred` — filter with predicate version
 
-```lean
-lemma filter_empty_of_prime_dvd_left
-    {N p b : ℕ} (hp : p.Prime) (hb : p ∣ b) :
-    (Finset.range N).filter (fun a => p^2 ∣ b*a+1) = ∅ := by
-  -- "if p ∣ b then p ∣ (b*a+1) impossible"
-```
+**Location:** `formal/lean/Erdos/Problem848_REFACTOR.lean:3093-3117`
 
-**Impact:** ~20 lines saved.
+**Impact:** ~20 lines saved, cleaner `off_count_modEq*_le'` lemmas.
 
 ### 6.11 Unify N=50 and N=100 Finite-Check Theorems (LOW PRIORITY)
 
@@ -416,7 +433,7 @@ rcases Finset.mem_filter.1 hn with ⟨hn_range, hn_mod⟩
 | 6.7 | `prime_ne_two_of_sq_dvd_odd` | ✅ DONE | 20-30 |
 | 6.8 | Unify 7/18 residue lemmas | ✅ DONE | 50-80 |
 | 6.9 | Unify `A₇_card`/`A₁₈_card` | ✅ DONE | 30 |
-| 6.10 | `filter_empty_of_prime_dvd_left` | ⏳ TODO | 20 |
+| 6.10 | `filter_empty_of_prime_dvd_left` | ✅ DONE | 20 |
 | 6.11 | Unify N=50/N=100 theorems | ⏳ TODO | 20 |
 | 6.12 | `scale_sum_inv_sq_le_of_rat` helper | ⏳ TODO (merged w/ 6.1) | — |
 | 6.3 | Named constants | ⏳ LOW | readability |
@@ -598,7 +615,9 @@ All helper `have` statements are defined early in `sawhney_main` (starts line 35
 
 ## Summary
 
-**The formalization is mathematically complete and production-ready.**
+**The formalization of Sawhney's asymptotic theorem is complete and production-ready.**
+
+> ⚠️ This proves the *asymptotic* result (∃ N₀, ∀ N ≥ N₀), not the full Erdős conjecture (∀ N). See "What We Formalized" section above.
 
 - 0 sorry, 0 native_decide, 0 axioms
 - Builds cleanly in ~12-13 min
@@ -617,9 +636,9 @@ All helper `have` statements are defined early in `sawhney_main` (starts line 35
 
 | Status | Count | Items |
 |--------|-------|-------|
-| ✅ DONE | 5 | 6.2, 6.6, 6.7, 6.8, 6.9 |
+| ✅ DONE | 6 | 6.2, 6.6, 6.7, 6.8, 6.9, 6.10 |
 | ⚠️ PARTIAL | 1 | 6.1 (sieve bounds exist, may need more unification) |
-| ⏳ TODO | 11 | 6.3-6.5, 6.10-6.17 |
+| ⏳ TODO | 10 | 6.3-6.5, 6.11-6.17 |
 
 **Completed refactors saved ~190-300 lines** from original ~5500+ baseline.
 
