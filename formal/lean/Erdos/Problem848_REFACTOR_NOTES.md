@@ -23,6 +23,7 @@ theorem erdos_848_asymptotic : ∃ N₀ : ℕ, ∀ N ≥ N₀, Erdos848 N
 | Asymptotic result (∃ N₀, ∀ N ≥ N₀) | ✅ **Formally proved** |
 | Original conjecture (∀ N) | ❌ **Still open** |
 | Explicit N₀ value | ❌ **Not computed** (would require effectivizing bounds) |
+| Computational verification (N ≤ 5000) | ✅ **No counterexamples** (greedy search, 2026-01-31) |
 
 This is a **partial result**, consistent with how erdosproblems.com marks Problem 848 as "decidable" based on Sawhney's work.
 
@@ -433,36 +434,35 @@ rcases Finset.mem_filter.1 hn with ⟨hn_range, hn_mod⟩
 | 6.8 | Unify 7/18 residue lemmas | ✅ DONE | 50-80 |
 | 6.9 | Unify `A₇_card`/`A₁₈_card` | ✅ DONE | 30 |
 | 6.10 | `filter_empty_of_prime_dvd_left` | ✅ DONE | 20 |
-| 6.11 | Unify N=50/N=100 theorems | ⏳ TODO | 20 |
+| 6.11 | Unify N=50/N=100 theorems | ✅ DONE | 20 |
 | 6.12 | `scale_sum_inv_sq_le_of_rat` helper | ⏳ TODO (merged w/ 6.1) | — |
-| 6.3 | Named constants | ⏳ LOW | readability |
+| 6.3 | Named constants | ✅ DONE | readability |
 | 6.4 | Tactic hygiene (general) | ⏳ LOW | stability |
 | 6.5 | Naming conventions | ⏳ LOW | cleanliness |
 | 6.13 | `density_contradiction_*` helpers | ⏳ LOW | readability |
-| 6.14 | Paper case label comments | ⏳ LOW | readability |
-| 6.15 | `private` markers | ⏳ LOW | namespace |
+| 6.14 | Paper case label comments | ✅ DONE | readability |
+| 6.15 | `private` markers | ✅ DONE | namespace |
 | 6.16 | `simp only` in 8M lemmas | ⏳ LOW | heartbeats |
 | 6.17 | Replace `simp_all` in dense lemmas | ⏳ LOW | stability |
 
 **Next priority items:**
-1. 6.10: `filter_empty_of_prime_dvd_left` (small, safe)
-2. 6.11: Unify N=50/N=100 theorems (small, safe)
-3. 6.1/6.12: Complete sieve bound unification (larger, may need care)
+1. 6.1/6.12: Complete sieve bound unification (larger, may need care)
+2. 6.13: Pull numerical contradictions into named helpers (readability)
+3. 6.16: `simp only` in 8M lemmas (stability / heartbeats)
 
 **Cosmetic polish (optional):**
-- 6.14: Paper case label comments
-- 6.15: `private` markers
-- 6.3: Named constants
+- 6.4: Tactic hygiene (general)
+- 6.5: Naming conventions
 
 ---
 
 ### Phase 4 Complete: `sawhney_main` Case Lemmas ✅
 
 All 4 case lemmas extracted as local `have` statements inside `sawhney_main`:
-- `case_Astar_empty` (line 3961) ✅
-- `case_Astar_nonempty_exists_even` (line 4170) ✅
-- `case_Astar_all_odd_exists_even_in_A78` (line 4408) ✅
-- `case_all_odd` (line 4831) ✅
+- `case_Astar_empty` (line 4012) ✅
+- `case_Astar_nonempty_exists_even` (line 4220) ✅
+- `case_Astar_all_odd_exists_even_in_A78` (line 4452) ✅
+- `case_all_odd` (line 4867) ✅
 
 ### Case Lemma Tree (Future Target)
 
