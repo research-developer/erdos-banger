@@ -266,16 +266,17 @@ def _process_url_only_pdf_reference(
         raise ValueError("Reference has no URL")
 
     # Create minimal ReferenceRecord from the entry
-    # Use a synthetic openalex_id based on the key to satisfy the identifier requirement
+    # Use a synthetic openalex_id based on the sanitized key to satisfy the identifier requirement
+    sanitized_key = sanitize_reference_id(ref.key)
     reference = ReferenceRecord(
         title=ref.citation or ref.key,
         authors=[],
         source="pdf-url",
         pdf_url=ref.url,
-        openalex_id=f"url:{ref.key}",  # Synthetic ID for URL-only refs
+        openalex_id=f"url:{sanitized_key}",  # Synthetic ID for URL-only refs
     )
 
-    reference_id = sanitize_reference_id(ref.key)
+    reference_id = sanitized_key
     entry = _build_manifest_entry_with_pdf(
         reference,
         ref.url,

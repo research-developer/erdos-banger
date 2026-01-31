@@ -210,6 +210,50 @@ class TestExaSearchCommand:
         body = json.loads(request.body)
         assert body["numResults"] == 10
 
+    @responses.activate
+    def test_search_type_cli_flag_overrides_env(
+        self, tmp_path: Path, sample_problems_yaml: Path
+    ) -> None:
+        """CLI --search-type flag overrides ERDOS_EXA_SEARCH_TYPE env var (BUG-057)."""
+        responses.add(
+            responses.POST,
+            "https://api.exa.ai/search",
+            json=SAMPLE_EXA_RESPONSE,
+            status=200,
+        )
+
+        env = _setup_env(tmp_path, sample_problems_yaml)
+        cache_path = tmp_path / "exa_cache"
+        env["ERDOS_EXA_CACHE_PATH"] = str(cache_path)
+        # Set env var to "neural" but CLI flag to "keyword"
+        env["ERDOS_EXA_SEARCH_TYPE"] = "neural"
+
+        result = runner.invoke(
+            app,
+            [
+                "--json",
+                "research",
+                "exa",
+                "search",
+                "6",
+                "test query search type",
+                "--search-type",
+                "keyword",
+            ],
+            env=env,
+        )
+
+        assert result.exit_code == 0
+        payload = json.loads(result.stdout)
+        # CLI flag should win
+        assert payload["data"]["search_type"] == "keyword"
+
+        # Verify the API request used the CLI flag value
+        request = responses.calls[0].request
+        assert request.body is not None
+        body = json.loads(request.body)
+        assert body["type"] == "keyword"
+
     def test_search_missing_api_key(
         self, tmp_path: Path, sample_problems_yaml: Path
     ) -> None:
