@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-29
 **Last Updated:** 2026-01-31
-**Status:** ✅ PHASE 6 IN PROGRESS — 6 of 17 items complete (6.2/6.6/6.7/6.8/6.9 + 6.1 partial)
+**Status:** ✅ PHASE 6 IN PROGRESS — 10 of 17 items complete (6.2/6.3/6.6/6.7/6.8/6.9/6.10/6.11/6.14/6.15 + 6.1 partial)
 **Scope:** This document is the SSOT for the **Problem 848 Lean formalization**.
 
 ---
@@ -32,14 +32,14 @@ This is a **partial result**, consistent with how erdosproblems.com marks Proble
 
 | Metric | Value |
 |--------|-------|
-| Total lines | **5385** |
-| Build time | ~10-11 min |
+| Total lines | **5455** |
+| Build time | ~14-15 min |
 | `sorry` | **0** ✅ |
 | `native_decide` | **0** ✅ |
-| Build status | **PASSES** ✅ (verifying) |
+| Build status | **PASSES** ✅ (verified 2026-01-31) |
 
 ```bash
-lake build Erdos.Problem848_REFACTOR
+lake -d formal/lean build Erdos.Problem848_REFACTOR
 # Build completed successfully (2755 jobs).
 ```
 
@@ -72,15 +72,15 @@ theorem sawhney_main : SawhneyMain := by
 | 5 | 425-624 | Density lemmas |
 | 6 | 625-1026 | Helper lemmas |
 | 6.5 | 1027-1081 | Small modular facts (computation) |
-| 7 | 1082-2264 | Finite verification (no native_decide) |
-| 8 | 2265-2286 | SawhneyMain statement (Prop) |
-| 9 | 2287-2383 | Glue theorems |
-| 9.5 | 2384-2929 | Quantitative bounds 🔥 (8M heartbeats × 2) |
-| 9.8 | 2930-3192 | Bridge lemmas |
-| 9.9 | 3193-3479 | More small modular facts |
-| 9.95 | 3480-3592 | Generic sieve cardinality bounds |
-| 10 | 3593-5367 | `sawhney_main` 🔥 (~1775 lines) |
-| 11 | 5368-5379 | Final statements |
+| 7 | 1082-2265 | Finite verification (no native_decide) |
+| 8 | 2266-2287 | SawhneyMain statement (Prop) |
+| 9 | 2288-2384 | Glue theorems |
+| 9.5 | 2385-2932 | Quantitative bounds 🔥 (8M heartbeats × 2) |
+| 9.8 | 2933-3203 | Bridge lemmas |
+| 9.9 | 3204-3490 | More small modular facts |
+| 9.95 | 3491-3603 | Generic sieve cardinality bounds |
+| 10 | 3604-5443 | `sawhney_main` 🔥 (~1823 lines) |
+| 11 | 5444-5455 | Final statements |
 
 ### Dependency Flow
 
@@ -90,13 +90,13 @@ flowchart TD
     S6["(6-7) Helpers + Finite checks"] --> S10
     S8["(8-9) Statement layer + Glue"] --> S10
     S95["(9.5) Computation 🔥<br/>natToNum, prime lists, huge ℚ sums"] --> S10
-    S10["(10) sawhney_main 🔥<br/>~1842 lines, case split tree"] --> S11
+    S10["(10) sawhney_main 🔥<br/>~1823 lines, case split tree"] --> S11
     S11["(11) Final wrapper"]
 ```
 
 **Bottlenecks:**
-1. **Section 9.5** (lines 2409-2954) — 2× 8M heartbeats
-2. **Section 10** — `sawhney_main` is ~1807 lines (lines 3609-5415)
+1. **Section 9.5** (lines 2385-2932) — 2× 8M heartbeats
+2. **Section 10** — `sawhney_main` is ~1823 lines (lines 3621-5443)
 
 ---
 
@@ -138,7 +138,7 @@ flowchart TD
 | 40M | 0 | 0 | N/A |
 | 20M | 3 | **0** | ✅ DONE |
 | 10M | 1 | **0** | ✅ DONE |
-| 8M | 0 | **2** | Current (lines 2642, 2651) |
+| 8M | 0 | **2** | Current (lines 2604, 2613) |
 
 **Result:** All 20M caps reduced to 8M.
 
@@ -150,9 +150,9 @@ For Mathlib submission, these would improve the file further:
 
 | Debt | Current | Target | Priority |
 |------|---------|--------|----------|
-| **Scoped maxHeartbeats** | All 11 uses scoped with `in` | ✅ DONE | DONE |
+| **Scoped maxHeartbeats** | All 9 uses scoped with `in` | ✅ DONE | DONE |
 | **Case lemmas** | All 4 case lemmas extracted | ✅ DONE | DONE |
-| **High heartbeats in 9.5** | 2× 8M (lines 2642, 2651) | Lower where possible | LOW |
+| **High heartbeats in 9.5** | 2× 8M (lines 2604, 2613) | Lower where possible | LOW |
 | ~~**Computation isolation**~~ | ~~Mixed with proof~~ | ~~Separate files~~ | ~~WONTFIX~~ — keep single file for external consumers |
 
 ---
@@ -195,17 +195,19 @@ have clash : ∀ x y, x ∈ s → y ∈ s → Squarefree (x * y + 1) → False :
 
 ### 6.3 Named Constants (LOW PRIORITY)
 
-**Issue:** Explicit bounds like `163/25000`, `1/1750`, `413/25000` are inline.
+✅ **Implemented** (2026-01-31)
 
-**Proposed:** Define at top of proof:
+**Fix:** Introduced named density constants at the start of `sawhney_main` and replaced the
+corresponding magic numbers in the final density bounds.
 
 ```lean
+let C_diag : ℝ := (1 : ℝ) / 1750
 let C_off : ℝ := 163 / 25000
-let C_diag : ℝ := 1 / 1750
 let C_no5 : ℝ := 413 / 25000
 ```
 
-Makes final density contradiction readable: `N * (C_diag + C_off + C_no5) + ...`
+**Note:** Added explicit `*_num` helper inequalities (`simpa [C_*]`) before `nlinarith` so the
+tactic sees concrete numerals.
 
 ### 6.4 Tactic Hygiene (LOW PRIORITY)
 
