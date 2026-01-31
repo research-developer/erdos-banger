@@ -2577,8 +2577,6 @@ lemma no5PrimesCoarse_eq_num : no5PrimesCoarse = no5PrimesCoarse_num := by
   simp [no5PrimesCoarse, no5PrimesCoarse_num, primesUpTo_eq_num]
 
 set_option maxRecDepth 20000 in
-set_option maxHeartbeats 20000000 in
-#count_heartbeats in
 lemma diagPrimesCoarse_eq_list : diagPrimesCoarse = diagPrimesCoarse_list := by
   have hnum : diagPrimesCoarse_num = diagPrimesCoarse_list := by
     classical
