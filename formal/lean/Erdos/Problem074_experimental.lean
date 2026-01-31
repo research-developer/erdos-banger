@@ -346,7 +346,7 @@ axiom SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear
         ε * (n : ℝ)
 
 /-- The linear case of Erdős Problem 74 holds, assuming Rödl/Lovász's finite construction. -/
-theorem erdos_74_linear_holds : erdos_74_linear := by
+theorem erdos_74_linear_holds : erdos_74_linear.{u} := by
   intro ε hε
   classical
   -- Choose a Rödl/Lovász graph `G k` for each `k`.
