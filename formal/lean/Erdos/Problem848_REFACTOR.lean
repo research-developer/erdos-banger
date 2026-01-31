@@ -3100,15 +3100,19 @@ lemma filter_empty_of_prime_dvd_left
     (Finset.range N).filter (fun a => pred a ∧ p ^ 2 ∣ b * a + 1) = ∅ := by
   classical
   ext a
-  simp [Finset.mem_filter, Finset.mem_range]
-  intro ha
-  rcases ha with ⟨_, ha_pred, hdiv⟩
-  have hpdiv' : p ∣ b * a + 1 := Nat.dvd_of_pow_dvd (by omega : 1 ≤ 2) hdiv
-  have hpmod : p ∣ b * a := Nat.dvd_mul_of_dvd_left hb a
-  have : p ∣ 1 := by
-    have := Nat.dvd_sub hpdiv' hpmod
-    simpa [Nat.add_sub_cancel] using this
-  exact hp.not_dvd_one this
+  constructor
+  · intro ha
+    have ha' : a < N ∧ pred a ∧ p ^ 2 ∣ b * a + 1 := by
+      simpa [Finset.mem_filter, Finset.mem_range] using ha
+    rcases ha' with ⟨_, ha_pred, hdiv⟩
+    have hpdiv' : p ∣ b * a + 1 := Nat.dvd_of_pow_dvd (by omega : 1 ≤ 2) hdiv
+    have hpmod : p ∣ b * a := Nat.dvd_mul_right_of_dvd hb a
+    have hp1 : p ∣ 1 := by
+      have := Nat.dvd_sub hpdiv' hpmod
+      simpa [Nat.add_sub_cancel] using this
+    exact (hp.not_dvd_one hp1).elim
+  · intro ha
+    simpa using ha
 
 /-- Variant of off_count_modEq25_le that works even when p | b (filter is empty in that case). -/
 lemma off_count_modEq25_le' (N p b t : ℕ) (hp : Nat.Prime p) (hp5 : p ≠ 5) :
