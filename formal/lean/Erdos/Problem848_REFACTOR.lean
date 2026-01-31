@@ -1,37 +1,35 @@
 /-
-Erdős Problem #848 — COMPLETE LEAN 4 FORMALIZATION
+Erdős Problem #848 — Lean 4 Formalization (Asymptotic Result)
 
-Contributors (collaborative effort):
+Contributors:
 - Raymond Jung (@the-obstacle-is-the-way)
-- Claude Opus 4.5 (Anthropic)
-- GPT-5.2 Pro Extended Thinking (OpenAI)
-- GPT-5.2 xHigh (OpenAI)
-- Gemini 3.0 (Google)
-- Aristotle (Harmonic)
+- Claude Opus 4.5, GPT-5.2 Pro/xHigh, Gemini 3.0, Aristotle
 
 Lean version: leanprover/lean4:v4.27.0
 Mathlib version: mathlib4 (2024)
 -/
 
 /-
-Problem 848: Erdős Problem #848 — COMPLETE SELF-CONTAINED FILE
+Erdős Problem #848 — Self-Contained Formalization
 
-Status: FULLY PROVED (0 errors, no sorries, no axioms)
+This file formalizes Sawhney's asymptotic theorem (2025), NOT the full Erdős conjecture.
 
-This is THE canonical file for Problem 848. It contains EVERYTHING:
+Original Problem 848 (STILL OPEN):
+  Is max|A| ≤ |A₇(N)| for ALL N?
+
+What This File Proves:
+  ∃ N₀, ∀ N ≥ N₀, max|A| ≤ |A₇(N)|  (asymptotic result)
+
+Contents:
 - All definitions and helper lemmas
 - Sieve bounds (diagonal and off-diagonal)
-- Finite verification for small N
+- Finite verification for small N (N=50, N=100)
 - The main stability theorem `SawhneyMain`
-- Final resolution `problem_848_resolved`
+- Asymptotic theorem `problem_848_asymptotic`
 
-Statement:
-Is the maximum size of a set A ⊆ {1,…,N} such that ab+1 is never squarefree
-(for all a,b ∈ A) achieved by taking those n ≡ 7 (mod 25)?
+Build: 0 sorry, 0 native_decide, 0 axioms
 
-Resolution (Sawhney-Sellke 2025):
-There exist absolute constants η > 0 and N₀ such that for all N ≥ N₀, if
-|A| ≥ (1/25 - η)N then A ⊆ {n : n ≡ 7 (mod 25)} or A ⊆ {n : n ≡ 18 (mod 25)}.
+Citation: Sawhney-Sellke (2025)
 -/
 
 -- ============================================================================
@@ -80,7 +78,7 @@ structure ErdosProblem where
 def problem : ErdosProblem := {
   id := 848
   title := "Erdős-Sárközy Squarefree Products"
-  status := "decidable"
+  status := "asymptotically resolved"
 }
 
 /-- A set A has the non-squarefree product property if ab+1 is not squarefree
@@ -5448,8 +5446,9 @@ theorem problem_848_statement_50 : Problem848Statement 50 := problem_848_N50
 
 theorem problem_848_statement_100 : Problem848Statement 100 := problem_848_N100
 
-/-- The full resolution (assuming SawhneyMain). -/
-theorem problem_848_resolved : ∃ N₀ : ℕ, ∀ N ≥ N₀, Problem848Statement N :=
+/-- The asymptotic resolution: for sufficiently large N, max|A| ≤ |A₇(N)|.
+    The full Erdős conjecture (∀ N) remains open. -/
+theorem problem_848_asymptotic : ∃ N₀ : ℕ, ∀ N ≥ N₀, Problem848Statement N :=
   problem_848_resolved_up_to_finite_check_of_sawhney sawhney_main
 
 end Erdos.Problem848_REFACTOR
