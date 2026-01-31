@@ -27,6 +27,7 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 | **Ordered edge graphs OE(G,<)** | f(n) = √n | 🔬 **INCONCLUSIVE** | `scripts/ordered_edge_graph_sqrt_test.py` |
 | **Cayley graphs on (Z/2Z)^d** | f(n) = √n | ❌ **REFUTED** | `scripts/cayley_z2_sqrt_test.py` |
 | **Heuristic finite search** | f(n) = √n | 🔬 **INCONCLUSIVE** | `scripts/ebip_chromatic_extremal_search.py` |
+| **SAT/backtracking search (edge deletions)** | f(n) = √n | 🔬 **INCONCLUSIVE** | `scripts/ebip_sat_search.py` |
 
 ### Key Findings
 
@@ -50,6 +51,11 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 12. **Heuristic search:** Found an n=18 graph with χ=4 and ebip=4 = ⌊√18⌋, but sampled induced subgraphs already
     violate strict √k (e.g. k=12 sample with ebip=4 > ⌊√12⌋=3). This is evidence that the hereditary constraint
     is substantially tighter than the whole-graph constraint (see `scripts/ebip_chromatic_extremal_search.py`).
+13. **SAT/backtracking search (edge deletions):** Implemented a “SAT-like” backtracking search over edge deletions
+    starting from 5-chromatic bases (currently: Mycielski M5 (n=23), and randomized Hajós chains (n=25)).
+    Early experiments suggest these bases are extremely **edge-critical**: deleting any edge that would decrease
+    the whole-graph `ebip` immediately drops χ below 5, so even the necessary *whole-graph* √n constraint cannot
+    be met within these families (see `scripts/ebip_sat_search.py`).
 
 **See also:**
 - `Problem074_HASSE_STRATEGY.md` - **ACTIVE: Suk-Tomon incidence posets + rank-parity defects**

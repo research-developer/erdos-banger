@@ -336,3 +336,141 @@ def chromatic_number_exact(n: int, edges: list[tuple[int, int]]) -> int:  # noqa
 
     dfs(0, 0)
     return best
+
+
+# === Odd Cycle Packing (Ve) ===
+# Ve(G) = max number of edge-disjoint odd cycles
+# Always: ebip >= Ve, so Ve > √n kills faster than computing ebip
+
+
+def find_odd_cycles_bfs(n: int, edges: list[tuple[int, int]]) -> list[list[int]]:
+    """
+    Find all odd cycles in a graph using BFS.
+    Returns list of cycles, each as list of vertices.
+    For small graphs only (exponential in worst case).
+    """
+    if n <= 2:
+        return []
+
+    adj: dict[int, list[int]] = {i: [] for i in range(n)}
+    for u, v in edges:
+        adj[u].append(v)
+        adj[v].append(u)
+
+    odd_cycles: list[list[int]] = []
+
+    # Try BFS from each vertex to find odd cycles
+    for start in range(n):
+        # BFS with distance tracking
+        dist = [-1] * n
+        parent = [-1] * n
+        dist[start] = 0
+        queue = [start]
+        head = 0
+
+        while head < len(queue):
+            u = queue[head]
+            head += 1
+            for v in adj[u]:
+                if dist[v] == -1:
+                    dist[v] = dist[u] + 1
+                    parent[v] = u
+                    queue.append(v)
+                elif v != parent[u]:
+                    # Found a cycle
+                    cycle_len = dist[u] + dist[v] + 1
+                    if cycle_len % 2 == 1:
+                        # Reconstruct cycle
+                        cycle: list[int] = []
+                        x, y = u, v
+                        path_x, path_y = [x], [y]
+                        while parent[x] != -1:
+                            x = parent[x]
+                            path_x.append(x)
+                        while parent[y] != -1:
+                            y = parent[y]
+                            path_y.append(y)
+                        # Find common ancestor and build cycle
+                        path_y.reverse()
+                        cycle = path_x + path_y[1:]
+                        if len(cycle) >= 3 and len(cycle) % 2 == 1:
+                            # Normalize cycle representation
+                            min_idx = cycle.index(min(cycle))
+                            cycle = cycle[min_idx:] + cycle[:min_idx]
+                            if tuple(cycle) not in {tuple(c) for c in odd_cycles}:
+                                odd_cycles.append(cycle)
+
+    return odd_cycles
+
+
+def cycle_to_edges(cycle: list[int]) -> set[tuple[int, int]]:
+    """Convert a cycle (list of vertices) to set of edges."""
+    edges: set[tuple[int, int]] = set()
+    for i in range(len(cycle)):
+        u, v = cycle[i], cycle[(i + 1) % len(cycle)]
+        edges.add((min(u, v), max(u, v)))
+    return edges
+
+
+def max_edge_disjoint_odd_cycles_greedy(n: int, edges: list[tuple[int, int]]) -> int:
+    """
+    Greedy approximation for Ve(G) = max edge-disjoint odd cycles.
+    Not exact, but fast and gives a lower bound.
+    """
+    odd_cycles = find_odd_cycles_bfs(n, edges)
+    if not odd_cycles:
+        return 0
+
+    # Sort by cycle length (prefer shorter cycles)
+    odd_cycles.sort(key=len)
+
+    used_edges: set[tuple[int, int]] = set()
+    count = 0
+
+    for cycle in odd_cycles:
+        cycle_edges = cycle_to_edges(cycle)
+        if not cycle_edges & used_edges:
+            # This cycle is edge-disjoint from previously selected
+            used_edges |= cycle_edges
+            count += 1
+
+    return count
+
+
+def max_edge_disjoint_odd_cycles_exact(
+    n: int, edges: list[tuple[int, int]], max_cycles: int = 100
+) -> int:
+    """
+    Exact Ve(G) via brute-force search over cycle subsets.
+    Only for very small graphs.
+    """
+    odd_cycles = find_odd_cycles_bfs(n, edges)
+    if not odd_cycles:
+        return 0
+
+    # Limit to avoid combinatorial explosion
+    if len(odd_cycles) > max_cycles:
+        # Fall back to greedy
+        return max_edge_disjoint_odd_cycles_greedy(n, edges)
+
+    # Convert cycles to edge sets
+    cycle_edge_sets = [cycle_to_edges(c) for c in odd_cycles]
+
+    # Brute force: find max independent set in the "cycle intersection graph"
+    best = 0
+    num_cycles = len(cycle_edge_sets)
+
+    for mask in range(1 << num_cycles):
+        selected = [i for i in range(num_cycles) if mask & (1 << i)]
+        # Check if all selected cycles are edge-disjoint
+        all_edges: set[tuple[int, int]] = set()
+        valid = True
+        for i in selected:
+            if cycle_edge_sets[i] & all_edges:
+                valid = False
+                break
+            all_edges |= cycle_edge_sets[i]
+        if valid:
+            best = max(best, len(selected))
+
+    return best
