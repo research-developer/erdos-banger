@@ -2287,34 +2287,38 @@ def Problem848Statement (N : ℕ) : Prop :=
 -- SECTION 9: GLUE THEOREMS (PROVED - conditional on SawhneyMain)
 -- ============================================================================
 
-lemma A₇_card (N : ℕ) : (A₇ N).card = (N + 17) / 25 := by
+/-- Counting residue classes in `Finset.range N`: `|{n < N : n % 25 = r}|`. -/
+lemma card_range_filter_mod25_eq (r : ℕ) (hr : r ≤ 24) (N : ℕ) :
+    ((Finset.range N).filter (fun n => n % 25 = r)).card = (N + (24 - r)) / 25 := by
   classical
-  set K : ℕ := (N + 17) / 25
-  have hbij : (A₇ N).card = (Finset.range K).card := by
-    refine (Finset.card_bij (s := Finset.range K) (t := A₇ N)
-      (i := fun k _hk => 25 * k + 7) ?_ ?_ ?_).symm
+  set K : ℕ := (N + (24 - r)) / 25
+  have hbij :
+      ((Finset.range N).filter (fun n => n % 25 = r)).card = (Finset.range K).card := by
+    refine (Finset.card_bij (s := Finset.range K) (t := (Finset.range N).filter (fun n => n % 25 = r))
+      (i := fun k _hk => 25 * k + r) ?_ ?_ ?_).symm
     · intro k hk
       have hk' : k < K := by simpa [Finset.mem_range] using hk
       have hk1 : k + 1 ≤ K := Nat.succ_le_iff.2 hk'
       have hmul : 25 * (k + 1) ≤ 25 * K := Nat.mul_le_mul_left 25 hk1
-      have hK : 25 * K ≤ N + 17 := by simpa [K] using Nat.mul_div_le (N + 17) 25
-      have hmul' : 25 * (k + 1) ≤ N + 17 := le_trans hmul hK
-      have hlt : 25 * k + 7 < N := by omega
-      simp [A₇, Finset.mem_filter, Finset.mem_range, hlt, Nat.add_mod]
+      have hK : 25 * K ≤ N + (24 - r) := by
+        simpa [K] using Nat.mul_div_le (N + (24 - r)) 25
+      have hmul' : 25 * (k + 1) ≤ N + (24 - r) := le_trans hmul hK
+      have hlt : 25 * k + r < N := by omega
+      simp [Finset.mem_filter, Finset.mem_range, hlt, Nat.add_mod]
     · intro k₁ _hk₁ k₂ _hk₂ h
       have h' : 25 * k₁ = 25 * k₂ := Nat.add_right_cancel h
       exact Nat.mul_left_cancel (by decide : 0 < 25) h'
     · intro a ha
-      have ha' : a < N ∧ a % 25 = 7 := by
-        simpa [A₇, Finset.mem_filter, Finset.mem_range] using ha
-      have ha_eq : 25 * (a / 25) + 7 = a := by
+      have ha' : a < N ∧ a % 25 = r := by
+        simpa [Finset.mem_filter, Finset.mem_range] using ha
+      have ha_eq : 25 * (a / 25) + r = a := by
         have h := Nat.mod_add_div a 25
         simpa [ha'.2, Nat.add_comm, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using h
       refine ⟨a / 25, ?_, ?_⟩
-      · have hlt : 25 * (a / 25) + 7 < N := by simpa [ha_eq] using ha'.1
-        have hmul : 25 * ((a / 25) + 1) ≤ N + 17 := by omega
+      · have hlt : 25 * (a / 25) + r < N := by simpa [ha_eq] using ha'.1
+        have hmul : 25 * ((a / 25) + 1) ≤ N + (24 - r) := by omega
         have hle : a / 25 + 1 ≤ K := by
-          have hmul' : (a / 25 + 1) * 25 ≤ N + 17 := by
+          have hmul' : (a / 25 + 1) * 25 ≤ N + (24 - r) := by
             simpa [Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using hmul
           have := (Nat.le_div_iff_mul_le (k0 := (by decide : 0 < 25))).2 hmul'
           simpa [K] using this
@@ -2323,41 +2327,11 @@ lemma A₇_card (N : ℕ) : (A₇ N).card = (N + 17) / 25 := by
       · exact ha_eq
   simpa [Finset.card_range, K] using hbij
 
+lemma A₇_card (N : ℕ) : (A₇ N).card = (N + 17) / 25 := by
+  simpa [A₇, Nat.sub_sub] using (card_range_filter_mod25_eq 7 (by decide) N)
+
 lemma A₁₈_card (N : ℕ) : (A₁₈ N).card = (N + 6) / 25 := by
-  classical
-  set K : ℕ := (N + 6) / 25
-  have hbij : (A₁₈ N).card = (Finset.range K).card := by
-    refine (Finset.card_bij (s := Finset.range K) (t := A₁₈ N)
-      (i := fun k _hk => 25 * k + 18) ?_ ?_ ?_).symm
-    · intro k hk
-      have hk' : k < K := by simpa [Finset.mem_range] using hk
-      have hk1 : k + 1 ≤ K := Nat.succ_le_iff.2 hk'
-      have hmul : 25 * (k + 1) ≤ 25 * K := Nat.mul_le_mul_left 25 hk1
-      have hK : 25 * K ≤ N + 6 := by simpa [K] using Nat.mul_div_le (N + 6) 25
-      have hmul' : 25 * (k + 1) ≤ N + 6 := le_trans hmul hK
-      have hlt : 25 * k + 18 < N := by omega
-      simp [A₁₈, Finset.mem_filter, Finset.mem_range, hlt, Nat.add_mod]
-    · intro k₁ _hk₁ k₂ _hk₂ h
-      have h' : 25 * k₁ = 25 * k₂ := Nat.add_right_cancel h
-      exact Nat.mul_left_cancel (by decide : 0 < 25) h'
-    · intro a ha
-      have ha' : a < N ∧ a % 25 = 18 := by
-        simpa [A₁₈, Finset.mem_filter, Finset.mem_range] using ha
-      have ha_eq : 25 * (a / 25) + 18 = a := by
-        have h := Nat.mod_add_div a 25
-        simpa [ha'.2, Nat.add_comm, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using h
-      refine ⟨a / 25, ?_, ?_⟩
-      · have hlt : 25 * (a / 25) + 18 < N := by simpa [ha_eq] using ha'.1
-        have hmul : 25 * ((a / 25) + 1) ≤ N + 6 := by omega
-        have hle : a / 25 + 1 ≤ K := by
-          have hmul' : (a / 25 + 1) * 25 ≤ N + 6 := by
-            simpa [Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using hmul
-          have := (Nat.le_div_iff_mul_le (k0 := (by decide : 0 < 25))).2 hmul'
-          simpa [K] using this
-        have hltK : a / 25 < K := Nat.lt_of_lt_of_le (Nat.lt_succ_self _) hle
-        simpa [Finset.mem_range] using hltK
-      · exact ha_eq
-  simpa [Finset.card_range, K] using hbij
+  simpa [A₁₈, Nat.sub_sub] using (card_range_filter_mod25_eq 18 (by decide) N)
 
 lemma A₁₈_card_le_A₇ (N : ℕ) : (A₁₈ N).card ≤ (A₇ N).card := by
   have h : N + 6 ≤ N + 17 := Nat.add_le_add_left (by decide : 6 ≤ 17) N
