@@ -3533,6 +3533,15 @@ lemma diag_count_mod50odd_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 
 -- SECTION 9.95: GENERIC SIEVE CARDINALITY BOUNDS
 -- ============================================================================
 
+/-- If `p^2 ∣ X` and `0 < X < N^2`, then `p ≤ N`. -/
+lemma prime_le_of_sq_dvd_lt_sq {p N X : ℕ} (hXpos : 0 < X) (hXlt : X < N ^ 2) (hp2 : p ^ 2 ∣ X) : p ≤ N := by
+  have hp2_le : p ^ 2 ≤ X := Nat.le_of_dvd hXpos hp2
+  have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hXlt
+  by_contra hp_le
+  have hNp : N ≤ p := le_of_lt (Nat.not_le.mp hp_le)
+  have hN2le : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hNp 2
+  exact (not_lt_of_ge hN2le) hp2_lt
+
 /-- `∑ (N/(k*p²)+1)` is bounded by `N * ∑ 1/(k*p²) + |P|` after casting to `ℝ`. -/
 lemma sum_div_add_one_le_real (N : ℕ) (P : Finset ℕ) (k : ℕ) :
     ((∑ p ∈ P, (N / (k * p ^ 2) + 1) : ℕ) : ℝ) ≤
