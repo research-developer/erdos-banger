@@ -11,7 +11,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Total lines | **5404** |
+| Total lines | **5379** |
 | Build time | ~10-11 min |
 | `sorry` | **0** ✅ |
 | `native_decide` | **0** ✅ |
@@ -53,13 +53,13 @@ theorem sawhney_main : SawhneyMain := by
 | 6.5 | 1027-1081 | Small modular facts (computation) |
 | 7 | 1082-2264 | Finite verification (no native_decide) |
 | 8 | 2265-2286 | SawhneyMain statement (Prop) |
-| 9 | 2287-2408 | Glue theorems |
-| 9.5 | 2409-2954 | Quantitative bounds 🔥 (8M heartbeats × 2) |
-| 9.8 | 2955-3217 | Bridge lemmas |
-| 9.9 | 3218-3504 | More small modular facts |
-| 9.95 | 3505-3617 | Generic sieve cardinality bounds |
-| 10 | 3618-5392 | `sawhney_main` 🔥 (~1775 lines) |
-| 11 | 5393-5404 | Final statements |
+| 9 | 2287-2383 | Glue theorems |
+| 9.5 | 2384-2929 | Quantitative bounds 🔥 (8M heartbeats × 2) |
+| 9.8 | 2930-3192 | Bridge lemmas |
+| 9.9 | 3193-3479 | More small modular facts |
+| 9.95 | 3480-3592 | Generic sieve cardinality bounds |
+| 10 | 3593-5367 | `sawhney_main` 🔥 (~1775 lines) |
+| 11 | 5368-5379 | Final statements |
 
 ### Dependency Flow
 
@@ -237,21 +237,22 @@ to get `p ≤ N`.
 
 ### 6.7 Factor "p ≠ 2 Because Odd" Micro-Proof (LOW PRIORITY)
 
-**Issue:** Multiple times rule out `p = 2` by showing `4 ∣ (b*a+1)` contradicts oddness:
-- Lines ~4277–4290, ~4502–4517
-- Also ~4206, ~4705, ~5232
+✅ **Implemented** (2026-01-31)
 
-**Proposed:**
+**Fix:** Extracted a small helper lemma and replaced the long parity/`4 ∤ ...` blocks.
 
 ```lean
-have prime_ne_two_of_sq_dvd_odd
-    {p n : ℕ} (hp : p.Prime) (hn : n % 2 = 1) (hp2 : p^2 ∣ n) : p ≠ 2 := by
+lemma prime_ne_two_of_sq_dvd_odd {p n : ℕ} (hn : n % 2 = 1) (hp2 : p ^ 2 ∣ n) : p ≠ 2 := by
   intro h; subst h
-  have : 2 ∣ n := dvd_trans (by decide : 2 ∣ 4) (by simpa [pow_two] using hp2)
-  omega -- contradiction with hn
+  have : 2 ∣ n := dvd_trans (by decide : 2 ∣ 4) (by simpa using hp2)
+  omega
 ```
 
-**Impact:** ~20-30 lines saved, removes fragile omega parity sub-derivations.
+**Location:** `formal/lean/Erdos/Problem848_REFACTOR.lean:3493`
+
+**Call sites replaced:** 4 (lines 4241, 4297, 4506, 4690).
+
+**Impact:** ~20-30 lines saved, removes fragile parity sub-derivations.
 
 ### 6.8 Unify 7/18 Residue Duplicate Lemmas (MEDIUM PRIORITY)
 
@@ -268,9 +269,9 @@ have prime_ne_two_of_sq_dvd_odd
 
 ### 6.9 Unify A₇_card and A₁₈_card (LOW PRIORITY)
 
-**Issue:** `A₇_card` (~2306–2341) and `A₁₈_card` (~2342–2377) are structurally identical.
+✅ **Implemented** (2026-01-31)
 
-**Proposed:**
+**Fix:** Added a general counting lemma for `Finset.range` and rewrote both card lemmas as one-liners.
 
 ```lean
 lemma card_range_filter_mod25_eq (r : ℕ) (hr : r ≤ 24) (N : ℕ) :
@@ -280,7 +281,9 @@ lemma card_range_filter_mod25_eq (r : ℕ) (hr : r ≤ 24) (N : ℕ) :
 
 Then `A₇_card` and `A₁₈_card` become `by simpa [A₇]` / `by simpa [A₁₈]`.
 
-**Impact:** ~30 lines saved, better API.
+**Location:** `formal/lean/Erdos/Problem848_REFACTOR.lean:2291`
+
+**Impact:** ~30 lines saved, better API and less duplication.
 
 ### 6.10 Factor "p ∣ b → Filter Empty" Helper (LOW PRIORITY)
 
@@ -415,8 +418,8 @@ rcases Finset.mem_filter.1 hn with ⟨hn_range, hn_mod⟩
 | 6.3 | Named constants | LOW | readability |
 | 6.4 | Tactic hygiene (general) | LOW | stability |
 | 6.5 | Naming conventions | LOW | cleanliness |
-| 6.7 | `prime_ne_two_of_sq_dvd_odd` | LOW | 20-30 |
-| 6.9 | Unify `A₇_card`/`A₁₈_card` | LOW | 30 |
+| 6.7 | ✅ `prime_ne_two_of_sq_dvd_odd` | DONE | 20-30 |
+| 6.9 | ✅ Unify `A₇_card`/`A₁₈_card` | DONE | 30 |
 | 6.10 | `filter_empty_of_prime_dvd_left` | LOW | 20 |
 | 6.11 | Unify N=50/N=100 theorems | LOW | 20 |
 | 6.13 | `density_contradiction_*` helpers | LOW | readability |
@@ -428,7 +431,7 @@ rcases Finset.mem_filter.1 hn with ⟨hn_range, hn_mod⟩
 **If you only do three *more* refactors, do:**
 1. Extract `sieve_set_card_bound` (6.1) (biggest remaining duplication)
 2. Extract ℚ→ℝ cast-and-scale boilerplate (6.12) (likely merges into 6.1)
-3. Factor `prime_ne_two_of_sq_dvd_odd` (6.7) (small, safe line reduction)
+3. Factor `filter_empty_of_prime_dvd_left` (6.10) (small, safe line reduction)
 
 These are the most "reviewer-per-line-changed" improvements and should not stress heartbeat constraints.
 

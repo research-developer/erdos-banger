@@ -28,6 +28,7 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 | **Cayley graphs on (Z/2Z)^d** | f(n) = √n | ❌ **REFUTED** | `scripts/cayley_z2_sqrt_test.py` |
 | **Heuristic finite search** | f(n) = √n | 🔬 **INCONCLUSIVE** | `scripts/ebip_chromatic_extremal_search.py` |
 | **SAT/backtracking search (edge deletions)** | f(n) = √n | 🔬 **INCONCLUSIVE** | `scripts/ebip_sat_search.py` |
+| **Layered bipartite union (random layers)** | f(n) = √n | ❌ **REFUTED** | `Problem074_layered_bipartite.lean`, `scripts/layered_bipartite_test.py` |
 
 ### Key Findings
 
@@ -56,6 +57,14 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
     Early experiments suggest these bases are extremely **edge-critical**: deleting any edge that would decrease
     the whole-graph `ebip` immediately drops χ below 5, so even the necessary *whole-graph* √n constraint cannot
     be met within these families (see `scripts/ebip_sat_search.py`).
+14. **Layered bipartite union (random layers):** Implemented a prototype “union of bipartite layers along bit cuts”
+    with fast-decaying layer densities (`scripts/layered_bipartite_test.py`). Using the odd-cycle packing diagnostic
+    `Ve(G[S])` (edge-disjoint odd cycles), we find strict √n violations very early:
+    - For many schedules at `n=32` and `n=64`, a sampled induced subgraph `|S|=25` admits **6 edge-disjoint odd cycles**,
+      i.e. `Ve(G[S]) ≥ 6 > ⌊√25⌋=5`, hence `ebip(G[S]) > √|S|`.
+    - When densities are made tiny enough to avoid these violations in sampling (e.g. “shifted super-exp shift=2”),
+      the resulting graphs at `n=32` have small chromatic number (`χ(G) = 2` or `3`), suggesting the model becomes
+      too close to bipartite to plausibly force `χ → ∞`.
 
 **See also:**
 - `Problem074_HASSE_STRATEGY.md` - **ACTIVE: Suk-Tomon incidence posets + rank-parity defects**
