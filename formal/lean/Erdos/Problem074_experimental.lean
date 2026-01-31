@@ -20,7 +20,6 @@ import Mathlib.Combinatorics.SimpleGraph.Subgraph
 import Mathlib.Combinatorics.SimpleGraph.Coloring
 import Mathlib.Combinatorics.SimpleGraph.Bipartite
 import Mathlib.Data.Set.Finite.Basic
-import Mathlib.Algebra.Order.Floor.Semiring
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Order.Filter.AtTopBot.Basic
 import Mathlib.Data.Nat.Sqrt
@@ -337,16 +336,280 @@ Technical lemma: the linear `ε * n` bound on `maxSubgraphEdgeDistToBipartite` i
 sigma-type disjoint union construction.
 
 This is a straightforward combinatorial argument (split a finite subgraph across components and
-union the edge-deletion witnesses), but keeping it as an axiom avoids a large amount of set/card
-bookkeeping in this experimental file.
+union the edge-deletion witnesses).
 -/
-axiom SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear
-    {ι : Type*} {W : ι → Type u} (G : ∀ i, SimpleGraph (W i)) (ε : ℝ)
+theorem SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear
+    {ι : Type*} {W : ι → Type u} (G : ∀ i, SimpleGraph (W i)) (ε : ℝ) (hε : 0 ≤ ε)
     (h : ∀ i : ι, ∀ n : ℕ,
       (SimpleGraph.maxSubgraphEdgeDistToBipartite (G i) n : ℝ) ≤ ε * (n : ℝ)) :
     ∀ n : ℕ,
       (SimpleGraph.maxSubgraphEdgeDistToBipartite (SimpleGraph.sigma (G := G)) n : ℝ) ≤
-        ε * (n : ℝ)
+        ε * (n : ℝ) := by
+  classical
+  intro n
+  -- Let `S` be the set of achievable deletion distances for `n`-vertex subgraphs.
+  let S : Set ℕ := SimpleGraph.subgraphEdgeDistsToBipartite (SimpleGraph.sigma (G := G)) n
+  by_cases hS : S.Nonempty
+  ·
+    have hBdd : BddAbove S :=
+      SimpleGraph.subgraphEdgeDistsToBipartite_bddAbove (G := SimpleGraph.sigma (G := G)) (n := n)
+
+    -- In `ℕ`, a bounded nonempty set has its `sSup` as an element of the set.
+    have hmem :
+        SimpleGraph.maxSubgraphEdgeDistToBipartite (SimpleGraph.sigma (G := G)) n ∈ S := by
+      dsimp [SimpleGraph.maxSubgraphEdgeDistToBipartite, S]
+      exact Nat.sSup_mem hS hBdd
+
+    -- Extract a witness `A` achieving the maximum value.
+    rcases (by
+      simpa [S, SimpleGraph.subgraphEdgeDistsToBipartite] using hmem) with
+      ⟨A, hA_finite, hnA, hEq⟩
+
+    -- Core bound: the chosen `A` can be made bipartite by deleting at most `ε * n` edges.
+    have hA_bound :
+        ((SimpleGraph.minEdgeDistToBipartite A : ℕ) : ℝ) ≤ ε * (n : ℝ) := by
+      -- Split `A` across components.
+      let Iset : Set ι := Sigma.fst '' A.verts
+      have hIset_finite : Iset.Finite := hA_finite.image Sigma.fst
+      let I : Finset ι := hIset_finite.toFinset
+
+      let Ai : ∀ i : ι, (G i).Subgraph :=
+        fun i => Subgraph.comap (SimpleGraph.sigmaHom (G := G) i) A
+
+      have hAi_finite : ∀ i : ι, (Ai i).verts.Finite := by
+        intro i
+        -- `Ai i.verts = (Sigma.mk i) ⁻¹' A.verts` and `Sigma.mk i` is an embedding.
+        simpa [Ai] using
+          (Set.Finite.preimage_embedding (Function.Embedding.sigmaMk i) hA_finite)
+
+      -- Choose minimal deletion witnesses for each component.
+      choose Edel hEdel_sub hEdel_bip hEdel_card using
+        fun i : ι => SimpleGraph.exists_deleteEdges_bipartite_minEdgeDist (A := Ai i)
+
+      -- Combine deletions across the finitely many relevant components.
+      let E : Set (Sym2 (Sigma W)) := ⋃ i ∈ I, Sym2.map (Sigma.mk i) '' Edel i
+
+      have hE_subset : E ⊆ A.edgeSet := by
+        intro e he
+        rcases (by simpa [E] using he) with ⟨i, _hiI, e0, he0, rfl⟩
+        have he0' : e0 ∈ (Ai i).edgeSet := hEdel_sub i he0
+        induction e0 using Sym2.ind with
+        | h u v =>
+          have hAdj : A.Adj (Sigma.mk i u) (Sigma.mk i v) := by
+            have : (Ai i).Adj u v := (Subgraph.mem_edgeSet).1 he0'
+            simpa [Ai] using this.2
+          exact (Subgraph.mem_edgeSet).2 hAdj
+
+      have hA_delete_bip : IsBipartite (A.deleteEdges E).coe := by
+        refine ⟨Coloring.mk (fun x : (A.deleteEdges E).verts => ?_) ?_⟩
+        · -- Color each vertex using the bipartite coloring of its component.
+          let i : ι := x.1.1
+          let u : W i := x.1.2
+          have hx : Sigma.mk i u = x.1 := by rfl
+          have hu : u ∈ (Ai i).verts := by
+            -- `u ∈ (Ai i).verts` means `Sigma.mk i u ∈ A.verts`.
+            -- This follows from `x.2 : x.1 ∈ A.verts` since `Sigma.mk i u = x.1`.
+            have : Sigma.mk i u ∈ A.verts := by simpa [hx] using x.2
+            simpa [Ai] using this
+          exact (hEdel_bip i).some ⟨u, hu⟩
+        · intro x y hxy
+          have hxy' : A.Adj x y ∧ s(x.1, y.1) ∉ E := by
+            simpa using (Subgraph.deleteEdges_adj (G' := A) (s := E) x y).1 hxy
+          have hAxy : A.Adj x y := hxy'.1
+          have hnotE : s(x.1, y.1) ∉ E := hxy'.2
+
+          -- Adjacent vertices lie in the same component.
+          let i : ι := x.1.1
+          let j : ι := y.1.1
+          have hij : i = j := by
+            by_contra hne
+            have : ¬(SimpleGraph.sigma (G := G)).Adj (Sigma.mk i x.1.2) (Sigma.mk j y.1.2) :=
+              SimpleGraph.sigma_adj_mk_mk_of_ne (G := G) hne x.1.2 y.1.2
+            exact this (A.adj_sub hAxy)
+          -- Rewrite to a single component `i`.
+          cases hij
+          let u : W i := x.1.2
+          let v : W i := y.1.2
+
+          have hu : u ∈ (Ai i).verts := by
+            have hx : Sigma.mk i u = x.1 := by rfl
+            have : Sigma.mk i u ∈ A.verts := by simpa [hx] using x.2
+            simpa [Ai] using this
+          have hv : v ∈ (Ai i).verts := by
+            have hy : Sigma.mk i v = y.1 := by rfl
+            have : Sigma.mk i v ∈ A.verts := by simpa [hy] using y.2
+            simpa [Ai] using this
+
+          have hGiAdj : (G i).Adj u v := by
+            have hSigma : (SimpleGraph.sigma (G := G)).Adj (Sigma.mk i u) (Sigma.mk i v) :=
+              A.adj_sub hAxy
+            exact (SimpleGraph.sigma_adj_mk_mk (G := G) i u v).1 hSigma
+
+          have hAiAdj : (Ai i).Adj u v := by
+            simpa [Ai, hGiAdj] using And.intro hGiAdj hAxy
+
+          have hnotEdel : s(u, v) ∉ Edel i := by
+            intro hmem
+            apply hnotE
+            have hiIset : i ∈ Iset := ⟨x.1, x.2, rfl⟩
+            have hiI : i ∈ I := by simpa [I, Iset] using hiIset
+            have : Sym2.map (Sigma.mk i) (s(u, v)) ∈ E := by
+              simp [E, hiI, hmem]
+            simpa [Sym2.map_pair_eq] using this
+
+          have hCompAdj : ((Ai i).deleteEdges (Edel i)).Adj u v := by
+            have : (Ai i).Adj u v ∧ s(u, v) ∉ Edel i := ⟨hAiAdj, hnotEdel⟩
+            simpa using (Subgraph.deleteEdges_adj (G' := Ai i) (s := Edel i) u v).2 this
+
+          -- Apply the component coloring validity.
+          have hu' : u ∈ ((Ai i).deleteEdges (Edel i)).verts := by simpa using hu
+          have hv' : v ∈ ((Ai i).deleteEdges (Edel i)).verts := by simpa using hv
+          have hCompAdj' :
+              ((Ai i).deleteEdges (Edel i)).coe.Adj ⟨u, hu'⟩ ⟨v, hv'⟩ :=
+            Subgraph.Adj.coe hCompAdj
+          have hcol :=
+            (hEdel_bip i).some.valid hCompAdj'
+          simpa using hcol
+
+      -- `E` is a deletion witness, so `minEdgeDistToBipartite A ≤ |E|`.
+      have hMin_le_E : SimpleGraph.minEdgeDistToBipartite A ≤ E.ncard := by
+        classical
+        dsimp [SimpleGraph.minEdgeDistToBipartite]
+        refine Nat.sInf_le ?_
+        exact ⟨E, hE_subset, hA_delete_bip, rfl⟩
+
+      -- Bound `|E|` by the sum of component deletion sizes.
+      have hE_ncard_le_sum :
+          E.ncard ≤ ∑ i ∈ I, (Edel i).ncard := by
+        have hE' :
+            (⋃ i ∈ I, Sym2.map (Sigma.mk i) '' Edel i).ncard ≤
+              ∑ i ∈ I, (Sym2.map (Sigma.mk i) '' Edel i).ncard :=
+          Finset.set_ncard_biUnion_le I (fun i => Sym2.map (Sigma.mk i) '' Edel i)
+        have hinj : ∀ i : ι, Function.Injective (Sym2.map (Sigma.mk i)) := fun i =>
+          Sym2.map.injective (fun _ _ hab => eq_of_heq (Sigma.mk.inj hab).2)
+        simpa [E, Set.ncard_image_of_injective, hinj] using hE'
+
+      -- Each component deletion size is bounded linearly in its component vertex count.
+      have hEdel_le :
+          ∀ i ∈ I, ((Edel i).ncard : ℝ) ≤ ε * ((Ai i).verts.ncard : ℝ) := by
+        intro i _hiI
+        have hMin_le_max :
+            SimpleGraph.minEdgeDistToBipartite (Ai i) ≤
+              SimpleGraph.maxSubgraphEdgeDistToBipartite (G i) (Ai i).verts.ncard := by
+          have hmem' :
+              SimpleGraph.minEdgeDistToBipartite (Ai i) ∈
+                SimpleGraph.subgraphEdgeDistsToBipartite (G i) (Ai i).verts.ncard := by
+            exact ⟨Ai i, rfl, hAi_finite i, rfl⟩
+          have hbdd' :
+              BddAbove (SimpleGraph.subgraphEdgeDistsToBipartite (G i) (Ai i).verts.ncard) :=
+            SimpleGraph.subgraphEdgeDistsToBipartite_bddAbove (G := G i) (n := (Ai i).verts.ncard)
+          simpa [SimpleGraph.maxSubgraphEdgeDistToBipartite] using le_csSup hbdd' hmem'
+
+        have hcast :
+            ((SimpleGraph.minEdgeDistToBipartite (Ai i) : ℕ) : ℝ) ≤
+              (SimpleGraph.maxSubgraphEdgeDistToBipartite (G i) (Ai i).verts.ncard : ℝ) := by
+          exact_mod_cast hMin_le_max
+
+        have hlin_i :
+            (SimpleGraph.maxSubgraphEdgeDistToBipartite (G i) (Ai i).verts.ncard : ℝ) ≤
+              ε * ((Ai i).verts.ncard : ℝ) := by
+          simpa using h i (Ai i).verts.ncard
+
+        simpa [hEdel_card i] using hcast.trans hlin_i
+
+      -- Relate the sum of component vertex counts to `n`.
+      have hVerts_sum :
+          (∑ i ∈ I, (Ai i).verts.ncard) = n := by
+        let Vset : ι → Set (Sigma W) := fun i => Sigma.mk i '' (Ai i).verts
+        have hVset_finite : ∀ i ∈ Iset, (Vset i).Finite := by
+          intro i _hi
+          exact (hAi_finite i).image (Sigma.mk i)
+        have hVset_disjoint : Iset.PairwiseDisjoint Vset := by
+          intro i _hi j _hj hij
+          refine Set.disjoint_left.2 ?_
+          intro x hx_i hx_j
+          rcases hx_i with ⟨u, _hu, rfl⟩
+          rcases hx_j with ⟨v, _hv, hEq⟩
+          exact hij ((Sigma.mk.inj hEq).1.symm)
+        have hVset_union : (⋃ i ∈ Iset, Vset i) = A.verts := by
+          ext x
+          constructor
+          · intro hx
+            rcases (by simpa [Vset] using hx) with ⟨i, _hi, u, hu, rfl⟩
+            simpa [Ai] using hu
+          · intro hx
+            have hxI : x.1 ∈ Iset := ⟨x, hx, rfl⟩
+            have hxA : x.2 ∈ (Ai x.1).verts := by simpa [Ai] using hx
+            -- Build the union membership witness `i = x.fst`.
+            have hx' :
+                ∃ i, i ∈ Iset ∧ ∃ u, u ∈ (Ai i).verts ∧ Sigma.mk i u = x :=
+              ⟨x.1, hxI, x.2, hxA, rfl⟩
+            simpa [Vset] using hx'
+
+        have hCard' :
+            (⋃ i ∈ Iset, Vset i).ncard = ∑ᶠ i ∈ Iset, (Vset i).ncard :=
+          Set.Finite.ncard_biUnion hIset_finite hVset_finite hVset_disjoint
+        have hVset_ncard : ∀ i : ι, (Vset i).ncard = (Ai i).verts.ncard := by
+          intro i
+          simpa [Vset] using
+            (Set.ncard_image_of_injective (Ai i).verts (fun _ _ hab => eq_of_heq (Sigma.mk.inj hab).2)).symm
+        have hFinsum :
+            (∑ᶠ i ∈ Iset, (Vset i).ncard) = ∑ i ∈ I, (Vset i).ncard :=
+          finsum_mem_eq_finite_toFinset_sum (fun i => (Vset i).ncard) hIset_finite
+
+        have hCard :
+            A.verts.ncard = ∑ i ∈ I, (Ai i).verts.ncard := by
+          calc
+            A.verts.ncard = (⋃ i ∈ Iset, Vset i).ncard := by simpa [hVset_union]
+            _ = ∑ i ∈ I, (Vset i).ncard := by simpa [hFinsum] using hCard'
+            _ = ∑ i ∈ I, (Ai i).verts.ncard := by
+              refine Finset.sum_congr rfl ?_
+              intro i hi
+              simpa [hVset_ncard i]
+
+        simpa [hnA] using hCard.symm
+
+      -- Sum bounds to get `|E| ≤ ε * n` in `ℝ`.
+      have hSum_le :
+          ((∑ i ∈ I, (Edel i).ncard : ℕ) : ℝ) ≤ ε * (n : ℝ) := by
+        have hSum_le' :
+            (∑ i ∈ I, ((Edel i).ncard : ℝ)) ≤
+              ∑ i ∈ I, ε * ((Ai i).verts.ncard : ℝ) := by
+          refine Finset.sum_le_sum ?_
+          intro i hi
+          simpa using hEdel_le i hi
+        have hsumVerts :
+            (∑ i ∈ I, ((Ai i).verts.ncard : ℝ)) = (n : ℝ) := by
+          exact_mod_cast hVerts_sum
+        calc
+          ((∑ i ∈ I, (Edel i).ncard : ℕ) : ℝ) = ∑ i ∈ I, ((Edel i).ncard : ℝ) := by simp
+          _ ≤ ∑ i ∈ I, ε * ((Ai i).verts.ncard : ℝ) := hSum_le'
+          _ = ε * (∑ i ∈ I, ((Ai i).verts.ncard : ℝ)) := by
+            simpa using (Finset.mul_sum (s := I) (f := fun i => ((Ai i).verts.ncard : ℝ)) ε).symm
+          _ = ε * (n : ℝ) := by simpa [hsumVerts]
+
+      have hE_real :
+          (E.ncard : ℝ) ≤ ε * (n : ℝ) := by
+        have hE_nat : E.ncard ≤ ∑ i ∈ I, (Edel i).ncard := hE_ncard_le_sum
+        have : (E.ncard : ℝ) ≤ ((∑ i ∈ I, (Edel i).ncard : ℕ) : ℝ) := by
+          exact_mod_cast hE_nat
+        exact this.trans hSum_le
+
+      -- `minEdgeDistToBipartite A` is at most `|E|`.
+      have hMin_real :
+          (SimpleGraph.minEdgeDistToBipartite A : ℝ) ≤ (E.ncard : ℝ) := by
+        exact_mod_cast hMin_le_E
+
+      exact hMin_real.trans hE_real
+
+    -- Rewrite the maximum via `hEq` and conclude.
+    simpa [hEq] using hA_bound
+  · -- If there are no `n`-vertex subgraphs, the `sSup` is `0`.
+    have hEmpty : S = ∅ := (Set.not_nonempty_iff_eq_empty).1 hS
+    have : SimpleGraph.maxSubgraphEdgeDistToBipartite (SimpleGraph.sigma (G := G)) n = 0 := by
+      simp [SimpleGraph.maxSubgraphEdgeDistToBipartite, S, hEmpty]
+    -- `0 ≤ ε * n` since `ε ≥ 0`.
+    simpa [this] using mul_nonneg hε (Nat.cast_nonneg n)
 
 /-- The linear case of Erdős Problem 74 holds, assuming Rödl/Lovász's finite construction. -/
 theorem erdos_74_linear_holds : erdos_74_linear.{u} := by
@@ -375,7 +638,7 @@ theorem erdos_74_linear_holds : erdos_74_linear.{u} := by
   have hlin : ∀ n : ℕ, (SimpleGraph.maxSubgraphEdgeDistToBipartite Ginf n : ℝ) ≤ ε * (n : ℝ) := by
     intro n
     simpa [Ginf] using
-      SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear (G := Gk) (ε := ε) hbk n
+      SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear (G := Gk) (ε := ε) (hε := le_of_lt hε) hbk n
 
   refine ⟨(Sigma Wk : Type u), Ginf, hchi_inf, fun n => ?_⟩
   exact (hlin n)
