@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-29
 **Last Updated:** 2026-01-30
-**Status:** ✅ PHASE 5 IN PROGRESS — 20M→10M reduction complete, 2× 10M remaining
+**Status:** ✅ PHASE 6 IDENTIFIED — External review found additional refactoring opportunities
 **Scope:** This document is the SSOT for the **Problem 848 Lean formalization**.
 
 ---
@@ -131,6 +131,74 @@ For Mathlib submission, these would improve the file further:
 | **Case lemmas** | All 4 case lemmas extracted | ✅ DONE | DONE |
 | **High heartbeats in 9.5** | 2× 10M (lines 2642, 2651) | Lower where possible | MEDIUM |
 | ~~**Computation isolation**~~ | ~~Mixed with proof~~ | ~~Separate files~~ | ~~WONTFIX~~ — keep single file for external consumers |
+
+---
+
+## Phase 6: External Reviewer Feedback (2026-01-30)
+
+An external Mathlib-style review identified additional refactoring opportunities:
+
+### 6.1 Top-Level Sieve Bound Lemma (HIGH PRIORITY)
+
+**Issue:** Lines ~4500-5300 repeat the sieve density bound logic 4+ times (for Astar, A7, A18).
+
+**Current:** We extracted `have` helpers inside `sawhney_main`, but the algebraic manipulation converting `∑ (N/(k*p²)+1)` to real bounds is still duplicated.
+
+**Proposed:** Extract a top-level lemma:
+
+```lean
+lemma sieve_set_card_bound {N k : ℕ} {P : Finset ℕ} {S : Finset ℕ}
+    (h_subset : S ⊆ P.biUnion (fun p => (Finset.range N).filter (fun n => k * p^2 ∣ n))) :
+    (S.card : ℝ) ≤ (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ)^2)) + (P.card : ℝ) := by
+  sorry -- Move algebraic rearrangement here
+```
+
+**Impact:** Could save ~300-500 lines.
+
+### 6.2 Finite Verification Streamlining (MEDIUM PRIORITY)
+
+**Issue:** `no_five_in_candidates_100` (Section 7, ~lines 1800-2400) uses massive case splits with repeated `Squarefree` checks.
+
+**Proposed:** Define a local clash helper:
+
+```lean
+have clash : ∀ x y, x ∈ s → y ∈ s → Squarefree (x * y + 1) → False := by
+  intro x y hx hy hsq
+  exact hsprop x hx y hy hsq
+```
+
+Then case splits collapse to single-line `exact clash 38 7 h38 hb squarefree_267`.
+
+### 6.3 Named Constants (LOW PRIORITY)
+
+**Issue:** Explicit bounds like `163/25000`, `1/1750`, `413/25000` are inline.
+
+**Proposed:** Define at top of proof:
+
+```lean
+let C_off : ℝ := 163 / 25000
+let C_diag : ℝ := 1 / 1750
+let C_no5 : ℝ := 413 / 25000
+```
+
+Makes final density contradiction readable: `N * (C_diag + C_off + C_no5) + ...`
+
+### 6.4 Tactic Hygiene (LOW PRIORITY)
+
+| Issue | Location | Suggestion |
+|-------|----------|------------|
+| `simp_all +decide` overuse | Sections 2-3 | Use `simp only [ZMod.natCast_...]` + `ring` |
+| `interval_cases n` (100 goals) | `diag_cand_100` | Consider `fin_cases` on `Fin 100` |
+| `grind` usage | `density_single_prime` | Prefer `simp only [mem_filter, mem_range]` |
+
+### 6.5 Naming Conventions (LOW PRIORITY)
+
+| Current | Mathlib Style |
+|---------|---------------|
+| `hA7A_sub_A` | `A7_subset_A` |
+| `hA78_bound` | `card_A7_A18_bound` |
+| `primesUpTo` | `primesLe` |
+| `DiagonalCandidates` | `DiagonalSieve` |
 
 ### Phase 4 Complete: `sawhney_main` Case Lemmas ✅
 
@@ -304,5 +372,12 @@ All helper `have` statements are defined early in `sawhney_main` (starts line 35
 **Remaining work is optional polish for Mathlib submission:**
 1. ~~Reduce 20M heartbeat caps~~ ✅ DONE (now 10M)
 2. Reduce 2× 10M heartbeat caps (lines 2642, 2651) — may be irreducible for computation-heavy lemmas
+
+**Phase 6 (External Review Feedback):**
+1. **HIGH:** Extract top-level `sieve_set_card_bound` lemma (~300-500 lines savings)
+2. **MEDIUM:** Streamline `no_five_in_candidates_100` case splits with `clash` helper
+3. **LOW:** Named constants (`C_off`, `C_diag`, `C_no5`) for readability
+4. **LOW:** Tactic hygiene (`simp_all` → `simp only`, `interval_cases` → `fin_cases`)
+5. **LOW:** Naming conventions (Mathlib style)
 
 **Architectural decision:** Keep as single file for external consumers. Only decompose if community requests it.
