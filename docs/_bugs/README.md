@@ -24,6 +24,7 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 | BUG-047 | PDF converter thread-unsafe env mutation | P1 | Open | `erdos convert` |
 | BUG-054 | arXiv single-file gzip extraction fails (not a tarball) | P2 | Open | `erdos ingest` |
 | BUG-055 | Ingest skips URL-only references (no PDF download) | P2 | Open | `erdos ingest` |
+| BUG-056 | Exa uses basic neural search instead of deep research | P2 | Open | `erdos research exa` |
 
 **Note:** BUG-039 core workflow (`erdos refs add` + `erdos ingest`) works. Remaining phases (auto-discovery) are feature requests tracked in DEBT-110.
 
@@ -118,7 +119,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 
 *Naming: GH-XXX = also tracked on GitHub Issues. BUG-XXX = local docs only. Both systems maintained in parallel.*
 
-**Next Bug ID:** BUG-056 (or GH-XXX if filing on GitHub)
+**Next Bug ID:** BUG-057 (or GH-XXX if filing on GitHub)
 
 ### Active Bug Decks
 
@@ -126,6 +127,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 - `docs/_bugs/bug-047-pdf-converter-thread-unsafe-env.md` (BUG-047) - Open
 - `docs/_bugs/bug-054-arxiv-single-tex-gzip-extraction-failure.md` (BUG-054) - Open
 - `docs/_bugs/bug-055-ingest-url-only-refs-skipped.md` (BUG-055) - Open
+- `docs/_bugs/bug-056-exa-uses-neural-not-deep-search.md` (BUG-056) - Open
 
 ### Archived Bug Decks
 
