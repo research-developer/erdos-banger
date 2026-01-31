@@ -1,28 +1,23 @@
 /-
 Problem 074 - Mycielski Graphs Approach
 
-Status: CANDIDATE (Low Priority - likely to fail)
-Hypothesis: Mycielski graphs might satisfy √n edge-deletion bound
+Status: REFUTED (2026-01-31)
+Prize: $500
 
-WHY WE'RE TESTING THIS:
-- Triangle-free with χ(Mₖ) = k
-- Recursive construction similar to Burling
-- Classic, well-studied construction
+This file explored Mycielski graphs as a candidate family for the √n
+edge-deletion-to-bipartite bound in Erdős Problem #74.
 
-WHY IT PROBABLY WON'T WORK:
-- Edge density O(n^1.585) - likely too dense
-- No geometric structure like Burling (boxes) or Twincut (cutsets)
-- Listed as "likely too dense" in literature
+RESULT: FAILS.
 
-COMPUTATIONAL TEST NEEDED FIRST:
-Before formalizing, verify computationally whether Mycielski graphs
-satisfy the √n bound. See `Problem074_MYCIELSKI_RESOURCES.md`.
+A concrete counterexample already occurs at M₄ (the Grötzsch graph).
+Exact MaxCut computation (see `scripts/mycielski_sqrt_test.py`):
+  - n = 11, m = 20, MaxCut = 16, ebip = 4, Nat.sqrt 11 = 3, so 4 > 3.
 
-Reference: Problem074_MYCIELSKI_RESOURCES.md
+Reference: `Problem074_MYCIELSKI_RESOURCES.md`
 -/
 
-import Mathlib.Combinatorics.SimpleGraph.Basic
-import Mathlib.Combinatorics.SimpleGraph.Coloring
+import Erdos.Problem074
+import Mathlib.Data.Nat.Sqrt
 
 namespace Erdos.Problem074.Mycielski
 
@@ -76,15 +71,10 @@ theorem mycielski_chromatic (k : ℕ) (hk : k ≥ 1) :
   sorry
 
 /-!
-## The Prize Question (NEEDS COMPUTATIONAL VERIFICATION)
-
-This is UNLIKELY to work due to edge density, but worth testing.
+## The Prize Question (REFUTED)
 -/
 
-/-- HYPOTHESIS (probably FALSE): Mycielski graphs satisfy √n bound.
-
-    Computational evidence needed before attempting proof.
-    Expected to FAIL because edge density O(n^1.585) is too high. -/
+/-- FALSE: Mycielski graphs do not satisfy the √n bound (counterexample at M₄). -/
 theorem mycielski_sqrt_bound_HYPOTHESIS (k : ℕ) :
     ∀ n, SimpleGraph.maxSubgraphEdgeDistToBipartite (MycielskiGraph k) n ≤ Nat.sqrt n := by
   sorry  -- DO NOT ATTEMPT without computational evidence

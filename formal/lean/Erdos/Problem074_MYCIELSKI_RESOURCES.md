@@ -1,10 +1,19 @@
 # Problem 074 - Mycielski Graphs Approach
 
-## Status: 🧪 CANDIDATE (Low Priority)
+## ⚠️ STATUS: REFUTED ⚠️
 
-**Hypothesis:** Mycielski graphs might satisfy sublinear edge-deletion bounds due to their recursive structure.
+**The Mycielski approach DOES NOT WORK for the √n bound.**
 
-**Expected Outcome:** LIKELY TO FAIL - probably linear (too dense)
+A concrete counterexample already occurs at **M₄** (the Grötzsch graph):
+- **n = 11 vertices, m = 20 edges**
+- **MaxCut = 16**
+- **ebip = 20 - 16 = 4 edge deletions needed**
+- **Nat.sqrt 11 = 3**
+- **4 > 3 → VIOLATES √n bound**
+
+Even worse: **M₅** has `n=23, m=71, MaxCut=55, ebip=16, Nat.sqrt 23=4`.
+
+**Reproducible proof:** `scripts/mycielski_sqrt_test.py`
 
 ---
 
@@ -52,33 +61,18 @@ The Mycielski construction produces triangle-free graphs with arbitrarily large 
 
 ## Computational Test
 
-Before formalizing, compute:
+Run:
 
-```python
-for k in [3, 4, 5, 6]:
-    M = mycielski_graph(k)
-    n = M.number_of_vertices()
-    for size in range(3, min(n+1, 50)):
-        max_ebip = 0
-        for A in induced_subgraphs(M, size):
-            ebip = edges(A) - max_cut(A)
-            max_ebip = max(max_ebip, ebip)
-        print(f"M_{k}, n={size}: ebip={max_ebip}, √n={sqrt(size):.2f}, ratio={max_ebip/sqrt(size):.2f}")
+```bash
+python3 scripts/mycielski_sqrt_test.py
 ```
-
-**If ratio → constant as n grows**: Linear in √n - promising!
-**If ratio → ∞**: Fails √n bound - move on.
 
 ---
 
-## Priority: LOW
+## Takeaway
 
-Given that:
-- Mycielski is "obviously dense"
-- Literature suggests linear edge-deletion
-- Other approaches remain unexplored
-
-**Recommendation:** Test computationally first before any formalization effort.
+Mycielski graphs are triangle-free with unbounded chromatic number, but they are not
+“close enough” to bipartite in the absolute-error sense needed for `f(n)=√n`.
 
 ---
 
