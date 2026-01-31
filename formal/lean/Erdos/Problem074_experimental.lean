@@ -419,16 +419,15 @@ theorem SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear
           have hnotE : s(x.1, y.1) ∉ E := hxy'.2
 
           -- Adjacent vertices lie in the same component.
-          let i : ι := x.1.1
-          let j : ι := y.1.1
-          have hij : i = j := by
+          have hij : x.1.1 = y.1.1 := by
             by_contra hne
-            have : ¬(SimpleGraph.sigma (G := G)).Adj (Sigma.mk i x.1.2) (Sigma.mk j y.1.2) :=
+            have :
+                ¬(SimpleGraph.sigma (G := G)).Adj (Sigma.mk x.1.1 x.1.2) (Sigma.mk y.1.1 y.1.2) :=
               SimpleGraph.sigma_adj_mk_mk_of_ne (G := G) hne x.1.2 y.1.2
-            exact this (A.adj_sub hAxy)
-          -- Rewrite to a single component `i`.
-          have hij' : j = i := hij.symm
-          subst j
+            exact this (by simpa using A.adj_sub hAxy)
+          -- Rewrite to a single component.
+          cases hij.symm
+          let i : ι := x.1.1
           let u : W i := x.1.2
           let v : W i := y.1.2
 
