@@ -3577,7 +3577,7 @@ If `S ⊆ ⋃_{p ∈ P} {n < N | pred p n}` and each class has size at most
 `N/(k*p²)+1`, then `|S| ≤ N * ∑_{p∈P} 1/(k*p²) + |P|` after casting to `ℝ`.
 -/
 lemma sieve_set_card_bound
-    (N k : ℕ) (P S : Finset ℕ) (pred : ℕ → ℕ → Prop)
+    (N k : ℕ) (P S : Finset ℕ) (pred : ℕ → ℕ → Prop) [∀ p, DecidablePred (pred p)]
     (hsubset :
       S ⊆ P.biUnion (fun p => (Finset.range N).filter (fun n => pred p n)))
     (hper : ∀ p ∈ P, ((Finset.range N).filter (fun n => pred p n)).card ≤ N / (k * p ^ 2) + 1) :
@@ -3606,7 +3606,7 @@ Variant of `sieve_set_card_bound` where the additive error is expressed as `π(N
 This is convenient when one later uses an analytic bound `π(N) ≤ δN`.
 -/
 lemma sieve_set_card_bound_primeCounting
-    (N k : ℕ) (P S : Finset ℕ) (pred : ℕ → ℕ → Prop)
+    (N k : ℕ) (P S : Finset ℕ) (pred : ℕ → ℕ → Prop) [∀ p, DecidablePred (pred p)]
     (hsubset :
       S ⊆ P.biUnion (fun p => (Finset.range N).filter (fun n => pred p n)))
     (hper : ∀ p ∈ P, ((Finset.range N).filter (fun n => pred p n)).card ≤ N / (k * p ^ 2) + 1)
@@ -3618,7 +3618,11 @@ lemma sieve_set_card_bound_primeCounting
     have := Finset.card_le_card hP_sub
     have := (Nat.cast_le.2 this : (P.card : ℝ) ≤ (primesUpTo N).card)
     simpa [primesUpTo_card] using this
-  exact hbase.trans (add_le_add_left hPcard _)
+  have hadd :
+      (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) + (P.card : ℝ) ≤
+        (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) :=
+    add_le_add_left hPcard ((N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)))
+  exact hbase.trans hadd
 
 -- ============================================================================
 -- SECTION 10: THE MAIN STABILITY THEOREM (SAWHNEY)
