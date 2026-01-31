@@ -1,7 +1,7 @@
 /-
 Problem 074 - Layered Bipartite Construction
 
-Status: EXPERIMENTAL (2026-01-31)
+Status: REFUTED for the naive random-layer model (2026-01-31)
 Prize: $500
 
 APPROACH: Build graph as union of bipartite layers with decaying densities.
@@ -23,6 +23,13 @@ Always ebip ≥ Ve, so Ve > √n kills faster than computing ebip.
 
 Reference: `Problem074_RESOURCES.md`
 Compile: cd formal/lean && lake build Erdos.Problem074_layered_bipartite
+
+Computational note:
+- `scripts/layered_bipartite_test.py` implements the “random edges per layer” version with bit-cuts.
+- For many density schedules, it exhibits an induced subgraph `|S|=25` with `Ve(G[S]) ≥ 6 > ⌊√25⌋=5`,
+  hence the strict √n bound fails already on small instances.
+- Extremely tiny densities avoid this in sampling, but then the finite graphs appear to have very small chromatic
+  number (often `χ ≤ 3` for `n=32`), so the naive model does not look compatible with `χ(G)=∞`.
 -/
 
 import Mathlib.Combinatorics.SimpleGraph.Basic
