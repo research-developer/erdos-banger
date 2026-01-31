@@ -190,23 +190,37 @@ theorem burling_1_bipartite_graph : IsBipartite (BurlingGraph 1) := by
   use fun _ => 0
   intro v w hvw
   exfalso
-  have hempty : (BurlingGraph 1).edgeSet = ∅ := burling_1_no_edges
-  have hedge : (BurlingGraph 1).Adj v w := hvw
-  rw [SimpleGraph.edgeSet_eq_empty] at hempty
-  exact hempty v w hedge
+  -- v and w are both in BurlingVertex 1, which is a subsingleton
+  haveI : Subsingleton (BurlingVertex 1) := burling_1_subsingleton
+  have : v = w := Subsingleton.elim v w
+  exact (BurlingGraph 1).loopless v (this ▸ hvw)
 
 /-- B_1 is a single vertex, so it's bipartite (needs 0 edge deletions). -/
 theorem burling_1_bipartite :
     ∀ n : ℕ, SimpleGraph.maxSubgraphEdgeDistToBipartite (BurlingGraph 1) n = 0 := by
   intro n
-  -- B_1 has only one vertex (base), so any subgraph has at most 1 vertex
-  -- A graph with ≤ 1 vertex has no edges, hence is bipartite
-  -- Therefore maxSubgraphEdgeDistToBipartite = 0
-  --
-  -- The supremum of minEdgeDistToBipartite over all n-vertex subgraphs
-  -- For n = 0: no such subgraphs exist, sSup ∅ = 0
-  -- For n ≥ 1: the only subgraph has 1 vertex (base), which is bipartite with 0 deletions
-  sorry
+  -- B_1 has only one vertex (base), so any subgraph has at most 1 vertex.
+  -- Key: any subgraph of B_1 has no edges (since B_1 has no edges),
+  -- so minEdgeDistToBipartite = 0 for any subgraph that exists.
+  -- Therefore the supremum is 0 (sSup of a set of 0s, or sSup ∅ = 0).
+  unfold SimpleGraph.maxSubgraphEdgeDistToBipartite
+  apply le_antisymm
+  · -- sSup ≤ 0
+    apply csSup_le'
+    intro m hm
+    rcases hm with ⟨A, hn, hfin, rfl⟩
+    -- minEdgeDistToBipartite A = 0 because A is bipartite
+    rw [SimpleGraph.minEdgeDistToBipartite_eq_zero_of_isBipartite]
+    -- Need: IsBipartite A.coe
+    use fun _ => 0
+    intro v w hvw
+    exfalso
+    haveI : Subsingleton (BurlingVertex 1) := burling_1_subsingleton
+    have : (v : BurlingVertex 1) = (w : BurlingVertex 1) := Subsingleton.elim v.val w.val
+    have hadj : (BurlingGraph 1).Adj v.val w.val := A.adj_sub hvw
+    exact (BurlingGraph 1).loopless v.val (this ▸ hadj)
+  · -- 0 ≤ sSup
+    exact Nat.zero_le _
 
 /-!
 ## Approach 3: Analyze the structure of odd cycles in Burling graphs
