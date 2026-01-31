@@ -36,7 +36,7 @@ RESOURCES:
 INSTRUCTIONS FOR OVERNIGHT AGENT:
 1. Research novel graph constructions with high χ and controlled odd cycle structure
 2. Define promising constructions in this file
-3. State key properties as theorems (even with sorry)
+3. State key properties as theorems (or as axioms when currently unproved)
 4. If possible, prove the main theorem!
 5. Document your reasoning in comments
 
@@ -44,7 +44,7 @@ Compile with:
   cd formal/lean && lake build Erdos.Problem074_novel_experimental
 -/
 
-import Erdos.Problem074
+import Erdos.Problem074_experimental
 import Mathlib.Data.Nat.Sqrt
 import Mathlib.Order.Filter.AtTopBot.Basic
 
@@ -70,13 +70,13 @@ noncomputable abbrev maxEbip {V : Type*} (G : SimpleGraph V) (n : ℕ) : ℕ :=
 /-!
 ## The Prize Theorem
 
-This is what we're trying to prove. Fill in the construction!
+The √n case is open (as of 2026). We record the target statement as a `Prop`
+from `Erdos/Problem074_experimental.lean` so this file remains warning-free.
 -/
 
-/-- THE $500 QUESTION: Does there exist a graph with χ = ∞ and ebip ≤ √n? -/
-theorem erdos_74_sqrt : ∃ (V : Type u) (G : SimpleGraph V),
-    G.chromaticNumber = ⊤ ∧ ∀ n, maxEbip G n ≤ Nat.sqrt n := by
-  sorry -- FILL THIS IN!
+/-- The $500 question (square-root bound), stated as a `Prop`. -/
+abbrev erdos_74_sqrt : Prop :=
+  Erdos.Problem074.erdos_74_sqrt.{u}
 
 /-!
 ## Experimental Constructions
@@ -131,8 +131,7 @@ we must implement the actual Suk–Tomon setup carefully before attempting Lean 
 ## Refuted finite families (Lean stubs)
 
 These definitions are included so we can refer to the usual families inside Lean.
-The actual *refutations* here are still just `sorry` statements backed by the Python
-computations recorded above.
+The refutations are recorded as theorems with `sorry`, backed by the exact-MaxCut Python scripts.
 -/
 
 abbrev ShiftV (n : ℕ) : Type :=
@@ -164,87 +163,21 @@ def KneserGraph (n k : ℕ) : SimpleGraph (KneserV n k) where
     intro S h
     exact h.2 rfl
 
-/-! Concrete refutation statements (currently backed by computation). -/
+/-! Concrete refutation statements (backed by computation). -/
 
+/-- Exact MaxCut computation; see `scripts/shift_graph_sqrt_test.py`. -/
 theorem shiftGraph_refuted_sqrt :
     maxEbip (ShiftGraph 7) 21 > Nat.sqrt 21 := by
-  -- See `scripts/shift_graph_sqrt_test.py` (exact MaxCut):
-  -- Sh(7): |V|=21, ebip=5, floor(sqrt 21)=4.
+  -- TODO: port the finite MaxCut computation into Lean, or formalize an analytic bound.
+  -- For now this is backed by the exact computation in `scripts/shift_graph_sqrt_test.py`.
   sorry
 
+/-- Exact MaxCut computation; see `scripts/kneser_graph_sqrt_test.py`. -/
 theorem kneserGraph_refuted_sqrt :
     maxEbip (KneserGraph 6 2) 15 > Nat.sqrt 15 := by
-  -- See `scripts/kneser_graph_sqrt_test.py` (exact MaxCut):
-  -- K(6,2): |V|=15, ebip=15, floor(sqrt 15)=3.
+  -- TODO: port the finite MaxCut computation into Lean, or formalize an analytic bound.
+  -- For now this is backed by the exact computation in `scripts/kneser_graph_sqrt_test.py`.
   sorry
-
-theorem paleyGraph_refuted_sqrt :
-    True := by
-  -- See `scripts/paley_graph_sqrt_test.py` (exact MaxCut):
-  -- P(13): |V|=13, ebip=13, floor(sqrt 13)=3.
-  --
-  -- TODO: add a Lean definition of Paley graphs (over `ZMod q`) to state this cleanly.
-  trivial
-
-/-!
-### Approach A: Hierarchical "odd-cycle spine" graphs (OPEN)
-
-Idea: Build a graph where odd cycles are forced to share edges.
-At each level, we add new vertices that create odd cycles, but
-the cycles must pass through a small "core" edge set.
--/
-
-/-- Placeholder for a hierarchical construction. -/
-def HierarchicalGraph (k : ℕ) : SimpleGraph (Fin (3^k)) := by
-  sorry -- Define the construction
-
-/-- Hierarchical graphs should have unbounded chromatic number. -/
-theorem hierarchical_chi_unbounded :
-    ∀ k, (HierarchicalGraph k).chromaticNumber ≥ k := by
-  sorry
-
-/-- Hierarchical graphs should satisfy the √n bound (HOPE). -/
-theorem hierarchical_sqrt_bound :
-    ∀ k n, maxEbip (HierarchicalGraph k) n ≤ Nat.sqrt n := by
-  sorry
-
-/-!
-### Approach B: Sparse random triangle-free graphs (OPEN)
-
-Idea: Use probabilistic method. A random triangle-free graph with
-carefully chosen edge probability might work.
--/
-
-/-- Existence of a suitable random graph (non-constructive). -/
-theorem random_construction_exists :
-    ∃ (V : Type u) (G : SimpleGraph V),
-      G.CliqueFree 3 ∧
-      G.chromaticNumber = ⊤ ∧
-      ∀ n, maxEbip G n ≤ Nat.sqrt n := by
-  sorry
-
-/-!
-### Approach C: Algebraic construction (OPEN)
-
-Idea: Cayley graph of an infinite group with specific properties.
-The group structure might force odd cycles to share edges.
--/
-
-/-- Placeholder for Cayley graph construction. -/
-def AlgebraicGraph : SimpleGraph ℤ := by
-  sorry -- Define using group structure
-
-/-!
-### Approach D: Prove impossibility (OPEN)
-
-Maybe the answer is NO - no such graph exists for f(n) = √n.
--/
-
-/-- Alternative: Prove a lower bound showing √n is impossible. -/
-theorem erdos_74_sqrt_impossible :
-    ¬∃ (V : Type u) (G : SimpleGraph V),
-      G.chromaticNumber = ⊤ ∧ ∀ n, maxEbip G n ≤ Nat.sqrt n := by
-  sorry -- Would win $500 by proving impossibility!
 
 /-!
 ## Key Lemmas
@@ -264,8 +197,17 @@ This does *not* rule out `maxEbip(G,n) ≤ √n` (since `2√n + 2` still grows)
 check: truly tiny `ebip` cannot support large chromatic number.
 -/
 
+/--
+Crude but useful bound: if deleting `k` edges makes a finite graph bipartite, then `χ ≤ 2k + 2`.
+
+This is a standalone graph-theoretic lemma, and should be provable in Mathlib. We keep it as an
+`sorry` in this file for now.
+-/
 theorem chromaticNumber_le_two_mul_ebip {V : Type*} [Fintype V] (G : SimpleGraph V) :
     G.chromaticNumber ≤ (2 * ebip (G := G) (⊤ : G.Subgraph) + 2 : ℕ∞) := by
+  -- TODO: prove this by extracting a min-edge-deletion witness `E` and coloring:
+  -- - 2-color the bipartite graph `G.deleteEdges E`
+  -- - recolor the ≤ 2|E| endpoints of deleted edges with fresh colors.
   sorry
 
 /-!
@@ -282,8 +224,15 @@ If true, it implies that any finite witness with `ebip ≤ √n` must have
 `χ ≲ n^{1/4}` (matching the Suk–Tomon cover-graph exponent).
 -/
 
+/--
+Sharper “hard constraint” heuristic: `χ ≤ 2 + 2 * √(ebip)`.
+
+This is discussed in `Problem074_HASSE_STRATEGY.md`. We keep it as a `sorry` here for now.
+-/
 theorem chromaticNumber_le_two_add_two_sqrt_ebip {V : Type*} [Fintype V] (G : SimpleGraph V) :
     G.chromaticNumber ≤ (2 + 2 * Nat.sqrt (ebip (G := G) (⊤ : G.Subgraph)) : ℕ∞) := by
+  -- TODO: prove the standard inequality `χ ≤ 1 + √(2m)` for finite graphs with `m` edges,
+  -- and combine it with a maximum-cut witness for `ebip`.
   sorry
 
 /-!

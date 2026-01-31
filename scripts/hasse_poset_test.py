@@ -20,6 +20,7 @@ probe whether ebip might scale like O(sqrt |S|) on this family.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from fractions import Fraction
 from math import sqrt
 from random import Random
 from typing import TYPE_CHECKING
@@ -35,6 +36,68 @@ from ebip_utils import (
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+
+
+Matrix3 = tuple[
+    tuple[Fraction, Fraction, Fraction],
+    tuple[Fraction, Fraction, Fraction],
+    tuple[Fraction, Fraction, Fraction],
+]
+
+
+def _det3(m: Matrix3) -> Fraction:
+    (a, b, c), (d, e, f), (g, h, i) = m
+    return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)
+
+
+def _inv3(m: Matrix3) -> Matrix3:
+    (a, b, c), (d, e, f), (g, h, i) = m
+    det = _det3(m)
+    if det == 0:
+        raise ValueError("singular matrix")
+
+    c11 = e * i - f * h
+    c12 = -(d * i - f * g)
+    c13 = d * h - e * g
+
+    c21 = -(b * i - c * h)
+    c22 = a * i - c * g
+    c23 = -(a * h - b * g)
+
+    c31 = b * f - c * e
+    c32 = -(a * f - c * d)
+    c33 = a * e - b * d
+
+    inv_det = Fraction(1, 1) / det
+    return (
+        (c11 * inv_det, c21 * inv_det, c31 * inv_det),
+        (c12 * inv_det, c22 * inv_det, c32 * inv_det),
+        (c13 * inv_det, c23 * inv_det, c33 * inv_det),
+    )
+
+
+def _mat_mul_vec(
+    m: Matrix3, v: tuple[Fraction, Fraction, Fraction]
+) -> tuple[Fraction, Fraction, Fraction]:
+    (a, b, c), (d, e, f), (g, h, i) = m
+    x, y, z = v
+    return (
+        a * x + b * y + c * z,
+        d * x + e * y + f * z,
+        g * x + h * y + i * z,
+    )
+
+
+def _row_mul_mat(
+    row: tuple[Fraction, Fraction, Fraction], m: Matrix3
+) -> tuple[Fraction, Fraction, Fraction]:
+    (a, b, c), (d, e, f), (g, h, i) = m
+    r0, r1, r2 = row
+    return (
+        r0 * a + r1 * d + r2 * g,
+        r0 * b + r1 * e + r2 * h,
+        r0 * c + r1 * f + r2 * i,
+    )
 
 
 @dataclass(frozen=True)
@@ -90,6 +153,76 @@ def standard_point_line_configuration(t: int) -> tuple[list[Point], list[Line]]:
     return points, lines
 
 
+def find_projection_with_distinct_x_and_slopes(
+    points: list[Point],
+    lines: list[Line],
+    rng: Random,
+    *,
+    max_attempts: int = 2000,
+    entry_bound: int = 5,
+) -> tuple[Matrix3, list[Fraction], list[Fraction]]:
+    """
+    Find a projective transformation of the plane that makes:
+      - all point x-coordinates distinct, and
+      - all line slopes distinct,
+    while preserving the incidence structure.
+
+    We follow the paper's statement that this can be done "by applying a projection".
+    Computationally, we just sample random invertible 3x3 matrices and reject those
+    that cause degeneracies (points at infinity / vertical lines / collisions).
+    """
+
+    pts = [
+        (Fraction(p.x), Fraction(p.y), Fraction(1, 1))  # homogeneous coordinate
+        for p in points
+    ]
+    # Line y = a x + b corresponds to: a x - y + b = 0, i.e. (A,B,C) = (a, -1, b).
+    lns = [
+        (Fraction(ln.slope), Fraction(-1, 1), Fraction(ln.intercept)) for ln in lines
+    ]
+
+    for _ in range(max_attempts):
+        m_int = tuple(
+            tuple(rng.randint(-entry_bound, entry_bound) for _ in range(3))
+            for _ in range(3)
+        )
+        m = tuple(
+            tuple(Fraction(x, 1) for x in row)  # type: ignore[misc]
+            for row in m_int
+        )
+        if _det3(m) == 0:
+            continue
+        inv = _inv3(m)
+
+        # Transform points.
+        x_coords: list[Fraction] = []
+        ok = True
+        for pvec in pts:
+            x, _y, z = _mat_mul_vec(m, pvec)
+            if z == 0:
+                ok = False
+                break
+            x_coords.append(x / z)
+        if not ok or len(set(x_coords)) != len(points):
+            continue
+
+        # Transform lines.
+        slopes: list[Fraction] = []
+        for lvec in lns:
+            a, b, _c = _row_mul_mat(lvec, inv)
+            if b == 0:
+                ok = False
+                break
+            slopes.append(-a / b)
+        if not ok or len(set(slopes)) != len(lines):
+            continue
+
+        # Sanity: incidence is preserved by construction (l * inv) * (m * p) = l * p.
+        return m, x_coords, slopes
+
+    raise RuntimeError("failed to find a suitable projective transform")
+
+
 def incidences(points: list[Point], lines: list[Line]) -> list[Incidence]:
     inc: list[Incidence] = []
     for pid, p in enumerate(points):
@@ -99,9 +232,20 @@ def incidences(points: list[Point], lines: list[Line]) -> list[Incidence]:
     return inc
 
 
-def suk_tomon_graph_standard(
+def suk_tomon_graph_standard(  # noqa: PLR0912
     t: int,
-) -> tuple[Graph, list[Incidence], list[Point], list[Line]]:
+    *,
+    use_projective_transform: bool = False,
+    projection_seed: int = 0,
+) -> tuple[
+    Graph,
+    list[Incidence],
+    list[Point],
+    list[Line],
+    list[Fraction],
+    list[Fraction],
+    Matrix3 | None,
+]:
     """
     Build the undirected Hasse diagram-style graph G_t on incidence vertices.
 
@@ -114,11 +258,21 @@ def suk_tomon_graph_standard(
     points, lines = standard_point_line_configuration(t)
     inc = incidences(points, lines)
 
+    if use_projective_transform:
+        proj_rng = Random(projection_seed)  # noqa: S311
+        proj_m, point_x, line_slope = find_projection_with_distinct_x_and_slopes(
+            points,
+            lines,
+            proj_rng,
+        )
+    else:
+        proj_m = None
+        point_x = [Fraction(p.x_key, 1) for p in points]
+        line_slope = [Fraction(ln.slope_key, 1) for ln in lines]
+
     # Sort incidences by the total order key (x_key(point), slope_key(line)).
-    def order_key(z: Incidence) -> tuple[int, int]:
-        p = points[z.p]
-        ln = lines[z.line]
-        return (p.x_key, ln.slope_key)
+    def order_key(z: Incidence) -> tuple[Fraction, Fraction]:
+        return (point_x[z.p], line_slope[z.line])
 
     inc_sorted = sorted(inc, key=order_key)
     vid: dict[tuple[int, int], int] = {
@@ -135,9 +289,9 @@ def suk_tomon_graph_standard(
 
     # Sort each incidence list by the relevant order key.
     for lid in range(len(lines)):
-        points_on_line[lid].sort(key=lambda pid: points[pid].x_key)
+        points_on_line[lid].sort(key=lambda pid: point_x[pid])
     for pid in range(len(points)):
-        lines_at_point[pid].sort(key=lambda lid: lines[lid].slope_key)
+        lines_at_point[pid].sort(key=lambda lid: line_slope[lid])
 
     pos_in_line: dict[tuple[int, int], int] = {}
     for lid, ps in enumerate(points_on_line):
@@ -172,7 +326,15 @@ def suk_tomon_graph_standard(
                     edges.append((u, v))
 
     n = len(inc_sorted)
-    return Graph(n, normalize_edges(n, edges)), inc_sorted, points, lines
+    return (
+        Graph(n, normalize_edges(n, edges)),
+        inc_sorted,
+        points,
+        lines,
+        point_x,
+        line_slope,
+        proj_m,
+    )
 
 
 def reachability_bitsets(n: int, edges: list[tuple[int, int]]) -> list[int]:
@@ -272,7 +434,7 @@ def defect_count(
     return d
 
 
-def experiment(  # noqa: PLR0915
+def experiment(  # noqa: PLR0912, PLR0915
     t: int,
     subset_sizes: list[int],
     samples_per_size: int,
@@ -280,9 +442,24 @@ def experiment(  # noqa: PLR0915
     exact_maxcut_limit: int = 25,
     maxcut_samples_per_size: int = 25,
     connected_samples_per_size: int = 80,
+    use_projective_transform: bool = False,
+    projection_seed: int | None = None,
 ) -> int:
     rng = Random(seed)  # noqa: S311
-    G, inc_sorted, points, lines = suk_tomon_graph_standard(t)
+    proj_seed = seed + 1_000_003 if projection_seed is None else projection_seed
+    (
+        G,
+        inc_sorted,
+        points,
+        lines,
+        point_x,
+        line_slope,
+        proj_m,
+    ) = suk_tomon_graph_standard(
+        t,
+        use_projective_transform=use_projective_transform,
+        projection_seed=proj_seed,
+    )
     reach = reachability_bitsets(G.n, G.edges)
     adj = adjacency_list(G.n, G.edges)
 
@@ -304,11 +481,14 @@ def experiment(  # noqa: PLR0915
                     q.append(v)
         comps.append(comp)
 
-    print(f"Suk-Tomon standard example (t={t})")
+    mode = "projective-transform" if use_projective_transform else "order-keys"
+    print(f"Suk-Tomon standard example (t={t}, mode={mode})")
     print(
         f"  |P|={len(points)} |L|={len(lines)} |I|=|V|={G.n} |E|={G.m} "
         f"(expected |I|≈t^4={t**4})"
     )
+    if use_projective_transform and proj_m is not None:
+        print(f"  projection_seed={proj_seed}, matrix={proj_m}")
     print("")
 
     violated = False
@@ -396,7 +576,17 @@ def experiment(  # noqa: PLR0915
                 inc = inc_sorted[v]
                 p = points[inc.p]
                 ln = lines[inc.line]
-                decoded.append(((p.x, p.y), (ln.slope, ln.intercept)))
+                decoded.append(
+                    {
+                        "v": v,
+                        "p": inc.p,
+                        "line": inc.line,
+                        "p_xy": (p.x, p.y),
+                        "line_ab": (ln.slope, ln.intercept),
+                        "x_order": str(point_x[inc.p]),
+                        "slope_order": str(line_slope[inc.line]),
+                    }
+                )
             print(f"        subset vertex ids: {sorted(subset)}")
             print(f"        subset incidences: {decoded}")
 
