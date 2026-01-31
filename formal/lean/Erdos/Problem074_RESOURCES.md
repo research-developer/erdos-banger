@@ -82,6 +82,7 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 | `Problem074_ordered_edge_graph_experimental.lean` | OE(G,<) notes | 🔬 INCONCLUSIVE |
 | `Problem074_cayley_experimental.lean` | Cayley graph notes | ❌ REFUTED (random sweeps) |
 | `Problem074_search_experimental.lean` | Heuristic search notes | 🔬 INCONCLUSIVE |
+| `Problem074_sat_search_experimental.lean` | SAT/backtracking search notes | 🔬 INCONCLUSIVE |
 
 **Active work:** 🔬 **HASSE DIAGRAM / SUK-TOMON APPROACH** - See `Problem074_HASSE_STRATEGY.md`
 

@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-29
 **Last Updated:** 2026-01-31
-**Status:** ✅ PHASE 6 EXPANDED — external review items tracked (6.2/6.6/6.8 complete)
+**Status:** ✅ PHASE 6 EXPANDED — external review items tracked (6.2/6.6/6.7/6.8 complete)
 **Scope:** This document is the SSOT for the **Problem 848 Lean formalization**.
 
 ---
@@ -11,7 +11,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Total lines | **5427** |
+| Total lines | **5404** |
 | Build time | ~10-11 min |
 | `sorry` | **0** ✅ |
 | `native_decide` | **0** ✅ |
@@ -57,9 +57,9 @@ theorem sawhney_main : SawhneyMain := by
 | 9.5 | 2409-2954 | Quantitative bounds 🔥 (8M heartbeats × 2) |
 | 9.8 | 2955-3217 | Bridge lemmas |
 | 9.9 | 3218-3504 | More small modular facts |
-| 9.95 | 3505-3608 | Generic sieve cardinality bounds |
-| 10 | 3609-5415 | `sawhney_main` 🔥 (~1807 lines) |
-| 11 | 5416-5427 | Final statements |
+| 9.95 | 3505-3617 | Generic sieve cardinality bounds |
+| 10 | 3618-5392 | `sawhney_main` 🔥 (~1775 lines) |
+| 11 | 5393-5404 | Final statements |
 
 ### Dependency Flow
 
