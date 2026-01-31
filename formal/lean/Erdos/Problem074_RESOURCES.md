@@ -10,26 +10,26 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 
 ---
 
-## Approach Summary (2026-01-30)
+## Approach Summary (2026-01-31)
 
 | Approach | Target | Status | Files |
 |----------|--------|--------|-------|
 | **Rödl/Kneser** | f(n) = εn (LINEAR) | ✅ DONE | `Problem074_experimental.lean` |
 | **Burling** | f(n) = √n | ❌ **REFUTED** | `Problem074_burling_experimental.lean` |
 | **Twincut** | f(n) = √n | ❌ **REFUTED** | `Problem074_twincut_experimental.lean` |
-| **Mycielski** | f(n) = √n | ⏳ LOW PRIORITY | `Problem074_MYCIELSKI_RESOURCES.md` |
+| **Mycielski** | f(n) = √n | ❌ **REFUTED** | `Problem074_MYCIELSKI_RESOURCES.md` |
 
 ### Key Findings
 
 1. **Linear case (εn):** SOLVED - proves known 1982 result, no prize
 2. **Burling graphs:** FAIL √n bound - counterexample at B₃ (n=27, ebip=8 > √27≈5.2)
 3. **Twincut graphs:** FAIL √n bound - counterexample at G₄ (n=23, ebip=7 > √23≈4.8)
-4. **Mycielski graphs:** UNTESTED - likely too dense (edge density O(n^1.585))
+4. **Mycielski graphs:** FAIL √n bound - counterexample at M₄ (n=11, ebip=4 > √11≈3.3)
 
 **See also:**
 - `Problem074_BURLING_RESOURCES.md` - Why Burling failed (counterexample at B₃)
 - `Problem074_TWINCUT_RESOURCES.md` - Why Twincut failed (counterexample at G₄)
-- `Problem074_MYCIELSKI_RESOURCES.md` - Next candidate (low priority)
+- `Problem074_MYCIELSKI_RESOURCES.md` - Why Mycielski failed (counterexample at M₄)
 
 ---
 
@@ -43,13 +43,13 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 | `Problem074_burling_experimental.lean` | Burling approach | ❌ REFUTED (B₃ counterexample) |
 | `Problem074_twincut.lean` | Twincut template | ❌ REFUTED |
 | `Problem074_twincut_experimental.lean` | Twincut approach | ❌ REFUTED (G₄ counterexample) |
+| `Problem074_mycielski.lean` | Mycielski approach | ❌ REFUTED (M₄ counterexample) |
 
 **Active work:** None - need new candidate approach
 
 **Recommendation:**
-1. Computational testing of Mycielski graphs (likely to fail)
-2. Search literature for other triangle-free high-χ constructions with special structure
-3. Consider original approach: construct NEW graph family specifically for this problem
+1. Search literature for other triangle-free high-χ constructions with special structure
+2. Consider original approach: construct NEW graph family specifically for this problem
 
 ---
 

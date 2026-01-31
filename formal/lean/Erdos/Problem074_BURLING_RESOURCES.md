@@ -23,7 +23,7 @@ This document covers the **Burling graph approach** to Erdős Problem #74 ($500 
 
 **Separate from:** `Problem074_RESOURCES.md` (covers Rödl/Kneser linear case approach)
 
-**Next candidate:** See `Problem074_MYCIELSKI_RESOURCES.md` (Twincut also REFUTED)
+**Next candidate:** TBD (Twincut and Mycielski are also refuted; see `Problem074_RESOURCES.md`)
 
 ---
 
