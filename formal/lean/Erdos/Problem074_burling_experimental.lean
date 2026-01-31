@@ -70,6 +70,20 @@ theorem SimpleGraph.edgeDistancesToBipartite_nonempty {G : SimpleGraph V} (A : G
   use fun _ => 0
   simp
 
+/-- If a subgraph is already bipartite, the minimum deletion distance is 0. -/
+theorem SimpleGraph.minEdgeDistToBipartite_eq_zero_of_isBipartite {G : SimpleGraph V}
+    (A : G.Subgraph) (hA : IsBipartite A.coe) :
+    SimpleGraph.minEdgeDistToBipartite A = 0 := by
+  classical
+  apply Nat.le_zero.1
+  dsimp [SimpleGraph.minEdgeDistToBipartite]
+  apply Nat.sInf_le
+  refine ⟨(∅ : Set (Sym2 V)), by simp, ?_, by simp⟩
+  have hcoe : (A.deleteEdges (∅ : Set (Sym2 V))).coe = A.coe := by
+    ext v w
+    simp
+  simpa [hcoe] using hA
+
 /-!
 ## Burling Graph Construction
 
