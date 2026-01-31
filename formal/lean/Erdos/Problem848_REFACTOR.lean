@@ -4196,7 +4196,13 @@ theorem sawhney_main : SawhneyMain := by
               exact le_trans h1 (add_le_add (le_refl _) hπN')
             -- Now combine: A.card ≤ A7A.card + A18A.card ≤ 2 * (N * 413/25000 + δ * N)
             -- = N * (826/25000 + 2δ) ≈ N * 0.033042 < N * 0.0395 = (1/25 - 1/2000) * N
-            nlinarith [hA_le, hA7_bound, hA18_bound, hNpos]
+            have hA7_bound_num :
+                (A7A.card : ℝ) ≤ (N : ℝ) * (413 / 25000 : ℝ) + δ * (N : ℝ) := by
+              simpa [C_no5] using hA7_bound
+            have hA18_bound_num :
+                (A18A.card : ℝ) ≤ (N : ℝ) * (413 / 25000 : ℝ) + δ * (N : ℝ) := by
+              simpa [C_no5] using hA18_bound
+            nlinarith [hA_le, hA7_bound_num, hA18_bound_num, hNpos]
           exfalso
           exact (not_lt_of_ge hdense) hA_lt
 
