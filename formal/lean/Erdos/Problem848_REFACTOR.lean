@@ -3093,27 +3093,28 @@ lemma off_count_modEq25_le (N p b t : ℕ) (hp : Nat.Prime p) (hb : ¬ p ∣ b) 
   have hcard := Finset.card_le_card hsubset
   exact le_trans hcard (card_filter_modEq_and_modEq_le N 25 (p ^ 2) t r hcop)
 
+private lemma not_sq_dvd_mul_add_one_of_prime_dvd_left
+    {p b a : ℕ} (hp : Nat.Prime p) (hb : p ∣ b) : ¬ p ^ 2 ∣ b * a + 1 := by
+  intro hp2
+  have hp1 : p ∣ b * a + 1 := Nat.dvd_of_pow_dvd (by decide : 1 ≤ 2) hp2
+  have hpa : p ∣ b * a := dvd_mul_of_dvd_left hb a
+  have : p ∣ 1 := (Nat.dvd_add_right hpa).mp hp1
+  exact hp.not_dvd_one this
+
 /-- If `p ∣ b`, then `p^2 ∣ b*a+1` is impossible, so the corresponding filter is empty. -/
-lemma filter_empty_of_prime_dvd_left
+lemma filter_empty_of_prime_dvd_left {N p b : ℕ} (hp : Nat.Prime p) (hb : p ∣ b) :
+    (Finset.range N).filter (fun a => p ^ 2 ∣ b * a + 1) = ∅ := by
+  classical
+  ext a
+  simp [not_sq_dvd_mul_add_one_of_prime_dvd_left (p := p) (b := b) (a := a) hp hb]
+
+lemma filter_empty_of_prime_dvd_left_of_pred
     {N p b : ℕ} (hp : Nat.Prime p) (hb : p ∣ b)
     (pred : ℕ → Prop) [DecidablePred pred] :
     (Finset.range N).filter (fun a => pred a ∧ p ^ 2 ∣ b * a + 1) = ∅ := by
   classical
   ext a
-  constructor
-  · intro ha
-    have ha' : a < N ∧ pred a ∧ p ^ 2 ∣ b * a + 1 := by
-      simpa [Finset.mem_filter, Finset.mem_range] using ha
-    rcases ha' with ⟨_, ha_pred, hdiv⟩
-    have hpdiv' : p ∣ b * a + 1 := Nat.dvd_of_pow_dvd (by omega : 1 ≤ 2) hdiv
-    have hpmod : p ∣ b * a := Nat.dvd_mul_right_of_dvd hb a
-    have hp1 : p ∣ 1 := by
-      have := Nat.dvd_sub hpdiv' hpmod
-      simpa [Nat.add_sub_cancel] using this
-    exact (hp.not_dvd_one hp1).elim
-  · intro ha
-    simp at ha
-    contradiction
+  simp [not_sq_dvd_mul_add_one_of_prime_dvd_left (p := p) (b := b) (a := a) hp hb]
 
 /-- Variant of off_count_modEq25_le that works even when p | b (filter is empty in that case). -/
 lemma off_count_modEq25_le' (N p b t : ℕ) (hp : Nat.Prime p) (hp5 : p ≠ 5) :
@@ -3124,7 +3125,8 @@ lemma off_count_modEq25_le' (N p b t : ℕ) (hp : Nat.Prime p) (hp5 : p ≠ 5) :
     have hempty :
         (Finset.range N).filter (fun a => a ≡ t [MOD 25] ∧ p ^ 2 ∣ b * a + 1) = ∅ := by
       simpa using
-        (filter_empty_of_prime_dvd_left (N := N) (p := p) (b := b) hp hb (pred := fun a => a ≡ t [MOD 25]))
+        (filter_empty_of_prime_dvd_left_of_pred (N := N) (p := p) (b := b) hp hb
+          (pred := fun a => a ≡ t [MOD 25]))
     simp [hempty]
   · exact off_count_modEq25_le N p b t hp hb hp5
 
@@ -3190,7 +3192,7 @@ lemma off_count_modEq100_le' (N p b t25 t4 : ℕ) (hp : Nat.Prime p) (hp2 : p �
         (Finset.range N).filter
             (fun a => a ≡ t25 [MOD 25] ∧ a ≡ t4 [MOD 4] ∧ p ^ 2 ∣ b * a + 1) = ∅ := by
       simpa [and_assoc] using
-        (filter_empty_of_prime_dvd_left (N := N) (p := p) (b := b) hp hb
+        (filter_empty_of_prime_dvd_left_of_pred (N := N) (p := p) (b := b) hp hb
           (pred := fun a => a ≡ t25 [MOD 25] ∧ a ≡ t4 [MOD 4]))
     simp [hempty]
   · exact off_count_modEq100_le N p b t25 t4 hp hb hp2 hp5

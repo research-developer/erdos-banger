@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-29
 **Last Updated:** 2026-01-31
-**Status:** ✅ PHASE 6 EXPANDED — external review items tracked (6.2/6.6/6.7/6.8 complete)
+**Status:** ✅ PHASE 6 IN PROGRESS — 6 of 17 items complete (6.2/6.6/6.7/6.8/6.9 + 6.1 partial)
 **Scope:** This document is the SSOT for the **Problem 848 Lean formalization**.
 
 ---
@@ -11,11 +11,11 @@
 
 | Metric | Value |
 |--------|-------|
-| Total lines | **5379** |
+| Total lines | **5385** |
 | Build time | ~10-11 min |
 | `sorry` | **0** ✅ |
 | `native_decide` | **0** ✅ |
-| Build status | **PASSES** ✅ |
+| Build status | **PASSES** ✅ (verifying) |
 
 ```bash
 lake build Erdos.Problem848_REFACTOR
@@ -408,32 +408,35 @@ rcases Finset.mem_filter.1 hn with ⟨hn_range, hn_mod⟩
 
 ### Phase 6 Summary Table
 
-| ID | Item | Priority | Est. Lines Saved |
-|----|------|----------|------------------|
-| 6.1 | `sieve_set_card_bound` top-level lemma | HIGH | 300-500 |
-| 6.2 | ✅ `clash` helper for finite verification | DONE | 50-100 |
-| 6.6 | ✅ `prime_le_of_sq_dvd_lt_sq` helper | DONE | 40-60 |
-| 6.8 | ✅ Unify 7/18 residue lemmas | DONE | 50-80 |
-| 6.12 | `scale_sum_inv_sq_le_of_rat` helper | MEDIUM | (merged w/ 6.1) |
-| 6.3 | Named constants | LOW | readability |
-| 6.4 | Tactic hygiene (general) | LOW | stability |
-| 6.5 | Naming conventions | LOW | cleanliness |
-| 6.7 | ✅ `prime_ne_two_of_sq_dvd_odd` | DONE | 20-30 |
-| 6.9 | ✅ Unify `A₇_card`/`A₁₈_card` | DONE | 30 |
-| 6.10 | `filter_empty_of_prime_dvd_left` | LOW | 20 |
-| 6.11 | Unify N=50/N=100 theorems | LOW | 20 |
-| 6.13 | `density_contradiction_*` helpers | LOW | readability |
-| 6.14 | Paper case label comments | LOW | readability |
-| 6.15 | `private` markers | LOW | namespace |
-| 6.16 | `simp only` in 8M lemmas | LOW | heartbeats |
-| 6.17 | Replace `simp_all` in dense lemmas | LOW | stability |
+| ID | Item | Status | Est. Lines Saved |
+|----|------|--------|------------------|
+| 6.1 | `sieve_set_card_bound` top-level lemma | ⚠️ PARTIAL (Section 9.95 exists) | 100-200 remaining |
+| 6.2 | `clash` helper for finite verification | ✅ DONE | 50-100 |
+| 6.6 | `prime_le_of_sq_dvd_lt_sq` helper | ✅ DONE | 40-60 |
+| 6.7 | `prime_ne_two_of_sq_dvd_odd` | ✅ DONE | 20-30 |
+| 6.8 | Unify 7/18 residue lemmas | ✅ DONE | 50-80 |
+| 6.9 | Unify `A₇_card`/`A₁₈_card` | ✅ DONE | 30 |
+| 6.10 | `filter_empty_of_prime_dvd_left` | ⏳ TODO | 20 |
+| 6.11 | Unify N=50/N=100 theorems | ⏳ TODO | 20 |
+| 6.12 | `scale_sum_inv_sq_le_of_rat` helper | ⏳ TODO (merged w/ 6.1) | — |
+| 6.3 | Named constants | ⏳ LOW | readability |
+| 6.4 | Tactic hygiene (general) | ⏳ LOW | stability |
+| 6.5 | Naming conventions | ⏳ LOW | cleanliness |
+| 6.13 | `density_contradiction_*` helpers | ⏳ LOW | readability |
+| 6.14 | Paper case label comments | ⏳ LOW | readability |
+| 6.15 | `private` markers | ⏳ LOW | namespace |
+| 6.16 | `simp only` in 8M lemmas | ⏳ LOW | heartbeats |
+| 6.17 | Replace `simp_all` in dense lemmas | ⏳ LOW | stability |
 
-**If you only do three *more* refactors, do:**
-1. Extract `sieve_set_card_bound` (6.1) (biggest remaining duplication)
-2. Extract ℚ→ℝ cast-and-scale boilerplate (6.12) (likely merges into 6.1)
-3. Factor `filter_empty_of_prime_dvd_left` (6.10) (small, safe line reduction)
+**Next priority items:**
+1. 6.10: `filter_empty_of_prime_dvd_left` (small, safe)
+2. 6.11: Unify N=50/N=100 theorems (small, safe)
+3. 6.1/6.12: Complete sieve bound unification (larger, may need care)
 
-These are the most "reviewer-per-line-changed" improvements and should not stress heartbeat constraints.
+**Cosmetic polish (optional):**
+- 6.14: Paper case label comments
+- 6.15: `private` markers
+- 6.3: Named constants
 
 ---
 
@@ -610,18 +613,15 @@ All helper `have` statements are defined early in `sawhney_main` (starts line 35
 1. ~~Reduce 20M heartbeat caps~~ ✅ DONE (now 8M)
 2. 2× 8M heartbeat caps remain (lines 2642, 2651) — likely irreducible for computation-heavy lemmas
 
-**Phase 6 (External Review Feedback) — 17 opportunities identified:**
+**Phase 6 Progress (2026-01-31):**
 
-| Priority | Count | Est. Total Lines Saved |
-|----------|-------|------------------------|
-| HIGH | 1 | 300-500 |
-| MEDIUM | 4 | 140-240 |
-| LOW | 12 | 120+ (plus readability/stability) |
+| Status | Count | Items |
+|--------|-------|-------|
+| ✅ DONE | 5 | 6.2, 6.6, 6.7, 6.8, 6.9 |
+| ⚠️ PARTIAL | 1 | 6.1 (sieve bounds exist, may need more unification) |
+| ⏳ TODO | 11 | 6.3-6.5, 6.10-6.17 |
 
-**Top 3 Recommendations (highest ROI):**
-1. `prime_le_of_sq_dvd_lt_sq` — factor repeated p ≤ N derivation (~40-60 lines)
-2. `scale_sum_inv_sq_le_of_rat` / sieve bound — ℚ→ℝ cast boilerplate (~300-500 lines)
-3. Unify 7/18 duplicate modular lemmas (~50-80 lines)
+**Completed refactors saved ~190-300 lines** from original ~5500+ baseline.
 
 **Full list:** See Phase 6 and Phase 6.5 sections above (items 6.1–6.17).
 
