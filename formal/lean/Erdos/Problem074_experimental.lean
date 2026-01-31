@@ -413,31 +413,29 @@ theorem SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear
             simpa [Ai] using this
           exact (hEdel_bip i).some ⟨u, hu⟩
         · intro x y hxy
-          have hxy' : A.Adj x y ∧ s(x.1, y.1) ∉ E := by
-            simpa using (Subgraph.deleteEdges_adj (G' := A) (s := E) x y).1 hxy
-          have hAxy : A.Adj x y := hxy'.1
-          have hnotE : s(x.1, y.1) ∉ E := hxy'.2
+          rcases x with ⟨⟨i, u⟩, hx⟩
+          rcases y with ⟨⟨j, v⟩, hy⟩
+          have hxy' : A.Adj (Sigma.mk i u) (Sigma.mk j v) ∧ s(Sigma.mk i u, Sigma.mk j v) ∉ E := by
+            have hxy'' : (A.deleteEdges E).Adj (Sigma.mk i u) (Sigma.mk j v) := by
+              simpa using hxy
+            simpa using
+              (Subgraph.deleteEdges_adj (G' := A) (s := E) (Sigma.mk i u) (Sigma.mk j v)).1 hxy''
+          have hAxy : A.Adj (Sigma.mk i u) (Sigma.mk j v) := hxy'.1
+          have hnotE : s(Sigma.mk i u, Sigma.mk j v) ∉ E := hxy'.2
 
           -- Adjacent vertices lie in the same component.
-          have hij : x.1.1 = y.1.1 := by
+          have hij : i = j := by
             by_contra hne
-            have :
-                ¬(SimpleGraph.sigma (G := G)).Adj (Sigma.mk x.1.1 x.1.2) (Sigma.mk y.1.1 y.1.2) :=
-              SimpleGraph.sigma_adj_mk_mk_of_ne (G := G) hne x.1.2 y.1.2
-            exact this (by simpa using A.adj_sub hAxy)
-          -- Rewrite to a single component.
-          cases hij.symm
-          let i : ι := x.1.1
-          let u : W i := x.1.2
-          let v : W i := y.1.2
+            have : ¬(SimpleGraph.sigma (G := G)).Adj (Sigma.mk i u) (Sigma.mk j v) :=
+              SimpleGraph.sigma_adj_mk_mk_of_ne (G := G) hne u v
+            exact this (A.adj_sub hAxy)
+          subst j
 
           have hu : u ∈ (Ai i).verts := by
-            have hx : Sigma.mk i u = x.1 := by rfl
-            have : Sigma.mk i u ∈ A.verts := by simpa [hx] using x.2
+            have : Sigma.mk i u ∈ A.verts := by simpa using hx
             simpa [Ai] using this
           have hv : v ∈ (Ai i).verts := by
-            have hy : Sigma.mk i v = y.1 := by rfl
-            have : Sigma.mk i v ∈ A.verts := by simpa [hy] using y.2
+            have : Sigma.mk i v ∈ A.verts := by simpa using hy
             simpa [Ai] using this
 
           have hGiAdj : (G i).Adj u v := by
@@ -451,11 +449,15 @@ theorem SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear
           have hnotEdel : s(u, v) ∉ Edel i := by
             intro hmem
             apply hnotE
-            have hiIset : i ∈ Iset := ⟨x.1, x.2, rfl⟩
+            have hiIset : i ∈ Iset := by
+              refine ⟨Sigma.mk i u, ?_, rfl⟩
+              simpa using hx
             have hiI : i ∈ I := by simpa [I, Iset] using hiIset
             have : Sym2.map (Sigma.mk i) (s(u, v)) ∈ E := by
               simp [E, hiI, hmem]
-            simpa [Sym2.map_pair_eq] using this
+            have : s(Sigma.mk i u, Sigma.mk i v) ∈ E := by
+              simpa [Sym2.map_pair_eq] using this
+            simpa using this
 
           have hCompAdj : ((Ai i).deleteEdges (Edel i)).Adj u v := by
             have : (Ai i).Adj u v ∧ s(u, v) ∉ Edel i := ⟨hAiAdj, hnotEdel⟩
