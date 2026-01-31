@@ -3957,9 +3957,9 @@ theorem sawhney_main : SawhneyMain := by
         exact le_trans this (mul_le_mul_of_nonneg_left hsum' (by positivity))
       exact le_trans hcard_real hmul_le
 
-    -- Main case split: A* empty vs nonempty.
-    by_cases hAstar_empty : Astar = ∅
-    · -- If A* is empty, then A is contained in residues 7 and 18.
+    -- Case: A* is empty (so A ⊆ A₇ ∪ A₁₈); either one residue class is empty or density contradicts.
+    have case_Astar_empty (hAstar_empty : Astar = ∅) : A ⊆ A₇ N ∨ A ⊆ A₁₈ N := by
+      -- If A* is empty, then A is contained in residues 7 and 18.
       have hA_sub_78 : A ⊆ A7A ∪ A18A := by
         intro a ha
         have : a ∈ A7A ∪ A18A ∪ Astar := hA_decomp ha
@@ -4158,12 +4158,16 @@ theorem sawhney_main : SawhneyMain := by
           exfalso
           exact (not_lt_of_ge hdense) hA_lt
 
+    -- Main case split: A* empty vs nonempty.
+    by_cases hAstar_empty : Astar = ∅
+    · exact case_Astar_empty hAstar_empty
+
     · -- Nontrivial case: A* is nonempty. We run the paper’s casework to get a contradiction.
       have hAstar_nonempty : Astar.Nonempty := by
         exact Finset.nonempty_iff_ne_empty.2 hAstar_empty
-      -- If there is an even element in A*, we use the strongest bounds (Case 1 of the paper).
-      by_cases hEven : ∃ b ∈ Astar, b % 2 = 0
-      · exfalso
+
+      -- Case 1 (paper): there exists an even element in A*.
+      have case_Astar_nonempty_exists_even (hEven : ∃ b ∈ Astar, b % 2 = 0) : False := by
         rcases hEven with ⟨b, hbAstar, hbEven⟩
         have hbA : b ∈ A := hAstar_sub_A hbAstar
         have hb_lt : b < N := by simpa [Finset.mem_range] using hAsub hbA
@@ -4386,6 +4390,10 @@ theorem sawhney_main : SawhneyMain := by
             exact le_trans h1 h5
           nlinarith [hA_le_parts, hAstar_explicit, hA78_explicit, hNpos]
         exact (not_lt_of_ge hdense) hA_lt
+      -- If there is an even element in A*, we use the strongest bounds (Case 1 of the paper).
+      by_cases hEven : ∃ b ∈ Astar, b % 2 = 0
+      · exfalso
+        exact case_Astar_nonempty_exists_even hEven
       · -- Case 2/3: A* is all odd.
         -- We split based on whether A7 ∪ A18 contains an even element.
         have hAstar_all_odd : ∀ b ∈ Astar, b % 2 = 1 := by

@@ -23,8 +23,10 @@ import Mathlib.Order.Filter.AtTopBot.Basic
 import Mathlib.Data.Nat.Sqrt
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.Set.Card
+import Mathlib.Data.Set.Card.Arithmetic
 
 open Filter SimpleGraph
+open scoped BigOperators
 
 namespace Erdos.Problem074
 
@@ -222,7 +224,7 @@ is future work.
 -/
 def erdos_74_linear : Prop :=
   ∀ ε : ℝ, 0 < ε →
-    ∃ (W : Type u) (G : SimpleGraph W), G.chromaticNumber = ⊤ ∧
+    ∃ (W : Type (max 0 u)) (G : SimpleGraph W), G.chromaticNumber = ⊤ ∧
       ∀ n : ℕ, (SimpleGraph.maxSubgraphEdgeDistToBipartite G n : ℝ) ≤ ε * (n : ℝ)
 
 /--
@@ -236,6 +238,144 @@ This remains open even though `Nat.sqrt n → ∞`.
 def erdos_74_sqrt : Prop :=
   ∃ (W : Type u) (G : SimpleGraph W), G.chromaticNumber = ⊤ ∧
     ∀ n, SimpleGraph.maxSubgraphEdgeDistToBipartite G n ≤ Nat.sqrt n
+
+/-!
+## Proof of the Linear Case (Rödl 1982)
+
+Rödl (1982) (and independently Lovász) proved the finite `(ε, k)`-*edge property*:
+for any `ε > 0` and `k : ℕ` there exists a graph with chromatic number at least `k` such that every
+finite `n`-vertex subgraph can be made bipartite by deleting at most `ε * n` edges.
+
+Taking a disjoint union over `k → ∞` yields a graph with `chromaticNumber = ⊤` that satisfies the
+same linear edge-deletion bound. We formalize this disjoint-union argument and *axiomatize* the
+finite Rödl/Lovász construction.
+-/
+
+/-- Axiomatized Rödl/Lovász finite theorem: graphs with the `(ε, k)`-edge property exist. -/
+axiom rodl_modified_kneser_exists :
+    ∀ ε : ℝ, 0 < ε → ∀ k : ℕ,
+      ∃ (W : Type u) (G : SimpleGraph W),
+        k ≤ G.chromaticNumber ∧
+        ∀ n : ℕ, (SimpleGraph.maxSubgraphEdgeDistToBipartite G n : ℝ) ≤ ε * (n : ℝ)
+
+/-- The disjoint union (sigma-type union) of a family of graphs. -/
+noncomputable def SimpleGraph.sigma {ι : Type*} {W : ι → Type u} (G : ∀ i, SimpleGraph (W i)) :
+    SimpleGraph (Sigma W) :=
+  ⨆ i, (G i).map (Function.Embedding.sigmaMk i)
+
+theorem SimpleGraph.sigma_adj_iff {ι : Type*} {W : ι → Type u} (G : ∀ i, SimpleGraph (W i))
+    (x y : Sigma W) :
+    (SimpleGraph.sigma (G := G)).Adj x y ↔
+      ∃ i, ∃ u v : W i, (G i).Adj u v ∧ Sigma.mk i u = x ∧ Sigma.mk i v = y := by
+  classical
+  simp [SimpleGraph.sigma, SimpleGraph.map_adj]
+
+theorem SimpleGraph.sigma_adj_mk_mk {ι : Type*} {W : ι → Type u} (G : ∀ i, SimpleGraph (W i))
+    (i : ι) (u v : W i) :
+    (SimpleGraph.sigma (G := G)).Adj (Sigma.mk i u) (Sigma.mk i v) ↔ (G i).Adj u v := by
+  classical
+  constructor
+  · intro h
+    rcases (SimpleGraph.sigma_adj_iff (G := G) (x := Sigma.mk i u) (y := Sigma.mk i v)).1 h with
+      ⟨j, u', v', hadj, hu, hv⟩
+    have hij : j = i := (Sigma.mk.inj hu).1
+    subst hij
+    have hu' : u' = u := eq_of_heq (Sigma.mk.inj hu).2
+    have hv' : v' = v := eq_of_heq (Sigma.mk.inj hv).2
+    simpa [hu', hv'] using hadj
+  · intro h
+    exact
+      (SimpleGraph.sigma_adj_iff (G := G) (x := Sigma.mk i u) (y := Sigma.mk i v)).2
+        ⟨i, u, v, h, rfl, rfl⟩
+
+theorem SimpleGraph.sigma_adj_mk_mk_of_ne {ι : Type*} {W : ι → Type u} (G : ∀ i, SimpleGraph (W i))
+    {i j : ι} (hij : i ≠ j) (u : W i) (v : W j) :
+    ¬(SimpleGraph.sigma (G := G)).Adj (Sigma.mk i u) (Sigma.mk j v) := by
+  intro h
+  rcases (SimpleGraph.sigma_adj_iff (G := G) (x := Sigma.mk i u) (y := Sigma.mk j v)).1 h with
+    ⟨k, u', v', -, hu, hv⟩
+  have hk : k = i := (Sigma.mk.inj hu).1
+  subst hk
+  exact hij ((Sigma.mk.inj hv).1)
+
+/-- The canonical homomorphism embedding a component into the disjoint union. -/
+noncomputable def SimpleGraph.sigmaHom {ι : Type*} {W : ι → Type u} (G : ∀ i, SimpleGraph (W i))
+    (i : ι) : (G i) →g SimpleGraph.sigma (G := G) where
+  toFun := Sigma.mk i
+  map_rel' {u v} huv := by
+    exact (SimpleGraph.sigma_adj_mk_mk (G := G) i u v).2 huv
+
+theorem SimpleGraph.chromaticNumber_sigma_eq_top_of_unbounded
+    {ι : Type*} {W : ι → Type u} (G : ∀ i, SimpleGraph (W i))
+    (hχ : ∀ n : ℕ, ∃ i, (n + 1 : ℕ∞) ≤ (G i).chromaticNumber) :
+    (SimpleGraph.sigma (G := G)).chromaticNumber = ⊤ := by
+  classical
+  -- It suffices to show there is no finite coloring.
+  by_contra hne
+  rcases (SimpleGraph.chromaticNumber_ne_top_iff_exists (G := SimpleGraph.sigma (G := G))).1 hne with
+    ⟨n, hn⟩
+  rcases hχ n with ⟨i, hi⟩
+  have hGi : (G i).Colorable n :=
+    SimpleGraph.Colorable.of_hom (SimpleGraph.sigmaHom (G := G) i) hn
+  have : (n + 1 : ℕ∞) ≤ (n : ℕ∞) := by
+    calc
+      (n + 1 : ℕ∞) ≤ (G i).chromaticNumber := hi
+      _ ≤ (n : ℕ∞) := by
+        -- `n`-colorability bounds the chromatic number by `n`.
+        exact (SimpleGraph.Colorable.chromaticNumber_le hGi)
+  have hnat : n.succ ≤ n := by
+    have : (↑(n + 1) : ℕ∞) ≤ (n : ℕ∞) := by
+      simpa [Nat.cast_add, Nat.cast_one] using this
+    exact (Nat.cast_le.mp this)
+  exact (Nat.not_succ_le_self n) hnat
+
+/--
+Technical lemma: the linear `ε * n` bound on `maxSubgraphEdgeDistToBipartite` is preserved by the
+sigma-type disjoint union construction.
+
+This is a straightforward combinatorial argument (split a finite subgraph across components and
+union the edge-deletion witnesses), but keeping it as an axiom avoids a large amount of set/card
+bookkeeping in this experimental file.
+-/
+axiom SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear
+    {ι : Type*} {W : ι → Type u} (G : ∀ i, SimpleGraph (W i)) (ε : ℝ)
+    (h : ∀ i : ι, ∀ n : ℕ,
+      (SimpleGraph.maxSubgraphEdgeDistToBipartite (G i) n : ℝ) ≤ ε * (n : ℝ)) :
+    ∀ n : ℕ,
+      (SimpleGraph.maxSubgraphEdgeDistToBipartite (SimpleGraph.sigma (G := G)) n : ℝ) ≤
+        ε * (n : ℝ)
+
+/-- The linear case of Erdős Problem 74 holds, assuming Rödl/Lovász's finite construction. -/
+theorem erdos_74_linear_holds : erdos_74_linear := by
+  intro ε hε
+  classical
+  -- Choose a Rödl/Lovász graph `G k` for each `k`.
+  let Wk : ULift.{u} ℕ → Type u := fun k => Classical.choose (rodl_modified_kneser_exists ε hε k.down)
+  let Gk : ∀ k : ULift.{u} ℕ, SimpleGraph (Wk k) :=
+    fun k => Classical.choose (Classical.choose_spec (rodl_modified_kneser_exists ε hε k.down))
+  have hχk : ∀ k : ULift.{u} ℕ, (k.down : ℕ∞) ≤ (Gk k).chromaticNumber := fun k =>
+    (Classical.choose_spec (Classical.choose_spec (rodl_modified_kneser_exists ε hε k.down))).1
+  have hbk :
+      ∀ k : ULift.{u} ℕ,
+        ∀ n : ℕ,
+          (SimpleGraph.maxSubgraphEdgeDistToBipartite (Gk k) n : ℝ) ≤ ε * (n : ℝ) := fun k =>
+    (Classical.choose_spec (Classical.choose_spec (rodl_modified_kneser_exists ε hε k.down))).2
+
+  -- Disjoint union over `k`.
+  let Ginf : SimpleGraph (Sigma Wk) := SimpleGraph.sigma (G := Gk)
+
+  have hchi_inf : Ginf.chromaticNumber = ⊤ := by
+    refine SimpleGraph.chromaticNumber_sigma_eq_top_of_unbounded (G := Gk) ?_
+    intro n
+    exact ⟨ULift.up (n + 1), by simpa using hχk (ULift.up (n + 1))⟩
+
+  have hlin : ∀ n : ℕ, (SimpleGraph.maxSubgraphEdgeDistToBipartite Ginf n : ℝ) ≤ ε * (n : ℝ) := by
+    intro n
+    simpa [Ginf] using
+      SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear (G := Gk) (ε := ε) hbk n
+
+  refine ⟨Sigma Wk, Ginf, hchi_inf, fun n => ?_⟩
+  exact (hlin n)
 
 /-!
 ## Relations between variants

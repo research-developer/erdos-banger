@@ -11,7 +11,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Total lines | **5407** |
+| Total lines | **5415** |
 | Build time | ~12-13 min |
 | `sorry` | **0** ✅ |
 | `native_decide` | **0** ✅ |
@@ -119,8 +119,14 @@ For Mathlib submission, these would improve the file:
 |------|---------|--------|----------|
 | **Scoped maxHeartbeats** | Line 3541 uses `set_option ... in` | Keep scoped | DONE |
 | **High heartbeats in 9.5** | 20M/10M caps remain (lines drift; grep for `maxHeartbeats`) | Keep lowering where possible | LOW |
-| **Monolithic theorem** | `sawhney_main` ~1842 lines (3555-5396) | Split into 4-8 case lemmas | LOW |
+| **Monolithic theorem** | `sawhney_main` still large (line numbers drift) | Split into case lemmas | LOW |
 | **Computation isolation** | Mixed with proof | Separate `Computation.lean` | LOW |
+
+### Phase 4 Progress: `sawhney_main` Case Lemmas
+
+- Extracted `case_Astar_empty` as a local `have` lemma inside `sawhney_main`.
+- Extracted `case_Astar_nonempty_exists_even` (Case 1) as a local `have` lemma inside `sawhney_main`.
+- Remaining targets (per tree below): `case_Astar_all_odd_exists_even_in_A78`, `case_all_odd`.
 
 ### Case Lemma Tree (Future Target)
 
