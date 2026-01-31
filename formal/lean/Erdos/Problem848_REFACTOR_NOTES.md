@@ -1,17 +1,17 @@
 # Problem 848 Refactor Notes (SSOT)
 
 **Date:** 2026-01-29
-**Last Updated:** 2026-01-30
+**Last Updated:** 2026-01-31
 **Status:** ✅ PHASE 4 COMPLETE — All case lemmas extracted
 **Scope:** This document is the SSOT for the **Problem 848 Lean formalization**.
 
 ---
 
-## Current State (2026-01-30)
+## Current State (2026-01-31)
 
 | Metric | Value |
 |--------|-------|
-| Total lines | **5423** |
+| Total lines | **5422** |
 | Build time | ~12-13 min |
 | `sorry` | **0** ✅ |
 | `native_decide` | **0** ✅ |
@@ -54,7 +54,7 @@ theorem sawhney_main : SawhneyMain := by
 | 7 | 1101-2280 | Finite verification (no native_decide) |
 | 8 | 2281-2302 | SawhneyMain statement (Prop) |
 | 9 | 2303-2424 | Glue theorems |
-| 9.5 | 2425-2972 | Quantitative bounds 🔥 (20M heartbeats × 3, 10M × 1) |
+| 9.5 | 2425-2972 | Quantitative bounds 🔥 (20M heartbeats × 2, 10M × 1) |
 | 9.8 | 2973-3247 | Bridge lemmas |
 | 9.9 | 3248-3535 | More small modular facts |
 | 10 | 3536-5411 | `sawhney_main` 🔥 (~1876 lines) |
@@ -73,7 +73,7 @@ flowchart TD
 ```
 
 **Bottlenecks:**
-1. **Section 9.5** (lines 2425-2972) — 3× 20M heartbeats, 1× 10M heartbeat
+1. **Section 9.5** (lines 2425-2972) — 2× 20M heartbeats, 1× 10M heartbeat
 2. **Section 10** — `sawhney_main` is ~1876 lines (lines 3536-5411)
 
 ---
@@ -119,7 +119,7 @@ For Mathlib submission, these would improve the file further:
 |------|---------|--------|----------|
 | **Scoped maxHeartbeats** | All 11 uses scoped with `in` | ✅ DONE | DONE |
 | **Case lemmas** | All 4 case lemmas extracted | ✅ DONE | DONE |
-| **High heartbeats in 9.5** | 3× 20M, 1× 10M (lines 2544, 2581, 2644, 2653) | Lower where possible | MEDIUM |
+| **High heartbeats in 9.5** | 2× 20M, 1× 10M (lines 2580, 2643, 2652) | Lower where possible | MEDIUM |
 | **Computation isolation** | Mixed with proof | Separate `Computation.lean` | LOW |
 
 ### Phase 4 Complete: `sawhney_main` Case Lemmas ✅
@@ -236,9 +236,9 @@ This is **kernel-reducible**, so `(natToNum p).Prime` can be computed by `decide
 | All sorries | `sorry` | **0** |
 | Native decide | `native_decide` | **0** |
 | Global heartbeats (bad) | `^set_option maxHeartbeats.*[^n]$` | **0** ✅ |
-| Scoped heartbeats (ok) | `set_option maxHeartbeats.*in$` | **11** |
-| 20M heartbeats | `20000000` | **3** (lines 2544, 2581, 2644) |
-| 10M heartbeats | `10000000` | **1** (line 2653) |
+| Scoped heartbeats (ok) | `set_option maxHeartbeats.*in$` | **10** |
+| 20M heartbeats | `20000000` | **2** (lines 2580, 2643) |
+| 10M heartbeats | `10000000` | **1** (line 2652) |
 | simpa usage | `simpa` | 486 |
 | biUnion bounds | `card_biUnion_le` | 7 |
 

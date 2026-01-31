@@ -409,7 +409,9 @@ theorem SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear
           have hu : u ∈ (Ai i).verts := by
             -- `u ∈ (Ai i).verts` means `Sigma.mk i u ∈ A.verts`.
             -- This follows from `x.2 : x.1 ∈ A.verts` since `Sigma.mk i u = x.1`.
-            have : Sigma.mk i u ∈ A.verts := by simpa [hx] using x.2
+            have : Sigma.mk i u ∈ A.verts := by
+              cases hx
+              exact x.2
             simpa [Ai] using this
           exact (hEdel_bip i).some ⟨u, hu⟩
         · intro x y hxy
@@ -568,12 +570,12 @@ theorem SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear
         have hCard :
             A.verts.ncard = ∑ i ∈ I, (Ai i).verts.ncard := by
           calc
-            A.verts.ncard = (⋃ i ∈ Iset, Vset i).ncard := by simpa [hVset_union]
+            A.verts.ncard = (⋃ i ∈ Iset, Vset i).ncard := by simp [hVset_union]
             _ = ∑ i ∈ I, (Vset i).ncard := by simpa [hFinsum] using hCard'
             _ = ∑ i ∈ I, (Ai i).verts.ncard := by
               refine Finset.sum_congr rfl ?_
               intro i hi
-              simpa [hVset_ncard i]
+              simp [hVset_ncard i]
 
         simpa [hnA] using hCard.symm
 
@@ -594,7 +596,7 @@ theorem SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear
           _ ≤ ∑ i ∈ I, ε * ((Ai i).verts.ncard : ℝ) := hSum_le'
           _ = ε * (∑ i ∈ I, ((Ai i).verts.ncard : ℝ)) := by
             simpa using (Finset.mul_sum (s := I) (f := fun i => ((Ai i).verts.ncard : ℝ)) ε).symm
-          _ = ε * (n : ℝ) := by simpa [hsumVerts]
+          _ = ε * (n : ℝ) := by simp [hsumVerts]
 
       have hE_real :
           (E.ncard : ℝ) ≤ ε * (n : ℝ) := by
