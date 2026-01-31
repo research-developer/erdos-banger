@@ -24,6 +24,10 @@ This directory contains technical-debt writeups: spec drift, missing fixtures, i
 | DEBT-119 | SPEC-036 LOC violations (lead.py, store_fs.py) | P3 | Exempted |
 | DEBT-120 | Test suite startup latency (~40s before tests flow) | P4 | Open |
 | DEBT-121 | Literature path convention drift (papers/ vs cache/pdf/) | P2 | Fixed |
+| DEBT-122 | Ingest fetch module exceeds LOC threshold (568 > 500) | P3 | Exempted |
+| DEBT-123 | LLM router bypasses AppConfig for task-specific commands | P2 | Open |
+| DEBT-124 | Test suite over-mocking reduces confidence | P2 | Open |
+| DEBT-125 | Missing test edge cases across new bug fixes | P2 | Open |
 
 ### DEBT-114: Hardcoded Relative Paths (Core) - FIXED
 
@@ -172,7 +176,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-095 | zbMATH client LOC violation | P3 | Superseded | 9f10546 |
 | DEBT-110 | Add paper discovery mode to ingest | P2 | Superseded | SPEC-036 |
 
-**Next Debt ID:** DEBT-122
+**Next Debt ID:** DEBT-126
 
 ### Archived Debt Decks
 

@@ -21,10 +21,8 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 | ID | Title | Priority | Status | Component |
 |----|-------|----------|--------|-----------|
 | BUG-039 | Ingest cannot discover papers - only fetches pre-defined refs | P2 | Phase 1 Fixed | `erdos ingest` |
-| BUG-047 | PDF converter thread-unsafe env mutation | P1 | Open | `erdos convert` |
-| BUG-054 | arXiv single-file gzip extraction fails (not a tarball) | P2 | Open | `erdos ingest` |
-| BUG-055 | Ingest skips URL-only references (no PDF download) | P2 | Open | `erdos ingest` |
-| BUG-056 | Exa uses basic neural search instead of deep research | P2 | Open | `erdos research exa` |
+| BUG-057 | Exa CLI ignores ERDOS_EXA_SEARCH_TYPE config | P1 | Fixed | `erdos research exa` |
+| BUG-058 | arXiv gzip extraction vulnerable to decompression bombs | P3 | Open | `erdos ingest` |
 
 **Note:** BUG-039 core workflow (`erdos refs add` + `erdos ingest`) works. Remaining phases (auto-discovery) are feature requests tracked in DEBT-110.
 
@@ -116,18 +114,20 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 | BUG-051 | ManifestBridge DOI case-sensitive | P2 | Fixed | b5497d4 |
 | BUG-052 | ManifestBridge arXiv version not normalized | P2 | Fixed | b5497d4 |
 | BUG-053 | Lead ingest partial failure inconsistent state | P2 | Fixed | PR#43 |
+| BUG-047 | PDF converter thread-unsafe env mutation | P1 | Fixed | (this sprint) |
+| BUG-054 | arXiv single-file gzip extraction fails | P2 | Fixed | (this sprint) |
+| BUG-055 | Ingest skips URL-only references | P2 | Fixed | (this sprint) |
+| BUG-056 | Exa uses basic neural search (config added) | P2 | Fixed | (this sprint) |
 
 *Naming: GH-XXX = also tracked on GitHub Issues. BUG-XXX = local docs only. Both systems maintained in parallel.*
 
-**Next Bug ID:** BUG-057 (or GH-XXX if filing on GitHub)
+**Next Bug ID:** BUG-059 (or GH-XXX if filing on GitHub)
 
 ### Active Bug Decks
 
 - `docs/_bugs/bug-039-ingest-no-search-discovery.md` (BUG-039) - Phase 1 Fixed
-- `docs/_bugs/bug-047-pdf-converter-thread-unsafe-env.md` (BUG-047) - Open
-- `docs/_bugs/bug-054-arxiv-single-tex-gzip-extraction-failure.md` (BUG-054) - Open
-- `docs/_bugs/bug-055-ingest-url-only-refs-skipped.md` (BUG-055) - Open
-- `docs/_bugs/bug-056-exa-uses-neural-not-deep-search.md` (BUG-056) - Open
+- `docs/_bugs/bug-057-exa-cli-ignores-search-type-config.md` (BUG-057) - Fixed
+- `docs/_bugs/bug-058-arxiv-gzip-decompression-bomb.md` (BUG-058) - Open
 
 ### Archived Bug Decks
 

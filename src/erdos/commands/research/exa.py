@@ -235,6 +235,7 @@ def exa_search(
             if app_ctx.config.exa_cache_path
             else DEFAULT_CACHE_PATH
         ),
+        search_type=app_ctx.config.exa_search_type,  # BUG-057 fix
     )
     client = ExaClient(config)
 
