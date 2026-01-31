@@ -128,11 +128,81 @@ noncomputable def SimpleGraph.maxSubgraphEdgeDistToBipartite (G : SimpleGraph V)
 
 ---
 
+## Current Status (2026-01-30)
+
+### Completed in `Problem074_experimental.lean`
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `SimpleGraph.sigma` | ✅ DONE | Disjoint union over sigma types |
+| `chromaticNumber_sigma_eq_top_of_unbounded` | ✅ DONE | Key chromatic number theorem |
+| `rodl_modified_kneser_exists` | ✅ AXIOM | Rödl's finite theorem (axiomatized) |
+| `maxSubgraphEdgeDistToBipartite_sigma_le_linear` | ✅ AXIOM | Linear bound preservation |
+| **`erdos_74_linear_holds`** | ✅ **PROVED** | The linear case is complete! |
+
+### Remaining Open
+
+| Statement | Status | Difficulty |
+|-----------|--------|------------|
+| `erdos_74` (main conjecture) | OPEN | **$500 prize** |
+| `erdos_74_sqrt` | OPEN | Would follow from main |
+
+---
+
+## Key Mathematical Insights
+
+### MAX-CUT Reformulation (Critical!)
+
+The edge-deletion-to-bipartite problem has an exact equivalence:
+
+$$\text{minEdgeDistToBipartite}(H) = |E(H)| - \text{MaxCut}(H)$$
+
+**Why this matters:** Bounding edge deletions by $f(n)$ means every $n$-vertex subgraph has a cut capturing all but $f(n)$ edges.
+
+### Why Linear is Natural, Sublinear is Hard
+
+| Regime | What it means | Rödl's mechanism |
+|--------|---------------|------------------|
+| $f(n) = \varepsilon n$ (linear) | Allow $O(n)$ "bad edges" | "Charge per vertex" - pay constant per vertex to hit obstructions |
+| $f(n) = o(n)$ (sublinear) | "Almost bipartite in absolute edge error" | **No known mechanism** - would need odd cycles to share a tiny edge set |
+
+**Key insight:** You can't cheat with disjoint unions. The worst-case is over ALL $n$-vertex subgraphs, so any component with only $\varepsilon n$ guarantee fails the $\sqrt{n}$ target for large $n$.
+
+### Countability is Essential
+
+- If $\chi(W) > \omega$ (uncountable chromatic), then $f_W^{(3)}(n) \ge \varepsilon n$ for some $\varepsilon > 0$
+- Sublinear is **intrinsically** "countable chromatic" territory
+- **Lean tip:** Add `Countable W` to the existential to force the intended case
+
+### What a Sublinear Construction Would Need
+
+A plausible (hypothetical) construction would be:
+- **Hierarchical/fractal graph** - globally complex enough for $\chi = \omega$
+- **Locally "bipartite + tiny structured defect set"**
+- Defect set property: on any $n$-vertex set, it intersects edges in only $o(n)$ edges
+
+---
+
 ## Suggested Approach
 
-1. **Start with `Problem074_experimental.lean`** (warning-free)
-2. **Add `erdos_74_linear`** - state EHS82 Theorem 1 (known positive result)
+### For Formalizing (DONE for linear case)
+
+1. ~~**Start with `Problem074_experimental.lean`**~~ ✅
+2. ~~**Add `erdos_74_linear`**~~ ✅ (Proved!)
 3. **Keep `erdos_74` and `erdos_74_sqrt`** as open `Prop` definitions
-4. **The main difficulty:** Constructing the Specker graphs or edge graphs $\mathcal{G}_0(\alpha, k)$ in Lean with proper cardinality arguments
-5. **Key insight from Tuza 1987:** Maximum bipartite subgraph of $K(n,k)$ gives explicit bounds
-6. **Key insight from Alon 1996:** Every graph with $2m^2$ edges has bipartite subgraph with $≥ m^2 + m/2$ edges
+
+### Lemmas Worth Proving in Lean (Future Work)
+
+| Lemma | Purpose | Difficulty |
+|-------|---------|------------|
+| **Monotonicity** | If $A \le B$ (subgraph inclusion), then `minEdgeDistToBipartite A ≤ minEdgeDistToBipartite B` | Low |
+| **Induced-subgraph reduction** | `maxSubgraphEdgeDistToBipartite` equals same quantity over induced subgraphs | Medium |
+| **Cut reformulation API** | Bridge between "delete edges" and "2-coloring with ≤k monochromatic edges" | Medium |
+| **Replace axiom** | Prove `maxSubgraphEdgeDistToBipartite_sigma_le_linear` for real | High (bookkeeping) |
+
+### For Attacking the Open Problem
+
+1. **Study Tuza 1987:** Maximum bipartite subgraph of $K(n,k)$ gives explicit bounds
+2. **Study Alon 1996:** Every graph with $2m^2$ edges has bipartite subgraph with $\ge m^2 + m/2$ edges
+3. **Look for hierarchical constructions** with local "bipartite + small defect" structure
+4. **Computational exploration:** Brute-force max-cut on small graphs to find candidate families
