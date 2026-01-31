@@ -3514,6 +3514,15 @@ lemma prime_le_of_sq_dvd_lt_sq {p N X : ℕ} (hXpos : 0 < X) (hXlt : X < N ^ 2) 
   have hN2le : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hNp 2
   exact (not_lt_of_ge hN2le) hp2_lt
 
+/-- If `p^2 ∣ n` and `n` is odd, then `p ≠ 2`. -/
+lemma prime_ne_two_of_sq_dvd_odd {p n : ℕ} (hn : n % 2 = 1) (hp2 : p ^ 2 ∣ n) : p ≠ 2 := by
+  intro hp
+  subst hp
+  have h4 : 4 ∣ n := by simpa using hp2
+  have h2 : 2 ∣ n := dvd_trans (by decide : 2 ∣ 4) h4
+  have h0 : n % 2 = 0 := Nat.mod_eq_zero_of_dvd h2
+  omega
+
 /-- `∑ (N/(k*p²)+1)` is bounded by `N * ∑ 1/(k*p²) + |P|` after casting to `ℝ`. -/
 lemma sum_div_add_one_le_real (N : ℕ) (P : Finset ℕ) (k : ℕ) :
     ((∑ p ∈ P, (N / (k * p ^ 2) + 1) : ℕ) : ℝ) ≤
@@ -4248,21 +4257,13 @@ theorem sawhney_main : SawhneyMain := by
                 exact this
               obtain ⟨p, hp, hp5, hp2div⟩ := prime_square_exists_ne5 (n := b * a + 1) hnsq h25
               have hp_ne2 : p ≠ 2 := by
-                intro hp2
-                subst hp2
-                -- b is even, so b*a+1 is odd, so 4 ∤ ...
-                have : 2 ∣ b * a := dvd_mul_of_dvd_left (Nat.dvd_of_mod_eq_zero hbEven') a
                 have hodd : (b * a + 1) % 2 = 1 := by
+                  -- b is even, so b*a+1 is odd.
+                  have : 2 ∣ b * a := dvd_mul_of_dvd_left (Nat.dvd_of_mod_eq_zero hbEven') a
                   -- even + 1 is odd
                   have : (b * a) % 2 = 0 := Nat.mod_eq_zero_of_dvd this
                   omega
-                have : ¬ (4 ∣ b * a + 1) := by
-                  intro h4
-                  have h0 : (b * a + 1) % 2 = 0 := by
-                    have : 2 ∣ 4 := by decide
-                    exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
-                  simp [hodd] at h0
-                exact (this (by simpa [pow_two] using hp2div)).elim
+                exact prime_ne_two_of_sq_dvd_odd (hn := hodd) hp2div
               have hp_lt : p ≤ N := by
                 have hab_lt : b * a + 1 < N ^ 2 := by
                   have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
@@ -4314,19 +4315,11 @@ theorem sawhney_main : SawhneyMain := by
                 exact this
               obtain ⟨p, hp, hp5, hp2div⟩ := prime_square_exists_ne5 (n := b * a + 1) hnsq h25
               have hp_ne2 : p ≠ 2 := by
-                intro hp2
-                subst hp2
-                have : 2 ∣ b * a := dvd_mul_of_dvd_left (Nat.dvd_of_mod_eq_zero hbEven') a
                 have hodd : (b * a + 1) % 2 = 1 := by
+                  have : 2 ∣ b * a := dvd_mul_of_dvd_left (Nat.dvd_of_mod_eq_zero hbEven') a
                   have : (b * a) % 2 = 0 := Nat.mod_eq_zero_of_dvd this
                   omega
-                have : ¬ (4 ∣ b * a + 1) := by
-                  intro h4
-                  have h0 : (b * a + 1) % 2 = 0 := by
-                    have : 2 ∣ 4 := by decide
-                    exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
-                  simp [hodd] at h0
-                exact (this (by simpa [pow_two] using hp2div)).elim
+                exact prime_ne_two_of_sq_dvd_odd (hn := hodd) hp2div
               have hp_lt : p ≤ N := by
                 have hab_lt : b * a + 1 < N ^ 2 := by
                   have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
@@ -4529,21 +4522,13 @@ theorem sawhney_main : SawhneyMain := by
                   have h25 : ¬ (25 ∣ b7 * a + 1) := cross_residue_7_18_not_div_25 b7 a hb7_mod ha_mod18
                   obtain ⟨p, hp, hp5, hp2div⟩ := prime_square_exists_ne5 (n := b7 * a + 1) hnsq h25
                   have hp_ne2 : p ≠ 2 := by
-                    intro hp2
-                    subst hp2
-                    -- b7 even -> b7*a+1 odd
-                    have : 2 ∣ b7 := Nat.dvd_of_mod_eq_zero hb7Even
-                    have : 2 ∣ b7 * a := dvd_mul_of_dvd_left this a
                     have hodd : (b7 * a + 1) % 2 = 1 := by
+                      -- b7 even -> b7*a+1 odd
+                      have : 2 ∣ b7 := Nat.dvd_of_mod_eq_zero hb7Even
+                      have : 2 ∣ b7 * a := dvd_mul_of_dvd_left this a
                       have : (b7 * a) % 2 = 0 := Nat.mod_eq_zero_of_dvd this
                       omega
-                    have : ¬ (4 ∣ b7 * a + 1) := by
-                      intro h4
-                      have h0 : (b7 * a + 1) % 2 = 0 := by
-                        have : 2 ∣ 4 := by decide
-                        exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
-                      simp [hodd] at h0
-                    exact (this (by simpa [pow_two] using hp2div)).elim
+                    exact prime_ne_two_of_sq_dvd_odd (hn := hodd) hp2div
                   have hp_le : p ≤ N := by
                     have hab_lt : b7 * a + 1 < N ^ 2 := by
                       have hb7_le : b7 ≤ N - 1 := Nat.le_pred_of_lt hb7_lt
@@ -4722,20 +4707,12 @@ theorem sawhney_main : SawhneyMain := by
                   have h25 : ¬ (25 ∣ b18 * a + 1) := cross_residue_18_7_not_div_25 b18 a hb18_mod ha_mod7
                   obtain ⟨p, hp, hp5, hp2div⟩ := prime_square_exists_ne5 (n := b18 * a + 1) hnsq h25
                   have hp_ne2 : p ≠ 2 := by
-                    intro hp2
-                    subst hp2
-                    have : 2 ∣ b18 := Nat.dvd_of_mod_eq_zero hb18Even
-                    have : 2 ∣ b18 * a := dvd_mul_of_dvd_left this a
                     have hodd : (b18 * a + 1) % 2 = 1 := by
+                      have : 2 ∣ b18 := Nat.dvd_of_mod_eq_zero hb18Even
+                      have : 2 ∣ b18 * a := dvd_mul_of_dvd_left this a
                       have : (b18 * a) % 2 = 0 := Nat.mod_eq_zero_of_dvd this
                       omega
-                    have : ¬ (4 ∣ b18 * a + 1) := by
-                      intro h4
-                      have h0 : (b18 * a + 1) % 2 = 0 := by
-                        have : 2 ∣ 4 := by decide
-                        exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
-                      simp [hodd] at h0
-                    exact (this (by simpa [pow_two] using hp2div)).elim
+                    exact prime_ne_two_of_sq_dvd_odd (hn := hodd) hp2div
                   have hp_le : p ≤ N := by
                     have hab_lt : b18 * a + 1 < N ^ 2 := by
                       have hb18_le : b18 ≤ N - 1 := Nat.le_pred_of_lt hb18_lt
