@@ -206,3 +206,153 @@ A plausible (hypothetical) construction would be:
 2. **Study Alon 1996:** Every graph with $2m^2$ edges has bipartite subgraph with $\ge m^2 + m/2$ edges
 3. **Look for hierarchical constructions** with local "bipartite + small defect" structure
 4. **Computational exploration:** Brute-force max-cut on small graphs to find candidate families
+
+---
+
+## 🎯 PRIMARY CANDIDATE: Burling Graphs
+
+**Status:** UNTESTED - Nobody has checked if Burling graphs satisfy sublinear edge-deletion bounds!
+
+### What Are Burling Graphs?
+
+Burling (1965) constructed a sequence of graphs $B_1, B_2, B_3, \ldots$ with:
+
+| Property | Value | Why It Matters |
+|----------|-------|----------------|
+| **Chromatic number** | $\chi(B_k) = k$ | Unbounded - exactly what we need |
+| **Triangle-free** | No 3-cycles | Weakest possible odd-cycle obstruction! |
+| **Clique number** | $\omega(B_k) = 2$ | No large cliques forcing high χ |
+| **Structure** | Intersection graphs of axis-aligned boxes in $\mathbb{R}^3$ | Geometric, recursive |
+| **Hereditary** | Induced subgraphs are Burling | Good for induction |
+| **Recognition** | Polynomial-time | Can verify candidates |
+
+### Why Burling Graphs Are Promising
+
+1. **Triangle-free = Weak Local Obstruction**
+   - Bipartiteness is blocked only by odd cycles
+   - No 3-cycles means only 5-cycles, 7-cycles, etc.
+   - These longer cycles are "easier" to hit with edge deletions
+
+2. **Hierarchical/Recursive Construction**
+   - Matches the "fractal structure" heuristic from ChatGPT analysis
+   - Box intersection structure may force odd cycles to share edges
+
+3. **Minimal Hereditary Class**
+   - Only known minimal hereditary class with unbounded χ besides complete graphs
+   - This "minimality" might translate to efficient edge-deletion structure
+
+### The Key Question (UNTESTED)
+
+$$\text{For Burling graphs: } \max_{|A|=n} \text{minEdgeDistToBipartite}(B_k[A]) \stackrel{?}{=} o(n)$$
+
+**If YES:** We win $500.
+**If NO:** We learn something and move on.
+
+### Burling Graph Construction (for Lean formalization)
+
+From arXiv:1703.07871 (Burling graphs, chromatic number, and orthogonal tree-decompositions):
+
+```
+B_1 = single vertex (trivially 1-colorable)
+
+B_{k+1} is built from B_k by:
+1. Take a copy of B_k
+2. Add new vertices corresponding to "frames" (axis-aligned box boundaries)
+3. Connect based on geometric containment/intersection rules
+```
+
+**Alternative definition** (from Pournajafi-Trotignon 2024): Burling graphs are "graphs derived from a tree" - may be easier to formalize.
+
+### Lean Skeleton for Burling Graphs
+
+```lean
+/-- The k-th Burling graph. Triangle-free with χ(B_k) = k. -/
+def BurlingGraph (k : ℕ) : SimpleGraph (BurlingVertex k) := sorry
+
+/-- Burling graphs are triangle-free. -/
+theorem burling_triangle_free (k : ℕ) : (BurlingGraph k).CliqueFree 3 := sorry
+
+/-- Burling graphs have chromatic number k. -/
+theorem burling_chromatic (k : ℕ) : (BurlingGraph k).chromaticNumber = k := sorry
+
+/-- THE PRIZE QUESTION: Do Burling graphs satisfy sublinear edge-deletion? -/
+theorem burling_sublinear_edge_deletion (k : ℕ) :
+    ∀ n, maxSubgraphEdgeDistToBipartite (BurlingGraph k) n ≤ Nat.sqrt n := by
+  sorry  -- $500 if you can fill this!
+```
+
+### References for Burling Graphs
+
+| Source | URL | Content |
+|--------|-----|---------|
+| **Original** | Burling 1965 | Original construction |
+| **arXiv:1703.07871** | https://arxiv.org/abs/1703.07871 | Burling graphs and tree-decompositions |
+| **HAL:hal-04253853** | https://hal.science/hal-04253853 | Burling graphs revisited (2024) - structural properties |
+| **arXiv:2510.19650** | https://arxiv.org/abs/2510.19650 | Burling graphs in large chromatic (2025) |
+
+### Computational Test Plan
+
+Before attempting a formal proof, verify computationally:
+
+```python
+# Pseudocode for testing Burling graphs
+for k in [3, 4, 5, 6]:
+    G = construct_burling_graph(k)
+    for n in range(5, min(100, |V(G)|)):
+        max_deletion = 0
+        for A in all_n_vertex_induced_subgraphs(G, n):
+            deletion = |E(A)| - max_cut(A)
+            max_deletion = max(max_deletion, deletion)
+        print(f"B_{k}, n={n}: max_deletion={max_deletion}, sqrt(n)={sqrt(n):.2f}")
+        # Check if max_deletion <= sqrt(n)
+```
+
+**Expected outcomes:**
+- If `max_deletion ≈ c * sqrt(n)`: VERY PROMISING - refine constant
+- If `max_deletion ≈ c * n`: Same as Kneser - not a solution
+- If `max_deletion` grows slower than sqrt(n): JACKPOT
+
+---
+
+## Other Candidate Constructions (Lower Priority)
+
+### Shift Graphs
+
+- Used in Borel chromatic number theory
+- Conley-Miller paper constructs "amalgamated shift graphs"
+- **Status:** Needs investigation for edge-deletion properties
+
+### Mycielski Graphs
+
+- Classic triangle-free high-chromatic construction
+- $M_k$ has $\chi(M_k) = k$ and no triangles
+- **Status:** Likely too dense - probably linear edge-deletion
+
+### Specker/Edge Graphs $\mathcal{G}_0(\alpha, k)$
+
+- From EHS82 paper
+- Achieve $f^{(3)}(n) \le 2n^{3/2}$ (subquadratic but not sublinear)
+- **Status:** Known to NOT achieve sublinear
+
+---
+
+## Action Items
+
+### Immediate (Before Next Session)
+
+- [ ] Fetch and extract full Burling graph construction from arXiv:1703.07871
+- [ ] Write Python script to compute edge-deletion for small Burling graphs
+- [ ] Run computational test to see if sublinear bound holds
+
+### If Computational Test Passes
+
+- [ ] Define `BurlingGraph` in Lean
+- [ ] Prove `burling_triangle_free`
+- [ ] Prove `burling_chromatic` (or axiomatize)
+- [ ] Attempt `burling_sublinear_edge_deletion`
+
+### If Computational Test Fails
+
+- [ ] Document the failure (what's the actual growth rate?)
+- [ ] Move to next candidate (shift graphs?)
+- [ ] Update this document with negative result

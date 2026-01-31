@@ -224,7 +224,7 @@ is future work.
 -/
 def erdos_74_linear : Prop :=
   ∀ ε : ℝ, 0 < ε →
-    ∃ (W : Type (max (max 0 u) u)) (G : SimpleGraph W), G.chromaticNumber = ⊤ ∧
+    ∃ (W : Type*) (G : SimpleGraph W), G.chromaticNumber = ⊤ ∧
       ∀ n : ℕ, (SimpleGraph.maxSubgraphEdgeDistToBipartite G n : ℝ) ≤ ε * (n : ℝ)
 
 /--
