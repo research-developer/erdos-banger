@@ -374,7 +374,7 @@ theorem erdos_74_linear_holds : erdos_74_linear := by
     simpa [Ginf] using
       SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear (G := Gk) (ε := ε) hbk n
 
-  refine ⟨Sigma Wk, Ginf, hchi_inf, fun n => ?_⟩
+  refine ⟨(Sigma Wk : Type u), Ginf, hchi_inf, fun n => ?_⟩
   exact (hlin n)
 
 /-!
