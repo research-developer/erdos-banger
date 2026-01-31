@@ -1,37 +1,35 @@
 /-
-Erdős Problem #848 — COMPLETE LEAN 4 FORMALIZATION
+Erdős Problem #848 — Lean 4 Formalization (Asymptotic Result)
 
-Contributors (collaborative effort):
+Contributors:
 - Raymond Jung (@the-obstacle-is-the-way)
-- Claude Opus 4.5 (Anthropic)
-- GPT-5.2 Pro Extended Thinking (OpenAI)
-- GPT-5.2 xHigh (OpenAI)
-- Gemini 3.0 (Google)
-- Aristotle (Harmonic)
+- Claude Opus 4.5, GPT-5.2 Pro/xHigh, Gemini 3.0, Aristotle
 
 Lean version: leanprover/lean4:v4.27.0
 Mathlib version: mathlib4 (2024)
 -/
 
 /-
-Problem 848: Erdős Problem #848 — COMPLETE SELF-CONTAINED FILE
+Erdős Problem #848 — Self-Contained Formalization
 
-Status: FULLY PROVED (0 errors, no sorries, no axioms)
+This file formalizes Sawhney's asymptotic theorem (2025), NOT the full Erdős conjecture.
 
-This is THE canonical file for Problem 848. It contains EVERYTHING:
+Original Problem 848 (STILL OPEN):
+  Is max|A| ≤ |A₇(N)| for ALL N?
+
+What This File Proves:
+  ∃ N₀, ∀ N ≥ N₀, max|A| ≤ |A₇(N)|  (asymptotic result)
+
+Contents:
 - All definitions and helper lemmas
 - Sieve bounds (diagonal and off-diagonal)
-- Finite verification for small N
+- Finite verification for small N (N=50, N=100)
 - The main stability theorem `SawhneyMain`
-- Final resolution `problem_848_resolved`
+- Asymptotic theorem `problem_848_asymptotic`
 
-Statement:
-Is the maximum size of a set A ⊆ {1,…,N} such that ab+1 is never squarefree
-(for all a,b ∈ A) achieved by taking those n ≡ 7 (mod 25)?
+Build: 0 sorry, 0 native_decide, 0 axioms
 
-Resolution (Sawhney-Sellke 2025):
-There exist absolute constants η > 0 and N₀ such that for all N ≥ N₀, if
-|A| ≥ (1/25 - η)N then A ⊆ {n : n ≡ 7 (mod 25)} or A ⊆ {n : n ≡ 18 (mod 25)}.
+Citation: Sawhney-Sellke (2025)
 -/
 
 -- ============================================================================
@@ -80,7 +78,7 @@ structure ErdosProblem where
 def problem : ErdosProblem := {
   id := 848
   title := "Erdős-Sárközy Squarefree Products"
-  status := "decidable"
+  status := "asymptotically resolved"
 }
 
 /-- A set A has the non-squarefree product property if ab+1 is not squarefree
@@ -118,25 +116,24 @@ instance instDecidableNonSquarefreeProductProp (A : Finset ℕ) :
 -- SECTION 2: MOD 25 DIVISIBILITY LEMMAS (PROVED)
 -- ============================================================================
 
+/-- Key lemma: If `a ≡ b ≡ r (mod 25)` and `r*r ≡ -1 (mod 25)`, then `5² | (ab + 1)`. -/
+lemma mod25_divisibility_of_residue (r a b : ℕ) (hr : r * r % 25 = 24) (ha : a % 25 = r)
+    (hb : b % 25 = r) : 25 ∣ (a * b + 1) := by
+  have h1 : a * b % 25 = (a % 25) * (b % 25) % 25 := Nat.mul_mod a b 25
+  rw [ha, hb] at h1
+  rw [hr] at h1
+  have h3 : (a * b + 1) % 25 = 0 := by omega
+  exact Nat.dvd_of_mod_eq_zero h3
+
 /-- Key lemma: If a ≡ b ≡ 7 (mod 25), then 5² | (ab + 1). -/
 lemma mod25_divisibility (a b : ℕ) (ha : a % 25 = 7) (hb : b % 25 = 7) :
     25 ∣ (a * b + 1) := by
-  have h1 : a * b % 25 = (a % 25) * (b % 25) % 25 := Nat.mul_mod a b 25
-  rw [ha, hb] at h1
-  have h2 : (7 : ℕ) * 7 % 25 = 24 := by norm_num
-  rw [h2] at h1
-  have h3 : (a * b + 1) % 25 = 0 := by omega
-  exact Nat.dvd_of_mod_eq_zero h3
+  exact mod25_divisibility_of_residue 7 a b (by norm_num) ha hb
 
 /-- Same for A₁₈: If a ≡ b ≡ 18 (mod 25), then 5² | (ab + 1). -/
 lemma mod25_divisibility_18 (a b : ℕ) (ha : a % 25 = 18) (hb : b % 25 = 18) :
     25 ∣ (a * b + 1) := by
-  have h1 : a * b % 25 = (a % 25) * (b % 25) % 25 := Nat.mul_mod a b 25
-  rw [ha, hb] at h1
-  have h2 : (18 : ℕ) * 18 % 25 = 24 := by norm_num
-  rw [h2] at h1
-  have h3 : (a * b + 1) % 25 = 0 := by omega
-  exact Nat.dvd_of_mod_eq_zero h3
+  exact mod25_divisibility_of_residue 18 a b (by norm_num) ha hb
 
 /-- Helper: 25 = 5² -/
 lemma twenty_five_eq_five_sq : (25 : ℕ) = 5 ^ 2 := by rfl
@@ -330,101 +327,71 @@ lemma two_roots_mod_p_squared (p : ℕ) (hp : Nat.Prime p) (hmod : p % 4 = 1) :
 -- SECTION 4: CROSS-RESIDUE CONSTRAINTS (PROVED)
 -- ============================================================================
 
-/-- If a ≡ 7 (mod 25) and b ≢ 7, 18 (mod 25), then 25 ∤ (ab + 1). -/
-lemma cross_residue_not_div_25 (a b : ℕ) (ha : a % 25 = 7)
-    (hb : b % 25 ≠ 7 ∧ b % 25 ≠ 18) : ¬ (25 ∣ a * b + 1) := by
+/-- If `a ≡ r (mod 25)` and `r*r ≡ -1 (mod 25)`, then `25 ∣ a*b+1` forces `b ≡ r (mod 25)`. -/
+lemma cross_residue_not_div_25_of_residue (r a b : ℕ) (hr : r * r % 25 = 24) (ha : a % 25 = r)
+    (hb : b % 25 ≠ r) : ¬ (25 ∣ a * b + 1) := by
   intro hdiv
+  have hr_lt : r < 25 := by
+    have : a % 25 < 25 := Nat.mod_lt a (by decide : 0 < 25)
+    simpa [ha] using this
   have h0 : ((a * b + 1 : ℕ) : ZMod 25) = 0 :=
     (ZMod.natCast_eq_zero_iff (a * b + 1) 25).2 hdiv
-  have haZ : (a : ZMod 25) = 7 := by
-    have : a % 25 = 7 % 25 := by
-      simpa [Nat.mod_eq_of_lt (by decide : 7 < 25)] using ha
-    exact (ZMod.natCast_eq_natCast_iff' a 7 25).2 this
-  have h1 : (7 : ZMod 25) * (b : ZMod 25) + 1 = 0 := by
+  have haZ : (a : ZMod 25) = (r : ZMod 25) := by
+    have ha_mod : a % 25 = r % 25 := by
+      have h := congrArg (fun x => x % 25) ha
+      have hleft : (a % 25) % 25 = a % 25 :=
+        Nat.mod_eq_of_lt (Nat.mod_lt a (by decide : 0 < 25))
+      simpa [hleft] using h
+    exact (ZMod.natCast_eq_natCast_iff' a r 25).2 ha_mod
+  have h1 : (r : ZMod 25) * (b : ZMod 25) + 1 = 0 := by
     have : (a : ZMod 25) * (b : ZMod 25) + 1 = 0 := by
       simpa [Nat.cast_add, Nat.cast_mul, Nat.cast_one] using h0
     simpa [haZ] using this
-  have h2 : (7 : ZMod 25) * (b : ZMod 25) = (-1 : ZMod 25) := by
+  have h2 : (r : ZMod 25) * (b : ZMod 25) = (-1 : ZMod 25) := by
     simpa using (eq_neg_of_add_eq_zero_left h1)
-  have h187 : (18 : ZMod 25) * (7 : ZMod 25) = 1 := by decide
-  have hbZ : (b : ZMod 25) = (7 : ZMod 25) := by
-    have hmul : (18 : ZMod 25) * ((7 : ZMod 25) * (b : ZMod 25)) =
-        (18 : ZMod 25) * (-1 : ZMod 25) := by
-      simpa [mul_assoc] using congrArg (fun x => (18 : ZMod 25) * x) h2
-    have hb' : (b : ZMod 25) = (18 : ZMod 25) * (-1 : ZMod 25) := by
-      have hmul' : ((18 : ZMod 25) * (7 : ZMod 25)) * (b : ZMod 25) =
-          (18 : ZMod 25) * (-1 : ZMod 25) := by
-        calc
-          ((18 : ZMod 25) * (7 : ZMod 25)) * (b : ZMod 25) =
-              (18 : ZMod 25) * ((7 : ZMod 25) * (b : ZMod 25)) := mul_assoc _ _ _
-          _ = (18 : ZMod 25) * (-1 : ZMod 25) := hmul
-      have : (1 : ZMod 25) * (b : ZMod 25) = (18 : ZMod 25) * (-1 : ZMod 25) := by
-        simpa [h187] using hmul'
-      simpa using this
-    exact hb'.trans (by decide : (18 : ZMod 25) * (-1 : ZMod 25) = (7 : ZMod 25))
-  have hbmod : b % 25 = 7 := by
-    have hb' : b % 25 = 7 % 25 := (ZMod.natCast_eq_natCast_iff' b 7 25).1 hbZ
-    simpa [Nat.mod_eq_of_lt (by decide : 7 < 25)] using hb'
-  exact hb.1 hbmod
+  have hrZ : (r : ZMod 25) * (r : ZMod 25) = (-1 : ZMod 25) := by
+    have hrr : ((r * r : ℕ) : ZMod 25) = (24 : ZMod 25) := by
+      have : (r * r) % 25 = 24 % 25 := by
+        simpa [Nat.mod_eq_of_lt (by decide : 24 < 25)] using hr
+      exact (ZMod.natCast_eq_natCast_iff' (r * r) 24 25).2 this
+    have hrr' : (r : ZMod 25) * (r : ZMod 25) = (24 : ZMod 25) := by simpa using hrr
+    exact hrr'.trans (by decide : (24 : ZMod 25) = (-1 : ZMod 25))
+  have hr_inv : (-(r : ZMod 25)) * (r : ZMod 25) = (1 : ZMod 25) := by
+    calc
+      (-(r : ZMod 25)) * (r : ZMod 25) = -((r : ZMod 25) * (r : ZMod 25)) := by simp
+      _ = -(-1 : ZMod 25) := by simp [hrZ]
+      _ = (1 : ZMod 25) := by simp
+  have hbZ : (b : ZMod 25) = (r : ZMod 25) := by
+    have hmul : (-(r : ZMod 25)) * ((r : ZMod 25) * (b : ZMod 25)) =
+        (-(r : ZMod 25)) * (-1 : ZMod 25) := by
+      simpa [mul_assoc] using congrArg (fun x => (-(r : ZMod 25)) * x) h2
+    have hmul' : ((-(r : ZMod 25)) * (r : ZMod 25)) * (b : ZMod 25) =
+        (-(r : ZMod 25)) * (-1 : ZMod 25) := by
+      simpa [mul_assoc] using hmul
+    have hmul'' : ((-(r : ZMod 25)) * (r : ZMod 25)) * (b : ZMod 25) = (r : ZMod 25) := by
+      simpa using hmul'
+    have : (1 : ZMod 25) * (b : ZMod 25) = (r : ZMod 25) := by
+      simpa [hr_inv] using hmul''
+    simpa using this
+  have hbmod : b % 25 = r := by
+    have hb' : b % 25 = r % 25 := (ZMod.natCast_eq_natCast_iff' b r 25).1 hbZ
+    simpa [Nat.mod_eq_of_lt hr_lt] using hb'
+  exact hb hbmod
+
+/-- If a ≡ 7 (mod 25) and b ≢ 7, 18 (mod 25), then 25 ∤ (ab + 1). -/
+lemma cross_residue_not_div_25 (a b : ℕ) (ha : a % 25 = 7)
+    (hb : b % 25 ≠ 7 ∧ b % 25 ≠ 18) : ¬ (25 ∣ a * b + 1) := by
+  exact cross_residue_not_div_25_of_residue 7 a b (by norm_num) ha hb.1
 
 /-- If a ≡ 18 (mod 25) and b ≢ 7,18 (mod 25), then 25 ∤ (ab + 1). -/
 lemma cross_residue_not_div_25_18 (a b : ℕ) (ha : a % 25 = 18)
     (hb : b % 25 ≠ 7 ∧ b % 25 ≠ 18) : ¬ (25 ∣ a * b + 1) := by
-  intro hdiv
-  have h0 : ((a * b + 1 : ℕ) : ZMod 25) = 0 :=
-    (ZMod.natCast_eq_zero_iff (a * b + 1) 25).2 hdiv
-  have haZ : (a : ZMod 25) = 18 := by
-    have : a % 25 = 18 % 25 := by
-      simpa [Nat.mod_eq_of_lt (by decide : 18 < 25)] using ha
-    exact (ZMod.natCast_eq_natCast_iff' a 18 25).2 this
-  have h1 : (18 : ZMod 25) * (b : ZMod 25) + 1 = 0 := by
-    have : (a : ZMod 25) * (b : ZMod 25) + 1 = 0 := by
-      simpa [Nat.cast_add, Nat.cast_mul, Nat.cast_one] using h0
-    simpa [haZ] using this
-  have h2 : (18 : ZMod 25) * (b : ZMod 25) = (-1 : ZMod 25) := by
-    simpa using (eq_neg_of_add_eq_zero_left h1)
-  have h718 : (7 : ZMod 25) * (18 : ZMod 25) = 1 := by decide
-  have hbZ : (b : ZMod 25) = (18 : ZMod 25) := by
-    have hmul : (7 : ZMod 25) * ((18 : ZMod 25) * (b : ZMod 25)) =
-        (7 : ZMod 25) * (-1 : ZMod 25) := by
-      simpa [mul_assoc] using congrArg (fun x => (7 : ZMod 25) * x) h2
-    have hb' : (b : ZMod 25) = (7 : ZMod 25) * (-1 : ZMod 25) := by
-      have hmul' : ((7 : ZMod 25) * (18 : ZMod 25)) * (b : ZMod 25) =
-          (7 : ZMod 25) * (-1 : ZMod 25) := by
-        calc
-          ((7 : ZMod 25) * (18 : ZMod 25)) * (b : ZMod 25) =
-              (7 : ZMod 25) * ((18 : ZMod 25) * (b : ZMod 25)) := mul_assoc _ _ _
-          _ = (7 : ZMod 25) * (-1 : ZMod 25) := hmul
-      have : (1 : ZMod 25) * (b : ZMod 25) = (7 : ZMod 25) * (-1 : ZMod 25) := by
-        simpa [h718] using hmul'
-      simpa using this
-    exact hb'.trans (by decide : (7 : ZMod 25) * (-1 : ZMod 25) = (18 : ZMod 25))
-  have hbmod : b % 25 = 18 := by
-    have hb' : b % 25 = 18 % 25 := (ZMod.natCast_eq_natCast_iff' b 18 25).1 hbZ
-    simpa [Nat.mod_eq_of_lt (by decide : 18 < 25)] using hb'
-  exact hb.2 hbmod
+  exact cross_residue_not_div_25_of_residue 18 a b (by norm_num) ha hb.2
 
-/-- If b ≢ 7, 18 (mod 25), ab+1 not squarefree implies p² | ab+1 for some p ≠ 5. -/
-lemma must_have_other_prime_square (a b : ℕ) (ha : a % 25 = 7)
-    (hb : b % 25 ≠ 7 ∧ b % 25 ≠ 18) (hnsq : ¬ Squarefree (a * b + 1)) :
-    ∃ p : ℕ, Nat.Prime p ∧ p ≠ 5 ∧ p^2 ∣ a * b + 1 := by
-  classical
-  have hnot : ¬ ∀ p : ℕ, Nat.Prime p → ¬p * p ∣ a * b + 1 := by
-    intro hall
-    exact hnsq ((Nat.squarefree_iff_prime_squarefree).2 hall)
-  push_neg at hnot
-  rcases hnot with ⟨p, hp, hpp⟩
-  have h25 : ¬ (25 ∣ a * b + 1) := cross_residue_not_div_25 a b ha hb
-  have hp2 : p ^ 2 ∣ a * b + 1 := by simpa [pow_two] using hpp
-  refine ⟨p, hp, ?_, hp2⟩
-  intro hp5
-  subst hp5
-  have : 25 ∣ a * b + 1 := by simpa [pow_two] using hp2
-  exact (h25 this).elim
-
-/-- If b ≢ 7, 18 (mod 25), ab+1 not squarefree implies p² | ab+1 for some p ≠ 5 (18-version). -/
-lemma must_have_other_prime_square_18 (a b : ℕ) (ha : a % 25 = 18)
-    (hb : b % 25 ≠ 7 ∧ b % 25 ≠ 18) (hnsq : ¬ Squarefree (a * b + 1)) :
+/-- If `a ≡ r (mod 25)` and `r*r ≡ -1 (mod 25)`, then `¬ Squarefree (a*b+1)` forces a prime square divisor
+other than `5²` provided `b ≢ r (mod 25)`. -/
+lemma must_have_other_prime_square_of_residue (r a b : ℕ) (hr : r * r % 25 = 24) (ha : a % 25 = r)
+    (hb : b % 25 ≠ r) (hnsq : ¬ Squarefree (a * b + 1)) :
     ∃ p : ℕ, Nat.Prime p ∧ p ≠ 5 ∧ p ^ 2 ∣ a * b + 1 := by
   classical
   have hnot : ¬ ∀ p : ℕ, Nat.Prime p → ¬p * p ∣ a * b + 1 := by
@@ -432,13 +399,25 @@ lemma must_have_other_prime_square_18 (a b : ℕ) (ha : a % 25 = 18)
     exact hnsq ((Nat.squarefree_iff_prime_squarefree).2 hall)
   push_neg at hnot
   rcases hnot with ⟨p, hp, hpp⟩
-  have h25 : ¬ (25 ∣ a * b + 1) := cross_residue_not_div_25_18 a b ha hb
+  have h25 : ¬ (25 ∣ a * b + 1) := cross_residue_not_div_25_of_residue r a b hr ha hb
   have hp2 : p ^ 2 ∣ a * b + 1 := by simpa [pow_two] using hpp
   refine ⟨p, hp, ?_, hp2⟩
   intro hp5
   subst hp5
   have : 25 ∣ a * b + 1 := by simpa [pow_two] using hp2
   exact (h25 this).elim
+
+/-- If b ≢ 7, 18 (mod 25), ab+1 not squarefree implies p² | ab+1 for some p ≠ 5. -/
+lemma must_have_other_prime_square (a b : ℕ) (ha : a % 25 = 7)
+    (hb : b % 25 ≠ 7 ∧ b % 25 ≠ 18) (hnsq : ¬ Squarefree (a * b + 1)) :
+    ∃ p : ℕ, Nat.Prime p ∧ p ≠ 5 ∧ p^2 ∣ a * b + 1 := by
+  exact must_have_other_prime_square_of_residue 7 a b (by norm_num) ha hb.1 hnsq
+
+/-- If b ≢ 7, 18 (mod 25), ab+1 not squarefree implies p² | ab+1 for some p ≠ 5 (18-version). -/
+lemma must_have_other_prime_square_18 (a b : ℕ) (ha : a % 25 = 18)
+    (hb : b % 25 ≠ 7 ∧ b % 25 ≠ 18) (hnsq : ¬ Squarefree (a * b + 1)) :
+    ∃ p : ℕ, Nat.Prime p ∧ p ≠ 5 ∧ p ^ 2 ∣ a * b + 1 := by
+  exact must_have_other_prime_square_of_residue 18 a b (by norm_num) ha hb.2 hnsq
 
 -- ============================================================================
 -- SECTION 5: DENSITY LEMMAS (PROVED)
@@ -660,7 +639,7 @@ lemma prop_implies_diag_candidates (A : Finset ℕ) (N : ℕ) (hAsub : A ⊆ Fin
   · exact hAprop a ha a ha
 
 /-- 7 × 18 + 1 = 127 is squarefree (it's prime). -/
-lemma seven_times_eighteen_plus_one_squarefree : Squarefree (7 * 18 + 1) := by
+private lemma seven_times_eighteen_plus_one_squarefree : Squarefree (7 * 18 + 1) := by
   have h : Nat.Prime 127 := by norm_num
   simp only [show 7 * 18 + 1 = 127 by norm_num]
   exact h.squarefree
@@ -671,11 +650,11 @@ Squarefree witnesses (for small finite checks).
 These are proved constructively (no native computation).
 -/
 
-lemma squarefree_127 : Squarefree 127 := (by
+private lemma squarefree_127 : Squarefree 127 := (by
   have hp : Nat.Prime 127 := by norm_num
   exact hp.squarefree)
 
-lemma squarefree_267 : Squarefree 267 := by
+private lemma squarefree_267 : Squarefree 267 := by
   have hp : Nat.Prime 3 := by norm_num
   have hq : Nat.Prime 89 := by norm_num
   have hcop : Nat.Coprime 3 89 := by decide
@@ -683,7 +662,7 @@ lemma squarefree_267 : Squarefree 267 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 267 = 3 * 89 by norm_num] using hmul
 
-lemma squarefree_302 : Squarefree 302 := by
+private lemma squarefree_302 : Squarefree 302 := by
   have hp : Nat.Prime 2 := by norm_num
   have hq : Nat.Prime 151 := by norm_num
   have hcop : Nat.Coprime 2 151 := by decide
@@ -691,11 +670,11 @@ lemma squarefree_302 : Squarefree 302 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 302 = 2 * 151 by norm_num] using hmul
 
-lemma squarefree_491 : Squarefree 491 := (by
+private lemma squarefree_491 : Squarefree 491 := (by
   have hp : Nat.Prime 491 := by norm_num
   exact hp.squarefree)
 
-lemma squarefree_694 : Squarefree 694 := by
+private lemma squarefree_694 : Squarefree 694 := by
   have hp : Nat.Prime 2 := by norm_num
   have hq : Nat.Prime 347 := by norm_num
   have hcop : Nat.Coprime 2 347 := by decide
@@ -703,11 +682,11 @@ lemma squarefree_694 : Squarefree 694 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 694 = 2 * 347 by norm_num] using hmul
 
-lemma squarefree_577 : Squarefree 577 := (by
+private lemma squarefree_577 : Squarefree 577 := (by
   have hp : Nat.Prime 577 := by norm_num
   exact hp.squarefree)
 
-lemma squarefree_685 : Squarefree 685 := by
+private lemma squarefree_685 : Squarefree 685 := by
   have hp : Nat.Prime 5 := by norm_num
   have hq : Nat.Prime 137 := by norm_num
   have hcop : Nat.Coprime 5 137 := by decide
@@ -715,11 +694,11 @@ lemma squarefree_685 : Squarefree 685 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 685 = 5 * 137 by norm_num] using hmul
 
-lemma squarefree_739 : Squarefree 739 := (by
+private lemma squarefree_739 : Squarefree 739 := (by
   have hp : Nat.Prime 739 := by norm_num
   exact hp.squarefree)
 
-lemma squarefree_1027 : Squarefree 1027 := by
+private lemma squarefree_1027 : Squarefree 1027 := by
   have hp : Nat.Prime 13 := by norm_num
   have hq : Nat.Prime 79 := by norm_num
   have hcop : Nat.Coprime 13 79 := by decide
@@ -727,7 +706,7 @@ lemma squarefree_1027 : Squarefree 1027 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 1027 = 13 * 79 by norm_num] using hmul
 
-lemma squarefree_1261 : Squarefree 1261 := by
+private lemma squarefree_1261 : Squarefree 1261 := by
   have hp : Nat.Prime 13 := by norm_num
   have hq : Nat.Prime 97 := by norm_num
   have hcop : Nat.Coprime 13 97 := by decide
@@ -735,7 +714,7 @@ lemma squarefree_1261 : Squarefree 1261 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 1261 = 13 * 97 by norm_num] using hmul
 
-lemma squarefree_1477 : Squarefree 1477 := by
+private lemma squarefree_1477 : Squarefree 1477 := by
   have hp : Nat.Prime 7 := by norm_num
   have hq : Nat.Prime 211 := by norm_num
   have hcop : Nat.Coprime 7 211 := by decide
@@ -743,15 +722,15 @@ lemma squarefree_1477 : Squarefree 1477 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 1477 = 7 * 211 by norm_num] using hmul
 
-lemma squarefree_1783 : Squarefree 1783 := (by
+private lemma squarefree_1783 : Squarefree 1783 := (by
   have hp : Nat.Prime 1783 := by norm_num
   exact hp.squarefree)
 
-lemma squarefree_1217 : Squarefree 1217 := (by
+private lemma squarefree_1217 : Squarefree 1217 := (by
   have hp : Nat.Prime 1217 := by norm_num
   exact hp.squarefree)
 
-lemma squarefree_1313 : Squarefree 1313 := by
+private lemma squarefree_1313 : Squarefree 1313 := by
   have hp : Nat.Prime 13 := by norm_num
   have hq : Nat.Prime 101 := by norm_num
   have hcop : Nat.Coprime 13 101 := by decide
@@ -759,7 +738,7 @@ lemma squarefree_1313 : Squarefree 1313 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 1313 = 13 * 101 by norm_num] using hmul
 
-lemma squarefree_2177 : Squarefree 2177 := by
+private lemma squarefree_2177 : Squarefree 2177 := by
   have hp : Nat.Prime 7 := by norm_num
   have hq : Nat.Prime 311 := by norm_num
   have hcop : Nat.Coprime 7 311 := by decide
@@ -767,7 +746,7 @@ lemma squarefree_2177 : Squarefree 2177 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 2177 = 7 * 311 by norm_num] using hmul
 
-lemma squarefree_2977 : Squarefree 2977 := by
+private lemma squarefree_2977 : Squarefree 2977 := by
   have hp : Nat.Prime 13 := by norm_num
   have hq : Nat.Prime 229 := by norm_num
   have hcop : Nat.Coprime 13 229 := by decide
@@ -775,15 +754,15 @@ lemma squarefree_2977 : Squarefree 2977 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 2977 = 13 * 229 by norm_num] using hmul
 
-lemma squarefree_3169 : Squarefree 3169 := (by
+private lemma squarefree_3169 : Squarefree 3169 := (by
   have hp : Nat.Prime 3169 := by norm_num
   exact hp.squarefree)
 
-lemma squarefree_1559 : Squarefree 1559 := (by
+private lemma squarefree_1559 : Squarefree 1559 := (by
   have hp : Nat.Prime 1559 := by norm_num
   exact hp.squarefree)
 
-lemma squarefree_1635 : Squarefree 1635 := by
+private lemma squarefree_1635 : Squarefree 1635 := by
   have hp : Nat.Prime 3 := by norm_num
   have hq : Nat.Prime 5 := by norm_num
   have hr : Nat.Prime 109 := by norm_num
@@ -795,7 +774,7 @@ lemma squarefree_1635 : Squarefree 1635 := by
     (Nat.squarefree_mul hcop_pq_r).2 ⟨hpq, hr.squarefree⟩
   simpa [show 1635 = (3 * 5) * 109 by norm_num, mul_assoc] using hpqr
 
-lemma squarefree_2167 : Squarefree 2167 := by
+private lemma squarefree_2167 : Squarefree 2167 := by
   have hp : Nat.Prime 11 := by norm_num
   have hq : Nat.Prime 197 := by norm_num
   have hcop : Nat.Coprime 11 197 := by decide
@@ -803,7 +782,7 @@ lemma squarefree_2167 : Squarefree 2167 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 2167 = 11 * 197 by norm_num] using hmul
 
-lemma squarefree_2585 : Squarefree 2585 := by
+private lemma squarefree_2585 : Squarefree 2585 := by
   have hp : Nat.Prime 5 := by norm_num
   have hq : Nat.Prime 11 := by norm_num
   have hr : Nat.Prime 47 := by norm_num
@@ -815,7 +794,7 @@ lemma squarefree_2585 : Squarefree 2585 := by
     (Nat.squarefree_mul hcop_pq_r).2 ⟨hpq, hr.squarefree⟩
   simpa [show 2585 = (5 * 11) * 47 by norm_num, mul_assoc] using hpqr
 
-lemma squarefree_2661 : Squarefree 2661 := by
+private lemma squarefree_2661 : Squarefree 2661 := by
   have hp : Nat.Prime 3 := by norm_num
   have hq : Nat.Prime 887 := by norm_num
   have hcop : Nat.Coprime 3 887 := by decide
@@ -823,7 +802,7 @@ lemma squarefree_2661 : Squarefree 2661 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 2661 = 3 * 887 by norm_num] using hmul
 
-lemma squarefree_3117 : Squarefree 3117 := by
+private lemma squarefree_3117 : Squarefree 3117 := by
   have hp : Nat.Prime 3 := by norm_num
   have hq : Nat.Prime 1039 := by norm_num
   have hcop : Nat.Coprime 3 1039 := by decide
@@ -831,7 +810,7 @@ lemma squarefree_3117 : Squarefree 3117 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 3117 = 3 * 1039 by norm_num] using hmul
 
-lemma squarefree_3535 : Squarefree 3535 := by
+private lemma squarefree_3535 : Squarefree 3535 := by
   have hp : Nat.Prime 5 := by norm_num
   have hq : Nat.Prime 7 := by norm_num
   have hr : Nat.Prime 101 := by norm_num
@@ -843,7 +822,7 @@ lemma squarefree_3535 : Squarefree 3535 := by
     (Nat.squarefree_mul hcop_pq_r).2 ⟨hpq, hr.squarefree⟩
   simpa [show 3535 = (5 * 7) * 101 by norm_num, mul_assoc] using hpqr
 
-lemma squarefree_3763 : Squarefree 3763 := by
+private lemma squarefree_3763 : Squarefree 3763 := by
   have hp : Nat.Prime 53 := by norm_num
   have hq : Nat.Prime 71 := by norm_num
   have hcop : Nat.Coprime 53 71 := by decide
@@ -851,7 +830,7 @@ lemma squarefree_3763 : Squarefree 3763 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 3763 = 53 * 71 by norm_num] using hmul
 
-lemma squarefree_2338 : Squarefree 2338 := by
+private lemma squarefree_2338 : Squarefree 2338 := by
   have hp : Nat.Prime 2 := by norm_num
   have hq : Nat.Prime 7 := by norm_num
   have hr : Nat.Prime 167 := by norm_num
@@ -863,11 +842,11 @@ lemma squarefree_2338 : Squarefree 2338 := by
     (Nat.squarefree_mul hcop_pq_r).2 ⟨hpq, hr.squarefree⟩
   simpa [show 2338 = (2 * 7) * 167 by norm_num, mul_assoc] using hpqr
 
-lemma squarefree_2789 : Squarefree 2789 := (by
+private lemma squarefree_2789 : Squarefree 2789 := (by
   have hp : Nat.Prime 2789 := by norm_num
   exact hp.squarefree)
 
-lemma squarefree_3363 : Squarefree 3363 := by
+private lemma squarefree_3363 : Squarefree 3363 := by
   have hp : Nat.Prime 3 := by norm_num
   have hq : Nat.Prime 19 := by norm_num
   have hr : Nat.Prime 59 := by norm_num
@@ -879,7 +858,7 @@ lemma squarefree_3363 : Squarefree 3363 := by
     (Nat.squarefree_mul hcop_pq_r).2 ⟨hpq, hr.squarefree⟩
   simpa [show 3363 = (3 * 19) * 59 by norm_num, mul_assoc] using hpqr
 
-lemma squarefree_3814 : Squarefree 3814 := by
+private lemma squarefree_3814 : Squarefree 3814 := by
   have hp : Nat.Prime 2 := by norm_num
   have hq : Nat.Prime 1907 := by norm_num
   have hcop : Nat.Coprime 2 1907 := by decide
@@ -887,15 +866,15 @@ lemma squarefree_3814 : Squarefree 3814 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 3814 = 2 * 1907 by norm_num] using hmul
 
-lemma squarefree_3011 : Squarefree 3011 := (by
+private lemma squarefree_3011 : Squarefree 3011 := (by
   have hp : Nat.Prime 3011 := by norm_num
   exact hp.squarefree)
 
-lemma squarefree_3527 : Squarefree 3527 := (by
+private lemma squarefree_3527 : Squarefree 3527 := (by
   have hp : Nat.Prime 3527 := by norm_num
   exact hp.squarefree)
 
-lemma squarefree_4258 : Squarefree 4258 := by
+private lemma squarefree_4258 : Squarefree 4258 := by
   have hp : Nat.Prime 2 := by norm_num
   have hq : Nat.Prime 2129 := by norm_num
   have hcop : Nat.Coprime 2 2129 := by decide
@@ -903,11 +882,11 @@ lemma squarefree_4258 : Squarefree 4258 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 4258 = 2 * 2129 by norm_num] using hmul
 
-lemma squarefree_3877 : Squarefree 3877 := (by
+private lemma squarefree_3877 : Squarefree 3877 := (by
   have hp : Nat.Prime 3877 := by norm_num
   exact hp.squarefree)
 
-lemma squarefree_3991 : Squarefree 3991 := by
+private lemma squarefree_3991 : Squarefree 3991 := by
   have hp : Nat.Prime 13 := by norm_num
   have hq : Nat.Prime 307 := by norm_num
   have hcop : Nat.Coprime 13 307 := by decide
@@ -915,7 +894,7 @@ lemma squarefree_3991 : Squarefree 3991 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 3991 = 13 * 307 by norm_num] using hmul
 
-lemma squarefree_5302 : Squarefree 5302 := by
+private lemma squarefree_5302 : Squarefree 5302 := by
   have hp : Nat.Prime 2 := by norm_num
   have hq : Nat.Prime 11 := by norm_num
   have hr : Nat.Prime 241 := by norm_num
@@ -927,15 +906,15 @@ lemma squarefree_5302 : Squarefree 5302 := by
     (Nat.squarefree_mul hcop_pq_r).2 ⟨hpq, hr.squarefree⟩
   simpa [show 5302 = (2 * 11) * 241 by norm_num, mul_assoc] using hpqr
 
-lemma squarefree_6733 : Squarefree 6733 := (by
+private lemma squarefree_6733 : Squarefree 6733 := (by
   have hp : Nat.Prime 6733 := by norm_num
   exact hp.squarefree)
 
-lemma squarefree_5741 : Squarefree 5741 := (by
+private lemma squarefree_5741 : Squarefree 5741 := (by
   have hp : Nat.Prime 5741 := by norm_num
   exact hp.squarefree)
 
-lemma squarefree_6511 : Squarefree 6511 := by
+private lemma squarefree_6511 : Squarefree 6511 := by
   have hp : Nat.Prime 17 := by norm_num
   have hq : Nat.Prime 383 := by norm_num
   have hcop : Nat.Coprime 17 383 := by decide
@@ -943,7 +922,7 @@ lemma squarefree_6511 : Squarefree 6511 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 6511 = 17 * 383 by norm_num] using hmul
 
-lemma squarefree_6931 : Squarefree 6931 := by
+private lemma squarefree_6931 : Squarefree 6931 := by
   have hp : Nat.Prime 29 := by norm_num
   have hq : Nat.Prime 239 := by norm_num
   have hcop : Nat.Coprime 29 239 := by decide
@@ -951,7 +930,7 @@ lemma squarefree_6931 : Squarefree 6931 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 6931 = 29 * 239 by norm_num] using hmul
 
-lemma squarefree_7627 : Squarefree 7627 := by
+private lemma squarefree_7627 : Squarefree 7627 := by
   have hp : Nat.Prime 29 := by norm_num
   have hq : Nat.Prime 263 := by norm_num
   have hcop : Nat.Coprime 29 263 := by decide
@@ -959,7 +938,7 @@ lemma squarefree_7627 : Squarefree 7627 := by
     (Nat.squarefree_mul hcop).2 ⟨hp.squarefree, hq.squarefree⟩
   simpa [show 7627 = 29 * 263 by norm_num] using hmul
 
-lemma squarefree_8119 : Squarefree 8119 := by
+private lemma squarefree_8119 : Squarefree 8119 := by
   have hp : Nat.Prime 23 := by norm_num
   have hq : Nat.Prime 353 := by norm_num
   have hcop : Nat.Coprime 23 353 := by decide
@@ -976,49 +955,49 @@ lemma pair_7_18_fails : ¬ NonSquarefreeProductProp ({7, 18} : Finset ℕ) := by
 
 -- Helper lemmas for pair_32_43_works: prove products are NOT squarefree
 -- 32 * 32 + 1 = 1025 = 5² × 41
-lemma not_squarefree_1025 : ¬ Squarefree 1025 := by
+private lemma not_squarefree_1025 : ¬ Squarefree 1025 := by
   intro h
   have hdiv : 5^2 ∣ 1025 := by norm_num
   have := h 5 hdiv
   norm_num at this
 
 -- 32 * 43 + 1 = 1377 = 3² × 153 = 3² × 9 × 17 = 3⁴ × 17
-lemma not_squarefree_1377 : ¬ Squarefree 1377 := by
+private lemma not_squarefree_1377 : ¬ Squarefree 1377 := by
   intro h
   have hdiv : 3^2 ∣ 1377 := by norm_num
   have := h 3 hdiv
   norm_num at this
 
 -- 43 * 43 + 1 = 1850 = 2 × 5² × 37
-lemma not_squarefree_1850 : ¬ Squarefree 1850 := by
+private lemma not_squarefree_1850 : ¬ Squarefree 1850 := by
   intro h
   have hdiv : 5^2 ∣ 1850 := by norm_num
   have := h 5 hdiv
   norm_num at this
 
 -- 38 * 38 + 1 = 1445 = 5 * 17²
-lemma not_squarefree_1445 : ¬ Squarefree 1445 := by
+private lemma not_squarefree_1445 : ¬ Squarefree 1445 := by
   intro h
   have hdiv : 17^2 ∣ 1445 := by norm_num
   have := h 17 hdiv
   norm_num at this
 
 -- 41 * 41 + 1 = 1682 = 2 * 29²
-lemma not_squarefree_1682 : ¬ Squarefree 1682 := by
+private lemma not_squarefree_1682 : ¬ Squarefree 1682 := by
   intro h
   have hdiv : 29^2 ∣ 1682 := by norm_num
   have := h 29 hdiv
   norm_num at this
 
 -- 70 * 70 + 1 = 4901 = 13² * 29
-lemma not_squarefree_4901 : ¬ Squarefree 4901 := by
+private lemma not_squarefree_4901 : ¬ Squarefree 4901 := by
   intro h
   have hdiv : 13^2 ∣ 4901 := by norm_num
   have := h 13 hdiv
   norm_num at this
 
 -- 99 * 99 + 1 = 9802 = 2 * 13² * 29
-lemma not_squarefree_9802 : ¬ Squarefree 9802 := by
+private lemma not_squarefree_9802 : ¬ Squarefree 9802 := by
   intro h
   have hdiv : 13^2 ∣ 9802 := by norm_num
   have := h 13 hdiv
@@ -1934,6 +1913,9 @@ lemma no_five_in_candidates_100 :
   have hs_one_lt : 1 < s.card := by simp [hcard]
   let C : Finset ℕ := {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99}
   have hsC : s ⊆ C := by simpa [C] using hs
+  have clash : ∀ x y, x ∈ s → y ∈ s → Squarefree (x * y + 1) → False := by
+    intro x y hx hy hsq
+    exact hsprop x hx y hy hsq
 
   by_cases h38 : 38 ∈ s
   · obtain ⟨b, hb, hb_ne⟩ := Finset.exists_mem_ne hs_one_lt 38
@@ -1945,38 +1927,38 @@ lemma no_five_in_candidates_100 :
     rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
     · have : Squarefree (38 * 7 + 1) := by
         simpa [show 38 * 7 + 1 = 267 by norm_num, mul_comm] using squarefree_267
-      exact (hsprop 38 h38 7 (by simpa [C] using hb) this).elim
+      exact (clash 38 7 h38 hb this).elim
     · have : Squarefree (38 * 18 + 1) := by
         simpa [show 38 * 18 + 1 = 685 by norm_num, mul_comm] using squarefree_685
-      exact (hsprop 38 h38 18 (by simpa [C] using hb) this).elim
+      exact (clash 38 18 h38 hb this).elim
     · have : Squarefree (38 * 32 + 1) := by
         simpa [show 38 * 32 + 1 = 1217 by norm_num, mul_comm] using squarefree_1217
-      exact (hsprop 38 h38 32 (by simpa [C] using hb) this).elim
+      exact (clash 38 32 h38 hb this).elim
     · exact (hb_ne rfl).elim
     · have : Squarefree (38 * 41 + 1) := by
         simpa [show 38 * 41 + 1 = 1559 by norm_num] using squarefree_1559
-      exact (hsprop 38 h38 41 (by simpa [C] using hb) this).elim
+      exact (clash 38 41 h38 hb this).elim
     · have : Squarefree (38 * 43 + 1) := by
         simpa [show 38 * 43 + 1 = 1635 by norm_num] using squarefree_1635
-      exact (hsprop 38 h38 43 (by simpa [C] using hb) this).elim
+      exact (clash 38 43 h38 hb this).elim
     · have : Squarefree (38 * 57 + 1) := by
         simpa [show 38 * 57 + 1 = 2167 by norm_num] using squarefree_2167
-      exact (hsprop 38 h38 57 (by simpa [C] using hb) this).elim
+      exact (clash 38 57 h38 hb this).elim
     · have : Squarefree (38 * 68 + 1) := by
         simpa [show 38 * 68 + 1 = 2585 by norm_num] using squarefree_2585
-      exact (hsprop 38 h38 68 (by simpa [C] using hb) this).elim
+      exact (clash 38 68 h38 hb this).elim
     · have : Squarefree (38 * 70 + 1) := by
         simpa [show 38 * 70 + 1 = 2661 by norm_num] using squarefree_2661
-      exact (hsprop 38 h38 70 (by simpa [C] using hb) this).elim
+      exact (clash 38 70 h38 hb this).elim
     · have : Squarefree (38 * 82 + 1) := by
         simpa [show 38 * 82 + 1 = 3117 by norm_num] using squarefree_3117
-      exact (hsprop 38 h38 82 (by simpa [C] using hb) this).elim
+      exact (clash 38 82 h38 hb this).elim
     · have : Squarefree (38 * 93 + 1) := by
         simpa [show 38 * 93 + 1 = 3535 by norm_num] using squarefree_3535
-      exact (hsprop 38 h38 93 (by simpa [C] using hb) this).elim
+      exact (clash 38 93 h38 hb this).elim
     · have : Squarefree (38 * 99 + 1) := by
         simpa [show 38 * 99 + 1 = 3763 by norm_num] using squarefree_3763
-      exact (hsprop 38 h38 99 (by simpa [C] using hb) this).elim
+      exact (clash 38 99 h38 hb this).elim
   have h38_not : 38 ∉ s := h38
 
   by_cases h18 : 18 ∈ s
@@ -1991,30 +1973,30 @@ lemma no_five_in_candidates_100 :
       rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
       · have : Squarefree (18 * 7 + 1) := by
           simpa [show 18 * 7 + 1 = 127 by norm_num] using squarefree_127
-        exact (hsprop 18 h18 7 (by simpa [C] using hb) this).elim
+        exact (clash 18 7 h18 hb this).elim
       · simp
       · have : Squarefree (18 * 32 + 1) := by
           simpa [show 18 * 32 + 1 = 577 by norm_num] using squarefree_577
-        exact (hsprop 18 h18 32 (by simpa [C] using hb) this).elim
+        exact (clash 18 32 h18 hb this).elim
       · exact (h38_not hb).elim
       · have : Squarefree (18 * 41 + 1) := by
           simpa [show 18 * 41 + 1 = 739 by norm_num] using squarefree_739
-        exact (hsprop 18 h18 41 (by simpa [C] using hb) this).elim
+        exact (clash 18 41 h18 hb this).elim
       · simp
       · have : Squarefree (18 * 57 + 1) := by
           simpa [show 18 * 57 + 1 = 1027 by norm_num] using squarefree_1027
-        exact (hsprop 18 h18 57 (by simpa [C] using hb) this).elim
+        exact (clash 18 57 h18 hb this).elim
       · simp
       · have : Squarefree (18 * 70 + 1) := by
           simpa [show 18 * 70 + 1 = 1261 by norm_num] using squarefree_1261
-        exact (hsprop 18 h18 70 (by simpa [C] using hb) this).elim
+        exact (clash 18 70 h18 hb this).elim
       · have : Squarefree (18 * 82 + 1) := by
           simpa [show 18 * 82 + 1 = 1477 by norm_num] using squarefree_1477
-        exact (hsprop 18 h18 82 (by simpa [C] using hb) this).elim
+        exact (clash 18 82 h18 hb this).elim
       · simp
       · have : Squarefree (18 * 99 + 1) := by
           simpa [show 18 * 99 + 1 = 1783 by norm_num] using squarefree_1783
-        exact (hsprop 18 h18 99 (by simpa [C] using hb) this).elim
+        exact (clash 18 99 h18 hb this).elim
     have : s.card ≤ 4 := by
       have : s.card ≤ ({18, 43, 68, 93} : Finset ℕ).card := Finset.card_le_card hs_sub
       simpa using this
@@ -2032,30 +2014,30 @@ lemma no_five_in_candidates_100 :
       rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
       · have : Squarefree (70 * 7 + 1) := by
           simpa [show 70 * 7 + 1 = 491 by norm_num, mul_comm] using squarefree_491
-        exact (hsprop 70 h70 7 (by simpa [C] using hb) this).elim
+        exact (clash 70 7 h70 hb this).elim
       · have : Squarefree (70 * 18 + 1) := by
           simpa [show 70 * 18 + 1 = 1261 by norm_num, mul_comm] using squarefree_1261
-        exact (hsprop 70 h70 18 (by simpa [C] using hb) this).elim
+        exact (clash 70 18 h70 hb this).elim
       · simp
       · exact (h38_not hb).elim
       · simp
       · have : Squarefree (70 * 43 + 1) := by
           simpa [show 70 * 43 + 1 = 3011 by norm_num, mul_comm] using squarefree_3011
-        exact (hsprop 70 h70 43 (by simpa [C] using hb) this).elim
+        exact (clash 70 43 h70 hb this).elim
       · have : Squarefree (70 * 57 + 1) := by
           simpa [show 70 * 57 + 1 = 3991 by norm_num, mul_comm] using squarefree_3991
-        exact (hsprop 70 h70 57 (by simpa [C] using hb) this).elim
+        exact (clash 70 57 h70 hb this).elim
       · simp
       · simp
       · have : Squarefree (70 * 82 + 1) := by
           simpa [show 70 * 82 + 1 = 5741 by norm_num, mul_comm] using squarefree_5741
-        exact (hsprop 70 h70 82 (by simpa [C] using hb) this).elim
+        exact (clash 70 82 h70 hb this).elim
       · have : Squarefree (70 * 93 + 1) := by
           simpa [show 70 * 93 + 1 = 6511 by norm_num, mul_comm] using squarefree_6511
-        exact (hsprop 70 h70 93 (by simpa [C] using hb) this).elim
+        exact (clash 70 93 h70 hb this).elim
       · have : Squarefree (70 * 99 + 1) := by
           simpa [show 70 * 99 + 1 = 6931 by norm_num, mul_comm] using squarefree_6931
-        exact (hsprop 70 h70 99 (by simpa [C] using hb) this).elim
+        exact (clash 70 99 h70 hb this).elim
     have : s.card ≤ 4 := by
       have : s.card ≤ ({32, 41, 68, 70} : Finset ℕ).card := Finset.card_le_card hs_sub
       simpa using this
@@ -2073,26 +2055,26 @@ lemma no_five_in_candidates_100 :
       rcases hb_cases with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
       · have : Squarefree (99 * 7 + 1) := by
           simpa [show 99 * 7 + 1 = 694 by norm_num, mul_comm] using squarefree_694
-        exact (hsprop 99 h99 7 (by simpa [C] using hb) this).elim
+        exact (clash 99 7 h99 hb this).elim
       · have : Squarefree (99 * 18 + 1) := by
           simpa [show 99 * 18 + 1 = 1783 by norm_num, mul_comm] using squarefree_1783
-        exact (hsprop 99 h99 18 (by simpa [C] using hb) this).elim
+        exact (clash 99 18 h99 hb this).elim
       · have : Squarefree (99 * 32 + 1) := by
           simpa [show 99 * 32 + 1 = 3169 by norm_num, mul_comm] using squarefree_3169
-        exact (hsprop 99 h99 32 (by simpa [C] using hb) this).elim
+        exact (clash 99 32 h99 hb this).elim
       · exact (h38_not hb).elim
       · simp
       · have : Squarefree (99 * 43 + 1) := by
           simpa [show 99 * 43 + 1 = 4258 by norm_num, mul_comm] using squarefree_4258
-        exact (hsprop 99 h99 43 (by simpa [C] using hb) this).elim
+        exact (clash 99 43 h99 hb this).elim
       · simp
       · have : Squarefree (99 * 68 + 1) := by
           simpa [show 99 * 68 + 1 = 6733 by norm_num, mul_comm] using squarefree_6733
-        exact (hsprop 99 h99 68 (by simpa [C] using hb) this).elim
+        exact (clash 99 68 h99 hb this).elim
       · exact (h70 hb).elim
       · have : Squarefree (99 * 82 + 1) := by
           simpa [show 99 * 82 + 1 = 8119 by norm_num, mul_comm] using squarefree_8119
-        exact (hsprop 99 h99 82 (by simpa [C] using hb) this).elim
+        exact (clash 99 82 h99 hb this).elim
       · simp
       · simp
     have : s.card ≤ 4 := by
@@ -2113,26 +2095,26 @@ lemma no_five_in_candidates_100 :
       · simp
       · have : Squarefree (41 * 18 + 1) := by
           simpa [show 41 * 18 + 1 = 739 by norm_num, mul_comm] using squarefree_739
-        exact (hsprop 41 h41 18 (by simpa [C] using hb) this).elim
+        exact (clash 41 18 h41 hb this).elim
       · have : Squarefree (41 * 32 + 1) := by
           simpa [show 41 * 32 + 1 = 1313 by norm_num, mul_comm] using squarefree_1313
-        exact (hsprop 41 h41 32 (by simpa [C] using hb) this).elim
+        exact (clash 41 32 h41 hb this).elim
       · exact (h38_not hb).elim
       · simp
       · simp
       · have : Squarefree (41 * 57 + 1) := by
           simpa [show 41 * 57 + 1 = 2338 by norm_num, mul_comm] using squarefree_2338
-        exact (hsprop 41 h41 57 (by simpa [C] using hb) this).elim
+        exact (clash 41 57 h41 hb this).elim
       · have : Squarefree (41 * 68 + 1) := by
           simpa [show 41 * 68 + 1 = 2789 by norm_num, mul_comm] using squarefree_2789
-        exact (hsprop 41 h41 68 (by simpa [C] using hb) this).elim
+        exact (clash 41 68 h41 hb this).elim
       · exact (h70 hb).elim
       · have : Squarefree (41 * 82 + 1) := by
           simpa [show 41 * 82 + 1 = 3363 by norm_num, mul_comm] using squarefree_3363
-        exact (hsprop 41 h41 82 (by simpa [C] using hb) this).elim
+        exact (clash 41 82 h41 hb this).elim
       · have : Squarefree (41 * 93 + 1) := by
           simpa [show 41 * 93 + 1 = 3814 by norm_num, mul_comm] using squarefree_3814
-        exact (hsprop 41 h41 93 (by simpa [C] using hb) this).elim
+        exact (clash 41 93 h41 hb this).elim
       · exact (h99 hb).elim
     have : s.card ≤ 3 := by
       have : s.card ≤ ({7, 41, 43} : Finset ℕ).card := Finset.card_le_card hs_sub
@@ -2152,20 +2134,20 @@ lemma no_five_in_candidates_100 :
       · simp
       · have : Squarefree (82 * 18 + 1) := by
           simpa [show 82 * 18 + 1 = 1477 by norm_num, mul_comm] using squarefree_1477
-        exact (hsprop 82 h82 18 (by simpa [C] using hb) this).elim
+        exact (clash 82 18 h82 hb this).elim
       · simp
       · exact (h38_not hb).elim
       · exact (h41 hb).elim
       · have : Squarefree (82 * 43 + 1) := by
           simpa [show 82 * 43 + 1 = 3527 by norm_num, mul_comm] using squarefree_3527
-        exact (hsprop 82 h82 43 (by simpa [C] using hb) this).elim
+        exact (clash 82 43 h82 hb this).elim
       · simp
       · simp
       · exact (h70 hb).elim
       · simp
       · have : Squarefree (82 * 93 + 1) := by
           simpa [show 82 * 93 + 1 = 7627 by norm_num] using squarefree_7627
-        exact (hsprop 82 h82 93 (by simpa [C] using hb) this).elim
+        exact (clash 82 93 h82 hb this).elim
       · exact (h99 hb).elim
     have hcard_eq :
         s = ({7, 32, 57, 68, 82} : Finset ℕ) := by
@@ -2177,7 +2159,7 @@ lemma no_five_in_candidates_100 :
     have h68 : 68 ∈ s := by simp [hcard_eq]
     have : Squarefree (32 * 68 + 1) := by
       simpa [show 32 * 68 + 1 = 2177 by norm_num] using squarefree_2177
-    exact (hsprop 32 h32 68 h68 this).elim
+    exact (clash 32 68 h32 h68 this).elim
 
   -- Remaining elements: {7,32,43,57,68,93}. Any 5-subset contains a squarefree pair.
   have hs_subR : s ⊆ ({7, 32, 43, 57, 68, 93} : Finset ℕ) := by
@@ -2204,7 +2186,7 @@ lemma no_five_in_candidates_100 :
   · by_cases h68 : 68 ∈ s
     · have : Squarefree (32 * 68 + 1) := by
         simpa [show 32 * 68 + 1 = 2177 by norm_num] using squarefree_2177
-      exact (hsprop 32 h32 68 h68 this).elim
+      exact (clash 32 68 h32 h68 this).elim
     · -- 68 ∉ s, so s = {7,32,43,57,93} and 32*93+1 is squarefree
       have hs_sub : s ⊆ ({7, 32, 43, 57, 93} : Finset ℕ) := by
         intro b hb
@@ -2222,7 +2204,7 @@ lemma no_five_in_candidates_100 :
       have h93 : 93 ∈ s := by simp [hs_eq]
       have : Squarefree (32 * 93 + 1) := by
         simpa [show 32 * 93 + 1 = 2977 by norm_num] using squarefree_2977
-      exact (hsprop 32 h32 93 h93 this).elim
+      exact (clash 32 93 h32 h93 this).elim
   · -- 32 ∉ s, so s = {7,43,57,68,93} and 7*43+1 is squarefree
     have hs_sub : s ⊆ ({7, 43, 57, 68, 93} : Finset ℕ) := by
       intro b hb
@@ -2241,41 +2223,42 @@ lemma no_five_in_candidates_100 :
     have h43 : 43 ∈ s := by simp [hs_eq]
     have : Squarefree (7 * 43 + 1) := by
       simpa [show 7 * 43 + 1 = 302 by norm_num] using squarefree_302
-    exact (hsprop 7 h7 43 h43 this).elim
+    exact (clash 7 43 h7 h43 this).elim
 
 -- Main theorems for small N
+lemma problem_848_small {N k : ℕ} (hA7_card : (A₇ N).card = k)
+    (cand : Finset ℕ) (hdiag : DiagonalCandidates N = cand)
+    (hno : ∀ s : Finset ℕ, s ⊆ cand → s.card = k.succ → ¬ NonSquarefreeProductProp s) :
+    ∀ A : Finset ℕ, A ⊆ Finset.range N → NonSquarefreeProductProp A →
+      A.card ≤ (A₇ N).card := by
+  intro A hAsub hAprop
+  rw [hA7_card]
+  have h_sub_cand : A ⊆ DiagonalCandidates N := prop_implies_diag_candidates A N hAsub hAprop
+  have h_sub_cand' : A ⊆ cand := by simpa [hdiag] using h_sub_cand
+  by_contra hle
+  push_neg at hle
+  have hcard_succ : k.succ ≤ A.card := (Nat.succ_le_iff).2 hle
+  have hex : ∃ s : Finset ℕ, s ⊆ A ∧ s.card = k.succ := Finset.exists_subset_card_eq hcard_succ
+  obtain ⟨s, hs_sub, hs_card⟩ := hex
+  have hs_prop : NonSquarefreeProductProp s := nonSquarefreeProductProp_subset hs_sub hAprop
+  have hs_sub_cand : s ⊆ cand := Finset.Subset.trans hs_sub h_sub_cand'
+  exact (hno s hs_sub_cand hs_card) hs_prop
+
 theorem problem_848_N50 :
     ∀ A : Finset ℕ, A ⊆ Finset.range 50 → NonSquarefreeProductProp A →
       A.card ≤ (A₇ 50).card := by
-  intro A hAsub hAprop
-  rw [A₇_50_card]
-  have h_sub_cand : A ⊆ DiagonalCandidates 50 := prop_implies_diag_candidates A 50 hAsub hAprop
-  rw [diag_cand_50] at h_sub_cand
-  by_contra h
-  push_neg at h
-  have hcard3 : 3 ≤ A.card := h
-  have hex : ∃ s : Finset ℕ, s ⊆ A ∧ s.card = 3 := Finset.exists_subset_card_eq hcard3
-  obtain ⟨s, hs_sub, hs_card⟩ := hex
-  have hs_prop : NonSquarefreeProductProp s := nonSquarefreeProductProp_subset hs_sub hAprop
-  have hs_sub_cand : s ⊆ {7, 18, 32, 38, 41, 43} := Finset.Subset.trans hs_sub h_sub_cand
-  exact no_triple_in_candidates s hs_sub_cand hs_card hs_prop
+  exact
+    problem_848_small (N := 50) (k := 2) (hA7_card := A₇_50_card)
+      (cand := {7, 18, 32, 38, 41, 43}) (hdiag := diag_cand_50)
+      (hno := fun s hs_sub hs_card => no_triple_in_candidates s hs_sub hs_card)
 
 theorem problem_848_N100 :
     ∀ A : Finset ℕ, A ⊆ Finset.range 100 → NonSquarefreeProductProp A →
       A.card ≤ (A₇ 100).card := by
-  intro A hAsub hAprop
-  rw [A₇_100_card]
-  have h_sub_cand : A ⊆ DiagonalCandidates 100 := prop_implies_diag_candidates A 100 hAsub hAprop
-  rw [diag_cand_100] at h_sub_cand
-  by_contra h
-  push_neg at h
-  have hcard5 : 5 ≤ A.card := h
-  have hex : ∃ s : Finset ℕ, s ⊆ A ∧ s.card = 5 := Finset.exists_subset_card_eq hcard5
-  obtain ⟨s, hs_sub, hs_card⟩ := hex
-  have hs_prop : NonSquarefreeProductProp s := nonSquarefreeProductProp_subset hs_sub hAprop
-  have hs_sub_cand : s ⊆ {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99} :=
-    Finset.Subset.trans hs_sub h_sub_cand
-  exact no_five_in_candidates_100 s hs_sub_cand hs_card hs_prop
+  exact
+    problem_848_small (N := 100) (k := 4) (hA7_card := A₇_100_card)
+      (cand := {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99}) (hdiag := diag_cand_100)
+      (hno := fun s hs_sub hs_card => no_five_in_candidates_100 s hs_sub hs_card)
 
 -- ============================================================================
 -- SECTION 8: SAWHNEY'S THEOREM (Research Level - as Prop)
@@ -2303,34 +2286,39 @@ def Problem848Statement (N : ℕ) : Prop :=
 -- SECTION 9: GLUE THEOREMS (PROVED - conditional on SawhneyMain)
 -- ============================================================================
 
-lemma A₇_card (N : ℕ) : (A₇ N).card = (N + 17) / 25 := by
+/-- Counting residue classes in `Finset.range N`: `|{n < N : n % 25 = r}|`. -/
+lemma card_range_filter_mod25_eq (r : ℕ) (hr : r ≤ 24) (N : ℕ) :
+    ((Finset.range N).filter (fun n => n % 25 = r)).card = (N + (24 - r)) / 25 := by
   classical
-  set K : ℕ := (N + 17) / 25
-  have hbij : (A₇ N).card = (Finset.range K).card := by
-    refine (Finset.card_bij (s := Finset.range K) (t := A₇ N)
-      (i := fun k _hk => 25 * k + 7) ?_ ?_ ?_).symm
+  have hr_lt : r < 25 := lt_of_le_of_lt hr (by decide : 24 < 25)
+  set K : ℕ := (N + (24 - r)) / 25
+  have hbij :
+      ((Finset.range N).filter (fun n => n % 25 = r)).card = (Finset.range K).card := by
+    refine (Finset.card_bij (s := Finset.range K) (t := (Finset.range N).filter (fun n => n % 25 = r))
+      (i := fun k _hk => 25 * k + r) ?_ ?_ ?_).symm
     · intro k hk
       have hk' : k < K := by simpa [Finset.mem_range] using hk
       have hk1 : k + 1 ≤ K := Nat.succ_le_iff.2 hk'
       have hmul : 25 * (k + 1) ≤ 25 * K := Nat.mul_le_mul_left 25 hk1
-      have hK : 25 * K ≤ N + 17 := by simpa [K] using Nat.mul_div_le (N + 17) 25
-      have hmul' : 25 * (k + 1) ≤ N + 17 := le_trans hmul hK
-      have hlt : 25 * k + 7 < N := by omega
-      simp [A₇, Finset.mem_filter, Finset.mem_range, hlt, Nat.add_mod]
+      have hK : 25 * K ≤ N + (24 - r) := by
+        simpa [K] using Nat.mul_div_le (N + (24 - r)) 25
+      have hmul' : 25 * (k + 1) ≤ N + (24 - r) := le_trans hmul hK
+      have hlt : 25 * k + r < N := by omega
+      simp [Finset.mem_filter, Finset.mem_range, hlt, Nat.add_mod, hr_lt]
     · intro k₁ _hk₁ k₂ _hk₂ h
       have h' : 25 * k₁ = 25 * k₂ := Nat.add_right_cancel h
       exact Nat.mul_left_cancel (by decide : 0 < 25) h'
     · intro a ha
-      have ha' : a < N ∧ a % 25 = 7 := by
-        simpa [A₇, Finset.mem_filter, Finset.mem_range] using ha
-      have ha_eq : 25 * (a / 25) + 7 = a := by
+      have ha' : a < N ∧ a % 25 = r := by
+        simpa [Finset.mem_filter, Finset.mem_range] using ha
+      have ha_eq : 25 * (a / 25) + r = a := by
         have h := Nat.mod_add_div a 25
         simpa [ha'.2, Nat.add_comm, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using h
       refine ⟨a / 25, ?_, ?_⟩
-      · have hlt : 25 * (a / 25) + 7 < N := by simpa [ha_eq] using ha'.1
-        have hmul : 25 * ((a / 25) + 1) ≤ N + 17 := by omega
+      · have hlt : 25 * (a / 25) + r < N := by simpa [ha_eq] using ha'.1
+        have hmul : 25 * ((a / 25) + 1) ≤ N + (24 - r) := by omega
         have hle : a / 25 + 1 ≤ K := by
-          have hmul' : (a / 25 + 1) * 25 ≤ N + 17 := by
+          have hmul' : (a / 25 + 1) * 25 ≤ N + (24 - r) := by
             simpa [Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using hmul
           have := (Nat.le_div_iff_mul_le (k0 := (by decide : 0 < 25))).2 hmul'
           simpa [K] using this
@@ -2339,41 +2327,11 @@ lemma A₇_card (N : ℕ) : (A₇ N).card = (N + 17) / 25 := by
       · exact ha_eq
   simpa [Finset.card_range, K] using hbij
 
+lemma A₇_card (N : ℕ) : (A₇ N).card = (N + 17) / 25 := by
+  simpa [A₇, Nat.sub_sub] using (card_range_filter_mod25_eq 7 (by decide) N)
+
 lemma A₁₈_card (N : ℕ) : (A₁₈ N).card = (N + 6) / 25 := by
-  classical
-  set K : ℕ := (N + 6) / 25
-  have hbij : (A₁₈ N).card = (Finset.range K).card := by
-    refine (Finset.card_bij (s := Finset.range K) (t := A₁₈ N)
-      (i := fun k _hk => 25 * k + 18) ?_ ?_ ?_).symm
-    · intro k hk
-      have hk' : k < K := by simpa [Finset.mem_range] using hk
-      have hk1 : k + 1 ≤ K := Nat.succ_le_iff.2 hk'
-      have hmul : 25 * (k + 1) ≤ 25 * K := Nat.mul_le_mul_left 25 hk1
-      have hK : 25 * K ≤ N + 6 := by simpa [K] using Nat.mul_div_le (N + 6) 25
-      have hmul' : 25 * (k + 1) ≤ N + 6 := le_trans hmul hK
-      have hlt : 25 * k + 18 < N := by omega
-      simp [A₁₈, Finset.mem_filter, Finset.mem_range, hlt, Nat.add_mod]
-    · intro k₁ _hk₁ k₂ _hk₂ h
-      have h' : 25 * k₁ = 25 * k₂ := Nat.add_right_cancel h
-      exact Nat.mul_left_cancel (by decide : 0 < 25) h'
-    · intro a ha
-      have ha' : a < N ∧ a % 25 = 18 := by
-        simpa [A₁₈, Finset.mem_filter, Finset.mem_range] using ha
-      have ha_eq : 25 * (a / 25) + 18 = a := by
-        have h := Nat.mod_add_div a 25
-        simpa [ha'.2, Nat.add_comm, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using h
-      refine ⟨a / 25, ?_, ?_⟩
-      · have hlt : 25 * (a / 25) + 18 < N := by simpa [ha_eq] using ha'.1
-        have hmul : 25 * ((a / 25) + 1) ≤ N + 6 := by omega
-        have hle : a / 25 + 1 ≤ K := by
-          have hmul' : (a / 25 + 1) * 25 ≤ N + 6 := by
-            simpa [Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using hmul
-          have := (Nat.le_div_iff_mul_le (k0 := (by decide : 0 < 25))).2 hmul'
-          simpa [K] using this
-        have hltK : a / 25 < K := Nat.lt_of_lt_of_le (Nat.lt_succ_self _) hle
-        simpa [Finset.mem_range] using hltK
-      · exact ha_eq
-  simpa [Finset.card_range, K] using hbij
+  simpa [A₁₈, Nat.sub_sub] using (card_range_filter_mod25_eq 18 (by decide) N)
 
 lemma A₁₈_card_le_A₇ (N : ℕ) : (A₁₈ N).card ≤ (A₇ N).card := by
   have h : N + 6 ≤ N + 17 := Nat.add_le_add_left (by decide : 6 ≤ 17) N
@@ -2449,7 +2407,7 @@ set_option maxRecDepth 20000 in
 /-- Explicit diagonal-prime list for `primeCutoff = 2000`.
 
 This is the set of primes `p ≤ 2000` with `p % 4 = 1` and `13 ≤ p`. -/
-def diagPrimesCoarse_listL : List ℕ :=
+private def diagPrimesCoarse_listL : List ℕ :=
   [
   13, 17, 29, 37, 41, 53, 61, 73, 89, 97, 101, 109,
   113, 137, 149, 157, 173, 181, 193, 197, 229, 233, 241, 257,
@@ -2466,12 +2424,12 @@ def diagPrimesCoarse_listL : List ℕ :=
   1993, 1997
   ]
 
-def diagPrimesCoarse_list : Finset ℕ :=
+private def diagPrimesCoarse_list : Finset ℕ :=
   diagPrimesCoarse_listL.toFinset
 
 set_option maxRecDepth 40000 in
 /-- Explicit prime list for `primeCutoff = 2000` with `p ≠ 5`. -/
-def no5PrimesCoarse_listL : List ℕ :=
+private def no5PrimesCoarse_listL : List ℕ :=
   [
   2, 3, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41,
   43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
@@ -2501,7 +2459,7 @@ def no5PrimesCoarse_listL : List ℕ :=
   1997, 1999
   ]
 
-def no5PrimesCoarse_list : Finset ℕ :=
+private def no5PrimesCoarse_list : Finset ℕ :=
   no5PrimesCoarse_listL.toFinset
 
 /-!
@@ -2512,75 +2470,74 @@ Instead we compute *ordered lists* via kernel-friendly `Num.Prime`, prove list e
 and lift to finsets via `List.toFinset`.
 -/
 
-def natToNum : ℕ → Num
+private def natToNum : ℕ → Num
   | 0 => 0
   | n + 1 => natToNum n + 1
 
-lemma natToNum_toNat (n : ℕ) : ((natToNum n : Num) : ℕ) = n := by
+private lemma natToNum_toNat (n : ℕ) : ((natToNum n : Num) : ℕ) = n := by
   induction n with
   | zero => simp [natToNum]
   | succ n ih =>
       simp [natToNum, ih]
 
-lemma natToNum_prime_iff (p : ℕ) : (natToNum p).Prime ↔ Nat.Prime p := by
+private lemma natToNum_prime_iff (p : ℕ) : (natToNum p).Prime ↔ Nat.Prime p := by
   simp [Num.Prime, natToNum_toNat]
 
-lemma natToNum_natPrime_iff (p : ℕ) : Nat.Prime (↑(natToNum p) : ℕ) ↔ Nat.Prime p := by
+private lemma natToNum_natPrime_iff (p : ℕ) : Nat.Prime (↑(natToNum p) : ℕ) ↔ Nat.Prime p := by
   simp [natToNum_toNat]
 
-def isDiagPrimeBool (p : ℕ) : Bool :=
+private def isDiagPrimeBool (p : ℕ) : Bool :=
   decide ((natToNum p).Prime ∧ p % 4 = 1 ∧ 13 ≤ p)
 
-def isNo5PrimeBool (p : ℕ) : Bool :=
+private def isNo5PrimeBool (p : ℕ) : Bool :=
   decide ((natToNum p).Prime ∧ p ≠ 5)
 
-def diagPrimesCoarse_computed_list : List ℕ :=
+private def diagPrimesCoarse_computed_list : List ℕ :=
   (List.range (primeCutoff + 1)).filter isDiagPrimeBool
 
-def no5PrimesCoarse_computed_list : List ℕ :=
+private def no5PrimesCoarse_computed_list : List ℕ :=
   (List.range (primeCutoff + 1)).filter isNo5PrimeBool
 
 set_option maxRecDepth 40000 in
-set_option maxHeartbeats 20000000 in
-lemma diagPrimesCoarse_computed_list_eq : diagPrimesCoarse_computed_list = diagPrimesCoarse_listL := by
+private lemma diagPrimesCoarse_computed_list_eq :
+    diagPrimesCoarse_computed_list = diagPrimesCoarse_listL := by
   unfold diagPrimesCoarse_computed_list diagPrimesCoarse_listL isDiagPrimeBool natToNum primeCutoff
   decide
 
 set_option maxRecDepth 80000 in
-set_option maxHeartbeats 40000000 in
-lemma no5PrimesCoarse_computed_list_eq : no5PrimesCoarse_computed_list = no5PrimesCoarse_listL := by
+private lemma no5PrimesCoarse_computed_list_eq :
+    no5PrimesCoarse_computed_list = no5PrimesCoarse_listL := by
   unfold no5PrimesCoarse_computed_list no5PrimesCoarse_listL isNo5PrimeBool natToNum primeCutoff
   decide
 
 set_option maxRecDepth 20000 in
  /-- Kernel-friendly prime list: uses `Num.Prime` instead of `Nat.Prime`. -/
-def primesUpTo_num (B : ℕ) : Finset ℕ :=
+private def primesUpTo_num (B : ℕ) : Finset ℕ :=
   (Finset.range (B + 1)).filter (fun p => (natToNum p).Prime)
 
-def diagPrimesCoarse_num : Finset ℕ :=
+private def diagPrimesCoarse_num : Finset ℕ :=
   (primesUpTo_num primeCutoff).filter (fun p => p % 4 = 1 ∧ 13 ≤ p)
 
-def no5PrimesCoarse_num : Finset ℕ :=
+private def no5PrimesCoarse_num : Finset ℕ :=
   (primesUpTo_num primeCutoff).filter (fun p => p ≠ 5)
 
-lemma primesUpTo_eq_num (B : ℕ) : primesUpTo B = primesUpTo_num B := by
+private lemma primesUpTo_eq_num (B : ℕ) : primesUpTo B = primesUpTo_num B := by
   classical
   ext p
   simp [primesUpTo, primesUpTo_num, natToNum_natPrime_iff]
 
-lemma diagPrimesCoarse_eq_num : diagPrimesCoarse = diagPrimesCoarse_num := by
+private lemma diagPrimesCoarse_eq_num : diagPrimesCoarse = diagPrimesCoarse_num := by
   classical
   ext p
   simp [diagPrimesCoarse, diagPrimesCoarse_num, primesUpTo_eq_num]
 
-lemma no5PrimesCoarse_eq_num : no5PrimesCoarse = no5PrimesCoarse_num := by
+private lemma no5PrimesCoarse_eq_num : no5PrimesCoarse = no5PrimesCoarse_num := by
   classical
   ext p
   simp [no5PrimesCoarse, no5PrimesCoarse_num, primesUpTo_eq_num]
 
 set_option maxRecDepth 20000 in
-set_option maxHeartbeats 20000000 in
-lemma diagPrimesCoarse_eq_list : diagPrimesCoarse = diagPrimesCoarse_list := by
+private lemma diagPrimesCoarse_eq_list : diagPrimesCoarse = diagPrimesCoarse_list := by
   have hnum : diagPrimesCoarse_num = diagPrimesCoarse_list := by
     classical
     have hcomp : diagPrimesCoarse_num = diagPrimesCoarse_computed_list.toFinset := by
@@ -2593,8 +2550,7 @@ lemma diagPrimesCoarse_eq_list : diagPrimesCoarse = diagPrimesCoarse_list := by
   simpa [diagPrimesCoarse_eq_num] using hnum
 
 set_option maxRecDepth 20000 in
-set_option maxHeartbeats 40000000 in
-lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
+private lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
   have hnum : no5PrimesCoarse_num = no5PrimesCoarse_list := by
     classical
     have hcomp : no5PrimesCoarse_num = no5PrimesCoarse_computed_list.toFinset := by
@@ -2607,44 +2563,44 @@ lemma no5PrimesCoarse_eq_list : no5PrimesCoarse = no5PrimesCoarse_list := by
   simpa [no5PrimesCoarse_eq_num] using hnum
 
 -- Precomputed values (verified by Python; checked below using `simp`+`norm_num`)
-def diagPrimeDen : ℕ := 675067109924022977481515022034423512130479741539843807153469481052459028449452239232681980484545751069432973665683513280116016389500052645708341506941475615768814814870158065312753645077424198983444958279911880503831858071611272341994669353872744477768603209022359280059888618077776469014358245817529542708972753086348322957228843681307207963965767547374440897724003930473524265583251046012199781767374651834379560815527295708011857396433182071977716977932488431948888643891386067228558290565991227834390721337450990589134617661285518460561497407002739052848895879304579595915925480129856478914111298702283283880166246123671142902924556816351174498397701877438338568113063768986635318468872328007108093276626460935787650985933892343902371072373911766012319899393655815824547851160252826653544514334345091072636858918139681
+private def diagPrimeDen : ℕ := 675067109924022977481515022034423512130479741539843807153469481052459028449452239232681980484545751069432973665683513280116016389500052645708341506941475615768814814870158065312753645077424198983444958279911880503831858071611272341994669353872744477768603209022359280059888618077776469014358245817529542708972753086348322957228843681307207963965767547374440897724003930473524265583251046012199781767374651834379560815527295708011857396433182071977716977932488431948888643891386067228558290565991227834390721337450990589134617661285518460561497407002739052848895879304579595915925480129856478914111298702283283880166246123671142902924556816351174498397701877438338568113063768986635318468872328007108093276626460935787650985933892343902371072373911766012319899393655815824547851160252826653544514334345091072636858918139681
 
-def diagPrimeNum : ℕ := 9305610659457897442676762862705965160774002555239187280326616824765234123780557950402694941485474115851934365564701907981391869361100532018302588546527816525182066155886026230828249088321763633219652942462312124219609612722188796413697767666009124057865982064831388014566139360058830576198938347738999199604817115293773916567614816635477749647011858507377026639402635648230109093785743026065979324685919233919683228360366693877028924951436389249109634069368426189819537949188621546091565402853367547905644723070462800659946565285260706726866118982643627117971703925445170082273301522379205943743210925761931977490511577686030761597012740023119745448189583494143740813932629018217041118409757090741073742791813029359289392669630990356661277433141915142252769433037626264467619973192311414856413911733309761632824747221874
+private def diagPrimeNum : ℕ := 9305610659457897442676762862705965160774002555239187280326616824765234123780557950402694941485474115851934365564701907981391869361100532018302588546527816525182066155886026230828249088321763633219652942462312124219609612722188796413697767666009124057865982064831388014566139360058830576198938347738999199604817115293773916567614816635477749647011858507377026639402635648230109093785743026065979324685919233919683228360366693877028924951436389249109634069368426189819537949188621546091565402853367547905644723070462800659946565285260706726866118982643627117971703925445170082273301522379205943743210925761931977490511577686030761597012740023119745448189583494143740813932629018217041118409757090741073742791813029359289392669630990356661277433141915142252769433037626264467619973192311414856413911733309761632824747221874
 
 -- These use precomputed values for efficiency (equality with symbolic sum verified externally)
-def diagPrimeSumCoarse : ℚ := (diagPrimeNum : ℚ) / (diagPrimeDen : ℚ)
-def diagPrimeSumCoarse_fast : ℚ := diagPrimeSumCoarse  -- alias for compatibility
+private def diagPrimeSumCoarse : ℚ := (diagPrimeNum : ℚ) / (diagPrimeDen : ℚ)
+private def diagPrimeSumCoarse_fast : ℚ := diagPrimeSumCoarse  -- alias for compatibility
 
-lemma diagPrimeDen_pos : 0 < diagPrimeDen := by decide
+private lemma diagPrimeDen_pos : 0 < diagPrimeDen := by decide
 
-lemma diagPrimeSumCoarse_eq_fast : diagPrimeSumCoarse = diagPrimeSumCoarse_fast := rfl
+private lemma diagPrimeSumCoarse_eq_fast : diagPrimeSumCoarse = diagPrimeSumCoarse_fast := rfl
 
 -- Off-diagonal primes (p ≠ 2, p ≠ 5)
-def offPrimeDen : ℕ := 837376834111829576045234207802218576771654247073893740289982865879324769485666464409369680899771977773242005057056999540614437182424912247965392785079134924948355989189457589130627235984427117797224911255790830829566444155587490652528907331686051520300467012482516027366478571696464873548704324803911298553048307160148081713726663967617471387285273644109699676946145878252651343297385076758448162529660353153374708797476760056809073559905024283699698489077329043974862540264273413182153550889236264833926893353304641773095468222254667916806377662942880161722100918206630359277744626322106160656481663569233077973282055319309860215031828955684993660072595539855351759737389172710882230640073358569128797565577137218928626035746778047381850872886282786937294735385122950536926904204127247594493286050612962127587629198831254870139942766921588273025082998237052137276427394390350703636265216598447302283681407140290051967526960734140292022847174630170910643044342639098106412408720895623083598914082492828468831180993652638376001071641235659157967616603674089101205719836262436715739807389481892598018622582810793317326994506645527722330785828216155964374072975780050119042207967029011297636863245809972089532936045614791048370600927553187281812384369905714441528901411454270087245942765155237167186994647772131285310554688868193782152679559282925508842576706555973095719413381305657011400504579142294191785760019235899478196360778088998748012407517319522706476609064285617097593330420701846156372967545677701181710563842194174395081411994449988574663500028542383470887115538355445020293448355570861780564053137488221394558995557980599076825127987938742564552790985356467640439463828089
+private def offPrimeDen : ℕ := 837376834111829576045234207802218576771654247073893740289982865879324769485666464409369680899771977773242005057056999540614437182424912247965392785079134924948355989189457589130627235984427117797224911255790830829566444155587490652528907331686051520300467012482516027366478571696464873548704324803911298553048307160148081713726663967617471387285273644109699676946145878252651343297385076758448162529660353153374708797476760056809073559905024283699698489077329043974862540264273413182153550889236264833926893353304641773095468222254667916806377662942880161722100918206630359277744626322106160656481663569233077973282055319309860215031828955684993660072595539855351759737389172710882230640073358569128797565577137218928626035746778047381850872886282786937294735385122950536926904204127247594493286050612962127587629198831254870139942766921588273025082998237052137276427394390350703636265216598447302283681407140290051967526960734140292022847174630170910643044342639098106412408720895623083598914082492828468831180993652638376001071641235659157967616603674089101205719836262436715739807389481892598018622582810793317326994506645527722330785828216155964374072975780050119042207967029011297636863245809972089532936045614791048370600927553187281812384369905714441528901411454270087245942765155237167186994647772131285310554688868193782152679559282925508842576706555973095719413381305657011400504579142294191785760019235899478196360778088998748012407517319522706476609064285617097593330420701846156372967545677701181710563842194174395081411994449988574663500028542383470887115538355445020293448355570861780564053137488221394558995557980599076825127987938742564552790985356467640439463828089
 
-def offPrimeNum : ℕ := 135813400117721233787155556548212973288342438109841990106668924783243450649497515328899374390398553392361533236364358473620113989559400736878195934710226502939814348745986565512153670102623578148759410059990511077563907734923970890465489942515347200993470556609943393338629483227672094207587065519819545605665343871087448127472983645066512688075362786684890747258933701480087879623820132236875211700084695463379072512648494589436991554823691888285199782475539514473061293573321318873774314242954092659452732134379153071273004165202022486952818582847062052887212052229949990441307347385730558087531112678001749856759564160517926485498180441906955241671542203738366146498425615591505821659821372018818548977244735859850797220589401532614892718530670996761152280766454347151356466383796353610898292387299254310732903459339004264700201630341840435553832948117266792074014635161352824685016425375698569747718074006730997138256628133474329660785463639204941345713349306703547396907539484094563499126011276303738019481918100760571648357490539034238576756079528587078037566442226023854008323640858042590843242505767952276386053894140210278691310901815929669386828399900781133461043854377207055512490593214933418055716311145185642798709051756720331061741580759232925272112289397420456078939228400343421415347510759410283135079183509548536284359810897034420727299221258878019206982482768033307055738224278227886620891952781117849433373938078120432421021270423938804374806423207068262547182750834257932759947807453552075063613345094195899367225573311262785988431116453716899927301598393855339705075412224545546846419958845408510098508541234937869448551969505421647216471304666292278160110811149
+private def offPrimeNum : ℕ := 135813400117721233787155556548212973288342438109841990106668924783243450649497515328899374390398553392361533236364358473620113989559400736878195934710226502939814348745986565512153670102623578148759410059990511077563907734923970890465489942515347200993470556609943393338629483227672094207587065519819545605665343871087448127472983645066512688075362786684890747258933701480087879623820132236875211700084695463379072512648494589436991554823691888285199782475539514473061293573321318873774314242954092659452732134379153071273004165202022486952818582847062052887212052229949990441307347385730558087531112678001749856759564160517926485498180441906955241671542203738366146498425615591505821659821372018818548977244735859850797220589401532614892718530670996761152280766454347151356466383796353610898292387299254310732903459339004264700201630341840435553832948117266792074014635161352824685016425375698569747718074006730997138256628133474329660785463639204941345713349306703547396907539484094563499126011276303738019481918100760571648357490539034238576756079528587078037566442226023854008323640858042590843242505767952276386053894140210278691310901815929669386828399900781133461043854377207055512490593214933418055716311145185642798709051756720331061741580759232925272112289397420456078939228400343421415347510759410283135079183509548536284359810897034420727299221258878019206982482768033307055738224278227886620891952781117849433373938078120432421021270423938804374806423207068262547182750834257932759947807453552075063613345094195899367225573311262785988431116453716899927301598393855339705075412224545546846419958845408510098508541234937869448551969505421647216471304666292278160110811149
 
-def offPrimeSumCoarse : ℚ := (offPrimeNum : ℚ) / (offPrimeDen : ℚ)
-def offPrimeSumCoarse_fast : ℚ := offPrimeSumCoarse
+private def offPrimeSumCoarse : ℚ := (offPrimeNum : ℚ) / (offPrimeDen : ℚ)
+private def offPrimeSumCoarse_fast : ℚ := offPrimeSumCoarse
 
-lemma offPrimeDen_pos : 0 < offPrimeDen := by decide
-lemma offPrimeSumCoarse_eq_fast : offPrimeSumCoarse = offPrimeSumCoarse_fast := rfl
+private lemma offPrimeDen_pos : 0 < offPrimeDen := by decide
+private lemma offPrimeSumCoarse_eq_fast : offPrimeSumCoarse = offPrimeSumCoarse_fast := rfl
 
 -- No-5 primes (p ≠ 5, includes p = 2)
-def no5PrimeDen : ℕ := 3349507336447318304180936831208874307086616988295574961159931463517299077942665857637478723599087911092968020228227998162457748729699648991861571140316539699793423956757830356522508943937708471188899645023163323318265776622349962610115629326744206081201868049930064109465914286785859494194817299215645194212193228640592326854906655870469885549141094576438798707784583513010605373189540307033792650118641412613498835189907040227236294239620097134798793956309316175899450161057093652728614203556945059335707573413218567092381872889018671667225510651771520646888403672826521437110978505288424642625926654276932311893128221277239440860127315822739974640290382159421407038949556690843528922560293434276515190262308548875714504142987112189527403491545131147749178941540491802147707616816508990377973144202451848510350516795325019480559771067686353092100331992948208549105709577561402814545060866393789209134725628561160207870107842936561168091388698520683642572177370556392425649634883582492334395656329971313875324723974610553504004286564942636631870466414696356404822879345049746862959229557927570392074490331243173269307978026582110889323143312864623857496291903120200476168831868116045190547452983239888358131744182459164193482403710212749127249537479622857766115605645817080348983771060620948668747978591088525141242218755472775128610718237131702035370306826223892382877653525222628045602018316569176767143040076943597912785443112355994992049630069278090825906436257142468390373321682807384625491870182710804726842255368776697580325647977799954298654000114169533883548462153421780081173793422283447122256212549952885578235982231922396307300511951754970258211163941425870561757855312356
+private def no5PrimeDen : ℕ := 3349507336447318304180936831208874307086616988295574961159931463517299077942665857637478723599087911092968020228227998162457748729699648991861571140316539699793423956757830356522508943937708471188899645023163323318265776622349962610115629326744206081201868049930064109465914286785859494194817299215645194212193228640592326854906655870469885549141094576438798707784583513010605373189540307033792650118641412613498835189907040227236294239620097134798793956309316175899450161057093652728614203556945059335707573413218567092381872889018671667225510651771520646888403672826521437110978505288424642625926654276932311893128221277239440860127315822739974640290382159421407038949556690843528922560293434276515190262308548875714504142987112189527403491545131147749178941540491802147707616816508990377973144202451848510350516795325019480559771067686353092100331992948208549105709577561402814545060866393789209134725628561160207870107842936561168091388698520683642572177370556392425649634883582492334395656329971313875324723974610553504004286564942636631870466414696356404822879345049746862959229557927570392074490331243173269307978026582110889323143312864623857496291903120200476168831868116045190547452983239888358131744182459164193482403710212749127249537479622857766115605645817080348983771060620948668747978591088525141242218755472775128610718237131702035370306826223892382877653525222628045602018316569176767143040076943597912785443112355994992049630069278090825906436257142468390373321682807384625491870182710804726842255368776697580325647977799954298654000114169533883548462153421780081173793422283447122256212549952885578235982231922396307300511951754970258211163941425870561757855312356
 
-def no5PrimeNum : ℕ := 1380630434582714511193856433995070469925023999513261700716658565012298572083656525724967178461366191342688138002514433435094893140662515195478176523920040936707613384173403851179241916394921430392262551495752875139822075095283374214390867101747440324274349238922289600720996504607153250379052586883189480975709682644497874223618598547883522139586724790849262665981880684173002861792665605705949009329999135006890998848070738414557039779199791836840497618979487101867107714557558688677250807861052635471737821890821254058187484883062757864617651994331128373270949127126430321042974015865028393006606114281240077400320311961381566157024550723312814626758764354808816345731091635076905517279358846644402993474556080658331814918104384177841421747008966773981903858450940339142352769739312662038086455599809979370519243036187271928940749288288950015240414790706119305572485935035762002376330918101241581274553703167214040520553473268037610665989029186990676025897739865912296000038878832001337595418127598043420909108666055680662594501603391796112274640921788437413355985605166532131773101952914062961391592605882602422871210083206368837096029435479874641921386575383174652886383384537839519686825618669705761755801290195533619565437134580068606059350692942646142617350569043951911561699678756610852848384690809772417850871422906387927290118802871063191751773591591485172547343312377790239623457476255205738269327830360370875929856530401480477696492599015277923975834757113890147782061424038877887412758775491909481965017222570957992550314287695039718617224494357251070596321931930866379113750004469043967949732972869855434953029722920350554619335865960429153418676204021636753079907072685
+private def no5PrimeNum : ℕ := 1380630434582714511193856433995070469925023999513261700716658565012298572083656525724967178461366191342688138002514433435094893140662515195478176523920040936707613384173403851179241916394921430392262551495752875139822075095283374214390867101747440324274349238922289600720996504607153250379052586883189480975709682644497874223618598547883522139586724790849262665981880684173002861792665605705949009329999135006890998848070738414557039779199791836840497618979487101867107714557558688677250807861052635471737821890821254058187484883062757864617651994331128373270949127126430321042974015865028393006606114281240077400320311961381566157024550723312814626758764354808816345731091635076905517279358846644402993474556080658331814918104384177841421747008966773981903858450940339142352769739312662038086455599809979370519243036187271928940749288288950015240414790706119305572485935035762002376330918101241581274553703167214040520553473268037610665989029186990676025897739865912296000038878832001337595418127598043420909108666055680662594501603391796112274640921788437413355985605166532131773101952914062961391592605882602422871210083206368837096029435479874641921386575383174652886383384537839519686825618669705761755801290195533619565437134580068606059350692942646142617350569043951911561699678756610852848384690809772417850871422906387927290118802871063191751773591591485172547343312377790239623457476255205738269327830360370875929856530401480477696492599015277923975834757113890147782061424038877887412758775491909481965017222570957992550314287695039718617224494357251070596321931930866379113750004469043967949732972869855434953029722920350554619335865960429153418676204021636753079907072685
 
-def no5PrimeSumCoarse : ℚ := (no5PrimeNum : ℚ) / (no5PrimeDen : ℚ)
-def no5PrimeSumCoarse_fast : ℚ := no5PrimeSumCoarse
+private def no5PrimeSumCoarse : ℚ := (no5PrimeNum : ℚ) / (no5PrimeDen : ℚ)
+private def no5PrimeSumCoarse_fast : ℚ := no5PrimeSumCoarse
 
-lemma no5PrimeDen_pos : 0 < no5PrimeDen := by decide
-lemma no5PrimeSumCoarse_eq_fast : no5PrimeSumCoarse = no5PrimeSumCoarse_fast := rfl
+private lemma no5PrimeDen_pos : 0 < no5PrimeDen := by decide
+private lemma no5PrimeSumCoarse_eq_fast : no5PrimeSumCoarse = no5PrimeSumCoarse_fast := rfl
 
 -- The symbolic sum equals the precomputed value.
 set_option maxRecDepth 200000 in
-set_option maxHeartbeats 20000000 in
-lemma diagPrimesCoarse_sum_eq :
+set_option maxHeartbeats 8000000 in
+private lemma diagPrimesCoarse_sum_eq :
     (∑ p ∈ diagPrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = diagPrimeSumCoarse := by
   rw [diagPrimesCoarse_eq_list]
   simp (config := { maxSteps := 5000000 })
@@ -2652,20 +2608,20 @@ lemma diagPrimesCoarse_sum_eq :
   norm_num
 
 set_option maxRecDepth 400000 in
-set_option maxHeartbeats 40000000 in
-lemma no5PrimesCoarse_sum_eq :
+set_option maxHeartbeats 8000000 in
+private lemma no5PrimesCoarse_sum_eq :
     (∑ p ∈ no5PrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = no5PrimeSumCoarse := by
   rw [no5PrimesCoarse_eq_list]
   simp (config := { maxSteps := 20000000 })
     [no5PrimesCoarse_list, no5PrimesCoarse_listL, no5PrimeSumCoarse, no5PrimeNum, no5PrimeDen]
   norm_num
 
-lemma offPrimeSumCoarse_eq_no5_sub :
+private lemma offPrimeSumCoarse_eq_no5_sub :
     offPrimeSumCoarse = no5PrimeSumCoarse - (1 : ℚ) / 4 := by
   norm_num
     [offPrimeSumCoarse, no5PrimeSumCoarse, offPrimeNum, offPrimeDen, no5PrimeNum, no5PrimeDen]
 
-lemma offPrimesCoarse_sum_eq :
+private lemma offPrimesCoarse_sum_eq :
     (∑ p ∈ offPrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = offPrimeSumCoarse := by
   classical
   let f : ℕ → ℚ := fun p => (1 : ℚ) / (p ^ 2 : ℚ)
@@ -2697,7 +2653,7 @@ We bound the *infinite* reciprocal-square sums by:
 2) bounding the tail by `∑_{i > B} 1/i^2 ≤ 1/B`.
 -/
 
-lemma diagPrimeSumCoarse_bound :
+private lemma diagPrimeSumCoarse_bound :
     diagPrimeSumCoarse + (1 : ℚ) / primeCutoff ≤ (1 : ℚ) / 70 := by
   have hNat : 70 * (diagPrimeNum * primeCutoff + diagPrimeDen) ≤ diagPrimeDen * primeCutoff := by
     norm_num [primeCutoff, diagPrimeNum, diagPrimeDen]
@@ -2717,7 +2673,7 @@ lemma diagPrimeSumCoarse_bound :
        _ = 1 * ((diagPrimeDen : ℚ) * primeCutoff) := by ring
   exact goal
 
-lemma offPrimeSumCoarse_bound :
+private lemma offPrimeSumCoarse_bound :
     offPrimeSumCoarse + (1 : ℚ) / primeCutoff ≤ (163 : ℚ) / 1000 := by
   have hNat : 1000 * (offPrimeNum * primeCutoff + offPrimeDen) ≤ 163 * (offPrimeDen * primeCutoff) := by
     norm_num [primeCutoff, offPrimeNum, offPrimeDen]
@@ -2737,7 +2693,7 @@ lemma offPrimeSumCoarse_bound :
        _ = 163 * ((offPrimeDen : ℚ) * primeCutoff) := by ring
   exact goal
 
-lemma no5PrimeSumCoarse_bound :
+private lemma no5PrimeSumCoarse_bound :
     no5PrimeSumCoarse + (1 : ℚ) / primeCutoff ≤ (413 : ℚ) / 1000 := by
   have hNat : 1000 * (no5PrimeNum * primeCutoff + no5PrimeDen) ≤ 413 * (no5PrimeDen * primeCutoff) := by
     norm_num [primeCutoff, no5PrimeNum, no5PrimeDen]
@@ -3100,23 +3056,11 @@ lemma prime_square_exists_ne5 {n : ℕ} (hn : ¬ Squarefree n) (h25 : ¬ 25 ∣ 
 
 lemma cross_residue_7_18_not_div_25 (a b : ℕ) (ha : a % 25 = 7) (hb : b % 25 = 18) :
     ¬ (25 ∣ a * b + 1) := by
-  intro hdiv
-  have h0 : ((a * b + 1 : ℕ) : ZMod 25) = 0 :=
-    (ZMod.natCast_eq_zero_iff (a * b + 1) 25).2 hdiv
-  have haZ : (a : ZMod 25) = 7 := by
-    have : a % 25 = 7 % 25 := by
-      simpa [Nat.mod_eq_of_lt (by decide : 7 < 25)] using ha
-    exact (ZMod.natCast_eq_natCast_iff' a 7 25).2 this
-  have hbZ : (b : ZMod 25) = 18 := by
-    have : b % 25 = 18 % 25 := by
-      simpa [Nat.mod_eq_of_lt (by decide : 18 < 25)] using hb
-    exact (ZMod.natCast_eq_natCast_iff' b 18 25).2 this
-  have hab : (7 : ZMod 25) * (18 : ZMod 25) + 1 = 0 := by
-    have : (a : ZMod 25) * (b : ZMod 25) + 1 = 0 := by
-      simpa [Nat.cast_add, Nat.cast_mul, Nat.cast_one] using h0
-    simpa [haZ, hbZ] using this
-  have hneq : (7 : ZMod 25) * (18 : ZMod 25) + 1 ≠ 0 := by decide
-  exact (hneq hab).elim
+  have hb_ne : b % 25 ≠ 7 := by
+    intro hb7
+    have : (18 : ℕ) = 7 := hb.symm.trans hb7
+    exact (by decide : (18 : ℕ) ≠ 7) this
+  exact cross_residue_not_div_25_of_residue 7 a b (by norm_num) ha hb_ne
 
 lemma cross_residue_18_7_not_div_25 (a b : ℕ) (ha : a % 25 = 18) (hb : b % 25 = 7) :
     ¬ (25 ∣ a * b + 1) := by
@@ -3150,25 +3094,40 @@ lemma off_count_modEq25_le (N p b t : ℕ) (hp : Nat.Prime p) (hb : ¬ p ∣ b) 
   have hcard := Finset.card_le_card hsubset
   exact le_trans hcard (card_filter_modEq_and_modEq_le N 25 (p ^ 2) t r hcop)
 
+private lemma not_sq_dvd_mul_add_one_of_prime_dvd_left
+    {p b a : ℕ} (hp : Nat.Prime p) (hb : p ∣ b) : ¬ p ^ 2 ∣ b * a + 1 := by
+  intro hp2
+  have hp1 : p ∣ b * a + 1 := Nat.dvd_of_pow_dvd (by decide : 1 ≤ 2) hp2
+  have hpa : p ∣ b * a := dvd_mul_of_dvd_left hb a
+  have : p ∣ 1 := (Nat.dvd_add_right hpa).mp hp1
+  exact hp.not_dvd_one this
+
+/-- If `p ∣ b`, then `p^2 ∣ b*a+1` is impossible, so the corresponding filter is empty. -/
+lemma filter_empty_of_prime_dvd_left {N p b : ℕ} (hp : Nat.Prime p) (hb : p ∣ b) :
+    (Finset.range N).filter (fun a => p ^ 2 ∣ b * a + 1) = ∅ := by
+  classical
+  ext a
+  simp [not_sq_dvd_mul_add_one_of_prime_dvd_left (p := p) (b := b) (a := a) hp hb]
+
+lemma filter_empty_of_prime_dvd_left_of_pred
+    {N p b : ℕ} (hp : Nat.Prime p) (hb : p ∣ b)
+    (pred : ℕ → Prop) [DecidablePred pred] :
+    (Finset.range N).filter (fun a => pred a ∧ p ^ 2 ∣ b * a + 1) = ∅ := by
+  classical
+  ext a
+  simp [not_sq_dvd_mul_add_one_of_prime_dvd_left (p := p) (b := b) (a := a) hp hb]
+
 /-- Variant of off_count_modEq25_le that works even when p | b (filter is empty in that case). -/
 lemma off_count_modEq25_le' (N p b t : ℕ) (hp : Nat.Prime p) (hp5 : p ≠ 5) :
     ((Finset.range N).filter (fun a => a ≡ t [MOD 25] ∧ p ^ 2 ∣ b * a + 1)).card ≤
       N / (25 * p ^ 2) + 1 := by
   by_cases hb : p ∣ b
   · -- If p | b, the filter is empty (p ∤ b*a+1)
-    have hempty : ((Finset.range N).filter
-        (fun a => a ≡ t [MOD 25] ∧ p ^ 2 ∣ b * a + 1)).card = 0 := by
-      rw [Finset.card_eq_zero, Finset.eq_empty_iff_forall_notMem]
-      intro a; simp only [Finset.mem_filter, Finset.mem_range, not_and]
-      intro _ _ hdiv
-      have hpdiv' : p ∣ b * a + 1 := Nat.dvd_of_pow_dvd (by omega : 1 ≤ 2) hdiv
-      have hpmod : p ∣ b * a := Nat.dvd_mul_right_of_dvd hb a
-      have hone : (b * a + 1) % p = 1 := by
-        have := Nat.add_mod (b * a) 1 p
-        simp [Nat.dvd_iff_mod_eq_zero.1 hpmod, Nat.mod_eq_of_lt hp.one_lt] at this
-        exact this
-      have hzero : (b * a + 1) % p = 0 := Nat.dvd_iff_mod_eq_zero.1 hpdiv'
-      omega
+    have hempty :
+        (Finset.range N).filter (fun a => a ≡ t [MOD 25] ∧ p ^ 2 ∣ b * a + 1) = ∅ := by
+      simpa using
+        (filter_empty_of_prime_dvd_left_of_pred (N := N) (p := p) (b := b) hp hb
+          (pred := fun a => a ≡ t [MOD 25]))
     simp [hempty]
   · exact off_count_modEq25_le N p b t hp hb hp5
 
@@ -3230,19 +3189,12 @@ lemma off_count_modEq100_le' (N p b t25 t4 : ℕ) (hp : Nat.Prime p) (hp2 : p �
       N / (100 * p ^ 2) + 1 := by
   by_cases hb : p ∣ b
   · -- If p | b, the filter is empty (p ∤ b*a+1)
-    have hempty : ((Finset.range N).filter
-        (fun a => a ≡ t25 [MOD 25] ∧ a ≡ t4 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)).card = 0 := by
-      rw [Finset.card_eq_zero, Finset.eq_empty_iff_forall_notMem]
-      intro a; simp only [Finset.mem_filter, Finset.mem_range, not_and]
-      intro _ _ _ hdiv
-      have hpdiv' : p ∣ b * a + 1 := Nat.dvd_of_pow_dvd (by omega : 1 ≤ 2) hdiv
-      have hpmod : p ∣ b * a := Nat.dvd_mul_right_of_dvd hb a
-      have hone : (b * a + 1) % p = 1 := by
-        have := Nat.add_mod (b * a) 1 p
-        simp [Nat.dvd_iff_mod_eq_zero.1 hpmod, Nat.mod_eq_of_lt hp.one_lt] at this
-        exact this
-      have hzero : (b * a + 1) % p = 0 := Nat.dvd_iff_mod_eq_zero.1 hpdiv'
-      omega
+    have hempty :
+        (Finset.range N).filter
+            (fun a => a ≡ t25 [MOD 25] ∧ a ≡ t4 [MOD 4] ∧ p ^ 2 ∣ b * a + 1) = ∅ := by
+      simpa [and_assoc] using
+        (filter_empty_of_prime_dvd_left_of_pred (N := N) (p := p) (b := b) hp hb
+          (pred := fun a => a ≡ t25 [MOD 25] ∧ a ≡ t4 [MOD 4]))
     simp [hempty]
   · exact off_count_modEq100_le N p b t25 t4 hp hb hp2 hp5
 
@@ -3533,12 +3485,124 @@ lemma diag_count_mod50odd_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 
         simp [h46.symm]
   exact le_trans (le_trans hcard hsum) (le_trans hsum' (le_of_eq hconst))
 
+-- ============================================================================
+-- SECTION 9.95: GENERIC SIEVE CARDINALITY BOUNDS
+-- ============================================================================
+
+/-- If `p^2 ∣ X` and `0 < X < N^2`, then `p ≤ N`. -/
+lemma prime_le_of_sq_dvd_lt_sq {p N X : ℕ} (hXpos : 0 < X) (hXlt : X < N ^ 2) (hp2 : p ^ 2 ∣ X) : p ≤ N := by
+  have hp2_le : p ^ 2 ≤ X := Nat.le_of_dvd hXpos hp2
+  have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hXlt
+  by_contra hp_le
+  have hNp : N ≤ p := le_of_lt (Nat.not_le.mp hp_le)
+  have hN2le : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hNp 2
+  exact (not_lt_of_ge hN2le) hp2_lt
+
+/-- If `p^2 ∣ n` and `n` is odd, then `p ≠ 2`. -/
+lemma prime_ne_two_of_sq_dvd_odd {p n : ℕ} (hn : n % 2 = 1) (hp2 : p ^ 2 ∣ n) : p ≠ 2 := by
+  intro hp
+  subst hp
+  have h4 : 4 ∣ n := by simpa using hp2
+  have h2 : 2 ∣ n := dvd_trans (by decide : 2 ∣ 4) h4
+  have h0 : n % 2 = 0 := Nat.mod_eq_zero_of_dvd h2
+  omega
+
+/-- `∑ (N/(k*p²)+1)` is bounded by `N * ∑ 1/(k*p²) + |P|` after casting to `ℝ`. -/
+lemma sum_div_add_one_le_real (N : ℕ) (P : Finset ℕ) (k : ℕ) :
+    ((∑ p ∈ P, (N / (k * p ^ 2) + 1) : ℕ) : ℝ) ≤
+      (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) + (P.card : ℝ) := by
+  classical
+  have hsplit :
+      ((∑ p ∈ P, (N / (k * p ^ 2) + 1) : ℕ) : ℝ) =
+        ((∑ p ∈ P, (N / (k * p ^ 2) : ℕ) : ℕ) : ℝ) + (P.card : ℝ) := by
+    have :
+        (∑ p ∈ P, (N / (k * p ^ 2) + 1 : ℕ)) =
+          (∑ p ∈ P, (N / (k * p ^ 2) : ℕ)) + P.card := by
+      simp [Finset.sum_add_distrib]
+    exact_mod_cast this
+  have hterm :
+      ∀ p ∈ P, ((N / (k * p ^ 2) : ℕ) : ℝ) ≤ (N : ℝ) / (k * (p : ℝ) ^ 2) := by
+    intro p hp
+    have h := (Nat.cast_div_le (α := ℝ) (m := N) (n := k * p ^ 2))
+    simpa [Nat.cast_mul, Nat.cast_pow, mul_assoc, mul_left_comm, mul_comm, div_eq_mul_inv] using h
+  have hdiv' :
+      ((∑ p ∈ P, (N / (k * p ^ 2) : ℕ) : ℕ) : ℝ) ≤
+        ∑ p ∈ P, (N : ℝ) / (k * (p : ℝ) ^ 2) := by
+    exact_mod_cast (Finset.sum_le_sum fun p hp => hterm p hp)
+  have hdiv :
+      ((∑ p ∈ P, (N / (k * p ^ 2) : ℕ) : ℕ) : ℝ) ≤
+        (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) := by
+    have :
+        (∑ p ∈ P, (N : ℝ) / (k * (p : ℝ) ^ 2)) =
+          (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) := by
+      simp [div_eq_mul_inv, mul_sum, mul_comm]
+    exact hdiv'.trans (le_of_eq this)
+  have h := add_le_add_right hdiv (P.card : ℝ)
+  calc
+    ((∑ p ∈ P, (N / (k * p ^ 2) + 1) : ℕ) : ℝ) =
+        ((∑ p ∈ P, (N / (k * p ^ 2) : ℕ) : ℕ) : ℝ) + (P.card : ℝ) := hsplit
+    _ ≤ (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) + (P.card : ℝ) := by
+        simpa [add_comm, add_left_comm, add_assoc] using h
+
+/--
+Bound the cardinality of a set `S` contained in a union of sieve classes.
+
+If `S ⊆ ⋃_{p ∈ P} {n < N | pred p n}` and each class has size at most
+`N/(k*p²)+1`, then `|S| ≤ N * ∑_{p∈P} 1/(k*p²) + |P|` after casting to `ℝ`.
+-/
+lemma sieve_set_card_bound
+    (N k : ℕ) (P S : Finset ℕ) (pred : ℕ → ℕ → Prop) [∀ p, DecidablePred (pred p)]
+    (hsubset :
+      S ⊆ P.biUnion (fun p => (Finset.range N).filter (fun n => pred p n)))
+    (hper : ∀ p ∈ P, ((Finset.range N).filter (fun n => pred p n)).card ≤ N / (k * p ^ 2) + 1) :
+    (S.card : ℝ) ≤
+      (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) + (P.card : ℝ) := by
+  classical
+  have hcard : S.card ≤ (∑ p ∈ P, (N / (k * p ^ 2) + 1)) := by
+    calc
+      S.card ≤
+          ((P.biUnion (fun p => (Finset.range N).filter (fun n => pred p n))).card) :=
+        Finset.card_le_card hsubset
+      _ ≤ ∑ p ∈ P, ((Finset.range N).filter (fun n => pred p n)).card :=
+        Finset.card_biUnion_le
+      _ ≤ ∑ p ∈ P, (N / (k * p ^ 2) + 1) := by
+          apply Finset.sum_le_sum
+          intro p hp
+          exact hper p hp
+  have hcard_real :
+      (S.card : ℝ) ≤ ((∑ p ∈ P, (N / (k * p ^ 2) + 1) : ℕ) : ℝ) := by
+    exact_mod_cast hcard
+  exact hcard_real.trans (sum_div_add_one_le_real (N := N) (P := P) (k := k))
+
+/--
+Variant of `sieve_set_card_bound` where the additive error is expressed as `π(N)`.
+
+This is convenient when one later uses an analytic bound `π(N) ≤ δN`.
+-/
+lemma sieve_set_card_bound_primeCounting
+    (N k : ℕ) (P S : Finset ℕ) (pred : ℕ → ℕ → Prop) [∀ p, DecidablePred (pred p)]
+    (hsubset :
+      S ⊆ P.biUnion (fun p => (Finset.range N).filter (fun n => pred p n)))
+    (hper : ∀ p ∈ P, ((Finset.range N).filter (fun n => pred p n)).card ≤ N / (k * p ^ 2) + 1)
+    (hP_sub : P ⊆ primesUpTo N) :
+    (S.card : ℝ) ≤
+      (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
+  have hbase := sieve_set_card_bound (N := N) (k := k) (P := P) (S := S) (pred := pred) hsubset hper
+  have hPcard : (P.card : ℝ) ≤ (N.primeCounting : ℝ) := by
+    have := Finset.card_le_card hP_sub
+    have := (Nat.cast_le.2 this : (P.card : ℝ) ≤ (primesUpTo N).card)
+    simpa [primesUpTo_card] using this
+  have hadd :
+      (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) + (P.card : ℝ) ≤
+        (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) :=
+    add_le_add_right hPcard ((N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)))
+  exact hbase.trans hadd
 
 -- ============================================================================
 -- SECTION 10: THE MAIN STABILITY THEOREM (SAWHNEY)
 -- ============================================================================
 
-set_option maxHeartbeats 2000000
+set_option maxHeartbeats 2000000 in
 
 /-- SawhneyMain: The stability theorem for Erdős Problem 848.
 
@@ -3558,6 +3622,10 @@ theorem sawhney_main : SawhneyMain := by
   let δ : ℝ := (1 / 10000000 : ℝ)
   have δpos : 0 < δ := by
     norm_num [δ]
+  -- Density bounds from the paper.
+  let C_diag : ℝ := (1 : ℝ) / 1750
+  let C_off : ℝ := 163 / 25000
+  let C_no5 : ℝ := 413 / 25000
   obtain ⟨Nπ, hπ⟩ := exists_primeCounting_le_mul_nat δ δpos
   -- Choose N₀ large enough to absorb all `+1` errors.
   let N₀ : ℕ := max 10000000 (max 100 Nπ)
@@ -3619,6 +3687,78 @@ theorem sawhney_main : SawhneyMain := by
         _ ≤ (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) + (P.card : ℝ) := by
             simpa [add_comm, add_left_comm, add_assoc] using h
 
+    -- Helper: residue-class counting via a union over prime-square divisors.
+    have residue_class_card_bound_of_subset
+        (t b : ℕ) (P S : Finset ℕ)
+        (hsubset :
+          S ⊆ P.biUnion (fun p =>
+            (Finset.range N).filter (fun a => a ≡ t [MOD 25] ∧ p ^ 2 ∣ b * a + 1)))
+        (hP_sub : P ⊆ primesUpTo N) (hP_ne5 : ∀ p ∈ P, p ≠ 5) :
+        (S.card : ℝ) ≤
+          (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
+      classical
+      have hcard : S.card ≤ (∑ p ∈ P, (N / (25 * p ^ 2) + 1)) := by
+        calc
+          S.card ≤
+              ((P.biUnion (fun p =>
+                    (Finset.range N).filter (fun a => a ≡ t [MOD 25] ∧ p ^ 2 ∣ b * a + 1))).card) :=
+            Finset.card_le_card hsubset
+          _ ≤ ∑ p ∈ P,
+                ((Finset.range N).filter (fun a => a ≡ t [MOD 25] ∧ p ^ 2 ∣ b * a + 1)).card :=
+            Finset.card_biUnion_le
+          _ ≤ ∑ p ∈ P, (N / (25 * p ^ 2) + 1) := by
+              apply Finset.sum_le_sum
+              intro p hp
+              have hp' : p ∈ primesUpTo N := hP_sub hp
+              have hp_prime : p.Prime := (Finset.mem_filter.1 hp').2
+              have hp_ne5 : p ≠ 5 := hP_ne5 p hp
+              exact off_count_modEq25_le' N p b t hp_prime hp_ne5
+      have hcard_real :
+          (S.card : ℝ) ≤ ((∑ p ∈ P, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) := by
+        exact_mod_cast hcard
+      have hsum := sum_div_add_one_le (P := P) (k := 25)
+      have hPcard : (P.card : ℝ) ≤ (N.primeCounting : ℝ) := by
+        have := Finset.card_le_card hP_sub
+        have := (Nat.cast_le.2 this : (P.card : ℝ) ≤ (primesUpTo N).card)
+        simpa [primesUpTo_card] using this
+      have hsum' :
+          ((∑ p ∈ P, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) ≤
+            (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
+        exact hsum.trans (add_le_add (le_refl _) hPcard)
+      exact le_trans hcard_real hsum'
+
+    -- Helper: mod-100 residue-class counting via a union over prime-square divisors.
+    have residue_class_card_bound100_of_subset
+        (t25 t4 b : ℕ) (P S : Finset ℕ)
+        (hsubset :
+          S ⊆ P.biUnion (fun p =>
+            (Finset.range N).filter (fun a => a ≡ t25 [MOD 25] ∧ a ≡ t4 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)))
+        (hP_sub : P ⊆ primesUpTo N) (hP_ne2 : ∀ p ∈ P, p ≠ 2) (hP_ne5 : ∀ p ∈ P, p ≠ 5) :
+        (S.card : ℝ) ≤
+          (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
+      classical
+      have hper :
+          ∀ p ∈ P,
+            ((Finset.range N).filter (fun a =>
+                a ≡ t25 [MOD 25] ∧ a ≡ t4 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)).card ≤
+              N / (100 * p ^ 2) + 1 := by
+        intro p hp
+        have hp' : p ∈ primesUpTo N := hP_sub hp
+        have hp_prime : p.Prime := (Finset.mem_filter.1 hp').2
+        have hp_ne2 : p ≠ 2 := hP_ne2 p hp
+        have hp_ne5 : p ≠ 5 := hP_ne5 p hp
+        exact off_count_modEq100_le' N p b t25 t4 hp_prime hp_ne2 hp_ne5
+      simpa using
+        sieve_set_card_bound_primeCounting
+          (N := N)
+          (k := 100)
+          (P := P)
+          (S := S)
+          (pred := fun p a => a ≡ t25 [MOD 25] ∧ a ≡ t4 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)
+          hsubset
+          hper
+          hP_sub
+
     -- Split A into the 25-residue classes: 7, 18, and the rest.
     let A7A : Finset ℕ := A.filter (fun a => a % 25 = 7)
     let A18A : Finset ℕ := A.filter (fun a => a % 25 = 18)
@@ -3663,9 +3803,212 @@ theorem sawhney_main : SawhneyMain := by
         exact le_trans (le_trans hcard hunion1) h1
       simpa [Nat.add_assoc, Nat.add_left_comm, Nat.add_comm] using this
 
-    -- Main case split: A* empty vs nonempty.
-    by_cases hAstar_empty : Astar = ∅
-    · -- If A* is empty, then A is contained in residues 7 and 18.
+    -- Helper: bound A* via diagonal primes (no parity restriction; modulus 25).
+    have Astar_bound_mod25 :
+        (Astar.card : ℝ) ≤
+          (46 : ℝ) *
+            ((N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by
+      classical
+      have hsubset :
+          Astar ⊆ (diagPrimesUpTo N).biUnion (fun p =>
+            (Finset.range N).filter (fun n =>
+              n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)) := by
+        intro x hx
+        have hxA : x ∈ A := hAstar_sub_A hx
+        have hx_lt : x < N := by simpa [Finset.mem_range] using hAsub hxA
+        have hx_mod_ne : x % 25 ≠ 7 ∧ x % 25 ≠ 18 := by
+          simpa [Astar] using (Finset.mem_filter.1 hx).2
+        have hnsq : ¬ Squarefree (x ^ 2 + 1) := by
+          simpa [pow_two, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using hAprop x hxA x hxA
+        obtain ⟨p, hp, hp2div⟩ := prime_square_exists (n := x ^ 2 + 1) hnsq
+        have hp_ne2 : p ≠ 2 := by
+          intro hp2
+          subst hp2
+          have : 4 ∣ x ^ 2 + 1 := by simpa [pow_two] using hp2div
+          exact (not_dvd_four_sq_add_one x) this
+        have hp_gt2 : p > 2 := lt_of_le_of_ne hp.two_le (Ne.symm hp_ne2)
+        have hp_mod4 : p % 4 = 1 :=
+          prime_sq_divides_implies_one_mod_four p x hp hp_gt2 (by simpa [pow_two] using hp2div)
+        have hp_ne5 : p ≠ 5 := by
+          intro hp5
+          subst hp5
+          have : 25 ∣ x ^ 2 + 1 := by simpa [pow_two] using hp2div
+          exact (not_dvd_25_sq_add_one_of_mod_ne x hx_mod_ne) this
+        have hp_ge13 : 13 ≤ p := prime_ge_13_of_mod4_one_ne5 p hp hp_mod4 hp_ne5
+        have hp_le : p ≤ N := by
+          have hxx_lt : x ^ 2 + 1 < N ^ 2 := by
+            have hx_le : x ≤ N - 1 := Nat.le_pred_of_lt hx_lt
+            have hxx_le : x ^ 2 ≤ (N - 1) ^ 2 := Nat.pow_le_pow_left hx_le 2
+            have : x ^ 2 + 1 ≤ (N - 1) ^ 2 + 1 := Nat.add_le_add_right hxx_le 1
+            have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
+            exact lt_of_le_of_lt this hlt
+          exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := x ^ 2 + 1) (Nat.succ_pos _) hxx_lt hp2div
+        have hp_mem : p ∈ diagPrimesUpTo N := by
+          have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_le
+          simp [diagPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp_mod4, hp_ge13]
+        refine Finset.mem_biUnion.2 ⟨p, hp_mem, ?_⟩
+        have : x ∈ (Finset.range N).filter (fun n =>
+            n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1) := by
+          simp [Finset.mem_filter, Finset.mem_range, hx_lt, hx_mod_ne, hp2div]
+        exact this
+      have hcard : Astar.card ≤ (∑ p ∈ diagPrimesUpTo N, 46 * (N / (25 * p ^ 2) + 1)) := by
+        calc Astar.card
+            ≤ ((diagPrimesUpTo N).biUnion (fun p =>
+                 (Finset.range N).filter (fun n =>
+                   n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1))).card :=
+              Finset.card_le_card hsubset
+          _ ≤ ∑ p ∈ diagPrimesUpTo N,
+                 ((Finset.range N).filter (fun n =>
+                   n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card :=
+              Finset.card_biUnion_le
+          _ ≤ ∑ p ∈ diagPrimesUpTo N, 46 * (N / (25 * p ^ 2) + 1) := by
+              apply Finset.sum_le_sum
+              intro p hp
+              have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
+              have hp_mod4 : p % 4 = 1 := (Finset.mem_filter.1 hp).2.1
+              have hp_ne5 : p ≠ 5 := by
+                have hp_ge13 : 13 ≤ p := (Finset.mem_filter.1 hp).2.2
+                omega
+              exact diag_count_mod25_ne_7_18_le N p hp_prime hp_mod4 hp_ne5
+      have hcard_real :
+          (Astar.card : ℝ) ≤ ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) := by
+        exact_mod_cast hcard
+      have hmul :
+          ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) =
+            (46 : ℝ) * ((∑ p ∈ diagPrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) := by
+        have :
+            (∑ p ∈ diagPrimesUpTo N, 46 * (N / (25 * p ^ 2) + 1) : ℕ) =
+              46 * (∑ p ∈ diagPrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) := by
+          simpa using
+            (Finset.mul_sum (s := diagPrimesUpTo N) (f := fun p => (N / (25 * p ^ 2) + 1)) (a := 46)).symm
+        exact_mod_cast this
+      have hsum := sum_div_add_one_le_real (N := N) (P := diagPrimesUpTo N) (k := 25)
+      have hPcard : ((diagPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
+        have hsub : diagPrimesUpTo N ⊆ primesUpTo N := by
+          intro p hp
+          exact (Finset.mem_filter.1 hp).1
+        have := Finset.card_le_card hsub
+        have := (Nat.cast_le.2 this : ((diagPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
+        simpa [primesUpTo_card] using this
+      have hsum' :
+          ((∑ p ∈ diagPrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) ≤
+            (N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
+        exact hsum.trans (add_le_add (le_refl _) hPcard)
+      have hmul' :
+          ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) ≤
+            (46 : ℝ) *
+              ((N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by
+        rw [hmul]
+        exact mul_le_mul_of_nonneg_left hsum' (by positivity)
+      exact le_trans hcard_real hmul'
+
+    -- Helper: bound A* via diagonal primes (odd restriction; modulus 50).
+    have Astar_bound_mod50
+        (hAstar_all_odd : ∀ x ∈ Astar, x % 2 = 1) :
+        (Astar.card : ℝ) ≤
+          (46 : ℝ) *
+            ((N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by
+      classical
+      have hsubset :
+          Astar ⊆ (diagPrimesUpTo N).biUnion (fun p =>
+            (Finset.range N).filter (fun n =>
+              n % 2 = 1 ∧ n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)) := by
+        intro x hx
+        have hxA : x ∈ A := hAstar_sub_A hx
+        have hx_lt : x < N := by simpa [Finset.mem_range] using hAsub hxA
+        have hx_mod_ne : x % 25 ≠ 7 ∧ x % 25 ≠ 18 := by
+          simpa [Astar] using (Finset.mem_filter.1 hx).2
+        have hx_odd : x % 2 = 1 := hAstar_all_odd x hx
+        have hnsq : ¬ Squarefree (x ^ 2 + 1) := by
+          simpa [pow_two, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using hAprop x hxA x hxA
+        obtain ⟨p, hp, hp2div⟩ := prime_square_exists (n := x ^ 2 + 1) hnsq
+        have hp_ne2 : p ≠ 2 := by
+          intro hp2
+          subst hp2
+          have : 4 ∣ x ^ 2 + 1 := by simpa [pow_two] using hp2div
+          exact (not_dvd_four_sq_add_one x) this
+        have hp_gt2 : p > 2 := lt_of_le_of_ne hp.two_le (Ne.symm hp_ne2)
+        have hp_mod4 : p % 4 = 1 :=
+          prime_sq_divides_implies_one_mod_four p x hp hp_gt2 (by simpa [pow_two] using hp2div)
+        have hp_ne5 : p ≠ 5 := by
+          intro hp5
+          subst hp5
+          have : 25 ∣ x ^ 2 + 1 := by simpa [pow_two] using hp2div
+          exact (not_dvd_25_sq_add_one_of_mod_ne x hx_mod_ne) this
+        have hp_ge13 : 13 ≤ p := prime_ge_13_of_mod4_one_ne5 p hp hp_mod4 hp_ne5
+        have hp_le : p ≤ N := by
+          have hxx_lt : x ^ 2 + 1 < N ^ 2 := by
+            have hx_le : x ≤ N - 1 := Nat.le_pred_of_lt hx_lt
+            have hxx_le : x ^ 2 ≤ (N - 1) ^ 2 := Nat.pow_le_pow_left hx_le 2
+            have : x ^ 2 + 1 ≤ (N - 1) ^ 2 + 1 := Nat.add_le_add_right hxx_le 1
+            have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
+            exact lt_of_le_of_lt this hlt
+          exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := x ^ 2 + 1) (Nat.succ_pos _) hxx_lt hp2div
+        have hp_mem : p ∈ diagPrimesUpTo N := by
+          have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_le
+          simp [diagPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp_mod4, hp_ge13]
+        refine Finset.mem_biUnion.2 ⟨p, hp_mem, ?_⟩
+        have : x ∈ (Finset.range N).filter (fun n =>
+            n % 2 = 1 ∧ n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1) := by
+          simp [Finset.mem_filter, Finset.mem_range, hx_lt, hx_odd, hx_mod_ne, hp2div]
+        exact this
+      have hcard : Astar.card ≤ (∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1)) := by
+        calc Astar.card
+            ≤ ((diagPrimesUpTo N).biUnion (fun p =>
+                 (Finset.range N).filter (fun n =>
+                   n % 2 = 1 ∧ n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1))).card :=
+              Finset.card_le_card hsubset
+          _ ≤ ∑ p ∈ diagPrimesUpTo N,
+                 ((Finset.range N).filter (fun n =>
+                   n % 2 = 1 ∧ n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card :=
+              Finset.card_biUnion_le
+          _ ≤ ∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) := by
+              apply Finset.sum_le_sum
+              intro p hp
+              have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
+              have hp_mod4 : p % 4 = 1 := (Finset.mem_filter.1 hp).2.1
+              have hp_ne2 : p ≠ 2 := by intro hp2; subst hp2; omega
+              have hp_ge13 : 13 ≤ p := (Finset.mem_filter.1 hp).2.2
+              have hp_ne5 : p ≠ 5 := by omega
+              exact diag_count_mod50odd_ne_7_18_le N p hp_prime hp_mod4 hp_ne2 hp_ne5
+      have hcard_real :
+          (Astar.card : ℝ) ≤ ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) := by
+        exact_mod_cast hcard
+      have hmul :
+          ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) =
+            (46 : ℝ) * ((∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) := by
+        have :
+            (∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) =
+              46 * (∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) := by
+          simpa using
+            (Finset.mul_sum (s := diagPrimesUpTo N) (f := fun p => (N / (50 * p ^ 2) + 1)) (a := 46)).symm
+        exact_mod_cast this
+      have hsum := sum_div_add_one_le (P := diagPrimesUpTo N) (k := 50)
+      have hPcard : ((diagPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
+        have hsub : diagPrimesUpTo N ⊆ primesUpTo N := by
+          intro p hp
+          exact (Finset.mem_filter.1 hp).1
+        have := Finset.card_le_card hsub
+        have := (Nat.cast_le.2 this : ((diagPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
+        simpa [primesUpTo_card] using this
+      have hsum' :
+          ((∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) ≤
+            (N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
+        exact hsum.trans (add_le_add (le_refl _) hPcard)
+      have hmul_le :
+          ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) ≤
+            (46 : ℝ) *
+              ((N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by
+        have :
+            ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) ≤
+              (46 : ℝ) * ((∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) := by
+          simp [hmul]
+        exact le_trans this (mul_le_mul_of_nonneg_left hsum' (by positivity))
+      exact le_trans hcard_real hmul_le
+
+    -- Case: A* is empty (so A ⊆ A₇ ∪ A₁₈); either one residue class is empty or density contradicts.
+    have case_Astar_empty (hAstar_empty : Astar = ∅) : A ⊆ A₇ N ∨ A ⊆ A₁₈ N := by
+      -- If A* is empty, then A is contained in residues 7 and 18.
       have hA_sub_78 : A ⊆ A7A ∪ A18A := by
         intro a ha
         have : a ∈ A7A ∪ A18A ∪ Astar := hA_decomp ha
@@ -3724,7 +4067,6 @@ theorem sawhney_main : SawhneyMain := by
                 exact cross_residue_18_7_not_div_25 b18 a hb18_mod ha_mod7
               obtain ⟨p, hp, hp5, hp2div⟩ := prime_square_exists_ne5 (n := b18 * a + 1) hnsq h25
               have hp_lt : p ≤ N := by
-                have hp2_le : p ^ 2 ≤ b18 * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
                 have hab_lt : b18 * a + 1 < N ^ 2 := by
                   have hb18_le : b18 ≤ N - 1 := Nat.le_pred_of_lt hb18_lt
                   have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -3732,11 +4074,7 @@ theorem sawhney_main : SawhneyMain := by
                   have : b18 * a + 1 ≤ (N - 1) * (N - 1) + 1 := Nat.add_le_add_right hab_le 1
                   have hlt : (N - 1) * (N - 1) + 1 < N ^ 2 := sq_pred_add_one_lt_sq N hN100
                   exact lt_of_le_of_lt this hlt
-                have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hab_lt
-                by_contra hpge
-                have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                exact (not_lt_of_ge this) hp2_lt
+                exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b18 * a + 1) (Nat.succ_pos _) hab_lt hp2div
               have hp_mem : p ∈ no5PrimesUpTo N := by
                 have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_lt
                 simp [no5PrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp5]
@@ -3744,54 +4082,21 @@ theorem sawhney_main : SawhneyMain := by
               have : a ∈ (Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ p ^ 2 ∣ b18 * a + 1) := by
                 simp [Finset.mem_filter, Finset.mem_range, ha_lt, Nat.ModEq, ha_mod7, hp2div]
               exact this
-            have hcard : A7A.card ≤ (∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1)) := by
-              calc A7A.card
-                  ≤ ((no5PrimesUpTo N).biUnion (fun p =>
-                       (Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ p ^ 2 ∣ b18 * a + 1))).card :=
-                    Finset.card_le_card hsubset
-                _ ≤ ∑ p ∈ no5PrimesUpTo N,
-                       ((Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ p ^ 2 ∣ b18 * a + 1)).card :=
-                    Finset.card_biUnion_le
-                _ ≤ ∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) := by
-                    apply Finset.sum_le_sum
-                    intro p hp
-                    have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                    have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2
-                    by_cases hpdiv : p ∣ b18
-                    · -- If p | b18, the filter is empty (p ∤ b18*a+1)
-                      have hempty : ((Finset.range N).filter
-                          (fun a => a ≡ 7 [MOD 25] ∧ p ^ 2 ∣ b18 * a + 1)).card = 0 := by
-                        rw [Finset.card_eq_zero, Finset.eq_empty_iff_forall_notMem]
-                        intro a; simp only [Finset.mem_filter, Finset.mem_range, not_and]
-                        intro _ _ hdiv
-                        have hpdiv' : p ∣ b18 * a + 1 := Nat.dvd_of_pow_dvd (by omega : 1 ≤ 2) hdiv
-                        -- p | b18 implies p | b18 * a, so b18 * a + 1 ≡ 1 (mod p)
-                        have hpmod : p ∣ b18 * a := Nat.dvd_mul_right_of_dvd hpdiv a
-                        have hone : (b18 * a + 1) % p = 1 := by
-                          have := Nat.add_mod (b18 * a) 1 p
-                          simp [Nat.dvd_iff_mod_eq_zero.1 hpmod, Nat.mod_eq_of_lt hp_prime.one_lt] at this
-                          exact this
-                        -- But p | (b18 * a + 1) implies (b18 * a + 1) % p = 0, contradiction
-                        have hzero : (b18 * a + 1) % p = 0 := Nat.dvd_iff_mod_eq_zero.1 hpdiv'
-                        omega
-                      simp [hempty]
-                    · exact off_count_modEq25_le N p b18 7 hp_prime hpdiv hp_ne5
-            have hcard_real : (A7A.card : ℝ) ≤ ((∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) := by
-              exact_mod_cast hcard
-            have hsum :=
-              sum_div_add_one_le (P := no5PrimesUpTo N) (k := 25)
-            have hPcard : ((no5PrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-              have hsub : no5PrimesUpTo N ⊆ primesUpTo N := by
-                intro p hp
-                exact (Finset.mem_filter.1 hp).1
-              have := Finset.card_le_card hsub
-              have := (Nat.cast_le.2 this : ((no5PrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-              simpa [primesUpTo_card] using this
-            have hsum' :
-                ((∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                  (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-              exact hsum.trans (add_le_add (le_refl _) hPcard)
-            exact le_trans hcard_real hsum'
+            have hP_sub : no5PrimesUpTo N ⊆ primesUpTo N := by
+              intro p hp
+              exact (Finset.mem_filter.1 hp).1
+            have hP_ne5 : ∀ p ∈ no5PrimesUpTo N, p ≠ 5 := by
+              intro p hp
+              exact (Finset.mem_filter.1 hp).2
+            exact
+              residue_class_card_bound_of_subset
+                (t := 7)
+                (b := b18)
+                (P := no5PrimesUpTo N)
+                (S := A7A)
+                hsubset
+                hP_sub
+                hP_ne5
           -- Bound A18A using b7.
           have hA18A_le :
               (A18A.card : ℝ) ≤
@@ -3815,7 +4120,6 @@ theorem sawhney_main : SawhneyMain := by
                 exact cross_residue_7_18_not_div_25 b7 a hb7_mod ha_mod18
               obtain ⟨p, hp, hp5, hp2div⟩ := prime_square_exists_ne5 (n := b7 * a + 1) hnsq h25
               have hp_lt : p ≤ N := by
-                have hp2_le : p ^ 2 ≤ b7 * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
                 have hab_lt : b7 * a + 1 < N ^ 2 := by
                   have hb7_le : b7 ≤ N - 1 := Nat.le_pred_of_lt hb7_lt
                   have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -3823,11 +4127,7 @@ theorem sawhney_main : SawhneyMain := by
                   have : b7 * a + 1 ≤ (N - 1) * (N - 1) + 1 := Nat.add_le_add_right hab_le 1
                   have hlt : (N - 1) * (N - 1) + 1 < N ^ 2 := sq_pred_add_one_lt_sq N hN100
                   exact lt_of_le_of_lt this hlt
-                have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hab_lt
-                by_contra hpge
-                have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                exact (not_lt_of_ge this) hp2_lt
+                exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b7 * a + 1) (Nat.succ_pos _) hab_lt hp2div
               have hp_mem : p ∈ no5PrimesUpTo N := by
                 have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_lt
                 simp [no5PrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp5]
@@ -3835,36 +4135,21 @@ theorem sawhney_main : SawhneyMain := by
               have : a ∈ (Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ p ^ 2 ∣ b7 * a + 1) := by
                 simp [Finset.mem_filter, Finset.mem_range, ha_lt, Nat.ModEq, ha_mod18, hp2div]
               exact this
-            have hcard : A18A.card ≤ (∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1)) := by
-              calc A18A.card
-                  ≤ ((no5PrimesUpTo N).biUnion (fun p =>
-                       (Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ p ^ 2 ∣ b7 * a + 1))).card :=
-                    Finset.card_le_card hsubset
-                _ ≤ ∑ p ∈ no5PrimesUpTo N,
-                       ((Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ p ^ 2 ∣ b7 * a + 1)).card :=
-                    Finset.card_biUnion_le
-                _ ≤ ∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) := by
-                    apply Finset.sum_le_sum
-                    intro p hp
-                    have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                    have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2
-                    exact off_count_modEq25_le' N p b7 18 hp_prime hp_ne5
-            have hcard_real : (A18A.card : ℝ) ≤ ((∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) := by
-              exact_mod_cast hcard
-            have hsum :=
-              sum_div_add_one_le (P := no5PrimesUpTo N) (k := 25)
-            have hPcard : ((no5PrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-              have hsub : no5PrimesUpTo N ⊆ primesUpTo N := by
-                intro p hp
-                exact (Finset.mem_filter.1 hp).1
-              have := Finset.card_le_card hsub
-              have := (Nat.cast_le.2 this : ((no5PrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-              simpa [primesUpTo_card] using this
-            have hsum' :
-                ((∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                  (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-              exact hsum.trans (add_le_add (le_refl _) hPcard)
-            exact le_trans hcard_real hsum'
+            have hP_sub : no5PrimesUpTo N ⊆ primesUpTo N := by
+              intro p hp
+              exact (Finset.mem_filter.1 hp).1
+            have hP_ne5 : ∀ p ∈ no5PrimesUpTo N, p ≠ 5 := by
+              intro p hp
+              exact (Finset.mem_filter.1 hp).2
+            exact
+              residue_class_card_bound_of_subset
+                (t := 18)
+                (b := b7)
+                (P := no5PrimesUpTo N)
+                (S := A18A)
+                hsubset
+                hP_sub
+                hP_ne5
           -- Combine and contradict density.
           have hA_le : (A.card : ℝ) ≤ (A7A.card : ℝ) + (A18A.card : ℝ) := by
             have hcard : A.card ≤ (A7A ∪ A18A).card := Finset.card_le_card hA_sub_78
@@ -3894,30 +4179,43 @@ theorem sawhney_main : SawhneyMain := by
             have hA7 := hA7A_le
             have hA18 := hA18A_le
             -- Explicit intermediate bounds for numerical reasoning
-            have hsum_bound : (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (413 / 25000 : ℝ) := hno5R
+            have hsum_bound : (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ C_no5 := by
+              simpa [C_no5] using hno5R
             have hN_times_sum : (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤
-                (N : ℝ) * (413 / 25000 : ℝ) :=
+                (N : ℝ) * C_no5 :=
               mul_le_mul_of_nonneg_left hsum_bound (le_of_lt hNpos)
-            have hA7_bound : (A7A.card : ℝ) ≤ (N : ℝ) * (413 / 25000 : ℝ) + δ * (N : ℝ) := by
-              have h1 : (A7A.card : ℝ) ≤ (N : ℝ) * (413 / 25000 : ℝ) + (N.primeCounting : ℝ) :=
+            have hA7_bound : (A7A.card : ℝ) ≤ (N : ℝ) * C_no5 + δ * (N : ℝ) := by
+              have h1 : (A7A.card : ℝ) ≤ (N : ℝ) * C_no5 + (N.primeCounting : ℝ) :=
                 le_trans hA7 (add_le_add hN_times_sum (le_refl _))
               exact le_trans h1 (add_le_add (le_refl _) hπN')
-            have hA18_bound : (A18A.card : ℝ) ≤ (N : ℝ) * (413 / 25000 : ℝ) + δ * (N : ℝ) := by
-              have h1 : (A18A.card : ℝ) ≤ (N : ℝ) * (413 / 25000 : ℝ) + (N.primeCounting : ℝ) :=
+            have hA18_bound : (A18A.card : ℝ) ≤ (N : ℝ) * C_no5 + δ * (N : ℝ) := by
+              have h1 : (A18A.card : ℝ) ≤ (N : ℝ) * C_no5 + (N.primeCounting : ℝ) :=
                 le_trans hA18 (add_le_add hN_times_sum (le_refl _))
               exact le_trans h1 (add_le_add (le_refl _) hπN')
             -- Now combine: A.card ≤ A7A.card + A18A.card ≤ 2 * (N * 413/25000 + δ * N)
             -- = N * (826/25000 + 2δ) ≈ N * 0.033042 < N * 0.0395 = (1/25 - 1/2000) * N
-            nlinarith [hA_le, hA7_bound, hA18_bound, hNpos]
+            have hA7_bound_num :
+                (A7A.card : ℝ) ≤ (N : ℝ) * (413 / 25000 : ℝ) + δ * (N : ℝ) := by
+              simpa [C_no5] using hA7_bound
+            have hA18_bound_num :
+                (A18A.card : ℝ) ≤ (N : ℝ) * (413 / 25000 : ℝ) + δ * (N : ℝ) := by
+              simpa [C_no5] using hA18_bound
+            nlinarith [hA_le, hA7_bound_num, hA18_bound_num, hNpos]
           exfalso
           exact (not_lt_of_ge hdense) hA_lt
 
-    · -- Nontrivial case: A* is nonempty. We run the paper’s casework to get a contradiction.
+    -- ═══════════════════════════════════════════════════════════════════
+    -- CASE 0: A* = ∅ (diagonal sieve catches everything)
+    -- ═══════════════════════════════════════════════════════════════════
+    by_cases hAstar_empty : Astar = ∅
+    · exact case_Astar_empty hAstar_empty
+
+    · -- A* is nonempty: run the paper’s casework to get a contradiction.
       have hAstar_nonempty : Astar.Nonempty := by
         exact Finset.nonempty_iff_ne_empty.2 hAstar_empty
-      -- If there is an even element in A*, we use the strongest bounds (Case 1 of the paper).
-      by_cases hEven : ∃ b ∈ Astar, b % 2 = 0
-      · exfalso
+
+      -- Case 1 (paper): there exists an even element in A*.
+      have case_Astar_nonempty_exists_even (hEven : ∃ b ∈ Astar, b % 2 = 0) : False := by
         rcases hEven with ⟨b, hbAstar, hbEven⟩
         have hbA : b ∈ A := hAstar_sub_A hbAstar
         have hb_lt : b < N := by simpa [Finset.mem_range] using hAsub hbA
@@ -3927,102 +4225,8 @@ theorem sawhney_main : SawhneyMain := by
         have hAstar_bound :
             (Astar.card : ℝ) ≤
               (46 : ℝ) *
-                ((N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by
-          have hsubset :
-              Astar ⊆ (diagPrimesUpTo N).biUnion (fun p =>
-                (Finset.range N).filter (fun n => n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)) := by
-            intro x hx
-            have hxA : x ∈ A := hAstar_sub_A hx
-            have hx_lt : x < N := by simpa [Finset.mem_range] using hAsub hxA
-            have hx_mod_ne : x % 25 ≠ 7 ∧ x % 25 ≠ 18 := by
-              simpa [Astar] using (Finset.mem_filter.1 hx).2
-            have hnsq : ¬ Squarefree (x ^ 2 + 1) := by
-              -- from the property with (x, x)
-              simpa [pow_two, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using hAprop x hxA x hxA
-            obtain ⟨p, hp, hp2div⟩ := prime_square_exists (n := x ^ 2 + 1) hnsq
-            have hp_ne2 : p ≠ 2 := by
-              intro hp2
-              subst hp2
-              have : 4 ∣ x ^ 2 + 1 := by simpa [pow_two] using hp2div
-              exact (not_dvd_four_sq_add_one x) this
-            have hp_gt2 : p > 2 := lt_of_le_of_ne hp.two_le (Ne.symm hp_ne2)
-            have hp_mod4 : p % 4 = 1 :=
-              prime_sq_divides_implies_one_mod_four p x hp hp_gt2 (by simpa [pow_two] using hp2div)
-            have hp_ne5 : p ≠ 5 := by
-              intro hp5
-              subst hp5
-              have : 25 ∣ x ^ 2 + 1 := by simpa [pow_two] using hp2div
-              exact (not_dvd_25_sq_add_one_of_mod_ne x hx_mod_ne) this
-            have hp_ge13 : 13 ≤ p := prime_ge_13_of_mod4_one_ne5 p hp hp_mod4 hp_ne5
-            have hp_le : p ≤ N := by
-              have hp2_le : p ^ 2 ≤ x ^ 2 + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
-              have hxx_lt : x ^ 2 + 1 < N ^ 2 := by
-                have hx_le : x ≤ N - 1 := Nat.le_pred_of_lt hx_lt
-                have hxx_le : x ^ 2 ≤ (N - 1) ^ 2 := Nat.pow_le_pow_left hx_le 2
-                have : x ^ 2 + 1 ≤ (N - 1) ^ 2 + 1 := Nat.add_le_add_right hxx_le 1
-                have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
-                exact lt_of_le_of_lt this hlt
-              have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hxx_lt
-              by_contra hpge
-              have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-              have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-              exact (not_lt_of_ge this) hp2_lt
-            have hp_mem : p ∈ diagPrimesUpTo N := by
-              have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_le
-              simp [diagPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp_mod4, hp_ge13]
-            refine Finset.mem_biUnion.2 ⟨p, hp_mem, ?_⟩
-            have : x ∈ (Finset.range N).filter (fun n => n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1) := by
-              simp [Finset.mem_filter, Finset.mem_range, hx_lt, hx_mod_ne, hp2div]
-            exact this
-          have hcard : Astar.card ≤ (∑ p ∈ diagPrimesUpTo N, 46 * (N / (25 * p ^ 2) + 1)) := by
-            calc Astar.card
-                ≤ ((diagPrimesUpTo N).biUnion (fun p =>
-                     (Finset.range N).filter (fun n => n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1))).card :=
-                  Finset.card_le_card hsubset
-              _ ≤ ∑ p ∈ diagPrimesUpTo N,
-                     ((Finset.range N).filter (fun n => n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card :=
-                  Finset.card_biUnion_le
-              _ ≤ ∑ p ∈ diagPrimesUpTo N, 46 * (N / (25 * p ^ 2) + 1) := by
-                  apply Finset.sum_le_sum
-                  intro p hp
-                  have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                  have hp_mod4 : p % 4 = 1 := (Finset.mem_filter.1 hp).2.1
-                  have hp_ne5 : p ≠ 5 := by
-                    have hp_ge13 : 13 ≤ p := (Finset.mem_filter.1 hp).2.2
-                    omega
-                  exact diag_count_mod25_ne_7_18_le N p hp_prime hp_mod4 hp_ne5
-          have hcard_real : (Astar.card : ℝ) ≤ ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) := by
-            exact_mod_cast hcard
-          have hmul :
-              ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) =
-                (46 : ℝ) * ((∑ p ∈ diagPrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) := by
-            have :
-                (∑ p ∈ diagPrimesUpTo N, 46 * (N / (25 * p ^ 2) + 1) : ℕ) =
-                  46 * (∑ p ∈ diagPrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) := by
-              simpa using
-                (Finset.mul_sum (s := diagPrimesUpTo N) (f := fun p => (N / (25 * p ^ 2) + 1)) (a := 46)).symm
-            exact_mod_cast this
-          have hsum := sum_div_add_one_le (P := diagPrimesUpTo N) (k := 25)
-          have hPcard : ((diagPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-            have hsub : diagPrimesUpTo N ⊆ primesUpTo N := by
-              intro p hp
-              exact (Finset.mem_filter.1 hp).1
-            have := Finset.card_le_card hsub
-            have := (Nat.cast_le.2 this : ((diagPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-            simpa [primesUpTo_card] using this
-          have hsum' :
-              ((∑ p ∈ diagPrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                (N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-            exact hsum.trans (add_le_add (le_refl _) hPcard)
-          have : (Astar.card : ℝ) ≤ (46 : ℝ) *
-                ((N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by
-            have hmul' : ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                (46 : ℝ) * ((N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by
-              -- hmul says the sums are equal after cast
-              rw [hmul]
-              exact mul_le_mul_of_nonneg_left hsum' (by positivity)
-            exact le_trans hcard_real hmul'
-          exact this
+                ((N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) :=
+          Astar_bound_mod25
         -- Bound A7A ∪ A18A using b (even): primes p ≠ 2,5.
         have hA78_bound :
             ((A7A.card : ℝ) + (A18A.card : ℝ)) ≤
@@ -4050,23 +4254,14 @@ theorem sawhney_main : SawhneyMain := by
                 exact this
               obtain ⟨p, hp, hp5, hp2div⟩ := prime_square_exists_ne5 (n := b * a + 1) hnsq h25
               have hp_ne2 : p ≠ 2 := by
-                intro hp2
-                subst hp2
-                -- b is even, so b*a+1 is odd, so 4 ∤ ...
-                have : 2 ∣ b * a := dvd_mul_of_dvd_left (Nat.dvd_of_mod_eq_zero hbEven') a
                 have hodd : (b * a + 1) % 2 = 1 := by
+                  -- b is even, so b*a+1 is odd.
+                  have : 2 ∣ b * a := dvd_mul_of_dvd_left (Nat.dvd_of_mod_eq_zero hbEven') a
                   -- even + 1 is odd
                   have : (b * a) % 2 = 0 := Nat.mod_eq_zero_of_dvd this
                   omega
-                have : ¬ (4 ∣ b * a + 1) := by
-                  intro h4
-                  have h0 : (b * a + 1) % 2 = 0 := by
-                    have : 2 ∣ 4 := by decide
-                    exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
-                  simp [hodd] at h0
-                exact (this (by simpa [pow_two] using hp2div)).elim
+                exact prime_ne_two_of_sq_dvd_odd (hn := hodd) hp2div
               have hp_lt : p ≤ N := by
-                have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
                 have hab_lt : b * a + 1 < N ^ 2 := by
                   have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
                   have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -4074,11 +4269,7 @@ theorem sawhney_main : SawhneyMain := by
                   have : b * a + 1 ≤ (N - 1) * (N - 1) + 1 := Nat.add_le_add_right hab_le 1
                   have hlt : (N - 1) * (N - 1) + 1 < N ^ 2 := sq_pred_add_one_lt_sq N hN100
                   exact lt_of_le_of_lt this hlt
-                have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hab_lt
-                by_contra hpge
-                have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                exact (not_lt_of_ge this) hp2_lt
+                exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b * a + 1) (Nat.succ_pos _) hab_lt hp2div
               have hp_mem : p ∈ offPrimesUpTo N := by
                 have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_lt
                 simp [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp_ne2, hp5]
@@ -4086,35 +4277,21 @@ theorem sawhney_main : SawhneyMain := by
               have : a ∈ (Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ p ^ 2 ∣ b * a + 1) := by
                 simp [Finset.mem_filter, Finset.mem_range, ha_lt, Nat.ModEq, ha_mod7, hp2div]
               exact this
-            have hcard : A7A.card ≤ (∑ p ∈ offPrimesUpTo N, (N / (25 * p ^ 2) + 1)) := by
-              calc A7A.card
-                  ≤ ((offPrimesUpTo N).biUnion (fun p =>
-                       (Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ p ^ 2 ∣ b * a + 1))).card :=
-                    Finset.card_le_card hsubset
-                _ ≤ ∑ p ∈ offPrimesUpTo N,
-                       ((Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ p ^ 2 ∣ b * a + 1)).card :=
-                    Finset.card_biUnion_le
-                _ ≤ ∑ p ∈ offPrimesUpTo N, (N / (25 * p ^ 2) + 1) := by
-                    apply Finset.sum_le_sum
-                    intro p hp
-                    have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                    have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2.2
-                    exact off_count_modEq25_le' N p b 7 hp_prime hp_ne5
-            have hcard_real : (A7A.card : ℝ) ≤ ((∑ p ∈ offPrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) := by
-              exact_mod_cast hcard
-            have hsum := sum_div_add_one_le (P := offPrimesUpTo N) (k := 25)
-            have hPcard : ((offPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-              have hsub : offPrimesUpTo N ⊆ primesUpTo N := by
-                intro p hp
-                exact (Finset.mem_filter.1 hp).1
-              have := Finset.card_le_card hsub
-              have := (Nat.cast_le.2 this : ((offPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-              simpa [primesUpTo_card] using this
-            have hsum' :
-                ((∑ p ∈ offPrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                  (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-              exact hsum.trans (add_le_add (le_refl _) hPcard)
-            exact le_trans hcard_real hsum'
+            have hP_sub : offPrimesUpTo N ⊆ primesUpTo N := by
+              intro p hp
+              exact (Finset.mem_filter.1 hp).1
+            have hP_ne5 : ∀ p ∈ offPrimesUpTo N, p ≠ 5 := by
+              intro p hp
+              exact (Finset.mem_filter.1 hp).2.2
+            exact
+              residue_class_card_bound_of_subset
+                (t := 7)
+                (b := b)
+                (P := offPrimesUpTo N)
+                (S := A7A)
+                hsubset
+                hP_sub
+                hP_ne5
           have hA18A_le :
               (A18A.card : ℝ) ≤
                 (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
@@ -4135,21 +4312,12 @@ theorem sawhney_main : SawhneyMain := by
                 exact this
               obtain ⟨p, hp, hp5, hp2div⟩ := prime_square_exists_ne5 (n := b * a + 1) hnsq h25
               have hp_ne2 : p ≠ 2 := by
-                intro hp2
-                subst hp2
-                have : 2 ∣ b * a := dvd_mul_of_dvd_left (Nat.dvd_of_mod_eq_zero hbEven') a
                 have hodd : (b * a + 1) % 2 = 1 := by
+                  have : 2 ∣ b * a := dvd_mul_of_dvd_left (Nat.dvd_of_mod_eq_zero hbEven') a
                   have : (b * a) % 2 = 0 := Nat.mod_eq_zero_of_dvd this
                   omega
-                have : ¬ (4 ∣ b * a + 1) := by
-                  intro h4
-                  have h0 : (b * a + 1) % 2 = 0 := by
-                    have : 2 ∣ 4 := by decide
-                    exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
-                  simp [hodd] at h0
-                exact (this (by simpa [pow_two] using hp2div)).elim
+                exact prime_ne_two_of_sq_dvd_odd (hn := hodd) hp2div
               have hp_lt : p ≤ N := by
-                have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
                 have hab_lt : b * a + 1 < N ^ 2 := by
                   have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
                   have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -4157,11 +4325,7 @@ theorem sawhney_main : SawhneyMain := by
                   have : b * a + 1 ≤ (N - 1) * (N - 1) + 1 := Nat.add_le_add_right hab_le 1
                   have hlt : (N - 1) * (N - 1) + 1 < N ^ 2 := sq_pred_add_one_lt_sq N hN100
                   exact lt_of_le_of_lt this hlt
-                have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hab_lt
-                by_contra hpge
-                have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                exact (not_lt_of_ge this) hp2_lt
+                exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b * a + 1) (Nat.succ_pos _) hab_lt hp2div
               have hp_mem : p ∈ offPrimesUpTo N := by
                 have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_lt
                 simp [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp_ne2, hp5]
@@ -4169,40 +4333,26 @@ theorem sawhney_main : SawhneyMain := by
               have : a ∈ (Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ p ^ 2 ∣ b * a + 1) := by
                 simp [Finset.mem_filter, Finset.mem_range, ha_lt, Nat.ModEq, ha_mod18, hp2div]
               exact this
-            have hcard : A18A.card ≤ (∑ p ∈ offPrimesUpTo N, (N / (25 * p ^ 2) + 1)) := by
-              calc A18A.card
-                  ≤ ((offPrimesUpTo N).biUnion (fun p =>
-                       (Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ p ^ 2 ∣ b * a + 1))).card :=
-                    Finset.card_le_card hsubset
-                _ ≤ ∑ p ∈ offPrimesUpTo N,
-                       ((Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ p ^ 2 ∣ b * a + 1)).card :=
-                    Finset.card_biUnion_le
-                _ ≤ ∑ p ∈ offPrimesUpTo N, (N / (25 * p ^ 2) + 1) := by
-                    apply Finset.sum_le_sum
-                    intro p hp
-                    have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                    have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2.2
-                    exact off_count_modEq25_le' N p b 18 hp_prime hp_ne5
-            have hcard_real : (A18A.card : ℝ) ≤ ((∑ p ∈ offPrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) := by
-              exact_mod_cast hcard
-            have hsum := sum_div_add_one_le (P := offPrimesUpTo N) (k := 25)
-            have hPcard : ((offPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-              have hsub : offPrimesUpTo N ⊆ primesUpTo N := by
-                intro p hp
-                exact (Finset.mem_filter.1 hp).1
-              have := Finset.card_le_card hsub
-              have := (Nat.cast_le.2 this : ((offPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-              simpa [primesUpTo_card] using this
-            have hsum' :
-                ((∑ p ∈ offPrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                  (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-              exact hsum.trans (add_le_add (le_refl _) hPcard)
-            exact le_trans hcard_real hsum'
+            have hP_sub : offPrimesUpTo N ⊆ primesUpTo N := by
+              intro p hp
+              exact (Finset.mem_filter.1 hp).1
+            have hP_ne5 : ∀ p ∈ offPrimesUpTo N, p ≠ 5 := by
+              intro p hp
+              exact (Finset.mem_filter.1 hp).2.2
+            exact
+              residue_class_card_bound_of_subset
+                (t := 18)
+                (b := b)
+                (P := offPrimesUpTo N)
+                (S := A18A)
+                hsubset
+                hP_sub
+                hP_ne5
           nlinarith [hA7A_le, hA18A_le]
         -- combine all parts
         have hA_le_parts : (A.card : ℝ) ≤ (A7A.card : ℝ) + (A18A.card : ℝ) + (Astar.card : ℝ) := by
           exact_mod_cast hA_card_le_parts_nat
-        have hdiag : (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (1 : ℝ) / 1750 := by
+        have hdiag : (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ C_diag := by
           have hdiagQ : (∑ p ∈ diagPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) ≤ (1 : ℚ) / 70 :=
             sum_diagPrimesUpTo_le N
           have hcast' : (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤ (1 : ℝ) / 70 := by
@@ -4215,8 +4365,10 @@ theorem sawhney_main : SawhneyMain := by
           have hmul : (1 / 25 : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤
               (1 / 25 : ℝ) * ((1 : ℝ) / 70) :=
             mul_le_mul_of_nonneg_left hcast' (by positivity)
-          nlinarith [hmul]
-        have hoff : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (163 : ℝ) / 25000 := by
+          have : (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (1 : ℝ) / 1750 := by
+            nlinarith [hmul]
+          simpa [C_diag] using this
+        have hoff : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ C_off := by
           have hoffQ : (∑ p ∈ offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) ≤ (163 : ℚ) / 1000 :=
             sum_offPrimesUpTo_le N
           have hcast' : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤ (163 : ℝ) / 1000 := by
@@ -4229,39 +4381,61 @@ theorem sawhney_main : SawhneyMain := by
           have hmul : (1 / 25 : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤
               (1 / 25 : ℝ) * ((163 : ℝ) / 1000) :=
             mul_le_mul_of_nonneg_left hcast' (by positivity)
-          nlinarith [hmul]
+          have : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (163 : ℝ) / 25000 := by
+            nlinarith [hmul]
+          simpa [C_off] using this
         have hπN' : (N.primeCounting : ℝ) ≤ δ * (N : ℝ) := hπN
         -- Now show total density is < (1/25 - 1/2000), contradiction.
         have hA_lt : (A.card : ℝ) < (1 / 25 - (1 / 2000 : ℝ)) * (N : ℝ) := by
           -- Compute explicit bounds step by step
-          have hNdiag : (N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (N : ℝ) / 1750 := by
-            have := mul_le_mul_of_nonneg_left hdiag (le_of_lt hNpos)
-            simp only [one_div] at this ⊢
-            exact this
-          have hNoff : (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (N : ℝ) * (163 / 25000) :=
+          have hNdiag :
+              (N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤
+                (N : ℝ) * C_diag :=
+            mul_le_mul_of_nonneg_left hdiag (le_of_lt hNpos)
+          have hNoff :
+              (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤
+                (N : ℝ) * C_off :=
             mul_le_mul_of_nonneg_left hoff (le_of_lt hNpos)
           -- Explicit bound on Astar
-          have hAstar_explicit : (Astar.card : ℝ) ≤ (46 : ℝ) * ((N : ℝ) / 1750 + δ * (N : ℝ)) := by
+          have hAstar_explicit : (Astar.card : ℝ) ≤ (46 : ℝ) * ((N : ℝ) * C_diag + δ * (N : ℝ)) := by
             have h1 := hAstar_bound
             have h2 : (N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) ≤
-                      (N : ℝ) / 1750 + δ * (N : ℝ) := add_le_add hNdiag hπN'
+                      (N : ℝ) * C_diag + δ * (N : ℝ) := add_le_add hNdiag hπN'
             exact le_trans h1 (mul_le_mul_of_nonneg_left h2 (by positivity))
           -- Explicit bound on A7A + A18A
-          have hA78_explicit : (A7A.card : ℝ) + (A18A.card : ℝ) ≤ 2 * (N : ℝ) * (163 / 25000) + 2 * δ * (N : ℝ) := by
+          have hA78_explicit :
+              (A7A.card : ℝ) + (A18A.card : ℝ) ≤ 2 * (N : ℝ) * C_off + 2 * δ * (N : ℝ) := by
             have h1 := hA78_bound
             have h4 : 2 * (N.primeCounting : ℝ) ≤ 2 * δ * (N : ℝ) := by nlinarith [hπN']
-            have h3 : 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ 2 * (N : ℝ) * (163 / 25000) := by
-              have hmul : (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (N : ℝ) * (163 / 25000) := hNoff
+            have h3 :
+                2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤
+                  2 * (N : ℝ) * C_off := by
+              have hmul :
+                  (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤
+                    (N : ℝ) * C_off :=
+                hNoff
               have h2mul := mul_le_mul_of_nonneg_left hmul (show (0 : ℝ) ≤ 2 by norm_num)
               calc 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2))
                   = 2 * ((N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2))) := by ring
-                _ ≤ 2 * ((N : ℝ) * (163 / 25000)) := h2mul
-                _ = 2 * (N : ℝ) * (163 / 25000) := by ring
+                _ ≤ 2 * ((N : ℝ) * C_off) := h2mul
+                _ = 2 * (N : ℝ) * C_off := by ring
             have h5 : 2 * (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + 2 * (N.primeCounting : ℝ) ≤
-                      2 * (N : ℝ) * (163 / 25000) + 2 * δ * (N : ℝ) := add_le_add h3 h4
+                      2 * (N : ℝ) * C_off + 2 * δ * (N : ℝ) := add_le_add h3 h4
             exact le_trans h1 h5
-          nlinarith [hA_le_parts, hAstar_explicit, hA78_explicit, hNpos]
+          have hAstar_explicit_num :
+              (Astar.card : ℝ) ≤ (46 : ℝ) * ((N : ℝ) * ((1 : ℝ) / 1750) + δ * (N : ℝ)) := by
+            simpa [C_diag] using hAstar_explicit
+          have hA78_explicit_num :
+              (A7A.card : ℝ) + (A18A.card : ℝ) ≤ 2 * (N : ℝ) * ((163 : ℝ) / 25000) + 2 * δ * (N : ℝ) := by
+            simpa [C_off] using hA78_explicit
+          nlinarith [hA_le_parts, hAstar_explicit_num, hA78_explicit_num, hNpos]
         exact (not_lt_of_ge hdense) hA_lt
+      -- ═══════════════════════════════════════════════════════════════════
+      -- CASE 1: ∃ even element in A* (Paper Case 1)
+      -- ═══════════════════════════════════════════════════════════════════
+      by_cases hEven : ∃ b ∈ Astar, b % 2 = 0
+      · exfalso
+        exact case_Astar_nonempty_exists_even hEven
       · -- Case 2/3: A* is all odd.
         -- We split based on whether A7 ∪ A18 contains an even element.
         have hAstar_all_odd : ∀ b ∈ Astar, b % 2 = 1 := by
@@ -4273,9 +4447,9 @@ theorem sawhney_main : SawhneyMain := by
               apply hEven
               exact ⟨b, hb, h0⟩
           | inr h1 => exact h1
-        by_cases hEven78 : (∃ b ∈ A7A, b % 2 = 0) ∨ (∃ b ∈ A18A, b % 2 = 0)
-        · -- Case 3 from the paper: one of A7 or A18 has an even element.
-          exfalso
+        have case_Astar_all_odd_exists_even_in_A78
+            (hAstar_all_odd : ∀ b ∈ Astar, b % 2 = 1)
+            (hEven78 : (∃ b ∈ A7A, b % 2 = 0) ∨ (∃ b ∈ A18A, b % 2 = 0)) : False := by
           -- Pick b∈A* and an even element from A7 or A18.
           rcases hAstar_nonempty with ⟨b, hbAstar⟩
           have hbA : b ∈ A := hAstar_sub_A hbAstar
@@ -4287,107 +4461,8 @@ theorem sawhney_main : SawhneyMain := by
           have hAstar_bound :
               (Astar.card : ℝ) ≤
                 (46 : ℝ) *
-                  ((N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by
-            have hsubset :
-                Astar ⊆ (diagPrimesUpTo N).biUnion (fun p =>
-                  (Finset.range N).filter (fun n =>
-                    n % 2 = 1 ∧ n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)) := by
-              intro x hx
-              have hxA : x ∈ A := hAstar_sub_A hx
-              have hx_lt : x < N := by simpa [Finset.mem_range] using hAsub hxA
-              have hx_mod_ne : x % 25 ≠ 7 ∧ x % 25 ≠ 18 := by
-                simpa [Astar] using (Finset.mem_filter.1 hx).2
-              have hx_odd : x % 2 = 1 := hAstar_all_odd x hx
-              have hnsq : ¬ Squarefree (x ^ 2 + 1) := by
-                simpa [pow_two, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using hAprop x hxA x hxA
-              obtain ⟨p, hp, hp2div⟩ := prime_square_exists (n := x ^ 2 + 1) hnsq
-              have hp_ne2 : p ≠ 2 := by
-                intro hp2
-                subst hp2
-                have : 4 ∣ x ^ 2 + 1 := by simpa [pow_two] using hp2div
-                exact (not_dvd_four_sq_add_one x) this
-              have hp_gt2 : p > 2 := lt_of_le_of_ne hp.two_le (Ne.symm hp_ne2)
-              have hp_mod4 : p % 4 = 1 :=
-                prime_sq_divides_implies_one_mod_four p x hp hp_gt2 (by simpa [pow_two] using hp2div)
-              have hp_ne5 : p ≠ 5 := by
-                intro hp5
-                subst hp5
-                have : 25 ∣ x ^ 2 + 1 := by simpa [pow_two] using hp2div
-                exact (not_dvd_25_sq_add_one_of_mod_ne x hx_mod_ne) this
-              have hp_ge13 : 13 ≤ p := prime_ge_13_of_mod4_one_ne5 p hp hp_mod4 hp_ne5
-              have hp_le : p ≤ N := by
-                have hp2_le : p ^ 2 ≤ x ^ 2 + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
-                have hxx_lt : x ^ 2 + 1 < N ^ 2 := by
-                  have hx_le : x ≤ N - 1 := Nat.le_pred_of_lt hx_lt
-                  have hxx_le : x ^ 2 ≤ (N - 1) ^ 2 := Nat.pow_le_pow_left hx_le 2
-                  have : x ^ 2 + 1 ≤ (N - 1) ^ 2 + 1 := Nat.add_le_add_right hxx_le 1
-                  have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
-                  exact lt_of_le_of_lt this hlt
-                have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hxx_lt
-                by_contra hpge
-                have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                exact (not_lt_of_ge this) hp2_lt
-              have hp_mem : p ∈ diagPrimesUpTo N := by
-                have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_le
-                simp [diagPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp_mod4, hp_ge13]
-              refine Finset.mem_biUnion.2 ⟨p, hp_mem, ?_⟩
-              have : x ∈ (Finset.range N).filter (fun n =>
-                  n % 2 = 1 ∧ n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1) := by
-                simp [Finset.mem_filter, Finset.mem_range, hx_lt, hx_odd, hx_mod_ne, hp2div]
-              exact this
-            have hcard : Astar.card ≤ (∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1)) := by
-              calc Astar.card
-                  ≤ ((diagPrimesUpTo N).biUnion (fun p =>
-                       (Finset.range N).filter (fun n =>
-                         n % 2 = 1 ∧ n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1))).card :=
-                    Finset.card_le_card hsubset
-                _ ≤ ∑ p ∈ diagPrimesUpTo N,
-                       ((Finset.range N).filter (fun n =>
-                         n % 2 = 1 ∧ n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card :=
-                    Finset.card_biUnion_le
-                _ ≤ ∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) := by
-                    apply Finset.sum_le_sum
-                    intro p hp
-                    have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                    have hp_mod4 : p % 4 = 1 := (Finset.mem_filter.1 hp).2.1
-                    have hp_ne2 : p ≠ 2 := by intro hp2; subst hp2; omega
-                    have hp_ge13 : 13 ≤ p := (Finset.mem_filter.1 hp).2.2
-                    have hp_ne5 : p ≠ 5 := by omega
-                    exact diag_count_mod50odd_ne_7_18_le N p hp_prime hp_mod4 hp_ne2 hp_ne5
-            -- convert to ℝ and finish (crude; sufficient for the final numerical contradiction)
-            have hcard_real : (Astar.card : ℝ) ≤ ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) := by
-              exact_mod_cast hcard
-            have hmul :
-                ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) =
-                  (46 : ℝ) * ((∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) := by
-              have :
-                  (∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) =
-                    46 * (∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) := by
-                simpa using
-                  (Finset.mul_sum (s := diagPrimesUpTo N) (f := fun p => (N / (50 * p ^ 2) + 1)) (a := 46)).symm
-              exact_mod_cast this
-            have hsum := sum_div_add_one_le (P := diagPrimesUpTo N) (k := 50)
-            have hPcard : ((diagPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-              have hsub : diagPrimesUpTo N ⊆ primesUpTo N := by
-                intro p hp
-                exact (Finset.mem_filter.1 hp).1
-              have := Finset.card_le_card hsub
-              have := (Nat.cast_le.2 this : ((diagPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-              simpa [primesUpTo_card] using this
-            have hsum' :
-                ((∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                  (N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-              exact hsum.trans (add_le_add (le_refl _) hPcard)
-            have hmul_le :
-                ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                  (46 : ℝ) * ((N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by
-              have hmul_le' :
-                  ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                    (46 : ℝ) * ((∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) := by
-                simp [hmul]
-              exact le_trans hmul_le' (mul_le_mul_of_nonneg_left hsum' (by positivity))
-            exact le_trans hcard_real hmul_le
+                  ((N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) :=
+            Astar_bound_mod50 hAstar_all_odd
           -- Now bound A7 and A18 depending on where the even element lies.
           cases hEven78 with
           | inl hA7_even =>
@@ -4416,7 +4491,6 @@ theorem sawhney_main : SawhneyMain := by
                   obtain ⟨p, hp, hp5, hp2div'⟩ := must_have_other_prime_square a b ha_mod7 hb_mod_ne hnsq'
                   have hp2div : p ^ 2 ∣ b * a + 1 := by simp only [Nat.mul_comm a b] at hp2div'; exact hp2div'
                   have hp_le : p ≤ N := by
-                    have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
                     have hab_lt : b * a + 1 < N ^ 2 := by
                       have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -4424,11 +4498,7 @@ theorem sawhney_main : SawhneyMain := by
                       have : b * a + 1 ≤ (N - 1) * (N - 1) + 1 := Nat.add_le_add_right hab_le 1
                       have hlt : (N - 1) * (N - 1) + 1 < N ^ 2 := sq_pred_add_one_lt_sq N hN100
                       exact lt_of_le_of_lt this hlt
-                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hab_lt
-                    by_contra hpge
-                    have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                    have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                    exact (not_lt_of_ge this) hp2_lt
+                    exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b * a + 1) (Nat.succ_pos _) hab_lt hp2div
                   have hp_mem : p ∈ no5PrimesUpTo N := by
                     have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_le
                     simp [no5PrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp5]
@@ -4436,35 +4506,21 @@ theorem sawhney_main : SawhneyMain := by
                   have : a ∈ (Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ p ^ 2 ∣ b * a + 1) := by
                     simp [Finset.mem_filter, Finset.mem_range, ha_lt, Nat.ModEq, ha_mod7, hp2div]
                   exact this
-                have hcard : A7A.card ≤ (∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1)) := by
-                  calc A7A.card
-                      ≤ ((no5PrimesUpTo N).biUnion (fun p =>
-                           (Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ p ^ 2 ∣ b * a + 1))).card :=
-                        Finset.card_le_card hsubset
-                    _ ≤ ∑ p ∈ no5PrimesUpTo N,
-                           ((Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ p ^ 2 ∣ b * a + 1)).card :=
-                        Finset.card_biUnion_le
-                    _ ≤ ∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) := by
-                        apply Finset.sum_le_sum
-                        intro p hp
-                        have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                        have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2
-                        exact off_count_modEq25_le' N p b 7 hp_prime hp_ne5
-                have hcard_real : (A7A.card : ℝ) ≤ ((∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) := by
-                  exact_mod_cast hcard
-                have hsum := sum_div_add_one_le (P := no5PrimesUpTo N) (k := 25)
-                have hPcard : ((no5PrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-                  have hsub : no5PrimesUpTo N ⊆ primesUpTo N := by
-                    intro p hp
-                    exact (Finset.mem_filter.1 hp).1
-                  have := Finset.card_le_card hsub
-                  have := (Nat.cast_le.2 this : ((no5PrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-                  simpa [primesUpTo_card] using this
-                have hsum' :
-                    ((∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                      (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-                  exact hsum.trans (add_le_add (le_refl _) hPcard)
-                exact le_trans hcard_real hsum'
+                have hP_sub : no5PrimesUpTo N ⊆ primesUpTo N := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).1
+                have hP_ne5 : ∀ p ∈ no5PrimesUpTo N, p ≠ 5 := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).2
+                exact
+                  residue_class_card_bound_of_subset
+                    (t := 7)
+                    (b := b)
+                    (P := no5PrimesUpTo N)
+                    (S := A7A)
+                    hsubset
+                    hP_sub
+                    hP_ne5
               -- Bound A18 using b7 (even), using off primes (exclude 2,5).
               have hA18_bound :
                   (A18A.card : ℝ) ≤
@@ -4483,23 +4539,14 @@ theorem sawhney_main : SawhneyMain := by
                   have h25 : ¬ (25 ∣ b7 * a + 1) := cross_residue_7_18_not_div_25 b7 a hb7_mod ha_mod18
                   obtain ⟨p, hp, hp5, hp2div⟩ := prime_square_exists_ne5 (n := b7 * a + 1) hnsq h25
                   have hp_ne2 : p ≠ 2 := by
-                    intro hp2
-                    subst hp2
-                    -- b7 even -> b7*a+1 odd
-                    have : 2 ∣ b7 := Nat.dvd_of_mod_eq_zero hb7Even
-                    have : 2 ∣ b7 * a := dvd_mul_of_dvd_left this a
                     have hodd : (b7 * a + 1) % 2 = 1 := by
+                      -- b7 even -> b7*a+1 odd
+                      have : 2 ∣ b7 := Nat.dvd_of_mod_eq_zero hb7Even
+                      have : 2 ∣ b7 * a := dvd_mul_of_dvd_left this a
                       have : (b7 * a) % 2 = 0 := Nat.mod_eq_zero_of_dvd this
                       omega
-                    have : ¬ (4 ∣ b7 * a + 1) := by
-                      intro h4
-                      have h0 : (b7 * a + 1) % 2 = 0 := by
-                        have : 2 ∣ 4 := by decide
-                        exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
-                      simp [hodd] at h0
-                    exact (this (by simpa [pow_two] using hp2div)).elim
+                    exact prime_ne_two_of_sq_dvd_odd (hn := hodd) hp2div
                   have hp_le : p ≤ N := by
-                    have hp2_le : p ^ 2 ≤ b7 * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
                     have hab_lt : b7 * a + 1 < N ^ 2 := by
                       have hb7_le : b7 ≤ N - 1 := Nat.le_pred_of_lt hb7_lt
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -4507,11 +4554,7 @@ theorem sawhney_main : SawhneyMain := by
                       have : b7 * a + 1 ≤ (N - 1) * (N - 1) + 1 := Nat.add_le_add_right hab_le 1
                       have hlt : (N - 1) * (N - 1) + 1 < N ^ 2 := sq_pred_add_one_lt_sq N hN100
                       exact lt_of_le_of_lt this hlt
-                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hab_lt
-                    by_contra hpge
-                    have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                    have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                    exact (not_lt_of_ge this) hp2_lt
+                    exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b7 * a + 1) (Nat.succ_pos _) hab_lt hp2div
                   have hp_mem : p ∈ offPrimesUpTo N := by
                     have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_le
                     simp [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp_ne2, hp5]
@@ -4519,35 +4562,21 @@ theorem sawhney_main : SawhneyMain := by
                   have : a ∈ (Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ p ^ 2 ∣ b7 * a + 1) := by
                     simp [Finset.mem_filter, Finset.mem_range, ha_lt, Nat.ModEq, ha_mod18, hp2div]
                   exact this
-                have hcard : A18A.card ≤ (∑ p ∈ offPrimesUpTo N, (N / (25 * p ^ 2) + 1)) := by
-                  calc A18A.card
-                      ≤ ((offPrimesUpTo N).biUnion (fun p =>
-                           (Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ p ^ 2 ∣ b7 * a + 1))).card :=
-                        Finset.card_le_card hsubset
-                    _ ≤ ∑ p ∈ offPrimesUpTo N,
-                           ((Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ p ^ 2 ∣ b7 * a + 1)).card :=
-                        Finset.card_biUnion_le
-                    _ ≤ ∑ p ∈ offPrimesUpTo N, (N / (25 * p ^ 2) + 1) := by
-                        apply Finset.sum_le_sum
-                        intro p hp
-                        have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                        have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2.2
-                        exact off_count_modEq25_le' N p b7 18 hp_prime hp_ne5
-                have hcard_real : (A18A.card : ℝ) ≤ ((∑ p ∈ offPrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) := by
-                  exact_mod_cast hcard
-                have hsum := sum_div_add_one_le (P := offPrimesUpTo N) (k := 25)
-                have hPcard : ((offPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-                  have hsub : offPrimesUpTo N ⊆ primesUpTo N := by
-                    intro p hp
-                    exact (Finset.mem_filter.1 hp).1
-                  have := Finset.card_le_card hsub
-                  have := (Nat.cast_le.2 this : ((offPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-                  simpa [primesUpTo_card] using this
-                have hsum' :
-                    ((∑ p ∈ offPrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                      (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-                  exact hsum.trans (add_le_add (le_refl _) hPcard)
-                exact le_trans hcard_real hsum'
+                have hP_sub : offPrimesUpTo N ⊆ primesUpTo N := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).1
+                have hP_ne5 : ∀ p ∈ offPrimesUpTo N, p ≠ 5 := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).2.2
+                exact
+                  residue_class_card_bound_of_subset
+                    (t := 18)
+                    (b := b7)
+                    (P := offPrimesUpTo N)
+                    (S := A18A)
+                    hsubset
+                    hP_sub
+                    hP_ne5
               -- Now combine and contradict density, using the prime-sum bounds.
               have hA_le_parts : (A.card : ℝ) ≤ (A7A.card : ℝ) + (A18A.card : ℝ) + (Astar.card : ℝ) := by
                 exact_mod_cast hA_card_le_parts_nat
@@ -4565,7 +4594,7 @@ theorem sawhney_main : SawhneyMain := by
                     (1 / 50 : ℝ) * ((1 : ℝ) / 70) := by
                   exact mul_le_mul_of_nonneg_left hcast' (by positivity)
                 nlinarith [this]
-              have hno5 : (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (413 : ℝ) / 25000 := by
+              have hno5 : (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ C_no5 := by
                 have hno5Q : (∑ p ∈ no5PrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) ≤ (413 : ℚ) / 1000 :=
                   sum_no5PrimesUpTo_le N
                 have hcast' : (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤ (413 : ℝ) / 1000 := by
@@ -4578,8 +4607,10 @@ theorem sawhney_main : SawhneyMain := by
                 have : (1 / 25 : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤
                     (1 / 25 : ℝ) * ((413 : ℝ) / 1000) := by
                   exact mul_le_mul_of_nonneg_left hcast' (by positivity)
-                nlinarith [this]
-              have hoff : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (163 : ℝ) / 25000 := by
+                have : (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (413 : ℝ) / 25000 := by
+                  nlinarith [this]
+                simpa [C_no5] using this
+              have hoff : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ C_off := by
                 have hoffQ : (∑ p ∈ offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) ≤ (163 : ℚ) / 1000 :=
                   sum_offPrimesUpTo_le N
                 have hcast' : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤ (163 : ℝ) / 1000 := by
@@ -4592,7 +4623,9 @@ theorem sawhney_main : SawhneyMain := by
                 have : (1 / 25 : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤
                     (1 / 25 : ℝ) * ((163 : ℝ) / 1000) := by
                   exact mul_le_mul_of_nonneg_left hcast' (by positivity)
-                nlinarith [this]
+                have : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (163 : ℝ) / 25000 := by
+                  nlinarith [this]
+                simpa [C_off] using this
               have hπN' : (N.primeCounting : ℝ) ≤ δ * (N : ℝ) := hπN
               have hA_lt : (A.card : ℝ) < (1 / 25 - (1 / 2000 : ℝ)) * (N : ℝ) := by
                 -- Compute explicit bounds
@@ -4600,9 +4633,13 @@ theorem sawhney_main : SawhneyMain := by
                   have := mul_le_mul_of_nonneg_left hdiag (le_of_lt hNpos)
                   simp only [one_div] at this ⊢
                   exact this
-                have hNno5 : (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (N : ℝ) * (413 / 25000) :=
+                have hNno5 :
+                    (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤
+                      (N : ℝ) * C_no5 :=
                   mul_le_mul_of_nonneg_left hno5 (le_of_lt hNpos)
-                have hNoff : (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (N : ℝ) * (163 / 25000) :=
+                have hNoff :
+                    (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤
+                      (N : ℝ) * C_off :=
                   mul_le_mul_of_nonneg_left hoff (le_of_lt hNpos)
                 -- Explicit Astar bound
                 have hAstar_explicit : (Astar.card : ℝ) ≤ (46 : ℝ) * ((N : ℝ) / 3500 + δ * (N : ℝ)) := by
@@ -4610,16 +4647,22 @@ theorem sawhney_main : SawhneyMain := by
                             (N : ℝ) / 3500 + δ * (N : ℝ) := add_le_add hNdiag hπN'
                   exact le_trans hAstar_bound (mul_le_mul_of_nonneg_left h2 (by positivity))
                 -- Explicit A7 bound
-                have hA7_explicit : (A7A.card : ℝ) ≤ (N : ℝ) * (413 / 25000) + δ * (N : ℝ) := by
+                have hA7_explicit : (A7A.card : ℝ) ≤ (N : ℝ) * C_no5 + δ * (N : ℝ) := by
                   have h2 : (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) ≤
-                            (N : ℝ) * (413 / 25000) + δ * (N : ℝ) := add_le_add hNno5 hπN'
+                            (N : ℝ) * C_no5 + δ * (N : ℝ) := add_le_add hNno5 hπN'
                   exact le_trans hA7_bound h2
                 -- Explicit A18 bound
-                have hA18_explicit : (A18A.card : ℝ) ≤ (N : ℝ) * (163 / 25000) + δ * (N : ℝ) := by
+                have hA18_explicit : (A18A.card : ℝ) ≤ (N : ℝ) * C_off + δ * (N : ℝ) := by
                   have h2 : (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) ≤
-                            (N : ℝ) * (163 / 25000) + δ * (N : ℝ) := add_le_add hNoff hπN'
+                            (N : ℝ) * C_off + δ * (N : ℝ) := add_le_add hNoff hπN'
                   exact le_trans hA18_bound h2
-                nlinarith [hA_le_parts, hAstar_explicit, hA7_explicit, hA18_explicit, hNpos]
+                have hA7_explicit_num :
+                    (A7A.card : ℝ) ≤ (N : ℝ) * (413 / 25000 : ℝ) + δ * (N : ℝ) := by
+                  simpa [C_no5] using hA7_explicit
+                have hA18_explicit_num :
+                    (A18A.card : ℝ) ≤ (N : ℝ) * ((163 : ℝ) / 25000) + δ * (N : ℝ) := by
+                  simpa [C_off] using hA18_explicit
+                nlinarith [hA_le_parts, hAstar_explicit, hA7_explicit_num, hA18_explicit_num, hNpos]
               exact (not_lt_of_ge hdense) hA_lt
           | inr hA18_even =>
               -- symmetric case: even element is in A18A
@@ -4647,7 +4690,6 @@ theorem sawhney_main : SawhneyMain := by
                   obtain ⟨p, hp, hp5, hp2div'⟩ := must_have_other_prime_square_18 a b ha_mod18 hb_mod_ne hnsq'
                   have hp2div : p ^ 2 ∣ b * a + 1 := by simp only [Nat.mul_comm a b] at hp2div'; exact hp2div'
                   have hp_le : p ≤ N := by
-                    have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
                     have hab_lt : b * a + 1 < N ^ 2 := by
                       have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -4655,11 +4697,7 @@ theorem sawhney_main : SawhneyMain := by
                       have : b * a + 1 ≤ (N - 1) * (N - 1) + 1 := Nat.add_le_add_right hab_le 1
                       have hlt : (N - 1) * (N - 1) + 1 < N ^ 2 := sq_pred_add_one_lt_sq N hN100
                       exact lt_of_le_of_lt this hlt
-                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hab_lt
-                    by_contra hpge
-                    have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                    have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                    exact (not_lt_of_ge this) hp2_lt
+                    exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b * a + 1) (Nat.succ_pos _) hab_lt hp2div
                   have hp_mem : p ∈ no5PrimesUpTo N := by
                     have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_le
                     simp [no5PrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp5]
@@ -4667,35 +4705,21 @@ theorem sawhney_main : SawhneyMain := by
                   have : a ∈ (Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ p ^ 2 ∣ b * a + 1) := by
                     simp [Finset.mem_filter, Finset.mem_range, ha_lt, Nat.ModEq, ha_mod18, hp2div]
                   exact this
-                have hcard : A18A.card ≤ (∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1)) := by
-                  calc A18A.card
-                      ≤ ((no5PrimesUpTo N).biUnion (fun p =>
-                           (Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ p ^ 2 ∣ b * a + 1))).card :=
-                        Finset.card_le_card hsubset
-                    _ ≤ ∑ p ∈ no5PrimesUpTo N,
-                           ((Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ p ^ 2 ∣ b * a + 1)).card :=
-                        Finset.card_biUnion_le
-                    _ ≤ ∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) := by
-                        apply Finset.sum_le_sum
-                        intro p hp
-                        have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                        have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2
-                        exact off_count_modEq25_le' N p b 18 hp_prime hp_ne5
-                have hcard_real : (A18A.card : ℝ) ≤ ((∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) := by
-                  exact_mod_cast hcard
-                have hsum := sum_div_add_one_le (P := no5PrimesUpTo N) (k := 25)
-                have hPcard : ((no5PrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-                  have hsub : no5PrimesUpTo N ⊆ primesUpTo N := by
-                    intro p hp
-                    exact (Finset.mem_filter.1 hp).1
-                  have := Finset.card_le_card hsub
-                  have := (Nat.cast_le.2 this : ((no5PrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-                  simpa [primesUpTo_card] using this
-                have hsum' :
-                    ((∑ p ∈ no5PrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                      (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-                  exact hsum.trans (add_le_add (le_refl _) hPcard)
-                exact le_trans hcard_real hsum'
+                have hP_sub : no5PrimesUpTo N ⊆ primesUpTo N := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).1
+                have hP_ne5 : ∀ p ∈ no5PrimesUpTo N, p ≠ 5 := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).2
+                exact
+                  residue_class_card_bound_of_subset
+                    (t := 18)
+                    (b := b)
+                    (P := no5PrimesUpTo N)
+                    (S := A18A)
+                    hsubset
+                    hP_sub
+                    hP_ne5
               -- Bound A7 using b18 (even), using off primes (exclude 2,5).
               have hA7_bound :
                   (A7A.card : ℝ) ≤
@@ -4714,22 +4738,13 @@ theorem sawhney_main : SawhneyMain := by
                   have h25 : ¬ (25 ∣ b18 * a + 1) := cross_residue_18_7_not_div_25 b18 a hb18_mod ha_mod7
                   obtain ⟨p, hp, hp5, hp2div⟩ := prime_square_exists_ne5 (n := b18 * a + 1) hnsq h25
                   have hp_ne2 : p ≠ 2 := by
-                    intro hp2
-                    subst hp2
-                    have : 2 ∣ b18 := Nat.dvd_of_mod_eq_zero hb18Even
-                    have : 2 ∣ b18 * a := dvd_mul_of_dvd_left this a
                     have hodd : (b18 * a + 1) % 2 = 1 := by
+                      have : 2 ∣ b18 := Nat.dvd_of_mod_eq_zero hb18Even
+                      have : 2 ∣ b18 * a := dvd_mul_of_dvd_left this a
                       have : (b18 * a) % 2 = 0 := Nat.mod_eq_zero_of_dvd this
                       omega
-                    have : ¬ (4 ∣ b18 * a + 1) := by
-                      intro h4
-                      have h0 : (b18 * a + 1) % 2 = 0 := by
-                        have : 2 ∣ 4 := by decide
-                        exact Nat.mod_eq_zero_of_dvd (dvd_trans this h4)
-                      simp [hodd] at h0
-                    exact (this (by simpa [pow_two] using hp2div)).elim
+                    exact prime_ne_two_of_sq_dvd_odd (hn := hodd) hp2div
                   have hp_le : p ≤ N := by
-                    have hp2_le : p ^ 2 ≤ b18 * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
                     have hab_lt : b18 * a + 1 < N ^ 2 := by
                       have hb18_le : b18 ≤ N - 1 := Nat.le_pred_of_lt hb18_lt
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -4737,11 +4752,7 @@ theorem sawhney_main : SawhneyMain := by
                       have : b18 * a + 1 ≤ (N - 1) * (N - 1) + 1 := Nat.add_le_add_right hab_le 1
                       have hlt : (N - 1) * (N - 1) + 1 < N ^ 2 := sq_pred_add_one_lt_sq N hN100
                       exact lt_of_le_of_lt this hlt
-                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hab_lt
-                    by_contra hpge
-                    have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                    have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                    exact (not_lt_of_ge this) hp2_lt
+                    exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b18 * a + 1) (Nat.succ_pos _) hab_lt hp2div
                   have hp_mem : p ∈ offPrimesUpTo N := by
                     have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_le
                     simp [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp_ne2, hp5]
@@ -4749,35 +4760,21 @@ theorem sawhney_main : SawhneyMain := by
                   have : a ∈ (Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ p ^ 2 ∣ b18 * a + 1) := by
                     simp [Finset.mem_filter, Finset.mem_range, ha_lt, Nat.ModEq, ha_mod7, hp2div]
                   exact this
-                have hcard : A7A.card ≤ (∑ p ∈ offPrimesUpTo N, (N / (25 * p ^ 2) + 1)) := by
-                  calc A7A.card
-                      ≤ ((offPrimesUpTo N).biUnion (fun p =>
-                           (Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ p ^ 2 ∣ b18 * a + 1))).card :=
-                        Finset.card_le_card hsubset
-                    _ ≤ ∑ p ∈ offPrimesUpTo N,
-                           ((Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ p ^ 2 ∣ b18 * a + 1)).card :=
-                        Finset.card_biUnion_le
-                    _ ≤ ∑ p ∈ offPrimesUpTo N, (N / (25 * p ^ 2) + 1) := by
-                        apply Finset.sum_le_sum
-                        intro p hp
-                        have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                        have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2.2
-                        exact off_count_modEq25_le' N p b18 7 hp_prime hp_ne5
-                have hcard_real : (A7A.card : ℝ) ≤ ((∑ p ∈ offPrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) := by
-                  exact_mod_cast hcard
-                have hsum := sum_div_add_one_le (P := offPrimesUpTo N) (k := 25)
-                have hPcard : ((offPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-                  have hsub : offPrimesUpTo N ⊆ primesUpTo N := by
-                    intro p hp
-                    exact (Finset.mem_filter.1 hp).1
-                  have := Finset.card_le_card hsub
-                  have := (Nat.cast_le.2 this : ((offPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-                  simpa [primesUpTo_card] using this
-                have hsum' :
-                    ((∑ p ∈ offPrimesUpTo N, (N / (25 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                      (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-                  exact hsum.trans (add_le_add (le_refl _) hPcard)
-                exact le_trans hcard_real hsum'
+                have hP_sub : offPrimesUpTo N ⊆ primesUpTo N := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).1
+                have hP_ne5 : ∀ p ∈ offPrimesUpTo N, p ≠ 5 := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).2.2
+                exact
+                  residue_class_card_bound_of_subset
+                    (t := 7)
+                    (b := b18)
+                    (P := offPrimesUpTo N)
+                    (S := A7A)
+                    hsubset
+                    hP_sub
+                    hP_ne5
               -- Combine as before and contradict.
               have hA_le_parts : (A.card : ℝ) ≤ (A7A.card : ℝ) + (A18A.card : ℝ) + (Astar.card : ℝ) := by
                 exact_mod_cast hA_card_le_parts_nat
@@ -4795,7 +4792,7 @@ theorem sawhney_main : SawhneyMain := by
                     (1 / 50 : ℝ) * ((1 : ℝ) / 70) := by
                   exact mul_le_mul_of_nonneg_left hcast' (by positivity)
                 nlinarith [this]
-              have hno5 : (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (413 : ℝ) / 25000 := by
+              have hno5 : (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ C_no5 := by
                 have hno5Q : (∑ p ∈ no5PrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) ≤ (413 : ℚ) / 1000 :=
                   sum_no5PrimesUpTo_le N
                 have hcast' : (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤ (413 : ℝ) / 1000 := by
@@ -4808,8 +4805,10 @@ theorem sawhney_main : SawhneyMain := by
                 have : (1 / 25 : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤
                     (1 / 25 : ℝ) * ((413 : ℝ) / 1000) := by
                   exact mul_le_mul_of_nonneg_left hcast' (by positivity)
-                nlinarith [this]
-              have hoff : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (163 : ℝ) / 25000 := by
+                have : (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (413 : ℝ) / 25000 := by
+                  nlinarith [this]
+                simpa [C_no5] using this
+              have hoff : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ C_off := by
                 have hoffQ : (∑ p ∈ offPrimesUpTo N, (1 : ℚ) / (p ^ 2 : ℚ) : ℚ) ≤ (163 : ℚ) / 1000 :=
                   sum_offPrimesUpTo_le N
                 have hcast' : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤ (163 : ℝ) / 1000 := by
@@ -4822,7 +4821,9 @@ theorem sawhney_main : SawhneyMain := by
                 have : (1 / 25 : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (p : ℝ) ^ 2) ≤
                     (1 / 25 : ℝ) * ((163 : ℝ) / 1000) := by
                   exact mul_le_mul_of_nonneg_left hcast' (by positivity)
-                nlinarith [this]
+                have : (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (163 : ℝ) / 25000 := by
+                  nlinarith [this]
+                simpa [C_off] using this
               have hπN' : (N.primeCounting : ℝ) ≤ δ * (N : ℝ) := hπN
               have hA_lt : (A.card : ℝ) < (1 / 25 - (1 / 2000 : ℝ)) * (N : ℝ) := by
                 -- Compute explicit bounds
@@ -4830,9 +4831,13 @@ theorem sawhney_main : SawhneyMain := by
                   have := mul_le_mul_of_nonneg_left hdiag (le_of_lt hNpos)
                   simp only [one_div] at this ⊢
                   exact this
-                have hNno5 : (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (N : ℝ) * (413 / 25000) :=
+                have hNno5 :
+                    (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤
+                      (N : ℝ) * C_no5 :=
                   mul_le_mul_of_nonneg_left hno5 (le_of_lt hNpos)
-                have hNoff : (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤ (N : ℝ) * (163 / 25000) :=
+                have hNoff :
+                    (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) ≤
+                      (N : ℝ) * C_off :=
                   mul_le_mul_of_nonneg_left hoff (le_of_lt hNpos)
                 -- Explicit Astar bound
                 have hAstar_explicit : (Astar.card : ℝ) ≤ (46 : ℝ) * ((N : ℝ) / 3500 + δ * (N : ℝ)) := by
@@ -4840,19 +4845,26 @@ theorem sawhney_main : SawhneyMain := by
                             (N : ℝ) / 3500 + δ * (N : ℝ) := add_le_add hNdiag hπN'
                   exact le_trans hAstar_bound (mul_le_mul_of_nonneg_left h2 (by positivity))
                 -- Explicit A7 bound (uses offPrimesUpTo in this branch)
-                have hA7_explicit : (A7A.card : ℝ) ≤ (N : ℝ) * (163 / 25000) + δ * (N : ℝ) := by
+                have hA7_explicit : (A7A.card : ℝ) ≤ (N : ℝ) * C_off + δ * (N : ℝ) := by
                   have h2 : (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) ≤
-                            (N : ℝ) * (163 / 25000) + δ * (N : ℝ) := add_le_add hNoff hπN'
+                            (N : ℝ) * C_off + δ * (N : ℝ) := add_le_add hNoff hπN'
                   exact le_trans hA7_bound h2
                 -- Explicit A18 bound (uses no5PrimesUpTo in this branch)
-                have hA18_explicit : (A18A.card : ℝ) ≤ (N : ℝ) * (413 / 25000) + δ * (N : ℝ) := by
+                have hA18_explicit : (A18A.card : ℝ) ≤ (N : ℝ) * C_no5 + δ * (N : ℝ) := by
                   have h2 : (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) ≤
-                            (N : ℝ) * (413 / 25000) + δ * (N : ℝ) := add_le_add hNno5 hπN'
+                            (N : ℝ) * C_no5 + δ * (N : ℝ) := add_le_add hNno5 hπN'
                   exact le_trans hA18_bound h2
-                nlinarith [hA_le_parts, hAstar_explicit, hA7_explicit, hA18_explicit, hNpos]
+                have hA7_explicit_num :
+                    (A7A.card : ℝ) ≤ (N : ℝ) * ((163 : ℝ) / 25000) + δ * (N : ℝ) := by
+                  simpa [C_off] using hA7_explicit
+                have hA18_explicit_num :
+                    (A18A.card : ℝ) ≤ (N : ℝ) * (413 / 25000 : ℝ) + δ * (N : ℝ) := by
+                  simpa [C_no5] using hA18_explicit
+                nlinarith [hA_le_parts, hAstar_explicit, hA7_explicit_num, hA18_explicit_num, hNpos]
               exact (not_lt_of_ge hdense) hA_lt
-        · -- Case 2 from the paper: A* odd, and no even element in A7 ∪ A18.
-          exfalso
+        have case_all_odd
+            (hAstar_all_odd : ∀ b ∈ Astar, b % 2 = 1)
+            (hEven78 : ¬((∃ b ∈ A7A, b % 2 = 0) ∨ (∃ b ∈ A18A, b % 2 = 0))) : False := by
           rcases hAstar_nonempty with ⟨b, hbAstar⟩
           have hbA : b ∈ A := hAstar_sub_A hbAstar
           have hb_lt : b < N := by simpa [Finset.mem_range] using hAsub hbA
@@ -4863,106 +4875,8 @@ theorem sawhney_main : SawhneyMain := by
           have hAstar_bound :
               (Astar.card : ℝ) ≤
                 (46 : ℝ) *
-                  ((N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by
-            have hsubset :
-                Astar ⊆ (diagPrimesUpTo N).biUnion (fun p =>
-                  (Finset.range N).filter (fun n =>
-                    n % 2 = 1 ∧ n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)) := by
-              intro x hx
-              have hxA : x ∈ A := hAstar_sub_A hx
-              have hx_lt : x < N := by simpa [Finset.mem_range] using hAsub hxA
-              have hx_mod_ne : x % 25 ≠ 7 ∧ x % 25 ≠ 18 := by
-                simpa [Astar] using (Finset.mem_filter.1 hx).2
-              have hx_odd : x % 2 = 1 := hAstar_all_odd x hx
-              have hnsq : ¬ Squarefree (x ^ 2 + 1) := by
-                simpa [pow_two, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using hAprop x hxA x hxA
-              obtain ⟨p, hp, hp2div⟩ := prime_square_exists (n := x ^ 2 + 1) hnsq
-              have hp_ne2 : p ≠ 2 := by
-                intro hp2
-                subst hp2
-                have : 4 ∣ x ^ 2 + 1 := by simpa [pow_two] using hp2div
-                exact (not_dvd_four_sq_add_one x) this
-              have hp_gt2 : p > 2 := lt_of_le_of_ne hp.two_le (Ne.symm hp_ne2)
-              have hp_mod4 : p % 4 = 1 :=
-                prime_sq_divides_implies_one_mod_four p x hp hp_gt2 (by simpa [pow_two] using hp2div)
-              have hp_ne5 : p ≠ 5 := by
-                intro hp5
-                subst hp5
-                have : 25 ∣ x ^ 2 + 1 := by simpa [pow_two] using hp2div
-                exact (not_dvd_25_sq_add_one_of_mod_ne x hx_mod_ne) this
-              have hp_ge13 : 13 ≤ p := prime_ge_13_of_mod4_one_ne5 p hp hp_mod4 hp_ne5
-              have hp_le : p ≤ N := by
-                have hp2_le : p ^ 2 ≤ x ^ 2 + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
-                have hxx_lt : x ^ 2 + 1 < N ^ 2 := by
-                  have hx_le : x ≤ N - 1 := Nat.le_pred_of_lt hx_lt
-                  have hxx_le : x ^ 2 ≤ (N - 1) ^ 2 := Nat.pow_le_pow_left hx_le 2
-                  have : x ^ 2 + 1 ≤ (N - 1) ^ 2 + 1 := Nat.add_le_add_right hxx_le 1
-                  have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
-                  exact lt_of_le_of_lt this hlt
-                have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hxx_lt
-                by_contra hpge
-                have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                exact (not_lt_of_ge this) hp2_lt
-              have hp_mem : p ∈ diagPrimesUpTo N := by
-                have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_le
-                simp [diagPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp_mod4, hp_ge13]
-              refine Finset.mem_biUnion.2 ⟨p, hp_mem, ?_⟩
-              have : x ∈ (Finset.range N).filter (fun n =>
-                  n % 2 = 1 ∧ n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1) := by
-                simp [Finset.mem_filter, Finset.mem_range, hx_lt, hx_odd, hx_mod_ne, hp2div]
-              exact this
-            have hcard : Astar.card ≤ (∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1)) := by
-              calc Astar.card
-                  ≤ ((diagPrimesUpTo N).biUnion (fun p =>
-                       (Finset.range N).filter (fun n =>
-                         n % 2 = 1 ∧ n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1))).card :=
-                    Finset.card_le_card hsubset
-                _ ≤ ∑ p ∈ diagPrimesUpTo N,
-                       ((Finset.range N).filter (fun n =>
-                         n % 2 = 1 ∧ n % 25 ≠ 7 ∧ n % 25 ≠ 18 ∧ (p ^ 2 : ℕ) ∣ n ^ 2 + 1)).card :=
-                    Finset.card_biUnion_le
-                _ ≤ ∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) := by
-                    apply Finset.sum_le_sum
-                    intro p hp
-                    have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                    have hp_mod4 : p % 4 = 1 := (Finset.mem_filter.1 hp).2.1
-                    have hp_ne2 : p ≠ 2 := by intro hp2; subst hp2; omega
-                    have hp_ge13 : 13 ≤ p := (Finset.mem_filter.1 hp).2.2
-                    have hp_ne5 : p ≠ 5 := by omega
-                    exact diag_count_mod50odd_ne_7_18_le N p hp_prime hp_mod4 hp_ne2 hp_ne5
-            have hcard_real : (Astar.card : ℝ) ≤ ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) := by
-              exact_mod_cast hcard
-            have hmul :
-                ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) =
-                  (46 : ℝ) * ((∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) := by
-              have :
-                  (∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) =
-                    46 * (∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) := by
-                simpa using
-                  (Finset.mul_sum (s := diagPrimesUpTo N) (f := fun p => (N / (50 * p ^ 2) + 1)) (a := 46)).symm
-              exact_mod_cast this
-            have hsum := sum_div_add_one_le (P := diagPrimesUpTo N) (k := 50)
-            have hPcard : ((diagPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-              have hsub : diagPrimesUpTo N ⊆ primesUpTo N := by
-                intro p hp
-                exact (Finset.mem_filter.1 hp).1
-              have := Finset.card_le_card hsub
-              have := (Nat.cast_le.2 this : ((diagPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-              simpa [primesUpTo_card] using this
-            have hsum' :
-                ((∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                  (N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-              exact hsum.trans (add_le_add (le_refl _) hPcard)
-            have hmul_le :
-                ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                  (46 : ℝ) * ((N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) := by
-              have hmul_le' :
-                  ((∑ p ∈ diagPrimesUpTo N, 46 * (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                    (46 : ℝ) * ((∑ p ∈ diagPrimesUpTo N, (N / (50 * p ^ 2) + 1) : ℕ) : ℝ) := by
-                simp [hmul]
-              exact le_trans hmul_le' (mul_le_mul_of_nonneg_left hsum' (by positivity))
-            exact le_trans hcard_real hmul_le
+                  ((N : ℝ) * (∑ p ∈ diagPrimesUpTo N, (1 : ℝ) / (50 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ)) :=
+            Astar_bound_mod50 hAstar_all_odd
           -- Bound A7 ∪ A18 (no even elements) using mod 100 split.
           -- In this case (A* all odd, A7 ∪ A18 all odd), the elements of A7A are in odd residue
           -- classes mod 100 that are ≡ 7 mod 25, i.e., 7 or 57 mod 100.
@@ -5088,7 +5002,6 @@ theorem sawhney_main : SawhneyMain := by
                     exact hb25.1 hb_mod25
                   have hp_gt2 : p > 2 := lt_of_le_of_ne hp_prime.two_le (Ne.symm hp_ne2)
                   have hp_le : p ≤ N := by
-                    have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2_dvd
                     have hba_lt : b * a + 1 < N ^ 2 := by
                       have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -5096,40 +5009,31 @@ theorem sawhney_main : SawhneyMain := by
                       have : b * a + 1 ≤ (N - 1) ^ 2 + 1 := by simpa [pow_two] using Nat.add_le_add_right hba_le 1
                       have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
                       omega
-                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hba_lt
-                    nlinarith [sq_nonneg p, sq_nonneg N]
+                    exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b * a + 1) (Nat.succ_pos _) hba_lt hp2_dvd
                   have hp_mem : p ∈ offPrimesUpTo N := by
                     simp only [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range]
                     exact ⟨⟨Nat.lt_succ_of_le hp_le, hp_prime⟩, hp_ne2, hp_ne5⟩
                   refine Finset.mem_biUnion.2 ⟨p, hp_mem, Finset.mem_filter.2 ⟨Finset.mem_range.2 ha_lt, ?_, ?_, hp2_dvd⟩⟩ <;> simp [Nat.ModEq, ha25, ha4]
-                have hcard : (A7A.filter (·%100=57)).card ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
-                  calc (A7A.filter (·%100=57)).card
-                      ≤ ((offPrimesUpTo N).biUnion (fun p =>
-                           (Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ a ≡ 1 [MOD 4] ∧ p ^ 2 ∣ b * a + 1))).card :=
-                        Finset.card_le_card hsubset
-                    _ ≤ ∑ p ∈ offPrimesUpTo N,
-                           ((Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ a ≡ 1 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)).card :=
-                        Finset.card_biUnion_le
-                    _ ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
-                        apply Finset.sum_le_sum
-                        intro p hp
-                        have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                        have hp_ne2 : p ≠ 2 := (Finset.mem_filter.1 hp).2.1
-                        have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2.2
-                        exact off_count_modEq100_le' N p b 7 1 hp_prime hp_ne2 hp_ne5
-                have hcard_real : ((A7A.filter (·%100=57)).card : ℝ) ≤ ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) := by
-                  exact_mod_cast hcard
-                have hsum := sum_div_add_one_le (P := offPrimesUpTo N) (k := 100)
-                have hPcard : ((offPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-                  have hsub : offPrimesUpTo N ⊆ primesUpTo N := by intro p hp; exact (Finset.mem_filter.1 hp).1
-                  have := Finset.card_le_card hsub
-                  have := (Nat.cast_le.2 this : ((offPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-                  simpa [primesUpTo_card] using this
-                have hsum' :
-                    ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                      (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-                  exact hsum.trans (add_le_add (le_refl _) hPcard)
-                exact le_trans hcard_real hsum'
+                have hP_sub : offPrimesUpTo N ⊆ primesUpTo N := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).1
+                have hP_ne2 : ∀ p ∈ offPrimesUpTo N, p ≠ 2 := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).2.1
+                have hP_ne5 : ∀ p ∈ offPrimesUpTo N, p ≠ 5 := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).2.2
+                exact
+                  residue_class_card_bound100_of_subset
+                    (t25 := 7)
+                    (t4 := 1)
+                    (b := b)
+                    (P := offPrimesUpTo N)
+                    (S := A7A.filter (· % 100 = 57))
+                    hsubset
+                    hP_sub
+                    hP_ne2
+                    hP_ne5
               -- Bound A18A ∩ S93 (sieve) similarly
               have hsieve18_bound : ((A18A.filter (·%100=93)).card : ℝ) ≤
                   (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
@@ -5166,7 +5070,6 @@ theorem sawhney_main : SawhneyMain := by
                     exact hb25.2 hb_mod25
                   have hp_gt2 : p > 2 := lt_of_le_of_ne hp_prime.two_le (Ne.symm hp_ne2)
                   have hp_le : p ≤ N := by
-                    have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2_dvd
                     have hba_lt : b * a + 1 < N ^ 2 := by
                       have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -5174,40 +5077,31 @@ theorem sawhney_main : SawhneyMain := by
                       have : b * a + 1 ≤ (N - 1) ^ 2 + 1 := by simpa [pow_two] using Nat.add_le_add_right hba_le 1
                       have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
                       omega
-                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hba_lt
-                    nlinarith [sq_nonneg p, sq_nonneg N]
+                    exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b * a + 1) (Nat.succ_pos _) hba_lt hp2_dvd
                   have hp_mem : p ∈ offPrimesUpTo N := by
                     simp only [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range]
                     exact ⟨⟨Nat.lt_succ_of_le hp_le, hp_prime⟩, hp_ne2, hp_ne5⟩
                   refine Finset.mem_biUnion.2 ⟨p, hp_mem, Finset.mem_filter.2 ⟨Finset.mem_range.2 ha_lt, ?_, ?_, hp2_dvd⟩⟩ <;> simp [Nat.ModEq, ha25, ha4]
-                have hcard : (A18A.filter (·%100=93)).card ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
-                  calc (A18A.filter (·%100=93)).card
-                      ≤ ((offPrimesUpTo N).biUnion (fun p =>
-                           (Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ a ≡ 1 [MOD 4] ∧ p ^ 2 ∣ b * a + 1))).card :=
-                        Finset.card_le_card hsubset
-                    _ ≤ ∑ p ∈ offPrimesUpTo N,
-                           ((Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ a ≡ 1 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)).card :=
-                        Finset.card_biUnion_le
-                    _ ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
-                        apply Finset.sum_le_sum
-                        intro p hp
-                        have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                        have hp_ne2 : p ≠ 2 := (Finset.mem_filter.1 hp).2.1
-                        have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2.2
-                        exact off_count_modEq100_le' N p b 18 1 hp_prime hp_ne2 hp_ne5
-                have hcard_real : ((A18A.filter (·%100=93)).card : ℝ) ≤ ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) := by
-                  exact_mod_cast hcard
-                have hsum := sum_div_add_one_le (P := offPrimesUpTo N) (k := 100)
-                have hPcard : ((offPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-                  have hsub : offPrimesUpTo N ⊆ primesUpTo N := by intro p hp; exact (Finset.mem_filter.1 hp).1
-                  have := Finset.card_le_card hsub
-                  have := (Nat.cast_le.2 this : ((offPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-                  simpa [primesUpTo_card] using this
-                have hsum' :
-                    ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                      (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-                  exact hsum.trans (add_le_add (le_refl _) hPcard)
-                exact le_trans hcard_real hsum'
+                have hP_sub : offPrimesUpTo N ⊆ primesUpTo N := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).1
+                have hP_ne2 : ∀ p ∈ offPrimesUpTo N, p ≠ 2 := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).2.1
+                have hP_ne5 : ∀ p ∈ offPrimesUpTo N, p ≠ 5 := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).2.2
+                exact
+                  residue_class_card_bound100_of_subset
+                    (t25 := 18)
+                    (t4 := 1)
+                    (b := b)
+                    (P := offPrimesUpTo N)
+                    (S := A18A.filter (· % 100 = 93))
+                    hsubset
+                    hP_sub
+                    hP_ne2
+                    hP_ne5
               -- Combine: A7A = (A7A ∩ S7) ∪ (A7A ∩ S57), A18A = (A18A ∩ S43) ∪ (A18A ∩ S93)
               have hA7_split : A7A.card ≤ (A7A.filter (·%100=7)).card + (A7A.filter (·%100=57)).card := by
                 have h_union : A7A = A7A.filter (·%100=7) ∪ A7A.filter (·%100=57) := by
@@ -5313,7 +5207,6 @@ theorem sawhney_main : SawhneyMain := by
                     have hb_mod25 : b % 25 = 7 := by omega
                     exact hb25.1 hb_mod25
                   have hp_le : p ≤ N := by
-                    have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2_dvd
                     have hba_lt : b * a + 1 < N ^ 2 := by
                       have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -5321,40 +5214,31 @@ theorem sawhney_main : SawhneyMain := by
                       have : b * a + 1 ≤ (N - 1) ^ 2 + 1 := by simpa [pow_two] using Nat.add_le_add_right hba_le 1
                       have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
                       omega
-                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hba_lt
-                    nlinarith [sq_nonneg p, sq_nonneg N]
+                    exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b * a + 1) (Nat.succ_pos _) hba_lt hp2_dvd
                   have hp_mem : p ∈ offPrimesUpTo N := by
                     simp only [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range]
                     exact ⟨⟨Nat.lt_succ_of_le hp_le, hp_prime⟩, hp_ne2, hp_ne5⟩
                   refine Finset.mem_biUnion.2 ⟨p, hp_mem, Finset.mem_filter.2 ⟨Finset.mem_range.2 ha_lt, ?_, ?_, hp2_dvd⟩⟩ <;> simp [Nat.ModEq, ha25, ha4]
-                have hcard : (A7A.filter (·%100=7)).card ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
-                  calc (A7A.filter (·%100=7)).card
-                      ≤ ((offPrimesUpTo N).biUnion (fun p =>
-                           (Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ a ≡ 3 [MOD 4] ∧ p ^ 2 ∣ b * a + 1))).card :=
-                        Finset.card_le_card hsubset
-                    _ ≤ ∑ p ∈ offPrimesUpTo N,
-                           ((Finset.range N).filter (fun a => a ≡ 7 [MOD 25] ∧ a ≡ 3 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)).card :=
-                        Finset.card_biUnion_le
-                    _ ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
-                        apply Finset.sum_le_sum
-                        intro p hp
-                        have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                        have hp_ne2 : p ≠ 2 := (Finset.mem_filter.1 hp).2.1
-                        have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2.2
-                        exact off_count_modEq100_le' N p b 7 3 hp_prime hp_ne2 hp_ne5
-                have hcard_real : ((A7A.filter (·%100=7)).card : ℝ) ≤ ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) := by
-                  exact_mod_cast hcard
-                have hsum := sum_div_add_one_le (P := offPrimesUpTo N) (k := 100)
-                have hPcard : ((offPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-                  have hsub : offPrimesUpTo N ⊆ primesUpTo N := by intro p hp; exact (Finset.mem_filter.1 hp).1
-                  have := Finset.card_le_card hsub
-                  have := (Nat.cast_le.2 this : ((offPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-                  simpa [primesUpTo_card] using this
-                have hsum' :
-                    ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                      (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-                  exact hsum.trans (add_le_add (le_refl _) hPcard)
-                exact le_trans hcard_real hsum'
+                have hP_sub : offPrimesUpTo N ⊆ primesUpTo N := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).1
+                have hP_ne2 : ∀ p ∈ offPrimesUpTo N, p ≠ 2 := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).2.1
+                have hP_ne5 : ∀ p ∈ offPrimesUpTo N, p ≠ 5 := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).2.2
+                exact
+                  residue_class_card_bound100_of_subset
+                    (t25 := 7)
+                    (t4 := 3)
+                    (b := b)
+                    (P := offPrimesUpTo N)
+                    (S := A7A.filter (· % 100 = 7))
+                    hsubset
+                    hP_sub
+                    hP_ne2
+                    hP_ne5
               have hsieve18_bound : ((A18A.filter (·%100=43)).card : ℝ) ≤
                   (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
                 have hsubset : A18A.filter (·%100=43) ⊆ (offPrimesUpTo N).biUnion (fun p =>
@@ -5387,7 +5271,6 @@ theorem sawhney_main : SawhneyMain := by
                     have hb_mod25 : b % 25 = 18 := by omega
                     exact hb25.2 hb_mod25
                   have hp_le : p ≤ N := by
-                    have hp2_le : p ^ 2 ≤ b * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2_dvd
                     have hba_lt : b * a + 1 < N ^ 2 := by
                       have hb_le : b ≤ N - 1 := Nat.le_pred_of_lt hb_lt
                       have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -5395,40 +5278,31 @@ theorem sawhney_main : SawhneyMain := by
                       have : b * a + 1 ≤ (N - 1) ^ 2 + 1 := by simpa [pow_two] using Nat.add_le_add_right hba_le 1
                       have hlt : (N - 1) ^ 2 + 1 < N ^ 2 := by simpa [pow_two] using sq_pred_add_one_lt_sq N hN100
                       omega
-                    have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hba_lt
-                    nlinarith [sq_nonneg p, sq_nonneg N]
+                    exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b * a + 1) (Nat.succ_pos _) hba_lt hp2_dvd
                   have hp_mem : p ∈ offPrimesUpTo N := by
                     simp only [offPrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range]
                     exact ⟨⟨Nat.lt_succ_of_le hp_le, hp_prime⟩, hp_ne2, hp_ne5⟩
                   refine Finset.mem_biUnion.2 ⟨p, hp_mem, Finset.mem_filter.2 ⟨Finset.mem_range.2 ha_lt, ?_, ?_, hp2_dvd⟩⟩ <;> simp [Nat.ModEq, ha25, ha4]
-                have hcard : (A18A.filter (·%100=43)).card ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
-                  calc (A18A.filter (·%100=43)).card
-                      ≤ ((offPrimesUpTo N).biUnion (fun p =>
-                           (Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ a ≡ 3 [MOD 4] ∧ p ^ 2 ∣ b * a + 1))).card :=
-                        Finset.card_le_card hsubset
-                    _ ≤ ∑ p ∈ offPrimesUpTo N,
-                           ((Finset.range N).filter (fun a => a ≡ 18 [MOD 25] ∧ a ≡ 3 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)).card :=
-                        Finset.card_biUnion_le
-                    _ ≤ ∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) := by
-                        apply Finset.sum_le_sum
-                        intro p hp
-                        have hp_prime : p.Prime := (Finset.mem_filter.1 (Finset.mem_filter.1 hp).1).2
-                        have hp_ne2 : p ≠ 2 := (Finset.mem_filter.1 hp).2.1
-                        have hp_ne5 : p ≠ 5 := (Finset.mem_filter.1 hp).2.2
-                        exact off_count_modEq100_le' N p b 18 3 hp_prime hp_ne2 hp_ne5
-                have hcard_real : ((A18A.filter (·%100=43)).card : ℝ) ≤ ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) := by
-                  exact_mod_cast hcard
-                have hsum := sum_div_add_one_le (P := offPrimesUpTo N) (k := 100)
-                have hPcard : ((offPrimesUpTo N).card : ℝ) ≤ (N.primeCounting : ℝ) := by
-                  have hsub : offPrimesUpTo N ⊆ primesUpTo N := by intro p hp; exact (Finset.mem_filter.1 hp).1
-                  have := Finset.card_le_card hsub
-                  have := (Nat.cast_le.2 this : ((offPrimesUpTo N).card : ℝ) ≤ (primesUpTo N).card)
-                  simpa [primesUpTo_card] using this
-                have hsum' :
-                    ((∑ p ∈ offPrimesUpTo N, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-                      (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-                  exact hsum.trans (add_le_add (le_refl _) hPcard)
-                exact le_trans hcard_real hsum'
+                have hP_sub : offPrimesUpTo N ⊆ primesUpTo N := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).1
+                have hP_ne2 : ∀ p ∈ offPrimesUpTo N, p ≠ 2 := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).2.1
+                have hP_ne5 : ∀ p ∈ offPrimesUpTo N, p ≠ 5 := by
+                  intro p hp
+                  exact (Finset.mem_filter.1 hp).2.2
+                exact
+                  residue_class_card_bound100_of_subset
+                    (t25 := 18)
+                    (t4 := 3)
+                    (b := b)
+                    (P := offPrimesUpTo N)
+                    (S := A18A.filter (· % 100 = 43))
+                    hsubset
+                    hP_sub
+                    hP_ne2
+                    hP_ne5
               -- Combine for b ≡ 3 case
               have hA7_split : A7A.card ≤ (A7A.filter (·%100=7)).card + (A7A.filter (·%100=57)).card := by
                 have h_union : A7A = A7A.filter (·%100=7) ∪ A7A.filter (·%100=57) := by
@@ -5553,6 +5427,17 @@ theorem sawhney_main : SawhneyMain := by
             nlinarith [hA_le_parts, hAstar_explicit, hA78_explicit', hNpos]
           exact (not_lt_of_ge hdense) hA_lt
 
+        by_cases hEven78 : (∃ b ∈ A7A, b % 2 = 0) ∨ (∃ b ∈ A18A, b % 2 = 0)
+        · -- ═══════════════════════════════════════════════════════════════════
+          -- CASE 2: All elements odd, ∃ even in A₇ ∪ A₁₈ (Paper Case 3)
+          -- ═══════════════════════════════════════════════════════════════════
+          exfalso
+          exact case_Astar_all_odd_exists_even_in_A78 hAstar_all_odd hEven78
+        · -- ═══════════════════════════════════════════════════════════════════
+          -- CASE 3: All elements in A odd (Paper Case 2 - mod 100 analysis)
+          -- ═══════════════════════════════════════════════════════════════════
+          exfalso
+          exact case_all_odd hAstar_all_odd hEven78
 -- ============================================================================
 -- SECTION 11: FINAL STATEMENTS (conditional on sawhney_main)
 -- ============================================================================
@@ -5561,8 +5446,9 @@ theorem problem_848_statement_50 : Problem848Statement 50 := problem_848_N50
 
 theorem problem_848_statement_100 : Problem848Statement 100 := problem_848_N100
 
-/-- The full resolution (assuming SawhneyMain). -/
-theorem problem_848_resolved : ∃ N₀ : ℕ, ∀ N ≥ N₀, Problem848Statement N :=
+/-- The asymptotic resolution: for sufficiently large N, max|A| ≤ |A₇(N)|.
+    The full Erdős conjecture (∀ N) remains open. -/
+theorem problem_848_asymptotic : ∃ N₀ : ℕ, ∀ N ≥ N₀, Problem848Statement N :=
   problem_848_resolved_up_to_finite_check_of_sawhney sawhney_main
 
 end Erdos.Problem848

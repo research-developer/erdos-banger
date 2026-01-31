@@ -424,3 +424,6 @@ def convert_pdf(
                     os.environ.pop("TORCH_DEVICE", None)
                 else:
                     os.environ["TORCH_DEVICE"] = original_torch_device
+                logger.debug(
+                    "Restored TORCH_DEVICE=%s after conversion", original_torch_device
+                )
