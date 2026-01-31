@@ -3759,38 +3759,27 @@ theorem sawhney_main : SawhneyMain := by
         (S.card : ℝ) ≤
           (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
       classical
-      have hcard : S.card ≤ (∑ p ∈ P, (N / (100 * p ^ 2) + 1)) := by
-        calc
-          S.card ≤
-              ((P.biUnion (fun p =>
-                    (Finset.range N).filter (fun a =>
-                      a ≡ t25 [MOD 25] ∧ a ≡ t4 [MOD 4] ∧ p ^ 2 ∣ b * a + 1))).card) :=
-            Finset.card_le_card hsubset
-          _ ≤ ∑ p ∈ P,
-                ((Finset.range N).filter (fun a =>
-                  a ≡ t25 [MOD 25] ∧ a ≡ t4 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)).card :=
-            Finset.card_biUnion_le
-          _ ≤ ∑ p ∈ P, (N / (100 * p ^ 2) + 1) := by
-              apply Finset.sum_le_sum
-              intro p hp
-              have hp' : p ∈ primesUpTo N := hP_sub hp
-              have hp_prime : p.Prime := (Finset.mem_filter.1 hp').2
-              have hp_ne2 : p ≠ 2 := hP_ne2 p hp
-              have hp_ne5 : p ≠ 5 := hP_ne5 p hp
-              exact off_count_modEq100_le' N p b t25 t4 hp_prime hp_ne2 hp_ne5
-      have hcard_real :
-          (S.card : ℝ) ≤ ((∑ p ∈ P, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) := by
-        exact_mod_cast hcard
-      have hsum := sum_div_add_one_le (P := P) (k := 100)
-      have hPcard : (P.card : ℝ) ≤ (N.primeCounting : ℝ) := by
-        have := Finset.card_le_card hP_sub
-        have := (Nat.cast_le.2 this : (P.card : ℝ) ≤ (primesUpTo N).card)
-        simpa [primesUpTo_card] using this
-      have hsum' :
-          ((∑ p ∈ P, (N / (100 * p ^ 2) + 1) : ℕ) : ℝ) ≤
-            (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (100 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
-        exact hsum.trans (add_le_add (le_refl _) hPcard)
-      exact le_trans hcard_real hsum'
+      have hper :
+          ∀ p ∈ P,
+            ((Finset.range N).filter (fun a =>
+                a ≡ t25 [MOD 25] ∧ a ≡ t4 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)).card ≤
+              N / (100 * p ^ 2) + 1 := by
+        intro p hp
+        have hp' : p ∈ primesUpTo N := hP_sub hp
+        have hp_prime : p.Prime := (Finset.mem_filter.1 hp').2
+        have hp_ne2 : p ≠ 2 := hP_ne2 p hp
+        have hp_ne5 : p ≠ 5 := hP_ne5 p hp
+        exact off_count_modEq100_le' N p b t25 t4 hp_prime hp_ne2 hp_ne5
+      simpa using
+        sieve_set_card_bound_primeCounting
+          (N := N)
+          (k := 100)
+          (P := P)
+          (S := S)
+          (pred := fun p a => a ≡ t25 [MOD 25] ∧ a ≡ t4 [MOD 4] ∧ p ^ 2 ∣ b * a + 1)
+          hsubset
+          hper
+          hP_sub
 
     -- Split A into the 25-residue classes: 7, 18, and the rest.
     let A7A : Finset ℕ := A.filter (fun a => a % 25 = 7)
