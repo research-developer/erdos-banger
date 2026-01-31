@@ -25,7 +25,9 @@ The bug fixes from commit 005dc83 have test coverage for happy paths but missing
 
 ### test_arxiv_extract.py
 
-- No test for symlinks in tarball (security: `../../../etc/passwd`)
+- ~~No test for symlinks in tarball (security)~~ ✅ Fixed
+- ~~No test for path traversal (`../../../etc/passwd`)~~ ✅ Fixed
+- ~~No test for absolute paths (`/etc/passwd`)~~ ✅ Fixed
 - No test for tar bombs (deeply nested directories)
 - No test for mixed-encoding files (UTF-8 + Latin-1)
 - Empty content after LaTeX validation not tested

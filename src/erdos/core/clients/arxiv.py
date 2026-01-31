@@ -200,11 +200,17 @@ def extract_arxiv_text(tarball_bytes: bytes) -> bytes:
     except tarfile.TarError:
         # Fallback: single gzip-compressed .tex file (BUG-054)
         # Some arXiv sources are just a gzipped .tex file, not a tarball
+        # Use streaming decompression with size limit to prevent decompression bombs (BUG-058)
         try:
-            decompressed = gzip.decompress(tarball_bytes)
+            with gzip.GzipFile(fileobj=io.BytesIO(tarball_bytes)) as gz:
+                # Read with size limit to prevent memory exhaustion
+                decompressed = gz.read(MAX_TEX_FILE_SIZE + 1)
+                if len(decompressed) > MAX_TEX_FILE_SIZE:
+                    # Truncate to limit but continue (same behavior as tar path)
+                    decompressed = decompressed[:MAX_TEX_FILE_SIZE]
             # Validate that the content looks like LaTeX
             if b"\\documentclass" in decompressed or b"\\begin{" in decompressed:
-                return decompressed[:MAX_TEX_FILE_SIZE]
+                return decompressed
             raise ValueError("Gzip content is not LaTeX")
         except (gzip.BadGzipFile, OSError) as e:
             raise tarfile.TarError(f"Not valid tar or gzip: {e}") from e

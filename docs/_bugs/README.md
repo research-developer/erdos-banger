@@ -22,7 +22,7 @@ This directory contains bug reports, adversarial code reviews, and quality audit
 |----|-------|----------|--------|-----------|
 | BUG-039 | Ingest cannot discover papers - only fetches pre-defined refs | P2 | Phase 1 Fixed | `erdos ingest` |
 | BUG-057 | Exa CLI ignores ERDOS_EXA_SEARCH_TYPE config | P1 | Fixed | `erdos research exa` |
-| BUG-058 | arXiv gzip extraction vulnerable to decompression bombs | P3 | Open | `erdos ingest` |
+| BUG-058 | arXiv gzip extraction vulnerable to decompression bombs | P3 | Fixed | `erdos ingest` |
 
 **Note:** BUG-039 core workflow (`erdos refs add` + `erdos ingest`) works. Remaining phases (auto-discovery) are feature requests tracked in DEBT-110.
 
@@ -127,7 +127,7 @@ All bugs below have been fixed and archived to `docs/_archive/bugs/`.
 
 - `docs/_bugs/bug-039-ingest-no-search-discovery.md` (BUG-039) - Phase 1 Fixed
 - `docs/_bugs/bug-057-exa-cli-ignores-search-type-config.md` (BUG-057) - Fixed
-- `docs/_bugs/bug-058-arxiv-gzip-decompression-bomb.md` (BUG-058) - Open
+- `docs/_bugs/bug-058-arxiv-gzip-decompression-bomb.md` (BUG-058) - Fixed
 
 ### Archived Bug Decks
 

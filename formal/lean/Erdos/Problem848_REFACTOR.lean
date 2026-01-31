@@ -4658,7 +4658,13 @@ theorem sawhney_main : SawhneyMain := by
                   have h2 : (N : ℝ) * (∑ p ∈ offPrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) ≤
                             (N : ℝ) * C_off + δ * (N : ℝ) := add_le_add hNoff hπN'
                   exact le_trans hA18_bound h2
-                nlinarith [hA_le_parts, hAstar_explicit, hA7_explicit, hA18_explicit, hNpos]
+                have hA7_explicit_num :
+                    (A7A.card : ℝ) ≤ (N : ℝ) * (413 / 25000 : ℝ) + δ * (N : ℝ) := by
+                  simpa [C_no5] using hA7_explicit
+                have hA18_explicit_num :
+                    (A18A.card : ℝ) ≤ (N : ℝ) * ((163 : ℝ) / 25000) + δ * (N : ℝ) := by
+                  simpa [C_off] using hA18_explicit
+                nlinarith [hA_le_parts, hAstar_explicit, hA7_explicit_num, hA18_explicit_num, hNpos]
               exact (not_lt_of_ge hdense) hA_lt
           | inr hA18_even =>
               -- symmetric case: even element is in A18A
@@ -4850,7 +4856,13 @@ theorem sawhney_main : SawhneyMain := by
                   have h2 : (N : ℝ) * (∑ p ∈ no5PrimesUpTo N, (1 : ℝ) / (25 * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) ≤
                             (N : ℝ) * C_no5 + δ * (N : ℝ) := add_le_add hNno5 hπN'
                   exact le_trans hA18_bound h2
-                nlinarith [hA_le_parts, hAstar_explicit, hA7_explicit, hA18_explicit, hNpos]
+                have hA7_explicit_num :
+                    (A7A.card : ℝ) ≤ (N : ℝ) * ((163 : ℝ) / 25000) + δ * (N : ℝ) := by
+                  simpa [C_off] using hA7_explicit
+                have hA18_explicit_num :
+                    (A18A.card : ℝ) ≤ (N : ℝ) * (413 / 25000 : ℝ) + δ * (N : ℝ) := by
+                  simpa [C_no5] using hA18_explicit
+                nlinarith [hA_le_parts, hAstar_explicit, hA7_explicit_num, hA18_explicit_num, hNpos]
               exact (not_lt_of_ge hdense) hA_lt
         have case_all_odd
             (hAstar_all_odd : ∀ b ∈ Astar, b % 2 = 1)

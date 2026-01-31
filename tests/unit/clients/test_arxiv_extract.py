@@ -158,3 +158,103 @@ def test_extract_arxiv_text_invalid_format_raises_tar_error():
 
     with pytest.raises(tarfile.TarError, match="Not valid tar or gzip"):
         extract_arxiv_text(random_bytes)
+
+
+# Security tests (DEBT-125)
+
+
+def test_extract_arxiv_text_ignores_path_traversal():
+    """Test that path traversal attacks are ignored (security)."""
+    tar_buffer = io.BytesIO()
+    with tarfile.open(fileobj=tar_buffer, mode="w:gz") as tar:
+        # Add malicious path traversal file
+        evil_content = (
+            b"\\documentclass{article}\n\\begin{document}\nEvil\n\\end{document}"
+        )
+        evil_info = tarfile.TarInfo(name="../../../etc/passwd.tex")
+        evil_info.size = len(evil_content)
+        tar.addfile(evil_info, io.BytesIO(evil_content))
+
+        # Add safe file
+        safe_content = b"\\documentclass{article}\n\\begin{document}\nSafe content.\n\\end{document}"
+        safe_info = tarfile.TarInfo(name="paper.tex")
+        safe_info.size = len(safe_content)
+        tar.addfile(safe_info, io.BytesIO(safe_content))
+
+    tar_buffer.seek(0)
+    result = extract_arxiv_text(tar_buffer.read())
+
+    # Should extract safe file, ignore malicious one
+    assert b"Safe content" in result
+    assert b"Evil" not in result
+
+
+def test_extract_arxiv_text_ignores_absolute_paths():
+    """Test that absolute paths are ignored (security)."""
+    tar_buffer = io.BytesIO()
+    with tarfile.open(fileobj=tar_buffer, mode="w:gz") as tar:
+        # Add absolute path file
+        abs_content = (
+            b"\\documentclass{article}\n\\begin{document}\nAbsolute\n\\end{document}"
+        )
+        abs_info = tarfile.TarInfo(name="/etc/passwd.tex")
+        abs_info.size = len(abs_content)
+        tar.addfile(abs_info, io.BytesIO(abs_content))
+
+        # Add safe file
+        safe_content = (
+            b"\\documentclass{article}\n\\begin{document}\nSafe.\n\\end{document}"
+        )
+        safe_info = tarfile.TarInfo(name="main.tex")
+        safe_info.size = len(safe_content)
+        tar.addfile(safe_info, io.BytesIO(safe_content))
+
+    tar_buffer.seek(0)
+    result = extract_arxiv_text(tar_buffer.read())
+
+    # Should extract safe file, ignore absolute path
+    assert b"Safe" in result
+    assert b"Absolute" not in result
+
+
+def test_extract_arxiv_text_ignores_symlinks():
+    """Test that symlinks are ignored (security)."""
+    tar_buffer = io.BytesIO()
+    with tarfile.open(fileobj=tar_buffer, mode="w:gz") as tar:
+        # Add symlink to /etc/passwd
+        symlink_info = tarfile.TarInfo(name="evil.tex")
+        symlink_info.type = tarfile.SYMTYPE
+        symlink_info.linkname = "/etc/passwd"
+        tar.addfile(symlink_info)
+
+        # Add safe file
+        safe_content = (
+            b"\\documentclass{article}\n\\begin{document}\nReal file.\n\\end{document}"
+        )
+        safe_info = tarfile.TarInfo(name="paper.tex")
+        safe_info.size = len(safe_content)
+        tar.addfile(safe_info, io.BytesIO(safe_content))
+
+    tar_buffer.seek(0)
+    result = extract_arxiv_text(tar_buffer.read())
+
+    # Should extract safe file, ignore symlink
+    assert b"Real file" in result
+
+
+def test_extract_arxiv_text_only_malicious_files_raises():
+    """Test that tarball with only malicious paths raises ValueError."""
+    tar_buffer = io.BytesIO()
+    with tarfile.open(fileobj=tar_buffer, mode="w:gz") as tar:
+        # Only malicious files
+        evil_content = (
+            b"\\documentclass{article}\n\\begin{document}\nEvil\n\\end{document}"
+        )
+        evil_info = tarfile.TarInfo(name="../../../tmp/evil.tex")
+        evil_info.size = len(evil_content)
+        tar.addfile(evil_info, io.BytesIO(evil_content))
+
+    tar_buffer.seek(0)
+
+    with pytest.raises(ValueError, match=r"No \.tex files found"):
+        extract_arxiv_text(tar_buffer.read())

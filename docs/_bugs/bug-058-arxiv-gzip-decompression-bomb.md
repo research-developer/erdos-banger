@@ -1,7 +1,7 @@
 # BUG-058: arXiv Gzip Extraction Vulnerable to Decompression Bombs
 
 **Priority:** P3
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-31
 **Component:** `src/erdos/core/clients/arxiv.py`
 
