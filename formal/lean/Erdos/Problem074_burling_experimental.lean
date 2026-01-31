@@ -168,6 +168,21 @@ More precisely: If an induced subgraph H has t edge-disjoint odd cycles,
 then n ≥ c · t² for some constant c > 0.
 
 This means: t ≤ O(√n), so we can hit all odd cycles with O(√n) edges.
+
+═══════════════════════════════════════════════════════════════════════════════
+STATUS: This is THE $500 AXIOM
+
+If we can PROVE this from the tree structure → we win $500
+Currently axiomatized → shows the STRUCTURE of the solution
+
+TO PROVE THIS, we would need:
+1. Formalize the tree decomposition (derived graph structure)
+2. Prove the "pivot" lemma: odd cycles have a minimal ancestor (pivot)
+3. Prove the counting argument: t pivots → Ω(t²) vertices
+
+The external analysis suggests this IS provable from Burling structure,
+but no one has done it yet!
+═══════════════════════════════════════════════════════════════════════════════
 -/
 axiom burling_odd_cycle_bottleneck (k : ℕ) (hk : k ≥ 1) :
     ∀ (H : (BurlingGraph k).Subgraph) (hfin : H.verts.Finite),
@@ -175,6 +190,95 @@ axiom burling_odd_cycle_bottleneck (k : ℕ) (hk : k ≥ 1) :
         F ⊆ H.edgeSet ∧
         F.ncard ≤ Nat.sqrt H.verts.ncard ∧
         IsBipartite (H.deleteEdges F).coe
+
+/-!
+## Attempt to Prove the Bottleneck Property
+
+The key insight from the literature:
+- In derived-from-tree graphs, neighborhoods live in branches
+- Branches are stable sets (independent)
+- Odd cycles must "cross" the tree in specific ways
+- The "pivot" structure limits how many independent odd cycles can exist
+
+Let's try to prove intermediate lemmas...
+-/
+
+/--
+Intermediate lemma 1: In a tree, any cycle must use at least one "back edge"
+(an edge not in the tree).
+
+For Burling graphs, since neighborhoods are in branches (which are paths in the tree),
+this constrains the structure of cycles.
+-/
+theorem tree_back_edge_lemma :
+    True := by  -- Placeholder
+  trivial
+
+/--
+Intermediate lemma 2: The "pivot" structure.
+
+In a derived-from-tree Burling graph, every odd cycle C has a "pivot" vertex p
+such that:
+- p is a common neighbor of two vertices in C (the "antennas")
+- All other vertices of C lie on paths from antennas to a "bottom" vertex
+
+This follows from the hole structure in Burling graphs (Lemma 6.1 in the literature).
+-/
+theorem burling_pivot_structure :
+    True := by  -- Placeholder
+  trivial
+
+/--
+Intermediate lemma 3: The counting argument.
+
+If we have t edge-disjoint odd cycles, each with a minimal pivot in the tree,
+then the "descendant regions" under these pivots are almost disjoint.
+
+Each region has size Ω(1) (at least the cycle itself).
+If regions are disjoint: n ≥ t · Ω(1) → not strong enough.
+
+But the KEY is: odd cycles in Burling graphs have length ≥ 5,
+and the tree structure forces significant overlap in descendants.
+
+STRONGER CLAIM (if true): t independent odd cycles → n ≥ Ω(t²)
+This would give t ≤ O(√n).
+-/
+theorem burling_counting_argument :
+    True := by  -- Placeholder
+  trivial
+
+/--
+If we could prove the above three lemmas properly, we could derive:
+`burling_odd_cycle_bottleneck` without axiom!
+
+The structure would be:
+1. For any n-vertex subgraph H, find all odd cycles
+2. Use pivot structure to assign each cycle to a minimal ancestor
+3. Apply counting argument: if there were > √n independent cycles,
+   we'd need > n vertices (contradiction)
+4. Therefore ≤ √n edge deletions suffice
+-/
+theorem burling_bottleneck_attempt (k : ℕ) (hk : k ≥ 1)
+    (H : (BurlingGraph k).Subgraph) (hfin : H.verts.Finite) :
+    ∃ (F : Set (Sym2 (BurlingVertex k))),
+      F ⊆ H.edgeSet ∧
+      F.ncard ≤ Nat.sqrt H.verts.ncard ∧
+      IsBipartite (H.deleteEdges F).coe := by
+  /-
+  This is where the actual proof would go.
+
+  OUTLINE:
+  1. If H is bipartite, take F = ∅
+  2. Otherwise, find a set of "independent" odd cycles C₁, ..., Cₜ
+  3. By counting argument, t ≤ √n
+  4. For each Cᵢ, pick one edge eᵢ
+  5. Let F = {e₁, ..., eₜ}
+  6. Show H - F is bipartite
+
+  The hard part is step 3 (proving the counting argument).
+  Currently we use the axiom `burling_odd_cycle_bottleneck` as a placeholder.
+  -/
+  exact burling_odd_cycle_bottleneck k hk H hfin
 
 /-!
 ## The Core Mathematical Insight
