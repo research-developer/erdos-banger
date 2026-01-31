@@ -2540,6 +2540,7 @@ def diagPrimesCoarse_computed_list : List ℕ :=
 def no5PrimesCoarse_computed_list : List ℕ :=
   (List.range (primeCutoff + 1)).filter isNo5PrimeBool
 
+#count_heartbeats in
 set_option maxRecDepth 40000 in
 set_option maxHeartbeats 20000000 in
 lemma diagPrimesCoarse_computed_list_eq : diagPrimesCoarse_computed_list = diagPrimesCoarse_listL := by
