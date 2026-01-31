@@ -3529,6 +3529,96 @@ lemma diag_count_mod50odd_ne_7_18_le (N p : ℕ) (hp : Nat.Prime p) (hmod : p % 
         simp [h46.symm]
   exact le_trans (le_trans hcard hsum) (le_trans hsum' (le_of_eq hconst))
 
+-- ============================================================================
+-- SECTION 9.95: GENERIC SIEVE CARDINALITY BOUNDS
+-- ============================================================================
+
+/-- `∑ (N/(k*p²)+1)` is bounded by `N * ∑ 1/(k*p²) + |P|` after casting to `ℝ`. -/
+lemma sum_div_add_one_le_real (N : ℕ) (P : Finset ℕ) (k : ℕ) :
+    ((∑ p ∈ P, (N / (k * p ^ 2) + 1) : ℕ) : ℝ) ≤
+      (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) + (P.card : ℝ) := by
+  classical
+  have hsplit :
+      ((∑ p ∈ P, (N / (k * p ^ 2) + 1) : ℕ) : ℝ) =
+        ((∑ p ∈ P, (N / (k * p ^ 2) : ℕ) : ℕ) : ℝ) + (P.card : ℝ) := by
+    have :
+        (∑ p ∈ P, (N / (k * p ^ 2) + 1 : ℕ)) =
+          (∑ p ∈ P, (N / (k * p ^ 2) : ℕ)) + P.card := by
+      simp [Finset.sum_add_distrib]
+    exact_mod_cast this
+  have hterm :
+      ∀ p ∈ P, ((N / (k * p ^ 2) : ℕ) : ℝ) ≤ (N : ℝ) / (k * (p : ℝ) ^ 2) := by
+    intro p hp
+    have h := (Nat.cast_div_le (α := ℝ) (m := N) (n := k * p ^ 2))
+    simpa [Nat.cast_mul, Nat.cast_pow, mul_assoc, mul_left_comm, mul_comm, div_eq_mul_inv] using h
+  have hdiv' :
+      ((∑ p ∈ P, (N / (k * p ^ 2) : ℕ) : ℕ) : ℝ) ≤
+        ∑ p ∈ P, (N : ℝ) / (k * (p : ℝ) ^ 2) := by
+    exact_mod_cast (Finset.sum_le_sum fun p hp => hterm p hp)
+  have hdiv :
+      ((∑ p ∈ P, (N / (k * p ^ 2) : ℕ) : ℕ) : ℝ) ≤
+        (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) := by
+    have :
+        (∑ p ∈ P, (N : ℝ) / (k * (p : ℝ) ^ 2)) =
+          (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) := by
+      simp [div_eq_mul_inv, mul_sum, mul_comm]
+    exact hdiv'.trans (le_of_eq this)
+  have h := add_le_add_right hdiv (P.card : ℝ)
+  calc
+    ((∑ p ∈ P, (N / (k * p ^ 2) + 1) : ℕ) : ℝ) =
+        ((∑ p ∈ P, (N / (k * p ^ 2) : ℕ) : ℕ) : ℝ) + (P.card : ℝ) := hsplit
+    _ ≤ (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) + (P.card : ℝ) := by
+        simpa [add_comm, add_left_comm, add_assoc] using h
+
+/--
+Bound the cardinality of a set `S` contained in a union of sieve classes.
+
+If `S ⊆ ⋃_{p ∈ P} {n < N | pred p n}` and each class has size at most
+`N/(k*p²)+1`, then `|S| ≤ N * ∑_{p∈P} 1/(k*p²) + |P|` after casting to `ℝ`.
+-/
+lemma sieve_set_card_bound
+    (N k : ℕ) (P S : Finset ℕ) (pred : ℕ → ℕ → Prop)
+    (hsubset :
+      S ⊆ P.biUnion (fun p => (Finset.range N).filter (fun n => pred p n)))
+    (hper : ∀ p ∈ P, ((Finset.range N).filter (fun n => pred p n)).card ≤ N / (k * p ^ 2) + 1) :
+    (S.card : ℝ) ≤
+      (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) + (P.card : ℝ) := by
+  classical
+  have hcard : S.card ≤ (∑ p ∈ P, (N / (k * p ^ 2) + 1)) := by
+    calc
+      S.card ≤
+          ((P.biUnion (fun p => (Finset.range N).filter (fun n => pred p n))).card) :=
+        Finset.card_le_card hsubset
+      _ ≤ ∑ p ∈ P, ((Finset.range N).filter (fun n => pred p n)).card :=
+        Finset.card_biUnion_le
+      _ ≤ ∑ p ∈ P, (N / (k * p ^ 2) + 1) := by
+          apply Finset.sum_le_sum
+          intro p hp
+          exact hper p hp
+  have hcard_real :
+      (S.card : ℝ) ≤ ((∑ p ∈ P, (N / (k * p ^ 2) + 1) : ℕ) : ℝ) := by
+    exact_mod_cast hcard
+  exact hcard_real.trans (sum_div_add_one_le_real (N := N) (P := P) (k := k))
+
+/--
+Variant of `sieve_set_card_bound` where the additive error is expressed as `π(N)`.
+
+This is convenient when one later uses an analytic bound `π(N) ≤ δN`.
+-/
+lemma sieve_set_card_bound_primeCounting
+    (N k : ℕ) (P S : Finset ℕ) (pred : ℕ → ℕ → Prop)
+    (hsubset :
+      S ⊆ P.biUnion (fun p => (Finset.range N).filter (fun n => pred p n)))
+    (hper : ∀ p ∈ P, ((Finset.range N).filter (fun n => pred p n)).card ≤ N / (k * p ^ 2) + 1)
+    (hP_sub : P ⊆ primesUpTo N) :
+    (S.card : ℝ) ≤
+      (N : ℝ) * (∑ p ∈ P, (1 : ℝ) / (k * (p : ℝ) ^ 2)) + (N.primeCounting : ℝ) := by
+  have hbase := sieve_set_card_bound (N := N) (k := k) (P := P) (S := S) (pred := pred) hsubset hper
+  have hPcard : (P.card : ℝ) ≤ (N.primeCounting : ℝ) := by
+    have := Finset.card_le_card hP_sub
+    have := (Nat.cast_le.2 this : (P.card : ℝ) ≤ (primesUpTo N).card)
+    simpa [primesUpTo_card] using this
+  exact hbase.trans (add_le_add_left hPcard _)
 
 -- ============================================================================
 -- SECTION 10: THE MAIN STABILITY THEOREM (SAWHNEY)
