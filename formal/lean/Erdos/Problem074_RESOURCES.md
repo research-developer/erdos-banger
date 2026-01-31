@@ -16,17 +16,20 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 |----------|--------|--------|-------|
 | **Rödl/Kneser** | f(n) = εn (LINEAR) | ✅ DONE | `Problem074_experimental.lean` |
 | **Burling** | f(n) = √n | ❌ **REFUTED** | `Problem074_burling_experimental.lean` |
-| **Twincut** | f(n) = √n | 🔄 NEXT CANDIDATE | `Problem074_TWINCUT_RESOURCES.md` |
+| **Twincut** | f(n) = √n | ❌ **REFUTED** | `Problem074_twincut_experimental.lean` |
+| **Mycielski** | f(n) = √n | ⏳ LOW PRIORITY | `Problem074_MYCIELSKI_RESOURCES.md` |
 
 ### Key Findings
 
 1. **Linear case (εn):** SOLVED - proves known 1982 result, no prize
-2. **Burling graphs:** FAIL √n bound - disjoint odd cycle packing kills them
-3. **Twincut graphs:** Small vertex cutset might prevent cycle packing - UNTESTED
+2. **Burling graphs:** FAIL √n bound - counterexample at B₃ (n=27, ebip=8 > √27≈5.2)
+3. **Twincut graphs:** FAIL √n bound - counterexample at G₄ (n=23, ebip=7 > √23≈4.8)
+4. **Mycielski graphs:** UNTESTED - likely too dense (edge density O(n^1.585))
 
 **See also:**
-- `Problem074_BURLING_RESOURCES.md` - Why Burling failed
-- `Problem074_TWINCUT_RESOURCES.md` - Next candidate approach
+- `Problem074_BURLING_RESOURCES.md` - Why Burling failed (counterexample at B₃)
+- `Problem074_TWINCUT_RESOURCES.md` - Why Twincut failed (counterexample at G₄)
+- `Problem074_MYCIELSKI_RESOURCES.md` - Next candidate (low priority)
 
 ---
 
@@ -36,14 +39,17 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 |------|---------|--------|
 | `Problem074.lean` | Main skeleton | Template |
 | `Problem074_experimental.lean` | Linear case (Rödl) | ✅ DONE (0 sorries) |
-| `Problem074_burling.lean` | Burling template | Clean template |
-| `Problem074_burling_experimental.lean` | Burling approach | ❌ REFUTED |
-| `Problem074_twincut.lean` | Twincut template | ✅ Compiles (2 sorries) |
-| `Problem074_twincut_experimental.lean` | **ACTIVE** - Twincut work | ✅ Compiles (2 sorries) |
+| `Problem074_burling.lean` | Burling template | ❌ REFUTED |
+| `Problem074_burling_experimental.lean` | Burling approach | ❌ REFUTED (B₃ counterexample) |
+| `Problem074_twincut.lean` | Twincut template | ❌ REFUTED |
+| `Problem074_twincut_experimental.lean` | Twincut approach | ❌ REFUTED (G₄ counterexample) |
 
-**Active work:** `Problem074_twincut_experimental.lean`
+**Active work:** None - need new candidate approach
 
-**Recommendation:** Computational testing needed before formal proof. See `Problem074_TWINCUT_RESOURCES.md`.
+**Recommendation:**
+1. Computational testing of Mycielski graphs (likely to fail)
+2. Search literature for other triangle-free high-χ constructions with special structure
+3. Consider original approach: construct NEW graph family specifically for this problem
 
 ---
 
