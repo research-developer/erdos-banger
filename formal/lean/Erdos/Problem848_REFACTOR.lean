@@ -5401,7 +5401,6 @@ theorem sawhney_main : SawhneyMain := by
             nlinarith [hA_le_parts, hAstar_explicit, hA78_explicit', hNpos]
           exact (not_lt_of_ge hdense) hA_lt
 
--- ============================================================================
         by_cases hEven78 : (∃ b ∈ A7A, b % 2 = 0) ∨ (∃ b ∈ A18A, b % 2 = 0)
         · -- Case 3 from the paper: one of A7 or A18 has an even element.
           exfalso
@@ -5409,6 +5408,7 @@ theorem sawhney_main : SawhneyMain := by
         · -- Case 2 from the paper: A* odd, and no even element in A7 ∪ A18.
           exfalso
           exact case_all_odd hAstar_all_odd hEven78
+-- ============================================================================
 -- SECTION 11: FINAL STATEMENTS (conditional on sawhney_main)
 -- ============================================================================
 
