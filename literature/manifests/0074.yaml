@@ -41,7 +41,7 @@ entries:
   error: null
   extract_path: literature/extracts/arxiv/1902.08177/fulltext.txt
   extracted: true
-  ingested_at: '2026-01-31T04:02:44.154060Z'
+  ingested_at: '2026-01-31T05:55:22.148642Z'
   lead_id: null
   reference:
     abstract: null
@@ -75,7 +75,7 @@ entries:
   error: null
   extract_path: literature/extracts/arxiv/1306.5167/fulltext.txt
   extracted: true
-  ingested_at: '2026-01-31T04:02:47.365412Z'
+  ingested_at: '2026-01-31T05:55:25.333099Z'
   lead_id: null
   reference:
     abstract: This paper is a survey on Extremal Graph Theory, primarily focusing
@@ -121,7 +121,7 @@ entries:
     - method tar: ReadError(''invalid header'')'
   extract_path: null
   extracted: false
-  ingested_at: '2026-01-31T04:02:50.587492Z'
+  ingested_at: '2026-01-31T05:55:28.512310Z'
   lead_id: null
   reference:
     abstract: "In 1973, Erd\u0151s and Simonovits asked whether every $n$-vertex triangle-free\
@@ -169,7 +169,7 @@ entries:
   error: null
   extract_path: literature/extracts/arxiv/2203.13833/fulltext.txt
   extracted: true
-  ingested_at: '2026-01-31T04:02:53.815324Z'
+  ingested_at: '2026-01-31T05:55:31.693947Z'
   lead_id: null
   reference:
     abstract: How large must the chromatic number of a graph be, in terms of the graph's
@@ -254,7 +254,7 @@ entries:
     - method tar: ReadError(''invalid header'')'
   extract_path: null
   extracted: false
-  ingested_at: '2026-01-31T04:03:00.191796Z'
+  ingested_at: '2026-01-31T05:55:37.935796Z'
   lead_id: null
   reference:
     abstract: "Polynomial algorithms are given for the following two problems: given\
@@ -323,6 +323,59 @@ entries:
     year: 1996
   schema_version: 1
   source: problem_ref
+- cache_hash: ea135f73000888d1a778828bf320b4fda337dd810d458e013724b9136f86312d
+  cache_path: literature/cache/arxiv/2001.09901/source.tar.gz
+  cached: true
+  error: 'Extraction failed: file could not be opened successfully:
+
+    - method gz: ReadError(''invalid header'')
+
+    - method bz2: ReadError(''not a bzip2 file'')
+
+    - method xz: ReadError(''not an lzma file'')
+
+    - method tar: ReadError(''invalid header'')'
+  extract_path: null
+  extracted: false
+  ingested_at: '2026-01-31T05:55:44.664175Z'
+  lead_id: null
+  reference:
+    abstract: "For every positive integer $n$, we construct a Hasse diagram with $n$\
+      \ vertices and chromatic number $\u03A9(n^{1/4})$, which significantly improves\
+      \ on the previously known best constructions of Hasse diagrams having chromatic\
+      \ number $\u0398(\\log n)$. In addition, if we also require that our Hasse diagram\
+      \ has girth at least $k\\geq 5$, we can achieve a chromatic number of at least\
+      \ $n^{\\frac{1}{2k-3}+o(1)}$. These results have the following surprising geometric\
+      \ consequence. They imply the existence of a family $\\mathcal{C}$ of $n$ curves\
+      \ in the plane such that the disjointness graph $G$ of $\\mathcal{C}$ is triangle-free\
+      \ (or have high girth), but the chromatic number of $G$ is polynomial in $n$.\
+      \ Again, the previously known best construction, due to Pach, Tardos and T\xF3\
+      th, had only logarithmic chromatic number."
+    arxiv_id: '2001.09901'
+    authors:
+    - Andrew Suk
+    - "Istv\xE1n Tomon"
+    cited_by_count: 0
+    concepts:
+    - Hasse diagram
+    - Combinatorics
+    - Mathematics
+    - Girth (graph theory)
+    - Chromatic scale
+    doi: 10.1112/blms.12457
+    fetched_at: null
+    license: null
+    oa_status: green
+    oa_url: null
+    openalex_id: https://openalex.org/W3003002606
+    pdf_url: https://arxiv.org/pdf/2001.09901
+    semantic_scholar_id: null
+    source: openalex
+    title: Hasse diagrams with large chromatic number
+    venue: Bulletin of the London Mathematical Society
+    year: 2021
+  schema_version: 1
+  source: problem_ref
 problem_id: 74
 schema_version: 1
-updated_at: '2026-01-31T04:03:06.355060Z'
+updated_at: '2026-01-31T05:55:47.665859Z'
