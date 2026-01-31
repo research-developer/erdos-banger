@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135452Z_964894
+title: A tamed family of triangle-free graphs with unbounded chromatic number
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2304.04296'
+  url: https://arxiv.org/abs/2304.04296
+notes: "[Exa] # Mathematics > Combinatorics\n\n**arXiv:2304.04296** (math)\n\n\\[Submitted\
+  \ on 9 Apr 2023\\]\n\n# Title:A tamed family of triangle-free graphs with unbounded\
+  \ chromatic number\n\nAuthors: [Édouard Bonnet], [Romain Bourneuf], [Julien Duron],\
+  \ [Colin Geniet], [Stéphan Thomassé], [Nicolas Trotignon] \n\nView a PDF of the\
+  \ paper titled A tamed family of triangle-free graphs with unbounded chromatic number,\
+  \ by \\\\'Edouard Bonnet and 4 other authors\n\n[View PDF]"
+created_at: '2026-01-31T13:54:52Z'
+updated_at: '2026-01-31T13:54:52Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

@@ -1,0 +1,47 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135440Z_543464
+title: '[Exa] https://webdocs.cs.ualberta.ca/~zacharyf/papers/edc.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://webdocs.cs.ualberta.ca/~zacharyf/papers/edc.pdf
+notes: '[Exa] Approximability of Packing Disjoint Cycles
+
+  Zachary Friggstad∗ Mohammad R. Salavatipour†
+
+  Department of Computing Science
+
+  University of Alberta
+
+  Edmonton, Alberta T6G 2E8, Canada
+
+  zacharyf,mreza@cs.ualberta.ca
+
+  Abstract
+
+  Given a graph G, the edge-disjoint cycle packing problem is to find the largest
+  set of cycles of which no
+
+  two share an edge. For undirected graphs, the best known approximation algorithm
+  has ratio O(
+
+  √
+
+  log n) where
+
+  n = |V (G)| and is due to Krivelevich et al [14, 15]. In fact, they pr'
+created_at: '2026-01-31T13:54:40Z'
+updated_at: '2026-01-31T13:54:40Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

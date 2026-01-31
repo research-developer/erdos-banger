@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135440Z_1081c9
+title: '[Exa] https://www.openu.ac.il/home/nutov/cycle%20packing.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.openu.ac.il/home/nutov/cycle%20packing.pdf
+notes: "[Exa] Approximation Algorithms and Hardness Results\nfor Cycle Packing Problems\n\
+  Michael Krivelevich\nTel Aviv University\nand\nZeev Nutov\nOpen University of Israel\n\
+  and\nMohammad R. Salavatipour\nUniversity of Alberta\nand\nJacques Verstraete\n\
+  University of Waterloo\nand\nRaphael Yuster\nUniversity of Haifa\nA preliminary\
+  \ version of this paper appeared as two separate papers, titled: “Approximation\n\
+  Algorithms for Cycle Packing Problems” in Proceedings of the 16th Annual ACM-SIAM\
+  \ Sympo\x02sium on Discrete Algorithms, V"
+created_at: '2026-01-31T13:54:40Z'
+updated_at: '2026-01-31T13:54:40Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

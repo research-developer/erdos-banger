@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135459Z_16cdb6
+title: Graph homomorphisms via vector colorings
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.sciencedirect.com/science/article/pii/S0195669819300411
+notes: "[Exa] [Skip to main content] [Skip to article] \n\n- [View **PDF**] \n- Download\
+  \ full issue\n\nSearch ScienceDirect\n\n## Outline\n\n1. [Abstract] \n2. [1\\. Introduction]\
+  \ \n3. [2\\. Preliminaries] \n4. [3\\. Graph cores] \n5. [4\\. Homomorphisms of\
+  \ graphs with χv(G)=χv(H)] \n6. [Acknowledgments] \n7. [Appendix A. Canonical vector\
+  \ coloring of Kneser graphs] \n8. [Appendix B. Computations] \n9. [References] \n\
+  \nShow full"
+created_at: '2026-01-31T13:54:59Z'
+updated_at: '2026-01-31T13:54:59Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

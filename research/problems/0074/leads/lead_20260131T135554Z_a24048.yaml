@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135554Z_a24048
+title: '[Exa] https://madry.mit.edu/docs/approx_cut.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://madry.mit.edu/docs/approx_cut.pdf
+notes: "[Exa] Fast Approximation Algorithms for Cut-based Problems in\nUndirected\
+  \ Graphs\nAleksander Mądry∗\nMassachusetts Institute of Technology\nmadry@mit.edu\n\
+  Abstract\nWe present a general method of designing fast approximation algorithms\
+  \ for cut-based min\x02imization problems in undirected graphs. In particular, we\
+  \ develop a technique that given\nany such problem that can be approximated quickly\
+  \ on trees, allows approximating it almost\nas quickly on general graphs while only\
+  \ losing a poly-logarithmic factor in t"
+created_at: '2026-01-31T13:55:54Z'
+updated_at: '2026-01-31T13:55:54Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

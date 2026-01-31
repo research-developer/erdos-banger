@@ -1,0 +1,41 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135459Z_72e47a
+title: On Homomorphism Graphs
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://arxiv.org/html/2111.03683v2
+notes: '[Exa] MSC codes: Primary 03E15, 05C15; Secondary 28A05Key Words: Σ21subscriptsuperscriptΣ12\\Sigma^{1}\_{2}roman\_Σ
+  start\_POSTSUPERSCRIPT 1 end\_POSTSUPERSCRIPT start\_POSTSUBSCRIPT 2 end\_POSTSUBSCRIPT-complete,
+  Borel chromatic number, bounded degree, Borel graph, Brooks’ theorem
+
+
+  # On Homomorphism Graphs
+
+
+  Sebastian Brandt
+
+  CISPA Helmholtz Center for Information Security
+
+  brandt@cispa.de
+
+  Yi-Jun Chang
+
+  National University of Singapore
+
+  cyijun@nus.edu.sgSupported by Dr. Max Rössler, by the Walter Haefner'
+created_at: '2026-01-31T13:54:59Z'
+updated_at: '2026-01-31T13:54:59Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

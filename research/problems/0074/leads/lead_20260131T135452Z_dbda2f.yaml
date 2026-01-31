@@ -1,0 +1,43 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135452Z_dbda2f
+title: Degeneracy of P_t-free and C_{≥t}-free graphs with no large complete bipartite
+  subgraphs
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2012.03686'
+  url: https://arxiv.org/pdf/2012.03686
+notes: '[Exa] Degeneracy of Pt-free and C>t-free graphs with no large
+
+  complete bipartite subgraphs
+
+  Marthe Bonamy * Nicolas Bousquet † Michał Pilipczuk ‡
+
+  Paweł Rz ˛azewski ˙
+
+  § Stéphan Thomassé ¶ Bartosz Walczak ||
+
+  Abstract
+
+  A hereditary class of graphs G is χ-bounded if there exists a function f such that
+  every graph G ∈ G
+
+  satisfies χ(G) 6 f(ω(G)), where χ(G) and ω(G) are the chromatic number and the clique
+  number of G,
+
+  respectively. As one of the first results about χ-bounded classes, Gyárfás proved
+  in 1985 th'
+created_at: '2026-01-31T13:54:52Z'
+updated_at: '2026-01-31T13:54:52Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135549Z_a78c52
+title: Mathematics > Combinatorics
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2312.03688'
+  url: https://arxiv.org/abs/2312.03688
+notes: "[Exa] # Mathematics > Combinatorics\n\n**arXiv:2312.03688** (math)\n\n\\[Submitted\
+  \ on 6 Dec 2023\\]\n\n# Title:Twin-width of sparse random graphs\n\nAuthors: [Kevin\
+  \ Hendrey], [Sergey Norin], [Raphael Steiner], [Jérémie Turcotte] \n\nView a PDF\
+  \ of the paper titled Twin-width of sparse random graphs, by Kevin Hendrey and 3\
+  \ other authors\n\n[View PDF] \n\n> Abstract:We show that the twin-width of every\
+  \ $n$-vertex $d$-regular graph is at most $n^{\\\\frac{d-2}{2d-2}+o(1)}$ and"
+created_at: '2026-01-31T13:55:49Z'
+updated_at: '2026-01-31T13:55:49Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

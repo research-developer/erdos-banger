@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135549Z_46ad66
+title: Twin-width can be exponential in treewidth
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://hal.science/hal-04292973/document
+notes: "[Exa] HAL Id: hal-04292973\nhttps://hal.science/hal-04292973v1\nSubmitted\
+  \ on 17 Nov 2023\nHAL is a multi-disciplinary open access\narchive for the deposit\
+  \ and dissemination of sci\x02entific research documents, whether they are pub\x02\
+  lished or not. The documents may come from\nteaching and research institutions in\
+  \ France or\nabroad, or from public or private research centers.\nL’archive ouverte\
+  \ pluridisciplinaire HAL, est\ndestinée au dépôt et à la diffusion de documents\n\
+  scientifiques de niveau recherche, publiés"
+created_at: '2026-01-31T13:55:49Z'
+updated_at: '2026-01-31T13:55:49Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

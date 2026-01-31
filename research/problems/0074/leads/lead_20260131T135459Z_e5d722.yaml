@@ -1,0 +1,39 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135459Z_e5d722
+title: '[Exa] https://www.cambridge.org/core/services/aop-cambridge-core/content/view/A01614AEBBBD2869DD34AA7C430BF39E/S2050508624000088a.pdf/on-homomorphism-graphs.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.cambridge.org/core/services/aop-cambridge-core/content/view/A01614AEBBBD2869DD34AA7C430BF39E/S2050508624000088a.pdf/on-homomorphism-graphs.pdf
+notes: '[Exa] Forum of Mathematics, Pi (2024), Vol. 12:e10 1–20
+
+  doi:10.1017/fmp.2024.8
+
+  RESEARCH ARTICLE
+
+  ON HOMOMORPHISM GRAPHS
+
+  Sebastian Brandt 1, Yi-Jun Chang 2, Jan Grebík 3, Christoph Grunau 4, Václav Rozhoň
+  5
+
+  and Zoltán Vidnyánszky 6
+
+  1CISPA Helmholtz Center for Information Security, Kaiserstraße 21, 66386 St. Ingbert,
+  Germany; E-mail: brandt@cispa.de. 2National University of Singapore, 13 Computing
+  Drive, Singapore 117417; E-mail: cyijun@nus.edu.sg. 3Masaryk University, Botanická
+  68A, 602 00 Brno, Czech R'
+created_at: '2026-01-31T13:54:59Z'
+updated_at: '2026-01-31T13:54:59Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

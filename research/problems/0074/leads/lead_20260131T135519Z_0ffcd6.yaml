@@ -1,0 +1,46 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135519Z_0ffcd6
+title: '[Exa] arXiv 2303.11231'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2303.11231'
+  url: https://export.arxiv.org/pdf/2303.11231v2.pdf
+notes: '[Exa] arXiv:2303.11231v2 [cs.DM] 27 Mar 2023
+
+  Bounded twin-width graphs are polynomially χ-bounded
+
+  Romain Bourneuf 1 and St´ephan Thomass´e2
+
+  1Ecole Normale Sup´erieure de Lyon, LIP, F-69342, LYON Cedex 07, ´ France.
+
+  2Univ Lyon, EnsL, UCBL, CNRS, LIP, F-69342, LYON Cedex 07, France.
+
+  March 28, 2023
+
+  Abstract
+
+  We show that every graph with twin-width t has chromatic number O(ω
+
+  kt
+
+  ) for some integer
+
+  kt, where ω denotes the clique number. This extends a quasi-polynomial bound from
+  Pilipczuk
+
+  and Soko lowski an'
+created_at: '2026-01-31T13:55:19Z'
+updated_at: '2026-01-31T13:55:19Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

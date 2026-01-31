@@ -1,0 +1,38 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135600Z_e33a5a
+title: '[Exa] arXiv 2109.09642'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2109.09642'
+  url: https://arxiv.org/pdf/2109.09642
+notes: '[Exa] TILING WITH MONOCHROMATIC BIPARTITE GRAPHS OF BOUNDED
+
+  MAXIMUM DEGREE
+
+  ANTONIO GIR ´ AO AND OLIVER JANZER ˜
+
+  Abstract. We prove that for any r ∈ N, there exists a constant Cr such that the
+  following is true. Let
+
+  F = {F1, F2, . . . } be an infinite sequence of bipartite graphs such that |V (Fi)|
+  = i and ∆(Fi) ≤ ∆ hold
+
+  for all i. Then in any r-edge coloured complete graph Kn, there is a collection
+  of at most exp(Cr∆)
+
+  monochromatic subgraphs, each of which is isomorphic to an element of F, whose verte'
+created_at: '2026-01-31T13:56:00Z'
+updated_at: '2026-01-31T13:56:00Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

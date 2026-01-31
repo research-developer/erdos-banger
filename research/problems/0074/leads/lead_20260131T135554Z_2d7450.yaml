@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135554Z_2d7450
+title: '[Exa] https://inria.hal.science/hal-01349049/document'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://inria.hal.science/hal-01349049/document
+notes: "[Exa] HAL Id: hal-01349049\nhttps://inria.hal.science/hal-01349049v1\nSubmitted\
+  \ on 26 Jul 2016\nHAL is a multi-disciplinary open access\narchive for the deposit\
+  \ and dissemination of sci\x02entific research documents, whether they are pub\x02\
+  lished or not. The documents may come from\nteaching and research institutions in\
+  \ France or\nabroad, or from public or private research centers.\nL’archive ouverte\
+  \ pluridisciplinaire HAL, est\ndestinée au dépôt et à la diffusion de documents\n\
+  scientifiques de niveau recherche, pu"
+created_at: '2026-01-31T13:55:54Z'
+updated_at: '2026-01-31T13:55:54Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

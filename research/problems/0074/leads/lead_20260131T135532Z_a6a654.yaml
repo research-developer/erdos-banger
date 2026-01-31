@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135532Z_a6a654
+title: Parameterized Algorithms for Even Cycle Transversal
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://link.springer.com/chapter/10.1007/978-3-642-34611-8_19?error=cookies_not_supported&code=7d774f8f-c8f8-4aa5-85c6-30180f7ea478
+notes: "[Exa] # Parameterized Algorithms for Even Cycle Transversal\n\n- Conference\
+  \ paper\n\n- pp 172–183\n- [Cite this conference paper] \n\n[![] Graph-Theoretic\
+  \ Concepts in Computer Science] (WG 2012)\n\n## Abstract\n\nWe consider a decision\
+  \ version of the problem of finding the minimum number of vertices whose deletion\
+  \ results in a graph without even cycles. While this problem is a natural analogue\
+  \ of the Odd Cycle Transversal problem (which asks for a subset of vertices to delete\
+  \ to make"
+created_at: '2026-01-31T13:55:32Z'
+updated_at: '2026-01-31T13:55:32Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

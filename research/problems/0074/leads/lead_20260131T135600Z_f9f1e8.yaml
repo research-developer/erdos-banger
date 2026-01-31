@@ -1,0 +1,45 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135600Z_f9f1e8
+title: '[Exa] https://users.renyi.hu/~p_erdos/1974-05.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://users.renyi.hu/~p_erdos/1974-05.pdf
+notes: '[Exa] COMPLETE SUBGRAPHS OF CHROMATIC GRAPHS AND HYPERGRAPHS
+
+  B . Bollobás, P . Erdős and E. G . Straus
+
+  In this note we consider k-chromatic graphs with given colour
+
+  classes Cl, . . .,Ck, ICil = n i . In other words, our k-chromati c
+
+  k
+
+  r-graphs have vertex sets u C i , and no r-tuple (i .e . edge o f
+
+  1
+
+  the r-graph) has two vertices in the same colour class C i .
+
+  As usual, we denote by K (r) the complete r-graph with
+
+  P
+
+  p vertices . The set of r-tuples of an r-graph G is denote d
+
+  by E(G) and e(G) is the'
+created_at: '2026-01-31T13:56:00Z'
+updated_at: '2026-01-31T13:56:00Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

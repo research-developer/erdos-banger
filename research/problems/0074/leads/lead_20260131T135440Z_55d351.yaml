@@ -1,0 +1,39 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135440Z_55d351
+title: '[Exa] https://optimization-online.org/wp-content/uploads/2002/06/493.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://optimization-online.org/wp-content/uploads/2002/06/493.pdf
+notes: '[Exa] FRACTIONAL PACKING OF T-JOINS
+
+  FRANCISCO BARAHONA
+
+  Abstract. Given a graph with nonnegative capacities on its edges, it is well known
+
+  that the capacity of a minimum T-cut is equal to the value of a maximum fractional
+
+  packing of T-joins. Padberg-Rao’s algorithm finds a minimum capacity T-cut but it
+
+  does not produce a T-join packing, we present a polynomial combinatorial algorithm
+
+  for finding an optimal T-join packing.
+
+  1. Introduction
+
+  We present a polynomial combinatorial algorithm for packing T-joi'
+created_at: '2026-01-31T13:54:40Z'
+updated_at: '2026-01-31T13:54:40Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

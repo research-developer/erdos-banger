@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135554Z_7f2658
+title: Code Sparsification and its Applications
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2311.00788'
+  url: https://arxiv.org/abs/2311.00788
+notes: "[Exa] # Computer Science > Data Structures and Algorithms\n\n**arXiv:2311.00788**\
+  \ (cs)\n\n\\[Submitted on 1 Nov 2023\\]\n\n# Title:Code Sparsification and its Applications\n\
+  \nAuthors: [Sanjeev Khanna], [Aaron L Putterman], [Madhu Sudan] \n\nView a PDF of\
+  \ the paper titled Code Sparsification and its Applications, by Sanjeev Khanna and\
+  \ 2 other authors\n\n[View PDF] \n\n> Abstract:We introduce a notion of code sparsification\
+  \ that generalizes the notion of cut sparsification in graphs."
+created_at: '2026-01-31T13:55:54Z'
+updated_at: '2026-01-31T13:55:54Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

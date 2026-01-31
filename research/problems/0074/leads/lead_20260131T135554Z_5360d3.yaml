@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135554Z_5360d3
+title: Sparsest cut and eigenvalue multiplicities on low degree Abelian Cayley graphs
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2412.17115'
+  url: https://arxiv.org/abs/2412.17115
+notes: "[Exa] # Computer Science > Data Structures and Algorithms\n\n**arXiv:2412.17115**\
+  \ (cs)\n\n\\[Submitted on 22 Dec 2024\\]\n\n# Title:Sparsest cut and eigenvalue\
+  \ multiplicities on low degree Abelian Cayley graphs\n\nAuthors: [Tommaso d'Orsi],\
+  \ [Chris Jones], [Jake Ruotolo], [Salil Vadhan], [Jiyu Zhang] \n\nView a PDF of\
+  \ the paper titled Sparsest cut and eigenvalue multiplicities on low degree Abelian\
+  \ Cayley graphs, by Tommaso d'Orsi and 4 other authors\n\n[View PDF]"
+created_at: '2026-01-31T13:55:54Z'
+updated_at: '2026-01-31T13:55:54Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

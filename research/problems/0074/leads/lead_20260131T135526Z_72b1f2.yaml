@@ -1,0 +1,39 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135526Z_72b1f2
+title: '[Exa] arXiv 2007.11513'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2007.11513'
+  url: https://export.arxiv.org/pdf/2007.11513v3.pdf
+notes: '[Exa] A class of graphs with large rankwidth
+
+  Chính T. Hoàng∗ and Nicolas Trotignon†
+
+  August 31, 2023
+
+  Abstract
+
+  We describe several graphs with arbitrarily large rankwidth (or equivalently with
+
+  arbitrarily large cliquewidth). Korpelainen, Lozin, and Mayhill [Split permutation
+
+  graphs, Graphs and Combinatorics, 30(3):633–646, 2014] proved that there exist split
+
+  graphs with Dilworth number 2 with arbitrarily large rankwidth, but without explicitly
+
+  constructing them. We provide an explicit construction. Maff'
+created_at: '2026-01-31T13:55:26Z'
+updated_at: '2026-01-31T13:55:26Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

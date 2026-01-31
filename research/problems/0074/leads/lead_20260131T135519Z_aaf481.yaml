@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135519Z_aaf481
+title: Computer Science > Computational Complexity
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2512.23680'
+  url: https://arxiv.org/abs/2512.23680
+notes: "[Exa] # Computer Science > Computational Complexity\n\n**arXiv:2512.23680**\
+  \ (cs)\n\n\\[Submitted on 29 Dec 2025\\]\n\n# Title:Coloring Hardness on Low Twin-Width\
+  \ Graphs\n\nAuthors: [Édouard Bonnet] \n\nView a PDF of the paper titled Coloring\
+  \ Hardness on Low Twin-Width Graphs, by \\\\'Edouard Bonnet\n\n[View PDF] [HTML\
+  \ (experimental)] \n\n> Abstract:As the class $\\\\mathcal T\\_4$ of graphs of twin-width\
+  \ at most 4 contains every finite subgraph of the infinite grid and every graph\
+  \ obtained by subdividing"
+created_at: '2026-01-31T13:55:19Z'
+updated_at: '2026-01-31T13:55:19Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

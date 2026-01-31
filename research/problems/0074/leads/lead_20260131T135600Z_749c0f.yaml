@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135600Z_749c0f
+title: Edge-Colouring Regular Bipartite Graphs
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.sciencedirect.com/science/article/abs/pii/S0304020808735564
+notes: "[Exa] [Skip to main content] [Skip to article] \n\n- [Access through **your\
+  \ institution**] \n- [Purchase PDF] \n\nSearch ScienceDirect\n\n## Article preview\n\
+  \n- [Abstract] \n- [Section snippets] \n\n[![Elsevier]] \n\n## [North-Holland Mathematics\
+  \ Studies] \n\n[Volume 62], 1982, Pages 139-158\n\n[![North-Holland Mathematics\
+  \ Studies]] \n\n# Edge-Colouring Regular Bipartite Graphs\n\nAuthor links open overlay\
+  \ panelA."
+created_at: '2026-01-31T13:56:00Z'
+updated_at: '2026-01-31T13:56:00Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

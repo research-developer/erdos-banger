@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135459Z_2994a0
+title: Lower Bounds for the Graph Homomorphism Problem - ADS
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://ui.adsabs.harvard.edu/abs/2015arXiv150205447F/abstract
+notes: "[Exa] Lower Bounds for the Graph Homomorphism Problem - ADS\nNow on home page\n\
+  ## ADS\n## Lower Bounds for the Graph Homomorphism Problem[] \n* [Fomin, Fedor V.];\n\
+  * [Golovnev, Alexander];\n* [Kulikov, Alexander S.];\n* [Mihajlin, Ivan] \n####\
+  \ Abstract\nThe graph homomorphism problem (HOM) asks whether the vertices of a\
+  \ given $n$-vertex graph $G$ can be mapped to the vertices of a given $h$-vertex\
+  \ graph $H$ such that each edge of $G$ is mapped to an edge of $H$."
+created_at: '2026-01-31T13:54:59Z'
+updated_at: '2026-01-31T13:54:59Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

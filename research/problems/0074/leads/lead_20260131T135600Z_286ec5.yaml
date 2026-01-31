@@ -1,0 +1,43 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135600Z_286ec5
+title: '[Exa] https://people.math.ethz.ch/~sudakovb/cubic-bisections.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://people.math.ethz.ch/~sudakovb/cubic-bisections.pdf
+notes: '[Exa] Journal of Combinatorial Theory, Series B 151 (2021) 465–481
+
+  Contents lists available at ScienceDirect
+
+  Journal of Combinatorial Theory,
+
+  Series B
+
+  www.elsevier.com/locate/jctb
+
+  Isomorphic bisections of cubic graphs
+
+  S. Das a,1, A. Pokrovskiy b, B. Sudakov c,2
+
+  a Institut für Mathematik, Freie Universität Berlin, 14195 Berlin, Germany b Department
+  of Mathematics, University Col lege London, United Kingdom of
+
+  Great Britain and Northern Ireland c Department of Mathematics, ETH, 8092 Zurich,
+  Switzerland
+
+  '
+created_at: '2026-01-31T13:56:00Z'
+updated_at: '2026-01-31T13:56:00Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

@@ -1,0 +1,44 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135452Z_ce746d
+title: '[Exa] arXiv 2304.04296'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2304.04296'
+  url: https://export.arxiv.org/pdf/2304.04296v1.pdf
+notes: '[Exa] arXiv:2304.04296v1 [math.CO] 9 Apr 2023
+
+  A tamed family of triangle-free graphs
+
+  with unbounded chromatic number
+
+  Edouard Bonnet, Romain Bourneuf, Julien Duron, Colin Geniet, St´e ´ phan
+
+  Thomass´e, and Nicolas Trotignon
+
+  Univ. Lyon, ENS de Lyon, UCBL, CNRS, LIP, France
+
+  April 11, 2023
+
+  Abstract
+
+  We construct a hereditary class of triangle-free graphs with unbounded chromatic
+
+  number, in which every non-trivial graph either contains a pair of non-adjacent
+  twins or
+
+  has an edgeless vertex cutset of size at'
+created_at: '2026-01-31T13:54:52Z'
+updated_at: '2026-01-31T13:54:52Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

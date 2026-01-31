@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135549Z_837bdd
+title: Bounded twin-width graphs are polynomially $χ$-bounded
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2303.11231'
+  url: https://arxiv.org/abs/2303.11231
+notes: "[Exa] # Computer Science > Discrete Mathematics\n\n**arXiv:2303.11231** (cs)\n\
+  \n\\[Submitted on 20 Mar 2023 ( [v1]), last revised 17 Jan 2025 (this version, v3)\\\
+  ]\n\n# Title:Bounded twin-width graphs are polynomially $χ$-bounded\n\nAuthors:\
+  \ [Romain Bourneuf], [Stéphan Thomassé] \n\nView a PDF of the paper titled Bounded\
+  \ twin-width graphs are polynomially $\\\\chi$-bounded, by Romain Bourneuf and St\\\
+  \\'ephan Thomass\\\\'e\n\n[View PDF] [HTML (experimental)] \n\n> Abstract:We"
+created_at: '2026-01-31T13:55:49Z'
+updated_at: '2026-01-31T13:55:49Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135526Z_b8a418
+title: Graphs of bounded cliquewidth are polynomially $χ$-bounded
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '1910.00697'
+  url: https://arxiv.org/abs/1910.00697
+notes: "[Exa] # Computer Science > Discrete Mathematics\n\n**arXiv:1910.00697** (cs)\n\
+  \n\\[Submitted on 1 Oct 2019 ( [v1]), last revised 7 Jul 2020 (this version, v3)\\\
+  ]\n\n# Title:Graphs of bounded cliquewidth are polynomially $χ$-bounded\n\nAuthors:\
+  \ [Marthe Bonamy], [Michał Pilipczuk] \n\nView a PDF of the paper titled Graphs\
+  \ of bounded cliquewidth are polynomially $\\\\chi$-bounded, by Marthe Bonamy and\
+  \ 1 other authors\n\n[View PDF] \n\n> Abstract:We prove that if $\\\\mathcal{C}$\
+  \ is a hereditary"
+created_at: '2026-01-31T13:55:26Z'
+updated_at: '2026-01-31T13:55:26Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

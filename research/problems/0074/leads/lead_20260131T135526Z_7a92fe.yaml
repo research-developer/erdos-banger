@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135526Z_7a92fe
+title: '[PDF] Graphs of bounded rank-width | Semantic Scholar'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.semanticscholar.org/paper/Graphs-of-bounded-rank-width-Seymour-Oum/f6c9251f0fb490aadd3f67fd8e807e0e8376a099
+notes: "[Exa] [Skip to search form] [Skip to main content] [Skip to account menu]\
+  \ \n\n- Corpus ID: 118310688\n\n# Graphs of bounded rank-width\n\n```\n@inproceedings{Seymour2005GraphsOB,\n\
+  \ title={Graphs of bounded rank-width},\n author={Paul D. Seymour and Sang-il Oum},\n\
+  \ year={2005},\n url={https://api.semanticscholar.org/CorpusID:118310688}\n}\n```\n\
+  \n- [Paul D. Seymour], [Sang-il Oum] \n- Published 2005\n- Mathematics\n\nWe define\
+  \ rank-width of graphs to investigate clique-width."
+created_at: '2026-01-31T13:55:26Z'
+updated_at: '2026-01-31T13:55:26Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

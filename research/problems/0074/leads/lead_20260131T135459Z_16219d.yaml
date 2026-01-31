@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135459Z_16219d
+title: '[Exa] https://backend.orbit.dtu.dk/ws/portalfiles/portal/201350683/UVC2_version9.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://backend.orbit.dtu.dk/ws/portalfiles/portal/201350683/UVC2_version9.pdf
+notes: "[Exa] General rights\nCopyright and moral rights for the publications made\
+  \ accessible in the public portal are retained by the authors and/or other copyright\
+  \ \nowners and it is a condition of accessing publications that users recognise\
+  \ and abide by the legal requirements associated with these rights.\n Users may\
+  \ download and print one copy of any publication from the public portal for the\
+  \ purpose of private study or research.\n You may not further distribute the material\
+  \ or use it for any profit-making"
+created_at: '2026-01-31T13:54:59Z'
+updated_at: '2026-01-31T13:54:59Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

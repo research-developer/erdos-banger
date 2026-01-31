@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135440Z_4afcf4
+title: Packing cycles in complete graphs
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.sciencedirect.com/science/article/pii/S0095895608000026
+notes: "[Exa] [Skip to main content] [Skip to article] \n\n- [View **PDF**] \n- Download\
+  \ full issue\n\nSearch ScienceDirect\n\n## Outline\n\n1. [Abstract] \n2. [Keywords]\
+  \ \n3. [References] \n\n## [Cited by (23)] \n\n[![Elsevier]] \n\n## [Journal of\
+  \ Combinatorial Theory, Series B] \n\n[Volume 98, Issue 5], September 2008, Pages\
+  \ 1014-1037\n\n[![Journal of Combinatorial Theory, Series B]] \n\n# Packing cycles\
+  \ in"
+created_at: '2026-01-31T13:54:40Z'
+updated_at: '2026-01-31T13:54:40Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

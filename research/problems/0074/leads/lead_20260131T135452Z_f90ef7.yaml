@@ -1,0 +1,38 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135452Z_f90ef7
+title: '[Exa] arXiv 2510.19650'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2510.19650'
+  url: https://arxiv.org/pdf/2510.19650
+notes: '[Exa] BURLING GRAPHS IN GRAPHS WITH LARGE CHROMATIC NUMBER
+
+  TARA ABRISHAMI, MARCIN BRIAŃSKI, JAMES DAVIES, XIYING DU, JANA MASAŘÍKOVÁ,
+
+  PAWEŁ RZĄŻEWSKI, AND BARTOSZ WALCZAK
+
+  Abstract. A graph class is χ-bounded if the only way to force large chromatic number
+  in graphs
+
+  from the class is by forming a large clique. In the 1970s, Erdős conjectured that
+  intersection graphs
+
+  of straight-line segments in the plane are χ-bounded, but this was disproved by
+  Pawlik et al. (2014),
+
+  who showed another way to force larg'
+created_at: '2026-01-31T13:54:52Z'
+updated_at: '2026-01-31T13:54:52Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

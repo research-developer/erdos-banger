@@ -1,0 +1,30 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135526Z_1fec1b
+title: Graphs of bounded cliquewidth are polynomially $χ$-bounded | Published in Advances
+  in Combinatorics
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.advancesincombinatorics.com/article/13668-graphs-of-bounded-cliquewidth-are-polynomially-bounded
+notes: "[Exa] Processing math: 0%\n\n[Skip to main content] \n\n[Advances in Combinatorics]\
+  \ \n\n## RSS Feed\n\nEnter the URL below into your favorite RSS reader.\n\n```\n\
+  http://localhost:47870/feed\n```\n\n×\n\n[Structural graph theory] \n\nJuly 10,\
+  \ 2020 EDT\n\n# Graphs of bounded cliquewidth are polynomially χ-bounded\n\nMarthe\
+  \ Bonamy\n\n- CNRS, LaBRI, Université de Bordeaux\n\nMichał Pilipczuk\n\n- Institute\
+  \ of Informatics, University of Warsaw\n\n[https://doi.org/10.19086/aic.13668] \n\
+  \n[cliquewidth]"
+created_at: '2026-01-31T13:55:26Z'
+updated_at: '2026-01-31T13:55:26Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

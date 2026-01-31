@@ -1,0 +1,41 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135459Z_5b3b7f
+title: '[Exa] arXiv 2508.06977'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2508.06977'
+  url: https://www.arxiv.org/pdf/2508.06977
+notes: '[Exa] Counting Graph Homomorphisms in Bipartite Settings
+
+  Igal Sason ∗
+
+  August 21, 2025
+
+  Abstract
+
+  This paper studies the problem of counting homomorphisms from a bipartite source
+  graph to a bipartite
+
+  target graph. An exact formula is first derived for the number of homomorphisms
+  from a complete bipartite
+
+  graph into a general bipartite graph. While exact, this formula is typically computationally
+  intensive to evaluate.
+
+  To address this, computable combinatorial lower bounds are derived. When the target
+  gra'
+created_at: '2026-01-31T13:54:59Z'
+updated_at: '2026-01-31T13:54:59Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

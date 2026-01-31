@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135440Z_015161
+title: Constrained bipartite edge coloring with applications to wavelength routing
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://link.springer.com/chapter/10.1007/3-540-63165-8_205?error=cookies_not_supported&code=015e3950-b1e1-4744-9426-823d8740d5cc
+notes: "[Exa] # Constrained bipartite edge coloring with applications to wavelength\
+  \ routing\n\n- Session 13: Routing Algorithms\n- Conference paper\n- First Online:\
+  \ 01 January 2005\n\n- pp 493–504\n- [Cite this conference paper] \n\n[![] Automata,\
+  \ Languages and Programming] (ICALP 1997)\n\n## Abstract\n\nMotivated by the problem\
+  \ of efficient routing in all-optical networks, we study a constrained version of\
+  \ the bipartite edge coloring problem. We show that if the edges adjacent to a pair\
+  \ of opposite"
+created_at: '2026-01-31T13:54:40Z'
+updated_at: '2026-01-31T13:54:40Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

@@ -1,0 +1,39 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135526Z_4c587a
+title: '[Exa] https://igt.centre-mersenne.org/item/10.5802/igt.11.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://igt.centre-mersenne.org/item/10.5802/igt.11.pdf
+notes: '[Exa] Innov. Graph Theory 2, 2025, pp. 223–243
+
+  https://doi.org/10.5802/igt.11
+
+  ON TREEWIDTH AND MAXIMUM CLIQUES
+
+  by Maria CHUDNOVSKY & Nicolas TROTIGNON (*)
+
+  Abstract. — We construct classes of graphs that are variants of the so-called
+
+  layered wheel. One of their key properties is that while the treewidth is bounded
+
+  by a function of the clique number, the construction can be adjusted to make
+
+  the dependence grow arbitrarily. Some of these classes provide counter-examples
+
+  to several conjectures. In particu'
+created_at: '2026-01-31T13:55:26Z'
+updated_at: '2026-01-31T13:55:26Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

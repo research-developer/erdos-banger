@@ -1,0 +1,43 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135459Z_b0d6a7
+title: '[Exa] arXiv 1610.10002'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '1610.10002'
+  url: https://arxiv.org/pdf/1610.10002
+notes: '[Exa] arXiv:1610.10002v3 [math.CO] 28 Mar 2019
+
+  Graph Homomorphisms via Vector Colorings
+
+  Chris Godsil1, David E. Roberson2, Brendan Rooney3, Robert
+
+  S´amal ˇ 4, and Antonios Varvitsiotis5,6
+
+  1Department of Combinatorics & Optimization, University of Waterloo
+
+  2Department of Computer Science, University College London
+
+  3Department of Mathematical Sciences, KAIST
+
+  4Computer Science Institute, Charles University
+
+  5Centre for Quantum Technologies, National University of Singapore
+
+  6
+
+  School of Physical and Mathema'
+created_at: '2026-01-31T13:54:59Z'
+updated_at: '2026-01-31T13:54:59Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

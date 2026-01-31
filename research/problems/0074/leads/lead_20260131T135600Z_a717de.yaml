@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135600Z_a717de
+title: On the Strong Chromatic Number of Random Graphs
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.math.cmu.edu/~lohp/docs/research/2008-cpc-strongchrom-number.pdf
+notes: "[Exa] Combinatorics, Probability and Computing (2008) 17, 271–286. \x01c 2007\
+  \ Cambridge University Press\ndoi:10.1017/S0963548307008607 First published online\
+  \ 5 July 2007 Printed in the United Kingdom\nOn the Strong Chromatic Number\nof\
+  \ Random Graphs\nPO-SHEN LOH1† and BENNY SUDAKOV2 ‡\n1Department of Mathematics,\
+  \ Princeton University, Princeton, NJ 08544, USA\n(e-mail: ploh@math.princeton.edu)\n\
+  2Department of Mathematics, Princeton University, Princeton, NJ 08544, USA\nand\n\
+  Institute for Advanced Study, Princeto"
+created_at: '2026-01-31T13:56:00Z'
+updated_at: '2026-01-31T13:56:00Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

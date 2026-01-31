@@ -1,0 +1,46 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135600Z_95d79d
+title: '[Exa] arXiv 1602.04316'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '1602.04316'
+  url: https://arxiv.org/pdf/1602.04316
+notes: '[Exa] Half-regular factorizations of the complete bipartite
+
+  graph
+
+  ✩
+
+  Mark Aksena,1, Istvan Miklosa,b,c,1, Kathleen Zhoua,1
+
+  aBudapest Semesters in Mathematics, Bethlen G´abor t´er 2, Budapest, 1071 Hungary
+
+  email: maksen@princeton.edu, zhou.kat@gmail.com
+
+  bAlfr´ed R´enyi Institute, Re´altanoda u 13-15, Budapest, 1053 Hungary
+
+  email: miklos.istvan@renyi.mta.hu
+
+  c
+
+  Institute for Computer Science and Control, L´agym´anyosi ´ut 11, Budapest, 1111
+  Hungary
+
+  Abstract
+
+  We consider a bipartite version of the color degr'
+created_at: '2026-01-31T13:56:00Z'
+updated_at: '2026-01-31T13:56:00Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

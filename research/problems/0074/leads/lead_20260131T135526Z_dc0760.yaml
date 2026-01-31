@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135526Z_dc0760
+title: Cliquewidth and dimension
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2308.11950'
+  url: https://arxiv.org/abs/2308.11950
+notes: "[Exa] # Mathematics > Combinatorics\n\n**arXiv:2308.11950** (math)\n\n\\[Submitted\
+  \ on 23 Aug 2023 ( [v1]), last revised 18 Oct 2025 (this version, v3)\\]\n\n# Title:Cliquewidth\
+  \ and dimension\n\nAuthors: [Gwenaël Joret], [Piotr Micek], [Michał Pilipczuk],\
+  \ [Bartosz Walczak] \n\nView a PDF of the paper titled Cliquewidth and dimension,\
+  \ by Gwena\\\\\"el Joret and 3 other authors\n\n[View PDF] [HTML (experimental)]\
+  \ \n\n> Abstract:We prove that every poset with"
+created_at: '2026-01-31T13:55:26Z'
+updated_at: '2026-01-31T13:55:26Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

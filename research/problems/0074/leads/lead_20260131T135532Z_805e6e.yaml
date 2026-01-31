@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135532Z_805e6e
+title: '[Exa] https://link.springer.com/content/pdf/10.1007/s00453-012-9667-x.pdf?error=cookies_not_supported&code=26c6ff8d-51ad-404c-8465-3c3e87a8205a'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://link.springer.com/content/pdf/10.1007/s00453-012-9667-x.pdf?error=cookies_not_supported&code=26c6ff8d-51ad-404c-8465-3c3e87a8205a
+notes: "[Exa] Algorithmica (2014) 68:41–61\nDOI 10.1007/s00453-012-9667-x\nParameterized\
+  \ Complexity of Eulerian Deletion\nProblems\nMarek Cygan · Dániel Marx · Marcin\
+  \ Pilipczuk ·\nMichał Pilipczuk ·Ildikó Schlotter\nReceived: 21 December 2011 /\
+  \ Accepted: 6 June 2012 / Published online: 22 June 2012\n© The Author(s) 2012.\
+  \ This article is published with open access at Springerlink.com\nAbstract We study\
+  \ a family of problems where the goal is to make a graph Eule\x02rian, i.e., connected\
+  \ and with all the vertices having ev"
+created_at: '2026-01-31T13:55:32Z'
+updated_at: '2026-01-31T13:55:32Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

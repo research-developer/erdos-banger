@@ -1,0 +1,47 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135549Z_2bcf7d
+title: Twin-width and permutations
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://lmcs.episciences.org/13880/pdf
+notes: '[Exa] Logical Methods in Computer Science
+
+  Volume 20, Issue 3, 2024, pp. 4:1–4:25
+
+  https://lmcs.episciences.org/
+
+  Submitted Mar. 24, 2023
+
+  Published Jul. 08, 2024
+
+  TWIN-WIDTH AND PERMUTATIONS
+
+  ÉDOUARD BONNET a, JAROSLAV NEŠETŘIL b, PATRICE OSSONA DE MENDEZ c,b,
+
+  SEBASTIAN SIEBERTZ d
+
+  , AND STÉPHAN THOMASSÉ a
+
+  a Université de Lyon, CNRS, ENS de Lyon, France
+
+  e-mail address: edouard.bonnet@ens-lyon.fr, stephan.thomasse@ens-lyon.fr
+
+  b Computer Science Institute of Charles University (IUUK), Praha, Czech Republic
+
+  e-'
+created_at: '2026-01-31T13:55:49Z'
+updated_at: '2026-01-31T13:55:49Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

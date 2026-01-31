@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135554Z_486c0a
+title: Faster MAX-CUT on Bounded Threshold Rank Graphs
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2511.11499'
+  url: https://arxiv.org/abs/2511.11499
+notes: "[Exa] # Computer Science > Data Structures and Algorithms\n\n**arXiv:2511.11499**\
+  \ (cs)\n\n\\[Submitted on 14 Nov 2025\\]\n\n# Title:Faster MAX-CUT on Bounded Threshold\
+  \ Rank Graphs\n\nAuthors: [Prashanti Anderson], [Samuel B. Hopkins], [Amit Rajaraman],\
+  \ [David Steurer] \n\nView a PDF of the paper titled Faster MAX-CUT on Bounded Threshold\
+  \ Rank Graphs, by Prashanti Anderson and Samuel B. Hopkins and Amit Rajaraman and\
+  \ David Steurer\n\n[View PDF] [HTML (experimental)]"
+created_at: '2026-01-31T13:55:54Z'
+updated_at: '2026-01-31T13:55:54Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

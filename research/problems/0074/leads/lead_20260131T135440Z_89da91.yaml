@@ -1,0 +1,27 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135440Z_89da91
+title: '[Exa] https://www.scirp.org/journal/paperinformation?paperid=71605'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.scirp.org/journal/paperinformation?paperid=71605
+notes: "[Exa] - [Home] \n- [Journals] \n- Article\n\n[Open Journal of Discrete Mathematics]\
+  \ \\> [Vol.6 No.4, October 2016] \n\nA Dynamic Programming Approach for the Max-Min\
+  \ Cycle Packing Problem in Even Graphs ()\n\n[Peter Recht] \n\n[Operations Research\
+  \ und Wirtschaftsinformatik, Dortmund, Germany].\n\n**DOI:** [10.4236/ojdm.2016.64027]\
+  \ [PDF] [HTML] [XML] 1,527Downloads\n3,012Views[Citations] \n\nAbstract\n\nLet ![]"
+created_at: '2026-01-31T13:54:40Z'
+updated_at: '2026-01-31T13:54:40Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

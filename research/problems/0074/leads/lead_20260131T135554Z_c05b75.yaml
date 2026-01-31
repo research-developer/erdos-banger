@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135554Z_c05b75
+title: '[Exa] https://people.maths.ox.ac.uk/scott/Papers/maxcutlinear.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://people.maths.ox.ac.uk/scott/Papers/maxcutlinear.pdf
+notes: "[Exa] SOLVING SPARSE RANDOM INSTANCES OF MAX CUT\nAND MAX 2-CSP IN LINEAR\
+  \ EXPECTED TIME\nALEXANDER D. SCOTT AND GREGORY B. SORKIN\nAbstract. We show that\
+  \ a maximum cut of a random graph below the giant\x02component threshold can be\
+  \ found in linear space and linear expected time\nby a simple algorithm. In fact,\
+  \ the algorithm solves a more general class\nof problems, namely binary 2-variable\
+  \ constraint satisfaction problems. In\naddition to Max Cut, such Max 2-CSPs encompass\
+  \ Max Dicut, Max 2-Lin,\nMax 2-Sat, Max-"
+created_at: '2026-01-31T13:55:54Z'
+updated_at: '2026-01-31T13:55:54Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

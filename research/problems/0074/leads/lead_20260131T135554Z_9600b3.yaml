@@ -1,0 +1,27 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135554Z_9600b3
+title: The max-cut problem on graphs not contractible to K5
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.sciencedirect.com/science/article/abs/pii/0167637783900160
+notes: "[Exa] [Skip to main content] [Skip to article] \n\n- [Access through **your\
+  \ institution**] \n- [Purchase PDF] \n\nSearch ScienceDirect\n\n## Article preview\n\
+  \n- [Abstract] \n- [References (20)] \n- [Cited by (115)] \n\n[![Elsevier]] \n\n\
+  ## [Operations Research Letters] \n\n[Volume 2, Issue 3], August 1983, Pages 107-111\n\
+  \n[![Operations Research Letters]] \n\n# The max-cut problem on graphs not contractible"
+created_at: '2026-01-31T13:55:54Z'
+updated_at: '2026-01-31T13:55:54Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135549Z_63a128
+title: 'Twin-width IV: ordered graphs and matrices'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://perso.ens-lyon.fr/edouard.bonnet/publi/twin-width4.pdf
+notes: "[Exa] Twin-width IV: ordered graphs and matrices\nÉdouard Bonnet \x1F Â\n\
+  Univ Lyon, CNRS, ENS de Lyon, Université Claude Bernard Lyon 1, LIP UMR5668, France\n\
+  Ugo Giocanti \x1F\nUniv Lyon, CNRS, ENS de Lyon, Université Claude Bernard Lyon\
+  \ 1, LIP UMR5668, France\nPatrice Ossona de Mendez \x1F Â\nCentre d’Analyse et de\
+  \ Mathématique Sociales CNRS UMR 8557, France\nand Computer Science Institute of\
+  \ Charles University (IUUK), Praha, Czech Republic\nPierre Simon \x1F Â\nUC Berkeley\n\
+  Stéphan Thomassé \x1F Â\nUniv Lyon, CNRS, ENS de Ly"
+created_at: '2026-01-31T13:55:49Z'
+updated_at: '2026-01-31T13:55:49Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

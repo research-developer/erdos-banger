@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135459Z_0f5be4
+title: On Weighted Graph Homomorphisms
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://www.semanticscholar.org/paper/On-Weighted-Graph-Homomorphisms-Galvin-Tetali/1157ff3794b0688d937710e5c9fa0466d8dd3999
+notes: "[Exa] [Skip to search form] [Skip to main content] [Skip to account menu]\
+  \ \n\n- DOI: [10.1090/dimacs/063/07] \n- Corpus ID: 1303679\n\n# On Weighted Graph\
+  \ Homomorphisms\n\n```\n@inproceedings{Galvin2012OnWG,\n title={On Weighted Graph\
+  \ Homomorphisms},\n author={David J. Galvin and Prasad Tetali},\n booktitle={Graphs,\
+  \ Morphisms and Statistical Physics},\n year={2012},\n url={https://api.semanticscholar.org/CorpusID:1303679}\n\
+  }\n```\n\n- [David J. Galvin], [P. Tetali]"
+created_at: '2026-01-31T13:54:59Z'
+updated_at: '2026-01-31T13:54:59Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

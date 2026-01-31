@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135554Z_7b2ad3
+title: Local Max-Cut on Sparse Graphs
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://ui.adsabs.harvard.edu/abs/2023arXiv231100182S/abstract
+notes: "[Exa] Now on home page\n\n## ADS\n\n## Local Max-Cut on Sparse Graphs\n\n\
+  - [Schwartzman, Gregory] \n\n#### Abstract\n\nWe bound the smoothed running time\
+  \ of the FLIP algorithm for local Max-Cut as a function of $\\\\alpha$, the arboricity\
+  \ of the input graph. We show that, with high probability and in expectation, the\
+  \ following holds (where $n$ is the number of nodes and $\\\\phi$ is the smoothing\
+  \ parameter): 1) When $\\\\alpha = O(\\\\log^{1-\\\\delta} n)$ FLIP terminates in\
+  \ $\\\\phi poly(n)$ iterations, where $\\\\delta"
+created_at: '2026-01-31T13:55:54Z'
+updated_at: '2026-01-31T13:55:54Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

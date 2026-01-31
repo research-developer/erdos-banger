@@ -1,0 +1,49 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135532Z_a1de6e
+title: Minimum Bisection is fixed-parameter tractable
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://pdfs.semanticscholar.org/5149/49719aa7aef35a2b9f096f4a3171b9b67501.pdf
+notes: '[Exa] Minimum Bisection is fixed-parameter tractable
+
+  Marek Cygan1, Daniel Lokshtanov2, Marcin Pilipczuk2,
+
+  Micha l Pilipczuk2, Saket Saurabh2,3
+
+  1
+
+  Institute of Informatics, University of Warsaw, Poland
+
+  2 Department of Informatics, University of Bergen, Norway
+
+  3
+
+  Institute of Mathematical Sciences, Chennai, India
+
+  Bertinoro Workshop on Graphs,
+
+  December 17th, 2013
+
+  Cygan, Lokshtanov, Pilipczuk×2, Saurabh Minimum Bisection is FPT 1/16
+
+  The problem
+
+  Mininimum Bisection
+
+  Input: A graph G with |V(G)| = 2n and an in'
+created_at: '2026-01-31T13:55:32Z'
+updated_at: '2026-01-31T13:55:32Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null
