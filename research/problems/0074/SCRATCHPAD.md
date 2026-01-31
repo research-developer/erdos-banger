@@ -97,3 +97,40 @@ All scripts below compute exact `ebip = |E| - MaxCut` (Gray-code) on sampled ind
   - Found a graph with `χ=4` and whole-graph `ebip=4 = ⌊√18⌋`.
   - But sampled induced subgraphs already violate strict √k (e.g. `k=12` sample with `ebip=4 > ⌊√12⌋=3`).
 - Interpretation: hereditary √n appears much tighter than whole-graph √n.
+
+## 2026-01-31 — SAT/backtracking search over edge deletions (global and hereditary)
+
+Script:
+- `scripts/ebip_sat_search.py`
+
+Idea:
+- “SAT-like” search space: fix a base graph with `χ ≥ 5`, treat each base edge as a boolean variable
+  (keep/delete), and backtrack.
+- Pruning is driven by **exact** MaxCut witnesses:
+  - If a subset violates `ebip(G[S]) ≤ ⌊√|S|⌋`, compute a MaxCut witness for `G[S]` and branch by deleting one of the
+    witness’s monochromatic edges (those deletions provably decrease `ebip(G[S])` for that cut).
+
+Findings so far (exact `χ`, exact MaxCut on whole graph; induced-subgraph checks are sampled):
+
+### Mycielski M5 (n=23)
+
+Run:
+- `uv run python scripts/ebip_sat_search.py --base mycielski5 --global-only --branch-limit 0 --max-deletions 1`
+
+Observed:
+- `M5`: `χ=5`, `ebip=16`, `⌊√23⌋=4` (fails whole-graph bound).
+- In the backtracking search, deleting any edge that would decrease `ebip` causes `χ` to drop below 5 immediately.
+  So within this base, we cannot even satisfy the *necessary* whole-graph √n constraint while keeping `χ ≥ 5`.
+
+### Randomized Hajós chains (n=25)
+
+Run:
+- `uv run python scripts/ebip_sat_search.py --base hajos25 --hajos-samples 1 --global-only --branch-limit 0 --max-deletions 1`
+
+Observed (for the sampled chain instance):
+- `χ=5`, `ebip=19`, `⌊√25⌋=5` (fails whole-graph bound).
+- Deleting any edge that would decrease `ebip` collapses `χ` below 5 immediately (edge-critical behavior).
+
+Interpretation:
+- These two independent “generic” 5-chromatic generators (Mycielski and Hajós) look structurally incompatible with
+  the strict √n regime even at the whole-graph level; the search repeatedly runs into edge-criticality barriers.
