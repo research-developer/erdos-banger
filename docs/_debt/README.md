@@ -172,7 +172,7 @@ All debt below has been resolved and archived to `docs/_archive/debt/`.
 | DEBT-095 | zbMATH client LOC violation | P3 | Superseded | 9f10546 |
 | DEBT-110 | Add paper discovery mode to ingest | P2 | Superseded | SPEC-036 |
 
-**Next Debt ID:** DEBT-121
+**Next Debt ID:** DEBT-122
 
 ### Archived Debt Decks
 

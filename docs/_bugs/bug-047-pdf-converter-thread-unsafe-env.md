@@ -38,20 +38,48 @@ Global `os.environ` is mutated, causing race conditions between concurrent conve
 
 ## Root Cause
 
-Direct mutation of global `os.environ` instead of passing environment through subprocess parameters.
+Direct mutation of global `os.environ` without synchronization. The Marker library is imported and runs **in-process** (not via subprocess), so `env=` parameter passing is not applicable.
 
 ## Recommended Fix
 
-```python
-# Pass torch_device via subprocess env parameter instead
-def _get_conversion_env(config: PDFConversionConfig) -> dict[str, str]:
-    env = dict(os.environ)
-    if config.torch_device:
-        env["TORCH_DEVICE"] = config.torch_device
-    return env
+**Option A: Threading Lock (Recommended)**
 
-# Use: subprocess.run(..., env=_get_conversion_env(config))
+```python
+import threading
+
+_torch_device_lock = threading.Lock()
+
+def convert_pdf(...) -> MarkdownResult:
+    # ...
+    with _torch_device_lock:  # Serialize access to os.environ
+        original_torch_device = os.environ.get("TORCH_DEVICE")
+        try:
+            if config.torch_device is not None:
+                os.environ["TORCH_DEVICE"] = config.torch_device
+            # ... conversion code (Marker runs here) ...
+        finally:
+            if config.torch_device is not None:
+                if original_torch_device is None:
+                    os.environ.pop("TORCH_DEVICE", None)
+                else:
+                    os.environ["TORCH_DEVICE"] = original_torch_device
 ```
+
+**Option B: Marker Config Injection (if supported)**
+
+Check if Marker's `ConfigParser` or `PdfConverter` accept device configuration directly, avoiding `os.environ` mutation entirely:
+
+```python
+# Check Marker API for device parameter
+converter_kwargs = {"torch_device": config.torch_device}  # If supported
+```
+
+**Why subprocess.run doesn't apply:** The original fix proposal assumed subprocess usage, but Marker is imported directly:
+```python
+from marker.config.parser import ConfigParser
+from marker.models import create_model_dict
+```
+The conversion happens in-process, not in a subprocess.
 
 ## Impact
 
