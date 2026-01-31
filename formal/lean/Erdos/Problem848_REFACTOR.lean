@@ -2639,7 +2639,7 @@ lemma no5PrimeSumCoarse_eq_fast : no5PrimeSumCoarse = no5PrimeSumCoarse_fast := 
 
 -- The symbolic sum equals the precomputed value.
 set_option maxRecDepth 200000 in
-set_option maxHeartbeats 10000000 in
+set_option maxHeartbeats 8000000 in
 lemma diagPrimesCoarse_sum_eq :
     (∑ p ∈ diagPrimesCoarse, (1 : ℚ) / (p ^ 2 : ℚ)) = diagPrimeSumCoarse := by
   rw [diagPrimesCoarse_eq_list]

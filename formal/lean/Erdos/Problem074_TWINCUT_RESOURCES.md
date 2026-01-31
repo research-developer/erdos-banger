@@ -1,6 +1,17 @@
 # Problem 074 - Twincut Graph Approach Resources
 
-## Status: CANDIDATE - Not Yet Tested
+## ⚠️ STATUS: REFUTED ⚠️
+
+**The twincut approach DOES NOT WORK for the √n bound.**
+
+A concrete counterexample already occurs in **G₄** (from arXiv:2304.04296):
+- **n = 23 vertices, m = 41 edges**
+- **MaxCut = 34**
+- **ebip = 41 - 34 = 7 edge deletions needed**
+- **Nat.sqrt 23 = 4**
+- **7 > 4 → VIOLATES √n bound**
+
+**Reproducible proof:** `scripts/twincut_sqrt_test.py`
 
 This document covers the **twincut graph approach** to Erdős Problem #74 ($500 prize).
 
@@ -85,8 +96,13 @@ This means removing any edge decreases the chromatic number. This tight structur
 ## Research Questions
 
 1. **Does the cutset property prevent disjoint odd cycle packing?**
-   - If G has cutset ≤2, can we bound vertex-disjoint odd cycles?
-   - Conjecture: ≤ O(√n) disjoint odd cycles in n-vertex twincut subgraph
+   - **No.** A cutset of size ≤ 2 does *not* prevent many vertex-disjoint odd cycles:
+     you can attach many odd-cycle components “in parallel” behind the same 2-vertex bottleneck.
+   - In fact, the twincut construction explicitly contains many disjoint copies of previous graphs,
+     so you can pack many disjoint odd cycles in induced subgraphs.
+   - Example witness (also in `scripts/twincut_sqrt_test.py`): inside G₅ there is an induced
+     subgraph on **n=30** vertices which is the disjoint union of **six C₅**’s, hence
+     **ebip = 6 > Nat.sqrt 30 = 5**.
 
 2. **Explicit construction of twincut graphs**
    - Need adjacency lists for G₃, G₄ to test computationally
@@ -119,19 +135,18 @@ This means removing any edge decreases the chromatic number. This tight structur
 ## Action Plan
 
 ### Phase 1: Understand the Construction
-- [ ] Read arXiv:2304.04296 in detail
-- [ ] Extract explicit construction of G₁, G₂, G₃, G₄
-- [ ] Understand the "twin" and "cutset" properties
+- [x] Read arXiv:2304.04296 in detail
+- [x] Extract explicit construction of G₁, G₂, G₃, G₄ (structured-tree realization)
+- [x] Understand the "twin" and "cutset" properties
 
 ### Phase 2: Computational Testing
-- [ ] Implement twincut graph generator in Python
-- [ ] Test √n bound on small examples (n ≤ 20)
-- [ ] Compare to Burling counterexample
+- [x] Implement twincut graph generator in Python (`scripts/twincut_sqrt_test.py`)
+- [x] Test √n bound on small examples
+- [x] Compare to Burling counterexample (same failure mode: disjoint-copy packing)
 
 ### Phase 3: Theoretical Analysis
-- [ ] Prove/disprove: cutset ≤ 2 → bounded disjoint odd cycles
-- [ ] If promising: attempt Lean formalization
-- [ ] If fails: document and find next candidate
+- [x] Disprove: cutset ≤ 2 → bounded disjoint odd cycles (false; explicit witnesses exist)
+- [ ] Find next candidate graph family
 
 ---
 
@@ -159,3 +174,10 @@ This means removing any edge decreases the chromatic number. This tight structur
 - Key hypothesis: small cutset → forced cycle overlap → √n bound might hold
 - Created `Problem074_twincut.lean` and `Problem074_twincut_experimental.lean`
 - Both compile (2 sorries expected)
+
+### 2026-01-31
+- Implemented the twincut construction from arXiv:2304.04296 as a structured-tree realization
+  in `scripts/twincut_sqrt_test.py`.
+- Found a direct √n violation already in **G₄**:
+  `n=23, m=41, MaxCut=34, ebip=7, Nat.sqrt 23=4`.
+- Conclusion: twincut graphs are not viable for the √n edge-deletion bound for Problem #74.
