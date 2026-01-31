@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135405Z_02bd56
+title: '[Exa] https://shelah.logic.at/files/203571/Sh-32.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://shelah.logic.at/files/203571/Sh-32.pdf
+notes: "[Exa] COLLOQUIA MATHEMATICA SOCIETATIS JÁNOS BOLYAI\n8 . TOPICS IN TOPOLOGY,\
+  \ KESZTHELY (HUNGARY), 1972 .\nON SOME GENERAL PROPERTIES OF CHROMATIC NUMBERS\n\
+  P . ERDóS - A. HAJNAL - S. SHELAH\n§ 1 . INTRODUCTION\nIn his paper [ 7] T a y 1\
+  \ o r introduced a generalization of chromatic\nnumber of graphs and stated several\
+  \ interesting problems. In this note we\nwill be interested in one of his problems\
+  \ we will state below . We are going\nto formulate several possible generalizations\
+  \ and quite a few related ques\x02tion"
+created_at: '2026-01-31T13:54:05Z'
+updated_at: '2026-01-31T13:54:05Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

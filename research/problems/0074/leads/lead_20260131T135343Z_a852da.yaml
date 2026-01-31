@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135343Z_a852da
+title: Sh:788
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://shelah.logic.at/papers/788/
+notes: "[Exa] This site requires javascript version ES6, which is not supported\n\
+  by your browser (see [here] \nfor supported browsers).\nMany pages on this site\
+  \ will not work with your browser\n(in particular interactive tables and file-upload).\n\
+  However, the [simple paper list] should be OK.\n\n# Sh:788\n\n- Komjáth, P., & Shelah,\
+  \ S. (2005). _Finite subgraphs of uncountably chromatic graphs_. J. Graph Theory,\
+  \ **49**(1), 28–38.[arXiv: math/0212064] [DOI: 10.1002/jgt.20060] [MR: 2130468]"
+created_at: '2026-01-31T13:53:43Z'
+updated_at: '2026-01-31T13:53:43Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

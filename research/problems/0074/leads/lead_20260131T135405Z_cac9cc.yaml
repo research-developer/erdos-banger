@@ -1,0 +1,45 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135405Z_cac9cc
+title: '[Exa] https://users.renyi.hu/~p_erdos/1985-08.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://users.renyi.hu/~p_erdos/1985-08.pdf
+notes: '[Exa] Discrete Mathematics 53 (1985) 2 8 1 -285
+
+  281
+
+  North-Holland
+
+  CHROMATIC NUMBER OF FINITE AND INFINITE
+
+  GRAPHS AND HYPERGRAPHS
+
+  Paul ERDŐS and Andras HAJNAL
+
+  Mathematical Institute of the Hungarian Academy of Sciences, Budapest, Hungary
+
+  We wrote many papers on these subjects, some in collaboration with Galvin, Rado,
+  Shelah
+
+  and Szemerédi, and posed many problems some of which turned out to be undecidable
+  . In this
+
+  survey we state some old and new solved and unsolved problems .
+
+  Nous avons écrit beaucoup'
+created_at: '2026-01-31T13:54:05Z'
+updated_at: '2026-01-31T13:54:05Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

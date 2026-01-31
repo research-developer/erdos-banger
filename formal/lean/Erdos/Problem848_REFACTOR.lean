@@ -3100,8 +3100,9 @@ lemma filter_empty_of_prime_dvd_left
     (Finset.range N).filter (fun a => pred a ∧ p ^ 2 ∣ b * a + 1) = ∅ := by
   classical
   ext a
-  simp only [Finset.mem_filter, Finset.mem_range, Finset.not_mem_empty, iff_false, not_and]
-  intro _ha_range _ha_pred hdiv
+  simp [Finset.mem_filter, Finset.mem_range]
+  intro ha
+  rcases ha with ⟨_, ha_pred, hdiv⟩
   have hpdiv' : p ∣ b * a + 1 := Nat.dvd_of_pow_dvd (by omega : 1 ≤ 2) hdiv
   have hpmod : p ∣ b * a := Nat.dvd_mul_of_dvd_left hb a
   have : p ∣ 1 := by

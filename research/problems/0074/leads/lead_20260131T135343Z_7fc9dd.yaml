@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135343Z_7fc9dd
+title: Consistency results on infinite graphs
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://link.springer.com/article/10.1007/BF02772573?error=cookies_not_supported&code=df97cc0c-f340-4204-a5e0-80090eed4fb0
+notes: "[Exa] # Consistency results on infinite graphs\n\n- Published: October 1988\n\
+  \n- Volume 61, pages 285–294, (1988)\n- [Cite this article] \n\n[![] Israel Journal\
+  \ of Mathematics] [Aims and scope] [Submit manuscript] \n\n## Abstract\n\nConsistently\
+  \ there exist ℵ2-chromatic graphs with no ℵ1-chromatic subgraphs. The statement\
+  \ that every uncountably chromatic graph of size ℵ1 contains an uncountably chromatic\
+  \ _ω_-connected subgraph is consistent and independent. It is"
+created_at: '2026-01-31T13:53:43Z'
+updated_at: '2026-01-31T13:53:43Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

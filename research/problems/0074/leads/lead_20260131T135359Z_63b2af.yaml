@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135359Z_63b2af
+title: Increasing the chromatic number of a random graph
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '1002.1748'
+  url: https://arxiv.org/abs/1002.1748
+notes: "[Exa] # Mathematics > Combinatorics\n\n**arXiv:1002.1748** (math)\n\n\\[Submitted\
+  \ on 9 Feb 2010\\]\n\n# Title:Increasing the chromatic number of a random graph\n\
+  \nAuthors: [N. Alon], [B. Sudakov] \n\nView a PDF of the paper titled Increasing\
+  \ the chromatic number of a random graph, by N. Alon and B. Sudakov\n\n[View PDF]\
+  \ \n\n> Abstract: What is the minimum number of edges that have to be added to the\
+  \ random graph $G=G\\_{n,0.5}$ in order to increase its chromatic number $\\\\chi=\\\
+  \\chi(G)$ by one"
+created_at: '2026-01-31T13:53:59Z'
+updated_at: '2026-01-31T13:53:59Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

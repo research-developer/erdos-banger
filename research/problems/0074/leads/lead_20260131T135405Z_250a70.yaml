@@ -1,0 +1,43 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135405Z_250a70
+title: '[Exa] https://users.renyi.hu/~p_erdos/1973-13.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://users.renyi.hu/~p_erdos/1973-13.pdf
+notes: '[Exa] XVIII ON CHROMATIC NUMBER OF GRAPHS AND SET SYSTEMS
+
+  P . Erd6s and A . Hainal
+
+  Mathematical Institute, Hungarian Academy of Sciences
+
+  B .Rothchild,
+
+  University of California, Los Angeles
+
+  . Introduction
+
+  The aim of this note is to correct a mistake the first two
+
+  authors made in [1] Set theoretical notation will be standard
+
+  otherwise we will use the graph theoretical notation described in
+
+  One of the main results of [1] Corollary 5 .6 states that every
+
+  graph of chromatic number ;;, A) contains complete'
+created_at: '2026-01-31T13:54:05Z'
+updated_at: '2026-01-31T13:54:05Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

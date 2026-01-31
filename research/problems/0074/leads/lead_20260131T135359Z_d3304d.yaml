@@ -1,0 +1,51 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135359Z_d3304d
+title: '[Exa] https://kostochk.web.illinois.edu/docs/2016/ejc15-r.pdf'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: null
+  url: https://kostochk.web.illinois.edu/docs/2016/ejc15-r.pdf
+notes: '[Exa] European Journal of Combinatorics 46 (2015) 89–94
+
+  Contents lists available at ScienceDirect
+
+  European Journal of Combinatorics
+
+  journal homepage: www.elsevier.com/locate/ejc
+
+  The minimum number of edges in a 4-critical
+
+  graph that is bipartite plus 3 edges
+
+  A.V. Kostochka a,b, B.M. Reiniger a
+
+  a Department of Mathematics, University of Illinois, Urbana, IL, 61801, USA
+
+  b
+
+  Institute of Mathematics, Novosibirsk, Russia
+
+  a r t i c l e i n f o
+
+  Article history:
+
+  Received 6 June 2014
+
+  Accepted 9 December 2014
+
+  Av'
+created_at: '2026-01-31T13:53:59Z'
+updated_at: '2026-01-31T13:53:59Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

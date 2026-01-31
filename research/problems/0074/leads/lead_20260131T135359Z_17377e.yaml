@@ -1,0 +1,28 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135359Z_17377e
+title: Bipartite graphs with no $K_6$ minor
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '2204.10119'
+  url: https://arxiv.org/abs/2204.10119
+notes: "[Exa] # Mathematics > Combinatorics\n\n**arXiv:2204.10119** (math)\n\n\\[Submitted\
+  \ on 21 Apr 2022\\]\n\n# Title:Bipartite graphs with no $K\\_6$ minor\n\nAuthors:\
+  \ [Maria Chudnovsky], [Alex Scott], [Paul Seymour], [Sophie Spirkl] \n\nView a PDF\
+  \ of the paper titled Bipartite graphs with no $K\\_6$ minor, by Maria Chudnovsky\
+  \ and 3 other authors\n\n[View PDF] \n\n> Abstract:A theorem of Mader shows that\
+  \ every graph with average degree at least eight has a $K\\_6$ minor, and this"
+created_at: '2026-01-31T13:53:59Z'
+updated_at: '2026-01-31T13:53:59Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null

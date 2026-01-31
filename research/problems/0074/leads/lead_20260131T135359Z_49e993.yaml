@@ -1,0 +1,29 @@
+schema_version: 1
+problem_id: 74
+id: lead_20260131T135359Z_49e993
+title: '[Exa] arXiv 0708.0202'
+status: new
+priority: medium
+tags: []
+source:
+  doi: null
+  arxiv_id: '0708.0202'
+  url: https://arxiv.org/pdf/0708.0202
+notes: "[Exa] arXiv:0708.0202v2 [math.CO] 13 Oct 2007\nRegular spanning subgraphs\
+  \ of\nbipartite graphs of high minimum\ndegree\nB´ela Csaba∗†\nAbstract\nLet G be\
+  \ a simple balanced bipartite graph on 2n vertices, δ =\nδ(G)/n, and ρ0 =\nδ+\n\
+  √\n2δ−1\n2\n. If δ ≥ 1/2 then G has a ⌊ρ0n⌋-regular\nspanning subgraph. The statement\
+  \ is nearly tight.\n1 Introduction\nIn this paper we will consider regular spanning\
+  \ subgraphs of simple graphs.\nWe mostly use standard graph theory notation: V (G)\
+  \ and E(G) will de\x02note the vertex and the e"
+created_at: '2026-01-31T13:53:59Z'
+updated_at: '2026-01-31T13:53:59Z'
+enriched_title: null
+enriched_authors: null
+enriched_year: null
+enriched_venue: null
+enriched_abstract: null
+enriched_provider: null
+enriched_at: null
+ingested_at: null
+manifest_entry_id: null
