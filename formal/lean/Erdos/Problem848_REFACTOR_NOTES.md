@@ -54,7 +54,7 @@ theorem sawhney_main : SawhneyMain := by
 | 7 | 1101-2280 | Finite verification (no native_decide) |
 | 8 | 2281-2302 | SawhneyMain statement (Prop) |
 | 9 | 2303-2424 | Glue theorems |
-| 9.5 | 2425-2972 | Quantitative bounds 🔥 (10M heartbeats × 2) |
+| 9.5 | 2425-2972 | Quantitative bounds 🔥 (8M heartbeats × 2) |
 | 9.8 | 2973-3247 | Bridge lemmas |
 | 9.9 | 3248-3535 | More small modular facts |
 | 10 | 3536-5411 | `sawhney_main` 🔥 (~1876 lines) |
@@ -73,7 +73,7 @@ flowchart TD
 ```
 
 **Bottlenecks:**
-1. **Section 9.5** (lines 2425-2972) — 2× 10M heartbeats
+1. **Section 9.5** (lines 2425-2972) — 2× 8M heartbeats
 2. **Section 10** — `sawhney_main` is ~1876 lines (lines 3536-5411)
 
 ---
@@ -115,9 +115,10 @@ flowchart TD
 |---------------|--------|-------|--------|
 | 40M | 0 | 0 | N/A |
 | 20M | 3 | **0** | ✅ DONE |
-| 10M | 1 | **2** | Remaining target |
+| 10M | 1 | **0** | ✅ DONE |
+| 8M | 0 | **2** | Current (lines 2642, 2651) |
 
-**Result:** All 20M caps reduced to 10M or lower.
+**Result:** All 20M caps reduced to 8M.
 
 ---
 
@@ -129,7 +130,7 @@ For Mathlib submission, these would improve the file further:
 |------|---------|--------|----------|
 | **Scoped maxHeartbeats** | All 11 uses scoped with `in` | ✅ DONE | DONE |
 | **Case lemmas** | All 4 case lemmas extracted | ✅ DONE | DONE |
-| **High heartbeats in 9.5** | 2× 10M (lines 2642, 2651) | Lower where possible | MEDIUM |
+| **High heartbeats in 9.5** | 2× 8M (lines 2642, 2651) | Lower where possible | LOW |
 | ~~**Computation isolation**~~ | ~~Mixed with proof~~ | ~~Separate files~~ | ~~WONTFIX~~ — keep single file for external consumers |
 
 ---
@@ -316,7 +317,7 @@ This is **kernel-reducible**, so `(natToNum p).Prime` can be computed by `decide
 | Global heartbeats (bad) | `^set_option maxHeartbeats.*[^n]$` | **0** ✅ |
 | Scoped heartbeats (ok) | `set_option maxHeartbeats.*in$` | **9** |
 | 20M heartbeats | `20000000` | **0** ✅ |
-| 10M heartbeats | `10000000` | **2** (lines 2642, 2651) |
+| 8M heartbeats | `8000000` | **2** (lines 2642, 2651) |
 | simpa usage | `simpa` | 486 |
 | biUnion bounds | `card_biUnion_le` | 7 |
 
@@ -367,11 +368,11 @@ All helper `have` statements are defined early in `sawhney_main` (starts line 35
 - All 4 case lemmas extracted (Phase 4 complete)
 - All heartbeat options properly scoped with `in`
 - No 40M or 20M heartbeat caps remaining
-- Phase 5: 20M → 10M reduction complete
+- Phase 5: 20M → 8M reduction complete
 
 **Remaining work is optional polish for Mathlib submission:**
-1. ~~Reduce 20M heartbeat caps~~ ✅ DONE (now 10M)
-2. Reduce 2× 10M heartbeat caps (lines 2642, 2651) — may be irreducible for computation-heavy lemmas
+1. ~~Reduce 20M heartbeat caps~~ ✅ DONE (now 8M)
+2. 2× 8M heartbeat caps remain (lines 2642, 2651) — likely irreducible for computation-heavy lemmas
 
 **Phase 6 (External Review Feedback):**
 1. **HIGH:** Extract top-level `sieve_set_card_bound` lemma (~300-500 lines savings)
