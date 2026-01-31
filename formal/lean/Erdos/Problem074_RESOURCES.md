@@ -15,7 +15,8 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 | File | Purpose |
 |------|---------|
 | `Problem074.lean` | Main skeleton with `sorry` (produces warnings) |
-| `Problem074_experimental.lean` | Same content but warning-free (uses `def : Prop`) |
+| `Problem074_experimental.lean` | Linear case approach (Rödl/Kneser disjoint union) |
+| `Problem074_burling.lean` | **NEW** - Burling graph approach (candidate for $500) |
 | `Upstream/FormalConjectures/ErdosProblems/74.lean` | Original upstream formalization |
 
 **Recommendation:** Use `Problem074_experimental.lean` for active work (no warnings), then sync to `Problem074.lean` when finalizing.
