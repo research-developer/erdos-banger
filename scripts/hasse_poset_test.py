@@ -138,10 +138,13 @@ def standard_point_line_configuration(t: int) -> tuple[list[Point], list[Line]]:
       Lines:   L = {y = a x + b : 0<=a<t, 0<=b<t^2}
 
     Note: Points do not have distinct geometric x-coordinates and lines have
-    repeated slopes; the construction in the paper applies a projective
-    transformation to remove these degeneracies. Here we model this by using
-    injective order-keys `x_key` and `slope_key` while keeping the same incidence
-    relation.
+    repeated slopes; the paper applies a projective transformation ("projection")
+    to remove these degeneracies without changing incidences.
+
+    In this repo we support two experimental modes:
+    - `mode=order-keys`: deterministic injective order-keys (`x_key`, `slope_key`)
+    - `mode=projective-transform`: sample a projective transform and use the
+      induced real x-coordinates / slopes (see `find_projection_with_distinct_x_and_slopes`)
     """
 
     if t <= 0:
