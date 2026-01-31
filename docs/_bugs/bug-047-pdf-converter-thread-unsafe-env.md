@@ -1,8 +1,10 @@
 # BUG-047: PDF Converter Thread-Unsafe Environment Mutation
 
 **Priority:** P1
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-27
+**Fixed:** 2026-01-31
+**Commit:** `005dc83`
 **Component:** `src/erdos/core/pdf/converter.py`
 
 ## Description
@@ -86,6 +88,14 @@ The conversion happens in-process, not in a subprocess.
 - High: Could cause incorrect device selection in production
 - Affects: Multi-threaded/async PDF conversion workflows
 - Workaround: Run conversions sequentially (performance impact)
+
+## Resolution
+
+Implemented **Option A: Threading Lock** as recommended. Added `_torch_device_lock = threading.Lock()` at module level and wrapped the TORCH_DEVICE mutation in a `with _torch_device_lock:` block.
+
+**Changes:**
+- `src/erdos/core/pdf/converter.py`: Added threading lock around env var mutation
+- `tests/unit/pdf/test_converter.py`: Added `test_convert_pdf_torch_device_is_thread_safe()` concurrent test
 
 ## Related
 

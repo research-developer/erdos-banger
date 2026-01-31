@@ -1,8 +1,10 @@
 # BUG-055: Ingest Skips URL-Only References (No PDF Download)
 
 **Priority:** P2
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-30
+**Fixed:** 2026-01-31
+**Commit:** `005dc83`
 **Component:** `erdos ingest`
 
 ## Summary
@@ -95,8 +97,24 @@ uv run marker_single literature/cache/pdf/erdos-gyori-1991.pdf \
 # 3. Manually update manifest (tedious)
 ```
 
+## Resolution
+
+Added URL-only PDF reference handling to `process_all_references()`:
+
+1. Added `_is_url_only_pdf_ref()` helper to detect URL-only PDF references
+2. Added `_process_url_only_pdf_reference()` to create a minimal `ReferenceRecord` with synthetic `openalex_id` and process via `_build_manifest_entry_with_pdf()`
+3. Updated `_error_manifest_entry()` to handle references without DOI/arXiv by using synthetic `openalex_id`
+
+**Changes:**
+- `src/erdos/core/ingest/fetch.py`: Added URL-only PDF processing path
+- `tests/unit/ingest/test_fetch.py`: Added 3 tests for URL-only handling
+- `docs/_debt/debt-122-ingest-fetch-module-size.md`: Created debt deck for module size (568 LOC, 14% over threshold)
+
+**Note:** Module size increased to 571 LOC (threshold: 500). Exempted via DEBT-122 as the complexity is justified for feature completeness.
+
 ## Related
 
 - BUG-039: Ingest cannot discover papers (different issue - this is about URL refs being skipped)
 - SPEC-036: Lead enrichment pipeline (may need update to cover URL-only refs)
+- DEBT-122: Ingest fetch module size exemption
 - Problem 74 research blocked on Erdos-Gyori 1991 paper

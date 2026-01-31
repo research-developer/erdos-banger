@@ -1,8 +1,10 @@
 # BUG-056: Exa Client Uses Basic Neural Search Instead of Deep Research
 
 **Priority:** P2 (Medium - suboptimal quality, workaround exists)
-**Status:** Open
+**Status:** Fixed (Partial - Config added, CLI flag pending)
 **Found:** 2026-01-31
+**Fixed:** 2026-01-31
+**Commit:** `005dc83`
 **Component:** `src/erdos/core/clients/exa.py`, `src/erdos/commands/research/exa.py`
 **Vendor Docs:** `docs/vendor-docs/exa/exa-api-reference.md`
 
@@ -262,12 +264,34 @@ ERDOS_EXA_SEARCH_TYPE=neural
 
 ## Acceptance Criteria
 
-- [ ] `ExaConfig` supports `search_type` field with default `"neural"`
-- [ ] `ERDOS_EXA_SEARCH_TYPE` env var configures search type
-- [ ] `erdos research exa search --search-type deep` CLI option works
-- [ ] API calls use configured search type (verified by test)
-- [ ] `.env.example` documents the option with recommendation for prize problems
-- [ ] Vendor docs reference updated in code comments
+- [x] `ExaConfig` supports `search_type` field with default `"neural"`
+- [x] `ERDOS_EXA_SEARCH_TYPE` env var configures search type
+- [ ] `erdos research exa search --search-type deep` CLI option works (Phase 3 - pending)
+- [x] API calls use configured search type (verified by test)
+- [x] `.env.example` documents the option with recommendation for prize problems
+- [ ] Vendor docs reference updated in code comments (pending)
+
+## Resolution (Partial)
+
+Implemented Phases 1-2 from the TDD fix plan:
+
+**Phase 1: Configuration** ✅
+- Added `exa_search_type: str = "neural"` to `AppConfig`
+- Added `search_type: str = "neural"` to `ExaConfig`
+- Wired `ERDOS_EXA_SEARCH_TYPE` env var through `AppConfig.from_env()`
+
+**Phase 2: API Wiring** ✅
+- Changed `"type": "neural"` to `"type": self.config.search_type` in payload
+
+**Changes:**
+- `src/erdos/core/config.py`: Added `exa_search_type` field
+- `src/erdos/core/clients/exa.py`: Added `search_type` to config, use in API payload
+- `tests/unit/clients/test_exa.py`: Added 3 tests for search_type
+- `.env.example`: Documented `ERDOS_EXA_SEARCH_TYPE` option
+
+**Remaining:**
+- Phase 3: CLI `--search-type` flag (separate PR)
+- Phase 4: Category filter (bonus feature)
 
 ---
 

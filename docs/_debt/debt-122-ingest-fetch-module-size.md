@@ -47,5 +47,6 @@ Future refactoring options (when/if the module grows further):
 
 ## Related
 
-- BUG-055: URL-only PDF reference handling
+- BUG-055: URL-only PDF reference handling (the fix that caused this overage)
 - SPEC-019: PDF ingestion
+- Commit `005dc83`: Main implementation commit

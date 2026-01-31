@@ -1,10 +1,10 @@
 # Bug: arXiv single-file gzip extraction fails (not a tarball)
 
 **Priority:** P2
-**Status:** Open
+**Status:** Fixed
 **Found:** 2026-01-30
-**Fixed:** N/A
-**Commit:** N/A
+**Fixed:** 2026-01-31
+**Commit:** `005dc83`
 
 ## Description
 
@@ -114,6 +114,18 @@ gunzip -c source.tar.gz > ../../../extracts/arxiv/0905.2527/fulltext.txt
 - Papers in this format cannot be ingested automatically
 - Affects an unknown percentage of arXiv submissions (likely single-author papers with simple submissions)
 - Problem 74 specifically affected: 2 of 3 newly added arXiv papers failed
+
+## Resolution
+
+Implemented the proposed fix. The `extract_arxiv_text()` function now:
+1. First attempts to open as tar archive (existing behavior)
+2. On `tarfile.TarError`, falls back to `gzip.decompress()`
+3. Validates content contains LaTeX markers (`\documentclass` or `\begin{`)
+4. Returns decompressed content capped at `MAX_TEX_FILE_SIZE`
+
+**Changes:**
+- `src/erdos/core/clients/arxiv.py`: Added gzip fallback with LaTeX validation
+- `tests/unit/clients/test_arxiv_extract.py`: Added 3 tests for gzip handling
 
 ## Related
 
