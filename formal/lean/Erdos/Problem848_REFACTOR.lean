@@ -2228,38 +2228,39 @@ lemma no_five_in_candidates_100 :
     exact (clash 7 43 h7 h43 this).elim
 
 -- Main theorems for small N
+lemma problem_848_small {N k : ℕ} (hA7_card : (A₇ N).card = k)
+    (cand : Finset ℕ) (hdiag : DiagonalCandidates N = cand)
+    (hno : ∀ s : Finset ℕ, s ⊆ cand → s.card = k.succ → ¬ NonSquarefreeProductProp s) :
+    ∀ A : Finset ℕ, A ⊆ Finset.range N → NonSquarefreeProductProp A →
+      A.card ≤ (A₇ N).card := by
+  intro A hAsub hAprop
+  rw [hA7_card]
+  have h_sub_cand : A ⊆ DiagonalCandidates N := prop_implies_diag_candidates A N hAsub hAprop
+  have h_sub_cand' : A ⊆ cand := by simpa [hdiag] using h_sub_cand
+  by_contra hle
+  push_neg at hle
+  have hcard_succ : k.succ ≤ A.card := (Nat.succ_le_iff).2 hle
+  have hex : ∃ s : Finset ℕ, s ⊆ A ∧ s.card = k.succ := Finset.exists_subset_card_eq hcard_succ
+  obtain ⟨s, hs_sub, hs_card⟩ := hex
+  have hs_prop : NonSquarefreeProductProp s := nonSquarefreeProductProp_subset hs_sub hAprop
+  have hs_sub_cand : s ⊆ cand := Finset.Subset.trans hs_sub h_sub_cand'
+  exact (hno s hs_sub_cand hs_card) hs_prop
+
 theorem problem_848_N50 :
     ∀ A : Finset ℕ, A ⊆ Finset.range 50 → NonSquarefreeProductProp A →
       A.card ≤ (A₇ 50).card := by
-  intro A hAsub hAprop
-  rw [A₇_50_card]
-  have h_sub_cand : A ⊆ DiagonalCandidates 50 := prop_implies_diag_candidates A 50 hAsub hAprop
-  rw [diag_cand_50] at h_sub_cand
-  by_contra h
-  push_neg at h
-  have hcard3 : 3 ≤ A.card := h
-  have hex : ∃ s : Finset ℕ, s ⊆ A ∧ s.card = 3 := Finset.exists_subset_card_eq hcard3
-  obtain ⟨s, hs_sub, hs_card⟩ := hex
-  have hs_prop : NonSquarefreeProductProp s := nonSquarefreeProductProp_subset hs_sub hAprop
-  have hs_sub_cand : s ⊆ {7, 18, 32, 38, 41, 43} := Finset.Subset.trans hs_sub h_sub_cand
-  exact no_triple_in_candidates s hs_sub_cand hs_card hs_prop
+  exact
+    problem_848_small (N := 50) (k := 2) (hA7_card := A₇_50_card)
+      (cand := {7, 18, 32, 38, 41, 43}) (hdiag := diag_cand_50)
+      (hno := fun s hs_sub hs_card => no_triple_in_candidates s hs_sub hs_card)
 
 theorem problem_848_N100 :
     ∀ A : Finset ℕ, A ⊆ Finset.range 100 → NonSquarefreeProductProp A →
       A.card ≤ (A₇ 100).card := by
-  intro A hAsub hAprop
-  rw [A₇_100_card]
-  have h_sub_cand : A ⊆ DiagonalCandidates 100 := prop_implies_diag_candidates A 100 hAsub hAprop
-  rw [diag_cand_100] at h_sub_cand
-  by_contra h
-  push_neg at h
-  have hcard5 : 5 ≤ A.card := h
-  have hex : ∃ s : Finset ℕ, s ⊆ A ∧ s.card = 5 := Finset.exists_subset_card_eq hcard5
-  obtain ⟨s, hs_sub, hs_card⟩ := hex
-  have hs_prop : NonSquarefreeProductProp s := nonSquarefreeProductProp_subset hs_sub hAprop
-  have hs_sub_cand : s ⊆ {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99} :=
-    Finset.Subset.trans hs_sub h_sub_cand
-  exact no_five_in_candidates_100 s hs_sub_cand hs_card hs_prop
+  exact
+    problem_848_small (N := 100) (k := 4) (hA7_card := A₇_100_card)
+      (cand := {7, 18, 32, 38, 41, 43, 57, 68, 70, 82, 93, 99}) (hdiag := diag_cand_100)
+      (hno := fun s hs_sub hs_card => no_five_in_candidates_100 s hs_sub hs_card)
 
 -- ============================================================================
 -- SECTION 8: SAWHNEY'S THEOREM (Research Level - as Prop)
