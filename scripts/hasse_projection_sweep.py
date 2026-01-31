@@ -25,8 +25,8 @@ from hasse_poset_test import (
 class SweepConfig:
     t: int = 4
     k: int = 25
-    projections: int = 12
-    samples_per_projection: int = 12
+    projections: int = 8
+    samples_per_projection: int = 6
     seed: int = 0
 
 

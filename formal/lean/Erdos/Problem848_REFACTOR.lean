@@ -4108,7 +4108,6 @@ theorem sawhney_main : SawhneyMain := by
                 exact cross_residue_18_7_not_div_25 b18 a hb18_mod ha_mod7
               obtain ⟨p, hp, hp5, hp2div⟩ := prime_square_exists_ne5 (n := b18 * a + 1) hnsq h25
               have hp_lt : p ≤ N := by
-                have hp2_le : p ^ 2 ≤ b18 * a + 1 := Nat.le_of_dvd (Nat.succ_pos _) hp2div
                 have hab_lt : b18 * a + 1 < N ^ 2 := by
                   have hb18_le : b18 ≤ N - 1 := Nat.le_pred_of_lt hb18_lt
                   have ha_le : a ≤ N - 1 := Nat.le_pred_of_lt ha_lt
@@ -4116,11 +4115,7 @@ theorem sawhney_main : SawhneyMain := by
                   have : b18 * a + 1 ≤ (N - 1) * (N - 1) + 1 := Nat.add_le_add_right hab_le 1
                   have hlt : (N - 1) * (N - 1) + 1 < N ^ 2 := sq_pred_add_one_lt_sq N hN100
                   exact lt_of_le_of_lt this hlt
-                have hp2_lt : p ^ 2 < N ^ 2 := lt_of_le_of_lt hp2_le hab_lt
-                by_contra hpge
-                have hpge' : N ≤ p := le_of_lt (Nat.not_le.mp hpge)
-                have : N ^ 2 ≤ p ^ 2 := Nat.pow_le_pow_left hpge' 2
-                exact (not_lt_of_ge this) hp2_lt
+                exact prime_le_of_sq_dvd_lt_sq (p := p) (N := N) (X := b18 * a + 1) (Nat.succ_pos _) hab_lt hp2div
               have hp_mem : p ∈ no5PrimesUpTo N := by
                 have hp_range : p < N + 1 := Nat.lt_succ_of_le hp_lt
                 simp [no5PrimesUpTo, primesUpTo, Finset.mem_filter, Finset.mem_range, hp, hp_range, hp5]
