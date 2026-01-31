@@ -190,9 +190,10 @@ theorem burling_1_bipartite_graph : IsBipartite (BurlingGraph 1) := by
   use fun _ => 0
   intro v w hvw
   exfalso
-  have : (BurlingGraph 1).edgeSet = ∅ := burling_1_no_edges
-  have : ⟦(v, w)⟧ ∈ (BurlingGraph 1).edgeSet := hvw
-  simp_all
+  have hempty : (BurlingGraph 1).edgeSet = ∅ := burling_1_no_edges
+  have hedge : (BurlingGraph 1).Adj v w := hvw
+  rw [SimpleGraph.edgeSet_eq_empty] at hempty
+  exact hempty v w hedge
 
 /-- B_1 is a single vertex, so it's bipartite (needs 0 edge deletions). -/
 theorem burling_1_bipartite :
