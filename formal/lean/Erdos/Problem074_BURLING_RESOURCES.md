@@ -1,10 +1,29 @@
 # Problem 074 - Burling Graph Approach Resources
 
+## ⚠️ STATUS: REFUTED ⚠️
+
+**The Burling approach DOES NOT WORK for the √n bound.**
+
+A concrete counterexample was found in G₄:
+- **n = 21 vertices, m = 39 edges**
+- **MaxCut = 32**
+- **ebip = 39 - 32 = 7 edge deletions needed**
+- **√21 ≈ 4.58, so Nat.sqrt 21 = 4**
+- **7 > 4 → VIOLATES √n bound**
+
+**Reproducible proof:** `scripts/burling_sqrt_counterexample.py`
+
+**Root cause:** The Burling NEXT-B construction creates **disjoint copies** of previous graphs, allowing many vertex-disjoint odd cycles to be packed. This fundamentally prevents the √n bound.
+
+---
+
 ## Overview
 
 This document covers the **Burling graph approach** to Erdős Problem #74 ($500 prize).
 
 **Separate from:** `Problem074_RESOURCES.md` (covers Rödl/Kneser linear case approach)
+
+**Next candidate:** See `Problem074_TWINCUT_RESOURCES.md` for twincut graphs approach
 
 ---
 
@@ -255,3 +274,11 @@ for k in [3, 4, 5, 6]:
 - Reduced to 3 sorries
 - Discovered key gap: best known is n^{3/2} (EHS82), target is √n
 - Burling graphs remain UNTESTED for this property
+
+### 2026-01-30 (later)
+- **REFUTED**: Found concrete counterexample in G₄
+- Counterexample: 21-vertex subgraph needs 7 deletions, but √21 = 4
+- Root cause: NEXT-B construction creates disjoint copies → many disjoint odd cycles
+- Created `scripts/burling_sqrt_counterexample.py` as reproducible proof
+- **Conclusion: Burling approach is DEAD for √n bound**
+- **Next step: Try twincut graphs (arXiv:2304.04296)**

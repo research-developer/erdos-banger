@@ -1,13 +1,13 @@
 # Problem 848 Refactor Notes (SSOT)
 
 **Date:** 2026-01-29
-**Last Updated:** 2026-01-31
-**Status:** ✅ PHASE 4 COMPLETE — All case lemmas extracted
+**Last Updated:** 2026-01-30
+**Status:** ✅ PHASE 5 IN PROGRESS — 20M→10M reduction complete, 2× 10M remaining
 **Scope:** This document is the SSOT for the **Problem 848 Lean formalization**.
 
 ---
 
-## Current State (2026-01-31)
+## Current State (2026-01-30)
 
 | Metric | Value |
 |--------|-------|
@@ -54,7 +54,7 @@ theorem sawhney_main : SawhneyMain := by
 | 7 | 1101-2280 | Finite verification (no native_decide) |
 | 8 | 2281-2302 | SawhneyMain statement (Prop) |
 | 9 | 2303-2424 | Glue theorems |
-| 9.5 | 2425-2972 | Quantitative bounds 🔥 (20M heartbeats × 1, 10M × 1) |
+| 9.5 | 2425-2972 | Quantitative bounds 🔥 (10M heartbeats × 2) |
 | 9.8 | 2973-3247 | Bridge lemmas |
 | 9.9 | 3248-3535 | More small modular facts |
 | 10 | 3536-5411 | `sawhney_main` 🔥 (~1876 lines) |
@@ -73,7 +73,7 @@ flowchart TD
 ```
 
 **Bottlenecks:**
-1. **Section 9.5** (lines 2425-2972) — 1× 20M heartbeat, 1× 10M heartbeat
+1. **Section 9.5** (lines 2425-2972) — 2× 10M heartbeats
 2. **Section 10** — `sawhney_main` is ~1876 lines (lines 3536-5411)
 
 ---
@@ -109,6 +109,16 @@ flowchart TD
 
 **Result:** -78 lines from Phase 2 baseline (5487 → 5409).
 
+### Phase 5: Heartbeat Reduction (In Progress)
+
+| Heartbeat Cap | Before | After | Status |
+|---------------|--------|-------|--------|
+| 40M | 0 | 0 | N/A |
+| 20M | 3 | **0** | ✅ DONE |
+| 10M | 1 | **2** | Remaining target |
+
+**Result:** All 20M caps reduced to 10M or lower.
+
 ---
 
 ## Remaining Structural Debt (Future Polish — Optional)
@@ -119,8 +129,8 @@ For Mathlib submission, these would improve the file further:
 |------|---------|--------|----------|
 | **Scoped maxHeartbeats** | All 11 uses scoped with `in` | ✅ DONE | DONE |
 | **Case lemmas** | All 4 case lemmas extracted | ✅ DONE | DONE |
-| **High heartbeats in 9.5** | 1× 20M, 1× 10M (lines 2642, 2651) | Lower where possible | MEDIUM |
-| **Computation isolation** | Mixed with proof | Separate `Computation.lean` | LOW |
+| **High heartbeats in 9.5** | 2× 10M (lines 2642, 2651) | Lower where possible | MEDIUM |
+| ~~**Computation isolation**~~ | ~~Mixed with proof~~ | ~~Separate files~~ | ~~WONTFIX~~ — keep single file for external consumers |
 
 ### Phase 4 Complete: `sawhney_main` Case Lemmas ✅
 
@@ -236,9 +246,9 @@ This is **kernel-reducible**, so `(natToNum p).Prime` can be computed by `decide
 | All sorries | `sorry` | **0** |
 | Native decide | `native_decide` | **0** |
 | Global heartbeats (bad) | `^set_option maxHeartbeats.*[^n]$` | **0** ✅ |
-| Scoped heartbeats (ok) | `set_option maxHeartbeats.*in$` | **10** |
-| 20M heartbeats | `20000000` | **1** (line 2642) |
-| 10M heartbeats | `10000000` | **1** (line 2651) |
+| Scoped heartbeats (ok) | `set_option maxHeartbeats.*in$` | **9** |
+| 20M heartbeats | `20000000` | **0** ✅ |
+| 10M heartbeats | `10000000` | **2** (lines 2642, 2651) |
 | simpa usage | `simpa` | 486 |
 | biUnion bounds | `card_biUnion_le` | 7 |
 
@@ -288,9 +298,11 @@ All helper `have` statements are defined early in `sawhney_main` (starts line 35
 - All Astar bound duplicates extracted to helpers
 - All 4 case lemmas extracted (Phase 4 complete)
 - All heartbeat options properly scoped with `in`
-- No 40M heartbeat caps remaining
+- No 40M or 20M heartbeat caps remaining
+- Phase 5: 20M → 10M reduction complete
 
 **Remaining work is optional polish for Mathlib submission:**
-1. Reduce 20M heartbeat caps in Section 9.5 (lines 2544, 2581, 2644) — use `#count_heartbeats in`
-2. Reduce 10M heartbeat cap (line 2653)
-3. Consider extracting computation to `Computation.lean`
+1. ~~Reduce 20M heartbeat caps~~ ✅ DONE (now 10M)
+2. Reduce 2× 10M heartbeat caps (lines 2642, 2651) — may be irreducible for computation-heavy lemmas
+
+**Architectural decision:** Keep as single file for external consumers. Only decompose if community requests it.

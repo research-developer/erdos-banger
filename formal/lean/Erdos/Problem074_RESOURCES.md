@@ -10,16 +10,40 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 
 ---
 
+## Approach Summary (2026-01-30)
+
+| Approach | Target | Status | Files |
+|----------|--------|--------|-------|
+| **Rödl/Kneser** | f(n) = εn (LINEAR) | ✅ DONE | `Problem074_experimental.lean` |
+| **Burling** | f(n) = √n | ❌ **REFUTED** | `Problem074_burling_experimental.lean` |
+| **Twincut** | f(n) = √n | 🔄 NEXT CANDIDATE | `Problem074_TWINCUT_RESOURCES.md` |
+
+### Key Findings
+
+1. **Linear case (εn):** SOLVED - proves known 1982 result, no prize
+2. **Burling graphs:** FAIL √n bound - disjoint odd cycle packing kills them
+3. **Twincut graphs:** Small vertex cutset might prevent cycle packing - UNTESTED
+
+**See also:**
+- `Problem074_BURLING_RESOURCES.md` - Why Burling failed
+- `Problem074_TWINCUT_RESOURCES.md` - Next candidate approach
+
+---
+
 ## Lean Files
 
-| File | Purpose |
-|------|---------|
-| `Problem074.lean` | Main skeleton with `sorry` (produces warnings) |
-| `Problem074_experimental.lean` | Linear case approach (Rödl/Kneser disjoint union) |
-| `Problem074_burling.lean` | **NEW** - Burling graph approach (candidate for $500) |
-| `Upstream/FormalConjectures/ErdosProblems/74.lean` | Original upstream formalization |
+| File | Purpose | Status |
+|------|---------|--------|
+| `Problem074.lean` | Main skeleton | Template |
+| `Problem074_experimental.lean` | Linear case (Rödl) | ✅ DONE (0 sorries) |
+| `Problem074_burling.lean` | Burling template | Clean template |
+| `Problem074_burling_experimental.lean` | Burling approach | ❌ REFUTED |
+| `Problem074_twincut.lean` | Twincut template | ✅ Compiles (2 sorries) |
+| `Problem074_twincut_experimental.lean` | **ACTIVE** - Twincut work | ✅ Compiles (2 sorries) |
 
-**Recommendation:** Use `Problem074_experimental.lean` for active work (no warnings), then sync to `Problem074.lean` when finalizing.
+**Active work:** `Problem074_twincut_experimental.lean`
+
+**Recommendation:** Computational testing needed before formal proof. See `Problem074_TWINCUT_RESOURCES.md`.
 
 ---
 
