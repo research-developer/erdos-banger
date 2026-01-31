@@ -323,17 +323,20 @@ Then `A₇_card` and `A₁₈_card` become `by simpa [A₇]` / `by simpa [A₁�
 
 ### 6.11 Unify N=50 and N=100 Finite-Check Theorems (LOW PRIORITY)
 
-**Issue:** `problem_848_N50` (~2247–2261) and `problem_848_N100` (~2263–2277) have 90% identical scaffolding.
+✅ **Implemented** (2026-01-31)
 
-**Proposed:**
+**Fix:** Added a shared lemma `problem_848_small` and rewrote both theorems to call it.
 
 ```lean
-lemma problem_848_small (N : ℕ) (cand : Finset ℕ)
-    (hdiag : DiagonalCandidates N = cand)
-    (hno3 : ∀ s ⊆ cand, s.card = 3 → NonSquarefreeProductProp s → False) :
-    ∀ A, A ⊆ Finset.range N → NonSquarefreeProductProp A → A.card ≤ (A₇ N).card := by
-  -- unified proof
+lemma problem_848_small {N k : ℕ} (hA7_card : (A₇ N).card = k)
+    (cand : Finset ℕ) (hdiag : DiagonalCandidates N = cand)
+    (hno : ∀ s : Finset ℕ, s ⊆ cand → s.card = k.succ → ¬ NonSquarefreeProductProp s) :
+    ∀ A : Finset ℕ, A ⊆ Finset.range N → NonSquarefreeProductProp A →
+      A.card ≤ (A₇ N).card := by
+  -- unified proof (subset extraction + contradiction)
 ```
+
+**Location:** `formal/lean/Erdos/Problem848_REFACTOR.lean:2231`
 
 **Impact:** ~20 lines saved.
 
@@ -381,24 +384,18 @@ exact density_contradiction_caseX.elim
 
 ### 6.14 Paper Case Label Comments (LOW PRIORITY)
 
-**Issue:** Add one-line comments right before each `by_cases` to match paper structure.
+✅ **Implemented** (2026-01-31)
 
-**Current:** Some comments exist ("Case 3 from the paper") but not consistently placed.
-
-**Proposed:** Add `-- Paper Case X: <description>` directly above corresponding `by_cases`.
-
-**Impact:** Readability for reviewers reading Lean alongside paper.
+**Fix:** Added clear `CASE 0/1/2/3` header blocks inside `sawhney_main`, aligned with the
+paper’s case split.
 
 ### 6.15 Namespace Hygiene: `private` Markers (LOW PRIORITY)
 
-**Issue:** Many lemmas are internal scaffolding that shouldn't pollute namespace:
-- `squarefree_*` lemmas (~674–1030)
-- Explicit list constants (~2555–2628)
-- Coarse-sum numerators/denominators (~2630–2665)
+✅ **Implemented** (2026-01-31)
 
-**Proposed:** Mark as `private` unless downstream files import them.
-
-**Impact:** Namespace cleanliness for Mathlib.
+**Fix:** Marked internal scaffolding as `private` (squarefree/non-squarefree witnesses, list
+constants, computed list bridges, coarse-sum lemmas, `natToNum`, etc.) to keep the public
+namespace clean.
 
 ### 6.16 Specific `simp only` Targets (LOW PRIORITY)
 
