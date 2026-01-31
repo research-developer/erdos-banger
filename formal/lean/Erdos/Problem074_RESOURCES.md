@@ -62,6 +62,8 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
     `Ve(G[S])` (edge-disjoint odd cycles), we find strict √n violations very early:
     - For many schedules at `n=32` and `n=64`, a sampled induced subgraph `|S|=25` admits **6 edge-disjoint odd cycles**,
       i.e. `Ve(G[S]) ≥ 6 > ⌊√25⌋=5`, hence `ebip(G[S]) > √|S|`.
+    - In particular, for exponential schedule `p_i = 0.5 · 2^{-2i}` on `n=32`, `L=6` (seed fixed in the script),
+      the script prints a subset `|S|=25` with exact `ebip(G[S]) = 9 > ⌊√25⌋=5`.
     - When densities are made tiny enough to avoid these violations in sampling (e.g. “shifted super-exp shift=2”),
       the resulting graphs at `n=32` have small chromatic number (`χ(G) = 2` or `3`), suggesting the model becomes
       too close to bipartite to plausibly force `χ → ∞`.

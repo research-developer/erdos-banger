@@ -155,6 +155,11 @@ Findings (seed fixed in the script for reproducibility; sampled subsets with `|S
   induced subset `|S|=25` with a greedy packing of **6 edge-disjoint odd cycles**, i.e. `Ve≥6 > ⌊√25⌋=5`.
   The script prints the subset and an explicit list of the packed cycles (vertex ids), giving a deterministic witness
   that `ebip(G[S]) > √|S|`.
+  - Concrete exact witness (exponential `c=0.5`, `n=32`, `L=6`, seed=42):
+    - `|S|=25`, `⌊√|S|⌋=5`
+    - `ebip(G[S]) = 9` (exact MaxCut), so `ebip/√|S| = 1.8`
+    - one such `S` is:
+      `[7, 0, 23, 8, 31, 27, 4, 29, 3, 21, 17, 2, 18, 13, 1, 30, 20, 24, 14, 28, 9, 16, 12, 19, 6]`
 - If densities are made extremely tiny (e.g. shifted super-exponential with `p_0=1/16` and `p_1=1/256`), the sampled
   √n violations disappear, but the finite graphs become very close to bipartite (`χ(G)=2` or `3` for `n=32`), so this
   naive random-layer model likely cannot simultaneously achieve strict √n and unbounded chromatic number.
