@@ -1,7 +1,7 @@
 /-
 Problem 74: Erdős Problem #74 - TWINCUT GRAPH APPROACH
 
-Status: EXPERIMENTAL (ACTIVE WORK)
+Status: REFUTED (2026-01-31)
 Prize: $500
 
 This file attempts to solve Problem 74 using twincut graphs as the candidate construction.
@@ -12,16 +12,16 @@ Twincut graphs (Bonnet, Bourneuf, Duron, Geniet, Thomassé, Trotignon 2023) are:
 - Hereditary class (induced subgraphs stay in the class)
 - Key structural constraint: Every graph either has twins OR vertex cutset ≤ 2
 
-KEY HYPOTHESIS: The small vertex cutset property (≤2) might prevent packing many
-vertex-disjoint odd cycles, which is exactly what killed the Burling approach.
+KEY HYPOTHESIS (FALSE): The small vertex cutset property (≤2) might prevent packing
+many vertex-disjoint odd cycles, which is exactly what killed the Burling approach.
 
 WHY BURLING FAILED: The Burling NEXT-B construction creates disjoint copies,
 allowing Θ(n) vertex-disjoint odd cycles to be packed in n vertices.
 This fundamentally violates √n bound (need ≥ n edge deletions, not √n).
 
-WHY TWINCUT MIGHT WORK: If graphs can only be separated by ≤2 vertices,
-odd cycles must "pass through" these bottlenecks and share edges/vertices.
-This could limit disjoint cycle packing to O(√n).
+WHY TWINCUT DOES NOT WORK: G₄ already violates the √n bound.
+See `scripts/twincut_sqrt_test.py` for an exact MaxCut computation:
+  - n = 23, m = 41, MaxCut = 34, ebip = 7, Nat.sqrt 23 = 4, so 7 > 4.
 
 Reference: arXiv:2304.04296 "A tamed family of triangle-free graphs with unbounded chromatic number"
 -/
@@ -188,6 +188,9 @@ def maxDisjointOddCycles (G : SimpleGraph V) [Fintype V] [DecidableRel G.Adj] : 
 
 If G has cutset ≤ 2 (or twins), then the number of vertex-disjoint odd cycles
 in any n-vertex induced subgraph is at most c√n for some constant c.
+
+NOTE: This is false for the twincut family from arXiv:2304.04296 (see the header
+counterexample and `formal/lean/Erdos/Problem074_TWINCUT_RESOURCES.md`).
 -/
 axiom small_cutset_bounds_odd_cycles (G : SimpleGraph V) [Fintype V] [DecidableRel G.Adj]
     (h : hasTwins G ∨ hasSmallEdgelessCutset G) (n : ℕ) (hn : Fintype.card V = n) :
@@ -202,7 +205,7 @@ If we can prove this theorem, we win $500!
 /--
 **THE $500 QUESTION**
 
-Conjecture: Twincut graphs satisfy a sublinear edge-deletion bound.
+Conjecture (FALSE): Twincut graphs satisfy a sublinear edge-deletion bound.
 
 Strategy:
 1. Use twincut_structure to get twins or small cutset
@@ -252,21 +255,18 @@ theorem twincut_sublinear_attempt :
 /-!
 ## Next Steps
 
-### Computational Testing (PRIORITY)
-1. Implement twincut graph generator in Python from arXiv:2304.04296
-2. Test √n bound on G₃, G₄ (compare to Burling counterexample)
-3. If passes: proceed with formalization
-4. If fails: document and find next candidate
+### Computational Testing (DONE)
+1. Implemented twincut graph generator in Python from arXiv:2304.04296
+2. Tested √n bound on G₄: **fails** (G₄ itself violates √n)
+3. Documented in `formal/lean/Erdos/Problem074_TWINCUT_RESOURCES.md`
 
 ### Theoretical Analysis
-1. Prove/disprove: cutset ≤ 2 → bounded disjoint odd cycles
-2. Understand how twins interact with odd cycle structure
-3. Study edge-criticality and what it implies
+1. (Lesson) Cutset ≤ 2 does not prevent packing many vertex-disjoint odd cycles
+2. Find the next candidate graph family for Problem #74
 
 ### Key Questions
-- Does the hereditary property preserve the cutset bound?
-- How do twins affect odd cycle packing?
-- What is the explicit construction of G₁, G₂, G₃?
+- What stronger structural property would actually prevent linear odd-cycle packing?
+- Can we enforce global overlap/bottlenecks for odd cycles?
 
 ### References
 - arXiv:2304.04296 (main paper)
@@ -284,10 +284,15 @@ theorem twincut_sublinear_attempt :
 - Set up proof strategy for twincut_sublinear_attempt
 - Ready for computational testing before full formal proof
 
+### 2026-01-31
+- Implemented the twincut construction (structured-tree realization) in `scripts/twincut_sqrt_test.py`.
+- Found a direct √n violation already in G₄: `n=23, m=41, MaxCut=34, ebip=7, Nat.sqrt 23=4`.
+- Marked the twincut approach as refuted for the √n edge-deletion bound.
+
 ### TODO
-- [ ] Implement twincut graph generator in Python
-- [ ] Test √n bound empirically on G₃, G₄
-- [ ] If promising, flesh out the axiomatized lemmas
+- [x] Implement twincut graph generator in Python (`scripts/twincut_sqrt_test.py`)
+- [x] Test √n bound empirically on G₄ (fails)
+- [ ] Find next candidate graph family
 -/
 
 end Erdos.Problem074.Twincut

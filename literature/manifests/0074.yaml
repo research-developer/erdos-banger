@@ -1,4 +1,4 @@
-created_at: '2026-01-30T23:06:10.354547Z'
+created_at: '2026-01-31T04:03:06.355060Z'
 entries:
 - cache_hash: null
   cache_path: null
@@ -6,7 +6,7 @@ entries:
   error: null
   extract_path: null
   extracted: false
-  ingested_at: '2026-01-30T23:05:43.760791Z'
+  ingested_at: '2026-01-31T04:02:40.686275Z'
   lead_id: null
   reference:
     abstract: null
@@ -41,7 +41,7 @@ entries:
   error: null
   extract_path: literature/extracts/arxiv/1902.08177/fulltext.txt
   extracted: true
-  ingested_at: '2026-01-30T23:05:47.242887Z'
+  ingested_at: '2026-01-31T04:02:44.154060Z'
   lead_id: null
   reference:
     abstract: null
@@ -75,7 +75,7 @@ entries:
   error: null
   extract_path: literature/extracts/arxiv/1306.5167/fulltext.txt
   extracted: true
-  ingested_at: '2026-01-30T23:05:50.474140Z'
+  ingested_at: '2026-01-31T04:02:47.365412Z'
   lead_id: null
   reference:
     abstract: This paper is a survey on Extremal Graph Theory, primarily focusing
@@ -110,10 +110,18 @@ entries:
 - cache_hash: 2b7b019ce49bf78bfdb82681c22937f73d861eb449b3054f08a6d12c65fd7358
   cache_path: literature/cache/arxiv/2012.10409/source.tar.gz
   cached: true
-  error: null
-  extract_path: literature/extracts/arxiv/2012.10409/fulltext.txt
-  extracted: true
-  ingested_at: '2026-01-30T23:05:54.029571Z'
+  error: 'Extraction failed: file could not be opened successfully:
+
+    - method gz: ReadError(''invalid header'')
+
+    - method bz2: ReadError(''not a bzip2 file'')
+
+    - method xz: ReadError(''not an lzma file'')
+
+    - method tar: ReadError(''invalid header'')'
+  extract_path: null
+  extracted: false
+  ingested_at: '2026-01-31T04:02:50.587492Z'
   lead_id: null
   reference:
     abstract: "In 1973, Erd\u0151s and Simonovits asked whether every $n$-vertex triangle-free\
@@ -161,7 +169,7 @@ entries:
   error: null
   extract_path: literature/extracts/arxiv/2203.13833/fulltext.txt
   extracted: true
-  ingested_at: '2026-01-30T23:05:57.517876Z'
+  ingested_at: '2026-01-31T04:02:53.815324Z'
   lead_id: null
   reference:
     abstract: How large must the chromatic number of a graph be, in terms of the graph's
@@ -203,7 +211,7 @@ entries:
   error: null
   extract_path: null
   extracted: false
-  ingested_at: '2026-01-30T23:06:00.646023Z'
+  ingested_at: '2026-01-31T04:02:56.941882Z'
   lead_id: null
   reference:
     abstract: null
@@ -235,10 +243,18 @@ entries:
 - cache_hash: 9a24b6c9339d96ae0f4fa14d45da4d41c464eddc0fee8e737499c37103073e0e
   cache_path: literature/cache/arxiv/0905.2527/source.tar.gz
   cached: true
-  error: null
-  extract_path: literature/extracts/arxiv/0905.2527/fulltext.txt
-  extracted: true
-  ingested_at: '2026-01-30T23:06:04.100742Z'
+  error: 'Extraction failed: file could not be opened successfully:
+
+    - method gz: ReadError(''invalid header'')
+
+    - method bz2: ReadError(''not a bzip2 file'')
+
+    - method xz: ReadError(''not an lzma file'')
+
+    - method tar: ReadError(''invalid header'')'
+  extract_path: null
+  extracted: false
+  ingested_at: '2026-01-31T04:03:00.191796Z'
   lead_id: null
   reference:
     abstract: "Polynomial algorithms are given for the following two problems: given\
@@ -279,7 +295,7 @@ entries:
   error: null
   extract_path: null
   extracted: false
-  ingested_at: '2026-01-30T23:06:07.349616Z'
+  ingested_at: '2026-01-31T04:03:03.354334Z'
   lead_id: null
   reference:
     abstract: null
@@ -309,4 +325,4 @@ entries:
   source: problem_ref
 problem_id: 74
 schema_version: 1
-updated_at: '2026-01-30T23:06:10.354547Z'
+updated_at: '2026-01-31T04:03:06.355060Z'
