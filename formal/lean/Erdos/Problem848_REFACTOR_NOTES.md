@@ -572,8 +572,8 @@ This is **kernel-reducible**, so `(natToNum p).Prime` can be computed by `decide
 | Global heartbeats (bad) | `^set_option maxHeartbeats.*[^n]$` | **0** ✅ |
 | Scoped heartbeats (ok) | `set_option maxHeartbeats.*in$` | **9** |
 | 20M heartbeats | `20000000` | **0** ✅ |
-| 8M heartbeats | `8000000` | **2** (lines 2642, 2651) |
-| simpa usage | `simpa` | 486 |
+| 8M heartbeats | `8000000` | **2** (lines 2604, 2613) |
+| simpa usage | `simpa` | 448 |
 | biUnion bounds | `card_biUnion_le` | 7 |
 
 ### Verification Commands
@@ -600,15 +600,15 @@ grep -n "20000000\|10000000" formal/lean/Erdos/Problem848_REFACTOR.lean | grep m
 
 ### Helper Locations Inside `sawhney_main`
 
-All helper `have` statements are defined early in `sawhney_main` (starts line 3541):
+All helper `have` statements are defined early in `sawhney_main` (starts line 3621):
 
 | Helper | Line | Purpose |
 |--------|------|---------|
-| `sum_div_add_one_le` | 3586 | Bound `∑ (N/(k*p²)+1)` |
-| `residue_class_card_bound_of_subset` | 3623 | Mod 25 density bound |
-| `residue_class_card_bound100_of_subset` | 3663 | Mod 100 density bound |
-| `Astar_bound_mod25` | 3750 | A* bound (mod 25) |
-| `Astar_bound_mod50` | 3854 | A* bound (mod 50, odd only) |
+| `sum_div_add_one_le` | 3656 | Bound `∑ (N/(k*p²)+1)` |
+| `residue_class_card_bound_of_subset` | 3693 | Mod 25 density bound |
+| `residue_class_card_bound100_of_subset` | 3733 | Mod 100 density bound |
+| `Astar_bound_mod25` | 3809 | A* bound (mod 25) |
+| `Astar_bound_mod50` | 3908 | A* bound (mod 50, odd only) |
 
 ---
 
@@ -619,7 +619,7 @@ All helper `have` statements are defined early in `sawhney_main` (starts line 35
 > ⚠️ This proves the *asymptotic* result (∃ N₀, ∀ N ≥ N₀), not the full Erdős conjecture (∀ N). See "What We Formalized" section above.
 
 - 0 sorry, 0 native_decide, 0 axioms
-- Builds cleanly in ~12-13 min
+- Builds cleanly in ~14-15 min
 - All density bound duplicates extracted to helpers
 - All Astar bound duplicates extracted to helpers
 - All 4 case lemmas extracted (Phase 4 complete)
@@ -629,15 +629,15 @@ All helper `have` statements are defined early in `sawhney_main` (starts line 35
 
 **Remaining work is optional polish for Mathlib submission:**
 1. ~~Reduce 20M heartbeat caps~~ ✅ DONE (now 8M)
-2. 2× 8M heartbeat caps remain (lines 2642, 2651) — likely irreducible for computation-heavy lemmas
+2. 2× 8M heartbeat caps remain (lines 2604, 2613) — likely irreducible for computation-heavy lemmas
 
 **Phase 6 Progress (2026-01-31):**
 
 | Status | Count | Items |
 |--------|-------|-------|
-| ✅ DONE | 6 | 6.2, 6.6, 6.7, 6.8, 6.9, 6.10 |
+| ✅ DONE | 10 | 6.2, 6.3, 6.6, 6.7, 6.8, 6.9, 6.10, 6.11, 6.14, 6.15 |
 | ⚠️ PARTIAL | 1 | 6.1 (sieve bounds exist, may need more unification) |
-| ⏳ TODO | 10 | 6.3-6.5, 6.11-6.17 |
+| ⏳ TODO | 6 | 6.4, 6.5, 6.12, 6.13, 6.16, 6.17 |
 
 **Completed refactors saved ~190-300 lines** from original ~5500+ baseline.
 
