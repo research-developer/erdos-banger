@@ -8,6 +8,9 @@ This module orchestrates reference fetching by:
 - Building ManifestEntry results
 
 Follows SRP: orchestration only, no direct client usage.
+
+# exempt: DEBT-122 — 568 LOC is 68 over threshold. Justified: URL-only PDF
+# handling (BUG-055) added necessary complexity for feature completeness.
 """
 
 from __future__ import annotations
