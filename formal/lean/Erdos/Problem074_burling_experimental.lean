@@ -160,7 +160,7 @@ axiom burling_has_tree_structure (k : ℕ) :
       -- Property 3: Neighborhoods live in branches
       True
 
-/--
+/-
 Key structural property: In any n-vertex induced subgraph of a Burling graph,
 odd cycles are "bottlenecked" by the tree structure.
 
@@ -170,26 +170,33 @@ then n ≥ c · t² for some constant c > 0.
 This means: t ≤ O(√n), so we can hit all odd cycles with O(√n) edges.
 
 ═══════════════════════════════════════════════════════════════════════════════
-STATUS: This is THE $500 AXIOM
+STATUS: This was our $500 target axiom (√n edge-deletion bound).
 
-If we can PROVE this from the tree structure → we win $500
-Currently axiomatized → shows the STRUCTURE of the solution
+However, this specific √n bound is **false** for the Burling sequence.
+
+Concrete counterexample (computed by brute-force MaxCut on 2026-01-31):
+- In the 4th Burling graph `G₄`, there is an induced connected component on `n = 21` vertices
+  with `m = 39` edges whose maximum cut has size `32`, hence it needs `39 - 32 = 7` edge deletions
+  to become bipartite.
+- But `Nat.sqrt 21 = 4`, so `7 > 4`.
+
+Reproduction script: `scripts/burling_sqrt_counterexample.py`.
 
 TO PROVE THIS, we would need:
 1. Formalize the tree decomposition (derived graph structure)
 2. Prove the "pivot" lemma: odd cycles have a minimal ancestor (pivot)
 3. Prove the counting argument: t pivots → Ω(t²) vertices
 
-The external analysis suggests this IS provable from Burling structure,
-but no one has done it yet!
+Even if a different (slower-growing) bound holds for Burling graphs, √n is not the right target.
 ═══════════════════════════════════════════════════════════════════════════════
 -/
-axiom burling_odd_cycle_bottleneck (k : ℕ) (hk : k ≥ 1) :
-    ∀ (H : (BurlingGraph k).Subgraph) (hfin : H.verts.Finite),
-      ∃ (F : Set (Sym2 (BurlingVertex k))),
-        F ⊆ H.edgeSet ∧
-        F.ncard ≤ Nat.sqrt H.verts.ncard ∧
-        IsBipartite (H.deleteEdges F).coe
+/-- The (now refuted) √n bottleneck bound, kept as a named conjecture for reference. -/
+def burling_odd_cycle_bottleneck_sqrt (k : ℕ) : Prop :=
+  ∀ (H : (BurlingGraph k).Subgraph) (hfin : H.verts.Finite),
+    ∃ (F : Set (Sym2 (BurlingVertex k))),
+      F ⊆ H.edgeSet ∧
+      F.ncard ≤ Nat.sqrt H.verts.ncard ∧
+      IsBipartite (H.deleteEdges F).coe
 
 /-!
 ## Attempt to Prove the Bottleneck Property
@@ -249,7 +256,7 @@ theorem burling_counting_argument :
 
 /--
 If we could prove the above three lemmas properly, we could derive:
-`burling_odd_cycle_bottleneck` without axiom!
+`burling_odd_cycle_bottleneck_sqrt` from the tree structure.
 
 The structure would be:
 1. For any n-vertex subgraph H, find all odd cycles
@@ -257,8 +264,12 @@ The structure would be:
 3. Apply counting argument: if there were > √n independent cycles,
    we'd need > n vertices (contradiction)
 4. Therefore ≤ √n edge deletions suffice
+
+NOTE: As of 2026-01-31, the √n bound is refuted for the Burling sequence
+(see the counterexample note near `burling_odd_cycle_bottleneck_sqrt`), so this
+is kept only as an outline/template.
 -/
-theorem burling_bottleneck_attempt (k : ℕ) (hk : k ≥ 1)
+theorem burling_bottleneck_attempt_sqrt (k : ℕ) (hk : k ≥ 1)
     (H : (BurlingGraph k).Subgraph) (hfin : H.verts.Finite) :
     ∃ (F : Set (Sym2 (BurlingVertex k))),
       F ⊆ H.edgeSet ∧
@@ -276,9 +287,9 @@ theorem burling_bottleneck_attempt (k : ℕ) (hk : k ≥ 1)
   6. Show H - F is bipartite
 
   The hard part is step 3 (proving the counting argument).
-  Currently we use the axiom `burling_odd_cycle_bottleneck` as a placeholder.
+  This was previously (incorrectly) axiomatized as `burling_odd_cycle_bottleneck`.
   -/
-  exact burling_odd_cycle_bottleneck k hk H hfin
+  sorry
 
 /-!
 ## The Core Mathematical Insight
@@ -473,13 +484,16 @@ If we can prove this for Burling graphs, we win $500!
 **THE $500 QUESTION FOR BURLING GRAPHS**
 
 Conjecture: Every n-vertex subgraph of B_k can be made bipartite by deleting ≤ √n edges.
+
+Update 2026-01-31: this conjecture is **false** for the Burling sequence (see the
+counterexample note near `burling_odd_cycle_bottleneck_sqrt`).
 -/
 def burling_sublinear_conjecture : Prop :=
   ∀ k : ℕ, ∀ n : ℕ,
     SimpleGraph.maxSubgraphEdgeDistToBipartite (BurlingGraph k) n ≤ Nat.sqrt n
 
-/-- The theorem we're trying to prove. -/
-theorem burling_sublinear :
+/-- Kept as an *attempt* (the statement is refuted for actual Burling graphs). -/
+theorem burling_sublinear_sqrt_attempt :
     ∀ k n : ℕ, SimpleGraph.maxSubgraphEdgeDistToBipartite (BurlingGraph k) n ≤ Nat.sqrt n := by
   intro k n
   /-
@@ -548,32 +562,16 @@ theorem burling_sublinear :
     - Odd cycles must have a "pivot" structure
     - If t edge-disjoint odd cycles exist → n ≥ Ω(t²) → t ≤ O(√n)
 
-    We use the axiom `burling_odd_cycle_bottleneck` which captures this.
+    We previously used an axiom here; the √n bound is now known false for Burling graphs.
     ═══════════════════════════════════════════════════════════════════════════════
     -/
-    -- Use the bottleneck axiom
-    simp only [SimpleGraph.maxSubgraphEdgeDistToBipartite]
-    apply csSup_le'
-    intro m hm
-    rcases hm with ⟨A, hn, hfin, rfl⟩
-    -- Apply the bottleneck axiom to subgraph A
-    have hk2 : k + 2 ≥ 1 := by omega
-    obtain ⟨F, hFsub, hFcard, hFbip⟩ := burling_odd_cycle_bottleneck (k + 2) hk2 A hfin
-    -- minEdgeDistToBipartite A ≤ F.ncard ≤ √(A.verts.ncard) = √n
-    calc SimpleGraph.minEdgeDistToBipartite A
-        ≤ F.ncard := by
-          -- minEdgeDistToBipartite is the infimum over all edge sets that make A bipartite
-          -- F makes A bipartite, so minEdgeDistToBipartite A ≤ F.ncard
-          dsimp [SimpleGraph.minEdgeDistToBipartite]
-          apply Nat.sInf_le
-          exact ⟨F, hFsub, hFbip, rfl⟩
-      _ ≤ Nat.sqrt A.verts.ncard := hFcard
-      _ = Nat.sqrt n := by rw [hn]
+    -- TODO: explore alternative (slower) bounds for Burling graphs.
+    sorry
 
 /-!
 ## If Burling Works: Constructing the Infinite Graph
 
-If `burling_sublinear` holds, we can construct the prize-winning graph
+If the √n bound held for Burling graphs, we could construct the prize-winning graph
 as the disjoint union of all B_k.
 -/
 
@@ -597,7 +595,7 @@ theorem burling_infinite_graph_exists
   sorry
 
 /-!
-## Research Status (Updated 2026-01-30)
+## Research Status (Updated 2026-01-31)
 
 ### PROVED in this file:
 1. `burling_1_subsingleton` - B_1 has exactly one vertex
@@ -613,10 +611,20 @@ theorem burling_infinite_graph_exists
 2. `burling_triangle_free` - no 3-cycles
 3. `burling_chromatic_number` - χ(B_k) = k
 
-### REMAINING SORRIES (3):
+### REMAINING SORRIES (4):
 1. `triangle_free_edge_bound_mantel` - Mantel's theorem (provable, not critical)
-2. `burling_sublinear` - **THE $500 QUESTION**
-3. `burling_infinite_graph_exists` - follows from #2
+2. `burling_bottleneck_attempt_sqrt` - outline/template only (√n bound is false)
+3. `burling_sublinear_sqrt_attempt` - outline/template only (√n bound is false)
+4. `burling_infinite_graph_exists` - depends on a (currently refuted) √n bound
+
+### COUNTEREXAMPLE (√n bound FAILS for Burling):
+
+Computed (brute-force MaxCut) on 2026-01-31:
+- In the Burling sequence graph `G₄`, an induced connected component on `n = 21` vertices has
+  `m = 39` edges and `MaxCut = 32`, so it needs `39 - 32 = 7` deletions to become bipartite.
+- Since `Nat.sqrt 21 = 4`, the √n conjecture fails already at `n = 21`.
+
+Reproduction script: `scripts/burling_sqrt_counterexample.py`.
 
 ### KEY INSIGHTS FROM LITERATURE:
 
@@ -640,19 +648,17 @@ theorem burling_infinite_graph_exists
 - Known: n^{3/2} bound (EHS82 for Specker graphs)
 - Target: √n bound (Problem 74)
 - Unknown: Does ANY graph achieve √n while having χ = ω?
-- Burling graphs are untested for this property!
+- Burling graphs do **not** satisfy the √n bound (see counterexample above).
 
-### WHY BURLING MIGHT WORK:
-1. Triangle-free → min odd cycle length is 5 (weaker obstruction)
-2. Box intersection structure → geometric constraints on cycles
-3. Tree-decomposition → possible bottleneck structure
-4. Minimal hereditary class → "simplest" high-χ construction
+### UPDATED TAKEAWAY:
+The Burling-tree/derived-graph structure is rich and useful, but it does not by itself force a √n
+edge-deletion-to-bipartite bound in Burling graphs.
 
 ### NEXT STEPS:
-1. Investigate if Burling graphs are sparse (linear edge count)
-2. Prove B_2 case (first non-trivial case)
-3. Computational test on small Burling graphs
-4. Study odd cycle structure via tree-decomposition
+1. Determine the *actual* asymptotic growth of `maxSubgraphEdgeDistToBipartite` for Burling graphs
+2. Decide whether Burling graphs could still work for Problem 74 with a slower-growing `f(n)`
+3. Use the derived-from-tree formalization (arXiv:2104.07001 / 2106.16089) to bound odd-cycle
+   structure in other candidate constructions
 
 ### KEY REFERENCES:
 - EHS82: literature/extracts/pdf/0074/erdos-hajnal-szemeredi-1982-almost-bipartite.md
