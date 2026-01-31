@@ -109,6 +109,22 @@ using exact MaxCut (brute force / Gray-code). See the Python scripts in `scripts
 These are *not* proofs about the infinite variants, but they are strong evidence
 that the most obvious algebraic / Borel-combinatorics families do not satisfy the
 `√n` target.
+
+### Hasse diagrams / Suk–Tomon rank-parity defects (ACTIVE, 2026-01-31)
+
+See:
+- `formal/lean/Erdos/Problem074_HASSE_STRATEGY.md`
+- `scripts/hasse_poset_test.py`
+
+Computational note (prototype, exact MaxCut on sampled induced subgraphs with `|S| ≤ 25`):
+- In a naive modeled "standard example" approximant with parameter `t=4` (`|V|=220, |E|=380`),
+  the script finds a **connected** induced subgraph on `n=25` vertices with `ebip=6 > √25=5`
+  (so the strict constant-1 `√n` bound fails for this naive model).
+- The same subset had a rank-parity defect upper bound `|D(S)|=15`, which is valid but loose.
+
+This does **not** refute the broader Hasse-diagram strategy: the paper enforces distinctness
+conditions via a projective transformation, and constants may matter. It *does* strongly suggest
+we must implement the actual Suk–Tomon setup carefully before attempting Lean proofs.
 -/
 
 /-!
@@ -250,6 +266,24 @@ check: truly tiny `ebip` cannot support large chromatic number.
 
 theorem chromaticNumber_le_two_mul_ebip {V : Type*} [Fintype V] (G : SimpleGraph V) :
     G.chromaticNumber ≤ (2 * ebip (G := G) (⊤ : G.Subgraph) + 2 : ℕ∞) := by
+  sorry
+
+/-!
+### The "hard constraint" heuristic: χ ≤ 2 + 2√(ebip)
+
+Let `(A,B)` be a maximum cut, so the monochromatic edges are exactly `ebip(G)`.
+Then `χ(G) ≤ χ(G[A]) + χ(G[B])`, and a graph with `m` edges satisfies `χ ≤ 1 + √(2m)`.
+
+This gives the useful (and plausibly close-to-sharp in this regime) bound:
+
+`χ(G) ≤ 2 + 2√(ebip(G))`.
+
+If true, it implies that any finite witness with `ebip ≤ √n` must have
+`χ ≲ n^{1/4}` (matching the Suk–Tomon cover-graph exponent).
+-/
+
+theorem chromaticNumber_le_two_add_two_sqrt_ebip {V : Type*} [Fintype V] (G : SimpleGraph V) :
+    G.chromaticNumber ≤ (2 + 2 * Nat.sqrt (ebip (G := G) (⊤ : G.Subgraph)) : ℕ∞) := by
   sorry
 
 /-!

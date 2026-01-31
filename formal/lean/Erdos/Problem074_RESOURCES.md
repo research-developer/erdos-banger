@@ -21,7 +21,7 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 | **Shift graphs** | f(n) = √n | ❌ **REFUTED** | `scripts/shift_graph_sqrt_test.py` |
 | **Kneser graphs K(n,2)** | f(n) = √n | ❌ **REFUTED** | `scripts/kneser_graph_sqrt_test.py` |
 | **Paley graphs** | f(n) = √n | ❌ **REFUTED** | `scripts/paley_graph_sqrt_test.py` |
-| **Hasse/Suk-Tomon** | f(n) = √n | 🔬 **ACTIVE** | `Problem074_HASSE_STRATEGY.md` |
+| **Hasse/Suk-Tomon** | f(n) = √n | 🔬 **ACTIVE** | `Problem074_HASSE_STRATEGY.md`, `scripts/hasse_poset_test.py` |
 
 ### Key Findings
 
@@ -32,6 +32,10 @@ Let $f(n) \to \infty$ (possibly very slowly). Is there a graph of infinite chrom
 5. **Shift graphs:** FAIL √n bound - counterexample at Sh(7) (n=21, ebip=5 > ⌊√21⌋=4)
 6. **Kneser graphs K(n,2):** FAIL √n bound - counterexample at K(6,2) (n=15, ebip=15 > ⌊√15⌋=3)
 7. **Paley graphs:** FAIL √n bound - counterexample at P(13) (n=13, ebip=13 > ⌊√13⌋=3)
+8. **Hasse/Suk-Tomon (prototype):** In a naive modeled "standard example" approximant (t=4),
+   a connected induced subgraph on n=25 vertices has ebip=6 > √25=5 (see `scripts/hasse_poset_test.py`).
+   This does **not** refute the strategy (projective transform / configuration details matter), but it is an
+   important sanity check.
 
 **See also:**
 - `Problem074_HASSE_STRATEGY.md` - **ACTIVE: Suk-Tomon incidence posets + rank-parity defects**

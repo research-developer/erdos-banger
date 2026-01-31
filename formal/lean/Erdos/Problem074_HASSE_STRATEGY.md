@@ -257,6 +257,36 @@ def check_sqrt_scaling(poset, max_n=100):
 
 ---
 
+## Computational Notes (2026-01-31)
+
+Prototype implementation:
+- `scripts/hasse_poset_test.py`
+
+What it currently does:
+- Implements a small-scale version of Tomon’s **Claim 12** "standard example" graph `G_t` (vertices = incidences).
+- Computes exact `ebip(G[S]) = |E(S)| - MaxCut(G[S])` for sampled subsets `S` with `|S| ≤ 25`.
+- Computes the **rank-parity defect** upper bound `|D(S)|` via induced poset heights mod 2.
+
+Important caveat:
+- The paper requires **distinct x-coordinates of points** and **distinct slopes of lines**, achieved by a projective
+  transformation. The prototype keeps the incidence relation from the standard example, but models these distinctness
+  assumptions via deterministic injective order-keys (`x_key`, `slope_key`). This may change the resulting graph.
+
+Observed behavior (Monte Carlo, not exhaustive):
+- For `t=4` (`|V|=220, |E|=380`) we found a **connected** induced subset `S` with `|S|=25` and
+  `ebip(G[S])=6 > √25=5` (so the strict constant-1 √n bound fails for this naive model).
+  The script prints the subset for reproduction.
+- The defect set `D(S)` is a valid constructive upper bound, but can be quite loose in this example
+  (the same subset had `|D(S)|=15`).
+
+Interpretation:
+- This is not a refutation of the Hasse-diagram strategy, but it strongly suggests we must:
+  - implement the *actual* projective/distinctness setup used in Suk–Tomon, and/or
+  - prove/target a `C√n` bound first (constants matter), and/or
+  - refine the canonical deletion set (beyond naive rank-parity).
+
+---
+
 ## Lean Formalization Plan
 
 ### Definitions Needed
