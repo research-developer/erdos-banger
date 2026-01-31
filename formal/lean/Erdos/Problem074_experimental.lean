@@ -490,8 +490,11 @@ theorem SimpleGraph.maxSubgraphEdgeDistToBipartite_sigma_le_linear
             (⋃ i ∈ I, Sym2.map (Sigma.mk i) '' Edel i).ncard ≤
               ∑ i ∈ I, (Sym2.map (Sigma.mk i) '' Edel i).ncard :=
           Finset.set_ncard_biUnion_le I (fun i => Sym2.map (Sigma.mk i) '' Edel i)
-        have hinj : ∀ i : ι, Function.Injective (Sym2.map (Sigma.mk i)) := fun i =>
-          Sym2.map.injective (fun _ _ hab => eq_of_heq (Sigma.mk.inj hab).2)
+        have hinj : ∀ i : ι, Function.Injective (Sym2.map (Sigma.mk i : W i → Sigma W)) := by
+          intro i
+          refine Sym2.map.injective (f := (Sigma.mk i : W i → Sigma W)) ?_
+          intro _ _ hab
+          exact eq_of_heq (Sigma.mk.inj hab).2
         simpa [E, Set.ncard_image_of_injective, hinj] using hE'
 
       -- Each component deletion size is bounded linearly in its component vertex count.
