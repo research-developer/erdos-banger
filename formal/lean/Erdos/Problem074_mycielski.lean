@@ -42,9 +42,9 @@ Construction:
     Inductively: Mₖ₊₁ has |V(Mₖ)| original + |V(Mₖ)| shadow + 1 apex vertices. -/
 inductive MycielskiVertex : ℕ → Type
   | base : MycielskiVertex 1  -- M₁ has one vertex
-  | orig : MycielskiVertex k → MycielskiVertex (k + 1)  -- original vertices from Mₖ
-  | shadow : MycielskiVertex k → MycielskiVertex (k + 1)  -- shadow copies
-  | apex : MycielskiVertex (k + 1)  -- the new apex
+  | orig {k : ℕ} : MycielskiVertex k → MycielskiVertex (k + 1)  -- original vertices from Mₖ
+  | shadow {k : ℕ} : MycielskiVertex k → MycielskiVertex (k + 1)  -- shadow copies
+  | apex {k : ℕ} : MycielskiVertex (k + 1)  -- the new apex
 
 /-- The k-th Mycielski graph. -/
 def MycielskiGraph (k : ℕ) : SimpleGraph (MycielskiVertex k) := by
