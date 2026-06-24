@@ -100,7 +100,7 @@ Check that the proof compiles:
 
 ```bash
 PROBLEM3=$(printf '%03d' $ARGUMENTS)
-uv run erdos lean check "~/.erdos/formal/lean/Erdos/Problem${PROBLEM3}.lean"
+uv run erdos lean check "$HOME/.erdos/formal/lean/Erdos/Problem${PROBLEM3}.lean"
 ```
 
 **Possible outcomes:**
@@ -130,7 +130,7 @@ uv run erdos lean formalize $ARGUMENTS
 
 # Check compilation
 PROBLEM3=$(printf '%03d' $ARGUMENTS)
-uv run erdos lean check "~/.erdos/formal/lean/Erdos/Problem${PROBLEM3}.lean"
+uv run erdos lean check "$HOME/.erdos/formal/lean/Erdos/Problem${PROBLEM3}.lean"
 
 # View problem details
 uv run erdos show $ARGUMENTS

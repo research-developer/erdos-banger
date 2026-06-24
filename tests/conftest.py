@@ -132,3 +132,24 @@ def _isolate_llm_env(monkeypatch: pytest.MonkeyPatch) -> None:
 def _disable_dotenv_autoload(monkeypatch: pytest.MonkeyPatch) -> None:
     """Prevent local `.env` files from affecting deterministic tests."""
     monkeypatch.setenv("ERDOS_LOAD_DOTENV", "0")
+
+
+@pytest.fixture(autouse=True)
+def _isolate_erdos_home(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    """Isolate the centralized data home so tests never read the developer's
+    real ``~/.erdos`` (which ``erdos sync`` / ``/erdos-setup`` populate).
+
+    After centralization, ``data_home()`` defaults to ``~/.erdos`` regardless of
+    cwd, so ``monkeypatch.chdir(tmp_path)`` alone no longer isolates data/index
+    resolution. Without this fixture, tests that assert "no data found" or
+    "no dataset" behavior pick up real synced data and fail on any machine where
+    the tool has been used. Each test gets a fresh empty home.
+
+    Overrides win: tests that need repo discovery call
+    ``monkeypatch.delenv("ERDOS_HOME", raising=False)``; tests that need a
+    populated home set ``ERDOS_HOME`` / ``ERDOS_DATA_PATH`` themselves.
+    """
+    monkeypatch.setenv("ERDOS_HOME", str(tmp_path_factory.mktemp("erdos_home")))

@@ -162,6 +162,9 @@ class TestLeanProveCommandConfig:
         """Running from a subdirectory should still discover repo-root `.env`."""
         monkeypatch.setenv("ERDOS_LOAD_DOTENV", "1")
         monkeypatch.delenv("ERDOS_REPO_ROOT", raising=False)
+        # Opt out of the global ERDOS_HOME isolation: this test asserts repo-root
+        # discovery of `.env`, which requires ERDOS_HOME to be unset.
+        monkeypatch.delenv("ERDOS_HOME", raising=False)
         monkeypatch.delenv("ARISTOTLE_API_KEY", raising=False)
 
         mock_result = MagicMock()
