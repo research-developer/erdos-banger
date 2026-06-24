@@ -49,8 +49,9 @@ class TestResolveRepoRoot:
         result = resolve_repo_root(tmp_path)
         assert result == tmp_path.resolve()
 
-    def test_discovers_when_none(self) -> None:
+    def test_discovers_when_none(self, monkeypatch) -> None:
         """Should discover repo root when None passed."""
+        monkeypatch.delenv("ERDOS_HOME", raising=False)
         result = resolve_repo_root(None)
         # Should find our actual repo
         assert result.is_absolute()
@@ -85,11 +86,39 @@ class TestRepoPath:
         result = repo_path("formal", "lean")
         assert result.parts[-2:] == ("formal", "lean")
 
-    def test_result_is_under_repo_root(self) -> None:
+    def test_result_is_under_repo_root(self, monkeypatch) -> None:
         """repo_path() result should be under the discovered repo root."""
+        monkeypatch.delenv("ERDOS_HOME", raising=False)
         root = discover_repo_root()
         assert root is not None  # We're in the repo
 
         result = repo_path("data", "test.yaml")
         # Result should be under root
         assert str(result).startswith(str(root))
+
+
+class TestDataHome:
+    """Tests for data_home() precedence."""
+
+    def test_explicit_env_wins(self, monkeypatch, tmp_path: Path) -> None:
+        from erdos.core.repo_root import data_home
+        monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
+        assert data_home() == tmp_path.resolve()
+
+    def test_prefers_discovered_repo_when_no_env(self, monkeypatch, tmp_path: Path) -> None:
+        import erdos.core.repo_root as rr
+        monkeypatch.delenv("ERDOS_HOME", raising=False)
+        fake = (tmp_path / "repo").resolve()
+        monkeypatch.setattr(rr, "discover_repo_root", lambda start=None: fake)
+        assert rr.data_home() == fake
+
+    def test_defaults_to_dot_erdos(self, monkeypatch, tmp_path: Path) -> None:
+        import erdos.core.repo_root as rr
+        monkeypatch.delenv("ERDOS_HOME", raising=False)
+        monkeypatch.setattr(rr, "discover_repo_root", lambda start=None: None)
+        assert rr.data_home() == (Path.home() / ".erdos").resolve()
+
+    def test_repo_path_anchors_on_data_home(self, monkeypatch, tmp_path: Path) -> None:
+        from erdos.core.repo_root import repo_path
+        monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
+        assert repo_path("index", "erdos.sqlite") == (tmp_path / "index" / "erdos.sqlite").resolve()
