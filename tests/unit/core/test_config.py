@@ -20,19 +20,19 @@ from erdos.core.config import (
     initialize_environment,
 )
 from erdos.core.context import AppContext
-from erdos.core.repo_root import repo_path
 
 
 class TestAppConfigDefaults:
     """Test AppConfig default values."""
 
-    def test_default_values(self) -> None:
+    def test_default_values(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         """AppConfig with no args uses sensible defaults."""
+        monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
         config = AppConfig()
 
         assert config.data_path is None
         assert config.index_path is None
-        assert config.run_log_path == repo_path("logs", "runs.jsonl")
+        assert config.run_log_path == tmp_path.resolve() / "logs" / "runs.jsonl"
         assert config.repo_root is None
         assert config.mailto == DEFAULT_MAILTO
         assert config.llm_command == ""
@@ -102,7 +102,9 @@ class TestAppConfigFromEnv:
         assert config.aristotle_command == "/env/aristotle"
         assert config.openalex_api_key == "env-openalex-key"
 
-    def test_defaults_when_env_unset(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_defaults_when_env_unset(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         """from_env() uses defaults when env vars are not set."""
         # Clear all relevant env vars
         for var in [
@@ -118,12 +120,14 @@ class TestAppConfigFromEnv:
             "OPENALEX_API_KEY",
         ]:
             monkeypatch.delenv(var, raising=False)
+        # Pin data home so run_log_path default resolves to a known concrete path
+        monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
 
         config = AppConfig.from_env()
 
         assert config.data_path is None
         assert config.index_path is None
-        assert config.run_log_path == repo_path("logs", "runs.jsonl")
+        assert config.run_log_path == tmp_path.resolve() / "logs" / "runs.jsonl"
         assert config.repo_root is None
         assert config.mailto == DEFAULT_MAILTO
         assert config.llm_command == ""
