@@ -49,10 +49,17 @@ def build_subprocess_env(overrides: dict[str, str] | None = None) -> dict[str, s
     This is the preferred helper for cases where core modules must pass an explicit
     `env=` to `subprocess.run()` (e.g., to inject a vendor API key) while keeping
     raw `os.environ` access centralized in this module.
+
+    Injects ERDOS_HOME and ERDOS_LEAN_PROJECT defaults so spawned subprocesses
+    (lake, LLM, aristotle) inherit a consistent location regardless of their
+    working directory — without mutating the parent process's global os.environ.
+    Explicit overrides and already-inherited values take precedence.
     """
     env = dict(os.environ)
     if overrides:
         env.update(overrides)
+    env.setdefault("ERDOS_HOME", str(data_home()))
+    env.setdefault("ERDOS_LEAN_PROJECT", str(get_default_lean_project_path()))
     return env
 
 
@@ -88,13 +95,11 @@ def _load_dotenv_if_enabled() -> None:
 def initialize_environment() -> None:
     """Initialize process environment for CLI execution.
 
-    Loads `.env` (unless disabled) then materializes the resolved data home and
-    Lean project into `os.environ` so child processes (lake, LLM, aristotle)
-    inherit a consistent location regardless of their working directory.
+    Loads `.env` (unless disabled via `ERDOS_LOAD_DOTENV`). Subprocess
+    inheritance of the data home is handled in `build_subprocess_env()`,
+    which avoids mutating the parent process's global environment.
     """
     _load_dotenv_if_enabled()
-    os.environ.setdefault("ERDOS_HOME", str(data_home()))
-    os.environ.setdefault("ERDOS_LEAN_PROJECT", str(get_default_lean_project_path()))
 
 
 @dataclass(frozen=True)
