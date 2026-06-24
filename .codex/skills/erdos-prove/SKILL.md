@@ -66,7 +66,7 @@ Create the formal statement file:
 uv run erdos lean formalize $ARGUMENTS
 ```
 
-This creates: `formal/lean/Erdos/Problem$(printf '%03d' $ARGUMENTS).lean` (IDs are zero-padded, e.g. 6 → Problem006.lean)
+This creates: `~/.erdos/formal/lean/Erdos/Problem$(printf '%03d' $ARGUMENTS).lean` (IDs are zero-padded, e.g. 6 → Problem006.lean)
 
 **What this generates:**
 - Import statements for Mathlib
@@ -78,7 +78,7 @@ This creates: `formal/lean/Erdos/Problem$(printf '%03d' $ARGUMENTS).lean` (IDs a
 Now we work together to fill in the proof. This is where your subscription pays off instead of API calls.
 
 **I will directly edit these files (no copy/paste needed):**
-- `formal/lean/Erdos/Problem$(printf '%03d' $ARGUMENTS).lean` - The main proof file
+- `~/.erdos/formal/lean/Erdos/Problem$(printf '%03d' $ARGUMENTS).lean` - The main proof file
 - `data/problems_enriched.yaml` - Update status when solved
 
 **My workflow:**
@@ -100,7 +100,7 @@ Check that the proof compiles:
 
 ```bash
 PROBLEM3=$(printf '%03d' $ARGUMENTS)
-uv run erdos lean check "formal/lean/Erdos/Problem${PROBLEM3}.lean"
+uv run erdos lean check "~/.erdos/formal/lean/Erdos/Problem${PROBLEM3}.lean"
 ```
 
 **Possible outcomes:**
@@ -130,7 +130,7 @@ uv run erdos lean formalize $ARGUMENTS
 
 # Check compilation
 PROBLEM3=$(printf '%03d' $ARGUMENTS)
-uv run erdos lean check "formal/lean/Erdos/Problem${PROBLEM3}.lean"
+uv run erdos lean check "~/.erdos/formal/lean/Erdos/Problem${PROBLEM3}.lean"
 
 # View problem details
 uv run erdos show $ARGUMENTS
@@ -177,7 +177,7 @@ Problem 6 is about... [explains math]
 [Step 2] Checking existing literature...
 Found 3 references in the manifest: [lists them]
 
-[Step 3] I see formal/lean/Erdos/Problem006.lean exists. Let me read it...
+[Step 3] I see ~/.erdos/formal/lean/Erdos/Problem006.lean exists. Let me read it...
 Current state: Has `sorry` at line 42.
 
 [Step 4] Here's my proposed proof approach:
@@ -188,7 +188,7 @@ Current state: Has `sorry` at line 42.
 Let me edit the file to add the proof...
 [Makes edit]
 
-[Step 5] Now run: uv run erdos lean check formal/lean/Erdos/Problem006.lean
+[Step 5] Now run: uv run erdos lean check ~/.erdos/formal/lean/Erdos/Problem006.lean
 
 You: [pastes error output]
 
@@ -196,7 +196,7 @@ Claude: I see the issue - we need to import Data.Nat.Prime.
 Let me fix that...
 [Makes edit]
 
-Try again: uv run erdos lean check formal/lean/Erdos/Problem006.lean
+Try again: uv run erdos lean check ~/.erdos/formal/lean/Erdos/Problem006.lean
 ```
 
 ## Why This Saves Money
@@ -220,13 +220,13 @@ uv sync --extra aristotle
 export ARISTOTLE_API_KEY=arstl-your-key
 
 # 3. Run via erdos wrapper (recommended - auto-loads .env)
-uv run erdos lean prove formal/lean/Erdos/Problem006.lean \
-    --output formal/lean/Erdos/Problem006_aristotle.lean
+uv run erdos lean prove ~/.erdos/formal/lean/Erdos/Problem006.lean \
+    --output ~/.erdos/formal/lean/Erdos/Problem006_aristotle.lean
 
 # Or direct CLI (requires exported env var)
 uv run aristotle prove-from-file \
-    formal/lean/Erdos/Problem006.lean \
-    --output-file formal/lean/Erdos/Problem006_aristotle.lean
+    ~/.erdos/formal/lean/Erdos/Problem006.lean \
+    --output-file ~/.erdos/formal/lean/Erdos/Problem006_aristotle.lean
 ```
 
 **Cost:** Paid per-problem. Use the subscription workflow above for unlimited iterations.

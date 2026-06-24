@@ -58,7 +58,7 @@ Instead of running `erdos loop run` (which calls LLM APIs), you can:
 
 1. **Generate skeleton (FREE):** `erdos lean formalize 6`
 2. **Work with Claude Code (SUBSCRIPTION):** Ask me to help write/edit the proof
-3. **Check compilation (FREE):** `erdos lean check formal/lean/Erdos/Problem006.lean`
+3. **Check compilation (FREE):** `erdos lean check ~/.erdos/formal/lean/Erdos/Problem006.lean`
 4. **Iterate with me (SUBSCRIPTION):** Show errors, I fix them
 
 This workflow uses your Claude/Codex subscription instead of per-token API calls.
@@ -124,13 +124,13 @@ erdos ingest 6 --pdf --pdf-converter marker
 erdos lean init
 
 # Generate skeleton
-erdos lean formalize 6  # Creates formal/lean/Erdos/Problem006.lean
+erdos lean formalize 6  # Creates ~/.erdos/formal/lean/Erdos/Problem006.lean
 
 # Import upstream formalization (if available)
 erdos lean import 6
 
 # Check compilation
-erdos lean check formal/lean/Erdos/Problem006.lean
+erdos lean check ~/.erdos/formal/lean/Erdos/Problem006.lean
 
 # Check status
 erdos lean status 6
@@ -315,7 +315,7 @@ When you want to use your subscription instead of API calls, **I can read AND ed
 
 | File Type | Location | What I Can Do |
 |-----------|----------|---------------|
-| **Lean proofs** | `formal/lean/Erdos/*.lean` | Write tactics, fix errors, add lemmas |
+| **Lean proofs** | `~/.erdos/formal/lean/Erdos/*.lean` | Write tactics, fix errors, add lemmas |
 | **Problem data** | `data/problems_enriched.yaml` | Add/edit problem metadata, refs, tags |
 | **Literature manifests** | `literature/manifests/*.yaml` | Add references, update metadata |
 | **Research notes** | `literature/cache/*.md` | Analyze papers, write summaries |
@@ -327,9 +327,9 @@ When you want to use your subscription instead of API calls, **I can read AND ed
 
 1. **Ask me to read the problem:** "Read Problem 6 and explain the mathematical statement"
 2. **Generate skeleton:** `uv run erdos lean formalize 6`
-3. **Ask me to work on the Lean file:** "Edit formal/lean/Erdos/Problem006.lean and fill in the proof"
+3. **Ask me to work on the Lean file:** "Edit ~/.erdos/formal/lean/Erdos/Problem006.lean and fill in the proof"
 4. **I'll edit the file directly** - no copy/paste needed
-5. **Check compilation:** `uv run erdos lean check formal/lean/Erdos/Problem006.lean`
+5. **Check compilation:** `uv run erdos lean check ~/.erdos/formal/lean/Erdos/Problem006.lean`
 6. **Iterate with me** - show me errors, I'll edit the file again
 
 ### For Research
@@ -356,7 +356,7 @@ When you want to use your subscription instead of API calls, **I can read AND ed
 
 | Path | Contents | Editable? |
 |------|----------|-----------|
-| `formal/lean/Erdos/*.lean` | Lean proof files | **YES** - I write proofs here |
+| `~/.erdos/formal/lean/Erdos/*.lean` | Lean proof files | **YES** - I write proofs here |
 | `data/problems_enriched.yaml` | Problem data (titles, statements, refs) | **YES** - I can update metadata |
 | `data/erdosproblems/` | Upstream submodule | NO - sync only, don't edit |
 | `literature/manifests/*.yaml` | Reference metadata per problem | **YES** - I can add refs |

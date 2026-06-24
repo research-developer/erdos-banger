@@ -23,7 +23,7 @@ This repo includes custom skills for both Claude Code and Codex CLI:
 
 | Location | Tool | Skills |
 |----------|------|--------|
-| `.claude/skills/` | Claude Code | `/erdos`, `/erdos-prove [id]` |
+| `skills/` (plugin root) | Claude Code | `/erdos`, `/erdos-prove [id]` |
 | `.codex/skills/` | Codex CLI | `$erdos`, `$erdos-prove` |
 
 | Skill | Invoke | Purpose |
@@ -31,7 +31,7 @@ This repo includes custom skills for both Claude Code and Codex CLI:
 | `erdos` | Auto or manual | Complete CLI reference, cost awareness, env config |
 | `erdos-prove [id]` | Manual | Step-by-step workflow to prove a problem using subscription |
 
-> **Note:** Skills apply to both tools; use `/skill` for Claude Code and `$skill` for Codex CLI.
+> **Note:** Skills ship via the `erdos` plugin (`skills/`); `.codex/skills/` remains for Codex. Use `/skill` for Claude Code and `$skill` for Codex CLI.
 
 > **Important:** When working with the erdos CLI, invoke `/erdos` first to load the full CLI reference before running commands. This prevents false negatives from incomplete knowledge.
 
