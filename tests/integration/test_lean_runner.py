@@ -8,11 +8,18 @@ from pathlib import Path
 
 import pytest
 
+from erdos.core.config import get_default_lean_project_path
 from erdos.core.constants import LAKE_UPDATE_TIMEOUT
 from erdos.core.lean import LeanRunner
 
 
 lean_available = shutil.which("lean") is not None
+
+_LEAN_PROJECT = get_default_lean_project_path()
+pytestmark = pytest.mark.skipif(
+    not (_LEAN_PROJECT / "lakefile.lean").exists(),
+    reason="Lean project not present (relocated to ~/.erdos/formal/lean)",
+)
 
 
 def _ensure_mathlib_cache(project_path: Path) -> None:
@@ -108,14 +115,13 @@ class TestLeanRunnerIntegration:
 
     @pytest.mark.slow
     def test_check_formal_project_compiles(self) -> None:
-        """check succeeds on the repo's formal/lean project.
+        """check succeeds on the configured Lean project.
 
         Note: Requires mathlib to be built (~15-30 min first run).
         Run `cd formal/lean && lake exe cache get` to pre-build locally.
         CI has mathlib pre-cached so this passes there.
         """
-        project_root = Path(__file__).resolve().parents[2]
-        project_path = project_root / "formal" / "lean"
+        project_path = _LEAN_PROJECT
 
         _ensure_mathlib_cache(project_path)
 
