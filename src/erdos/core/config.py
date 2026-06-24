@@ -25,7 +25,7 @@ from pathlib import Path
 
 from erdos.core.constants import DEFAULT_HTTP_TIMEOUT
 from erdos.core.dotenv_loader import load_dotenv_file
-from erdos.core.repo_root import repo_path, resolve_repo_root
+from erdos.core.repo_root import data_home, repo_path, resolve_repo_root
 
 
 # Default values (matching existing behavior)
@@ -88,9 +88,13 @@ def _load_dotenv_if_enabled() -> None:
 def initialize_environment() -> None:
     """Initialize process environment for CLI execution.
 
-    Currently this loads `.env` (unless disabled via `ERDOS_LOAD_DOTENV`).
+    Loads `.env` (unless disabled) then materializes the resolved data home and
+    Lean project into `os.environ` so child processes (lake, LLM, aristotle)
+    inherit a consistent location regardless of their working directory.
     """
     _load_dotenv_if_enabled()
+    os.environ.setdefault("ERDOS_HOME", str(data_home()))
+    os.environ.setdefault("ERDOS_LEAN_PROJECT", str(get_default_lean_project_path()))
 
 
 @dataclass(frozen=True)
@@ -239,13 +243,20 @@ def _parse_int_env(name: str, default: int) -> int:
 
 
 def get_default_lean_project_path() -> Path:
-    """Get the default Lean project path (formal/lean).
+    """Resolve the Lean project: $ERDOS_LEAN_PROJECT, else <data-home>/formal/lean.
 
     Returns:
-        Absolute path to the formal/lean directory relative to repo root.
+        Absolute path to the Lean project directory.
+
+    Precedence:
+        1. $ERDOS_LEAN_PROJECT (if set and non-empty)
+        2. <data-home>/formal/lean (default)
 
     Example:
         >>> get_default_lean_project_path()
         PosixPath('/abs/path/to/repo/formal/lean')
     """
+    explicit = os.environ.get("ERDOS_LEAN_PROJECT")
+    if explicit and explicit.strip():
+        return Path(explicit).expanduser().resolve()
     return repo_path("formal", "lean")

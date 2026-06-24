@@ -305,3 +305,27 @@ class TestGetDefaultLeanProjectPath:
         """get_default_lean_project_path() path ends with formal/lean."""
         result = get_default_lean_project_path()
         assert result.parts[-2:] == ("formal", "lean")
+
+
+class TestLeanProjectAndEnvMaterialization:
+    """Tests for Lean project path resolution and environment materialization."""
+
+    def test_lean_project_env_override(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        """$ERDOS_LEAN_PROJECT overrides the default."""
+        monkeypatch.setenv("ERDOS_LEAN_PROJECT", str(tmp_path / "proj"))
+        assert get_default_lean_project_path() == (tmp_path / "proj").resolve()
+
+    def test_lean_project_defaults_under_home(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        """When $ERDOS_LEAN_PROJECT is unset, default is <data-home>/formal/lean."""
+        monkeypatch.delenv("ERDOS_LEAN_PROJECT", raising=False)
+        monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
+        assert get_default_lean_project_path() == (tmp_path / "formal" / "lean").resolve()
+
+    def test_initialize_environment_materializes_home(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        """initialize_environment() materializes ERDOS_HOME and ERDOS_LEAN_PROJECT into os.environ."""
+        monkeypatch.setenv("ERDOS_LOAD_DOTENV", "0")
+        monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
+        monkeypatch.delenv("ERDOS_LEAN_PROJECT", raising=False)
+        initialize_environment()
+        assert os.environ["ERDOS_HOME"] == str(tmp_path)
+        assert os.environ["ERDOS_LEAN_PROJECT"] == str((tmp_path / "formal" / "lean").resolve())
