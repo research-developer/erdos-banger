@@ -36,7 +36,9 @@ SAMPLE_EXA_RESPONSE_WITH_SUMMARY: dict[str, Any] = json.loads(
 class TestExaConfig:
     """Tests for ExaConfig."""
 
-    def test_default_config(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_default_config(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         """Config has sensible defaults."""
         monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
         config = ExaConfig()

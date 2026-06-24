@@ -207,7 +207,9 @@ class AppConfig:
             data_path=Path(data_path_str) if data_path_str else None,
             index_path=Path(index_path_str) if index_path_str else None,
             run_log_path=(
-                Path(run_log_path_str) if run_log_path_str else repo_path("logs", "runs.jsonl")
+                Path(run_log_path_str)
+                if run_log_path_str
+                else repo_path("logs", "runs.jsonl")
             ),
             repo_root=Path(repo_root_str) if repo_root_str else None,
             submodule_path=Path(submodule_path_str) if submodule_path_str else None,

@@ -43,7 +43,9 @@ SAMPLE_REFERENCES_RESPONSE: dict[str, Any] = json.loads(
 class TestS2Config:
     """Tests for S2Config."""
 
-    def test_default_config(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_default_config(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         """Config has sensible defaults."""
         monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
         config = S2Config()

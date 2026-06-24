@@ -102,11 +102,15 @@ class TestDataHome:
 
     def test_explicit_env_wins(self, monkeypatch, tmp_path: Path) -> None:
         from erdos.core.repo_root import data_home
+
         monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
         assert data_home() == tmp_path.resolve()
 
-    def test_prefers_discovered_repo_when_no_env(self, monkeypatch, tmp_path: Path) -> None:
+    def test_prefers_discovered_repo_when_no_env(
+        self, monkeypatch, tmp_path: Path
+    ) -> None:
         import erdos.core.repo_root as rr
+
         monkeypatch.delenv("ERDOS_HOME", raising=False)
         fake = (tmp_path / "repo").resolve()
         monkeypatch.setattr(rr, "discover_repo_root", lambda start=None: fake)
@@ -114,11 +118,16 @@ class TestDataHome:
 
     def test_defaults_to_dot_erdos(self, monkeypatch, tmp_path: Path) -> None:
         import erdos.core.repo_root as rr
+
         monkeypatch.delenv("ERDOS_HOME", raising=False)
         monkeypatch.setattr(rr, "discover_repo_root", lambda start=None: None)
         assert rr.data_home() == (Path.home() / ".erdos").resolve()
 
     def test_repo_path_anchors_on_data_home(self, monkeypatch, tmp_path: Path) -> None:
         from erdos.core.repo_root import repo_path
+
         monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
-        assert repo_path("index", "erdos.sqlite") == (tmp_path / "index" / "erdos.sqlite").resolve()
+        assert (
+            repo_path("index", "erdos.sqlite")
+            == (tmp_path / "index" / "erdos.sqlite").resolve()
+        )

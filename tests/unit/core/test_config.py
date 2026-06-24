@@ -26,7 +26,9 @@ from erdos.core.context import AppContext
 class TestAppConfigDefaults:
     """Test AppConfig default values."""
 
-    def test_default_values(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_default_values(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         """AppConfig with no args uses sensible defaults."""
         monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
         config = AppConfig()
@@ -311,16 +313,22 @@ class TestGetDefaultLeanProjectPath:
 class TestLeanProjectAndEnvMaterialization:
     """Tests for Lean project path resolution and environment materialization."""
 
-    def test_lean_project_env_override(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_lean_project_env_override(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         """$ERDOS_LEAN_PROJECT overrides the default."""
         monkeypatch.setenv("ERDOS_LEAN_PROJECT", str(tmp_path / "proj"))
         assert get_default_lean_project_path() == (tmp_path / "proj").resolve()
 
-    def test_lean_project_defaults_under_home(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_lean_project_defaults_under_home(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         """When $ERDOS_LEAN_PROJECT is unset, default is <data-home>/formal/lean."""
         monkeypatch.delenv("ERDOS_LEAN_PROJECT", raising=False)
         monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
-        assert get_default_lean_project_path() == (tmp_path / "formal" / "lean").resolve()
+        assert (
+            get_default_lean_project_path() == (tmp_path / "formal" / "lean").resolve()
+        )
 
     def test_initialize_environment_does_not_mutate_os_environ(
         self, monkeypatch: pytest.MonkeyPatch
@@ -345,7 +353,9 @@ class TestLeanProjectAndEnvMaterialization:
         monkeypatch.delenv("ERDOS_LEAN_PROJECT", raising=False)
         env = build_subprocess_env()
         assert env["ERDOS_HOME"] == str(tmp_path.resolve())
-        assert env["ERDOS_LEAN_PROJECT"] == str((tmp_path / "formal" / "lean").resolve())
+        assert env["ERDOS_LEAN_PROJECT"] == str(
+            (tmp_path / "formal" / "lean").resolve()
+        )
         # Must NOT have mutated global os.environ
         assert "ERDOS_LEAN_PROJECT" not in os.environ
 
@@ -358,4 +368,7 @@ class TestLeanProjectAndEnvMaterialization:
         # Inherited value is preserved (setdefault)
         assert build_subprocess_env()["ERDOS_LEAN_PROJECT"] == "/custom/lean"
         # Explicit override wins over inherited value
-        assert build_subprocess_env({"ERDOS_HOME": "/override"})["ERDOS_HOME"] == "/override"
+        assert (
+            build_subprocess_env({"ERDOS_HOME": "/override"})["ERDOS_HOME"]
+            == "/override"
+        )
