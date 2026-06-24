@@ -22,7 +22,6 @@ from erdos.commands.refs import get_refs
 from erdos.commands.show import get_problem as show_get_problem
 from erdos.core.ask import ask_question as core_ask_question
 from erdos.core.config import (
-    DEFAULT_INDEX_PATH,
     AppConfig,
     get_default_lean_project_path,
 )
@@ -36,6 +35,7 @@ from erdos.core.lean import (
 )
 from erdos.core.models import CLIOutput
 from erdos.core.problem_loader import ProblemLoader
+from erdos.core.repo_root import repo_path
 from erdos.core.run_logger import RunLogger
 from erdos.core.search import search_basic, search_fts
 from erdos.core.search.facade import SearchIndex
@@ -68,8 +68,8 @@ def _get_index() -> SearchIndexProtocol | None:
     config = AppConfig.from_env()
     if config.index_path is not None:
         return SearchIndex(config.index_path)
-    # Try default location (aligned with DEFAULT_INDEX_PATH)
-    default_path = DEFAULT_INDEX_PATH
+    # Try default location (under the data home)
+    default_path = repo_path("index", "erdos.sqlite")
     if default_path.exists():
         return SearchIndex(default_path)
     return None

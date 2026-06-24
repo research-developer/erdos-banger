@@ -286,6 +286,8 @@ ENV_READ_ALLOWLIST = {
     Path("src/erdos/core/sync/proofs.py"),
     # router.py resolves LLM commands from task-specific env vars (SPEC-032)
     Path("src/erdos/core/llm/router.py"),
+    # repo_root.py is the legitimate data-home resolver; reads ERDOS_HOME only
+    Path("src/erdos/core/repo_root.py"),
 }
 
 

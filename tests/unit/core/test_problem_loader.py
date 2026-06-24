@@ -251,9 +251,9 @@ class TestProblemLoaderFromDefault:
     def test_uses_local_enriched_default(
         self, tmp_path: Path, sample_problems_yaml: Path, monkeypatch
     ) -> None:
-        """from_default() falls back to ./data/problems_enriched.yaml."""
+        """from_default() falls back to data/problems_enriched.yaml under data home."""
         monkeypatch.delenv("ERDOS_DATA_PATH", raising=False)
-        monkeypatch.chdir(tmp_path)
+        monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
 
         data_dir = tmp_path / "data"
         data_dir.mkdir()

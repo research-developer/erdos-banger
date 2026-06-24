@@ -30,16 +30,12 @@ from erdos.core.repo_root import repo_path, resolve_repo_root
 
 # Default values (matching existing behavior)
 DEFAULT_MAILTO = "erdos-banger@example.com"
-DEFAULT_RUN_LOG_PATH = Path("logs/runs.jsonl")
-DEFAULT_INDEX_PATH = Path("index/erdos.sqlite")
 DEFAULT_ARISTOTLE_COMMAND = "aristotle"
 
 __all__ = [
     "DEFAULT_ARISTOTLE_COMMAND",
     "DEFAULT_HTTP_TIMEOUT",
-    "DEFAULT_INDEX_PATH",
     "DEFAULT_MAILTO",
-    "DEFAULT_RUN_LOG_PATH",
     "AppConfig",
     "build_subprocess_env",
     "get_default_lean_project_path",
@@ -120,7 +116,7 @@ class AppConfig:
     # Paths (None means use runtime defaults)
     data_path: Path | None = None
     index_path: Path | None = None
-    run_log_path: Path = field(default=DEFAULT_RUN_LOG_PATH)
+    run_log_path: Path = field(default_factory=lambda: repo_path("logs", "runs.jsonl"))
     repo_root: Path | None = None
     submodule_path: Path | None = None
 
@@ -202,7 +198,7 @@ class AppConfig:
             data_path=Path(data_path_str) if data_path_str else None,
             index_path=Path(index_path_str) if index_path_str else None,
             run_log_path=(
-                Path(run_log_path_str) if run_log_path_str else DEFAULT_RUN_LOG_PATH
+                Path(run_log_path_str) if run_log_path_str else repo_path("logs", "runs.jsonl")
             ),
             repo_root=Path(repo_root_str) if repo_root_str else None,
             submodule_path=Path(submodule_path_str) if submodule_path_str else None,

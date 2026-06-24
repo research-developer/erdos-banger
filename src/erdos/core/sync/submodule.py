@@ -28,9 +28,6 @@ from erdos.core.sync.models import SubmoduleProblemData, SubmoduleSyncStatus
 
 logger = logging.getLogger(__name__)
 
-# Default submodule path
-DEFAULT_SUBMODULE_PATH = repo_path("data", "erdosproblems")
-
 
 # =============================================================================
 # Exceptions
@@ -78,7 +75,7 @@ def get_submodule_path(config: AppConfig | None = None) -> Path:
         config = AppConfig.from_env()
     if config.submodule_path:
         return config.submodule_path
-    return DEFAULT_SUBMODULE_PATH
+    return repo_path("data", "erdosproblems")
 
 
 def _get_problems_yaml_path(submodule_path: Path) -> Path:

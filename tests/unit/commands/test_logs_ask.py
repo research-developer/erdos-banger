@@ -11,8 +11,8 @@ from erdos.core.ask.logging import log_ask_interaction
 def test_query_ask_logs_reads_entries_from_default_location(
     tmp_path: Path, monkeypatch
 ) -> None:
-    """query_ask_logs should read from logs/ask relative to CWD."""
-    monkeypatch.chdir(tmp_path)
+    """query_ask_logs should read from logs/ask under the data home."""
+    monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
 
     log_ask_interaction(
         problem_id=6,

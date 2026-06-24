@@ -124,8 +124,11 @@ class TestLeanProveCommandConfig:
         mock_result.stderr = ""
 
         with runner.isolated_filesystem():
+            import os
             from pathlib import Path
 
+            # Point data home at the isolated filesystem so .env is discovered here
+            monkeypatch.setenv("ERDOS_HOME", os.getcwd())
             Path(".env").write_text("ARISTOTLE_API_KEY=dotenv-key\n", encoding="utf-8")
             input_file = Path("input.lean")
             input_file.write_text("-- test", encoding="utf-8")

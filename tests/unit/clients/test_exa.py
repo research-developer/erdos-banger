@@ -36,14 +36,15 @@ SAMPLE_EXA_RESPONSE_WITH_SUMMARY: dict[str, Any] = json.loads(
 class TestExaConfig:
     """Tests for ExaConfig."""
 
-    def test_default_config(self) -> None:
+    def test_default_config(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         """Config has sensible defaults."""
+        monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
         config = ExaConfig()
         assert config.api_key is None
         assert config.timeout == 30.0
         assert config.max_retries == 3
         assert config.cache_ttl_hours == 24
-        assert config.cache_path == Path("literature/cache/exa")
+        assert config.cache_path == tmp_path / "literature" / "cache" / "exa"
 
     def test_from_env_with_api_key(self) -> None:
         """Config loads EXA_API_KEY from environment."""

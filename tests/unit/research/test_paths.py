@@ -14,10 +14,10 @@ def test_get_research_root_respects_repo_root(tmp_path: Path) -> None:
     assert get_research_root(tmp_path) == tmp_path.resolve() / "research"
 
 
-def test_get_research_root_defaults_to_cwd(
+def test_get_research_root_defaults_to_data_home(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ) -> None:
-    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
     assert get_research_root(None) == tmp_path.resolve() / "research"
 
 

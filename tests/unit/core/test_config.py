@@ -15,12 +15,12 @@ import pytest
 from erdos.core.config import (
     DEFAULT_HTTP_TIMEOUT,
     DEFAULT_MAILTO,
-    DEFAULT_RUN_LOG_PATH,
     AppConfig,
     get_default_lean_project_path,
     initialize_environment,
 )
 from erdos.core.context import AppContext
+from erdos.core.repo_root import repo_path
 
 
 class TestAppConfigDefaults:
@@ -32,7 +32,7 @@ class TestAppConfigDefaults:
 
         assert config.data_path is None
         assert config.index_path is None
-        assert config.run_log_path == DEFAULT_RUN_LOG_PATH
+        assert config.run_log_path == repo_path("logs", "runs.jsonl")
         assert config.repo_root is None
         assert config.mailto == DEFAULT_MAILTO
         assert config.llm_command == ""
@@ -123,7 +123,7 @@ class TestAppConfigFromEnv:
 
         assert config.data_path is None
         assert config.index_path is None
-        assert config.run_log_path == DEFAULT_RUN_LOG_PATH
+        assert config.run_log_path == repo_path("logs", "runs.jsonl")
         assert config.repo_root is None
         assert config.mailto == DEFAULT_MAILTO
         assert config.llm_command == ""

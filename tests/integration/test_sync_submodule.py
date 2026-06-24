@@ -10,7 +10,6 @@ from __future__ import annotations
 import pytest
 
 from erdos.core.sync.submodule import (
-    DEFAULT_SUBMODULE_PATH,
     check_submodule_staleness,
     get_submodule_commit,
     get_submodule_path,
@@ -32,7 +31,6 @@ class TestSubmoduleLocal:
     def test_default_path_exists(self) -> None:
         """Default submodule path should exist in the repo."""
         path = get_submodule_path()
-        assert path == DEFAULT_SUBMODULE_PATH
         # Path should exist since the repo has the submodule initialized
         assert path.exists(), "Submodule directory not found"
 

@@ -12,8 +12,7 @@ import json
 import logging
 import re
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import unquote
 
 import requests
@@ -22,15 +21,22 @@ from erdos.core.clients.cache import FileCache, make_cache_key
 from erdos.core.config import AppConfig
 from erdos.core.constants import DEFAULT_HTTP_TIMEOUT, RETRY_MAX_ATTEMPTS
 from erdos.core.rate_limiter import RateLimiter
+from erdos.core.repo_root import repo_path
 from erdos.core.retry import post_with_retry
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 logger = logging.getLogger(__name__)
 
 
-# Default cache location
-DEFAULT_CACHE_PATH = Path("literature/cache/exa")
 DEFAULT_CACHE_TTL_HOURS = 24
+
+
+def _default_cache_path() -> Path:
+    return repo_path("literature", "cache", "exa")
 
 
 @dataclass(frozen=True)
@@ -41,7 +47,7 @@ class ExaConfig:
     timeout: float = DEFAULT_HTTP_TIMEOUT
     max_retries: int = RETRY_MAX_ATTEMPTS
     cache_ttl_hours: int = DEFAULT_CACHE_TTL_HOURS
-    cache_path: Path = field(default=DEFAULT_CACHE_PATH)
+    cache_path: Path = field(default_factory=_default_cache_path)
     search_type: str = "neural"
 
     @classmethod
@@ -62,7 +68,7 @@ class ExaConfig:
             cache_path=(
                 app_config.exa_cache_path
                 if app_config.exa_cache_path
-                else DEFAULT_CACHE_PATH
+                else _default_cache_path()
             ),
             search_type=app_config.exa_search_type,
         )
