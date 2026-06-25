@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "decide-and-certify": {
+      "type": "http",
+      "url": "https://decide-and-certify-mcp.researchdeveloper.workers.dev/mcp",
+      "headers": {
+        "Authorization": "Bearer ${DECIDE_CERTIFY_TOKEN}"
+      }
+    },
+    "notionApi": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@notionhq/notion-mcp-server"],
+      "env": {
+        "NOTION_TOKEN": "${NOTION_TOKEN}"
+      }
+    }
+  }
+}
