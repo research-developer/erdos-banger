@@ -36,7 +36,7 @@ This repo includes custom skills for both Claude Code and Codex CLI:
 
 | Location | Tool | Skills |
 |----------|------|--------|
-| `.claude/skills/` | Claude Code | `/erdos`, `/erdos-prove [id]` |
+| `skills/` (plugin root) | Claude Code | `/erdos`, `/erdos-prove [id]` |
 | `.codex/skills/` | Codex CLI | `$erdos`, `$erdos-prove` |
 
 | Skill | Invoke | Purpose |
@@ -44,7 +44,7 @@ This repo includes custom skills for both Claude Code and Codex CLI:
 | `erdos` | Auto or manual | Complete CLI reference, cost awareness, env config |
 | `erdos-prove [id]` | Manual | Step-by-step workflow to prove a problem using subscription |
 
-> **Note:** Skills apply to both tools; use `/skill` for Claude Code and `$skill` for Codex CLI.
+> **Note:** Skills ship via the `erdos` plugin (`skills/`); `.codex/skills/` remains for Codex. Use `/skill` for Claude Code and `$skill` for Codex CLI.
 
 > **Important:** When working with the erdos CLI, invoke `/erdos` first to load the full CLI reference before running commands. This prevents false negatives from incomplete knowledge.
 
@@ -52,9 +52,9 @@ This repo includes custom skills for both Claude Code and Codex CLI:
 
 **No pay‑as‑you‑go proving workflow (subscription-based):**
 1. `erdos lean formalize 6` - Generate Lean skeleton (FREE)
-   - Writes to `formal/lean/Erdos/ProblemXXX.lean` (e.g., Problem006.lean)
+   - Writes to `~/.erdos/formal/lean/Erdos/ProblemXXX.lean` (resolved via `ERDOS_LEAN_PROJECT`; e.g., Problem006.lean)
 2. Work with Claude Code/Codex to fill in the proof (SUBSCRIPTION)
-3. `erdos lean check formal/lean/Erdos/ProblemXXX.lean` - Verify compilation (FREE)
+3. `erdos lean check ~/.erdos/formal/lean/Erdos/ProblemXXX.lean` - Verify compilation (FREE)
 4. Iterate with Claude Code/Codex on errors (SUBSCRIPTION)
 
 ## Build & Development Commands
@@ -112,15 +112,15 @@ uv run pytest -m "requires_lean"
 **Elan Environment:** The `lake` command (Lean's build tool) is managed by elan and may not be in PATH by default. Use one of these approaches:
 
 ```bash
-# Recommended: use erdos wrapper (works from repo root)
-uv run erdos lean check formal/lean/Erdos/Problem848.lean
+# Recommended: use the erdos wrapper (works from any directory)
+erdos lean check ~/.erdos/formal/lean/Erdos/Problem848.lean
 
-# If running lake directly, point it at the Lean workspace (formal/lean/)
-source ~/.elan/env && lake -d formal/lean build Erdos.Problem848
-~/.elan/bin/lake -d formal/lean build Erdos.Problem848
+# If running lake directly, point it at the relocated Lean workspace
+source ~/.elan/env && lake -d ~/.erdos/formal/lean build Erdos.Problem848
+~/.elan/bin/lake -d ~/.erdos/formal/lean build Erdos.Problem848
 
-# From the formal/lean directory:
-cd formal/lean && source ~/.elan/env && lake build
+# From the project directory:
+cd ~/.erdos/formal/lean && source ~/.elan/env && lake build
 ```
 
 If `erdos lean check` reports `lake` not found, source `~/.elan/env` (or use `~/.elan/bin/lake`) so elan-managed tools are available on `PATH`.
@@ -129,7 +129,7 @@ If `erdos lean check` reports `lake` not found, source `~/.elan/env` (or use `~/
 pre-cache mathlib:
 
 ```bash
-cd formal/lean
+cd ~/.erdos/formal/lean
 lake update
 lake exe cache get
 ```
@@ -181,7 +181,9 @@ src/erdos/
 - `literature/manifests/` - Reference metadata per problem
 - `literature/cache/` - arXiv source tarballs (gitignored)
 - `index/` - SQLite FTS5 index (gitignored)
-- `formal/lean/` - Lean 4 project
+- `~/.erdos/formal/lean/` - Lean 4 project, relocated to [research-developer/erdos-lean](https://github.com/research-developer/erdos-lean) (see `formal/README.md`)
+
+> **Data home:** all runtime data paths above resolve under the **data home** — `$ERDOS_HOME` if set, else a discovered repo checkout, else `~/.erdos` (the default for the globally-installed CLI/plugin). When running the installed `erdos` from any directory, `data/`, `literature/`, and `index/` live under `~/.erdos/`.
 
 ## Ralph Wiggum Loop (Autonomous Development)
 

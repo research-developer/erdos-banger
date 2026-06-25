@@ -8,8 +8,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from erdos.core.config import DEFAULT_INDEX_PATH, AppConfig
+from erdos.core.config import AppConfig
 from erdos.core.constants import DEFAULT_SEARCH_LIMIT
+from erdos.core.repo_root import repo_path
 from erdos.core.search.bm25 import BM25Search
 from erdos.core.search.db import DatabaseManager, SearchIndexError
 from erdos.core.search.embeddings_store import EmbeddingsStore
@@ -87,8 +88,8 @@ class SearchIndex:
         if config_index_path is not None:
             return cls(config_index_path)
 
-        # 3. Default path
-        return cls(DEFAULT_INDEX_PATH)
+        # 3. Default path (under the data home)
+        return cls(repo_path("index", "erdos.sqlite"))
 
     @property
     def db_path(self) -> Path:

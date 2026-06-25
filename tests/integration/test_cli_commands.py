@@ -359,13 +359,18 @@ def test_cli_lean_check_success_and_failure(monkeypatch, tmp_path: Path) -> None
             ],
         )
 
+    # LeanRunner.__init__ requires the project dir to exist; the real
+    # formal/lean lives at ~/.erdos/formal/lean now, so point the default
+    # resolution at an existing dir (check itself is mocked above).
+    lean_env = {"ERDOS_LEAN_PROJECT": str(tmp_path)}
+
     monkeypatch.setattr(LeanRunner, "check", fake_check_ok)
-    ok = runner.invoke(app, ["lean", "check", str(file_path)], env={})
+    ok = runner.invoke(app, ["lean", "check", str(file_path)], env=lean_env)
     assert ok.exit_code == 0
     assert "compiled successfully" in ok.stdout
 
     monkeypatch.setattr(LeanRunner, "check", fake_check_fail)
-    bad = runner.invoke(app, ["lean", "check", str(file_path)], env={})
+    bad = runner.invoke(app, ["lean", "check", str(file_path)], env=lean_env)
     assert bad.exit_code == 5
     # Rich may wrap output; normalize whitespace for assertion
     normalized = " ".join(bad.stdout.split())
@@ -381,7 +386,13 @@ def test_cli_lean_check_json_success(monkeypatch, tmp_path: Path) -> None:
 
     monkeypatch.setattr(LeanRunner, "check", fake_check_ok)
 
-    result = runner.invoke(app, ["--json", "lean", "check", str(file_path)], env={})
+    # Point default project resolution at an existing dir (see note above);
+    # the real Lean project is relocated to ~/.erdos/formal/lean.
+    result = runner.invoke(
+        app,
+        ["--json", "lean", "check", str(file_path)],
+        env={"ERDOS_LEAN_PROJECT": str(tmp_path)},
+    )
 
     assert result.exit_code == 0
     payload = json.loads(result.stdout)

@@ -33,6 +33,7 @@ def cli_runner(
         env = os.environ.copy()
         env["UV_PROJECT"] = str(project_root)
         env["ERDOS_DATA_PATH"] = str(data_dir)
+        env["ERDOS_HOME"] = str(tmp_path)
         env["ERDOS_LOAD_DOTENV"] = "0"
         env.pop("ERDOS_REPO_ROOT", None)
         # E2E tests should be deterministic and avoid paid/network integrations.

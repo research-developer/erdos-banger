@@ -1,14 +1,23 @@
-"""Repository root discovery helpers.
+"""Repository root + data-home discovery helpers.
 
-Many commands assume paths like `logs/`, `data/`, and `research/` live under the
-project root. Users often run `erdos` from subdirectories (e.g., `formal/lean/`),
-so we need a lightweight way to resolve the repo root consistently without
-requiring `ERDOS_REPO_ROOT` to be set.
+Data historically lived under the project root (data/, logs/, index/, ...).
+The `erdos` CLI can now run from anywhere (installed as a global tool / Claude
+plugin), so data resolves to a fixed *data home*:
+
+    1. $ERDOS_HOME, if set (and non-empty)
+    2. a discovered project root (when running inside a checkout)
+    3. ~/.erdos (default)
+
+`repo_path()` anchors all data paths on this home.
 """
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
+
+
+DEFAULT_DATA_HOME = Path.home() / ".erdos"
 
 
 def _looks_like_repo_root(path: Path) -> bool:
@@ -17,11 +26,7 @@ def _looks_like_repo_root(path: Path) -> bool:
 
 
 def discover_repo_root(start: Path | None = None) -> Path | None:
-    """Discover the repository root by walking ancestors from `start`.
-
-    Returns the first ancestor directory that looks like the project root, or
-    None if no such directory is found.
-    """
+    """Discover the repository root by walking ancestors from `start`."""
     resolved = (start or Path.cwd()).resolve()
     for candidate in (resolved, *resolved.parents):
         if _looks_like_repo_root(candidate):
@@ -29,32 +34,28 @@ def discover_repo_root(start: Path | None = None) -> Path | None:
     return None
 
 
-def resolve_repo_root(repo_root: Path | None) -> Path:
-    """Resolve a usable repository root.
+def data_home() -> Path:
+    """Resolve the centralized data home (see module docstring)."""
+    explicit = os.environ.get("ERDOS_HOME")
+    if explicit and explicit.strip():
+        return Path(explicit).expanduser().resolve()
+    discovered = discover_repo_root()
+    if discovered is not None:
+        return discovered
+    return DEFAULT_DATA_HOME.resolve()
 
-    If `repo_root` is provided, it is resolved and returned. Otherwise, attempts
-    discovery from the current working directory, falling back to the current
-    working directory if discovery fails.
+
+def resolve_repo_root(repo_root: Path | None) -> Path:
+    """Resolve a usable base directory.
+
+    Explicit `repo_root` wins; otherwise the data home is used (which prefers a
+    discovered checkout, falling back to ~/.erdos).
     """
     if repo_root is not None:
         return repo_root.resolve()
-    return discover_repo_root() or Path.cwd().resolve()
+    return data_home()
 
 
 def repo_path(*parts: str) -> Path:
-    """Get absolute path relative to repository root.
-
-    Convenience function that joins path parts with the discovered repo root.
-    Use this instead of hardcoded relative paths like Path("data/...").
-
-    Args:
-        *parts: Path components to join (e.g., "data", "problems_enriched.yaml")
-
-    Returns:
-        Absolute path: repo_root / parts[0] / parts[1] / ...
-
-    Example:
-        >>> repo_path("data", "problems_enriched.yaml")
-        PosixPath('/abs/path/to/repo/data/problems_enriched.yaml')
-    """
-    return resolve_repo_root(None).joinpath(*parts)
+    """Absolute path under the data home. Use instead of hardcoded `Path("data/...")`."""
+    return data_home().joinpath(*parts)

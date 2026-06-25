@@ -1,0 +1,8 @@
+{
+  "name": "erdos",
+  "version": "0.1.0",
+  "description": "Erdős problems research toolkit: literature search, RAG Q&A, and Lean 4 formalization, backed by a centralized ~/.erdos data home.",
+  "author": { "name": "research-developer" },
+  "homepage": "https://github.com/research-developer/erdos-banger",
+  "keywords": ["erdos", "math", "lean4", "research", "formalization"]
+}

@@ -10,8 +10,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import requests
 
@@ -20,15 +19,22 @@ from erdos.core.clients.json_response import response_json_or_raise
 from erdos.core.config import AppConfig
 from erdos.core.constants import DEFAULT_HTTP_TIMEOUT, RETRY_MAX_ATTEMPTS
 from erdos.core.rate_limiter import RateLimiter
+from erdos.core.repo_root import repo_path
 from erdos.core.retry import fetch_with_retry
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 logger = logging.getLogger(__name__)
 
 
-# Default cache location and TTL
-DEFAULT_CACHE_PATH = Path("literature/cache/s2")
 DEFAULT_CACHE_TTL_DAYS = 7
+
+
+def _default_cache_path() -> Path:
+    return repo_path("literature", "cache", "s2")
 
 
 @dataclass(frozen=True)
@@ -39,7 +45,7 @@ class S2Config:
     timeout: float = DEFAULT_HTTP_TIMEOUT
     max_retries: int = RETRY_MAX_ATTEMPTS
     cache_ttl_days: int = DEFAULT_CACHE_TTL_DAYS
-    cache_path: Path = field(default=DEFAULT_CACHE_PATH)
+    cache_path: Path = field(default_factory=_default_cache_path)
 
     @classmethod
     def from_env(cls) -> S2Config:
@@ -53,7 +59,7 @@ class S2Config:
             cache_path=(
                 app_config.semantic_scholar_cache_path
                 if app_config.semantic_scholar_cache_path
-                else DEFAULT_CACHE_PATH
+                else _default_cache_path()
             ),
         )
 

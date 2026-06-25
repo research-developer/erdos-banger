@@ -43,14 +43,17 @@ SAMPLE_REFERENCES_RESPONSE: dict[str, Any] = json.loads(
 class TestS2Config:
     """Tests for S2Config."""
 
-    def test_default_config(self) -> None:
+    def test_default_config(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         """Config has sensible defaults."""
+        monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
         config = S2Config()
         assert config.api_key is None
         assert config.timeout == 30.0
         assert config.max_retries == 3
         assert config.cache_ttl_days == 7
-        assert config.cache_path == Path("literature/cache/s2")
+        assert config.cache_path == tmp_path / "literature" / "cache" / "s2"
 
     def test_from_env_with_api_key(self) -> None:
         """Config loads SEMANTIC_SCHOLAR_API_KEY from environment."""

@@ -1,0 +1,11 @@
+{
+  "name": "erdos-banger",
+  "owner": { "name": "research-developer" },
+  "plugins": [
+    {
+      "name": "erdos",
+      "source": "./",
+      "description": "Erdős problems research toolkit (CLI wrappers, skills, centralized data home)."
+    }
+  ]
+}

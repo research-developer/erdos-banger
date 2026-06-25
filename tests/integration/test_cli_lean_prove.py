@@ -124,8 +124,13 @@ class TestLeanProveCommandConfig:
         mock_result.stderr = ""
 
         with runner.isolated_filesystem():
+            import os
             from pathlib import Path
 
+            # ERDOS_HOME governs the .env search via resolve_repo_root(None) -> data_home()
+            # Remove ERDOS_REPO_ROOT so it cannot override ERDOS_HOME for .env discovery.
+            monkeypatch.delenv("ERDOS_REPO_ROOT", raising=False)
+            monkeypatch.setenv("ERDOS_HOME", os.getcwd())
             Path(".env").write_text("ARISTOTLE_API_KEY=dotenv-key\n", encoding="utf-8")
             input_file = Path("input.lean")
             input_file.write_text("-- test", encoding="utf-8")
@@ -157,6 +162,9 @@ class TestLeanProveCommandConfig:
         """Running from a subdirectory should still discover repo-root `.env`."""
         monkeypatch.setenv("ERDOS_LOAD_DOTENV", "1")
         monkeypatch.delenv("ERDOS_REPO_ROOT", raising=False)
+        # Opt out of the global ERDOS_HOME isolation: this test asserts repo-root
+        # discovery of `.env`, which requires ERDOS_HOME to be unset.
+        monkeypatch.delenv("ERDOS_HOME", raising=False)
         monkeypatch.delenv("ARISTOTLE_API_KEY", raising=False)
 
         mock_result = MagicMock()

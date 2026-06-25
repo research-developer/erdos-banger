@@ -12,10 +12,10 @@ import typer
 from erdos.commands.app_context import get_app_context
 from erdos.commands.presenter import console, exit_with_result
 from erdos.core.clients.exa import (
-    DEFAULT_CACHE_PATH,
     ExaClient,
     ExaConfig,
     ExaResearchResult,
+    _default_cache_path,
 )
 from erdos.core.exit_codes import ExitCode
 from erdos.core.models import CLIOutput
@@ -249,7 +249,7 @@ def exa_search(
         cache_path=(
             app_ctx.config.exa_cache_path
             if app_ctx.config.exa_cache_path
-            else DEFAULT_CACHE_PATH
+            else _default_cache_path()
         ),
         search_type=effective_search_type,  # BUG-056
     )

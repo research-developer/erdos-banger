@@ -28,6 +28,7 @@ from erdos.core.batch.persistence import (
 )
 from erdos.core.exit_codes import ExitCode
 from erdos.core.rate_limiter import RateLimiter
+from erdos.core.repo_root import repo_path
 
 
 if TYPE_CHECKING:
@@ -69,7 +70,7 @@ class BatchRunner:
         self.command = command
         self.problem_ids = problem_ids
         self.process_fn = process_fn
-        self.state_dir = state_dir or Path("logs")
+        self.state_dir = state_dir or repo_path("logs")
         self.filters = filters or BatchFilters()
         self.delay = delay
         self.on_progress = on_progress

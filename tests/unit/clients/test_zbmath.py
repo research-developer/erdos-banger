@@ -36,14 +36,17 @@ SAMPLE_SEARCH_RESPONSE: dict[str, Any] = json.loads(
 class TestZbMathConfig:
     """Tests for ZbMathConfig."""
 
-    def test_default_config(self) -> None:
+    def test_default_config(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         """Config has sensible defaults."""
+        monkeypatch.setenv("ERDOS_HOME", str(tmp_path))
         config = ZbMathConfig()
         assert config.mailto is None
         assert config.timeout == 30.0
         assert config.max_retries == 3
         assert config.cache_ttl_days == 30
-        assert config.cache_path == Path("literature/cache/zbmath")
+        assert config.cache_path == tmp_path / "literature" / "cache" / "zbmath"
 
     def test_from_env_with_mailto(self) -> None:
         """Config loads ERDOS_MAILTO from environment."""

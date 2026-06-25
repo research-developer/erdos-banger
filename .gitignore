@@ -66,3 +66,6 @@ literature/papers/
 
 # Lean run logs
 formal/lean/logs/
+
+# Subagent-driven-development scratch (ledger)
+.superpowers/
