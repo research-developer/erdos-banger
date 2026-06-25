@@ -1,0 +1,29 @@
+== unit tests ==
+  all unit tests PASSED
+
+== weird / primitive enumeration up to 1,000,000 ==
+  weird count:     1765  (in 25.1s)
+  primitive count: 24
+  first weird:     [70, 836, 4030, 5830, 7192, 7912, 9272, 10430, 10570, 10792, 10990, 11410]
+  first primitive: [70, 836, 4030, 5830, 7192, 7912, 9272, 10792, 17272, 45356, 73616, 83312]
+  largest primitive in range: 786,208
+  primitive-weird growth by decade (count with n < 10^k):
+    n < 10^2 : 1
+    n < 10^3 : 2
+    n < 10^4 : 7
+    n < 10^5 : 13
+    n < 10^6 : 24
+== OEIS cross-checks ==
+  A006037 (weird) <= 1,000,000 [b-file]: MATCH (computed 1765, OEIS 1765)
+  A002975 (primitive) <= 1,000,000 [b-file]: MATCH (computed 24, OEIS 24)
+  wrote 1765 weird numbers -> data_weird_1e6.txt
+  wrote 24 primitive numbers -> data_prim_1e6.txt
+
+== odd-weird scan up to 50,000,000 ==
+  [odd] scanned to n=10,000,002  (19.6s, 20,661 odd-abundant, 0 weird)
+  [odd] scanned to n=20,000,002  (65.2s, 41,497 odd-abundant, 0 weird)
+  [odd] scanned to n=30,000,002  (140.9s, 62,047 odd-abundant, 0 weird)
+  [odd] scanned to n=40,000,002  (245.7s, 82,565 odd-abundant, 0 weird)
+  [odd] scanned to n=50,000,000  (387.4s, 103,059 odd-abundant, 0 weird)
+  odd scan bound reached: 49,999,999  (387.4s)
+  NO odd weird numbers found in odd [3, 49,999,999]
