@@ -1,0 +1,67 @@
+==============================================================================
+DELIVERABLE 1: exact DSS verifier -- unit tests
+==============================================================================
+            [1, 2, 4, 8] ->  True  (setframe=True, brute=True, expect=True)  OK
+               [1, 2, 3] -> False  (setframe=False, brute=False, expect=False)  OK
+                     [1] ->  True  (setframe=True, brute=True, expect=True)  OK
+               [1, 2, 4] ->  True  (setframe=True, brute=True, expect=True)  OK
+               [2, 3, 4] ->  True  (setframe=True, brute=True, expect=True)  OK
+            [3, 5, 6, 7] ->  True  (setframe=True, brute=True, expect=True)  OK
+          [1, 5, 10, 11] -> False  (setframe=False, brute=False, expect=False)  OK
+               [2, 3, 5] -> False  (setframe=False, brute=False, expect=False)  OK
+        [1, 2, 4, 8, 16] ->  True  (setframe=True, brute=True, expect=True)  OK
+      [6, 9, 11, 12, 13] ->  True  (setframe=True, brute=True, expect=True)  OK
+               [3, 6, 9] -> False  (setframe=False, brute=False, expect=False)  OK
+  Conway-Guy sets n=1..24 all DSS and match A005318: True
+  ALL TESTS: PASSED
+
+==============================================================================
+DELIVERABLE 3: record constructions -- powers of 2 vs Conway-Guy (A005318)
+==============================================================================
+  n |   pow2 max    /2^n |     CG max    /2^n   DSS |                    CG set (n<=8)
+  1 |          1  0.5000 |          1  0.5000  True |                              [1]
+  2 |          2  0.5000 |          2  0.5000  True |                           [1, 2]
+  3 |          4  0.5000 |          4  0.5000  True |                        [2, 3, 4]
+  4 |          8  0.5000 |          7  0.4375  True |                     [3, 5, 6, 7]
+  5 |         16  0.5000 |         13  0.4062  True |               [6, 9, 11, 12, 13]
+  6 |         32  0.5000 |         24  0.3750  True |         [11, 17, 20, 22, 23, 24]
+  7 |         64  0.5000 |         44  0.3438  True |     [20, 31, 37, 40, 42, 43, 44]
+  8 |        128  0.5000 |         84  0.3281  True | [40, 60, 71, 77, 80, 82, 83, 84]
+  9 |        256  0.5000 |        161  0.3145  True |                                 
+ 10 |        512  0.5000 |        309  0.3018  True |                                 
+ 11 |       1024  0.5000 |        594  0.2900  True |                                 
+ 12 |       2048  0.5000 |       1164  0.2842  True |                                 
+ 13 |       4096  0.5000 |       2284  0.2788  True |                                 
+ 14 |       8192  0.5000 |       4484  0.2737  True |                                 
+ 15 |      16384  0.5000 |       8807  0.2688  True |                                 
+ 16 |      32768  0.5000 |      17305  0.2641  True |                                 
+ 17 |      65536  0.5000 |      34301  0.2617  True |                                 
+ 18 |     131072  0.5000 |      68008  0.2594  True |                                 
+ 19 |     262144  0.5000 |     134852  0.2572  True |                                 
+ 20 |     524288  0.5000 |     267420  0.2550  True |                                 
+ 21 |    1048576  0.5000 |     530356  0.2529  True |                                 
+ 22 |    2097152  0.5000 |    1051905  0.2508  True |                                 
+ 23 |    4194304  0.5000 |    2095003  0.2497  True |                                 
+ 24 |    8388608  0.5000 |    4172701  0.2487  True |                                 
+
+==============================================================================
+DELIVERABLE 2 + 4: exhaustive f(n) (exact) with A276661 cross-check
+==============================================================================
+  n |    f(n) |    f/2^n |  A276661 CG(A005318)     status |  time(s) | witness
+  1 |       1 |  0.50000 |        1           1 OEIS-MATCH |     0.00 | [1]  verify=True
+  2 |       2 |  0.50000 |        2           2 OEIS-MATCH |     0.00 | [1, 2]  verify=True
+    [n=3 bound(CG)=4 split_depth=2 #prefixes=1]
+  3 |       4 |  0.50000 |        4           4 OEIS-MATCH |     0.04 | [2, 3, 4]  verify=True
+    [n=4 bound(CG)=7 split_depth=3 #prefixes=10]
+  4 |       7 |  0.43750 |        7           7 OEIS-MATCH |     0.06 | [3, 5, 6, 7]  verify=True
+    [n=5 bound(CG)=13 split_depth=3 #prefixes=120]
+  5 |      13 |  0.40625 |       13          13 OEIS-MATCH |     0.10 | [6, 9, 11, 12, 13]  verify=True
+    [n=6 bound(CG)=24 split_depth=2 #prefixes=171]
+  6 |      24 |  0.37500 |       24          24 OEIS-MATCH |     0.09 | [11, 17, 20, 22, 23, 24]  verify=True
+    [n=7 bound(CG)=44 split_depth=2 #prefixes=703]
+  7 |      44 |  0.34375 |       44          44 OEIS-MATCH |     0.12 | [20, 31, 37, 40, 42, 43, 44]  verify=True
+    [n=8 bound(CG)=84 split_depth=2 #prefixes=2926]
+  8 |      84 |  0.32812 |       84          84 OEIS-MATCH |     3.62 | [40, 60, 71, 77, 80, 82, 83, 84]  verify=True
+
+Total exhaustive wall time: 4.0s; largest n reached: 8
+
