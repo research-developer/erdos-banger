@@ -17,6 +17,19 @@ See `CANDIDATES.md` for:
 - Candidate problems being considered (tiered by AI-friendliness)
 - Related solved problems to study first
 
+## Erdős Attack — RationAll arsenal & orientation
+
+When attacking these problems with the RationAll exact-arithmetic stack, **read
+`docs/notes/erdos-tools-and-methods.md` first** — the orientation reference covering: the three
+edges (decide-and-certify category↔magma-law↔Lean bridge; FlowAngle exact irrationals; dozenal RNS
++ K4 bracketing prime sieve), the exact `Z[√d]` foundation (T1–T9, norm `a²−3b²`), the certify+Lean
+workbench (`certkit/`), the `decidable`/`falsifiable`/`verifiable` "decisive zone", and attack
+lanes A–E. Companion: `docs/notes/erdos-647-divisor-window.md`.
+
+- **Backlog:** Linear *Solve Erdos Problems* (team Math), issues **MATH-1…MATH-24** — one per target, each with statement + RationAll angle + lane.
+- **Shipped:** the certify+Lean workbench + these notes (PR #2); the kernel-checked #647 divisor-window partial theorem (PR #3, `formal/lean/Erdos/Problem647.lean`, sorry-free, axioms `[propext, Classical.choice, Quot.sound]`).
+- **Zero-float discipline:** all search/sieve/cert arithmetic is exact (int/`Fraction`/ring); `erdos lean check` is the sole trust anchor — it drops `#print axioms`, so read axioms via `lake env lean`.
+
 ## Skills (Claude Code / Codex CLI)
 
 This repo includes custom skills for both Claude Code and Codex CLI:
