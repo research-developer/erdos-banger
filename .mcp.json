@@ -4,7 +4,7 @@
       "type": "http",
       "url": "https://decide-and-certify-mcp.researchdeveloper.workers.dev/mcp",
       "headers": {
-        "Authorization": "${DECIDE_CERTIFY_TOKEN}"
+        "Authorization": "Bearer ${DECIDE_CERTIFY_TOKEN}"
       }
     },
     "notionApi": {
