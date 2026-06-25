@@ -69,6 +69,18 @@ back to its algebraic value. Relevance to Erdős: the irrationality cluster (MAT
 `∑1/(t^n−1)`, `∑p_n/2^n`, `∑1/lcm`, `∑1/(n!−1)`, `∑1/(2^n−1)`) — all exact partial sums and continued
 fractions, with Lerch/Lambert framing for the transcendence side.
 
+**The exact‑trig LUT substrate (verified).** Every rotation above is read from a closed twiddle table of
+`2cos(2πk/n)` stored as ring elements — no `cos`, no float. The whole 12‑point (dodecagonal) table is one
+48‑bit constant **`DFT6_HEX = 0x3105b6b50132`**: 12 nibbles `[signB|signA|opcode]`, opcodes
+`{00→(0,0), 01→±1, 10→±2, 11→±√3}`, decoding `2cos(2πk/12)` into `Z[√3]`. *Verified here* — it yields
+exactly the dodecagon table `a=[2,0,1,0,−1,0,−2,0,−1,0,1,0]`, `b=[0,1,0,0,0,−1,0,−1,0,0,0,1]`, and each
+`a+b√3` equals `2cos(2πk/12)` (12/12). Two higher‑resolution ROMs extend it, both spot‑checked exact:
+`flowangle_rom.v` (144 Bézier‑curve points in `Z[√3]`, denom 288 = 2·12², passing through the dodecagon
+vertices) and `twiddle_rom_24.v` (24‑gon, `2cos(2πk/24)` in `Z[√2,√3]/2`, 24/24 match). Erdős relevance:
+this is the FlowAngle compute substrate for **Lane C** (the irrationality constants are these ring
+elements) and for any **exponential/character‑sum angle** `e^{2πi·a/n}` — the angles live in the table
+exactly, so partial sums stay zero‑float and norm‑checkable end to end.
+
 ### 1.3 Dozenal RNS super‑digit + bracketing prime sieve — exact prime structure
 
 The twin primes **(11, 13) bracket the dozen 12**, two ways:
@@ -86,6 +98,14 @@ correction). The **conjugate gate** `σ: √3 → −√3`, `(a,b) ↦ (a,−b)`
 `13 ↔ 11` while fixing the dozen — and it is the same gate as the free norm‑integrity check. Relevance:
 twin/safe‑prime structure (#647 open core), prime sieves (MATH‑15/18), covering systems.
 
+The same base‑12 wheel underlies the **K4 twin‑prime sieve** (`demos/k4-sieve-compaction/`): for each
+unshielded prime `p ∈ {5..43}` it forbids the `k`‑residues where `p` divides a twin member of the
+`B1=(12k−1,12k+1)` / `S57=(12k+5,12k+7)` classes (`inv = 12⁻¹ mod p`), verified zero false‑negative vs
+Eratosthenes (N=10⁵). Honest caveat: it is an `O(depth)` *pre‑filter*, not a primality oracle, and its
+"compaction" folds the 4 forbidden residues by the negation orbit `r↦−r` — a constant ×2 storage win
+(`|⟨σ₁₁⟩|=2`, not `|V₄|`), no asymptotic speedup. Useful as the candidate generator for a twin/safe‑prime
+search; the scalable enumeration lives in `twin_prime_validate`, not here.
+
 ---
 
 ## 2. The exact‑arithmetic foundation (Z[√d] rings)
@@ -99,13 +119,31 @@ inv:    1/(a+b√3) = (a−b√3)/(a²−3b²) (exact, via the norm)
 ```
 **Multiplicativity of the norm is the self‑checking invariant** — if a product's norm ≠ the product of
 norms, a bit flipped. The universal ring is `Z[√2,√3]` (n=12, the dozenal default); the algebraic tower
-nests `Z ⊂ Z[√3],Z[√2] ⊂ Z[√2,√3]`, Galois group V₄.
+nests `Z ⊂ Z[√3],Z[√2] ⊂ Z[√2,√3]`, Galois group V₄. The tower also includes the **golden‑ratio ring
+`Z[φ]`** (`φ=(1+√5)/2`, the real cyclotomic ring of `n=5/10`: mult `(a₁,b₁)(a₂,b₂)=(a₁a₂+b₁b₂, a₁b₂+a₂b₁+b₁b₂)`,
+`N(a+bφ)=a²+ab−b²`, `σ(a+bφ)=(a+b)−bφ`) — **the field where the Fibonacci/Lucas reciprocal‑sum irrationality
+problems (e.g. Erdős #267, `∑1/F_n`) live**, hence the Lane‑C ring once those targets are taken up
+(`demos/gauge-zphi/` implements the ring; no reciprocal‑sum machinery yet).
+
+**Proof backing (T1–T9, `notebooks/zsqrtd_substrate_proof.py`).** The ring laws used above are machine‑checked
+(symbolic + sweeps, every check an `assert`): **T1** ring closure · **T2** norm multiplicativity
+`N(a+b√d)=a²−d·b²` (Brahmagupta–Fibonacci) · **T3** `σ` is a ring automorphism, `x·σ(x)=N(x)` · **T4** trace
+`Tr=2a` is ℤ‑linear (not multiplicative) · **T5** cyclotomic↔`Z[√d]` map (degree‑≤2 `n`: 5/10→`Z[φ]`,
+8→`Z[√2]`, 12→`Z[√3]`, 24→`Z[√2,√3]`) · **T6** binomial‑Heron `k`‑th‑root error `≤ 2ku` · **T7** RALL‑228
+`√Q = N(Q)^{1/4}·(Q/σ(Q))^{1/4}` · **T8** the norm check detects 100% of single‑bit faults (2000×2000 sweep).
+**T9** gives the prime‑structure backing: the **Dedekind zeta factorization `ζ_{ℚ(√d)}(s)=ζ(s)·L(s,χ_d)`**
+(χ_d the Kronecker symbol) and the **fundamental units / Pell** fact that ring units `±ε_d^n` are exactly the
+integer points on `x²−d·y²=±1` — directly the arithmetic of the safe‑prime / Pell side of §5.1's #647 core,
+and the field theory under every Lane‑C irrationality constant.
 
 **Concrete exact methods used in the Erdős searches:**
 - **Divisor‑count sieve:** `for i in 1..N: τ[i::i] += 1` (NumPy int64) — exact `τ(m)` for all `m ≤ N`.
 - **Prefix‑max:** `np.maximum.accumulate(m + τ)` realizes `max_{m≤k}(m+τ(m))` (used for #647 slack).
 - **Exact rationals:** `fractions.Fraction` for unit‑fraction / prime‑reciprocal problems (MATH‑5, 22).
 - **Snellius O(1/n⁴):** `s_in² = 2−c₁`, `s_out² = 2/(2−c₁)`, `S_n = (2 s_in + s_out)/3` (exact ring inversion).
+- **Norm‑split prime test:** a prime `p` is **inert vs split in `Z[√3]`** by `N=a²−3b²` ⟺ the Legendre symbol
+  `(3/p)`, i.e. `p≡±1 (mod 12)` splits, `p≡±5` is inert (`demos/precision-lookahead/`) — an exact, float‑free
+  read on `p`'s factorization type from its residue, reusable for the prime‑structure lanes.
 
 ---
 
