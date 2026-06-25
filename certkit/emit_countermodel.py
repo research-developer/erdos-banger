@@ -8,6 +8,27 @@ from certkit.lawlean import law_to_lean
 
 def emit_countermodel(order: int, table: list[list[int]], eq1: str, eq2: str,
                       thm: str = "certify_cm") -> str:
+    # Validate the table BEFORE emitting: a malformed table would otherwise emit
+    # a *different* magma silently, because the Lean `getD … []` / `getD … 0`
+    # fallbacks fill missing/oversized rows with 0 instead of erroring. Make the
+    # mismatch loud here instead.
+    if len(table) != order:
+        raise ValueError(
+            f"table must have exactly {order} rows for a Fin {order} magma, "
+            f"got {len(table)}"
+        )
+    for i, row in enumerate(table):
+        if len(row) != order:
+            raise ValueError(
+                f"row {i} must have exactly {order} entries for a Fin {order} "
+                f"magma, got {len(row)}"
+            )
+        for j, x in enumerate(row):
+            if not 0 <= x < order:
+                raise ValueError(
+                    f"table[{i}][{j}] = {x} is not a valid Fin {order} element "
+                    f"(must satisfy 0 <= x < {order})"
+                )
     rows = ", ".join("[" + ", ".join(str(x) for x in row) + "]" for row in table)
     prop1 = law_to_lean(eq1, order)
     prop2 = law_to_lean(eq2, order)
