@@ -37,7 +37,12 @@ reduces to the structure of *safe primes* (`n - 1 = p` with `p = 2q + 1`,
 `q` prime). That case is left open.
 -/
 
-import Mathlib
+import Mathlib.Algebra.Order.Ring.Star
+import Mathlib.Analysis.Normed.Ring.Lemmas
+import Mathlib.Data.Int.Star
+import Mathlib.Data.ZMod.Basic
+import Mathlib.NumberTheory.ArithmeticFunction.Misc
+import Mathlib.Tactic.IntervalCases
 
 namespace Erdos.Problem647
 
