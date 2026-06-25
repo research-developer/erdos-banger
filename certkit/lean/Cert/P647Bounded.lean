@@ -2,7 +2,7 @@
 -- W2 golden cert: pure-`decide` variant. B = 50 (largest tested; pure kernel `decide`
 -- cleared B=50 in ~1s, so no down-tuning was needed). Axioms: NONE (not even propext,
 -- and crucially NO Lean.ofReduceBool) — the witness-pure trust baseline. The
--- native_decide scale variant (P647BoundedNative.lean, B=5000) adds ofReduceBool:
+-- native_decide scale variant (P647BoundedNative.lean, B=1000) adds ofReduceBool:
 -- that delta is the entire point of this pair.
 -- Erdős #647 (bounded): for 24 < n ≤ 50, max_{m<n}(m+τ(m)) > n+2.
 -- τ(m) = number of divisors, defined here (no mathlib).

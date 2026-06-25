@@ -11,5 +11,5 @@ def test_theorem_uses_bound_and_tactic():
     assert "#print axioms p647_bounded" in src
 
 def test_native_variant():
-    src = emit_p647_bounded(5000, tactic="native_decide")
-    assert "n < 5001" in src and "by native_decide" in src
+    src = emit_p647_bounded(1000, tactic="native_decide")
+    assert "n < 1001" in src and "by native_decide" in src
