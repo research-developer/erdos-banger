@@ -270,6 +270,11 @@ addopts = [
     # panels / missing option text). Let pytest auto-detect color support.
 ]
 testpaths = ["tests"]
+# Put the repo root on sys.path so the top-level `certkit/` package (sibling to
+# `src/erdos`, per the certify+Lean workbench plan) is importable under
+# --import-mode=importlib. The editable install only exposes `src/`, so without
+# this the `certkit.*` imports in tests/certkit/ fail to collect.
+pythonpath = ["."]
 # pytest-dotenv: Load .env if present (for local network tests with API keys).
 # This only affects local runs; CI uses explicit env vars. See DEBT-100.
 env_files = [".env"]
